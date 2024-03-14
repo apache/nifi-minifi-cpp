@@ -21,8 +21,8 @@
 #include <memory>
 #include "core/state/nodes/DeviceInformation.h"
 #include "core/state/nodes/AgentInformation.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/algorithm/find_if.hpp"
 

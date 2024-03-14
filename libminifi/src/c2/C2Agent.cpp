@@ -37,7 +37,7 @@
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
 #include "utils/file/FileSystem.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
 #include "utils/StringUtils.h"
@@ -796,7 +796,7 @@ std::optional<std::string> C2Agent::resolveFlowUrl(const std::string& url) const
     base += url;
     return base;
   } else if (configuration_->get(Configuration::nifi_c2_rest_url, "c2.rest.url", base)) {
-    utils::URL base_url{utils::string::trim(base)};
+    http::URL base_url{utils::string::trim(base)};
     if (base_url.isValid()) {
       return base_url.hostPort() + "/c2/api/" + url;
     }
@@ -815,7 +815,7 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
     logger_->log_error("Missing C2 REST URL");
     return std::nullopt;
   }
-  utils::URL base_url{utils::string::trim(base)};
+  http::URL base_url{utils::string::trim(base)};
   if (base_url.isValid()) {
     return base_url.hostPort() + url;
   }

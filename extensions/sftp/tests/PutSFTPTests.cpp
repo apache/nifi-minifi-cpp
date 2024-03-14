@@ -17,7 +17,6 @@
  */
 
 #include <sys/stat.h>
-#undef NDEBUG
 #include <cstring>
 #include <utility>
 #include <chrono>
@@ -37,8 +36,8 @@
 #include <unistd.h>
 #endif
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "Exception.h"
 #include "date/date.h"
 #include "utils/file/FileUtils.h"

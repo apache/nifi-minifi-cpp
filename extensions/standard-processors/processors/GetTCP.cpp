@@ -205,7 +205,7 @@ asio::awaitable<std::error_code> GetTCP::TcpClient::readLoop(auto& socket) {
     auto dynamic_buffer = max_message_size_ ? asio::dynamic_buffer(read_message, *max_message_size_) : asio::dynamic_buffer(read_message);
     auto [read_error, bytes_read] = co_await asio::async_read_until(socket, dynamic_buffer, delimiter_, utils::net::use_nothrow_awaitable);  // NOLINT
 
-    if (*max_message_size_ && read_error == asio::error::not_found) {
+    if (max_message_size_ && *max_message_size_ && read_error == asio::error::not_found) {
       current_doesnt_end_with_delimiter = true;
       bytes_read = *max_message_size_;
     } else if (read_error) {

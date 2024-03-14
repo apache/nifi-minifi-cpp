@@ -16,8 +16,8 @@
  */
 #include "LineByLineInputOutputStreamCallback.h"
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/BufferStream.h"
 #include "fmt/format.h"

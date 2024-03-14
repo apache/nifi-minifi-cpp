@@ -20,8 +20,8 @@
 #include <vector>
 #include <set>
 #include "utils/CollectionUtils.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 TEST_CASE("TestHaveCommonItem", "[haveCommonItem]") {
   auto verify = [](std::initializer_list<std::string> a, std::initializer_list<std::string> b, bool result) {

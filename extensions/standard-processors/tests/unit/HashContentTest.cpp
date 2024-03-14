@@ -15,19 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifdef OPENSSL_SUPPORT
-
 #include <array>
 #include <memory>
 #include <utility>
 #include <string>
 #include <iostream>
 
-#include "TestBase.h"
-#include "Catch.h"
-#include "SingleProcessorTestController.h"
-#include "TestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/TestUtils.h"
 #include "unit/ProvenanceTestHelper.h"
 
 #include "core/Processor.h"
@@ -178,4 +175,3 @@ TEST_CASE("Invalid hash algorithm throws in onSchedule", "[HashContent]") {
 }
 
 }  // namespace org::apache::nifi::minifi::processors::test
-#endif  // OPENSSL_SUPPORT

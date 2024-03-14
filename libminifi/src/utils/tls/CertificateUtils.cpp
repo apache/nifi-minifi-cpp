@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef OPENSSL_SUPPORT
-
 #include "utils/tls/CertificateUtils.h"
 
 #include "openssl/rsa.h"
@@ -49,9 +47,9 @@ std::string ssl_error_category::message(int value) const {
   if (err == 0) {
     return "";
   }
-  char buf[4096];
-  ERR_error_string_n(err, buf, sizeof(buf));
-  return buf;
+  std::array<char, 4096> buf{};
+  ERR_error_string_n(err, buf.data(), buf.size());
+  return buf.data();
 }
 
 std::error_code get_last_ssl_error_code() {
@@ -300,5 +298,3 @@ std::error_code processPEMCertificate(const std::filesystem::path& cert_file, co
 }
 
 }  // namespace org::apache::nifi::minifi::utils::tls
-
-#endif  // OPENSSL_SUPPORT

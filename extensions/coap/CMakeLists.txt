@@ -36,7 +36,7 @@ add_minifi_library(minifi-coap SHARED ${SOURCES})
 
 target_link_libraries(nanofi-coap-c COAP::libcoap Threads::Threads)
 target_link_libraries(minifi-coap ${LIBMINIFI})
-target_link_libraries(minifi-coap nanofi-coap-c Threads::Threads COAP::libcoap minifi-http-curl)
+target_link_libraries(minifi-coap nanofi-coap-c Threads::Threads COAP::libcoap)
 
 register_extension(minifi-coap "COAP EXTENSIONS" COAP-EXTENSION "Enables LibCOAP Functionality." "extensions/coap/tests/")
 register_extension_linter(minifi-coap-extensions-linter)

@@ -21,8 +21,8 @@
 #include <memory>
 #include <utility>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "ArchiveTests.h"
 #include "core/PropertyDefinition.h"
 #include "processors/GetFile.h"

@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "catch2/matchers/catch_matchers_string.hpp"
-#include "TestBase.h"
+#include "unit/TestBase.h"
 #include "../processors/ConsumeMQTT.h"
 
 namespace {

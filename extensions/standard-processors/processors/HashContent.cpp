@@ -17,9 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifdef OPENSSL_SUPPORT
-
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -86,5 +83,3 @@ void HashContent::onTrigger(core::ProcessContext&, core::ProcessSession& session
 REGISTER_RESOURCE(HashContent, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors
-
-#endif  // OPENSSL_SUPPORT

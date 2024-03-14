@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "core/Relationship.h"
 
 using org::apache::nifi::minifi::core::Relationship;

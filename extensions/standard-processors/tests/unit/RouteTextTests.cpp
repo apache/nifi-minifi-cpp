@@ -17,8 +17,8 @@
  */
 
 #include "FlowFileRecord.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "processors/RouteText.h"
 
 namespace processors = minifi::processors;

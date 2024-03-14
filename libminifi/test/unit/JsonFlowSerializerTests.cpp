@@ -17,8 +17,8 @@
 
 #include <regex>
 
-#include "../Catch.h"
-#include "../ConfigurationTestController.h"
+#include "unit/Catch.h"
+#include "unit/ConfigurationTestController.h"
 #include "catch2/generators/catch_generators.hpp"
 #include "core/flow/FlowSchema.h"
 #include "core/json/JsonFlowSerializer.h"
@@ -198,7 +198,7 @@ constexpr std::string_view config_json_with_nifi_schema_part_1 = R"({
                 "type": "org.apache.nifi.minifi.processors.InvokeHTTP",
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
-                    "artifact": "minifi-http-curl",
+                    "artifact": "minifi-standard-processors",
                     "version": "1.23.06"
                 },
                 "properties": {

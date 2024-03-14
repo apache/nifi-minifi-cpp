@@ -17,10 +17,10 @@
  */
 
 #include "FlowFileRecord.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "processors/SplitText.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 #include "io/BufferStream.h"
 
 namespace org::apache::nifi::minifi::test {

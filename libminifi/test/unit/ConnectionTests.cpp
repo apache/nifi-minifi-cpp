@@ -16,9 +16,9 @@
  */
 #include "Connection.h"
 
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "ProvenanceTestHelper.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/ProvenanceTestHelper.h"
 
 TEST_CASE("Connection::poll() works correctly", "[poll]") {
   const auto flow_repo = std::make_shared<TestRepository>();

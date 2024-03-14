@@ -18,8 +18,8 @@
 #define EXTENSION_LIST ""  // NOLINT(cppcoreguidelines-macro-usage)
 #include <memory>
 #include <string_view>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/expected.h"
 #include "utils/gsl.h"
 

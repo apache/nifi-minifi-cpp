@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "PublishKafka.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 
 namespace org::apache::nifi::minifi::test {
 

@@ -29,8 +29,8 @@
 #include "core/file_utils.h"
 #include "api/ecu.h"
 #include "api/nanofi.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 class FileManager {
 public:

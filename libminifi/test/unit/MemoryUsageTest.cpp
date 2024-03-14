@@ -24,8 +24,8 @@
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   constexpr bool cout_enabled = true;

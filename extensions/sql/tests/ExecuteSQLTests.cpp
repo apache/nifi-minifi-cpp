@@ -15,14 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
-
 #include <optional>
 
 #include "SQLTestController.h"
 #include "processors/ExecuteSQL.h"
-#include "Utils.h"
+#include "unit/TestUtils.h"
 #include "FlowFileMatcher.h"
 
 namespace org::apache::nifi::minifi::test {

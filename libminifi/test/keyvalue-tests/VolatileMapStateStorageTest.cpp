@@ -19,8 +19,8 @@
 #define CATCH_CONFIG_RUNNER
 #include <memory>
 #include <string>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "catch2/catch_session.hpp"
 #include "controllers/keyvalue/AutoPersistor.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"

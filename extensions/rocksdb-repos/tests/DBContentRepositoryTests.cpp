@@ -24,11 +24,11 @@
 #include "FlowFileRecord.h"
 #include "properties/Configure.h"
 #include "provenance/Provenance.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/ContentRepositoryDependentTests.h"
-#include "IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 class TestDatabaseContentRepository : public core::repository::DatabaseContentRepository {
  public:
@@ -139,7 +139,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
     // an immediate read will still be able to access the content
     REQUIRE_FALSE(minifi::io::isError(content_repo->read(*claim)->read(readstr)));
 
-    REQUIRE(minifi::utils::verifyEventHappenedInPollTime(1s, [&] {
+    REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(1s, [&] {
       return minifi::io::isError(content_repo->read(*claim)->read(readstr));
     }));
   }
@@ -317,7 +317,6 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 TEST_CASE("ProcessSession::read reads the flowfile from offset to size (RocksDB)", "[readoffsetsize]") {
   ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::DatabaseContentRepository>());
 }
-
 
 TEST_CASE("ProcessSession::append should append to the flowfile and set its size correctly (RocksDB)" "[appendsetsize]") {
   ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());

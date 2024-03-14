@@ -36,7 +36,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessorNode.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
@@ -144,26 +144,6 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
     if (!peers_.empty())
       peer_index_ = 0;
   }
-  /**
-   * If at this point we have no peers and HTTP support is disabled this means
-   * we must rely on the configured host/port
-   */
-  if (peers_.empty() && is_http_disabled()) {
-    std::string host;
-    std::string portStr;
-    int configured_port = -1;
-    // place hostname/port into the log message if we have it
-    context.getProperty(hostName, host);
-    context.getProperty(port, portStr);
-    if (!host.empty() && !portStr.empty() && !portStr.empty() && core::Property::StringToInt(portStr, configured_port)) {
-      nifi_instances_.push_back({ host, configured_port, "" });
-      bypass_rest_api_ = true;
-    } else {
-      // we cannot proceed, so log error and throw an exception
-      logger_->log_error("{}/{}/{} -- configuration values after eval of configuration options", host, portStr, configured_port);
-      throw(Exception(SITE2SITE_EXCEPTION, "HTTPClient not resolvable. No peers configured or any port specific hostname and port -- cannot schedule"));
-    }
-  }
   // populate the site2site protocol for load balancing between them
   if (!peers_.empty()) {
     auto count = peers_.size();
@@ -266,7 +246,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     configure_->get(Configure::nifi_rest_api_password, this->rest_password_);
 
     std::string token;
-    std::unique_ptr<utils::BaseHTTPClient> client;
+    std::unique_ptr<http::BaseHTTPClient> client;
     if (!rest_user_name_.empty()) {
       std::stringstream loginUrl;
       loginUrl << protocol << host;
@@ -281,14 +261,14 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
         logger_->log_error("Could not locate HTTPClient. You do not have cURL support!");
         return std::make_pair("", -1);
       }
-      client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
-      client->initialize(utils::HttpRequestMethod::GET, loginUrl.str(), ssl_service);
+      client = std::unique_ptr<http::BaseHTTPClient>(dynamic_cast<http::BaseHTTPClient*>(client_ptr));
+      client->initialize(http::HttpRequestMethod::GET, loginUrl.str(), ssl_service);
       // use a connection timeout. if this times out we will simply attempt re-connection
       // so no need for configuration parameter that isn't already defined in Processor
       client->setConnectionTimeout(10s);
       client->setReadTimeout(idle_timeout_);
 
-      token = utils::get_token(client.get(), this->rest_user_name_, this->rest_password_);
+      token = http::get_token(client.get(), this->rest_user_name_, this->rest_password_);
       logger_->log_debug("Token from NiFi REST Api endpoint {},  {}", loginUrl.str(), token);
       if (token.empty())
         return std::make_pair("", -1);
@@ -300,8 +280,8 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
       return std::make_pair("", -1);
     }
     int siteTosite_port_ = -1;
-    client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
-    client->initialize(utils::HttpRequestMethod::GET, fullUrl.str(), ssl_service);
+    client = std::unique_ptr<http::BaseHTTPClient>(dynamic_cast<http::BaseHTTPClient*>(client_ptr));
+    client->initialize(http::HttpRequestMethod::GET, fullUrl.str(), ssl_service);
     // use a connection timeout. if this times out we will simply attempt re-connection
     // so no need for configuration parameter that isn't already defined in Processor
     client->setConnectionTimeout(10s);

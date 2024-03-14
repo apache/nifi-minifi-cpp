@@ -14,16 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #define CUSTOM_EXTENSION_INIT
-#undef NDEBUG
 
 #include <filesystem>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "agent/agent_version.h"
 #include "core/extension/Utils.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals;
 

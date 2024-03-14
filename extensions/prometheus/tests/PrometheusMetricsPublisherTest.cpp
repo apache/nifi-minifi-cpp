@@ -18,7 +18,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "PrometheusMetricsPublisher.h"
 #include "properties/Configure.h"
 #include "MetricsExposer.h"

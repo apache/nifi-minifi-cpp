@@ -23,12 +23,12 @@
 #include <vector>
 #include <set>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/gsl.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/StringUtils.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 
@@ -293,7 +293,7 @@ TEST_CASE("TestConcurrentQueue: test untimed waiting consumers", "[ProducerConsu
   producer.join();
 
   auto queue_is_empty = [&queue]() { return queue.empty(); };
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), queue_is_empty));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), queue_is_empty));
 
   queue.stop();
   consumer.join();
@@ -311,7 +311,7 @@ TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerC
   std::thread producer { MinifiConcurrentQueueTestProducersConsumers::getSimpleProducerThread(queue) };
 
   auto we_have_all_results = [&results_size]() { return results_size >= 3; };
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), we_have_all_results));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), we_have_all_results));
 
   queue.stop();
   producer.join();
@@ -380,7 +380,7 @@ TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
   relay.join();
 
   auto queue_is_empty = [&cqueue]() { return cqueue.empty(); };
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), queue_is_empty));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds(1), queue_is_empty));
 
   cqueue.stop();
   consumer.join();

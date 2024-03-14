@@ -16,7 +16,7 @@
  */
 
 #include <string_view>
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "RollingWindow.h"
 #include "range/v3/view/zip.hpp"
 #include "range/v3/algorithm/contains.hpp"

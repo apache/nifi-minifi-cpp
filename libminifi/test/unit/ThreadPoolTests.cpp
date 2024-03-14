@@ -19,8 +19,8 @@
 #include <utility>
 #include <future>
 #include <memory>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/ThreadPool.h"
 
 using namespace std::literals::chrono_literals;

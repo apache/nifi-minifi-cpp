@@ -35,7 +35,6 @@
 #include "expression/Expression.h"
 #include "utils/RegexUtils.h"
 
-#ifdef ENABLE_CURL
 #ifdef WIN32
 #pragma comment(lib, "wldap32.lib" )
 #pragma comment(lib, "crypt32.lib" )
@@ -44,8 +43,6 @@
 #define CURL_STATICLIB
 #endif
 #include <curl/curl.h>
-#endif
-
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -702,7 +699,6 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
 }
 
 Value expr_urlEncode(const std::vector<Value> &args) {
-#ifdef ENABLE_CURL
   auto arg_0 = args[0].asString();
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {
@@ -719,13 +715,9 @@ Value expr_urlEncode(const std::vector<Value> &args) {
   } else {
     throw std::runtime_error("Failed to initialize cURL");
   }
-#else
-  throw std::runtime_error("Failed to initialize cURL");
-#endif
 }
 
 Value expr_urlDecode(const std::vector<Value> &args) {
-#ifdef ENABLE_CURL
   auto arg_0 = args[0].asString();
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {
@@ -743,9 +735,6 @@ Value expr_urlDecode(const std::vector<Value> &args) {
   } else {
     throw std::runtime_error("Failed to initialize cURL");
   }
-#else
-  throw std::runtime_error("Failed to initialize cURL");
-#endif
 }
 
 Value expr_base64Encode(const std::vector<Value> &args) {

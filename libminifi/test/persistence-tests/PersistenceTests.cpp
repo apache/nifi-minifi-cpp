@@ -27,19 +27,19 @@
 #include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "catch2/matchers/catch_matchers_string.hpp"
 #include "../../extensions/libarchive/MergeContent.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
 
-using minifi::utils::verifyEventHappenedInPollTime;
+using minifi::test::utils::verifyEventHappenedInPollTime;
 
 namespace {
 

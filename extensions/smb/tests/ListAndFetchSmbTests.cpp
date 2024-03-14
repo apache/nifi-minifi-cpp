@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "ListSmb.h"
 #include "FetchSmb.h"
 #include "utils/MockSmbConnectionControllerService.h"
-#include "ReadFromFlowFileTestProcessor.h"
+#include "unit/ReadFromFlowFileTestProcessor.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::extensions::smb::test {

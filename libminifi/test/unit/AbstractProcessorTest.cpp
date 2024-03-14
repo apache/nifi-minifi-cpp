@@ -17,7 +17,7 @@
  */
 #define EXTENSION_LIST ""  // NOLINT(cppcoreguidelines-macro-usage)
 #include <array>
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "core/AbstractProcessor.h"
 #include "core/PropertyDefinitionBuilder.h"
 

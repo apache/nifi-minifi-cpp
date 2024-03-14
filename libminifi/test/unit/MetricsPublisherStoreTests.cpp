@@ -17,9 +17,9 @@
  */
 #include <memory>
 
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "ProvenanceTestHelper.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "properties/Configuration.h"
 #include "core/Resource.h"

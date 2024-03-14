@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "core/RepositoryFactory.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "FlowFileRepository.h"
-#include "TestBase.h"
-#include "Utils.h"
+#include "unit/TestBase.h"
 #include "StreamPipe.h"
-#include "IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -125,7 +124,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
   std::set<std::shared_ptr<core::FlowFile>> expired;
   for (size_t i = 0; i < 200; ++i) {
     std::shared_ptr<core::FlowFile> ff;
-    bool got_non_null_flow_file = minifi::utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
+    bool got_non_null_flow_file = utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
       ff = connection->poll(expired);
       return static_cast<bool>(ff);
     });

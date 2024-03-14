@@ -17,7 +17,7 @@
 
 #include <thread>
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "wel/LookupCacher.h"
 
 namespace wel = org::apache::nifi::minifi::wel;

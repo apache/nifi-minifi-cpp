@@ -18,8 +18,8 @@
 
 #include <fstream>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "../agent/JsonSchema.h"
 #include "nlohmann/json-schema.hpp"
 #include "utils/RegexUtils.h"

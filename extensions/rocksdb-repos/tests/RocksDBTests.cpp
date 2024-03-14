@@ -17,17 +17,15 @@
 
 #include <fstream>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "../database/RocksDatabase.h"
 #include "../database/RocksDbInstance.h"
 #include "../database/ColumnHandle.h"
 #include "../database/DbHandle.h"
-#include "IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "database/StringAppender.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
-
-#undef NDEBUG
 
 using core::repository::StringAppender;
 
@@ -72,7 +70,7 @@ void new_db_opts(minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
 TEST_CASE_METHOD(RocksDBTest, "Malformed database uri - Missing column name", "[rocksDBTest1]") {
   auto db = minifi::internal::RocksDatabase::create({}, {}, "minifidb://malformed", {});
   REQUIRE(!db);
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(
       std::chrono::seconds{1}, "Couldn't detect the column name in 'minifidb://malformed'"));
 }
 
@@ -157,7 +155,7 @@ TEST_CASE_METHOD(RocksDBTest, "Logged if the options are incompatible with an ex
   };
   auto default_db = minifi::internal::RocksDatabase::create(new_db_opts, cf_opts, "minifidb://" + db_dir + "/default", {});
   REQUIRE(default_db->open());
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(
       std::chrono::seconds{1}, "Could not determine if we definitely need to reopen or we are definitely safe, requesting reopen"));
 }
 
@@ -174,7 +172,7 @@ TEST_CASE_METHOD(RocksDBTest, "Error is logged if different DBOptions are used",
   REQUIRE(col_1->open());
   auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two", {});
   REQUIRE_FALSE(col_2->open());
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(
       std::chrono::seconds{1}, "Conflicting database options requested for '" + db_dir + "'"));
 }
 
@@ -251,14 +249,14 @@ TEST_CASE_METHOD(RocksDBTest, "Error is logged if different encryption keys are 
     auto db_opt_2 = createEncrSetter(home_dir, "two", "encryption.key.two");
     auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two", {});
     REQUIRE_FALSE(col_2->open());
-    REQUIRE(utils::verifyLogLinePresenceInPollTime(
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds{1}, "Conflicting database options requested for '" + db_dir + "'"));
   }
 
   SECTION("Using no encryption key") {
     auto col_2 = minifi::internal::RocksDatabase::create(withDefaultEnv, {}, "minifidb://" + db_dir + "/column_two", {});
     REQUIRE_FALSE(col_2->open());
-    REQUIRE(utils::verifyLogLinePresenceInPollTime(
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds{1}, "Conflicting database options requested for '" + db_dir + "'"));
   }
 }

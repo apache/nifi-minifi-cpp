@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "TableFormatter.h"
 
 namespace minifi = org::apache::nifi::minifi;

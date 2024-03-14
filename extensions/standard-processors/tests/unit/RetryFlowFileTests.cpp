@@ -22,8 +22,8 @@
 #include <set>
 #include <regex>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 #include "processors/GenerateFlowFile.h"
 #include "processors/UpdateAttribute.h"
@@ -31,7 +31,7 @@
 #include "processors/PutFile.h"
 #include "processors/LogAttribute.h"
 #include "utils/file/FileUtils.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 
 namespace {
 using std::optional;

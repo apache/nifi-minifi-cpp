@@ -17,10 +17,11 @@
 
 #include <chrono>
 
-#include "../Catch.h"
-#include "../TestBase.h"
-#include "ProvenanceTestHelper.h"
-#include "utils/TestUtils.h"
+#include "unit/Catch.h"
+#include "unit/TestBase.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "unit/TestUtils.h"
+#include "utils/TimeUtil.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -63,8 +64,8 @@ class SchedulingAgentTestFixture {
     count_proc_->setScheduledState(core::RUNNING);
 
 #ifdef WIN32
-    utils::dateSetInstall(TZ_DATA_DIR);
     date::set_install(TZ_DATA_DIR);
+    minifi::utils::timeutils::dateSetInstall(TZ_DATA_DIR);
 #endif
   }
 

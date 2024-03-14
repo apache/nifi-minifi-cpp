@@ -20,8 +20,8 @@
 #include <fstream>
 #include <filesystem>
 #include "utils/file/FileUtils.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "api/nanofi.h"
 
 const std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";

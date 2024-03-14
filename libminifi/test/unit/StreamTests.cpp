@@ -23,8 +23,8 @@
 #include <string>
 #include <memory>
 #include <utility>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "io/BaseStream.h"
 #include "io/StreamSlice.h"
 #include "utils/span.h"

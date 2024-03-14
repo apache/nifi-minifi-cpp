@@ -52,9 +52,7 @@ else()
 endif()
 
 add_minifi_library(minifi-grafana-loki SHARED ${SOURCES})
-target_include_directories(minifi-grafana-loki PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/http-curl")
-target_link_libraries(minifi-grafana-loki ${LIBMINIFI} minifi-http-curl)
-add_dependencies(minifi-grafana-loki minifi-http-curl)
+target_link_libraries(minifi-grafana-loki ${LIBMINIFI})
 
 if (ENABLE_GRPC_FOR_LOKI)
     target_include_directories(minifi-grafana-loki SYSTEM PRIVATE BEFORE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")

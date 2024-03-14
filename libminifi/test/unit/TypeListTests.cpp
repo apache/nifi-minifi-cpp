@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "core/Core.h"
 #include "utils/meta/type_list.h"
 

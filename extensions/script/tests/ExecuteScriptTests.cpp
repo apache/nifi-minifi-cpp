@@ -17,9 +17,9 @@
  */
 #define EXTENSION_LIST "*minifi-*,!*python*,!*lua*"  // NOLINT(cppcoreguidelines-macro-usage)
 
-#include "SingleProcessorTestController.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 #include "../ExecuteScript.h"
 

@@ -20,8 +20,8 @@
 #include <vector>
 #include "c2/C2Payload.h"
 #include "c2/PayloadParser.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 TEST_CASE("Test Valid Payload", "[tv1]") {
   std::string ident = "identifier";

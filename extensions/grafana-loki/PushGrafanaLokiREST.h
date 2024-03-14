@@ -18,7 +18,7 @@
 
 #include "PushGrafanaLoki.h"
 
-#include "client/HTTPClient.h"
+#include "http/HTTPClient.h"
 
 namespace org::apache::nifi::minifi::extensions::grafana::loki {
 
@@ -68,7 +68,7 @@ class PushGrafanaLokiREST : public PushGrafanaLoki {
   void addLogLineMetadata(rapidjson::Value& log_line, rapidjson::Document::AllocatorType& allocator, core::FlowFile& flow_file) const;
 
   std::map<std::string, std::string> stream_label_attributes_;
-  curl::HTTPClient client_;
+  http::HTTPClient client_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::grafana::loki

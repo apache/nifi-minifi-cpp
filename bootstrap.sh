@@ -259,8 +259,6 @@ add_cmake_option DEBUG_SYMBOLS ${FALSE}
 add_cmake_option BUILD_ROCKSDB ${TRUE}
 ## uses the source from the third party directory
 add_option ROCKSDB_ENABLED ${TRUE} "ENABLE_ROCKSDB"
-## need libcurl installed
-add_option HTTP_CURL_ENABLED ${TRUE} "ENABLE_CURL"
 
 # third party directory
 add_option LIBARCHIVE_ENABLED ${TRUE} "ENABLE_LIBARCHIVE"
@@ -325,22 +323,16 @@ fi
 add_option NANOFI_ENABLED ${FALSE} "ENABLE_NANOFI"
 
 add_option SPLUNK_ENABLED ${TRUE} "ENABLE_SPLUNK"
-set_dependency SPLUNK_ENABLED HTTP_CURL_ENABLED
 
 add_option GCP_ENABLED ${TRUE} "ENABLE_GCP"
 
 add_option ELASTIC_ENABLED ${TRUE} "ENABLE_ELASTICSEARCH"
-set_dependency ELASTIC_ENABLED HTTP_CURL_ENABLED
 
 add_option GRAFANA_LOKI_ENABLED ${FALSE} "ENABLE_GRAFANA_LOKI"
-set_dependency GRAFANA_LOKI_ENABLED HTTP_CURL_ENABLED
 
 add_option PROCFS_ENABLED ${TRUE} "ENABLE_PROCFS"
 
 add_option PROMETHEUS_ENABLED ${TRUE} "ENABLE_PROMETHEUS"
-
-add_option OPENSSL_ENABLED ${TRUE} "MINIFI_OPENSSL"
-add_dependency OPENSSL_ENABLED "opensslbuild"
 
 USE_SHARED_LIBS=${TRUE}
 ASAN_ENABLED=${FALSE}

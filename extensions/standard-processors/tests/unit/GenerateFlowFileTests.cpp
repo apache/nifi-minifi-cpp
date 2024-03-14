@@ -19,9 +19,9 @@
 #include <string>
 #include <set>
 
-#include "TestBase.h"
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 #include "GenerateFlowFile.h"
 
 using minifi::processors::GenerateFlowFile;

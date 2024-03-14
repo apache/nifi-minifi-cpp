@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "FetchSmb.h"
 #include "SmbConnectionControllerService.h"
 #include "utils/MockSmbConnectionControllerService.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 #include "OsUtils.h"
 #include "core/Resource.h"
 

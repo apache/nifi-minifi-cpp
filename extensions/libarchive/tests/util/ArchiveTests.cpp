@@ -27,8 +27,8 @@
 #include <string>
 #include <utility>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/gsl.h"
 
 TAE_MAP_T build_test_archive_map(int NUM_FILES, const char* const* FILE_NAMES, const char* const* FILE_CONTENT) {

@@ -25,8 +25,8 @@
 #include "PropertyDefinition.h"
 #include "PropertyDefinitionBuilder.h"
 #include "RelationshipDefinition.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 namespace org::apache::nifi::minifi {
 

@@ -20,8 +20,8 @@
 #include <memory>
 
 #include "c2/triggers/FileUpdateTrigger.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Processor.h"
 #include "core/ClassLoader.h"
 

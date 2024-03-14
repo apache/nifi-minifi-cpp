@@ -17,8 +17,6 @@
  */
 
 #include <sys/stat.h>
-#undef NDEBUG
-#include <cassert>
 #include <cstring>
 #include <utility>
 #include <chrono>
@@ -34,8 +32,8 @@
 #include <iterator>
 #include <random>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/file/FileUtils.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"

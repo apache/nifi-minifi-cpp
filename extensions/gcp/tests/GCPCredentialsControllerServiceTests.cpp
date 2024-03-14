@@ -16,7 +16,7 @@
  */
 #define EXTENSION_LIST "minifi-gcp"  // NOLINT(cppcoreguidelines-macro-usage)
 
-#include "TestBase.h"
+#include "unit/TestBase.h"
 #include "gtest/gtest.h"
 #include "../controllerservices/GCPCredentialsControllerService.h"
 #include "core/Resource.h"
@@ -25,7 +25,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stream.h"
 #include "rapidjson/writer.h"
-#include "DummyProcessor.h"
+#include "unit/DummyProcessor.h"
 #include "utils/Environment.h"
 
 namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;

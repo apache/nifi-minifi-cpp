@@ -21,10 +21,10 @@
 #include <ctime>
 #include <algorithm>
 #include <cctype>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/Id.h"
-#include "../Utils.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::utils {
 struct IdentifierTestAccessor {

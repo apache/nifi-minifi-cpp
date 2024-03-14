@@ -18,8 +18,8 @@
 
 #include <string>
 #include "core/ConfigurableComponent.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 namespace org::apache::nifi::minifi::core {
 

@@ -70,7 +70,7 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Test Azure credentials
 TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Filesystem name is not set", "[azureDataLakeStorageParameters]") {
   plan_->setDynamicProperty(update_attribute_, "test.filesystemname", "");
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto failed_flowfiles = getFailedFlowFileContents();
   CHECK(failed_flowfiles.size() == 1);
   CHECK(failed_flowfiles[0] == TEST_DATA);
@@ -86,7 +86,7 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Connection String is e
 TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete file succeeds", "[azureDataLakeStorageDelete]") {
   test_controller_.runSession(plan_, true);
   REQUIRE(getFailedFlowFileContents().empty());
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedDeleteParams();
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   CHECK(passed_params.file_system_name == FILESYSTEM_NAME);
@@ -98,7 +98,7 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete file succeeds",
 TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete file fails", "[azureDataLakeStorageDelete]") {
   mock_data_lake_storage_client_ptr_->setDeleteFailure(true);
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedDeleteParams();
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   CHECK(passed_params.file_system_name == FILESYSTEM_NAME);
@@ -114,7 +114,7 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete result is false
   mock_data_lake_storage_client_ptr_->setDeleteResult(false);
   test_controller_.runSession(plan_, true);
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedDeleteParams();
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   CHECK(passed_params.file_system_name == FILESYSTEM_NAME);
   CHECK(passed_params.directory_name == DIRECTORY_NAME);

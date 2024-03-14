@@ -15,18 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <sys/stat.h>
-#undef NDEBUG
-#include <cassert>
 #include <chrono>
 #include <memory>
 #include <string>
 #include "processors/LogAttribute.h"
 #include "integration/IntegrationBase.h"
 #include "ProcessContextExpr.h"
-#include "TestBase.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/TestUtils.h"
+#include "unit/Catch.h"
+
+namespace org::apache::nifi::minifi::test {
 
 class TestHarness : public IntegrationBase {
  public:
@@ -38,11 +38,10 @@ class TestHarness : public IntegrationBase {
   }
 
   void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
         "key:route_check_attr value:good",
         "key:variable_attribute value:replacement_value"));
-    assert(false == verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "ProcessSession rollback"));  // No rollback happened
+    REQUIRE(false == minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "ProcessSession rollback"));  // No rollback happened
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> /*pg*/) override {
@@ -51,16 +50,10 @@ class TestHarness : public IntegrationBase {
   }
 };
 
-int main(int argc, char **argv) {
-  std::string key_dir;
-  std::string test_file_location;
-  std::string url;
-  if (argc > 1) {
-    test_file_location = argv[1];
-  }
-
+TEST_CASE("UpdateAttributeIntegrationTest", "[updateattribute]") {
   TestHarness harness;
-  harness.run(test_file_location);
-
-  return 0;
+  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestUpdateAttribute.yml";
+  harness.run(test_file_path);
 }
+
+}  // namespace org::apache::nifi::minifi::test

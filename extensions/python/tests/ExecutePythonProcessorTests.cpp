@@ -19,8 +19,8 @@
 #include <memory>
 #include <string>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 #include "processors/GetFile.h"
 #include "ExecutePythonProcessor.h"
@@ -28,11 +28,11 @@
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 
 namespace {
-using org::apache::nifi::minifi::utils::putFileToDir;
-using org::apache::nifi::minifi::utils::getFileContent;
+using org::apache::nifi::minifi::test::utils::putFileToDir;
+using org::apache::nifi::minifi::test::utils::getFileContent;
 using org::apache::nifi::minifi::utils::file::resolve;
 
 class ExecutePythonProcessorTestBase {

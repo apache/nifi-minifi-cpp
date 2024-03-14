@@ -16,7 +16,7 @@
  */
 #include <string>
 
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "utils/Cron.h"
 #include "date/date.h"
 #include "date/tz.h"

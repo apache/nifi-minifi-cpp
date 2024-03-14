@@ -35,7 +35,7 @@
 #include "coap2/coap.h"
 #include "coap2/uri.h"
 #include "coap2/address.h"
-#include "protocols/RESTSender.h"
+#include "c2/protocols/RESTSender.h"
 
 namespace org::apache::nifi::minifi::coap::c2 {
 

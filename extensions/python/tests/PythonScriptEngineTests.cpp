@@ -16,9 +16,9 @@
  */
 
 #include <barrier>
-#include "TestBase.h"
-#include "Catch.h"
-#include "Utils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "PythonScriptEngine.h"
 
 namespace org::apache::nifi::minifi::extensions::python {

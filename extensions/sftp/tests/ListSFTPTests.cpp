@@ -17,8 +17,6 @@
  */
 
 #include <sys/stat.h>
-#undef NDEBUG
-#include <cassert>
 #include <cstring>
 #include <utility>
 #include <chrono>
@@ -37,8 +35,8 @@
 #include <unistd.h>
 #endif
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/file/FileUtils.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
@@ -50,7 +48,7 @@
 #include "processors/GenerateFlowFile.h"
 #include "processors/LogAttribute.h"
 #include "tools/SFTPTestServer.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
