@@ -19,6 +19,7 @@
 
 #include "../Catch.h"
 #include "../ConfigurationTestController.h"
+#include "catch2/generators/catch_generators.hpp"
 #include "core/flow/FlowSchema.h"
 #include "core/json/JsonFlowSerializer.h"
 #include "core/json/JsonNode.h"
@@ -104,7 +105,8 @@ constexpr std::string_view config_json_with_default_schema = R"({
 }
 )";
 
-constexpr std::string_view config_json_with_nifi_schema = R"({
+// in two parts because Visual Studio doesn't like long string constants
+constexpr std::string_view config_json_with_nifi_schema_part_1 = R"({
     "encodingVersion": {
         "majorVersion": 2,
         "minorVersion": 0
@@ -390,7 +392,9 @@ constexpr std::string_view config_json_with_nifi_schema = R"({
             }
         ],
         "labels": [],
-        "funnels": [],
+        "funnels": [],)";
+
+constexpr std::string_view config_json_with_nifi_schema_part_2 = R"(
         "controllerServices": [
             {
                 "identifier": "b9801278-7b5d-4314-aed6-713fd4b5f933",
@@ -452,6 +456,66 @@ constexpr std::string_view config_json_with_nifi_schema = R"({
                 ],
                 "componentType": "CONTROLLER_SERVICE",
                 "groupIdentifier": "8b4d66dc-9085-4722-b35b-3492f363baa3"
+            },
+            {
+                "identifier": "b418f4ff-e598-4ea2-921f-14f9dd864482",
+                "instanceIdentifier": "dbb76c00-97ad-4b3a-bf0c-d5d1b88e79d3",
+                "name": "Second SSLContextService",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "type": "org.apache.nifi.minifi.controllers.SSLContextService",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-system",
+                    "version": "1.23.06"
+                },
+                "properties": {
+                    "Private Key": "second_ssl_service_certs/agent-key.pem",
+                    "Client Certificate": "second_ssl_service_certs/agent-cert.pem",
+                    "CA Certificate": "second_ssl_service_certs/ca-cert.pem",
+                    "Use System Cert Store": "false"
+                },
+                "propertyDescriptors": {
+                    "Private Key": {
+                        "name": "Private Key",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Client Certificate": {
+                        "name": "Client Certificate",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Passphrase": {
+                        "name": "Passphrase",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "CA Certificate": {
+                        "name": "CA Certificate",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Use System Cert Store": {
+                        "name": "Use System Cert Store",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "controllerServiceApis": [
+                    {
+                        "type": "org.apache.nifi.minifi.controllers.SSLContextService",
+                        "bundle": {
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-system",
+                            "version": "1.23.06"
+                        }
+                    }
+                ],
+                "componentType": "CONTROLLER_SERVICE",
+                "groupIdentifier": "910ec043-2372-4edb-9ef4-8ce720c50685"
             }
         ],
         "variables": {},
@@ -467,16 +531,9 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   ConfigurationTestController test_controller;
   core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
 
-  core::flow::FlowSchema schema;
-  std::string flow_definition;
-  SECTION("Default schema") {
-    schema = core::flow::FlowSchema::getDefault();
-    flow_definition = std::string{config_json_with_default_schema};
-  }
-  SECTION("NiFi schema") {
-    schema = core::flow::FlowSchema::getNiFiFlowJson();
-    flow_definition = std::string{config_json_with_nifi_schema};
-  }
+  const auto [schema, flow_definition] = GENERATE(
+      std::make_tuple(core::flow::FlowSchema::getDefault(), std::string{config_json_with_default_schema}),
+      std::make_tuple(core::flow::FlowSchema::getNiFiFlowJson(), utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2)));
 
   const auto process_group = json_configuration.getRootFromPayload(flow_definition);
   REQUIRE(process_group);
@@ -486,7 +543,21 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   REQUIRE(res);
   const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
 
-  std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider);
+  using Overrides = std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>;
+  const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
+  const auto controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
+
+  const auto [overrides, expected_results] = GENERATE_REF(
+      std::make_tuple(Overrides{},
+          std::array{"very_secure_password", "very_secure_passphrase"}),
+      std::make_tuple(Overrides{{processor_id, {{"invokehttp-proxy-password", "password123"}}}},
+          std::array{"password123", "very_secure_passphrase"}),
+      std::make_tuple(Overrides{{controller_service_id, {{"Passphrase", "speak friend and enter"}}}},
+          std::array{"very_secure_password", "speak friend and enter"}),
+      std::make_tuple(Overrides{{processor_id, {{"invokehttp-proxy-password", "password123"}}}, {controller_service_id, {{"Passphrase", "speak friend and enter"}}}},
+          std::array{"password123", "speak friend and enter"}));
+
+  std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 
   {
     std::regex regex{R"_("invokehttp-proxy-password": "(enc\{.*\})",)_"};
@@ -495,7 +566,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
 
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
-    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "very_secure_password");
+    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[0]);
   }
 
   {
@@ -505,6 +576,36 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
 
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
-    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "very_secure_passphrase");
+    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[1]);
   }
+}
+
+TEST_CASE("JsonFlowSerializer with an override can add a new property to the flow config file") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
+
+  const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
+  const auto config_json_with_nifi_schema = utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
+  const auto process_group = json_configuration.getRootFromPayload(config_json_with_nifi_schema);
+  REQUIRE(process_group);
+
+  rapidjson::Document doc;
+  rapidjson::ParseResult res = doc.Parse(config_json_with_nifi_schema.data(), config_json_with_nifi_schema.size());
+  REQUIRE(res);
+  const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
+
+  const auto second_controller_service_id = utils::Identifier::parse("b418f4ff-e598-4ea2-921f-14f9dd864482").value();
+  const auto overrides = std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>{{second_controller_service_id, {{"Passphrase", "new passphrase"}}}};
+
+  std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
+
+  // find the second match
+  std::regex regex{R"_("Passphrase": "(enc\{.*\})")_"};
+  std::smatch match_results;
+  REQUIRE(std::regex_search(config_json_encrypted.cbegin(), config_json_encrypted.cend(), match_results, regex));
+  REQUIRE(std::regex_search(match_results.suffix().first, config_json_encrypted.cend(), match_results, regex));
+  REQUIRE(match_results.size() == 2);
+
+  std::string encrypted_value = match_results[1];
+  CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "new passphrase");
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,24 +17,15 @@
 #pragma once
 
 #include <string>
-#include <memory>
-#include <vector>
+#include <filesystem>
 
-#include "StructuredConfiguration.h"
+#include "Utils.h"
+#include "core/flow/AdaptiveConfiguration.h"
 
-namespace org::apache::nifi::minifi::core::flow {
+namespace org::apache::nifi::minifi::encrypt_config::flow_config_encryptor {
 
-class AdaptiveConfiguration : public StructuredConfiguration {
- public:
-  explicit AdaptiveConfiguration(ConfigurationContext ctx);
+void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::filesystem::path& minifi_home, const std::filesystem::path& flow_config_path);
+void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::filesystem::path& minifi_home, const std::filesystem::path& flow_config_path,
+    const std::string& component_id, const std::string& property_name, const std::string& property_value);
 
-  std::vector<std::string> getSupportedFormats() const override {
-    return {"application/json", "text/yml"};
-  }
-
-  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &payload) override;
-
-  std::string serializeWithOverrides(const core::ProcessGroup& process_group, const std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>& overrides) const;
-};
-
-}  // namespace org::apache::nifi::minifi::core::flow
+}  // namespace org::apache::nifi::minifi::encrypt_config::flow_config_encryptor

@@ -205,6 +205,8 @@ class ProcessGroup : public CoreComponent {
    */
   std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(const std::string &nodeId) const;
 
+  std::vector<const core::controller::ControllerServiceNode*> getAllControllerServices() const;
+
   // update property value
   void updatePropertyValue(const std::string& processorName, const std::string& propertyName, const std::string& propertyValue);
 

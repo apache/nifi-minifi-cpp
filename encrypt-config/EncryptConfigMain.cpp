@@ -21,37 +21,64 @@
 #include "EncryptConfig.h"
 #include "argparse/argparse.hpp"
 #include "agent/agent_version.h"
+#include "utils/StringUtils.h"
 
-using org::apache::nifi::minifi::encrypt_config::EncryptConfig;
+namespace minifi = org::apache::nifi::minifi;
+using minifi::encrypt_config::EncryptConfig;
+
+constexpr std::string_view OPERATION_MINIFI_PROPERTIES = "minifi-properties";
+constexpr std::string_view OPERATION_FLOW_CONFIG = "flow-config";
+constexpr std::string_view OPERATION_WHOLE_FLOW_CONFIG_FILE = "whole-flow-config-file";
 
 int main(int argc, char* argv[]) try {
   argparse::ArgumentParser argument_parser("Apache MiNiFi C++ Encrypt-Config", org::apache::nifi::minifi::AgentBuild::VERSION);
+  argument_parser.add_argument("operation")
+      .default_value("minifi-properties")
+      .help(minifi::utils::string::join_pack("what to encrypt: ", OPERATION_MINIFI_PROPERTIES, " | ", OPERATION_FLOW_CONFIG, " | ", OPERATION_WHOLE_FLOW_CONFIG_FILE));
   argument_parser.add_argument("-m", "--minifi-home")
-    .required()
-    .metavar("MINIFI_HOME")
-    .help("Specifies the home directory used by the minifi agent");
-  argument_parser.add_argument("-e", "--encrypt-flow-config")
-    .default_value(false)
-    .implicit_value(true)
-    .help("If set, the flow configuration file (as specified in minifi.properties) is also encrypted.");
+      .required()
+      .metavar("MINIFI_HOME")
+      .help("Specifies the home directory used by the minifi agent");
+  argument_parser.add_argument("--component-id")
+      .metavar("ID")
+      .help(minifi::utils::string::join_pack("Processor or controller service id (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--property-name")
+      .metavar("NAME")
+      .help(minifi::utils::string::join_pack("The name of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--property-value")
+      .metavar("VALUE")
+      .help(minifi::utils::string::join_pack("The new value of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
 
   try {
     argument_parser.parse_args(argc, argv);
   } catch (const std::runtime_error& err) {
-    std::cerr << err.what() << std::endl;
-    std::cerr << argument_parser;
-    std::exit(1);
+    std::cerr << err.what() << "\n\n" << argument_parser;
+    return 1;
   }
 
   EncryptConfig encrypt_config{argument_parser.get("-m")};
-  EncryptConfig::EncryptionType type = encrypt_config.encryptSensitiveProperties();
-  if (argument_parser.get<bool>("--encrypt-flow-config")) {
-    encrypt_config.encryptFlowConfig();
-  } else if (type == EncryptConfig::EncryptionType::RE_ENCRYPT) {
-    std::cout << "WARNING: you did not request the flow config to be updated, "
-              << "if it is currently encrypted and the old key is removed, "
-              << "you won't be able to recover the flow config.\n";
+  std::string operation = argument_parser.get("operation");
+
+  if (operation == OPERATION_MINIFI_PROPERTIES) {
+    encrypt_config.encryptSensitiveValuesInMinifiProperties();
+  } else if (operation == OPERATION_FLOW_CONFIG) {
+    auto component_id = argument_parser.present("--component-id");
+    auto property_name = argument_parser.present("--property-name");
+    auto property_value = argument_parser.present("--property-value");
+    encrypt_config.encryptSensitiveValuesInFlowConfig(component_id, property_name, property_value);
+  } else if (operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) {
+    encrypt_config.encryptWholeFlowConfigFile();
+  } else {
+    std::cerr << "Unknown operation: " << operation << "\n\n" << argument_parser;
+    return 4;
   }
+
+  if ((operation == OPERATION_MINIFI_PROPERTIES || operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) && encrypt_config.isReencrypting()) {
+    std::cout << "WARNING: an .old key was provided, which is used for both " << OPERATION_MINIFI_PROPERTIES << " and " << OPERATION_WHOLE_FLOW_CONFIG_FILE << ".\n"
+        << "If both are currently encrypted, make sure to run " << argv[0] << " to re-encrypt both before removing the .old key,\n"
+        << "otherwise you won't be able to recover the encrypted data!\n";
+  }
+
   return 0;
 } catch (const std::exception& ex) {
   std::cerr << ex.what() << "\n(" << typeid(ex).name() << ")\n";

@@ -20,15 +20,14 @@
 #include <memory>
 #include <vector>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 std::shared_ptr<ControllerService> &ControllerServiceNode::getControllerServiceImplementation() {
   return controller_service_;
+}
+
+const ControllerService* ControllerServiceNode::getControllerServiceImplementation() const {
+  return controller_service_.get();
 }
 
 std::vector<std::shared_ptr<ControllerServiceNode> > &ControllerServiceNode::getLinkedControllerServices() {
@@ -39,9 +38,4 @@ std::vector<std::shared_ptr<ConfigurableComponent> > &ControllerServiceNode::get
   return linked_components_;
 }
 
-} /* namespace controller */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::controller
