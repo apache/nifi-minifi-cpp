@@ -54,24 +54,6 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     Then no files are placed in the monitored directory in 10s of running time
 
 
-  Scenario: InvokeHTTP to ListenHTTP without an SSLContextService works without a proper server cert if peer verification is disabled
-    Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
-    And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
-    And the "Custom Text" property of the GenerateFlowFile processor is set to "sed do eiusmod tempor incididunt"
-    And a InvokeHTTP processor with the "Remote URL" property set to "https://server-${feature_id}:4430/contentListener"
-    And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
-    And the "Disable Peer Verification" property of the InvokeHTTP processor is set to "true"
-    And the "success" relationship of the GenerateFlowFile processor is connected to the InvokeHTTP
-
-    And a ListenHTTP processor with the "Listening Port" property set to "4430" in a "server" flow
-    And the "SSL Certificate" property of the ListenHTTP processor is set to "/tmp/resources/self_signed_server.crt"
-    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "server" flow
-    And the "success" relationship of the ListenHTTP processor is connected to the PutFile
-
-    When both instances start up
-    Then a flowfile with the content "sed do eiusmod tempor incididunt" is placed in the monitored directory in less than 10s
-
-
   Scenario: InvokeHTTP to ListenHTTP with mutual TLS, using certificate files
     Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
