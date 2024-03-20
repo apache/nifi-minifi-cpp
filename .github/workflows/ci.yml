@@ -445,7 +445,7 @@ jobs:
         run: |
           python3 -m venv venv && source venv/bin/activate \
             && pip install -r requirements.txt \
-            && python main.py --noninteractive --skip-compiler-install --cmake-options="-DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16 -DSTRICT_GSL_CHECKS=AUDIT -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" --minifi-options="${UBUNTU_CLANG_MINIFI_OPTIONS}"
+            && python main.py --noninteractive --skip-compiler-install --cmake-options="-DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16 -DCMAKE_CXX_FLAGS='-stdlib=libc++' -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++' -DSTRICT_GSL_CHECKS=AUDIT -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" --minifi-options="${UBUNTU_CLANG_MINIFI_OPTIONS}"
         working-directory: bootstrap
       - id: cache_save
         uses: actions/cache/save@v4
