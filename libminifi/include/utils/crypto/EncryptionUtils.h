@@ -47,6 +47,10 @@ struct EncryptedData {
   Bytes ciphertext_plus_mac;
 };
 
+struct EncryptionError : public std::runtime_error {
+  using runtime_error::runtime_error;
+};
+
 /**
  * Encrypt the input (raw version).
  *

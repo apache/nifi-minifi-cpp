@@ -273,3 +273,63 @@ TEST_CASE("YamlFlowSerializer with an override can add a new property to the flo
     CHECK_FALSE(std::regex_search(match_results.suffix().first, config_yaml_encrypted.cend(), match_results, regex));
   }
 }
+
+TEST_CASE("The encrypted flow configuration can be decrypted with the correct key") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_properties_encryptor = encryption_provider;
+
+  core::flow::AdaptiveConfiguration yaml_configuration_before{configuration_context};
+  const auto process_group_before = yaml_configuration_before.getRootFromPayload(std::string{config_yaml});
+  REQUIRE(process_group_before);
+
+  const auto schema = core::flow::FlowSchema::getDefault();
+  YAML::Node root_yaml_node = YAML::Load(std::string{config_yaml});
+  const auto flow_serializer_before = core::yaml::YamlFlowSerializer{root_yaml_node};
+  std::string config_yaml_encrypted = flow_serializer_before.serialize(*process_group_before, schema, encryption_provider, {});
+
+  core::flow::AdaptiveConfiguration yaml_configuration_after{configuration_context};
+  const auto process_group_after = yaml_configuration_after.getRootFromPayload(config_yaml_encrypted);
+  REQUIRE(process_group_after);
+
+  const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
+  const auto* processor_before = process_group_before->findProcessorById(processor_id);
+  REQUIRE(processor_before);
+  const auto* processor_after = process_group_after->findProcessorById(processor_id);
+  REQUIRE(processor_after);
+  CHECK(processor_before->getProperties().at("HTTP Method").getValue() == processor_after->getProperties().at("HTTP Method").getValue());
+  CHECK(processor_before->getProperties().at("invokehttp-proxy-password").getValue() == processor_after->getProperties().at("invokehttp-proxy-password").getValue());
+
+  const auto controller_service_id = "b9801278-7b5d-4314-aed6-713fd4b5f933";
+  const auto controller_service_node_before = process_group_before->findControllerService(controller_service_id);
+  REQUIRE(controller_service_node_before);
+  const auto controller_service_before = controller_service_node_before->getControllerServiceImplementation();
+  REQUIRE(controller_service_node_before);
+  const auto controller_service_node_after = process_group_after->findControllerService(controller_service_id);
+  REQUIRE(controller_service_node_after);
+  const auto controller_service_after = controller_service_node_before->getControllerServiceImplementation();
+  REQUIRE(controller_service_after);
+  CHECK(controller_service_before->getProperties().at("CA Certificate").getValue() == controller_service_after->getProperties().at("CA Certificate").getValue());
+  CHECK(controller_service_before->getProperties().at("Passphrase").getValue() == controller_service_after->getProperties().at("Passphrase").getValue());
+}
+
+TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrect key") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_properties_encryptor = encryption_provider;
+
+  core::flow::AdaptiveConfiguration yaml_configuration_before{configuration_context};
+  const auto process_group_before = yaml_configuration_before.getRootFromPayload(std::string{config_yaml});
+  REQUIRE(process_group_before);
+
+  const auto schema = core::flow::FlowSchema::getDefault();
+  YAML::Node root_yaml_node = YAML::Load(std::string{config_yaml});
+  const auto flow_serializer = core::yaml::YamlFlowSerializer{root_yaml_node};
+  std::string config_yaml_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {});
+
+  const utils::crypto::Bytes different_secret_key = utils::string::from_hex("ea55b7d0edc22280c9547e4d89712b3fae74f96d82f240a004fb9fbd0640eec7");
+  configuration_context.sensitive_properties_encryptor = utils::crypto::EncryptionProvider{different_secret_key};
+
+  core::flow::AdaptiveConfiguration yaml_configuration_after{configuration_context};
+  REQUIRE_THROWS_AS(yaml_configuration_after.getRootFromPayload(config_yaml_encrypted), utils::crypto::EncryptionError);
+}

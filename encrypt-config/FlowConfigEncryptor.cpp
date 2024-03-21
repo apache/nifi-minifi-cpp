@@ -197,6 +197,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
     return core::flow::Overrides{};
   }();
   if (overrides.isEmpty()) {
+    std::cout << "Nothing to do, exiting.\n";
     return;
   }
 
