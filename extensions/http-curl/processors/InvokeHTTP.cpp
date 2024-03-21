@@ -108,7 +108,6 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
   context.getProperty(InvokeHTTP::ProxyPassword, proxy_.password);
 
   follow_redirects_ = context.getProperty<bool>(InvokeHTTP::FollowRedirects).value_or(false);
-  disable_peer_verification_ = (context.getProperty(InvokeHTTP::DisablePeerVerification) | utils::andThen(&utils::string::toBool)).value_or(false);
   content_type_ = context.getProperty(InvokeHTTP::ContentType);
 
   if (auto ssl_context_name = context.getProperty(SSLContext)) {
@@ -128,7 +127,7 @@ std::unique_ptr<minifi::extensions::curl::HTTPClient> InvokeHTTP::createHTTPClie
   setupClientTimeouts(*client, connect_timeout_, read_timeout_);
   client->setHTTPProxy(proxy_);
   client->setFollowRedirects(follow_redirects_);
-  client->setPeerVerification(!disable_peer_verification_);
+  client->setPeerVerification(true);
   if (send_message_body_ && content_type_)
     client->setContentType(*content_type_);
   setupClientTransferEncoding(*client, use_chunked_encoding_);

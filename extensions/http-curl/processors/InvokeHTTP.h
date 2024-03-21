@@ -150,7 +150,7 @@ class InvokeHTTP : public core::Processor {
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto DisablePeerVerification = core::PropertyDefinitionBuilder<>::createProperty("Disable Peer Verification")
-      .withDescription("Disables peer verification for the SSL session")
+      .withDescription("DEPRECATED. The value is ignored, peer and host verification are always performed when using SSL/TLS.")
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
@@ -297,7 +297,6 @@ class InvokeHTTP : public core::Processor {
 
   utils::HTTPProxy proxy_{};
   bool follow_redirects_ = false;
-  bool disable_peer_verification_ = false;
   std::optional<std::string> content_type_;
 
 
