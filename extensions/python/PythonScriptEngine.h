@@ -94,7 +94,7 @@ class PythonScriptEngine {
   }
 
   template<typename... Args>
-  void call(std::string_view fn_name, Args&& ...args) {
+  void call(const char* fn_name, Args&& ...args) {
     GlobalInterpreterLock gil_lock;
     try {
       if (auto item = bindings_[fn_name]) {

@@ -41,8 +41,8 @@ class Object : public ReferenceHolder<reference_type> {
       : ReferenceHolder<reference_type>(object) {
   }
 
-  OwnedReference getAttribute(std::string_view attribute_name) {
-    return OwnedReference(PyObject_GetAttrString(this->ref_.get(), attribute_name.data()));
+  OwnedReference getAttribute(const char* attribute_name) {
+    return OwnedReference(PyObject_GetAttrString(this->ref_.get(), attribute_name));
   }
 };
 
@@ -283,13 +283,22 @@ class Dict : public ReferenceHolder<reference_type> {
   }
 
   template<object::convertible T>
-  void put(std::string_view key, T value) {
-    PyDict_SetItemString(this->ref_.get(), key.data(), object::from(value).releaseReference());
+  void put(const char* key, T value) {
+    PyDict_SetItemString(this->ref_.get(), key, object::from(std::move(value)).releaseReference());
   }
 
-  std::optional<BorrowedReference> operator[](std::string_view key) {
-    auto item = BorrowedReference(PyDict_GetItemString(this->ref_.get(), key.data()));
+  template<object::convertible T>
+  void put(const std::string& key, T value) {
+    put(key.c_str(), std::move(value));
+  }
+
+  std::optional<BorrowedReference> operator[](const char* key) {
+    auto item = BorrowedReference(PyDict_GetItemString(this->ref_.get(), key));
     return item ? std::optional{item} : std::nullopt;
+  }
+
+  std::optional<BorrowedReference> operator[](const std::string& key) {
+    return operator[](key.c_str());
   }
 
   static BorrowedDict fromTuple(PyObject* tuple, Py_ssize_t location) requires(reference_type == ReferenceType::BORROWED) {
@@ -357,12 +366,12 @@ class Module : public ReferenceHolder<reference_type> {
       : ReferenceHolder<reference_type>(object) {
   }
 
-  static OwnedModule import(std::string_view module_name) requires(reference_type == ReferenceType::OWNED) {
-    return OwnedModule(PyImport_ImportModule(module_name.data()));
+  static OwnedModule import(const char* module_name) requires(reference_type == ReferenceType::OWNED) {
+    return OwnedModule(PyImport_ImportModule(module_name));
   }
 
-  OwnedCallable getFunction(std::string_view function_name) {
-    return OwnedCallable(PyObject_GetAttrString(this->ref_.get(), function_name.data()));
+  OwnedCallable getFunction(const char* function_name) {
+    return OwnedCallable(PyObject_GetAttrString(this->ref_.get(), function_name));
   }
 };
 
