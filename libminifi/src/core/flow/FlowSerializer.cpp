@@ -20,37 +20,33 @@
 
 namespace org::apache::nifi::minifi::core::flow {
 
-Overrides& Overrides::add(const utils::Identifier& component_id, std::string_view property_name, std::string_view property_value) {
-  required_values_[component_id].emplace(property_name, property_value);
+Overrides& Overrides::add(std::string_view property_name, std::string_view property_value) {
+  overrides_.emplace(property_name, OverrideItem{.value = std::string{property_value}, .is_required = true});
   return *this;
 }
 
-Overrides& Overrides::addOptional(const utils::Identifier& component_id, std::string_view property_name, std::string_view property_value) {
-  optional_values_[component_id].emplace(property_name, property_value);
+Overrides& Overrides::addOptional(std::string_view property_name, std::string_view property_value) {
+  overrides_.emplace(property_name, OverrideItem{.value = std::string{property_value}, .is_required = false});
   return *this;
 }
 
-std::optional<std::string> Overrides::get(const utils::Identifier& component_id, std::string_view property_name) const {
-  const auto get_optional = [&](const auto& container) -> std::optional<std::string> {
-    if (container.contains(component_id) && container.at(component_id).contains(std::string{property_name})) {
-      return {container.at(component_id).at(std::string{property_name})};
-    } else {
-      return std::nullopt;
-    }
-  };
-  return get_optional(required_values_) | utils::orElse([&]{ return get_optional(optional_values_); });
-}
-
-std::vector<std::pair<std::string, std::string>> Overrides::getRequired(const utils::Identifier& component_id) const {
-  if (required_values_.contains(component_id)) {
-    return {begin(required_values_.at(component_id)), end(required_values_.at(component_id))};
+std::optional<std::string> Overrides::get(std::string_view property_name) const {
+  const auto it = overrides_.find(std::string{property_name});
+  if (it != overrides_.end()) {
+    return {it->second.value};
   } else {
-    return {};
+    return std::nullopt;
   }
 }
 
-bool Overrides::isEmpty() const {
-  return required_values_.empty() && optional_values_.empty();
+std::vector<std::pair<std::string, std::string>> Overrides::getRequired() const {
+  std::vector<std::pair<std::string, std::string>> required_overrides;
+  for (const auto& [name, override_item] : overrides_) {
+    if (override_item.is_required) {
+      required_overrides.emplace_back(name, override_item.value);
+    }
+  }
+  return required_overrides;
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow

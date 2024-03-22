@@ -41,7 +41,7 @@ rapidjson::Value& getMember(rapidjson::Value& node, const std::string& member_na
 
 void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc,
     const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
-    const core::flow::Overrides& overrides, const utils::Identifier& component_id) const {
+    const core::flow::Overrides& overrides) const {
   std::unordered_set<std::string> processed_property_names;
 
   for (auto &property : property_jsons.GetObject()) {
@@ -52,7 +52,7 @@ void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value& property_j
     }
     if (properties.at(name).isSensitive()) {
       auto& value = property.value;
-      const auto override_value = overrides.get(component_id, name);
+      const auto override_value = overrides.get(name);
       const std::string_view value_sv = override_value ? *override_value : std::string_view{value.GetString(), value.GetStringLength()};
       const std::string encrypted_value = utils::crypto::property_encryption::encrypt(value_sv, encryption_provider);
       value.SetString(encrypted_value.c_str(), encrypted_value.size(), alloc);
@@ -60,7 +60,7 @@ void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value& property_j
     processed_property_names.insert(name);
   }
 
-  for (const auto& [name, value] : overrides.getRequired(component_id)) {
+  for (const auto& [name, value] : overrides.getRequired()) {
     gsl_Expects(properties.contains(name) && properties.at(name).isSensitive());
     if (processed_property_names.contains(name)) { continue; }
     const std::string encrypted_value = utils::crypto::property_encryption::encrypt(value, encryption_provider);
@@ -69,7 +69,7 @@ void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value& property_j
 }
 
 std::string JsonFlowSerializer::serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-    const core::flow::Overrides& overrides) const {
+    const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
   gsl_Expects(schema.root_group.size() == 1 && schema.identifier.size() == 1 &&
       schema.processors.size() == 1 && schema.processor_properties.size() == 1 &&
       schema.controller_services.size() == 1 && schema.controller_service_properties.size() == 1);
@@ -93,8 +93,9 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup& process_grou
       logger_->log_warn("Processor {} not found in the flow definition", processor_id->to_string());
       continue;
     }
+    const auto processor_overrides = overrides.contains(*processor_id) ? overrides.at(*processor_id) : core::flow::Overrides{};
     encryptSensitiveProperties(getMember(processor_json, schema.processor_properties[0]), alloc, processor->getProperties(), encryption_provider,
-        overrides, *processor_id);
+        processor_overrides);
   }
 
   auto controller_services = getMember(root_group, schema.controller_services[0]).GetArray();
@@ -115,8 +116,9 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup& process_grou
       logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id_str);
       continue;
     }
+    const auto controller_service_overrides = overrides.contains(*controller_service_id) ? overrides.at(*controller_service_id) : core::flow::Overrides{};
     encryptSensitiveProperties(getMember(controller_service_json, schema.controller_service_properties[0]), alloc, controller_service->getProperties(), encryption_provider,
-        overrides, *controller_service_id);
+        controller_service_overrides);
   }
 
   rapidjson::StringBuffer buffer;

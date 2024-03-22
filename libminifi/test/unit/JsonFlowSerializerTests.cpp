@@ -527,6 +527,8 @@ constexpr std::string_view config_json_with_nifi_schema_part_2 = R"(
 const utils::crypto::Bytes secret_key = utils::string::from_hex("75536923a75928a970077f9dae2c2b166a5413e020cb5190de4fb8edce1a38c7");
 const utils::crypto::EncryptionProvider encryption_provider{secret_key};
 
+using OverridesMap = std::unordered_map<utils::Identifier, core::flow::Overrides>;
+
 TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   ConfigurationTestController test_controller;
   core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
@@ -547,14 +549,14 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   const auto controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
 
   const auto [overrides, expected_results] = GENERATE_REF(
-      std::make_tuple(core::flow::Overrides{},
+      std::make_tuple(OverridesMap{},
           std::array{"very_secure_password", "very_secure_passphrase"}),
-      std::make_tuple(core::flow::Overrides{}.add(processor_id, "invokehttp-proxy-password", "password123"),
+      std::make_tuple(OverridesMap{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "password123")}},
           std::array{"password123", "very_secure_passphrase"}),
-      std::make_tuple(core::flow::Overrides{}.add(controller_service_id, "Passphrase", "speak friend and enter"),
+      std::make_tuple(OverridesMap{{controller_service_id, core::flow::Overrides{}.add("Passphrase", "speak friend and enter")}},
           std::array{"very_secure_password", "speak friend and enter"}),
-      std::make_tuple(core::flow::Overrides{}.add(processor_id, "invokehttp-proxy-password", "password123")
-                                             .add(controller_service_id, "Passphrase", "speak friend and enter"),
+      std::make_tuple(OverridesMap{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "password123")},
+                                   {controller_service_id, core::flow::Overrides{}.add("Passphrase", "speak friend and enter")}},
           std::array{"password123", "speak friend and enter"}));
 
   std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
@@ -597,7 +599,7 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
   const auto second_controller_service_id = utils::Identifier::parse("b418f4ff-e598-4ea2-921f-14f9dd864482").value();
 
   SECTION("with required overrides") {
-    const auto overrides = core::flow::Overrides{}.add(second_controller_service_id, "Passphrase", "new passphrase");
+    const OverridesMap overrides{{second_controller_service_id, core::flow::Overrides{}.add("Passphrase", "new passphrase")}};
 
     std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 
@@ -616,9 +618,8 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
 
   SECTION("with optional overrides: the override is only used if the property is already in the flow config") {
     const auto first_controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
-    const auto overrides = core::flow::Overrides{}
-        .addOptional(first_controller_service_id, "Passphrase", "first new passphrase")
-        .addOptional(second_controller_service_id, "Passphrase", "second new passphrase");
+    const OverridesMap overrides{{first_controller_service_id, core::flow::Overrides{}.addOptional("Passphrase", "first new passphrase")},
+                                 {second_controller_service_id, core::flow::Overrides{}.addOptional("Passphrase", "second new passphrase")}};
 
     std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 

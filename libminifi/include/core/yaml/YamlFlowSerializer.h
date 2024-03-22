@@ -26,11 +26,11 @@ class YamlFlowSerializer : public core::flow::FlowSerializer {
   explicit YamlFlowSerializer(const YAML::Node& flow_definition_yaml) : flow_definition_yaml_(flow_definition_yaml) {}
 
   [[nodiscard]] std::string serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-      const core::flow::Overrides& overrides) const override;
+      const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const override;
 
  private:
   void encryptSensitiveProperties(YAML::Node property_yamls, const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
-      const core::flow::Overrides& overrides, const utils::Identifier& component_id) const;
+      const core::flow::Overrides& overrides) const;
 
   YAML::Node flow_definition_yaml_;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<YamlFlowSerializer>::getLogger()};

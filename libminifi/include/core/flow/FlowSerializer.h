@@ -28,15 +28,17 @@ namespace org::apache::nifi::minifi::core::flow {
 
 class Overrides {
  public:
-  Overrides& add(const utils::Identifier& component_id, std::string_view property_name, std::string_view property_value);
-  Overrides& addOptional(const utils::Identifier& component_id, std::string_view property_name, std::string_view property_value);
-  [[nodiscard]] std::optional<std::string> get(const utils::Identifier& component_id, std::string_view property_name) const;
-  [[nodiscard]] std::vector<std::pair<std::string, std::string>> getRequired(const utils::Identifier& component_id) const;
-  [[nodiscard]] bool isEmpty() const;
+  Overrides& add(std::string_view property_name, std::string_view property_value);
+  Overrides& addOptional(std::string_view property_name, std::string_view property_value);
+  [[nodiscard]] std::optional<std::string> get(std::string_view property_name) const;
+  [[nodiscard]] std::vector<std::pair<std::string, std::string>> getRequired() const;
 
  private:
-  std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>> required_values_;
-  std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>> optional_values_;
+  struct OverrideItem {
+    std::string value;
+    bool is_required;
+  };
+  std::unordered_map<std::string, OverrideItem> overrides_;
 };
 
 class FlowSerializer {
@@ -50,7 +52,7 @@ class FlowSerializer {
   FlowSerializer& operator=(FlowSerializer&&) = delete;
 
   [[nodiscard]] virtual std::string serialize(const core::ProcessGroup& process_group, const FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-      const Overrides& overrides) const = 0;
+      const std::unordered_map<utils::Identifier, Overrides>& overrides) const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::flow

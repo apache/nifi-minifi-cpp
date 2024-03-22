@@ -24,7 +24,7 @@
 namespace org::apache::nifi::minifi::core::yaml {
 
 void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
-    const core::flow::Overrides& overrides, const utils::Identifier& component_id) const {
+    const core::flow::Overrides& overrides) const {
   std::unordered_set<std::string> processed_property_names;
 
   for (auto kv : property_yamls) {
@@ -36,12 +36,12 @@ void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, c
     if (properties.at(name).isSensitive()) {
       if (kv.second.IsSequence()) {
         for (auto property_item : kv.second) {
-          const auto override_value = overrides.get(component_id, name);
+          const auto override_value = overrides.get(name);
           auto value = override_value ? *override_value : property_item["value"].as<std::string>();
           property_item["value"] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
         }
       } else {
-        const auto override_value = overrides.get(component_id, name);
+        const auto override_value = overrides.get(name);
         auto value = override_value ? *override_value : kv.second.as<std::string>();
         property_yamls[name] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
       }
@@ -49,7 +49,7 @@ void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, c
     }
   }
 
-  for (const auto& [name, value] : overrides.getRequired(component_id)) {
+  for (const auto& [name, value] : overrides.getRequired()) {
     gsl_Expects(properties.contains(name) && properties.at(name).isSensitive());
     if (processed_property_names.contains(name)) { continue; }
     property_yamls[name] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
@@ -57,7 +57,7 @@ void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, c
 }
 
 std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-    const core::flow::Overrides& overrides) const {
+    const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
   gsl_Expects(schema.identifier.size() == 1 &&
       schema.processors.size() == 1 && schema.processor_properties.size() == 1 &&
       schema.controller_services.size() == 1 && schema.controller_service_properties.size() == 1);
@@ -75,7 +75,8 @@ std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_grou
       logger_->log_warn("Processor {} not found in the flow definition", processor_id->to_string());
       continue;
     }
-    encryptSensitiveProperties(processor_yaml[schema.processor_properties[0]], processor->getProperties(), encryption_provider, overrides, *processor_id);
+    const auto processor_overrides = overrides.contains(*processor_id) ? overrides.at(*processor_id) : core::flow::Overrides{};
+    encryptSensitiveProperties(processor_yaml[schema.processor_properties[0]], processor->getProperties(), encryption_provider, processor_overrides);
   }
 
   for (auto controller_service_yaml : flow_definition_yaml[schema.controller_services[0]]) {
@@ -95,7 +96,8 @@ std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_grou
       logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id_str);
       continue;
     }
-    encryptSensitiveProperties(controller_service_yaml[schema.controller_service_properties[0]], controller_service->getProperties(), encryption_provider, overrides, *controller_service_id);
+    const auto controller_service_overrides = overrides.contains(*controller_service_id) ? overrides.at(*controller_service_id) : core::flow::Overrides{};
+    encryptSensitiveProperties(controller_service_yaml[schema.controller_service_properties[0]], controller_service->getProperties(), encryption_provider, controller_service_overrides);
   }
 
   return YAML::Dump(flow_definition_yaml) + '\n';

@@ -75,7 +75,7 @@ void AdaptiveConfiguration::setSensitivePropertiesEncryptor(utils::crypto::Encry
   sensitive_properties_encryptor_ = std::move(sensitive_properties_encryptor);
 }
 
-std::string AdaptiveConfiguration::serializeWithOverrides(const core::ProcessGroup& process_group, const core::flow::Overrides& overrides) const {
+std::string AdaptiveConfiguration::serializeWithOverrides(const core::ProcessGroup& process_group, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
   gsl_Expects(flow_serializer_);
   return flow_serializer_->serialize(process_group, schema_, sensitive_properties_encryptor_, overrides);
 }
