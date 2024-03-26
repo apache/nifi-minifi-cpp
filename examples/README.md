@@ -95,7 +95,7 @@ The flow: [ConsumeJournald](../PROCESSORS.md#consumejournald) &#10132; [LogAttri
 
 ### HTTP POST Invocation
 
-Using the [http_poste_config.yml](http_post_config.yml)/[http_post_config.json](http_post_config.json)/[http_post_config.nifi.schema.json](http_post_config.nifi.schema.json) flow configuration MiNiFi transfers flowfile data received from the GetFile processor by invoking an HTTP endpoint with POST method.
+Using the [http_post_config.yml](http_post_config.yml)/[http_post_config.json](http_post_config.json)/[http_post_config.nifi.schema.json](http_post_config.nifi.schema.json) flow configuration MiNiFi transfers flowfile data received from the GetFile processor by invoking an HTTP endpoint with POST method.
 
 The flow: [GetFile](../PROCESSORS.md#getfile) &#10132; [InvokeHTTP](../PROCESSORS.md#invokehttp)
 

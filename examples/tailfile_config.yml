@@ -20,8 +20,7 @@ Processors:
 - name: Log tailfile attributes
   id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
   class: org.apache.nifi.minifi.processors.LogAttribute
-  scheduling strategy: TIMER_DRIVEN
-  scheduling period: 1000 ms
+  scheduling strategy: EVENT_DRIVEN
   auto-terminated relationships list:
   - success
   Properties:
