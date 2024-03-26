@@ -20,7 +20,6 @@
 #include <memory>
 #include <filesystem>
 
-#include "PythonConfigState.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/Configure.h"
@@ -37,8 +36,14 @@ class PythonDependencyInstaller {
   void createVirtualEnvIfSpecified() const;
   static void evalScript(std::string_view script);
   void addVirtualenvToPath() const;
+  bool isPackageInstallationNeeded() const {
+    return install_python_packages_automatically_ && !virtualenv_path_.empty();
+  }
 
-  PythonConfigState config_state_;
+  std::filesystem::path virtualenv_path_;
+  std::filesystem::path python_processor_dir_;
+  std::string python_binary_;
+  bool install_python_packages_automatically_ = false;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PythonDependencyInstaller>::getLogger();
 };
 

@@ -48,8 +48,6 @@ class PythonScriptEngine {
   PythonScriptEngine& operator=(const PythonScriptEngine& other) = delete;
   PythonScriptEngine& operator=(PythonScriptEngine&& other) = delete;
 
-  static void initialize(const std::shared_ptr<Configure> &configuration, const std::shared_ptr<core::logging::Logger>& logger);
-
   void eval(const std::string& script);
   void evalFile(const std::filesystem::path& file_name);
 

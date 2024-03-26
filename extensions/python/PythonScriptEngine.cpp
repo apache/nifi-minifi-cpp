@@ -115,7 +115,7 @@ void PythonScriptEngine::initialize(const core::Relationship& success, const cor
 }
 
 void PythonScriptEngine::evalInternal(std::string_view script) {
-  const auto script_file = "# -*- coding: utf-8 -*-\n" + std::string(script);
+  const auto script_file = minifi::utils::string::join_pack("# -*- coding: utf-8 -*-\n", script);
   auto compiled_string = OwnedObject(Py_CompileString(script_file.c_str(), "<string>", Py_file_input));
   if (!compiled_string.get()) {
     throw PyException();
