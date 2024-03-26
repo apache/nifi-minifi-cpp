@@ -12,11 +12,17 @@ class Visitor(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         if node.name != self.class_name:
             return
+
+        # Iterate through the body of the class to find the ProcessorDetails nested class
         for child in node.body:
             if isinstance(child, ast.ClassDef) and child.name == 'ProcessorDetails':
+                # Iterate through the nodes of the 'ProcessorDetails' class
                 for detail in child.body:
+                    # Check if the child node is an assignment of the 'dependencies' member variable
                     if isinstance(detail, ast.Assign) and detail.targets[0].id == 'dependencies':
+                        # Iterate through values of the 'dependencies' list member variable
                         for elt in detail.value.elts:
+                            # Check if the element is a string constant and add it to the dependencies list
                             if isinstance(elt, ast.Constant):
                                 self.dependencies.append(elt.s)
                         break
