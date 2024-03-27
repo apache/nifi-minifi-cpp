@@ -164,7 +164,6 @@ Due to some differences between the NiFi and MiNiFi C++ processors and implement
 - MiNiFi C++ only supports expression language with flow file attributes, so only FLOWFILE_ATTRIBUTES expression language scope is supported, otherwise the expression language will not be evaluated.
 - MiNiFi C++ does not support property dependencies, so the property dependencies will be ignored. If a property depends on another property, the property will not be required.
 - MiNiFi C++ does not support the use of self.jvm member in Python processors that provides JVM bindings in NiFi, it is set to None in MiNiFi C++.
-- Inline definition of Python package dependencies, defined in the ProcessorDetails nested class are not supported as in NiFi, so the dependencies must be defined in the requirements.txt files. If a processor's dependencies are defined in the ProcessorDetails class, the dependencies should be copied to the requirements.txt file.
 
 ## Use Python processors from virtualenv
 
@@ -181,6 +180,12 @@ It is possible to automatically install the dependencies of the Python processor
 
     # in minifi.properties
     nifi.python.install.packages.automatically=true
+
+Additionally if the `nifi.python.install.packages.automatically` is set to true, the dependencies defined inline in the Python processors are also installed. These dependencies should be defined in the processors' `ProcessorDetails` nested class' `dependencies` attribute, which must be a list of strings containing the package names and optionally their required versions.
+
+    class DetectObjectInImage(FlowFileTransform):
+      class ProcessorDetails:
+          dependencies = ['numpy >= 1.23.5', 'opencv-python >= 4.6']
 
 ## Set python binary for virtualenv creation and package installation
 

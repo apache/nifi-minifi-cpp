@@ -1278,5 +1278,7 @@ def step_impl(context, install_mode):
         context.test.use_nifi_python_processors_with_virtualenv_in_minifi()
     elif install_mode == "with a pre-created virtualenv containing the required python packages":
         context.test.use_nifi_python_processors_with_virtualenv_packages_installed_in_minifi()
+    elif install_mode == "using inline defined Python dependencies to install packages":
+        context.test.remove_python_requirements_txt_in_minifi()
     else:
         raise Exception("Unknown python install mode.")

@@ -30,9 +30,11 @@ class PythonDependencyInstaller {
  public:
   explicit PythonDependencyInstaller(const std::shared_ptr<Configure> &configuration);
   void installDependenciesFromRequirementsFiles() const;
+  void installInlinePythonDependencies(const std::filesystem::path& script_file_path) const;
 
  private:
   std::vector<std::filesystem::path> getRequirementsFilePaths() const;
+  void runInstallCommandInVirtualenv(const std::string& install_command) const;
   void createVirtualEnvIfSpecified() const;
   static void evalScript(std::string_view script);
   void addVirtualenvToPath() const;
