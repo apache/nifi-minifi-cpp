@@ -223,11 +223,14 @@ bool BinFiles::resurrectFlowFiles(core::ProcessSession &session) {
   return had_failure;
 }
 
-void BinFiles::assumeOwnershipOfNextBatch(core::ProcessSession &session) {
+bool BinFiles::assumeOwnershipOfNextBatch(core::ProcessSession &session) {
   for (size_t i = 0; i < batchSize_; ++i) {
     auto flow = session.get();
 
     if (flow == nullptr) {
+      if (i == 0) {
+        return false;
+      }
       break;
     }
 
@@ -242,6 +245,7 @@ void BinFiles::assumeOwnershipOfNextBatch(core::ProcessSession &session) {
     session.transfer(flow, Self);
   }
   session.commit();
+  return true;
 }
 
 void BinFiles::processReadyBins(std::deque<std::unique_ptr<Bin>> ready_bins, core::ProcessSession &session) {
@@ -283,8 +287,15 @@ void BinFiles::onTrigger(core::ProcessContext& context, core::ProcessSession& se
     return;
   }
 
-  assumeOwnershipOfNextBatch(session);
-  processReadyBins(gatherReadyBins(context), session);
+  auto valid_batch = assumeOwnershipOfNextBatch(session);
+  auto ready_bins = gatherReadyBins(context);
+  if (ready_bins.empty()) {
+    if (!valid_batch) {
+      yield();
+    }
+  } else {
+    processReadyBins(std::move(ready_bins), session);
+  }
 }
 
 void BinFiles::transferFlowsToFail(core::ProcessSession &session, std::unique_ptr<Bin> &bin) {

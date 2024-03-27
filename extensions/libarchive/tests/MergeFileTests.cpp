@@ -36,6 +36,7 @@
 #include "MergeContent.h"
 #include "processors/LogAttribute.h"
 #include "TestBase.h"
+#include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "serialization/FlowFileV3Serializer.h"
@@ -898,4 +899,27 @@ TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testM
   std::shared_ptr<core::FlowFile> flow3 = output_->poll(expiredFlowRecords);
   REQUIRE(expiredFlowRecords.empty());
   REQUIRE_FALSE(flow3);
+}
+
+TEST_CASE("Empty MergeContent yields") {
+  const auto merge_content = std::make_shared<minifi::processors::MergeContent>("mergeContent");
+
+  minifi::test::SingleProcessorTestController controller{merge_content};
+  controller.trigger();
+
+  CHECK(merge_content->isYield());
+}
+
+TEST_CASE("Empty MergeContent doesnt yield when processing readybins") {
+  const auto merge_content = std::make_shared<minifi::processors::MergeContent>("mergeContent");
+
+  minifi::test::SingleProcessorTestController controller{merge_content};
+  controller.plan->setProperty(merge_content, minifi::processors::MergeContent::MaxBinAge, "100ms");
+  controller.plan->setProperty(merge_content, minifi::processors::MergeContent::MinEntries, "2");
+
+  auto first_trigger_results = controller.trigger("foo");
+  CHECK_FALSE(merge_content->isYield());
+  std::this_thread::sleep_for(100ms);
+  auto second_trigger_results = controller.trigger();
+  CHECK_FALSE(merge_content->isYield());
 }
