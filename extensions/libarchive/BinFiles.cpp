@@ -228,7 +228,7 @@ bool BinFiles::assumeOwnershipOfNextBatch(core::ProcessSession &session) {
     auto flow = session.get();
 
     if (flow == nullptr) {
-      if (i == 0) {
+      if (i == 0) {  // Batch didn't contain a single flowfile, we should yield if there are no ready bins either
         return false;
       }
       break;
@@ -287,9 +287,8 @@ void BinFiles::onTrigger(core::ProcessContext& context, core::ProcessSession& se
     return;
   }
 
-  auto valid_batch = assumeOwnershipOfNextBatch(session);
-  auto ready_bins = gatherReadyBins(context);
-  if (ready_bins.empty()) {
+  const bool valid_batch = assumeOwnershipOfNextBatch(session);
+  if (auto ready_bins = gatherReadyBins(context); ready_bins.empty()) {
     if (!valid_batch) {
       yield();
     }
