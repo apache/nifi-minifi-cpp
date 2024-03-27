@@ -173,7 +173,7 @@ void PythonDependencyInstaller::installInlinePythonDependencies(const std::files
     return;
   }
   auto dependency_installer_path = python_processor_dir_ / "nifi_python_processors" / "utils" / "inline_dependency_installer.py";
-  if (ython_processor_dir_.empty() || !std::filesystem::exists(dependency_installer_path) || !std::filesystem::exists(script_file_path)) {
+  if (python_processor_dir_.empty() || !std::filesystem::exists(dependency_installer_path) || !std::filesystem::exists(script_file_path)) {
     return;
   }
   logger_->log_info("Checking and installing inline defined Python dependencies of {}", script_file_path.string());
