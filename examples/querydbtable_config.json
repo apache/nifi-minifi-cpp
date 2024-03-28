@@ -1,0 +1,62 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Query users table",
+                "identifier": "0bd6ebcd-7fef-47e3-8e36-4413d39d01d5",
+                "type": "org.apache.nifi.processors.standard.QueryDatabaseTable",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "properties": {
+                    "Columns to Return": "id,name",
+                    "DB Controller Service": "ODBCService",
+                    "Output Format": "JSON",
+                    "Table Name": "users",
+                    "Where Clause": "id = 1"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Put files to /tmp/output",
+                "identifier": "32700228-e078-42a6-89d7-03e4e478c9da",
+                "type": "org.apache.nifi.processors.standard.PutFile",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "properties": {
+                    "Directory": "/tmp/output"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "2308c4f7-4710-4bd1-a949-141265771b2f",
+                "name": "QueryDatabaseTable/success/PutFile",
+                "source": {
+                    "id": "0bd6ebcd-7fef-47e3-8e36-4413d39d01d5"
+                },
+                "destination": {
+                    "id": "32700228-e078-42a6-89d7-03e4e478c9da"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": [
+            {
+                "name": "ODBCService",
+                "identifier": "64fafacd-74ad-4c3b-b1cc-a816ef128e09",
+                "type": "ODBCService",
+                "properties": {
+                    "Connection String": "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
+                }
+            }
+        ]
+    }
+}

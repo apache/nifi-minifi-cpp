@@ -38,9 +38,8 @@ Processors:
     Delivery Guarantee: 1
     Known Brokers: kafka-broker:9093
     Message Timeout: 12 sec
-    Message Timeout Phrase: 12 sec
     Request Timeout: 10 sec
-    Security CA Key: /tmp/resources/certs/ca-cert
+    Security CA: /tmp/resources/certs/ca-cert
     Security Cert: /tmp/resources/certs/client_test_client_client.pem
     Security Pass Phrase: abcdefgh
     Security Private Key: /tmp/resources/certs/client_test_client_client.key

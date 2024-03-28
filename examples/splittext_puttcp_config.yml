@@ -1,0 +1,53 @@
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+  - name: Get files from /tmp/input
+    id: a8fd96f8-6f3e-4ab8-9cc7-7dcb3304d60b
+    class: org.apache.nifi.processors.standard.GetFile
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 2000 ms
+    penalization period: 30 sec
+    yield period: 1 sec
+    Properties:
+      Input Directory: /tmp/input
+  - name: Split text by lines skipping the first 3 header lines
+    id: 40b45f52-ae1d-443c-9465-7e070ce3bea0
+    class: org.apache.nifi.processors.standard.SplitText
+    scheduling strategy: EVENT_DRIVEN
+    penalization period: 30 sec
+    yield period: 1 sec
+    auto-terminated relationships list:
+      - failure
+      - original
+    Properties:
+      Header Line Count: 3
+      Line Split Count: 1
+      Remove Trailing Newlines: false
+  - name: Put data to TCP server
+    id: 11167a2c-9778-48ba-be2d-d1f9f4b0433f
+    class: org.apache.nifi.processors.standard.PutTCP
+    scheduling strategy: EVENT_DRIVEN
+    penalization period: 30 sec
+    yield period: 1 sec
+    auto-terminated relationships list:
+      - success
+      - failure
+    Properties:
+      Hostname: 192.168.1.5
+      Port: 8081
+Connections:
+  - name: GetFile/success/SplitText
+    id: 76bc36d3-f484-49a4-ad69-bec47cd921c8
+    source id: a8fd96f8-6f3e-4ab8-9cc7-7dcb3304d60b
+    source relationship names:
+      - success
+    destination id: 40b45f52-ae1d-443c-9465-7e070ce3bea0
+  - name: SplitText/splits/PutTCP
+    id: 25ee2e5c-fc74-4575-a510-db33e6c5683d
+    source id: 40b45f52-ae1d-443c-9465-7e070ce3bea0
+    source relationship names:
+      - splits
+    destination id: 11167a2c-9778-48ba-be2d-d1f9f4b0433f
+Controller Services: []
+Remote Process Groups: []

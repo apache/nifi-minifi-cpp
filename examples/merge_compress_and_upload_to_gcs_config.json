@@ -1,0 +1,157 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Compress to tar.gz format",
+                "identifier": "333d994b-0637-4c46-b515-89464523ccb8",
+                "type": "org.apache.nifi.minifi.processors.CompressContent",
+                "maxConcurrentTasks": 1,
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "autoTerminatedRelationships": [
+                    "failure"
+                ],
+                "properties": {
+                    "Batch Size": 1,
+                    "Compression Format": "gzip",
+                    "Compression Level": 6,
+                    "Encapsulate in TAR": true,
+                    "Mode": "compress",
+                    "Update Filename": true
+                }
+            },
+            {
+                "name": "Tail /tmp/test_file.log",
+                "identifier": "47bd6218-14ab-4180-95ff-3db72e82d97c",
+                "type": "org.apache.nifi.minifi.processors.TailFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1000 ms",
+                "properties": {
+                    "File to Tail": "/tmp/test_file.log",
+                    "Initial Start Position": "Beginning of File",
+                    "Input Delimiter": "\\n",
+                    "tail-mode": "Single file"
+                }
+            },
+            {
+                "name": "Merge every 10 lines",
+                "identifier": "d527e0ff-0504-4954-b42f-15771a6e7366",
+                "type": "org.apache.nifi.minifi.processors.MergeContent",
+                "maxConcurrentTasks": 1,
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "autoTerminatedRelationships": [
+                    "original",
+                    "failure"
+                ],
+                "properties": {
+                    "Attribute Strategy": "Keep Only Common Attributes",
+                    "Batch Size": 1,
+                    "Correlation Attribute Name": "test",
+                    "Delimiter Strategy": "Filename",
+                    "Keep Path": false,
+                    "Maximum Number of Entries": 10,
+                    "Maximum number of Bins": 100,
+                    "Merge Format": "Binary Concatenation",
+                    "Merge Strategy": "Bin-Packing Algorithm",
+                    "Minimum Group Size": 0,
+                    "Minimum Number of Entries": 10
+                }
+            },
+            {
+                "name": "Upload to Google Cloud Storage",
+                "identifier": "58da4d62-1f29-4fc6-92b8-c223f081d701",
+                "type": "org.apache.nifi.minifi.aws.processors.PutGCSObject",
+                "maxConcurrentTasks": 1,
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ],
+                "properties": {
+                    "Bucket": "test-bucket",
+                    "Number of retries": 2,
+                    "GCP Credentials Provider Service": "GCPCredentialsControllerService"
+                }
+            },
+            {
+                "name": "Add upload target attribute",
+                "identifier": "78000004-98b5-44ec-a25c-1f0e0134ffe8",
+                "type": "org.apache.nifi.minifi.processors.UpdateAttribute",
+                "maxConcurrentTasks": 1,
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "autoTerminatedRelationships": [
+                    "failure"
+                ],
+                "properties": {
+                    "upload_target": "google_cloud_storage"
+                }
+            }
+        ],
+        "funnels": [],
+        "connections": [
+            {
+                "identifier": "b9558376-04e8-4e42-a4cd-41e31754e585",
+                "name": "CompressContent/success/PutGCSObject",
+                "source": {
+                    "id": "333d994b-0637-4c46-b515-89464523ccb8"
+                },
+                "destination": {
+                    "id": "58da4d62-1f29-4fc6-92b8-c223f081d701"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            },
+            {
+                "identifier": "7ebc1173-5d15-4894-836e-e2597496dfe9",
+                "name": "TailFile/success/UpdateAttribute",
+                "source": {
+                    "id": "47bd6218-14ab-4180-95ff-3db72e82d97c"
+                },
+                "destination": {
+                    "id": "78000004-98b5-44ec-a25c-1f0e0134ffe8"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            },
+            {
+                "identifier": "5c6d3cec-17c7-479f-919a-99ac8762de5e",
+                "name": "MergeContent/merged/CompressContent",
+                "source": {
+                    "id": "d527e0ff-0504-4954-b42f-15771a6e7366"
+                },
+                "destination": {
+                    "id": "333d994b-0637-4c46-b515-89464523ccb8"
+                },
+                "selectedRelationships": [
+                    "merged"
+                ]
+            },
+            {
+                "identifier": "8a247c4d-0c9f-495f-8a00-5c8a21f56a9e",
+                "name": "UpdateAttribute/success/MergeContent",
+                "source": {
+                    "id": "78000004-98b5-44ec-a25c-1f0e0134ffe8"
+                },
+                "destination": {
+                    "id": "d527e0ff-0504-4954-b42f-15771a6e7366"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": [
+            {
+                "name": "GCPCredentialsControllerService",
+                "identifier": "c1c49f60-c054-4df8-bce9-8f0660dcc55e",
+                "type": "org.apache.nifi.minifi.controllers.GCPCredentialsControllerService",
+                "properties": {
+                    "Credentials Location": "Use Anonymous credentials"
+                }
+            }
+        ]
+    }
+}

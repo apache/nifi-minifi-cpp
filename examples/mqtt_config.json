@@ -1,0 +1,52 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "1dbeda1d-1c89-4f33-a8fa-4c3b76abaed1",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Publish data to MQTT broker",
+                "identifier": "6ecff0a9-9d1b-45c6-99b7-3e4db40e0cd1",
+                "type": "org.apache.nifi.processors.standard.PublishMQTT",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "Broker URI": "127.0.0.1:1883",
+                    "Topic": "testtopic",
+                    "Client ID": "publisher-client",
+                    "MQTT Version": "3.x AUTO"
+                },
+                "autoTerminatedRelationships": [
+                    "failure",
+                    "success"
+                ]
+            }
+        ],
+        "funnels": [],
+        "connections": [
+            {
+                "identifier": "3783d336-1d81-452b-9d34-8be77bc8fce5",
+                "name": "GetFile/success/PublishMQTT",
+                "source": {
+                    "id": "1dbeda1d-1c89-4f33-a8fa-4c3b76abaed1"
+                },
+                "destination": {
+                    "id": "6ecff0a9-9d1b-45c6-99b7-3e4db40e0cd1"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

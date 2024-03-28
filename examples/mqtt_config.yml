@@ -1,0 +1,32 @@
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: Get files from /tmp/input
+  id: 1dbeda1d-1c89-4f33-a8fa-4c3b76abaed1
+  class: org.apache.nifi.processors.standard.GetFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 2000 ms
+  Properties:
+    Input Directory: /tmp/input
+- name: Publish data to MQTT broker
+  id: 6ecff0a9-9d1b-45c6-99b7-3e4db40e0cd1
+  class: org.apache.nifi.processors.standard.PublishMQTT
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - failure
+  - success
+  Properties:
+    Broker URI: 127.0.0.1:1883
+    Topic: testtopic
+    Client ID: publisher-client
+    MQTT Version: '3.x AUTO'
+Connections:
+- name: GetFile/success/PublishMQTT
+  id: 3783d336-1d81-452b-9d34-8be77bc8fce5
+  source id: 1dbeda1d-1c89-4f33-a8fa-4c3b76abaed1
+  source relationship names:
+  - success
+  destination id: 6ecff0a9-9d1b-45c6-99b7-3e4db40e0cd1
+Controller Services: []
+Remote Process Groups: []

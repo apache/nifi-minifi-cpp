@@ -1,0 +1,142 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "962790e7-ea35-4096-9362-96f527288669",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input",
+                    "Keep Source File": "true"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Invoke POST request on remote URL",
+                "identifier": "33b373b6-6f19-4194-b45a-1ef73c357a8e",
+                "type": "org.apache.nifi.processors.standard.InvokeHTTP",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "HTTP Method": "POST",
+                    "Remote URL": "http://1.2.3.4:8080/contentListener"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "response"
+                ]
+            },
+            {
+                "name": "Retry on HTTP 5xx status codes",
+                "identifier": "3b1c6971-541b-4530-9f72-175757500699",
+                "type": "org.apache.nifi.processors.standard.RetryFlowFile",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "Maximum Retries": "5"
+                },
+                "autoTerminatedRelationships": [
+                    "failure"
+                ]
+            },
+            {
+                "name": "Log failed flow files",
+                "identifier": "1f669bb0-6d50-41e6-9230-90c1cc3e21f9",
+                "type": "org.apache.nifi.minifi.processors.LogAttribute",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "FlowFiles To Log": "0",
+                    "Log Level": "warn",
+                    "Log Prefix": "=== Failed HTTP request ===",
+                    "Maximum Payload Line Length": "0"
+                },
+                "autoTerminatedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "name": "GetFile/success/InvokeHTTP",
+                "identifier": "168cc31e-be1d-4ed3-bebc-8bf652dde104",
+                "source": {
+                    "id": "962790e7-ea35-4096-9362-96f527288669"
+                },
+                "destination": {
+                    "id": "33b373b6-6f19-4194-b45a-1ef73c357a8e"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            },
+            {
+                "name": "InvokeHTTP/failure/LogAttribute",
+                "identifier": "0d55009a-adcc-4722-b889-570b6d26cfee",
+                "source": {
+                    "id": "33b373b6-6f19-4194-b45a-1ef73c357a8e"
+                },
+                "destination": {
+                    "id": "1f669bb0-6d50-41e6-9230-90c1cc3e21f9"
+                },
+                "selectedRelationships": [
+                    "failure"
+                ]
+            },
+            {
+                "name": "InvokeHTTP/retry/RetryFlowFile",
+                "identifier": "c8a96f1d-48cd-4ee3-8a2f-081c3e3c7bcd",
+                "source": {
+                    "id": "33b373b6-6f19-4194-b45a-1ef73c357a8e"
+                },
+                "destination": {
+                    "id": "3b1c6971-541b-4530-9f72-175757500699"
+                },
+                "selectedRelationships": [
+                    "retry"
+                ]
+            },
+            {
+                "name": "RetryFlowFile/retry/InvokeHTTP",
+                "identifier": "cadf51f0-3468-423a-9d12-5c40270aa7ca",
+                "source": {
+                    "id": "3b1c6971-541b-4530-9f72-175757500699"
+                },
+                "destination": {
+                    "id": "33b373b6-6f19-4194-b45a-1ef73c357a8e"
+                },
+                "selectedRelationships": [
+                    "retry"
+                ]
+            },
+            {
+                "name": "RetryFlowFile/retries_exceeded/LogAttribute",
+                "identifier": "160fc0f4-6efe-4274-8bc7-2a416570bdeb",
+                "source": {
+                    "id": "3b1c6971-541b-4530-9f72-175757500699"
+                },
+                "destination": {
+                    "id": "1f669bb0-6d50-41e6-9230-90c1cc3e21f9"
+                },
+                "selectedRelationships": [
+                    "retries_exceeded"
+                ]
+            },
+            {
+                "name": "InvokeHTTP/no retry/LogAttribute",
+                "identifier": "8f6008ba-e1c7-433b-88f1-1e461bb82e29",
+                "source": {
+                    "id": "33b373b6-6f19-4194-b45a-1ef73c357a8e"
+                },
+                "destination": {
+                    "id": "1f669bb0-6d50-41e6-9230-90c1cc3e21f9"
+                },
+                "selectedRelationships": [
+                    "no retry"
+                ]
+            }
+        ],
+        "controllerServices": [],
+        "remoteProcessGroups": []
+    }
+}

@@ -1,0 +1,246 @@
+{
+    "encodingVersion": {
+        "majorVersion": 2,
+        "minorVersion": 0
+    },
+    "maxTimerDrivenThreadCount": 1,
+    "maxEventDrivenThreadCount": 1,
+    "parameterContexts": [],
+    "rootGroup": {
+        "identifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+        "instanceIdentifier": "9af45830-320e-437e-8204-dcd3c2933aa6",
+        "name": "root",
+        "position": {
+            "x": 0.0,
+            "y": 0.0
+        },
+        "processGroups": [],
+        "remoteProcessGroups": [],
+        "processors": [
+            {
+                "identifier": "0f469727-71d2-420f-aca5-d51599cb7507",
+                "instanceIdentifier": "9e22e432-9a97-4cd9-a7a4-d1ffeca5fbfe",
+                "name": "Query users table",
+                "comments": "",
+                "position": {
+                    "x": 90.22606801867788,
+                    "y": 3.5556140585132995
+                },
+                "type": "org.apache.nifi.minifi.processors.QueryDatabaseTable",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-sql",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Table Name": "users",
+                    "Where Clause": "id = 1",
+                    "DB Controller Service": "ODBCService",
+                    "Columns to Return": "id,name",
+                    "Output Format": "JSON",
+                    "Max Rows Per Flow File": "0"
+                },
+                "propertyDescriptors": {
+                    "Table Name": {
+                        "name": "Table Name",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Where Clause": {
+                        "name": "Where Clause",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "DB Controller Service": {
+                        "name": "DB Controller Service",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Columns to Return": {
+                        "name": "Columns to Return",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum-value Columns": {
+                        "name": "Maximum-value Columns",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Output Format": {
+                        "name": "Output Format",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Max Rows Per Flow File": {
+                        "name": "Max Rows Per Flow File",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "1 sec",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "ca0439aa-2454-40f8-90fb-72b792d71bc1",
+                "instanceIdentifier": "bb8a7729-d7d4-4b82-9cd0-4e5c28a5d52e",
+                "name": "Put files to /tmp/output",
+                "comments": "",
+                "position": {
+                    "x": 382.2260680186779,
+                    "y": 12.5556140585133
+                },
+                "type": "org.apache.nifi.minifi.processors.PutFile",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-standard-processors",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Create Missing Directories": "true",
+                    "Maximum File Count": "-1",
+                    "Directory": "/tmp/output",
+                    "Conflict Resolution Strategy": "fail"
+                },
+                "propertyDescriptors": {
+                    "Permissions": {
+                        "name": "Permissions",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Create Missing Directories": {
+                        "name": "Create Missing Directories",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum File Count": {
+                        "name": "Maximum File Count",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Directory Permissions": {
+                        "name": "Directory Permissions",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Directory": {
+                        "name": "Directory",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Conflict Resolution Strategy": {
+                        "name": "Conflict Resolution Strategy",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "1000 ms",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "inputPorts": [],
+        "outputPorts": [],
+        "connections": [
+            {
+                "identifier": "a0bf433a-5ea8-4f5b-87f2-5d060fb368ca",
+                "instanceIdentifier": "ed677727-9dc1-4f9a-82bc-06f2e99b9908",
+                "name": "Query users table/success/Put files to /tmp/output",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "0f469727-71d2-420f-aca5-d51599cb7507",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Query users table",
+                    "instanceIdentifier": "9e22e432-9a97-4cd9-a7a4-d1ffeca5fbfe"
+                },
+                "destination": {
+                    "id": "ca0439aa-2454-40f8-90fb-72b792d71bc1",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Put files to /tmp/output",
+                    "instanceIdentifier": "bb8a7729-d7d4-4b82-9cd0-4e5c28a5d52e"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "success"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "labels": [],
+        "funnels": [],
+        "controllerServices": [
+            {
+                "identifier": "da6e66d2-b185-4ca2-9691-69afb82dfc0b",
+                "instanceIdentifier": "370368b3-75d8-4901-b478-bd039ca7f58a",
+                "name": "ODBCService",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "type": "org.apache.nifi.minifi.sql.controllers.ODBCService",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-sql",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Connection String": "enc{7YHB8DDp3xI5wiKGfsoflVELCXpY7M/v||qKzN8vELnMZGysNDRWitok+XHy0pXkwKF9oR0nNoUet/AfE9aj0oOBHJppSCVKPlq0WjbM82+4HYY3hLcfPssHFn2/zeR1vtDo3wRHptoFmG9pncr8O8noH2tPXHKgqWJnYtwNAiGhEQLuqTSnNXjBe5KSgKNatq}"
+                },
+                "propertyDescriptors": {
+                    "Connection String": {
+                        "name": "Connection String",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    }
+                },
+                "controllerServiceApis": [
+                    {
+                        "type": "org.apache.nifi.minifi.sql.controllers.ODBCService",
+                        "bundle": {
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-sql",
+                            "version": "0.15.0"
+                        }
+                    }
+                ],
+                "componentType": "CONTROLLER_SERVICE",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "variables": {},
+        "componentType": "PROCESS_GROUP"
+    }
+}

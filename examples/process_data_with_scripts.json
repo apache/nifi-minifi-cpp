@@ -1,0 +1,105 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "ExecuteScript",
+                "identifier": "9e5dc411-cc01-4359-adea-ff70f07b3402",
+                "type": "org.apache.nifi.minifi.processors.ExecuteScript",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1000 ms",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "properties": {
+                    "Module Directory": "",
+                    "Script Body": "",
+                    "Script Engine": "python",
+                    "Script File": "../../examples/scripts/python/reverse_flow_file_content.py"
+                },
+                "autoTerminatedRelationships": [
+                    "failure"
+                ]
+            },
+            {
+                "name": "GenerateFlowFile",
+                "identifier": "b3972d8e-f0de-420a-a259-4d46017699e7",
+                "type": "org.apache.nifi.minifi.processors.GenerateFlowFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1000 ms",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "properties": {
+                    "Batch Size": "1",
+                    "Custom Text": "here is a generated uuid: ${UUID()}",
+                    "Data Format": "Text",
+                    "File Size": "1 kB",
+                    "Unique FlowFiles": "false"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "PutFile",
+                "identifier": "ea186cb6-48e6-40e6-98f6-b78568d9f91d",
+                "type": "org.apache.nifi.minifi.processors.PutFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1000 ms",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "properties": {
+                    "Conflict Resolution Strategy": "fail",
+                    "Create Missing Directories": "true",
+                    "Directory": "./reversed_flow_files/",
+                    "Directory Permissions": "",
+                    "Maximum File Count": "-1",
+                    "Permissions": ""
+                },
+                "autoTerminatedRelationships": [
+                    "failure",
+                    "success"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "938cc13f-ae5a-43fc-ab10-e71cecef652e",
+                "name": "ExecuteScript/success/PutFile",
+                "source": {
+                    "id": "9e5dc411-cc01-4359-adea-ff70f07b3402"
+                },
+                "destination": {
+                    "id": "ea186cb6-48e6-40e6-98f6-b78568d9f91d"
+                },
+                "selectedRelationships": [
+                    "success"
+                ],
+                "maxWorkQueueSize": 10000,
+                "maxWorkQueueDataSize": "10 MB",
+                "flowFileExpiration": "0 seconds",
+                "queuePrioritizerClass": ""
+            },
+            {
+                "identifier": "7612fcc2-c80e-4967-aeec-2b1076376f49",
+                "name": "GenerateFlowFile/success/ExecuteScript",
+                "source": {
+                    "id": "b3972d8e-f0de-420a-a259-4d46017699e7"
+                },
+                "destination": {
+                    "id": "9e5dc411-cc01-4359-adea-ff70f07b3402"
+                },
+                "selectedRelationships": [
+                    "success"
+                ],
+                "maxWorkQueueSize": 10000,
+                "maxWorkQueueDataSize": "10 MB",
+                "flowFileExpiration": "0 seconds",
+                "queuePrioritizerClass": ""
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": [],
+        "processGroups": [],
+        "inputPorts": [],
+        "outputPorts": [],
+        "funnels": []
+    }
+}

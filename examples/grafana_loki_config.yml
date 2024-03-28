@@ -17,30 +17,31 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- name: Log tailfile attributes
-  id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
-  class: org.apache.nifi.minifi.processors.LogAttribute
-  scheduling strategy: EVENT_DRIVEN
-  auto-terminated relationships list:
-  - success
-  Properties:
-    FlowFiles To Log: '0'
-- name: Tail /tmp/test_file.log
-  id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
+- name: Tail /tmp/input/test_file.log
+  id: 962c76c4-013e-40c0-ac21-9fd6db4593a3
   class: org.apache.nifi.minifi.processors.TailFile
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1000 ms
   Properties:
-    File to Tail: /tmp/test_file.log
-    Initial Start Position: Beginning of File
-    Input Delimiter: \n
-    tail-mode: Single file
+    File to Tail: /tmp/input/test_file.log
+- name: PushGrafanaLokiREST
+  id: 6a9f6c0e-f70c-4778-be8b-ca2494eb0042
+  class: org.apache.nifi.minifi.processors.PushGrafanaLokiREST
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - failure
+  - success
+  Properties:
+    Url: http://127.0.0.1:3100/
+    Stream Labels: job=minifi,id=logs
+    Log Line Metadata Attributes: filename
+    Max Batch Size: '50'
 Connections:
-- name: TailFile/success/LogAttribute
-  id: eda7f758-c548-46d6-aba0-faa6e9937d8c
-  source id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
+- name: TailFile/success/PushGrafanaLokiREST
+  id: 32f1aa1b-05c8-4fc1-941f-1e3dc70cb1b2
+  source id: 962c76c4-013e-40c0-ac21-9fd6db4593a3
   source relationship names:
   - success
-  destination id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
+  destination id: 6a9f6c0e-f70c-4778-be8b-ca2494eb0042
 Controller Services: []
 Remote Process Groups: []

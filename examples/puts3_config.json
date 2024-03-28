@@ -1,0 +1,51 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "bfd376a8-c845-453b-9f74-4cf6f3a95e74",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Upload to S3 test_bucket",
+                "identifier": "8c9e2512-e814-4b73-ac5c-f33753332128",
+                "type": "org.apache.nifi.processors.standard.PutS3Object",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "properties": {
+                    "Access Key": "test_access_key",
+                    "Bucket": "test_bucket",
+                    "Secret Key": "test_secret"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "ad443bb0-0254-47e9-b113-7122244a46b3",
+                "name": "GetFile/success/PutS3Object",
+                "source": {
+                    "id": "bfd376a8-c845-453b-9f74-4cf6f3a95e74"
+                },
+                "destination": {
+                    "id": "8c9e2512-e814-4b73-ac5c-f33753332128"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

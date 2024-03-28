@@ -1,0 +1,116 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+  - id: 333d994b-0637-4c46-b515-89464523ccb8
+    name: Compress to tar.gz format
+    class: org.apache.nifi.minifi.processors.CompressContent
+    max concurrent tasks: 1
+    scheduling strategy: EVENT_DRIVEN
+    auto-terminated relationships list:
+      - failure
+    Properties:
+      Batch Size: 1
+      Compression Format: gzip
+      Compression Level: 6
+      Encapsulate in TAR: true
+      Mode: compress
+      Update Filename: true
+  - name: Tail /tmp/test_file.log
+    id: 47bd6218-14ab-4180-95ff-3db72e82d97c
+    class: org.apache.nifi.minifi.processors.TailFile
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 1000 ms
+    Properties:
+      File to Tail: /tmp/test_file.log
+      Initial Start Position: Beginning of File
+      Input Delimiter: \n
+      tail-mode: Single file
+  - id: d527e0ff-0504-4954-b42f-15771a6e7366
+    name: Merge every 10 lines
+    class: org.apache.nifi.minifi.processors.MergeContent
+    max concurrent tasks: 1
+    scheduling strategy: EVENT_DRIVEN
+    auto-terminated relationships list:
+      - original
+      - failure
+    Properties:
+      Attribute Strategy: Keep Only Common Attributes
+      Batch Size: 1
+      Correlation Attribute Name: test
+      Delimiter Strategy: Filename
+      Keep Path: false
+      Maximum Number of Entries: 10
+      Maximum number of Bins: 100
+      Merge Format: Binary Concatenation
+      Merge Strategy: Bin-Packing Algorithm
+      Minimum Group Size: 0
+      Minimum Number of Entries: 10
+  - id: 58da4d62-1f29-4fc6-92b8-c223f081d701
+    name: Upload to Google Cloud Storage
+    class: org.apache.nifi.minifi.aws.processors.PutGCSObject
+    max concurrent tasks: 1
+    scheduling strategy: EVENT_DRIVEN
+    auto-terminated relationships list:
+      - success
+      - failure
+    Properties:
+      Bucket: test-bucket
+      Number of retries: 2
+      GCP Credentials Provider Service: GCPCredentialsControllerService
+  - id: 78000004-98b5-44ec-a25c-1f0e0134ffe8
+    name: Add upload target attribute
+    class: org.apache.nifi.minifi.processors.UpdateAttribute
+    max concurrent tasks: 1
+    scheduling strategy: EVENT_DRIVEN
+    auto-terminated relationships list:
+      - failure
+    Properties:
+      upload_target: google_cloud_storage
+Controller Services:
+  - name: GCPCredentialsControllerService
+    id: c1c49f60-c054-4df8-bce9-8f0660dcc55e
+    class: org.apache.nifi.minifi.controllers.GCPCredentialsControllerService
+    Properties:
+        Credentials Location: Use Anonymous credentials
+Connections:
+  - id: b9558376-04e8-4e42-a4cd-41e31754e585
+    name: CompressContent/success/PutGCSObject
+    source id: 333d994b-0637-4c46-b515-89464523ccb8
+    source relationship names:
+      - success
+    destination id: 58da4d62-1f29-4fc6-92b8-c223f081d701
+  - id: 7ebc1173-5d15-4894-836e-e2597496dfe9
+    name: TailFile/success/UpdateAttribute
+    source id: 47bd6218-14ab-4180-95ff-3db72e82d97c
+    source relationship names:
+      - success
+    destination id: 78000004-98b5-44ec-a25c-1f0e0134ffe8
+  - id: 5c6d3cec-17c7-479f-919a-99ac8762de5e
+    name: MergeContent/merged/CompressContent
+    source id: d527e0ff-0504-4954-b42f-15771a6e7366
+    source relationship names:
+      - merged
+    destination id: 333d994b-0637-4c46-b515-89464523ccb8
+  - id: 8a247c4d-0c9f-495f-8a00-5c8a21f56a9e
+    name: UpdateAttribute/success/MergeContent
+    source id: 78000004-98b5-44ec-a25c-1f0e0134ffe8
+    source relationship names:
+      - success
+    destination id: d527e0ff-0504-4954-b42f-15771a6e7366
+Remote Process Groups: []

@@ -1,0 +1,494 @@
+{
+    "encodingVersion": {
+        "majorVersion": 2,
+        "minorVersion": 0
+    },
+    "maxTimerDrivenThreadCount": 1,
+    "maxEventDrivenThreadCount": 1,
+    "parameterContexts": [],
+    "rootGroup": {
+        "identifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+        "instanceIdentifier": "9af45830-320e-437e-8204-dcd3c2933aa6",
+        "name": "root",
+        "position": {
+            "x": 0.0,
+            "y": 0.0
+        },
+        "processGroups": [],
+        "remoteProcessGroups": [],
+        "processors": [
+            {
+                "identifier": "1f27e7fd-4463-40a2-acfd-fd3d5cafae50",
+                "instanceIdentifier": "5e273549-c27b-48fa-b3a3-c1ff837749ea",
+                "name": "Log S3 object attributes",
+                "comments": "",
+                "position": {
+                    "x": 447.0,
+                    "y": 100.0
+                },
+                "type": "org.apache.nifi.minifi.processors.LogAttribute",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-standard-processors",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "FlowFiles To Log": "0",
+                    "Log Payload": "false",
+                    "Hexencode Payload": "false",
+                    "Maximum Payload Line Length": "0"
+                },
+                "propertyDescriptors": {
+                    "FlowFiles To Log": {
+                        "name": "FlowFiles To Log",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Level": {
+                        "name": "Log Level",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Attributes to Ignore": {
+                        "name": "Attributes to Ignore",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Attributes to Log": {
+                        "name": "Attributes to Log",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Payload": {
+                        "name": "Log Payload",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Prefix": {
+                        "name": "Log Prefix",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Hexencode Payload": {
+                        "name": "Hexencode Payload",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum Payload Line Length": {
+                        "name": "Maximum Payload Line Length",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "1000 ms",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [
+                    "success"
+                ],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "1b8dc9d5-9f61-4739-80b6-638fbb4ff8f1",
+                "instanceIdentifier": "8396d665-31b7-43b7-84f0-41cfc884e029",
+                "name": "Fetch S3 object from test_bucket",
+                "comments": "",
+                "position": {
+                    "x": 247.0,
+                    "y": 103.0
+                },
+                "type": "org.apache.nifi.minifi.aws.processors.FetchS3Object",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-aws",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Bucket": "test_bucket",
+                    "Use Default Credentials": "false",
+                    "Communications Timeout": "30 sec",
+                    "Region": "us-west-2",
+                    "Requester Pays": "false",
+                    "AWS Credentials Provider service": "AWSCredentialsService"
+                },
+                "propertyDescriptors": {
+                    "Proxy Host": {
+                        "name": "Proxy Host",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Proxy Username": {
+                        "name": "Proxy Username",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Access Key": {
+                        "name": "Access Key",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Proxy Password": {
+                        "name": "Proxy Password",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "Endpoint Override URL": {
+                        "name": "Endpoint Override URL",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Proxy Port": {
+                        "name": "Proxy Port",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Object Key": {
+                        "name": "Object Key",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "AWS Credentials Provider service": {
+                        "name": "AWS Credentials Provider service",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Bucket": {
+                        "name": "Bucket",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Use Default Credentials": {
+                        "name": "Use Default Credentials",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Version": {
+                        "name": "Version",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Communications Timeout": {
+                        "name": "Communications Timeout",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Secret Key": {
+                        "name": "Secret Key",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "Credentials File": {
+                        "name": "Credentials File",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Region": {
+                        "name": "Region",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Requester Pays": {
+                        "name": "Requester Pays",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "1000 ms",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [
+                    "failure"
+                ],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "d472aea5-3f4e-45bc-accb-d6ad4f783622",
+                "instanceIdentifier": "713e1f3f-33c4-44fb-8055-a82d760755a9",
+                "name": "List test_bucket S3 bucket",
+                "comments": "",
+                "position": {
+                    "x": 36.0,
+                    "y": 96.0
+                },
+                "type": "org.apache.nifi.minifi.aws.processors.ListS3",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-aws",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Minimum Object Age": "0 sec",
+                    "Bucket": "test_bucket",
+                    "Use Default Credentials": "false",
+                    "Communications Timeout": "30 sec",
+                    "Region": "us-west-2",
+                    "Use Versions": "false",
+                    "Write User Metadata": "false",
+                    "Requester Pays": "false",
+                    "AWS Credentials Provider service": "AWSCredentialsService",
+                    "Write Object Tags": "false"
+                },
+                "propertyDescriptors": {
+                    "Proxy Host": {
+                        "name": "Proxy Host",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Proxy Username": {
+                        "name": "Proxy Username",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Minimum Object Age": {
+                        "name": "Minimum Object Age",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Access Key": {
+                        "name": "Access Key",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Delimiter": {
+                        "name": "Delimiter",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Proxy Password": {
+                        "name": "Proxy Password",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "Endpoint Override URL": {
+                        "name": "Endpoint Override URL",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Prefix": {
+                        "name": "Prefix",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Proxy Port": {
+                        "name": "Proxy Port",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "AWS Credentials Provider service": {
+                        "name": "AWS Credentials Provider service",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Write Object Tags": {
+                        "name": "Write Object Tags",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Bucket": {
+                        "name": "Bucket",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Use Default Credentials": {
+                        "name": "Use Default Credentials",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Communications Timeout": {
+                        "name": "Communications Timeout",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Secret Key": {
+                        "name": "Secret Key",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "Credentials File": {
+                        "name": "Credentials File",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Region": {
+                        "name": "Region",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Use Versions": {
+                        "name": "Use Versions",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Write User Metadata": {
+                        "name": "Write User Metadata",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Requester Pays": {
+                        "name": "Requester Pays",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "10000 ms",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "inputPorts": [],
+        "outputPorts": [],
+        "connections": [
+            {
+                "identifier": "1140c720-9c7c-4ff9-9bb4-1b08bcfca185",
+                "instanceIdentifier": "1e01b749-1e33-400c-b997-f89f29cde46f",
+                "name": "List test_bucket S3 bucket/success/Fetch S3 object from test_bucket",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "d472aea5-3f4e-45bc-accb-d6ad4f783622",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "List test_bucket S3 bucket",
+                    "instanceIdentifier": "713e1f3f-33c4-44fb-8055-a82d760755a9"
+                },
+                "destination": {
+                    "id": "1b8dc9d5-9f61-4739-80b6-638fbb4ff8f1",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Fetch S3 object from test_bucket",
+                    "instanceIdentifier": "8396d665-31b7-43b7-84f0-41cfc884e029"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "success"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "dc1b813f-ac8d-4081-9fa0-7dc58ab8a05c",
+                "instanceIdentifier": "501be62a-5793-4c51-8fa8-6cbcad14961d",
+                "name": "Fetch S3 object from test_bucket/success/Log S3 object attributes",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "1b8dc9d5-9f61-4739-80b6-638fbb4ff8f1",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Fetch S3 object from test_bucket",
+                    "instanceIdentifier": "8396d665-31b7-43b7-84f0-41cfc884e029"
+                },
+                "destination": {
+                    "id": "1f27e7fd-4463-40a2-acfd-fd3d5cafae50",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Log S3 object attributes",
+                    "instanceIdentifier": "5e273549-c27b-48fa-b3a3-c1ff837749ea"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "success"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "labels": [],
+        "funnels": [],
+        "controllerServices": [
+            {
+                "identifier": "b4a19d3f-2db7-493e-9f13-6130ef4ccae0",
+                "instanceIdentifier": "77c68d5a-52da-4b5b-8a04-e915e6fe91ca",
+                "name": "AWSCredentialsService",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "type": "org.apache.nifi.minifi.aws.controllers.AWSCredentialsService",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-aws",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Use Default Credentials": "true"
+                },
+                "propertyDescriptors": {
+                    "Access Key": {
+                        "name": "Access Key",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Use Default Credentials": {
+                        "name": "Use Default Credentials",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Secret Key": {
+                        "name": "Secret Key",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "Credentials File": {
+                        "name": "Credentials File",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "controllerServiceApis": [
+                    {
+                        "type": "org.apache.nifi.minifi.aws.controllers.AWSCredentialsService",
+                        "bundle": {
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-aws",
+                            "version": "0.15.0"
+                        }
+                    }
+                ],
+                "componentType": "CONTROLLER_SERVICE",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "variables": {},
+        "componentType": "PROCESS_GROUP"
+    }
+}

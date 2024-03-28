@@ -1,0 +1,255 @@
+{
+    "encodingVersion": {
+        "majorVersion": 2,
+        "minorVersion": 0
+    },
+    "maxTimerDrivenThreadCount": 1,
+    "maxEventDrivenThreadCount": 1,
+    "parameterContexts": [],
+    "rootGroup": {
+        "identifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+        "instanceIdentifier": "9af45830-320e-437e-8204-dcd3c2933aa6",
+        "name": "root",
+        "position": {
+            "x": 0.0,
+            "y": 0.0
+        },
+        "processGroups": [],
+        "remoteProcessGroups": [],
+        "processors": [
+            {
+                "identifier": "af053760-caa2-4624-b70e-0ef8a802864f",
+                "instanceIdentifier": "35196325-c33f-486e-ba36-646d66ee3369",
+                "name": "Upload Blob to test-container in Azure Storage",
+                "comments": "",
+                "position": {
+                    "x": 1101.0,
+                    "y": 257.0
+                },
+                "type": "org.apache.nifi.minifi.azure.processors.PutAzureBlobStorage",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-azure",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Blob": "test-blob",
+                    "Storage Account Name": "test-account",
+                    "Container Name": "test-container",
+                    "Use Managed Identity Credentials": "false",
+                    "Storage Account Key": "test-key",
+                    "Create Container": "false"
+                },
+                "propertyDescriptors": {
+                    "Common Storage Account Endpoint Suffix": {
+                        "name": "Common Storage Account Endpoint Suffix",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Blob": {
+                        "name": "Blob",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Storage Account Name": {
+                        "name": "Storage Account Name",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Azure Storage Credentials Service": {
+                        "name": "Azure Storage Credentials Service",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Container Name": {
+                        "name": "Container Name",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Use Managed Identity Credentials": {
+                        "name": "Use Managed Identity Credentials",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Storage Account Key": {
+                        "name": "Storage Account Key",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "SAS Token": {
+                        "name": "SAS Token",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "Create Container": {
+                        "name": "Create Container",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Connection String": {
+                        "name": "Connection String",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "1000 ms",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "e7947180-caf7-4ddf-8b02-9e03d8f77d9d",
+                "instanceIdentifier": "2d995b54-4b70-456e-9f76-49265a1fc489",
+                "name": "Get files from /tmp/input",
+                "comments": "",
+                "position": {
+                    "x": 361.0,
+                    "y": 248.0
+                },
+                "type": "org.apache.nifi.minifi.processors.GetFile",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-standard-processors",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Keep Source File": "false",
+                    "Minimum File Age": "0 sec",
+                    "Polling Interval": "0 sec",
+                    "Input Directory": "/tmp/input",
+                    "Maximum File Age": "0 sec",
+                    "Batch Size": "10",
+                    "Maximum File Size": "0 B",
+                    "Minimum File Size": "0 B",
+                    "Ignore Hidden Files": "true",
+                    "Recurse Subdirectories": "true",
+                    "File Filter": ".*"
+                },
+                "propertyDescriptors": {
+                    "Keep Source File": {
+                        "name": "Keep Source File",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Minimum File Age": {
+                        "name": "Minimum File Age",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Polling Interval": {
+                        "name": "Polling Interval",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Input Directory": {
+                        "name": "Input Directory",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum File Age": {
+                        "name": "Maximum File Age",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Batch Size": {
+                        "name": "Batch Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum File Size": {
+                        "name": "Maximum File Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Minimum File Size": {
+                        "name": "Minimum File Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Ignore Hidden Files": {
+                        "name": "Ignore Hidden Files",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Recurse Subdirectories": {
+                        "name": "Recurse Subdirectories",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "File Filter": {
+                        "name": "File Filter",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "2000 ms",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "inputPorts": [],
+        "outputPorts": [],
+        "connections": [
+            {
+                "identifier": "a380ee83-29fc-4a00-b2c6-2cf71e1d8b0e",
+                "instanceIdentifier": "84861a85-32d9-49b2-874e-99011cb28257",
+                "name": "Get files from /tmp/input/success/Upload Blob to test-container in Azure Storage",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "e7947180-caf7-4ddf-8b02-9e03d8f77d9d",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Get files from /tmp/input",
+                    "instanceIdentifier": "2d995b54-4b70-456e-9f76-49265a1fc489"
+                },
+                "destination": {
+                    "id": "af053760-caa2-4624-b70e-0ef8a802864f",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Upload Blob to test-container in Azure Storage",
+                    "instanceIdentifier": "35196325-c33f-486e-ba36-646d66ee3369"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "success"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "labels": [],
+        "funnels": [],
+        "controllerServices": [],
+        "variables": {},
+        "componentType": "PROCESS_GROUP"
+    }
+}
