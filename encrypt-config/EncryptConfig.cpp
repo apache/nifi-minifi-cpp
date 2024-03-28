@@ -57,7 +57,7 @@ EncryptConfig::EncryptConfig(const std::string& minifi_home) : minifi_home_(mini
   std::filesystem::current_path(minifi_home_);
 }
 
-bool EncryptConfig::isReencrypting() const {
+bool EncryptConfig::isReEncrypting() const {
   encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
 
   std::string decryption_key_name = utils::string::join_pack(ENCRYPTION_KEY_PROPERTY_NAME, ".old");
@@ -200,16 +200,20 @@ void EncryptConfig::encryptSensitiveValuesInMinifiProperties() const {
 }
 
 void EncryptConfig::encryptSensitiveValuesInFlowConfig(
-    const std::optional<std::string>& component_id, const std::optional<std::string>& property_name, const std::optional<std::string>& property_value) const {
-  if (!component_id && !property_name && !property_value) {
-    EncryptionKeys keys = getEncryptionKeys(SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME);
-    flow_config_encryptor::encryptSensitiveValuesInFlowConfig(keys, minifi_home_, flowConfigPath());
-  } else if (component_id && property_name && property_value) {
-    EncryptionKeys keys = getEncryptionKeys(SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME);
-    flow_config_encryptor::encryptSensitiveValuesInFlowConfig(keys, minifi_home_, flowConfigPath(), *component_id, *property_name, *property_value);
-  } else {
-    throw std::runtime_error("either all of --component-id, --property-name and --property-value should be given (for batch mode) or none of them (for interactive mode)");
-  }
+    bool re_encrypt, const std::optional<std::string>& component_id, const std::optional<std::string>& property_name, const std::optional<std::string>& property_value) const {
+  EncryptionKeys keys = getEncryptionKeys(SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME);
+  flow_config_encryptor::EncryptionRequest request_type = [&] {
+    if (re_encrypt) {
+      return flow_config_encryptor::EncryptionRequest{flow_config_encryptor::EncryptionType::ReEncrypt};
+    } else if (!component_id && !property_name && !property_value) {
+      return flow_config_encryptor::EncryptionRequest{flow_config_encryptor::EncryptionType::Interactive};
+    } else if (component_id && property_name && property_value) {
+      return flow_config_encryptor::EncryptionRequest{*component_id, *property_name, *property_value};
+    } else {
+      throw std::runtime_error("either all of --component-id, --property-name and --property-value should be given (for batch mode) or none of them (for interactive mode)");
+    }
+  }();
+  flow_config_encryptor::encryptSensitiveValuesInFlowConfig(keys, minifi_home_, flowConfigPath(), request_type);
 }
 
 }  // namespace org::apache::nifi::minifi::encrypt_config

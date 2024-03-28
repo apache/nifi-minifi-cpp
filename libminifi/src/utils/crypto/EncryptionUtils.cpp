@@ -59,11 +59,11 @@ std::string EncryptionType::separator() { return "||"; }
 
 Bytes encryptRaw(const Bytes& plaintext, const Bytes& key, const Bytes& nonce) {
   if (key.size() != EncryptionType::keyLength()) {
-    throw std::invalid_argument{"Expected key of " + std::to_string(EncryptionType::keyLength()) +
+    throw EncryptionError{"Expected key of " + std::to_string(EncryptionType::keyLength()) +
         " bytes, but got " + std::to_string(key.size()) + " bytes during encryption"};
   }
   if (nonce.size() != EncryptionType::nonceLength()) {
-    throw std::invalid_argument{"Expected nonce of " + std::to_string(EncryptionType::nonceLength()) +
+    throw EncryptionError{"Expected nonce of " + std::to_string(EncryptionType::nonceLength()) +
         " bytes, but got " + std::to_string(nonce.size()) + " bytes during encryption"};
   }
 
@@ -84,22 +84,22 @@ std::string encrypt(std::string_view plaintext, const Bytes& key) {
 
 Bytes decryptRaw(const Bytes& input, const Bytes& key, const Bytes& nonce) {
   if (key.size() != EncryptionType::keyLength()) {
-    throw std::invalid_argument{"Expected key of " + std::to_string(EncryptionType::keyLength()) +
+    throw EncryptionError{"Expected key of " + std::to_string(EncryptionType::keyLength()) +
         " bytes, but got " + std::to_string(key.size()) + " bytes during decryption"};
   }
   if (nonce.size() != EncryptionType::nonceLength()) {
-    throw std::invalid_argument{"Expected a nonce of " + std::to_string(EncryptionType::nonceLength()) +
+    throw EncryptionError{"Expected a nonce of " + std::to_string(EncryptionType::nonceLength()) +
         " bytes, but got " + std::to_string(nonce.size()) + " bytes during decryption"};
   }
   if (input.size() < EncryptionType::macLength()) {
-    throw std::invalid_argument{"Input is too short: expected at least " + std::to_string(EncryptionType::macLength()) +
+    throw EncryptionError{"Input is too short: expected at least " + std::to_string(EncryptionType::macLength()) +
         " bytes, but got " + std::to_string(input.size()) + " bytes during decryption"};
   }
 
   Bytes plaintext(input.size() - EncryptionType::macLength());
   if (crypto_secretbox_open_easy(reinterpret_cast<unsigned char*>(plaintext.data()), reinterpret_cast<const unsigned char*>(input.data()), input.size(),
       reinterpret_cast<const unsigned char*>(nonce.data()), reinterpret_cast<const unsigned char*>(key.data()))) {
-    throw std::runtime_error{"Decryption failed; the input may be forged!"};
+    throw EncryptionError{"Decryption failed; the input may be forged!"};
   }
   return plaintext;
 }
@@ -113,7 +113,7 @@ std::string decrypt(std::string_view input, const Bytes& key) {
 EncryptedData parseEncrypted(std::string_view input) {
   std::vector<std::string> nonce_and_rest = utils::string::split(input, EncryptionType::separator());
   if (nonce_and_rest.size() != 2) {
-    throw std::invalid_argument{"Incorrect input; expected '<nonce>" + EncryptionType::separator() + "<ciphertext_plus_mac>'"};
+    throw EncryptionError{"Incorrect input; expected '<nonce>" + EncryptionType::separator() + "<ciphertext_plus_mac>'"};
   }
 
   Bytes nonce = utils::string::from_base64(nonce_and_rest[0]);

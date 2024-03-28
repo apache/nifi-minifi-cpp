@@ -71,8 +71,11 @@ std::unique_ptr<core::ProcessGroup> AdaptiveConfiguration::getRootFromPayload(co
   }
 }
 
-std::string AdaptiveConfiguration::serializeWithOverrides(const core::ProcessGroup& process_group,
-    const std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>& overrides) const {
+void AdaptiveConfiguration::setSensitivePropertiesEncryptor(utils::crypto::EncryptionProvider sensitive_properties_encryptor) {
+  sensitive_properties_encryptor_ = std::move(sensitive_properties_encryptor);
+}
+
+std::string AdaptiveConfiguration::serializeWithOverrides(const core::ProcessGroup& process_group, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
   gsl_Expects(flow_serializer_);
   return flow_serializer_->serialize(process_group, schema_, sensitive_properties_encryptor_, overrides);
 }

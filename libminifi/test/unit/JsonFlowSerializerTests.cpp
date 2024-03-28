@@ -527,6 +527,8 @@ constexpr std::string_view config_json_with_nifi_schema_part_2 = R"(
 const utils::crypto::Bytes secret_key = utils::string::from_hex("75536923a75928a970077f9dae2c2b166a5413e020cb5190de4fb8edce1a38c7");
 const utils::crypto::EncryptionProvider encryption_provider{secret_key};
 
+using OverridesMap = std::unordered_map<utils::Identifier, core::flow::Overrides>;
+
 TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   ConfigurationTestController test_controller;
   core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
@@ -543,24 +545,24 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   REQUIRE(res);
   const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
 
-  using Overrides = std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>;
   const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
   const auto controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
 
   const auto [overrides, expected_results] = GENERATE_REF(
-      std::make_tuple(Overrides{},
+      std::make_tuple(OverridesMap{},
           std::array{"very_secure_password", "very_secure_passphrase"}),
-      std::make_tuple(Overrides{{processor_id, {{"invokehttp-proxy-password", "password123"}}}},
+      std::make_tuple(OverridesMap{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "password123")}},
           std::array{"password123", "very_secure_passphrase"}),
-      std::make_tuple(Overrides{{controller_service_id, {{"Passphrase", "speak friend and enter"}}}},
+      std::make_tuple(OverridesMap{{controller_service_id, core::flow::Overrides{}.add("Passphrase", "speak friend and enter")}},
           std::array{"very_secure_password", "speak friend and enter"}),
-      std::make_tuple(Overrides{{processor_id, {{"invokehttp-proxy-password", "password123"}}}, {controller_service_id, {{"Passphrase", "speak friend and enter"}}}},
+      std::make_tuple(OverridesMap{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "password123")},
+                                   {controller_service_id, core::flow::Overrides{}.add("Passphrase", "speak friend and enter")}},
           std::array{"password123", "speak friend and enter"}));
 
   std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 
   {
-    std::regex regex{R"_("invokehttp-proxy-password": "(enc\{.*\})",)_"};
+    std::regex regex{R"_("invokehttp-proxy-password": "(.*)",)_"};
     std::smatch match_results;
     CHECK(std::regex_search(config_json_encrypted, match_results, regex));
 
@@ -570,7 +572,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   }
 
   {
-    std::regex regex{R"_("Passphrase": "(enc\{.*\})",)_"};
+    std::regex regex{R"_("Passphrase": "(.*)",)_"};
     std::smatch match_results;
     CHECK(std::regex_search(config_json_encrypted, match_results, regex));
 
@@ -595,17 +597,108 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
   const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
 
   const auto second_controller_service_id = utils::Identifier::parse("b418f4ff-e598-4ea2-921f-14f9dd864482").value();
-  const auto overrides = std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>{{second_controller_service_id, {{"Passphrase", "new passphrase"}}}};
 
-  std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
+  SECTION("with required overrides") {
+    const OverridesMap overrides{{second_controller_service_id, core::flow::Overrides{}.add("Passphrase", "new passphrase")}};
 
-  // find the second match
-  std::regex regex{R"_("Passphrase": "(enc\{.*\})")_"};
-  std::smatch match_results;
-  REQUIRE(std::regex_search(config_json_encrypted.cbegin(), config_json_encrypted.cend(), match_results, regex));
-  REQUIRE(std::regex_search(match_results.suffix().first, config_json_encrypted.cend(), match_results, regex));
-  REQUIRE(match_results.size() == 2);
+    std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 
-  std::string encrypted_value = match_results[1];
-  CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "new passphrase");
+    std::regex regex{R"_("Passphrase": "(.*)")_"};
+    std::smatch match_results;
+
+    // skip the first match
+    REQUIRE(std::regex_search(config_json_encrypted.cbegin(), config_json_encrypted.cend(), match_results, regex));
+
+    // verify the second match
+    REQUIRE(std::regex_search(match_results.suffix().first, config_json_encrypted.cend(), match_results, regex));
+    REQUIRE(match_results.size() == 2);
+    std::string encrypted_value = match_results[1];
+    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "new passphrase");
+  }
+
+  SECTION("with optional overrides: the override is only used if the property is already in the flow config") {
+    const auto first_controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
+    const OverridesMap overrides{{first_controller_service_id, core::flow::Overrides{}.addOptional("Passphrase", "first new passphrase")},
+                                 {second_controller_service_id, core::flow::Overrides{}.addOptional("Passphrase", "second new passphrase")}};
+
+    std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
+
+    std::regex regex{R"_("Passphrase": "(.*)")_"};
+    std::smatch match_results;
+
+    // verify the first match
+    REQUIRE(std::regex_search(config_json_encrypted.cbegin(), config_json_encrypted.cend(), match_results, regex));
+    REQUIRE(match_results.size() == 2);
+    std::string encrypted_value = match_results[1];
+    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "first new passphrase");
+
+    // check that there is no second match
+    CHECK_FALSE(std::regex_search(match_results.suffix().first, config_json_encrypted.cend(), match_results, regex));
+  }
+}
+
+TEST_CASE("The encrypted flow configuration can be decrypted with the correct key") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_properties_encryptor = encryption_provider;
+  core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
+
+  const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
+  const auto config_json_with_nifi_schema = utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
+  const auto process_group_before = json_configuration_before.getRootFromPayload(config_json_with_nifi_schema);
+  REQUIRE(process_group_before);
+
+  rapidjson::Document doc;
+  rapidjson::ParseResult res = doc.Parse(config_json_with_nifi_schema.data(), config_json_with_nifi_schema.size());
+  REQUIRE(res);
+  const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
+  std::string config_json_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {});
+
+  core::flow::AdaptiveConfiguration json_configuration_after{configuration_context};
+  const auto process_group_after = json_configuration_after.getRootFromPayload(config_json_encrypted);
+  REQUIRE(process_group_after);
+
+  const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
+  const auto* processor_before = process_group_before->findProcessorById(processor_id);
+  REQUIRE(processor_before);
+  const auto* processor_after = process_group_after->findProcessorById(processor_id);
+  REQUIRE(processor_after);
+  CHECK(processor_before->getProperties().at("HTTP Method").getValue() == processor_after->getProperties().at("HTTP Method").getValue());
+  CHECK(processor_before->getProperties().at("invokehttp-proxy-password").getValue() == processor_after->getProperties().at("invokehttp-proxy-password").getValue());
+
+  const auto controller_service_id = "b9801278-7b5d-4314-aed6-713fd4b5f933";
+  const auto controller_service_node_before = process_group_before->findControllerService(controller_service_id);
+  REQUIRE(controller_service_node_before);
+  const auto controller_service_before = controller_service_node_before->getControllerServiceImplementation();
+  REQUIRE(controller_service_node_before);
+  const auto controller_service_node_after = process_group_after->findControllerService(controller_service_id);
+  REQUIRE(controller_service_node_after);
+  const auto controller_service_after = controller_service_node_before->getControllerServiceImplementation();
+  REQUIRE(controller_service_after);
+  CHECK(controller_service_before->getProperties().at("CA Certificate").getValue() == controller_service_after->getProperties().at("CA Certificate").getValue());
+  CHECK(controller_service_before->getProperties().at("Passphrase").getValue() == controller_service_after->getProperties().at("Passphrase").getValue());
+}
+
+TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrect key") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_properties_encryptor = encryption_provider;
+  core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
+
+  const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
+  const auto config_json_with_nifi_schema = utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
+  const auto process_group_before = json_configuration_before.getRootFromPayload(config_json_with_nifi_schema);
+  REQUIRE(process_group_before);
+
+  rapidjson::Document doc;
+  rapidjson::ParseResult res = doc.Parse(config_json_with_nifi_schema.data(), config_json_with_nifi_schema.size());
+  REQUIRE(res);
+  const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
+  std::string config_json_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {});
+
+  const utils::crypto::Bytes different_secret_key = utils::string::from_hex("ea55b7d0edc22280c9547e4d89712b3fae74f96d82f240a004fb9fbd0640eec7");
+  configuration_context.sensitive_properties_encryptor = utils::crypto::EncryptionProvider{different_secret_key};
+
+  core::flow::AdaptiveConfiguration json_configuration_after{configuration_context};
+  REQUIRE_THROWS_AS(json_configuration_after.getRootFromPayload(config_json_encrypted), utils::crypto::EncryptionError);
 }

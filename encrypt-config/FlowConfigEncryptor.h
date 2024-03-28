@@ -24,8 +24,22 @@
 
 namespace org::apache::nifi::minifi::encrypt_config::flow_config_encryptor {
 
-void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::filesystem::path& minifi_home, const std::filesystem::path& flow_config_path);
-void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::filesystem::path& minifi_home, const std::filesystem::path& flow_config_path,
-    const std::string& component_id, const std::string& property_name, const std::string& property_value);
+enum class EncryptionType {
+  Interactive,
+  SingleProperty,
+  ReEncrypt
+};
+
+struct EncryptionRequest {
+  explicit EncryptionRequest(EncryptionType type);
+  EncryptionRequest(std::string_view component_id, std::string_view property_name, std::string_view property_value);
+
+  EncryptionType type;
+  std::string component_id;
+  std::string property_name;
+  std::string property_value;
+};
+
+void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::filesystem::path& minifi_home, const std::filesystem::path& flow_config_path, const EncryptionRequest& request);
 
 }  // namespace org::apache::nifi::minifi::encrypt_config::flow_config_encryptor

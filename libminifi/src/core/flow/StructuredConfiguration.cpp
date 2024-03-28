@@ -673,6 +673,9 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
       coercedValue = property_value_node.getScalarAsString().value();
     }
     return coercedValue;
+  } catch (const utils::crypto::EncryptionError& e) {
+    logger_->log_error("Fetching property failed with a decryption error: {}", e.what());
+    throw;
   } catch (const std::exception& e) {
     logger_->log_error("Fetching property failed with an exception of {}", e.what());
     logger_->log_error("Invalid conversion for field {}. Value {}", property_from_processor.getName(), property_value_node.getDebugString());
