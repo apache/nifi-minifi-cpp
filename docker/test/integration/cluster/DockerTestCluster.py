@@ -216,6 +216,10 @@ class DockerTestCluster:
         container_name = self.container_store.get_container_name_with_postfix(container_name)
         return self.splunk_checker.enable_splunk_hec_ssl(container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem)
 
+    def get_splunk_token(self, container_name, hec_name):
+        container_name = self.container_store.get_container_name_with_postfix(container_name)
+        return self.splunk_checker.get_splunk_token(container_name, hec_name)
+
     def check_google_cloud_storage(self, gcs_container_name, content):
         gcs_container_name = self.container_store.get_container_name_with_postfix(gcs_container_name)
         return self.gcs_checker.check_google_cloud_storage(gcs_container_name, content)

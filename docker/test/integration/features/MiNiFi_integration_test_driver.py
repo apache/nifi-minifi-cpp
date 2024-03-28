@@ -116,6 +116,12 @@ class MiNiFi_integration_test:
         assert self.cluster.wait_for_container_startup_to_finish('splunk')
         assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token')
 
+    def get_splunk_token(self):
+        token = self.cluster.get_splunk_token('splunk', 'splunk_hec_token')
+        if token is None:
+            raise Exception("Failed to get Splunk token")
+        return token
+
     def start_elasticsearch(self, context):
         self.cluster.acquire_container(context=context, name='elasticsearch', engine='elasticsearch')
         self.cluster.deploy_container('elasticsearch')
