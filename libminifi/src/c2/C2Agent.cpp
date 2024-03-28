@@ -38,6 +38,7 @@
 #include "utils/file/FileManager.h"
 #include "utils/file/FileSystem.h"
 #include "http/BaseHTTPClient.h"
+#include "utils/file/PathUtils.h"
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
 #include "utils/StringUtils.h"
@@ -54,7 +55,8 @@ namespace org::apache::nifi::minifi::c2 {
 C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
                  std::weak_ptr<state::response::NodeReporter> node_reporter,
                  std::shared_ptr<utils::file::FileSystem> filesystem,
-                 std::function<void()> request_restart)
+                 std::function<void()> request_restart,
+                 std::shared_ptr<utils::file::AssetManager> asset_manager)
     : heart_beat_period_(3s),
       max_c2_responses(5),
       configuration_(std::move(configuration)),
@@ -62,7 +64,8 @@ C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
       filesystem_(std::move(filesystem)),
       thread_pool_(2, nullptr, "C2 threadpool"),
       request_restart_(std::move(request_restart)),
-      last_run_(std::chrono::steady_clock::now()) {
+      last_run_(std::chrono::steady_clock::now()),
+      asset_manager_(std::move(asset_manager)) {
   if (!configuration_->getAgentClass()) {
     logger_->log_info("Agent class is not predefined");
   }
@@ -381,6 +384,9 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
       break;
     }
+    case Operation::sync:
+      handle_sync(resp);
+      break;
     default:
       break;
       // do nothing
@@ -700,6 +706,94 @@ void C2Agent::handle_transfer(const C2ContentResponse &resp) {
   }
 }
 
+void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse &resp) {
+  auto send_error = [&] (std::string_view error) {
+    logger_->log_error("{}", error);
+    C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
+    response.setRawData(as_bytes(std::span(error.begin(), error.end())));
+    enqueue_c2_response(std::move(response));
+  };
+
+  if (!asset_manager_) {
+    send_error("Internal error: no asset manager");
+    return;
+  }
+
+  SyncOperand operand = SyncOperand::asset;
+  try {
+    operand = utils::enumCast<SyncOperand>(resp.name, true);
+  } catch(const std::runtime_error&) {
+    send_error("Unknown operand '" + resp.name + "'");
+    return;
+  }
+
+  gsl_Assert(operand == SyncOperand::asset);
+
+  // we are expecting the format
+  // args: {
+  //   "<id_A>.path": "a/b/c.txt",
+  //   "<id_A>.url": "example.com",
+  //   "<id_B>.path": "a/b/c.txt",
+  //   "<id_B>.url": "example.com"
+  // }
+  std::set<std::string> ids;
+  utils::file::AssetLayout asset_layout;
+  for (auto& arg: resp.operation_arguments) {
+    auto fragments = utils::string::split(arg.first, ".");
+    if (fragments.size() == 2) {
+      ids.insert(fragments.front());
+    } else {
+      send_error("Malformed asset sync command");
+      return;
+    }
+  }
+  for (auto& id : ids) {
+    auto path_it = resp.operation_arguments.find(id + ".path");
+    if (path_it == resp.operation_arguments.end()) {
+      send_error("Malformed path for id '" + id + "'");
+      return;
+    }
+    auto result = utils::file::validateRelativePath(path_it->second.to_string());
+    if (!result) {
+      send_error(result.error());
+      return;
+    }
+    auto url_it = resp.operation_arguments.find(id + ".url");
+    if (url_it == resp.operation_arguments.end()) {
+      send_error("Malformed url for id '" + id + "'");
+      return;
+    }
+    asset_layout.insert(utils::file::AssetDescription{
+      .id = id,
+      .path = path_it->second.to_string(),
+      .url = url_it->second.to_string()
+    });
+  }
+
+  auto fetch = [&] (std::string_view url) -> nonstd::expected<std::vector<std::byte>, std::string> {
+    auto resolved_url = resolveUrl(std::string{url});
+    if (!resolved_url) {
+      return nonstd::make_unexpected("Couldn't resolve url");
+    }
+    C2Payload file_response = protocol_.load()->fetch(resolved_url.value());
+
+    if (file_response.getStatus().getState() != state::UpdateState::READ_COMPLETE) {
+      return nonstd::make_unexpected("Failed to fetch file from " + resolved_url.value());
+    }
+
+    return std::move(file_response).moveRawData();
+  };
+
+  auto result = asset_manager_->sync(asset_layout, fetch);
+  if (!result) {
+    send_error(result.error());
+    return;
+  }
+
+  C2Payload response(Operation::acknowledge, state::UpdateState::FULLY_APPLIED, resp.ident, true);
+  enqueue_c2_response(std::move(response));
+}
+
 utils::TaskRescheduleInfo C2Agent::produce() {
   // place priority on messages to send to the c2 server
   if (protocol_ != nullptr) {
@@ -891,27 +985,6 @@ static auto make_path(const std::string& str) {
   return std::filesystem::path(str);
 }
 
-static std::optional<std::string> validateFilePath(const std::filesystem::path& path) {
-  if (path.empty()) {
-    return "Empty file path";
-  }
-  if (!path.is_relative()) {
-    return "File path must be a relative path '" + path.string() + "'";
-  }
-  if (!path.has_filename()) {
-    return "Filename missing in output path '" + path.string() + "'";
-  }
-  if (path.filename() == "." || path.filename() == "..") {
-    return "Invalid filename '" + path.filename().string() + "'";
-  }
-  for (const auto& segment : path) {
-    if (segment == "..") {
-      return "Accessing parent directory is forbidden in file path '" + path.string() + "'";
-    }
-  }
-  return std::nullopt;
-}
-
 void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   auto send_error = [&] (std::string_view error) {
     logger_->log_error("{}", error);
@@ -919,19 +992,16 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     response.setRawData(as_bytes(std::span(error.begin(), error.end())));
     enqueue_c2_response(std::move(response));
   };
-  std::filesystem::path asset_dir = configuration_->getHome() / "asset";
-  if (auto asset_dir_str = configuration_->get(Configuration::nifi_asset_directory)) {
-    asset_dir = asset_dir_str.value();
-  }
 
   // output file
   std::filesystem::path file_path;
   if (auto file_rel = resp.getArgument("file") | utils::transform(make_path)) {
-    if (auto error = validateFilePath(file_rel.value())) {
-      send_error(error.value());
+    auto result = utils::file::validateRelativePath(file_rel.value());
+    if (!result) {
+      send_error(result.error());
       return;
     }
-    file_path = asset_dir / file_rel.value();
+    file_path = asset_manager_->getRoot() / file_rel.value();
   } else {
     send_error("Couldn't find 'file' argument");
     return;

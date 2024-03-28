@@ -25,6 +25,7 @@
 #include "core/state/nodes/QueueMetrics.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/ConfigurationChecksums.h"
+#include "core/state/nodes/AssetInformation.h"
 #include "utils/gsl.h"
 #include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
@@ -33,10 +34,11 @@
 namespace org::apache::nifi::minifi::state::response {
 
 ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
-  std::shared_ptr<core::FlowConfiguration> flow_configuration)
+  std::shared_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::AssetManager> asset_manager)
     : configuration_(std::move(configuration)),
       repository_metric_sources_(std::move(repository_metric_sources)),
-      flow_configuration_(std::move(flow_configuration)) {
+      flow_configuration_(std::move(flow_configuration)),
+      asset_manager_(std::move(asset_manager)) {
 }
 
 void ResponseNodeLoader::clearConfigRoot() {
@@ -194,6 +196,13 @@ void ResponseNodeLoader::initializeConfigurationChecksums(const SharedResponseNo
   }
 }
 
+void ResponseNodeLoader::initializeAssetInformation(const SharedResponseNode& response_node) const {
+  auto asset_info = dynamic_cast<state::response::AssetInformation*>(response_node.get());
+  if (asset_info) {
+    asset_info->setAssetManager(asset_manager_);
+  }
+}
+
 void ResponseNodeLoader::initializeFlowMonitor(const SharedResponseNode& response_node) const {
   auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
   if (flowMonitor == nullptr) {
@@ -231,6 +240,7 @@ std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std:
     initializeAgentStatus(response_node);
     initializeConfigurationChecksums(response_node);
     initializeFlowMonitor(response_node);
+    initializeAssetInformation(response_node);
   }
   return response_nodes;
 }
