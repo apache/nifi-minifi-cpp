@@ -805,10 +805,12 @@ TEST_CASE("FlowFileRepository can filter out too small contents") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
+  const auto minifi_home = testController.createTempDirectory();
   const auto ff_dir = testController.createTempDirectory();
   const auto content_dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
+  config->setHome(minifi_home);
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
 
