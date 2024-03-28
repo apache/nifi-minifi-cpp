@@ -16,18 +16,17 @@
  */
 #include <string>
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "processors/ListenTCP.h"
-#include "SingleProcessorTestController.h"
-#include "Utils.h"
+#include "unit/SingleProcessorTestController.h"
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 using ListenTCP = org::apache::nifi::minifi::processors::ListenTCP;
 
 using namespace std::literals::chrono_literals;
-using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
 
 namespace org::apache::nifi::minifi::test {
 
@@ -265,8 +264,8 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
   ssl_data.key_pw = "Password12";
 
 
-  asio::ssl::context::method client_method;
-  bool expected_to_work;
+  asio::ssl::context::method client_method = asio::ssl::context::method::sslv2_client;
+  bool expected_to_work = false;
 
   SECTION("sslv2 should be disabled") {
     client_method = asio::ssl::context::method::sslv2_client;

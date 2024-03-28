@@ -19,8 +19,6 @@
  */
 #pragma once
 
-#ifdef OPENSSL_SUPPORT
-
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 #include <openssl/md5.h>
@@ -188,5 +186,3 @@ class HashContent : public core::Processor {
 };
 
 }  // namespace org::apache::nifi::minifi::processors
-
-#endif  // OPENSSL_SUPPORT

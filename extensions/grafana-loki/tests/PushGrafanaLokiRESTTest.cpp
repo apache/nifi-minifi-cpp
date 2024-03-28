@@ -17,10 +17,10 @@
 
 #include "../PushGrafanaLokiREST.h"
 #include "MockGrafanaLokiREST.h"
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 #include "utils/StringUtils.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 
 #ifdef WIN32
 #pragma push_macro("GetObject")
@@ -292,7 +292,7 @@ TEST_CASE_METHOD(PushGrafanaLokiRESTTestFixture, "Basic authentication is set in
 
 TEST_CASE_METHOD(PushGrafanaLokiRESTTestFixture, "Bearer token is set for authentication", "[PushGrafanaLokiREST]") {
   auto temp_dir = test_controller_.createTempDirectory();
-  auto test_file_path = minifi::utils::putFileToDir(temp_dir, "test1.txt", "mytoken\n");
+  auto test_file_path = minifi::test::utils::putFileToDir(temp_dir, "test1.txt", "mytoken\n");
   setProperty(PushGrafanaLokiREST::LogLineBatchSize, "1");
   setProperty(PushGrafanaLokiREST::BearerTokenFile, test_file_path.string());
   auto results = test_controller_.trigger({minifi::test::InputFlowFileData{"log line 1", {}}});

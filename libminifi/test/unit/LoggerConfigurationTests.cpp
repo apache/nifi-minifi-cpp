@@ -23,8 +23,8 @@
 #include <string>
 #include <vector>
 
-#include "../Catch.h"
-#include "../TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestBase.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "spdlog/formatter.h"
 #include "spdlog/pattern_formatter.h"

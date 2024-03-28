@@ -24,11 +24,11 @@
 #include "core/RepositoryFactory.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "TailFile.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/StringUtils.h"
-#include "ConfigurationTestController.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/ConfigurationTestController.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -793,7 +793,7 @@ TEST_CASE("Configuration is not valid yaml", "[YamlConfiguration]") {
   ConfigurationTestController test_controller;
   core::YamlConfiguration yaml_config(test_controller.getContext());
   REQUIRE_THROWS(yaml_config.getRootFromPayload("}"));
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "Configuration is not valid yaml"));
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Configuration is not valid yaml"));
 }
 
 namespace {

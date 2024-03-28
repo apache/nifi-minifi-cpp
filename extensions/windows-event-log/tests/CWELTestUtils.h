@@ -26,10 +26,10 @@
 
 #include "ConsumeWindowsEventLog.h"
 #include "processors/PutFile.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/StringUtils.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 #include "utils/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"

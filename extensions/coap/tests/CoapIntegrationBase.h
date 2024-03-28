@@ -23,9 +23,10 @@
 #include <utility>
 #include <vector>
 
-#include "../tests/TestServer.h"
+#include "integration/TestServer.h"
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
+#include "core/yaml/YamlConfiguration.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -38,7 +39,7 @@ int ssl_enable(void *, void *) {
   return 0;
 }
 
-class CoapIntegrationBase : public IntegrationBase {
+class CoapIntegrationBase : public minifi::test::IntegrationBase {
  public:
   explicit CoapIntegrationBase(std::chrono::seconds waitTime = 5s)
       : IntegrationBase(waitTime),
@@ -110,7 +111,7 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
     }
     if (scheme == "https" && !key_dir.empty()) {
       std::string cert;
-      cert = key_dir + "nifi-cert.pem";
+      cert = key_dir.string() + "nifi-cert.pem";
       callback.init_ssl = ssl_enable;
       port += "s";
       callback.log_message = log_message;

@@ -19,8 +19,8 @@
 #include <memory>
 #include <utility>
 #include <string>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Processor.h"
 #include "../../controller/Controller.h"
 #include "core/controller/ControllerService.h"

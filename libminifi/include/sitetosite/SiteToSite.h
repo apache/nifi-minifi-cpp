@@ -27,7 +27,7 @@
 #include "properties/Configure.h"
 #include "io/CRCStream.h"
 #include "utils/Id.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
@@ -364,10 +364,10 @@ class SiteToSiteClientConfiguration {
   std::string getInterface() const {
     return local_network_interface_;
   }
-  void setHTTPProxy(const utils::HTTPProxy &proxy) {
+  void setHTTPProxy(const http::HTTPProxy &proxy) {
     proxy_ = proxy;
   }
-  utils::HTTPProxy getHTTPProxy() const {
+  http::HTTPProxy getHTTPProxy() const {
     return this->proxy_;
   }
 
@@ -384,7 +384,7 @@ class SiteToSiteClientConfiguration {
 
   std::shared_ptr<controllers::SSLContextService> ssl_service_;
 
-  utils::HTTPProxy proxy_;
+  http::HTTPProxy proxy_;
 };
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic pop

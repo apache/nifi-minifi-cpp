@@ -14,9 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
-#ifdef OPENSSL_SUPPORT
-
 #include "api/nanofi.h"
 #include <openssl/md5.h>
 #include <unistd.h>
@@ -116,5 +113,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
-
-#endif  // OPENSSL_SUPPORT

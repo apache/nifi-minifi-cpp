@@ -360,7 +360,6 @@ show_supported_features() {
   echo " Select MiNiFi C++ Features to toggle."
   echo "****************************************"
   echo "A. Persistent Repositories .....$(print_feature_status ROCKSDB_ENABLED)"
-  echo "B. libcurl features ............$(print_feature_status HTTP_CURL_ENABLED)"
   echo "C. libarchive features .........$(print_feature_status LIBARCHIVE_ENABLED)"
   echo "D. Python Scripting support ....$(print_feature_status PYTHON_SCRIPTING_ENABLED)"
   echo "E. Expression Language support .$(print_feature_status EXPRESSION_LANGUAGE_ENABLED)"
@@ -400,7 +399,6 @@ show_supported_features() {
   echo "5. Build Profile ...............$(print_multi_option_status BUILD_PROFILE)"
   echo "6. Create ASAN build ...........$(print_feature_status ASAN_ENABLED)"
   echo "7. Treat warnings as errors.....$(print_feature_status MINIFI_FAIL_ON_WARNINGS)"
-  echo "8. Enable OpenSSL...............$(print_feature_status OPENSSL_ENABLED)"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -418,7 +416,6 @@ read_feature_options(){
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
-    b) ToggleFeature HTTP_CURL_ENABLED ;;
     c) ToggleFeature LIBARCHIVE_ENABLED ;;
     d) ToggleFeature PYTHON_SCRIPTING_ENABLED ;;
     e) ToggleFeature EXPRESSION_LANGUAGE_ENABLED ;;
@@ -453,7 +450,6 @@ read_feature_options(){
     5) ToggleMultiOption BUILD_PROFILE;;
     6) ToggleFeature ASAN_ENABLED;;
     7) ToggleFeature MINIFI_FAIL_ON_WARNINGS;;
-    8) ToggleFeature OPENSSL_ENABLED;;
     p) export FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         export MENU="main"

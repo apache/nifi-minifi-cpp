@@ -15,10 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
 #include "CustomProcessors.h"
-#include "TestControllerWithFlow.h"
+#include "unit/TestControllerWithFlow.h"
 
 // A flow with structure:
 // [Generator] ---> [A] ---|

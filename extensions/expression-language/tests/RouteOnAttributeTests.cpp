@@ -17,8 +17,8 @@
  */
 #include <array>
 #include <memory>
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include <RouteOnAttribute.h>
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"

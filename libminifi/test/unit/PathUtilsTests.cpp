@@ -16,7 +16,7 @@
  */
 
 #include <string>
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "utils/file/PathUtils.h"
 
 namespace fs = org::apache::nifi::minifi::utils::file;

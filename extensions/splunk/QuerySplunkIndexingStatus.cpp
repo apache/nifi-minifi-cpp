@@ -27,7 +27,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "client/HTTPClient.h"
+#include "http/HTTPClient.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
@@ -86,7 +86,7 @@ std::string getAckIdsAsPayload(const std::unordered_map<uint64_t, FlowFileWithIn
   return buffer.GetString();
 }
 
-void getIndexingStatusFromSplunk(curl::HTTPClient& client, std::unordered_map<uint64_t, FlowFileWithIndexStatus>& undetermined_flow_files) {
+void getIndexingStatusFromSplunk(http::HTTPClient& client, std::unordered_map<uint64_t, FlowFileWithIndexStatus>& undetermined_flow_files) {
   rapidjson::Document response;
   if (!client.submit())
     return;

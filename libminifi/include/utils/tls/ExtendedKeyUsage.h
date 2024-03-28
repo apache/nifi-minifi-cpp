@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 #pragma once
-#ifdef OPENSSL_SUPPORT
 
 #include <bitset>
 #include <cinttypes>
@@ -51,5 +50,3 @@ class ExtendedKeyUsage {
 };
 
 }  // namespace org::apache::nifi::minifi::utils::tls
-
-#endif  // OPENSSL_SUPPORT

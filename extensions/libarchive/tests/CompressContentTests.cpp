@@ -27,8 +27,8 @@
 #include <iostream>
 
 #include "FlowController.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Core.h"
 #include "../../include/core/FlowFile.h"
 #include "unit/ProvenanceTestHelper.h"
@@ -43,7 +43,7 @@
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
-#include "Utils.h"
+#include "unit/TestUtils.h"
 #include "utils/gsl.h"
 
 class ReadCallback {

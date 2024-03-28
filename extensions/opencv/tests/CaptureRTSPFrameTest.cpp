@@ -28,15 +28,15 @@
 
 #include "FlowFile.h"
 #include "core/Core.h"
-#include "../../../libminifi/test/TestBase.h"
-#include "../../../libminifi/test/Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "FlowController.h"
 #include "core/Processor.h"
 #include "core/ProcessorNode.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "processors/LogAttribute.h"
-#include "../../../libminifi/test/unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 
 // TODO(_): valid capture test needs to be fixed
 TEST_CASE("CaptureRTSPFrame::ValidCapture", "[!mayfail]") {

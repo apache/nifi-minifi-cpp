@@ -21,7 +21,7 @@
 #include "utils/FileMutex.h"
 #include "utils/file/FileUtils.h"
 #include "utils/OsUtils.h"
-#include "../TestBase.h"
+#include "unit/TestBase.h"
 
 namespace minifi = org::apache::nifi::minifi;
 

@@ -19,8 +19,8 @@
 #include <map>
 #include <string>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Core.h"
 #include "utils/OsUtils.h"
 #include "wel/MetadataWalker.h"

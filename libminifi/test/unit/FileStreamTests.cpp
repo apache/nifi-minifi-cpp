@@ -22,8 +22,8 @@
 #include <vector>
 
 #include "io/FileStream.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/gsl.h"
 #include "utils/file/FileUtils.h"
 

@@ -47,13 +47,8 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
             -DENABLE_ACL=ON
             -DENABLE_ICONV=OFF
             -DENABLE_TEST=OFF
-            -DENABLE_WERROR=OFF)
-
-    if (MINIFI_OPENSSL)
-        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_OPENSSL=ON)
-    else()
-        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_OPENSSL=OFF)
-    endif()
+            -DENABLE_WERROR=OFF
+            -DENABLE_OPENSSL=ON)
 
     if (NOT ENABLE_LZMA)
         list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_LZMA=OFF)
@@ -83,10 +78,7 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
     )
 
     # Set dependencies
-    add_dependencies(libarchive-external ZLIB::ZLIB)
-    if (MINIFI_OPENSSL)
-        add_dependencies(libarchive-external OpenSSL::Crypto)
-    endif()
+    add_dependencies(libarchive-external ZLIB::ZLIB OpenSSL::Crypto)
     if (ENABLE_LZMA)
         add_dependencies(libarchive-external LibLZMA::LibLZMA)
     endif()
@@ -104,10 +96,7 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
     add_library(LibArchive::LibArchive STATIC IMPORTED)
     set_target_properties(LibArchive::LibArchive PROPERTIES IMPORTED_LOCATION "${LIBARCHIVE_LIBRARY}")
     add_dependencies(LibArchive::LibArchive libarchive-external)
-    set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
-    if (MINIFI_OPENSSL)
-        set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES OpenSSL::Crypto)
-    endif()
+    set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB OpenSSL::Crypto)
     if (ENABLE_LZMA)
         set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES LibLZMA::LibLZMA)
     endif()

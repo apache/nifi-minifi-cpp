@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "c2/ControllerSocketMetricsPublisher.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/nodes/QueueMetrics.h"

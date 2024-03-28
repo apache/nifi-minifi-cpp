@@ -19,8 +19,8 @@
 #include <string>
 #include <vector>
 #include "utils/ClassUtils.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 TEST_CASE("Test ShortNames", "[testcrc1]") {
   std::string className;

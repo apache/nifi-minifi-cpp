@@ -26,8 +26,8 @@
 #include <utility>
 #include <vector>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "processors/SQLProcessor.h"
 
 #ifdef MINIFI_USE_REAL_ODBC_TEST_DRIVER

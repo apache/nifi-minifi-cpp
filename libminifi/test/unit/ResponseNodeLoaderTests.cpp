@@ -18,13 +18,13 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
-#include "../ReadFromFlowFileTestProcessor.h"
-#include "../WriteToFlowFileTestProcessor.h"
+#include "unit/ReadFromFlowFileTestProcessor.h"
+#include "unit/WriteToFlowFileTestProcessor.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "utils/Id.h"
-#include "ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 
 namespace org::apache::nifi::minifi::test {
 

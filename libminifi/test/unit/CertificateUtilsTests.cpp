@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "date/date.h"
 #include "openssl/core_names.h"
 #include "utils/file/FileUtils.h"

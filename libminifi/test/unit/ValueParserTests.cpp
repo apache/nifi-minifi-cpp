@@ -18,7 +18,7 @@
 #include <cstdint>
 
 #include "utils/ValueParser.h"
-#include "../Catch.h"
+#include "unit/Catch.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 

@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "AppendHostInfo.h"
 #include "LogAttribute.h"
 

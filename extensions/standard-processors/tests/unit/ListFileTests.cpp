@@ -18,17 +18,15 @@
 #include <memory>
 #include <string>
 
-#include "TestBase.h"
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "processors/LogAttribute.h"
 #include "processors/ListFile.h"
-#include "utils/TestUtils.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "utils/file/PathUtils.h"
-#include "Utils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -44,7 +42,7 @@ inline char get_separator() {
 }
 #endif
 
-using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
 
 class ListFileTestFixture {
  public:
@@ -76,13 +74,13 @@ ListFileTestFixture::ListFileTestFixture()
   auto log_attribute = plan_->addProcessor("LogAttribute", "logAttribute", core::Relationship("success", "description"), true);
   plan_->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
-  hidden_file_path_ = utils::putFileToDir(input_dir_, ".hidden_file.txt", "hidden");
-  standard_file_abs_path_ = utils::putFileToDir(input_dir_, "standard_file.log", "test");
-  empty_file_abs_path_ = utils::putFileToDir(input_dir_, "empty_file.txt", "");
+  hidden_file_path_ = minifi::test::utils::putFileToDir(input_dir_, ".hidden_file.txt", "hidden");
+  standard_file_abs_path_ = minifi::test::utils::putFileToDir(input_dir_, "standard_file.log", "test");
+  empty_file_abs_path_ = minifi::test::utils::putFileToDir(input_dir_, "empty_file.txt", "");
   utils::file::FileUtils::create_dir(input_dir_ / "first_subdir");
-  first_sub_file_abs_path_ = utils::putFileToDir(input_dir_ / "first_subdir", "sub_file_one.txt", "the");
+  first_sub_file_abs_path_ = minifi::test::utils::putFileToDir(input_dir_ / "first_subdir", "sub_file_one.txt", "the");
   utils::file::FileUtils::create_dir(input_dir_ / "second_subdir");
-  second_sub_file_abs_path_ = utils::putFileToDir(input_dir_ / "second_subdir", "sub_file_two.txt", "some_other_content");
+  second_sub_file_abs_path_ = minifi::test::utils::putFileToDir(input_dir_ / "second_subdir", "sub_file_two.txt", "some_other_content");
 
   auto last_write_time = *utils::file::FileUtils::last_write_time(standard_file_abs_path_);
   utils::file::FileUtils::set_last_write_time(empty_file_abs_path_, last_write_time - 1h);
@@ -236,7 +234,7 @@ TEST_CASE("ListFile sets attributes correctly") {
   list_file->setProperty(ListFile::InputDirectory, dir.string());
   SECTION("File in subdirectory of input directory") {
     std::filesystem::create_directories(dir / "a" / "b");
-    utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
+    minifi::test::utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
     auto result = test_controller.trigger();
     REQUIRE((result.contains(ListFile::Success) && result.at(ListFile::Success).size() == 1));
     auto flow_file = result.at(ListFile::Success)[0];
@@ -245,7 +243,7 @@ TEST_CASE("ListFile sets attributes correctly") {
     CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "alpha.txt");
   }
   SECTION("File directly in input directory") {
-    utils::putFileToDir(dir, "beta.txt", "The quick brown fox jumps over the lazy dog\n");
+    minifi::test::utils::putFileToDir(dir, "beta.txt", "The quick brown fox jumps over the lazy dog\n");
     auto result = test_controller.trigger();
     REQUIRE((result.contains(ListFile::Success) && result.at(ListFile::Success).size() == 1));
     auto flow_file = result.at(ListFile::Success)[0];
@@ -266,12 +264,12 @@ TEST_CASE("If a second file with the same modification time shows up later, then
 
   const auto common_timestamp = std::chrono::file_clock::now();
 
-  const auto file_one = utils::putFileToDir(input_dir, "file_one.txt", "When I was one, I had just begun.");
+  const auto file_one = minifi::test::utils::putFileToDir(input_dir, "file_one.txt", "When I was one, I had just begun.");
   std::filesystem::last_write_time(file_one, common_timestamp);
   const auto result_one = test_controller.trigger();
   CHECK(result_one.at(ListFile::Success).size() == 1);
 
-  const auto file_two = utils::putFileToDir(input_dir, "file_two.txt", "When I was two, I was nearly new.");
+  const auto file_two = minifi::test::utils::putFileToDir(input_dir, "file_two.txt", "When I was two, I was nearly new.");
   std::filesystem::last_write_time(file_two, common_timestamp);
   const auto result_two = test_controller.trigger();
   CHECK(result_two.at(ListFile::Success).size() == 1);

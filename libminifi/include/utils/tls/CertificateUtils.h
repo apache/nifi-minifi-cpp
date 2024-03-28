@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 #pragma once
-#ifdef OPENSSL_SUPPORT
 
 #include <openssl/ssl.h>
 #include <openssl/pkcs12.h>
@@ -113,5 +112,3 @@ std::error_code processP12Certificate(const std::filesystem::path& cert_file, co
 std::error_code processPEMCertificate(const std::filesystem::path& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler);
 
 }  // namespace org::apache::nifi::minifi::utils::tls
-
-#endif  // OPENSSL_SUPPORT

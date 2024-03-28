@@ -20,8 +20,8 @@
 #include <set>
 
 #include "ResourceQueue.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "logging/LoggerConfiguration.h"
 
 using namespace std::literals::chrono_literals;

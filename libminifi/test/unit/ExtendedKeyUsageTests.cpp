@@ -14,13 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef OPENSSL_SUPPORT
-
 #include <openssl/x509v3.h>
 
 #include "utils/gsl.h"
 #include "utils/tls/ExtendedKeyUsage.h"
-#include "../Catch.h"
+#include "unit/Catch.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 
@@ -191,5 +189,3 @@ TEST_CASE("ExtendedKeyUsage ignores ASN.1 flags higher than 15", "[constructor]"
   REQUIRE(createExtendedKeyUsage({128}) == nullptr);
   REQUIRE(createExtendedKeyUsage({1, 2, 200}) == nullptr);
 }
-
-#endif  // OPENSSL_SUPPORT

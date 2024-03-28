@@ -17,7 +17,7 @@
 To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR select the option to "Enable all Extensions" in the bootstrap script. [ReadMe](https://github.com/apache/nifi-minifi-cpp/#bootstrapping)
 
 # Extension internals
-Extensions are dynamic libraries loaded at runtime by the agent. An extension makes its 
+Extensions are dynamic libraries loaded at runtime by the agent. An extension makes its
 capabilities (classes) available to the system through registrars. Registration must happen in source files, not headers.
 
 ```C++
@@ -32,19 +32,17 @@ REGISTER_RESOURCE(HTTPClient, InternalResource);
 REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
-Some extensions (e.g. `http-curl`) require initialization before use. 
+Some extensions (e.g. `OpenCVExtension`) require initialization before use.
 You need to create `init` and `deinit` functions and register them using `REGISTER_EXTENSION`.
 
 ```C++
-static bool init(const core::extension::ExtensionConfig& /*config*/) override {
-  return curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
+static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
+  return org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
 }
 
-static void deinit() override {
-  curl_global_cleanup();
-}
+static void deinit() {}
 
-REGISTER_EXTENSION("HttpCurlExtension", init, deinit);
+REGISTER_EXTENSION("OpenCVExtension", init, deinit);
 ```
 
 If you don't use `REGISTER_EXTENSION`, the registered resources still become available, so make sure to register the extension if you need special initialization.

@@ -20,15 +20,14 @@
 #include <filesystem>
 #include <chrono>
 
-#include "TestBase.h"
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "utils/file/FileUtils.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "Utils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -71,9 +70,9 @@ GetFileTestController::GetFileTestController()
   auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
-  utils::putFileToDir(temp_dir_, input_file_name_, "The quick brown fox jumps over the lazy dog\n");
-  utils::putFileToDir(temp_dir_, large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
-  utils::putFileToDir(temp_dir_, hidden_input_file_name_, "But noone has ever seen it\n");
+  minifi::test::utils::putFileToDir(temp_dir_, input_file_name_, "The quick brown fox jumps over the lazy dog\n");
+  minifi::test::utils::putFileToDir(temp_dir_, large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
+  minifi::test::utils::putFileToDir(temp_dir_, hidden_input_file_name_, "But noone has ever seen it\n");
 
 #ifdef WIN32
   const auto hide_file_err = minifi::test::utils::hide_file(getFullPath(hidden_input_file_name_));
@@ -171,7 +170,7 @@ TEST_CASE("Check if subdirectories are ignored or not if Recurse property is set
 
   auto subdir_path = test_controller.getFullPath("subdir");
   utils::file::FileUtils::create_dir(subdir_path);
-  utils::putFileToDir(subdir_path, "subfile.txt", "Some content in a subfile\n");
+  minifi::test::utils::putFileToDir(subdir_path, "subfile.txt", "Some content in a subfile\n");
 
   SECTION("File in subdirectory is ignored when Recurse property set to false")  {
     test_controller.setProperty(minifi::processors::GetFile::Recurse, "false");
@@ -275,7 +274,7 @@ TEST_CASE("GetFile sets attributes correctly") {
   get_file->setProperty(GetFile::Directory, dir.string());
   SECTION("File in subdirectory of input directory") {
     std::filesystem::create_directories(dir / "a" / "b");
-    utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
+    minifi::test::utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
     auto result = test_controller.trigger();
     REQUIRE((result.contains(GetFile::Success) && result.at(GetFile::Success).size() == 1));
     auto flow_file = result.at(GetFile::Success)[0];
@@ -284,7 +283,7 @@ TEST_CASE("GetFile sets attributes correctly") {
     CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "alpha.txt");
   }
   SECTION("File directly in input directory") {
-    utils::putFileToDir(dir, "beta.txt", "The quick brown fox jumps over the lazy dog\n");
+    minifi::test::utils::putFileToDir(dir, "beta.txt", "The quick brown fox jumps over the lazy dog\n");
     auto result = test_controller.trigger();
     REQUIRE((result.contains(GetFile::Success) && result.at(GetFile::Success).size() == 1));
     auto flow_file = result.at(GetFile::Success)[0];

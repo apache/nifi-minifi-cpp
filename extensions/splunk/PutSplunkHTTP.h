@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "SplunkHECProcessor.h"
-#include "client/HTTPClient.h"
+#include "http/HTTPClient.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
@@ -107,7 +107,7 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  private:
-  std::string getEndpoint(curl::HTTPClient& client);
+  std::string getEndpoint(http::HTTPClient& client);
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
   std::optional<std::string> source_type_;
@@ -115,7 +115,7 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
   std::optional<std::string> host_;
   std::optional<std::string> index_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PutSplunkHTTP>::getLogger(uuid_)};
-  std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>> client_queue_;
+  std::shared_ptr<utils::ResourceQueue<http::HTTPClient>> client_queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

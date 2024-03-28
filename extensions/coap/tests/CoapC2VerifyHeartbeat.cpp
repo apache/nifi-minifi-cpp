@@ -15,10 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <sys/stat.h>
-#undef NDEBUG
-#include <cassert>
 #include <utility>
 #include <chrono>
 #include <fstream>
@@ -29,9 +26,9 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include "BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "processors/InvokeHTTP.h"
-#include "TestBase.h"
+#include "unit/TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
@@ -50,7 +47,8 @@
 #include "CoapC2Protocol.h"
 #include "CoapServer.h"
 #include "concurrentqueue.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
+#include "unit/Catch.h"
 
 class VerifyCoAPServer : public CoapIntegrationBase {
  public:
@@ -60,7 +58,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
   }
 
   void testSetup() override {
-    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::http::HTTPClient>();
     LogTestController::getInstance().setOff<minifi::processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
@@ -80,8 +78,8 @@ class VerifyCoAPServer : public CoapIntegrationBase {
   }
 
   void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(3),
+    using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
+    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3),
         "Received ack. version 3. number of operations 1",
         "Received ack. version 3. number of operations 0",
         "Received read error event from protocol",
@@ -90,11 +88,11 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     auto proc = pg->findProcessorByName("invoke");
-    assert(proc != nullptr);
+    REQUIRE(proc != nullptr);
 
     const auto* const inv = dynamic_cast<minifi::processors::InvokeHTTP*>(proc);
 
-    assert(inv != nullptr);
+    REQUIRE(inv != nullptr);
     std::string url;
     inv->getProperty(minifi::processors::InvokeHTTP::URL, url);
 
@@ -116,14 +114,14 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
     {
       // valid response version 3, 0 ops
-      auto data = std::unique_ptr<uint8_t[]>(new uint8_t[5] { 0x00, 0x03, 0x00, 0x01, 0x00 });
+      auto data = std::unique_ptr<uint8_t[]>(new uint8_t[5] { 0x00, 0x03, 0x00, 0x01, 0x00 });  // NOLINT(cppcoreguidelines-avoid-c-arrays)
       minifi::coap::CoapResponse response(205, std::move(data), 5);
       responses.enqueue(std::move(response));
     }
 
     {
       // valid response
-      auto data = std::unique_ptr<uint8_t[]>(new uint8_t[5] { 0x00, 0x03, 0x00, 0x00, 0x00 });
+      auto data = std::unique_ptr<uint8_t[]>(new uint8_t[5] { 0x00, 0x03, 0x00, 0x00, 0x00 });  // NOLINT(cppcoreguidelines-avoid-c-arrays)
       minifi::coap::CoapResponse response(205, std::move(data), 5);
       responses.enqueue(std::move(response));
     }
@@ -140,7 +138,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
       stream.write("id");
       stream.write("operand");
 
-      auto data = std::make_unique<uint8_t[]>(stream.size());
+      auto data = std::make_unique<uint8_t[]>(stream.size());  // NOLINT(cppcoreguidelines-avoid-c-arrays)
       memcpy(data.get(), stream.getBuffer().data(), stream.getBuffer().size());
       minifi::coap::CoapResponse response(205, std::move(data), stream.size());
       responses.enqueue(std::move(response));
@@ -174,12 +172,9 @@ class VerifyCoAPServer : public CoapIntegrationBase {
   TestController testController;
 };
 
-int main(int argc, char **argv) {
-  const cmd_args args = parse_cmdline_args(argc, argv);
-  const bool isSecure = args.isUrlSecure();
-
-  VerifyCoAPServer harness(isSecure);
-  harness.setKeyDir(args.key_dir);
-  harness.run(args.test_file);
-  return 0;
+TEST_CASE("CoapC2VerifyHeartbeat", "[c2test]") {
+  VerifyCoAPServer harness(false);
+  harness.setKeyDir(TEST_RESOURCES);
+  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "CoapC2VerifyServe.yml";
+  harness.run(test_file_path);
 }

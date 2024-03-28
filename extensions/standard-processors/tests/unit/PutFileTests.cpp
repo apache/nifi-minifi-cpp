@@ -23,9 +23,9 @@
 #include <fstream>
 
 #include "utils/file/FileUtils.h"
-#include "TestBase.h"
-#include "Catch.h"
-#include "TestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"

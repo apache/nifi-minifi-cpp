@@ -30,8 +30,8 @@
 #include <thread>
 
 #include "io/BaseStream.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "unit/SiteToSiteHelper.h"
 #include "sitetosite/CPeer.h"
 #include "sitetosite/CRawSocketProtocol.h"

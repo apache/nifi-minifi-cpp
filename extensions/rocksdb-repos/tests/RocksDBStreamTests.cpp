@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "../RocksDbStream.h"
 #include "../DatabaseContentRepository.h"
 #include "../database/StringAppender.h"

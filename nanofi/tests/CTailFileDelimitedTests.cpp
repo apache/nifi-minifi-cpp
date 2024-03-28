@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "Catch.h"
+#include "unit/Catch.h"
 
 #include "CTestsBase.h"
 

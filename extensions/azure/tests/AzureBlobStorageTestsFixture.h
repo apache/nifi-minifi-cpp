@@ -24,8 +24,8 @@
 #include <vector>
 #include <memory>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Processor.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"

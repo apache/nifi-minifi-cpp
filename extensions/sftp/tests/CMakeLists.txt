@@ -32,7 +32,6 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND ENABLE_EXPRESSION_LANGUAGE
         target_include_directories(${testfilename} BEFORE PRIVATE ${LIBSSH2_INCLUDE_DIR})
         target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
         target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/processors")
-        target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test/")
         target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/nanofi/include")
         target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/sftp")
         target_include_directories(${testfilename} BEFORE PRIVATE "../")

@@ -28,8 +28,8 @@
 #include "FlowFileRecord.h"
 #include "provenance/Provenance.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 namespace provenance = minifi::provenance;
 using namespace std::literals::chrono_literals;

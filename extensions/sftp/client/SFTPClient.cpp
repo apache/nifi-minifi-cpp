@@ -222,7 +222,7 @@ void SFTPClient::setPublicKeyAuthenticationCredentials(const std::string& privat
   private_key_passphrase_ = private_key_passphrase;
 }
 
-bool SFTPClient::setProxy(ProxyType type, const utils::HTTPProxy& proxy) {
+bool SFTPClient::setProxy(ProxyType type, const http::HTTPProxy& proxy) {
   switch (type) {
     case ProxyType::Http:
       if (curl_easy_setopt(easy_, CURLOPT_PROXYTYPE, CURLPROXY_HTTP) != CURLE_OK) {

@@ -19,9 +19,9 @@
 #include <memory>
 #include <string>
 
-#include "SingleProcessorTestController.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 #include "../../script/ExecuteScript.h"
 #include "utils/file/FileUtils.h"

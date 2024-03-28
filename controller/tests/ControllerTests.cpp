@@ -23,12 +23,12 @@
 #include <fstream>
 #include "range/v3/algorithm/find.hpp"
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Processor.h"
 #include "Controller.h"
 #include "c2/ControllerSocketProtocol.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "c2/ControllerSocketMetricsPublisher.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "controllers/SSLContextService.h"
@@ -308,7 +308,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[controllerTests
 
   minifi::controller::startComponent(controller_socket_data_, "TestStateController");
 
-  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
   REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return controller_->isRunning(); }, 20ms));
 
   minifi::controller::stopComponent(controller_socket_data_, "TestStateController");
@@ -338,7 +338,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[controllerTests]") {
 
   minifi::controller::startComponent(controller_socket_data_, "TestStateController");
 
-  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
   REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return controller_->isRunning(); }, 20ms));
 
   for (auto i = 0; i < 3; ++i) {
@@ -364,7 +364,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[controllerTests]") {
   initalizeControllerSocket();
   minifi::controller::startComponent(controller_socket_data_, "TestStateController");
 
-  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
   REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return controller_->isRunning(); }, 20ms));
 
   std::stringstream ss;

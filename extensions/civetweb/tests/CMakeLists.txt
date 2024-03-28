@@ -17,34 +17,28 @@
 # under the License.
 #
 
-if(ENABLE_CURL)
-    file(GLOB CIVETWEB_INTEGRATION_TESTS "*.cpp")
-    SET(CIVETWEB-EXTENSIONS_TEST_COUNT 0)
-    FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
-        get_filename_component(testfilename "${testfile}" NAME_WE)
-        add_minifi_executable("${testfilename}" "${testfile}")
-        target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
-        target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/civetweb")
-        target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
-        target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/http-curl")
-        target_include_directories(${testfilename} SYSTEM PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/civetweb-1.10/include")
+file(GLOB CIVETWEB_INTEGRATION_TESTS "*.cpp")
+SET(CIVETWEB-EXTENSIONS_TEST_COUNT 0)
+FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
+    get_filename_component(testfilename "${testfile}" NAME_WE)
+    add_minifi_executable("${testfilename}" "${testfile}")
+    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/civetweb")
+    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
 
-        target_link_libraries(${testfilename} minifi-civet-extensions)
-        target_link_libraries(${testfilename} minifi-http-curl)
-        target_link_libraries(${testfilename} minifi-standard-processors)
+    target_link_libraries(${testfilename} minifi-civet-extensions)
+    target_link_libraries(${testfilename} minifi-standard-processors)
 
-        createTests("${testfilename}")
-        target_link_libraries(${testfilename} Catch2WithMain)
-        MATH(EXPR CIVETWEB-EXTENSIONS_TEST_COUNT "${CIVETWEB-EXTENSIONS_TEST_COUNT}+1")
-        add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
-        # Copy test resources
-        add_custom_command(
-            TARGET "${testfilename}"
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    "${CMAKE_SOURCE_DIR}/extensions/civetweb/tests/resources"
-                    "$<TARGET_FILE_DIR:${testfilename}>/resources"
-            )
-    ENDFOREACH()
-    message("-- Finished building ${CIVETWEB-EXTENSIONS_TEST_COUNT} civetweb related test file(s)...")
-endif()
+    createTests("${testfilename}")
+    target_link_libraries(${testfilename} Catch2WithMain)
+    MATH(EXPR CIVETWEB-EXTENSIONS_TEST_COUNT "${CIVETWEB-EXTENSIONS_TEST_COUNT}+1")
+    add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
+    # Copy test resources
+    add_custom_command(
+        TARGET "${testfilename}"
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/extensions/civetweb/tests/resources"
+                "$<TARGET_FILE_DIR:${testfilename}>/resources"
+        )
+ENDFOREACH()
+message("-- Finished building ${CIVETWEB-EXTENSIONS_TEST_COUNT} civetweb related test file(s)...")

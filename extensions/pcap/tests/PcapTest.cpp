@@ -15,19 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
-#include <cassert>
 #include <chrono>
 #include <string>
-#include "TestBase.h"
+#include "unit/TestBase.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
 #include "core/ConfigurableComponent.h"
 #include "core/state/ProcessorController.h"
 #include "integration/IntegrationBase.h"
 #include "CapturePacket.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
+#include "unit/Catch.h"
+
+namespace org::apache::nifi::minifi::test {
 
 class PcapTestHarness : public IntegrationBase {
  public:
@@ -49,8 +49,7 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
         // FIXME(fgerlits): These assertions don't work, but the test is still useful to check that the processor starts
         // "Starting capture",
         // "Stopping capture",
@@ -75,14 +74,15 @@ class PcapTestHarness : public IntegrationBase {
   std::string dir = testController.createTempDirectory();
 };
 
-int main(int argc, char **argv) {
-  std::string test_file_location;
-  if (argc > 1) {
-    test_file_location = argv[1];
-  }
-
+TEST_CASE("PcapTest", "[pcap]") {
   PcapTestHarness harness;
-  harness.setKeyDir("");
-  harness.run(test_file_location);
-  return 0;
+#ifdef __APPLE__
+  std::string test_file_name = "TestPcap.yml";
+#else
+  std::string test_file_name = "TestPcapLinux.yml";
+#endif
+  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / test_file_name;
+  harness.run(test_file_path);
 }
+
+}  // namespace org::apache::nifi::minifi::test

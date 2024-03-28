@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
-#include "ConfigurationTestController.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/ConfigurationTestController.h"
 #include "core/flow/AdaptiveConfiguration.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -89,7 +89,7 @@ TEST_CASE("Adaptive configuration logs json parse errors") {
 
   REQUIRE_THROWS(config.getRootFromPayload(json_config));
 
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "[debug] Could not parse configuration as json, trying yaml"));
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "[error] Configuration file is not valid json: Invalid encoding in string. (38)"));
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "[error] Configuration file is not valid yaml: yaml-cpp: error at line 3, column 27: end of map flow not found"));
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "[debug] Could not parse configuration as json, trying yaml"));
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "[error] Configuration file is not valid json: Invalid encoding in string. (38)"));
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "[error] Configuration file is not valid yaml: yaml-cpp: error at line 3, column 27: end of map flow not found"));
 }

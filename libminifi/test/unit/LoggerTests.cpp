@@ -21,12 +21,12 @@
 #include <vector>
 #include <ctime>
 #include <random>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/ZlibStream.h"
 #include "StreamPipe.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "utils/span.h"
 #include "utils/net/AsioSocketUtils.h"
 
@@ -220,7 +220,7 @@ class LoggerTestAccessor {
   }
   static bool waitForCompressionToHappen(logging::LoggerConfiguration& log_config) {
     auto sink = log_config.compression_manager_.getSink();
-    return !sink || utils::verifyEventHappenedInPollTime(1s, [&]{ return sink->cached_logs_.itemCount() == 0; });
+    return !sink || minifi::test::utils::verifyEventHappenedInPollTime(1s, [&]{ return sink->cached_logs_.itemCount() == 0; });
   }
   static auto getCompressedLogs(logging::LoggerConfiguration& log_config) {
     return log_config.compression_manager_.getCompressedLogs(std::chrono::milliseconds{0});
@@ -265,7 +265,7 @@ TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl10
   for (size_t idx = 0; idx < 10000; ++idx) {
     logger->log_error("Hi there");
   }
-  bool cache_shrunk = utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, [&] {
+  bool cache_shrunk = minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, [&] {
     return LoggerTestAccessor::getUncompressedSize(*log_config) <= 10_KiB;
   });
   REQUIRE(cache_shrunk);

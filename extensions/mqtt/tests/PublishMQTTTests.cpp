@@ -18,9 +18,9 @@
 
 #include "range/v3/algorithm/find_if.hpp"
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "catch2/matchers/catch_matchers_string.hpp"
-#include "TestBase.h"
+#include "unit/TestBase.h"
 #include "../processors/PublishMQTT.h"
 
 using namespace std::literals::chrono_literals;

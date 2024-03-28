@@ -23,9 +23,9 @@
 #include <memory>
 #include <vector>
 
-#include "TestBase.h"
-#include "Catch.h"
-#include "Utils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 
 struct Lines {
   std::vector<std::string> lines;
@@ -278,7 +278,7 @@ auto findByName(const std::set<T>& set, const std::string& name) -> decltype(Res
 
 void assertFailure(const Conn& expected, ConnectionFailure failure) {
   auto assertMessage = [](const std::string& message) {
-    REQUIRE(utils::verifyLogLinePresenceInPollTime(std::chrono::seconds{1}, message));
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds{1}, message));
   };
 
   switch (failure) {
