@@ -43,7 +43,8 @@ enum class Operation : uint8_t {
   clear,
   transfer,
   pause,
-  resume
+  resume,
+  sync
 };
 
 enum class DescribeOperand : uint8_t {
@@ -68,6 +69,10 @@ enum class ClearOperand : uint8_t{
   connection,
   repositories,
   corecomponentstate
+};
+
+enum class SyncOperand : uint8_t{
+  asset
 };
 
 #define PAYLOAD_NO_STATUS 0

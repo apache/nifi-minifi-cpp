@@ -25,6 +25,7 @@
 #include <string>
 #include <system_error>
 #include <utility>
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::utils::file {
 
@@ -40,6 +41,27 @@ inline std::optional<std::filesystem::path> canonicalize(const std::filesystem::
     return std::nullopt;
 
   return result;
+}
+
+inline nonstd::expected<void, std::string> validateRelativePath(const std::filesystem::path& path) {
+  if (path.empty()) {
+    return nonstd::make_unexpected("Empty file path");
+  }
+  if (!path.is_relative()) {
+    return nonstd::make_unexpected("File path must be a relative path '" + path.string() + "'");
+  }
+  if (!path.has_filename()) {
+    return nonstd::make_unexpected("Filename missing in output path '" + path.string() + "'");
+  }
+  if (path.filename() == "." || path.filename() == "..") {
+    return nonstd::make_unexpected("Invalid filename '" + path.filename().string() + "'");
+  }
+  for (const auto& segment : path) {
+    if (segment == "..") {
+      return nonstd::make_unexpected("Accessing parent directory is forbidden in file path '" + path.string() + "'");
+    }
+  }
+  return {};
 }
 
 
