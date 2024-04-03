@@ -63,7 +63,11 @@ class ControllerSocketMetricsPublisherTestFixture {
  public:
   ControllerSocketMetricsPublisherTestFixture()
       : configuration_(std::make_shared<Configure>()),
-        response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr)),
+        response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(
+            configuration_,
+            std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{},
+            nullptr,
+            std::make_shared<minifi::utils::file::AssetManager>(configuration_))),
         test_response_node_(std::make_shared<TestQueueMetrics>()),
         controller_socket_metrics_publisher_("test_publisher") {
     controller_socket_metrics_publisher_.initialize(configuration_, response_node_loader_);
