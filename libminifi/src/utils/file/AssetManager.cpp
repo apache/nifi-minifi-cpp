@@ -22,6 +22,8 @@
 #include "core/logging/LoggerFactory.h"
 #include "utils/Hash.h"
 
+#undef GetObject
+
 namespace org::apache::nifi::minifi::utils::file {
 
 AssetManager::AssetManager(std::shared_ptr<Configure> configuration)
