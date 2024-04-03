@@ -18,12 +18,13 @@
 
 #include "core/state/nodes/MetricsBase.h"
 #include "utils/file/AssetManager.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
 class AssetInformation : public ResponseNode {
  public:
-  AssetInformation() = default;
+  AssetInformation();
   explicit AssetInformation(std::string name, const utils::Identifier& uuid = {}) : ResponseNode(std::move(name), uuid) {}
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines hash for all asset identifiers";
@@ -35,6 +36,7 @@ class AssetInformation : public ResponseNode {
 
  private:
   std::shared_ptr<utils::file::AssetManager> asset_manager_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

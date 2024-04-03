@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::state {
 class MetricsPublisherStore {
  public:
   MetricsPublisherStore(std::shared_ptr<Configure> configuration, const std::vector<std::shared_ptr<core::RepositoryMetricsSource>>& repository_metric_sources,
-    std::shared_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::AssetManager> asset_manager);
+    std::shared_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::AssetManager> asset_manager = nullptr);
   void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* update_sink);
   void loadMetricNodes(core::ProcessGroup* root);
   void clearMetricNodes();
