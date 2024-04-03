@@ -60,9 +60,6 @@ class C2HeartbeatHandler : public HeartbeatHandler {
       hb_str = std::string{buffer.GetString(), buffer.GetSize()};
     }
     auto& asset_info_node = root["assetInfo"];
-    if (!asset_info_node.IsObject()) {
-      int x = 0;
-    }
     auto& asset_hash_node = asset_info_node["hash"];
     std::string asset_hash{asset_hash_node.GetString(), asset_hash_node.GetStringLength()};
 
@@ -98,7 +95,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
 
   void removeAsset(std::string id) {
     std::lock_guard guard{asset_mtx_};
-    expected_assets_.erase(AssetDescription{.id = id});
+    expected_assets_.erase(AssetDescription{.id = id, .path = {}, .url = {}});
   }
 
   std::optional<std::string> getAgentAssetHash() const {
