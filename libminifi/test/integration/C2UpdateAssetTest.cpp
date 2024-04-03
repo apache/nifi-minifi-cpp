@@ -248,7 +248,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   }
 
   size_t file_count = minifi::utils::file::list_dir_all(asset_dir.string(), controller.getLogger()).size();
-  if (file_count != expected_files.size()) {
+  // + 1 is for the .state file from the AssetManager
+  if (file_count != expected_files.size() + 1) {
     controller.getLogger()->log_error("Expected {} files, got {}", expected_files.size(), file_count);
     REQUIRE(false);
   }
