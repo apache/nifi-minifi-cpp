@@ -50,4 +50,13 @@ bool verifyLogLinePresenceInPollTime(const std::chrono::duration<Rep, Period>& w
   return verifyEventHappenedInPollTime(wait_duration, check);
 }
 
+template <class Rep, class Period, typename ...String>
+bool verifyLogLineVariantPresenceInPollTime(const std::chrono::duration<Rep, Period>& wait_duration, String&&... patterns) {
+  auto check = [&patterns...] {
+    const std::string logs = LogTestController::getInstance().getLogs();
+    return ((logs.find(patterns) != std::string::npos) || ...);
+  };
+  return verifyEventHappenedInPollTime(wait_duration, check);
+}
+
 }  // namespace org::apache::nifi::minifi::utils

@@ -36,10 +36,10 @@ namespace org::apache::nifi::minifi::processors {
 class ListenTCP : public NetworkListenerProcessor {
  public:
   explicit ListenTCP(std::string_view name, const utils::Identifier& uuid = {})
-    : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger(uuid)) {
+      : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger(uuid)) {
   }
 
-  EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. "
+  EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a configurable message demarcator. "
                                                           "For each message the processor produces a single FlowFile.";
 
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")
@@ -69,14 +69,28 @@ class ListenTCP : public NetworkListenerProcessor {
       .withDefaultValue(magic_enum::enum_name(utils::net::ClientAuthOption::NONE))
       .withAllowedValues(magic_enum::enum_names<utils::net::ClientAuthOption>())
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto MessageDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Message Delimiter")
+      .withDescription("The delimiter is used to divide the stream into flowfiles.")
+      .isRequired(true)
+      .withDefaultValue("\n")
+      .supportsExpressionLanguage(false)
+      .build();
+  EXTENSIONAPI static constexpr auto ConsumeDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Consume delimiter")
+      .withDescription("If set to true then the delimiter won't be included in the resulting flowfiles.")
+      .withDefaultValue("true")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .isRequired(true)
+      .build();
+
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
       Port,
       MaxBatchSize,
       MaxQueueSize,
       SSLContextService,
-      ClientAuth
+      ClientAuth,
+      MessageDelimiter,
+      ConsumeDelimiter
   };
-
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Messages received successfully will be sent out this relationship."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

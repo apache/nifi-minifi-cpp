@@ -23,11 +23,12 @@
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "utils/IntegrationTestUtils.h"
+#include "catch2/generators/catch_generators.hpp"
 
 using ListenTCP = org::apache::nifi::minifi::processors::ListenTCP;
 
 using namespace std::literals::chrono_literals;
-using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+using org::apache::nifi::minifi::utils::verifyLogLineVariantPresenceInPollTime;
 
 namespace org::apache::nifi::minifi::test {
 
@@ -54,8 +55,8 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP][NetworkListenerProces
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
   }
 
-  CHECK_THAT(utils::sendMessagesViaTCP({"test_message_1"}, endpoint), MatchesSuccess());
-  CHECK_THAT(utils::sendMessagesViaTCP({"another_message"}, endpoint), MatchesSuccess());
+  CHECK_THAT(utils::sendMessagesViaTCP({"test_message_1\n"}, endpoint), MatchesSuccess());
+  CHECK_THAT(utils::sendMessagesViaTCP({"another_message\n"}, endpoint), MatchesSuccess());
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenTCP::Success, 2}}, result, 300s, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[0]) == "test_message_1");
@@ -98,7 +99,7 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP][NetworkLis
   LogTestController::getInstance().setWarn<ListenTCP>();
 
   for (auto i = 0; i < 100; ++i) {
-    CHECK_THAT(utils::sendMessagesViaTCP({"test_message"}, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendMessagesViaTCP({"test_message\n"}, endpoint), MatchesSuccess());
   }
 
   CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
@@ -213,8 +214,8 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
 
-    utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt");
-    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "peer did not return a certificate (SSL routines)"));
+    [[maybe_unused]] auto send_error = utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt");
+    CHECK(verifyLogLineVariantPresenceInPollTime(std::chrono::seconds(3), "peer did not return a certificate (SSL routines)", "due to unspecified system error"));
   }
 
   ProcessorTriggerResult result;
@@ -265,33 +266,12 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
   ssl_data.key_pw = "Password12";
 
 
-  asio::ssl::context::method client_method;
-  bool expected_to_work;
-
-  SECTION("sslv2 should be disabled") {
-    client_method = asio::ssl::context::method::sslv2_client;
-    expected_to_work = false;
-  }
-
-  SECTION("sslv3 should be disabled") {
-    client_method = asio::ssl::context::method::sslv3_client;
-    expected_to_work = false;
-  }
-
-  SECTION("tlsv11 should be disabled") {
-    client_method = asio::ssl::context::method::tlsv11_client;
-    expected_to_work = false;
-  }
-
-  SECTION("tlsv12 should be enabled") {
-    client_method = asio::ssl::context::method::tlsv12_client;
-    expected_to_work = true;
-  }
-
-  SECTION("tlsv13 should be enabled") {
-    client_method = asio::ssl::context::method::tlsv13_client;
-    expected_to_work = true;
-  }
+  const auto [client_method, expected_to_work] = GENERATE(
+      std::make_tuple(asio::ssl::context::method::sslv2_client, false),
+      std::make_tuple(asio::ssl::context::method::sslv3_client, false),
+      std::make_tuple(asio::ssl::context::method::tlsv11_client, false),
+      std::make_tuple(asio::ssl::context::method::tlsv12_client, true),
+      std::make_tuple(asio::ssl::context::method::tlsv13_client, true));
 
   if (!isSslMethodAvailable(client_method))
     return;
@@ -306,6 +286,33 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
     ProcessorTriggerResult result;
     CHECK_FALSE(controller.triggerUntil({{ListenTCP::Success, 1}}, result, 300ms, 50ms));
   }
+}
+
+TEST_CASE("Custom delimiter", "[ListenTCP][NetworkListenerProcessor]") {
+  const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
+  SingleProcessorTestController controller{listen_tcp};
+  LogTestController::getInstance().setTrace<ListenTCP>();
+
+  std::string delimiter = GENERATE("\n", "foo", "💩", "\a");
+  const auto consume_delimiter = GENERATE(true, false);
+
+  REQUIRE(listen_tcp->setProperty(ListenTCP::MessageDelimiter, delimiter));
+  REQUIRE(listen_tcp->setProperty(ListenTCP::ConsumeDelimiter, fmt::format("{}", consume_delimiter)));
+  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
+
+  asio::ip::tcp::endpoint endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
+
+  auto message1 = "test_message_1";
+  auto message2 = "another_message";
+  CHECK_THAT(utils::sendMessagesViaTCP({fmt::format("{}{}", message1, delimiter)}, endpoint), MatchesSuccess());
+  CHECK_THAT(utils::sendMessagesViaTCP({fmt::format("{}{}", message2, delimiter)}, endpoint), MatchesSuccess());
+  ProcessorTriggerResult result;
+  REQUIRE(controller.triggerUntil({{ListenTCP::Success, 2}}, result, 300s, 50ms));
+  CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[0]) == fmt::format("{}{}", message1, consume_delimiter ? "" : delimiter));
+  CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[1]) == fmt::format("{}{}", message2, consume_delimiter ? "" : delimiter));
+
+  check_for_attributes(*result.at(ListenTCP::Success)[0], port);
+  check_for_attributes(*result.at(ListenTCP::Success)[1], port);
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -50,7 +50,7 @@ asio::awaitable<void> TcpServer::doReceive() {
 asio::awaitable<void> TcpServer::readLoop(auto& socket, const auto& remote_address, const auto& local_port) {
   std::string read_message;
   while (true) {
-    auto [read_error, bytes_read] = co_await asio::async_read_until(socket, asio::dynamic_buffer(read_message), '\n', use_nothrow_awaitable);  // NOLINT
+    auto [read_error, bytes_read] = co_await asio::async_read_until(socket, asio::dynamic_buffer(read_message), delimiter_, use_nothrow_awaitable);  // NOLINT
     if (read_error) {
       if (read_error != asio::error::eof) {
         logger_->log_error("Error during reading from socket: {}", read_error.message());
@@ -64,7 +64,8 @@ asio::awaitable<void> TcpServer::readLoop(auto& socket, const auto& remote_addre
     }
 
     if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size()) {
-      concurrent_queue_.enqueue(Message(read_message.substr(0, bytes_read - 1), IpProtocol::TCP, remote_address, local_port));
+      auto message_str = read_message.substr(0, bytes_read - (consume_delimiter_ ? delimiter_.size() : 0));
+      concurrent_queue_.enqueue(Message(std::move(message_str), IpProtocol::TCP, remote_address, local_port));
     } else {
       logger_->log_warn("Queue is full. TCP message ignored.");
     }
