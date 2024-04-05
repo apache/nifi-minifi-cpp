@@ -58,7 +58,7 @@ class SplunkChecker:
     def enable_splunk_hec_indexer(self, container_name, hec_name):
         (code, _) = self.container_communicator.execute_command(container_name, ["sudo",
                                                                                  "/opt/splunk/bin/splunk", "http-event-collector",
-                                                                                 "update", hec_name,
+                                                                                 "create", hec_name,
                                                                                  "-uri", "https://localhost:8089",
                                                                                  "-use-ack", "1",
                                                                                  "-disabled", "0",
@@ -78,3 +78,22 @@ class SplunkChecker:
                                                                                  "-require-client-cert", "1",
                                                                                  "-auth", "admin:splunkadmin"])
         return code == 0
+
+    def get_splunk_token(self, container_name, hec_name):
+        (code, output) = self.container_communicator.execute_command(container_name, ["sudo",
+                                                                                      "/opt/splunk/bin/splunk", "http-event-collector",
+                                                                                      "list",
+                                                                                      "-uri", "https://localhost:8089",
+                                                                                      "-auth", "admin:splunkadmin"])
+        if code != 0:
+            return None
+        output_lines = output.splitlines()
+        hec_name_found = False
+        for output_line in output_lines:
+            if hec_name_found:
+                if "token=" in output_line:
+                    return "Splunk " + output_line.split("=")[1].strip()
+            else:
+                if hec_name in output_line:
+                    hec_name_found = True
+        return None
