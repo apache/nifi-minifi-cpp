@@ -49,9 +49,8 @@ ${WIX_EXTRA_FEATURES}
 
     <Feature Id="InstallService" Title="Apache NiFi MiNiFi C++ Service" AllowAdvertise="no" Display="hidden" Level="1">
       <ComponentRef Id="minifiService"/>
-      <ComponentRef Id="minifiService_autostart"/>
       <ComponentRef Id="minifiServiceNotLocal"/>
-      <ComponentRef Id="minifiServiceNotLocal_autostart"/>
+      <ComponentRef Id="minifiService_autostart"/>
     </Feature>
 
     <Feature Id="InstallConf" Title="Apache NiFi MiNiFi C++ Configuration" AllowAdvertise="yes"  Level="1">
@@ -366,15 +365,6 @@ ${WIX_EXTRA_FEATURES}
                 <Condition><![CDATA[SERVICEACCOUNT="LocalSystem"]]></Condition>
               </Component>
 
-              <Component Id="minifiService_autostart" Guid="17e2be83-e375-4b54-95da-f26fbf20b2ca">
-                <File Id="MiNiFiExe_autostart" Name="minifi.exe" KeyPath="yes" Source="minifi_main\minifi.exe"/>
-                <ServiceControl Id="ServiceControl_Start"
-                      Name="Apache NiFi MiNiFi"
-                      Start="install"
-                      Wait="no" />
-                <Condition><![CDATA[SERVICEACCOUNT="LocalSystem" AND AUTOSTART="1"]]></Condition>
-              </Component>
-
               <Component Id="minifiServiceNotLocal" Guid="87658309-0339-425c-8633-f54ffaaa4922">
                 <File Id="MiNiFiExeWithPassword" Name="minifi.exe" KeyPath="yes" Source="minifi_main\minifi.exe"/>
                 <ServiceInstall Id="MiNiFiExeServiceWithPassword"
@@ -400,13 +390,13 @@ ${WIX_EXTRA_FEATURES}
                 <Condition><![CDATA[SERVICEACCOUNT<>"LocalSystem"]]></Condition>
               </Component>
 
-              <Component Id="minifiServiceNotLocal_autostart" Guid="e347bedd-3c94-49c4-bc78-7b011811c4e6">
-                <File Id="MiNiFiExe_NotLocal_autostart" Name="minifi.exe" KeyPath="yes" Source="minifi_main\minifi.exe"/>
-                <ServiceControl Id="ServiceControl_NotLocal_Start"
+              <Component Id="minifiService_autostart" Guid="17e2be83-e375-4b54-95da-f26fbf20b2ca">
+                <File Id="MiNiFiExe_autostart" Name="minifi.exe" KeyPath="yes" Source="minifi_main\minifi.exe"/>
+                <ServiceControl Id="ServiceControl_Start"
                       Name="Apache NiFi MiNiFi"
                       Start="install"
                       Wait="no" />
-                <Condition><![CDATA[SERVICEACCOUNT<>"LocalSystem" AND AUTOSTART="1"]]></Condition>
+                <Condition><![CDATA[AUTOSTART="1"]]></Condition>
               </Component>
 
 ${WIX_EXTRA_COMPONENTS}
