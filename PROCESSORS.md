@@ -1561,8 +1561,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Max Size of Message Queue** | 10000         |                            | Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
 | SSL Context Service           |               |                            | The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection.                                                    |
 | Client Auth                   | NONE          | NONE<br/>WANT<br/>REQUIRED | The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.                                                                                    |
-| **Message Delimiter**         |               |                            | The delimiter is used to divide the stream into flowfiles.                                                                                                                                       |
-| **Consume delimiter**         | true          | true<br/>false             | If set to true then the delimiter won't be included in the resulting flowfiles.                                                                                                                  |
+| **Message Delimiter**         | \n            |                            | The delimiter is used to divide the stream into flowfiles.                                                                                                                                       |
+| **Consume delimiter**         | true          | true<br/>false             | If set to true then the delimiter won't be included at the end of the resulting flowfiles.                                                                                                       |
 
 ### Relationships
 

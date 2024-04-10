@@ -76,7 +76,7 @@ class ListenTCP : public NetworkListenerProcessor {
       .supportsExpressionLanguage(false)
       .build();
   EXTENSIONAPI static constexpr auto ConsumeDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Consume delimiter")
-      .withDescription("If set to true then the delimiter won't be included in the resulting flowfiles.")
+      .withDescription("If set to true then the delimiter won't be included at the end of the resulting flowfiles.")
       .withDefaultValue("true")
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .isRequired(true)
