@@ -4,6 +4,7 @@ import subprocess
 import os
 
 
+# Extract the list of PIP dependency packages from the visited processor class AST node
 class Visitor(ast.NodeVisitor):
     def __init__(self, class_name):
         self.dependencies = []
@@ -46,4 +47,5 @@ if __name__ == '__main__':
 
     dependencies = extract_dependencies(sys.argv[1])
     if dependencies:
+        # --no-cache-dir is used to be in line with NiFi's dependency install behavior
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir"] + dependencies)

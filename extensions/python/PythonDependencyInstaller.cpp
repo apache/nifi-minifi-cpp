@@ -119,6 +119,7 @@ void PythonDependencyInstaller::installDependenciesFromRequirementsFiles() const
   auto requirement_file_paths = getRequirementsFilePaths();
   for (const auto& requirements_file_path : requirement_file_paths) {
     logger_->log_info("Installing python packages from the following requirements.txt file: {}", requirements_file_path.string());
+    // --no-cache-dir is used to be in line with NiFi's dependency install behavior
     auto install_command = std::string("\"").append(python_binary_).append("\" -m pip install --no-cache-dir -r \"").append(requirements_file_path.string()).append("\"");
     runInstallCommandInVirtualenv(install_command);
   }
