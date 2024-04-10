@@ -80,7 +80,7 @@ class PythonCreator : public minifi::core::CoreComponent {
         class_name = full_name;
       }
       if (path.string().find("nifi_python_processors") != std::string::npos) {
-        auto utils_path = std::string("nifi_python_processors").append(1, utils::file::getSeparator()).append("utils");
+        auto utils_path = (std::filesystem::path("nifi_python_processors") / "utils").string();
         if (path.string().find(utils_path) != std::string::npos) {
           continue;
         }
