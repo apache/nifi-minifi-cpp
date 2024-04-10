@@ -26,8 +26,8 @@
 
 namespace org::apache::nifi::minifi::utils::file {
 
-AssetManager::AssetManager(std::shared_ptr<Configure> configuration)
-    : root_(configuration->get(Configure::nifi_asset_directory).value_or(configuration->getHome() / "asset")),
+AssetManager::AssetManager(const Configure& configuration)
+    : root_(configuration.get(Configure::nifi_asset_directory).value_or(configuration.getHome() / "asset")),
       logger_(core::logging::LoggerFactory<AssetManager>::getLogger()) {
   refreshState();
 }

@@ -398,7 +398,7 @@ int main(int argc, char **argv) {
           .sensitive_values_encryptor = utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(minifiHome)
       }, nifi_configuration_class_name);
 
-    auto asset_manager = std::make_shared<utils::file::AssetManager>(configure);
+    auto asset_manager = std::make_shared<utils::file::AssetManager>(*configure);
 
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, flow_repo, content_repo};
     auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration, asset_manager);
