@@ -80,7 +80,7 @@ jobs:
         run: |
           # Skip brew update until https://github.com/actions/setup-python/issues/577 is fixed
           # brew update
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid bison flex lua ccache sqliteodbc automake autoconf ninja
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid bison flex ccache sqliteodbc automake autoconf ninja
       - id: setup_env
         name: setup enviroment
         run: |
@@ -130,7 +130,6 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 240
     env:
-      LUA_DIR: D:\a\nifi-minifi-cpp\nifi-minifi-cpp\.lua
       WINDOWS_MINIFI_OPTIONS: >-
         -DCMAKE_BUILD_TYPE=Release
         -DBUILD_ROCKSDB=ON
@@ -160,7 +159,7 @@ jobs:
         -DENABLE_KUBERNETES=ON
         -DENABLE_LIBARCHIVE=ON
         -DENABLE_LIBRDKAFKA=ON
-        -DENABLE_LUA_SCRIPTING=OFF
+        -DENABLE_LUA_SCRIPTING=ON
         -DENABLE_LZMA=ON
         -DENABLE_MQTT=ON
         -DENABLE_NANOFI=ON
@@ -428,7 +427,7 @@ jobs:
           echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev libusb-1.0-0-dev libpng-dev libgps-dev clang-16 clang-tidy-16 libc++-16-dev libc++abi-16-dev libc++1-16 libc++abi1-16 libunwind-16 libsqliteodbc lua5.3 liblua5.3-dev flake8 parallel
+          sudo apt install -y ccache libfl-dev libpcap-dev libusb-1.0-0-dev libpng-dev libgps-dev clang-16 clang-tidy-16 libc++-16-dev libc++abi-16-dev libc++1-16 libc++abi1-16 libunwind-16 libsqliteodbc flake8 parallel
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - id: free_disk_space
