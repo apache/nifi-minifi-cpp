@@ -1548,7 +1548,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Listens for incoming TCP connections and reads data from each connection using a configurable message demarcator. For each message the processor produces a single FlowFile.
+Listens for incoming TCP connections and reads data from each connection using a configurable message delimiter. For each message the processor produces a single FlowFile.
 
 ### Properties
 
@@ -1562,7 +1562,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | SSL Context Service           |               |                            | The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection.                                                    |
 | Client Auth                   | NONE          | NONE<br/>WANT<br/>REQUIRED | The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.                                                                                    |
 | **Message Delimiter**         | \n            |                            | The delimiter is used to divide the stream into flowfiles.                                                                                                                                       |
-| **Consume delimiter**         | true          | true<br/>false             | If set to true then the delimiter won't be included at the end of the resulting flowfiles.                                                                                                       |
+| **Consume Delimiter**         | true          | true<br/>false             | If set to true then the delimiter won't be included at the end of the resulting flowfiles.                                                                                                       |
 
 ### Relationships
 

@@ -39,7 +39,7 @@ class ListenTCP : public NetworkListenerProcessor {
       : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger(uuid)) {
   }
 
-  EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a configurable message demarcator. "
+  EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a configurable message delimiter. "
                                                           "For each message the processor produces a single FlowFile.";
 
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")
@@ -75,7 +75,7 @@ class ListenTCP : public NetworkListenerProcessor {
       .withDefaultValue("\n")
       .supportsExpressionLanguage(false)
       .build();
-  EXTENSIONAPI static constexpr auto ConsumeDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Consume delimiter")
+  EXTENSIONAPI static constexpr auto ConsumeDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Consume Delimiter")
       .withDescription("If set to true then the delimiter won't be included at the end of the resulting flowfiles.")
       .withDefaultValue("true")
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
