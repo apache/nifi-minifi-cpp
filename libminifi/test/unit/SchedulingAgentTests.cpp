@@ -64,8 +64,8 @@ class SchedulingAgentTestFixture {
     count_proc_->setScheduledState(core::RUNNING);
 
 #ifdef WIN32
-    date::set_install(TZ_DATA_DIR);
     minifi::utils::timeutils::dateSetInstall(TZ_DATA_DIR);
+    date::set_install(TZ_DATA_DIR);
 #endif
   }
 

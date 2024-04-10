@@ -145,7 +145,7 @@ versions of OpenSSL, cURL, or zlib are used:
 and rebuild.
 
 #### Libraries / Development Headers
-* libcurl-openssl (If not available or desired, NSS will be used)
+* libcurl-openssl (built and statically linked)
 * libuuid and uuid-dev
 * openssl
 * Python 3 and development headers -- Required if Python support is enabled
