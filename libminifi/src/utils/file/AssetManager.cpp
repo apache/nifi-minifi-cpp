@@ -78,7 +78,6 @@ void AssetManager::refreshState() {
     } else {
       logger_->log_error("Asset '.state' file contains entry that does not exist on the filesystem");
     }
-
   }
   state_ = std::move(new_state);
 }
@@ -95,7 +94,9 @@ std::string AssetManager::hash() const {
   return cached_hash_.value();
 }
 
-nonstd::expected<void, std::string> AssetManager::sync(org::apache::nifi::minifi::utils::file::AssetLayout layout, std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)> fetch) {
+nonstd::expected<void, std::string> AssetManager::sync(
+    org::apache::nifi::minifi::utils::file::AssetLayout layout,
+    std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)> fetch) {
   std::lock_guard lock(mtx_);
   std::vector<std::pair<std::filesystem::path, std::vector<std::byte>>> new_file_contents;
   for (auto& new_entry : layout) {
