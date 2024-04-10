@@ -25,7 +25,6 @@
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
-#include "utils/Environment.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/AssetManager.h"
 
