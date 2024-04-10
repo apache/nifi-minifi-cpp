@@ -43,7 +43,7 @@ using AssetLayout = std::set<AssetDescription>;
 
 class AssetManager {
  public:
-  explicit AssetManager(std::shared_ptr<Configure> configuration);
+  explicit AssetManager(const Configure& configuration);
 
   nonstd::expected<void, std::string> sync(AssetLayout layout, std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)> fetch);
 
