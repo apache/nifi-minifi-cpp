@@ -28,14 +28,14 @@ namespace {
 
 std::string getPythonBinary(const std::shared_ptr<Configure> &configuration) {
 #if WIN32
-  std::string python_binary_ = "python";
+  std::string python_binary = "python";
 #else
-  std::string python_binary_ = "python3";
+  std::string python_binary = "python3";
 #endif
   if (auto binary = configuration->get(minifi::Configuration::nifi_python_env_setup_binary)) {
-    python_binary_ = *binary;
+    python_binary = *binary;
   }
-  return python_binary_;
+  return python_binary;
 }
 
 // On Windows when calling a system command using std::system, the whole command needs to be encapsulated in additional quotes,
@@ -52,9 +52,7 @@ std::string encapsulateCommandInQuotesIfNeeded(const std::string& command) {
 
 PythonDependencyInstaller::PythonDependencyInstaller(const std::shared_ptr<Configure> &configuration) {
   python_binary_ = getPythonBinary(configuration);
-  std::string automatic_install_str;
-  install_python_packages_automatically_ =
-    configuration->get(Configuration::nifi_python_install_packages_automatically, automatic_install_str) && utils::string::toBool(automatic_install_str).value_or(false);
+  install_python_packages_automatically_ = (configuration->get(Configuration::nifi_python_install_packages_automatically) | utils::andThen(&utils::string::toBool)).value_or(false);
   if (auto path = configuration->get(minifi::Configuration::nifi_python_virtualenv_directory)) {
     virtualenv_path_ = *path;
     logger_->log_debug("Python virtualenv path was specified at: {}", virtualenv_path_.string());
@@ -86,6 +84,10 @@ std::vector<std::filesystem::path> PythonDependencyInstaller::getRequirementsFil
 
 void PythonDependencyInstaller::createVirtualEnvIfSpecified() const {
   if (virtualenv_path_.empty()) {
+    if (install_python_packages_automatically_) {
+      logger_->log_warn("Python virtualenv path was not specified, but automatic python dependency installation was requested. "
+                        "Specify python virtualenv path in properties to enable automatic python dependency installation.");
+    }
     return;
   }
   if (!std::filesystem::exists(virtualenv_path_) || std::filesystem::is_empty(virtualenv_path_)) {
