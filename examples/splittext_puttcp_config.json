@@ -20,7 +20,6 @@
                 "identifier": "40b45f52-ae1d-443c-9465-7e070ce3bea0",
                 "type": "org.apache.nifi.processors.standard.SplitText",
                 "schedulingStrategy": "EVENT_DRIVEN",
-                "schedulingPeriod": "1 sec",
                 "penaltyDuration": "30 sec",
                 "yieldDuration": "1 sec",
                 "properties": {
@@ -38,7 +37,6 @@
                 "identifier": "11167a2c-9778-48ba-be2d-d1f9f4b0433f",
                 "type": "org.apache.nifi.processors.standard.PutTCP",
                 "schedulingStrategy": "EVENT_DRIVEN",
-                "schedulingPeriod": "1 sec",
                 "penaltyDuration": "30 sec",
                 "yieldDuration": "1 sec",
                 "properties": {

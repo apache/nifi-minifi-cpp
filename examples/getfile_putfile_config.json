@@ -18,7 +18,6 @@
                 "identifier": "a7ee8464-8f5a-4448-b40b-1d2d2c5e9610",
                 "type": "org.apache.nifi.processors.standard.PutFile",
                 "schedulingStrategy": "EVENT_DRIVEN",
-                "schedulingPeriod": "1 sec",
                 "properties": {
                     "Directory": "/tmp/output",
                     "Directory Permissions": "777",

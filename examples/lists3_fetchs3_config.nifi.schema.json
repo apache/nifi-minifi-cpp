@@ -81,7 +81,6 @@
                     }
                 },
                 "style": {},
-                "schedulingPeriod": "1000 ms",
                 "schedulingStrategy": "EVENT_DRIVEN",
                 "executionNode": "ALL",
                 "penaltyDuration": "30000 ms",
@@ -201,7 +200,6 @@
                     }
                 },
                 "style": {},
-                "schedulingPeriod": "1000 ms",
                 "schedulingStrategy": "EVENT_DRIVEN",
                 "executionNode": "ALL",
                 "penaltyDuration": "30000 ms",

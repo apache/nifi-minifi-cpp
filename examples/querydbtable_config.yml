@@ -32,7 +32,6 @@ Processors:
   id: 32700228-e078-42a6-89d7-03e4e478c9da
   class: org.apache.nifi.processors.standard.PutFile
   scheduling strategy: EVENT_DRIVEN
-  scheduling period: 1 sec
   auto-terminated relationships list:
   - success
   - failure

@@ -18,7 +18,6 @@
                 "identifier": "8a534b4a-2b4a-4e1e-ab07-8a09fa08f848",
                 "type": "org.apache.nifi.processors.standard.PublishKafka",
                 "schedulingStrategy": "EVENT_DRIVEN",
-                "schedulingPeriod": "0 sec",
                 "properties": {
                     "Batch Size": "10",
                     "Client Name": "test-client",
