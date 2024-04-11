@@ -36,6 +36,7 @@ class MinifiOptions:
         self.use_nifi_python_processors_with_system_python_packages_installed = False
         self.use_nifi_python_processors_with_virtualenv = False
         self.use_nifi_python_processors_with_virtualenv_packages_installed = False
+        self.remove_python_requirements_txt = False
         self.config_format = "json"
         self.use_flow_config_from_url = False
         self.set_ssl_context_properties = False
@@ -150,12 +151,12 @@ class MinifiContainer(FlowContainer):
                 f.write("controller.socket.port=9998\n")
                 f.write("controller.socket.local.any.interface=false\n")
 
-            if self.options.use_nifi_python_processors_with_virtualenv:
+            if self.options.use_nifi_python_processors_with_virtualenv or self.options.remove_python_requirements_txt:
                 f.write("nifi.python.virtualenv.directory=/opt/minifi/minifi-current/venv\n")
             elif self.options.use_nifi_python_processors_with_virtualenv_packages_installed:
                 f.write("nifi.python.virtualenv.directory=/opt/minifi/minifi-current/venv-with-langchain\n")
 
-            if self.options.use_nifi_python_processors_with_virtualenv:
+            if self.options.use_nifi_python_processors_with_virtualenv or self.options.remove_python_requirements_txt:
                 f.write("nifi.python.install.packages.automatically=true\n")
 
     def _setup_config(self):
@@ -180,6 +181,8 @@ class MinifiContainer(FlowContainer):
             image = self.image_store.get_image('minifi-cpp-nifi-python-system-python-packages')
         elif self.options.use_nifi_python_processors_with_virtualenv or self.options.use_nifi_python_processors_with_virtualenv_packages_installed:
             image = self.image_store.get_image('minifi-cpp-nifi-python')
+        elif self.options.remove_python_requirements_txt:
+            image = self.image_store.get_image('minifi-cpp-nifi-with-inline-python-dependencies')
         else:
             image = 'apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION
 

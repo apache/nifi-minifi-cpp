@@ -67,6 +67,7 @@ ${WIX_EXTRA_FEATURES}
       <ComponentRef Id="PythonProcessorH2oFiles"/>
       <ComponentRef Id="PythonProcessorNifiApiFiles"/>
       <ComponentRef Id="PythonProcessorGoogleFiles"/>
+      <ComponentRef Id="NifiPythonProcessorUtilsFiles"/>
     </Feature>
 
     <FeatureRef Id="ProductFeature"/>
@@ -437,6 +438,11 @@ ${WIX_EXTRA_COMPONENTS}
                 <Component Id="NifiPythonProcessorFiles" Guid="66ce16d4-aea4-4fcb-bbbb-8a28813e2138">
                   <File Id="NifiPythonProcessors_init" Name="__init__.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\nifi_python_processors\__init__.py"/>
                 </Component>
+                <Directory Id="INSTALLNIFIPYTHONPROCESSORSUTILSDIR" Name="utils">
+                  <Component Id="NifiPythonProcessorUtilsFiles" Guid="6bb11f67-007f-4467-970a-c42c2bae0891">
+                    <File Id="NifiPythonProcessorUtils_dependency_installer" Name="inline_dependency_installer.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\nifi_python_processors\utils\inline_dependency_installer.py"/>
+                  </Component>
+                </Directory>
               </Directory>
             </Directory>
           </Directory>

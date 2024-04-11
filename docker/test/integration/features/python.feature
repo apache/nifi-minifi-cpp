@@ -89,6 +89,7 @@ Feature: MiNiFi can use python processors in its flows
       | with required python packages                                         |
       | with a pre-created virtualenv                                         |
       | with a pre-created virtualenv containing the required python packages |
+      | using inline defined Python dependencies to install packages          |
 
   @USE_NIFI_PYTHON_PROCESSORS
   Scenario: MiNiFi C++ can use custom relationships in NiFi native python processors
