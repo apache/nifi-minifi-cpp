@@ -28,10 +28,11 @@ class EncryptConfig {
   explicit EncryptConfig(const std::string& minifi_home);
 
   void encryptSensitiveValuesInMinifiProperties() const;
-  void encryptSensitiveValuesInFlowConfig(const std::optional<std::string>& component_id, const std::optional<std::string>& property_name, const std::optional<std::string>& property_value) const;
+  void encryptSensitiveValuesInFlowConfig(
+      bool re_encrypt, const std::optional<std::string>& component_id, const std::optional<std::string>& property_name, const std::optional<std::string>& property_value) const;
   void encryptWholeFlowConfigFile() const;
 
-  [[nodiscard]] bool isReencrypting() const;
+  [[nodiscard]] bool isReEncrypting() const;
 
  private:
   [[nodiscard]] std::filesystem::path bootstrapFilePath() const;
