@@ -111,6 +111,10 @@ class ImageStore:
         pip3_install_command = ""
         requirements_install_command = ""
         additional_cmd = ""
+        # The following sed command is used to remove the existing dependencies from the ParseDocument and ChunkDocument processors
+        # /class ProcessorDetails:/,/^$/: Do the following between 'class ProcessorDetails:' and the first empty line (so we don't modify other PropertyDescriptor blocks below)
+        # /^\s*dependencies\s*=/,/\]\s*$/: Do the following between 'dependencies =' at the start of a line, and ']' at the end of a line
+        # d: Delete line
         parse_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
         chunk_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
         if python_option == PythonOptions.SYSTEM_INSTALLED_PACKAGES:
