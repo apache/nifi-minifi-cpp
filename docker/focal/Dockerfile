@@ -33,7 +33,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN apt update \
     && DEBIAN_FRONTEND="noninteractive" apt install -y openjdk-8-jdk openjdk-8-source python3.9-dev sudo git maven autogen autoconf automake cmake software-properties-common pkgconf libtool \
-    libfl-dev libusb-1.0-0-dev libpng-dev libgps-dev libsqliteodbc liblua5.3-dev\
+    libfl-dev libusb-1.0-0-dev libpng-dev libgps-dev libsqliteodbc \
     && mkdir -p "${MINIFI_BASE_DIR}"
 
 COPY . ${MINIFI_BASE_DIR}

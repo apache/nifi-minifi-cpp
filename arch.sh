@@ -70,8 +70,6 @@ build_deps(){
                     elif [ "$FOUND_VALUE" = "jnibuild" ]; then
                         INSTALLED+=("jdk8-openjdk")
                         INSTALLED+=("maven")
-                    elif [ "$FOUND_VALUE" = "lua" ]; then
-                        INSTALLED+=("lua")
                     elif [ "$FOUND_VALUE" = "gpsd" ]; then
                         INSTALLED+=("gpsd")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then

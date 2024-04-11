@@ -149,7 +149,6 @@ and rebuild.
 * libuuid and uuid-dev
 * openssl
 * Python 3 and development headers -- Required if Python support is enabled
-* Lua and development headers -- Required if Lua support is enabled
 * libgps-dev -- Required if building libGPS support
 * Zlib headers
 * perl -- Required for OpenSSL configuration
@@ -190,7 +189,6 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 * libarchive (built and statically linked)
 * librdkafka (built and statically linked)
 * Python 3 -- Required if Python support is enabled
-* Lua -- Required if Lua support is enabled
 * libusb -- Optional, unless USB Camera support is enabled
 * libpng -- Optional, unless USB Camera support is enabled
 * libpcap -- Optional, unless ENABLE_PCAP specified
@@ -220,8 +218,6 @@ dnf install cmake \
   zlib-devel
 # (Optional) for building Python support
 dnf install python36-devel
-# (Optional) for building Lua support
-dnf install lua-devel
 # (Optional) for building USB Camera support
 dnf install libusb-devel libpng-devel
 # (Optional) for building docker image
@@ -255,8 +251,6 @@ apt install cmake \
   zlib1g-dev
 # (Optional) for building Python support
 apt install libpython3-dev
-# (Optional) for building Lua support
-apt install liblua5.1-0-dev
 # (Optional) for building USB Camera support
 apt install libusb-1.0.0-0-dev libpng12-dev
 # (Optional) for building docker image
@@ -281,7 +275,6 @@ brew install cmake \
   ossp-uuid \
   openssl \
   python \
-  lua \
   xz \
   bzip2 \
   doxygen \
