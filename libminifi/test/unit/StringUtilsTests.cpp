@@ -615,6 +615,16 @@ TEST_CASE("string::parseCharacter tests") {
   CHECK(string::parseCharacter("") == std::nullopt);
 }
 
+TEST_CASE("string::replaceEscapedCharacters tests") {
+  CHECK(string::replaceEscapedCharacters("a") == "a");
+  CHECK(string::replaceEscapedCharacters(R"(\n)") == "\n");
+  CHECK(string::replaceEscapedCharacters(R"(\t)") == "\t");
+  CHECK(string::replaceEscapedCharacters(R"(\r)") == "\r");
+  CHECK(string::replaceEscapedCharacters(R"(\\s)") == "\\\\s");
+  CHECK(string::replaceEscapedCharacters(R"(\r\n)") == "\r\n");
+  CHECK(string::replaceEscapedCharacters(R"(foo\nbar)") == "foo\nbar");
+}
+
 #ifdef WIN32
 TEST_CASE("Conversion from UTF-8 strings to UTF-16 strings works") {
   using org::apache::nifi::minifi::utils::to_wstring;

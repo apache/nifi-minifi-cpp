@@ -29,10 +29,12 @@ void ListenTCP::initialize() {
 
 void ListenTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   auto delimiter_str = context.getProperty(MessageDelimiter).value_or("\n");
+  delimiter_str = utils::string::replaceEscapedCharacters(delimiter_str);
   if (delimiter_str.empty()) {
-    logger_->log_warn("{} cannot be an empty string", MessageDelimiter.name);
+    logger_->log_warn("{} cannot be an empty string, using \\n as the delimiter", MessageDelimiter.name);
     delimiter_str = "\n";
   }
+
   const auto consume_delimiter = context.getProperty<bool>(ConsumeDelimiter).value_or(true);
   startTcpServer(context, SSLContextService, ClientAuth, consume_delimiter, std::move(delimiter_str));
 }

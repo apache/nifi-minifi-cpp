@@ -23,6 +23,7 @@
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "utils/IntegrationTestUtils.h"
+#include "utils/StringUtils.h"
 #include "catch2/generators/catch_generators.hpp"
 
 using ListenTCP = org::apache::nifi::minifi::processors::ListenTCP;
@@ -293,7 +294,7 @@ TEST_CASE("Custom delimiter", "[ListenTCP][NetworkListenerProcessor]") {
   SingleProcessorTestController controller{listen_tcp};
   LogTestController::getInstance().setTrace<ListenTCP>();
 
-  std::string delimiter = GENERATE("\n", "foo", "💩", "\a");
+  std::string delimiter = GENERATE("\n", "\\n", "foo", "💩", "foo\\nbar");
   const auto consume_delimiter = GENERATE(true, false);
 
   REQUIRE(listen_tcp->setProperty(ListenTCP::MessageDelimiter, delimiter));
@@ -304,6 +305,7 @@ TEST_CASE("Custom delimiter", "[ListenTCP][NetworkListenerProcessor]") {
 
   auto message1 = "test_message_1";
   auto message2 = "another_message";
+  delimiter = minifi::utils::string::replaceEscapedCharacters(delimiter);
   CHECK_THAT(utils::sendMessagesViaTCP({fmt::format("{}{}", message1, delimiter)}, endpoint), MatchesSuccess());
   CHECK_THAT(utils::sendMessagesViaTCP({fmt::format("{}{}", message2, delimiter)}, endpoint), MatchesSuccess());
   ProcessorTriggerResult result;

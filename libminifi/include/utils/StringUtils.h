@@ -430,6 +430,8 @@ bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& un
 struct ParseError {};
 
 nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_view input);
+
+std::string replaceEscapedCharacters(std::string_view input);
 }  // namespace string
 
 }  // namespace org::apache::nifi::minifi::utils
