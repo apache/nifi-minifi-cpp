@@ -97,7 +97,11 @@ endif()
 # Enable usage of the VERSION specifier
 if (WIN32)
     add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS NOMINMAX)
-    add_compile_options(/W3 /utf-8 /bigobj /MP)
+    add_compile_options(/W3 /utf-8 /bigobj /MP /diagnostics:caret)
+    if (CMAKE_GENERATOR STREQUAL "Ninja")
+        # these flags are default on msbuild, but not on ninja
+        add_compile_options(/MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline)
+    endif()
 endif()
 
 if (NOT PORTABLE)
