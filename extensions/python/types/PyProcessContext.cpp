@@ -16,9 +16,11 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
 
 #include "PyProcessContext.h"
+
+#include <string>
+
 #include "PyStateManager.h"
 #include "PyScriptFlowFile.h"
-#include <string>
 #include "PyException.h"
 
 extern "C" {
@@ -27,6 +29,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 static PyMethodDef PyProcessContext_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"getProperty", (PyCFunction) PyProcessContext::getProperty, METH_VARARGS, nullptr},
     {"getStateManager", (PyCFunction) PyProcessContext::getStateManager, METH_VARARGS, nullptr},
+    {"getControllerService", (PyCFunction) PyProcessContext::getControllerService, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -102,6 +105,30 @@ PyObject* PyProcessContext::getStateManager(PyProcessContext* self, PyObject*) {
   }
 
   return object::returnReference(context->getStateManager());
+}
+
+PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObject* args) {
+  auto context = self->process_context_.lock();
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  const char* controller_service_name = nullptr;
+  const char* controller_service_type = nullptr;
+  if (!PyArg_ParseTuple(args, "s|s", &controller_service_name, &controller_service_type)) {
+    throw PyException();
+  }
+
+  if (auto controller_service = context->getControllerService(controller_service_name)) {
+    std::string controller_service_type_str = controller_service_type;
+    if (controller_service_type_str == "SSLContextService") {
+      auto ssl_ctx_service = std::dynamic_pointer_cast<controllers::SSLContextService>(controller_service);
+      return object::returnReference(std::weak_ptr(ssl_ctx_service));
+    }
+  }
+
+  Py_RETURN_NONE;
 }
 
 PyTypeObject* PyProcessContext::typeObject() {

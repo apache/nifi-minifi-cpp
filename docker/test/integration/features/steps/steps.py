@@ -1265,6 +1265,7 @@ def step_impl(context, lines: str, timeout_seconds: int):
 
 
 @given(u'a SSL context service is set up for Grafana Loki processor \"{processor_name}\"')
+@given(u'a SSL context service is set up for the following processor: \"{processor_name}\"')
 def step_impl(context, processor_name: str):
     setUpSslContextServiceForProcessor(context, processor_name)
 
