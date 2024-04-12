@@ -111,3 +111,17 @@ Feature: MiNiFi can use python processors in its flows
     When all instances start up
 
     Then flowfiles with these contents are placed in the monitored directory in less than 10 seconds: "test_data_one,test_data_two,test_data_three,test_data_four"
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: MiNiFi C++ can use special property types in NiFi native python processors
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a SpecialPropertyTypeChecker processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+
+    And the "success" relationship of the GenerateFlowFile processor is connected to the SpecialPropertyTypeChecker
+    And the "success" relationship of the SpecialPropertyTypeChecker processor is connected to the PutFile
+
+    When all instances start up
+
+    Then one flowfile with the contents "Check successful!" is placed in the monitored directory in less than 30 seconds

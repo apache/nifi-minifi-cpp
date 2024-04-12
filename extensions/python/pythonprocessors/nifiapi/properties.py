@@ -241,20 +241,20 @@ class PythonPropertyValue:
             return int(round(milliseconds / 1000 / 60 / 60 / 24))
         return 0
 
-    def asDataSize(self, data_unit: DataUnit) -> int:
+    def asDataSize(self, data_unit: DataUnit) -> float:
         if not self.value:
             return None
         bytes = dataSizeStringToBytes(self.value)
         if data_unit == DataUnit.B:
-            return bytes
+            return float(bytes)
         if data_unit == DataUnit.KB:
-            return int(bytes / 1000)
+            return float(bytes / 1024)
         if data_unit == DataUnit.MB:
-            return int(bytes / 1000 / 1000)
+            return float(bytes / 1024 / 1024)
         if data_unit == DataUnit.GB:
-            return int(bytes / 1000 / 1000 / 1000)
+            return float(bytes / 1024 / 1024 / 1024)
         if data_unit == DataUnit.TB:
-            return int(bytes / 1000 / 1000 / 1000 / 1000)
+            return float(bytes / 1024 / 1024 / 1024 / 1024)
         return 0
 
     def evaluateAttributeExpressions(self, flow_file_proxy: FlowFileProxy = None):
