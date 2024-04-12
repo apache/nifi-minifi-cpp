@@ -518,7 +518,7 @@ bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& un
   return true;
 }
 
-nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_view input) {
+nonstd::expected<std::optional<char>, ParseError> parseCharacter(const std::string_view input) {
   if (input.empty()) { return std::nullopt; }
   if (input.size() == 1) { return input[0]; }
 
@@ -532,7 +532,8 @@ nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_vie
       case 'v': return '\v';  // Vertical Tab
       case 'f': return '\f';  // Form Feed
       case 'r': return '\r';  // Carriage Return
-      default: return input[1];
+      case '\\': return '\\';
+      default: break;
     }
   }
   return nonstd::make_unexpected(ParseError{});
@@ -578,6 +579,10 @@ std::string replaceEscapedCharacters(std::string_view input) {
         break;
       case 'r':
         result << '\r';  // Carriage Return
+        ++i;
+        break;
+      case '\\':
+        result << '\\';
         ++i;
         break;
       default:
