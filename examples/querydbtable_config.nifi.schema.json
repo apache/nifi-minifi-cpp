@@ -216,7 +216,7 @@
                     "version": "0.15.0"
                 },
                 "properties": {
-                    "Connection String": "enc{7YHB8DDp3xI5wiKGfsoflVELCXpY7M/v||qKzN8vELnMZGysNDRWitok+XHy0pXkwKF9oR0nNoUet/AfE9aj0oOBHJppSCVKPlq0WjbM82+4HYY3hLcfPssHFn2/zeR1vtDo3wRHptoFmG9pncr8O8noH2tPXHKgqWJnYtwNAiGhEQLuqTSnNXjBe5KSgKNatq}"
+                    "Connection String": "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
                 },
                 "propertyDescriptors": {
                     "Connection String": {
