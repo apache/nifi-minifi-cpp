@@ -74,12 +74,8 @@ if (WIN32)
     target_compile_definitions(minifiexe PUBLIC SERVICE_NAME="Apache NiFi MINiFi")
 endif()
 
-if (NOT WIN32)
-add_custom_command(TARGET minifiexe POST_BUILD
-    COMMAND cat ${CMAKE_BINARY_DIR}/all.log)
-else()
-#add_custom_command(TARGET minifiexe POST_BUILD
-#           COMMAND type ${CMAKE_BINARY_DIR}/all.log)
+if (WIN32)
+    add_custom_command(TARGET minifiexe POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:minifiexe> ${CMAKE_BINARY_DIR}/minifi_main/)
 endif()
 
 if (NOT WIN32)

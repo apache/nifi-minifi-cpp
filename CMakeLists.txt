@@ -97,7 +97,11 @@ endif()
 # Enable usage of the VERSION specifier
 if (WIN32)
     add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS NOMINMAX)
-    add_compile_options(/W3 /utf-8 /bigobj /MP)
+    add_compile_options(/W3 /utf-8 /bigobj /MP /diagnostics:caret)
+    if (CMAKE_GENERATOR STREQUAL "Ninja")
+        # these flags are default on msbuild, but not on ninja
+        add_compile_options(/MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline)
+    endif()
 endif()
 
 if (NOT PORTABLE)
@@ -418,7 +422,6 @@ endif()
 # Generate source assembly
 set(ASSEMBLY_BASE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 if(WIN32)
-    set(CPACK_PRE_BUILD_SCRIPTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/prep_for_win_package.cmake")
     set(CPACK_ALL_INSTALL_TYPES Full Developer)
     set(CPACK_COMPONENT_LIBRARIES_INSTALL_TYPES Developer Full)
     set(CPACK_COMPONENT_HEADERS_INSTALL_TYPES Developer Full)
