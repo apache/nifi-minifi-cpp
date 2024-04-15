@@ -50,14 +50,12 @@ class C2HeartbeatHandler : public HeartbeatHandler {
   using AssetDescription = org::apache::nifi::minifi::utils::file::AssetDescription;
 
   void handleHeartbeat(const rapidjson::Document& root, struct mg_connection* conn) override {
-    std::string hb_str;
-    {
+    std::string hb_str = [&] {
       rapidjson::StringBuffer buffer;
       rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
       root.Accept(writer);
-
-      hb_str = std::string{buffer.GetString(), buffer.GetSize()};
-    }
+      return std::string{buffer.GetString(), buffer.GetSize()};
+    }();
     auto& asset_info_node = root["assetInfo"];
     auto& asset_hash_node = asset_info_node["hash"];
     std::string asset_hash{asset_hash_node.GetString(), asset_hash_node.GetStringLength()};
@@ -66,7 +64,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
     {
       std::lock_guard guard(asset_mtx_);
       agent_asset_hash_ = asset_hash;
-      if (asset_hash != assetHash()) {
+      if (asset_hash != calculateAssetHash()) {
         std::unordered_map<std::string, std::string> args;
         for (auto& asset : expected_assets_) {
           args[asset.id + ".path"] = asset.path;
@@ -86,15 +84,15 @@ class C2HeartbeatHandler : public HeartbeatHandler {
   void addAsset(std::string id, std::string path, std::string url) {
     std::lock_guard guard(asset_mtx_);
     expected_assets_.insert(AssetDescription{
-      .id = id,
-      .path = path,
-      .url = url
+      .id = std::move(id),
+      .path = std::move(path),
+      .url = std::move(url)
     });
   }
 
   void removeAsset(std::string id) {
     std::lock_guard guard{asset_mtx_};
-    expected_assets_.erase(AssetDescription{.id = id, .path = {}, .url = {}});
+    expected_assets_.erase(AssetDescription{.id = std::move(id), .path = {}, .url = {}});
   }
 
   std::optional<std::string> getAgentAssetHash() const {
@@ -102,7 +100,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
     return agent_asset_hash_;
   }
 
-  std::string assetHash() const {
+  std::string calculateAssetHash() const {
     std::lock_guard guard{asset_mtx_};
     size_t hash_value{0};
     for (auto& asset : expected_assets_) {
@@ -202,7 +200,7 @@ int main() {
   };
 
   harness.setVerifier([&] () {
-    assert(utils::verifyEventHappenedInPollTime(10s, [&] {return hb_handler.assetHash() == hb_handler.getAgentAssetHash();}));
+    assert(utils::verifyEventHappenedInPollTime(10s, [&] {return hb_handler.calculateAssetHash() == hb_handler.getAgentAssetHash();}));
 
     {
       std::unordered_map<std::string, std::string> expected_assets{
@@ -229,7 +227,7 @@ int main() {
     hb_handler.addAsset("Av2", "A.txt", "/api/file/Av2.txt");
 
 
-    assert(utils::verifyEventHappenedInPollTime(10s, [&] {return hb_handler.assetHash() == hb_handler.getAgentAssetHash();}));
+    assert(utils::verifyEventHappenedInPollTime(10s, [&] {return hb_handler.calculateAssetHash() == hb_handler.getAgentAssetHash();}));
 
     {
       std::unordered_map<std::string, std::string> expected_assets{
