@@ -59,11 +59,6 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         install(FILES ${OPENSSL_LIBRARIES_LIST} DESTINATION bin COMPONENT bin)
     endif()
 
-    # Define patch step
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/openssl/Tidy-up-aarch64-feature-detection-code-in-armcap.c.patch")
-    set(PC ${Bash_EXECUTABLE} -c "set -x && \
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
-
     # Set build options
     set(OPENSSL_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${OPENSSL_BIN_DIR}"
@@ -78,13 +73,12 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     if (WIN32)
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.1.1/openssl-3.1.1.tar.gz
-                URL_HASH "SHA256=b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.0/openssl-3.3.0.tar.gz
+                URL_HASH "SHA256=53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS}" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
-                PATCH_COMMAND ${PC}
                 EXCLUDE_FROM_ALL TRUE
                 BUILD_COMMAND nmake
                 INSTALL_COMMAND nmake install
@@ -92,13 +86,12 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     else()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.1.1/openssl-3.1.1.tar.gz
-                URL_HASH "SHA256=b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.0/openssl-3.3.0.tar.gz
+                URL_HASH "SHA256=53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
-                PATCH_COMMAND ${PC}
                 EXCLUDE_FROM_ALL TRUE
         )
     endif()
