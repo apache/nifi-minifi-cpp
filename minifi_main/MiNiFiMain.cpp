@@ -403,7 +403,8 @@ int main(int argc, char **argv) {
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, flow_repo, content_repo};
     auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration, asset_manager);
     const auto controller = std::make_unique<minifi::FlowController>(
-        prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
+        prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo,
+        std::move(metrics_publisher_store), filesystem, request_restart, asset_manager);
 
     const bool disk_space_watchdog_enable = configure->get(minifi::Configure::minifi_disk_space_watchdog_enable)
         | utils::andThen(utils::string::toBool)
