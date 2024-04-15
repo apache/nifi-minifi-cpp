@@ -76,8 +76,6 @@ endif()
 
 if (WIN32)
     add_custom_command(TARGET minifiexe POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:minifiexe> ${CMAKE_BINARY_DIR}/minifi_main/)
-else()
-    add_custom_command(TARGET minifiexe POST_BUILD COMMAND cat ${CMAKE_BINARY_DIR}/all.log)
 endif()
 
 if (NOT WIN32)
