@@ -1,0 +1,50 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Log tailfile attributes",
+                "identifier": "41141af1-3c43-4fa4-8236-2b207b0fe9d8",
+                "type": "org.apache.nifi.minifi.processors.LogAttribute",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "FlowFiles To Log": "0"
+                },
+                "autoTerminatedRelationships": [
+                    "success"
+                ]
+            },
+            {
+                "name": "Tail /tmp/test_file.log",
+                "identifier": "0ef22940-ac0a-4813-9ad9-fe41c2b51fff",
+                "type": "org.apache.nifi.minifi.processors.TailFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1000 ms",
+                "properties": {
+                    "File to Tail": "/tmp/test_file.log",
+                    "Initial Start Position": "Beginning of File",
+                    "Input Delimiter": "\\n",
+                    "tail-mode": "Single file"
+                },
+                "autoTerminatedRelationships": []
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "eda7f758-c548-46d6-aba0-faa6e9937d8c",
+                "name": "TailFile/success/LogAttribute",
+                "source": {
+                    "id": "0ef22940-ac0a-4813-9ad9-fe41c2b51fff"
+                },
+                "destination": {
+                    "id": "41141af1-3c43-4fa4-8236-2b207b0fe9d8"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "45c2a56e-7C29-42f3-8C1D-89c0c84a6ee7",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "3952ac3c-c0a8-46fe-936a-e9faa7123275",
+                "name": "GetFile/success/RPG",
+                "source": {
+                    "id": "45c2a56e-7C29-42f3-8C1D-89c0c84a6ee7"
+                },
+                "destination": {
+                    "id": "4222cd3a-746e-3497-abd0-b7695faa750c"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [
+            {
+                "name": "RemoteProcessGroup",
+                "identifier": "38878f84-23cd-4aaa-9c45-45151bb2d681",
+                "targetUri": "http://127.0.0.1:8080/nifi",
+                "communicationsTimeout": "30 sec",
+                "yieldDuration": "3 sec",
+                "inputPorts": [
+                    {
+                        "identifier": "4222cd3a-746e-3497-abd0-b7695faa750c",
+                        "name": "to_nifi"
+                    }
+                ]
+            }
+        ],
+        "controllerServices": []
+    }
+}

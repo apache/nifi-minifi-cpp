@@ -1,0 +1,55 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "7fd166aa-0662-4c42-affa-88f6fb39807f",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Publish messages to Kafka topic test",
+                "identifier": "8a534b4a-2b4a-4e1e-ab07-8a09fa08f848",
+                "type": "org.apache.nifi.processors.standard.PublishKafka",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "Batch Size": "10",
+                    "Client Name": "test-client",
+                    "Compress Codec": "none",
+                    "Delivery Guarantee": "1",
+                    "Known Brokers": "kafka-broker:9092",
+                    "Message Timeout": "12 sec",
+                    "Request Timeout": "10 sec",
+                    "Topic Name": "test"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "1edd529e-eee9-4b05-9e35-f1607bb0243b",
+                "name": "GetFile/success/PublishKafka",
+                "source": {
+                    "id": "7fd166aa-0662-4c42-affa-88f6fb39807f"
+                },
+                "destination": {
+                    "id": "8a534b4a-2b4a-4e1e-ab07-8a09fa08f848"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

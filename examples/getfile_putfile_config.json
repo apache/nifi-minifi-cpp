@@ -1,0 +1,54 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/getfile_dir",
+                "identifier": "2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input",
+                    "Keep Source File": "true",
+                    "Recurse Subdirectories": "true",
+                    "Ignore Hidden Files": "false",
+                    "Minimum File Size": "1 MB"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Put files to /tmp/out_dir",
+                "identifier": "e143601d-de4f-44ba-a6ec-d1f97d77ec94",
+                "type": "org.apache.nifi.processors.standard.PutFile",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "Conflict Resolution Strategy": "fail",
+                    "Create Missing Directories": "true",
+                    "Directory": "/tmp/out_dir"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "098a56ba-f4bf-4323-a3f3-6f8a5e3586bf",
+                "name": "GetFile/success/PutFile",
+                "source": {
+                    "id": "2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27"
+                },
+                "destination": {
+                    "id": "e143601d-de4f-44ba-a6ec-d1f97d77ec94"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

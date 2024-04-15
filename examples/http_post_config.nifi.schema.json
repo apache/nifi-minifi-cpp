@@ -1,0 +1,647 @@
+{
+    "encodingVersion": {
+        "majorVersion": 2,
+        "minorVersion": 0
+    },
+    "maxTimerDrivenThreadCount": 1,
+    "maxEventDrivenThreadCount": 1,
+    "parameterContexts": [],
+    "rootGroup": {
+        "identifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+        "instanceIdentifier": "9af45830-320e-437e-8204-dcd3c2933aa6",
+        "name": "root",
+        "position": {
+            "x": 0.0,
+            "y": 0.0
+        },
+        "processGroups": [],
+        "remoteProcessGroups": [],
+        "processors": [
+            {
+                "identifier": "375ce4dc-8005-4a39-92e8-5402c72f541c",
+                "instanceIdentifier": "44898895-5d15-4965-8677-aba1c11f2876",
+                "name": "Log failed flow files",
+                "comments": "",
+                "position": {
+                    "x": 957.0,
+                    "y": 293.0
+                },
+                "type": "org.apache.nifi.minifi.processors.LogAttribute",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-standard-processors",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "FlowFiles To Log": "0",
+                    "Log Level": "warn",
+                    "Log Payload": "false",
+                    "Log Prefix": "=== Failed HTTP request ===",
+                    "Hexencode Payload": "false",
+                    "Maximum Payload Line Length": "0"
+                },
+                "propertyDescriptors": {
+                    "FlowFiles To Log": {
+                        "name": "FlowFiles To Log",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Level": {
+                        "name": "Log Level",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Attributes to Ignore": {
+                        "name": "Attributes to Ignore",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Attributes to Log": {
+                        "name": "Attributes to Log",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Payload": {
+                        "name": "Log Payload",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Prefix": {
+                        "name": "Log Prefix",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Hexencode Payload": {
+                        "name": "Hexencode Payload",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum Payload Line Length": {
+                        "name": "Maximum Payload Line Length",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [
+                    "success"
+                ],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "7f5c10d0-e7d8-42c4-aacd-96d9d1353da4",
+                "instanceIdentifier": "fc1ea604-88e5-4d5a-bef3-95b071442558",
+                "name": "Invoke POST request on remote URL",
+                "comments": "",
+                "position": {
+                    "x": 354.0,
+                    "y": 100.0
+                },
+                "type": "org.apache.nifi.minifi.processors.InvokeHTTP",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-http-curl",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Invalid HTTP Header Field Handling Strategy": "transform",
+                    "Read Timeout": "15 s",
+                    "Send Message Body": "true",
+                    "Connection Timeout": "5 s",
+                    "send-message-body": "true",
+                    "Content-type": "application/octet-stream",
+                    "Always Output Response": "false",
+                    "HTTP Method": "POST",
+                    "Include Date Header": "true",
+                    "Use Chunked Encoding": "false",
+                    "Disable Peer Verification": "false",
+                    "Penalize on \"No Retry\"": "false",
+                    "Follow Redirects": "true",
+                    "Remote URL": "http://1.2.3.4:8080/contentListener"
+                },
+                "propertyDescriptors": {
+                    "Proxy Host": {
+                        "name": "Proxy Host",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Upload Speed Limit": {
+                        "name": "Upload Speed Limit",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Attributes to Send": {
+                        "name": "Attributes to Send",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Invalid HTTP Header Field Handling Strategy": {
+                        "name": "Invalid HTTP Header Field Handling Strategy",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Download Speed Limit": {
+                        "name": "Download Speed Limit",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Read Timeout": {
+                        "name": "Read Timeout",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "invokehttp-proxy-password": {
+                        "name": "invokehttp-proxy-password",
+                        "displayName": "Proxy Password",
+                        "identifiesControllerService": false,
+                        "sensitive": true
+                    },
+                    "Send Message Body": {
+                        "name": "Send Message Body",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Proxy Port": {
+                        "name": "Proxy Port",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "invokehttp-proxy-username": {
+                        "name": "invokehttp-proxy-username",
+                        "displayName": "Proxy Username",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Put Response Body in Attribute": {
+                        "name": "Put Response Body in Attribute",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Connection Timeout": {
+                        "name": "Connection Timeout",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "send-message-body": {
+                        "name": "send-message-body",
+                        "displayName": "Send Body",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Content-type": {
+                        "name": "Content-type",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "SSL Context Service": {
+                        "name": "SSL Context Service",
+                        "identifiesControllerService": true,
+                        "sensitive": false
+                    },
+                    "Always Output Response": {
+                        "name": "Always Output Response",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "HTTP Method": {
+                        "name": "HTTP Method",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Include Date Header": {
+                        "name": "Include Date Header",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Use Chunked Encoding": {
+                        "name": "Use Chunked Encoding",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Disable Peer Verification": {
+                        "name": "Disable Peer Verification",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Penalize on \"No Retry\"": {
+                        "name": "Penalize on \"No Retry\"",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Follow Redirects": {
+                        "name": "Follow Redirects",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Remote URL": {
+                        "name": "Remote URL",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [
+                    "success",
+                    "response"
+                ],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "bbf3ddd1-0761-411e-930b-fec2c282d10e",
+                "instanceIdentifier": "28de5978-6696-491a-906b-eb7a43145393",
+                "name": "Retry on HTTP 5xx status codes",
+                "comments": "",
+                "position": {
+                    "x": 366.0,
+                    "y": 356.0
+                },
+                "type": "org.apache.nifi.minifi.processors.RetryFlowFile",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-standard-processors",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Reuse Mode": "Fail on Reuse",
+                    "Retry Attribute": "flowfile.retries",
+                    "Penalize Retries": "true",
+                    "Maximum Retries": "5",
+                    "Fail on Non-numerical Overwrite": "false"
+                },
+                "propertyDescriptors": {
+                    "Reuse Mode": {
+                        "name": "Reuse Mode",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Retry Attribute": {
+                        "name": "Retry Attribute",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Penalize Retries": {
+                        "name": "Penalize Retries",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum Retries": {
+                        "name": "Maximum Retries",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Fail on Non-numerical Overwrite": {
+                        "name": "Fail on Non-numerical Overwrite",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [
+                    "failure"
+                ],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "570e4ec6-105a-4da6-aba8-0d8ca069c12a",
+                "instanceIdentifier": "25d38cad-02d6-4f2e-b3a4-17786df17a07",
+                "name": "Get files from /tmp/input",
+                "comments": "",
+                "position": {
+                    "x": 71.0,
+                    "y": 90.0
+                },
+                "type": "org.apache.nifi.minifi.processors.GetFile",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-standard-processors",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Keep Source File": "true",
+                    "Minimum File Age": "0 sec",
+                    "Polling Interval": "0 sec",
+                    "Input Directory": "/tmp/input",
+                    "Maximum File Age": "0 sec",
+                    "Batch Size": "10",
+                    "Maximum File Size": "0 B",
+                    "Minimum File Size": "0 B",
+                    "Ignore Hidden Files": "true",
+                    "Recurse Subdirectories": "true",
+                    "File Filter": ".*"
+                },
+                "propertyDescriptors": {
+                    "Keep Source File": {
+                        "name": "Keep Source File",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Minimum File Age": {
+                        "name": "Minimum File Age",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Polling Interval": {
+                        "name": "Polling Interval",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Input Directory": {
+                        "name": "Input Directory",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum File Age": {
+                        "name": "Maximum File Age",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Batch Size": {
+                        "name": "Batch Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum File Size": {
+                        "name": "Maximum File Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Minimum File Size": {
+                        "name": "Minimum File Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Ignore Hidden Files": {
+                        "name": "Ignore Hidden Files",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Recurse Subdirectories": {
+                        "name": "Recurse Subdirectories",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "File Filter": {
+                        "name": "File Filter",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "2 sec",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "inputPorts": [],
+        "outputPorts": [],
+        "connections": [
+            {
+                "identifier": "79cb7a8f-6e9d-40b5-9897-35667f9a85db",
+                "instanceIdentifier": "a18e5acf-b232-4f7d-814a-dc97dcab5368",
+                "name": "Invoke POST request on remote URL/no retry/Log failed flow files",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "7f5c10d0-e7d8-42c4-aacd-96d9d1353da4",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Invoke POST request on remote URL",
+                    "instanceIdentifier": "fc1ea604-88e5-4d5a-bef3-95b071442558"
+                },
+                "destination": {
+                    "id": "375ce4dc-8005-4a39-92e8-5402c72f541c",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Log failed flow files",
+                    "instanceIdentifier": "44898895-5d15-4965-8677-aba1c11f2876"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "no retry"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "edf56257-a055-48e6-a7e4-87b53a950a87",
+                "instanceIdentifier": "f3216baf-e7ee-4c3c-83b4-f33482d40dca",
+                "name": "Get files from /tmp/input/success/Invoke POST request on remote URL",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "570e4ec6-105a-4da6-aba8-0d8ca069c12a",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Get files from /tmp/input",
+                    "instanceIdentifier": "25d38cad-02d6-4f2e-b3a4-17786df17a07"
+                },
+                "destination": {
+                    "id": "7f5c10d0-e7d8-42c4-aacd-96d9d1353da4",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Invoke POST request on remote URL",
+                    "instanceIdentifier": "fc1ea604-88e5-4d5a-bef3-95b071442558"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "success"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "e1766b79-913e-4964-a748-38da1eaf9c68",
+                "instanceIdentifier": "26dafca1-adaa-4ca2-90d5-14d4fad0b32b",
+                "name": "Retry on HTTP 5xx status codes/retries_exceeded/Log failed flow files",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "bbf3ddd1-0761-411e-930b-fec2c282d10e",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Retry on HTTP 5xx status codes",
+                    "instanceIdentifier": "28de5978-6696-491a-906b-eb7a43145393"
+                },
+                "destination": {
+                    "id": "375ce4dc-8005-4a39-92e8-5402c72f541c",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Log failed flow files",
+                    "instanceIdentifier": "44898895-5d15-4965-8677-aba1c11f2876"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "retries_exceeded"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "43bed49d-842a-4144-abdf-9768d784973d",
+                "instanceIdentifier": "c4722313-9e83-468a-ac0a-edb3cac8ffeb",
+                "name": "Invoke POST request on remote URL/failure/Log failed flow files",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "7f5c10d0-e7d8-42c4-aacd-96d9d1353da4",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Invoke POST request on remote URL",
+                    "instanceIdentifier": "fc1ea604-88e5-4d5a-bef3-95b071442558"
+                },
+                "destination": {
+                    "id": "375ce4dc-8005-4a39-92e8-5402c72f541c",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Log failed flow files",
+                    "instanceIdentifier": "44898895-5d15-4965-8677-aba1c11f2876"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "failure"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "0f1d984a-114f-4ce0-af3b-79a372ac2a7e",
+                "instanceIdentifier": "5b127baa-1371-45ed-a4cc-04ed870d4f32",
+                "name": "Invoke POST request on remote URL/retry/Retry on HTTP 5xx status codes",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "7f5c10d0-e7d8-42c4-aacd-96d9d1353da4",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Invoke POST request on remote URL",
+                    "instanceIdentifier": "fc1ea604-88e5-4d5a-bef3-95b071442558"
+                },
+                "destination": {
+                    "id": "bbf3ddd1-0761-411e-930b-fec2c282d10e",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Retry on HTTP 5xx status codes",
+                    "instanceIdentifier": "28de5978-6696-491a-906b-eb7a43145393"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "retry"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "a8353d2f-777c-4dda-bd32-32f30db25f09",
+                "instanceIdentifier": "791904a8-f4e0-46f2-9909-87428c31ab63",
+                "name": "Retry on HTTP 5xx status codes/retry/Invoke POST request on remote URL",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "bbf3ddd1-0761-411e-930b-fec2c282d10e",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Retry on HTTP 5xx status codes",
+                    "instanceIdentifier": "28de5978-6696-491a-906b-eb7a43145393"
+                },
+                "destination": {
+                    "id": "7f5c10d0-e7d8-42c4-aacd-96d9d1353da4",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Invoke POST request on remote URL",
+                    "instanceIdentifier": "fc1ea604-88e5-4d5a-bef3-95b071442558"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "retry"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "labels": [],
+        "funnels": [],
+        "controllerServices": [],
+        "variables": {},
+        "componentType": "PROCESS_GROUP"
+    }
+}

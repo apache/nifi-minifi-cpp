@@ -17,36 +17,31 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- name: Query users table
-  id: 0bd6ebcd-7fef-47e3-8e36-4413d39d01d5
-  class: org.apache.nifi.processors.standard.QueryDatabaseTable
+- name: Tail /tmp/input/test_file.log
+  id: 962c76c4-013e-40c0-ac21-9fd6db4593a3
+  class: org.apache.nifi.minifi.processors.TailFile
   scheduling strategy: TIMER_DRIVEN
-  scheduling period: 1 sec
+  scheduling period: 1000 ms
   Properties:
-    Columns to Return: id,name
-    DB Controller Service: ODBCService
-    Output Format: JSON
-    Table Name: users
-    Where Clause: id = 1
-- name: Put files to /tmp/output
-  id: 32700228-e078-42a6-89d7-03e4e478c9da
-  class: org.apache.nifi.processors.standard.PutFile
+    File to Tail: /tmp/input/test_file.log
+- name: PushGrafanaLokiREST
+  id: 6a9f6c0e-f70c-4778-be8b-ca2494eb0042
+  class: org.apache.nifi.minifi.processors.PushGrafanaLokiREST
   scheduling strategy: EVENT_DRIVEN
   auto-terminated relationships list:
-  - success
   - failure
+  - success
   Properties:
-    Directory: /tmp/output
-Controller Services:
-- name: ODBCService
-  id: 64fafacd-74ad-4c3b-b1cc-a816ef128e09
-  class: ODBCService
-  Properties:
-    Connection String: Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;
+    Url: http://127.0.0.1:3100/
+    Stream Labels: job=minifi,id=logs
+    Log Line Metadata Attributes: filename
+    Max Batch Size: '50'
 Connections:
-- name: QueryDatabaseTable/success/PutFile
-  id: 2308c4f7-4710-4bd1-a949-141265771b2f
-  destination id: 32700228-e078-42a6-89d7-03e4e478c9da
-  source id: 0bd6ebcd-7fef-47e3-8e36-4413d39d01d5
-  source relationship name: success
-Remote Processing Groups: []
+- name: TailFile/success/PushGrafanaLokiREST
+  id: 32f1aa1b-05c8-4fc1-941f-1e3dc70cb1b2
+  source id: 962c76c4-013e-40c0-ac21-9fd6db4593a3
+  source relationship names:
+  - success
+  destination id: 6a9f6c0e-f70c-4778-be8b-ca2494eb0042
+Controller Services: []
+Remote Process Groups: []

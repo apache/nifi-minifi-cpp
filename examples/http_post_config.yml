@@ -59,11 +59,11 @@ Connections:
   source id: 962790e7-ea35-4096-9362-96f527288669
   source relationship name: success
   destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
-- name: InvokeHTTP/failure/InvokeHTTP
+- name: InvokeHTTP/failure/LogAttribute
   id: 0d55009a-adcc-4722-b889-570b6d26cfee
   source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
   source relationship name: failure
-  destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+  destination id: 1f669bb0-6d50-41e6-9230-90c1cc3e21f9
 - name: InvokeHTTP/retry/RetryFlowFile
   id: c8a96f1d-48cd-4ee3-8a2f-081c3e3c7bcd
   source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e

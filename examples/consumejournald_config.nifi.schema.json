@@ -1,0 +1,213 @@
+{
+    "encodingVersion": {
+        "majorVersion": 2,
+        "minorVersion": 0
+    },
+    "maxTimerDrivenThreadCount": 1,
+    "maxEventDrivenThreadCount": 1,
+    "parameterContexts": [],
+    "rootGroup": {
+        "identifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+        "instanceIdentifier": "9af45830-320e-437e-8204-dcd3c2933aa6",
+        "name": "root",
+        "position": {
+            "x": 0.0,
+            "y": 0.0
+        },
+        "processGroups": [],
+        "remoteProcessGroups": [],
+        "processors": [
+            {
+                "identifier": "4b4c6065-da7e-4316-82fd-440273932a20",
+                "instanceIdentifier": "10f04bb1-ee11-4fad-8533-09cc975363bf",
+                "name": "Consume journal messages",
+                "comments": "",
+                "position": {
+                    "x": 95.0,
+                    "y": 127.0
+                },
+                "type": "org.apache.nifi.minifi.extensions.systemd.ConsumeJournald",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-systemd",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Timestamp Format": "%x %X %Z",
+                    "Journal Type": "System",
+                    "Batch Size": "1000",
+                    "Payload Format": "Syslog",
+                    "Process Old Messages": "false",
+                    "Include Timestamp": "true"
+                },
+                "propertyDescriptors": {
+                    "Timestamp Format": {
+                        "name": "Timestamp Format",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Journal Type": {
+                        "name": "Journal Type",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Batch Size": {
+                        "name": "Batch Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Payload Format": {
+                        "name": "Payload Format",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Process Old Messages": {
+                        "name": "Process Old Messages",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Include Timestamp": {
+                        "name": "Include Timestamp",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "5 sec",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            },
+            {
+                "identifier": "bff103a6-6ee1-44c3-b084-3e410b428e17",
+                "instanceIdentifier": "c0707e12-622e-4c1d-b0fa-e200926995d7",
+                "name": "Log messages to info level",
+                "comments": "",
+                "position": {
+                    "x": 390.0,
+                    "y": 131.0
+                },
+                "type": "org.apache.nifi.minifi.processors.LogAttribute",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-standard-processors",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "FlowFiles To Log": "0",
+                    "Log Level": "info",
+                    "Log Payload": "true",
+                    "Log Prefix": "=====",
+                    "Hexencode Payload": "false",
+                    "Maximum Payload Line Length": "0"
+                },
+                "propertyDescriptors": {
+                    "FlowFiles To Log": {
+                        "name": "FlowFiles To Log",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Level": {
+                        "name": "Log Level",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Attributes to Ignore": {
+                        "name": "Attributes to Ignore",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Attributes to Log": {
+                        "name": "Attributes to Log",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Payload": {
+                        "name": "Log Payload",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Log Prefix": {
+                        "name": "Log Prefix",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Hexencode Payload": {
+                        "name": "Hexencode Payload",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum Payload Line Length": {
+                        "name": "Maximum Payload Line Length",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [
+                    "success"
+                ],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "inputPorts": [],
+        "outputPorts": [],
+        "connections": [
+            {
+                "identifier": "0ed54cca-7d1e-4299-9ddf-05b7f6d48828",
+                "instanceIdentifier": "fe35f524-e4f1-4e2d-a79f-40cf536eeca4",
+                "name": "Consume journal messages/success/Log messages to info level",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "4b4c6065-da7e-4316-82fd-440273932a20",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Consume journal messages",
+                    "instanceIdentifier": "10f04bb1-ee11-4fad-8533-09cc975363bf"
+                },
+                "destination": {
+                    "id": "bff103a6-6ee1-44c3-b084-3e410b428e17",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Log messages to info level",
+                    "instanceIdentifier": "c0707e12-622e-4c1d-b0fa-e200926995d7"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "success"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "labels": [],
+        "funnels": [],
+        "controllerServices": [],
+        "variables": {},
+        "componentType": "PROCESS_GROUP"
+    }
+}

@@ -1,0 +1,52 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "d5fef466-fef0-4d90-814e-9c19a67e454a",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Upload Blob to test-container in Azure Storage",
+                "identifier": "e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3",
+                "type": "org.apache.nifi.processors.standard.PutAzureBlobStorage",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "Blob": "test-blob",
+                    "Storage Account Name": "test-account",
+                    "Storage Account Key": "test-key",
+                    "Container Name": "test-container",
+                    "Create Container": "true"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "781aa97f-534f-416a-985c-dc046e2a527a",
+                "name": "GetFile/success/PutAzureBlobStorage",
+                "source": {
+                    "id": "d5fef466-fef0-4d90-814e-9c19a67e454a"
+                },
+                "destination": {
+                    "id": "e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

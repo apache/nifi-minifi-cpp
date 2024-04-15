@@ -1,0 +1,72 @@
+{
+    "rootGroup": {
+        "name": "Read Kubernetes pod logs and publish them to Kafka",
+        "processors": [
+            {
+                "name": "Tail Kubernetes log files",
+                "identifier": "891efd7f-2814-4068-9efd-5f258f4990d5",
+                "type": "org.apache.nifi.minifi.processors.TailFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "properties": {
+                    "tail-mode": "Multiple file",
+                    "tail-base-directory": "/var/log/pods/${namespace}_${pod}_${uid}/${container}",
+                    "File to Tail": ".*\\.log",
+                    "Attribute Provider Service": "KubernetesControllerService",
+                    "Lookup frequency": "10 min",
+                    "Recursive lookup": "false",
+                    "Initial Start Position": "Beginning of File",
+                    "Input Delimiter": "\\n",
+                    "Rolling Filename Pattern": "${filename}.log.*"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Publish messages to Kafka topic test",
+                "identifier": "fb880b73-bff7-4775-a854-e048ae09e07e",
+                "type": "org.apache.nifi.processors.standard.PublishKafka",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "Batch Size": "10",
+                    "Client Name": "test-client",
+                    "Compress Codec": "none",
+                    "Delivery Guarantee": "1",
+                    "Known Brokers": "kafka-broker:9092",
+                    "Message Timeout": "12 sec",
+                    "Request Timeout": "10 sec",
+                    "Topic Name": "test"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "name": "TailFile/success/PublishKafka",
+                "identifier": "d6675f90-62a6-4f98-b67f-00efeab78e5e",
+                "source": {
+                    "id": "891efd7f-2814-4068-9efd-5f258f4990d5"
+                },
+                "destination": {
+                    "id": "fb880b73-bff7-4775-a854-e048ae09e07e"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": [
+            {
+                "name": "KubernetesControllerService",
+                "identifier": "568559dc-3c81-4b01-bc08-760fadb953b0",
+                "type": "org.apache.nifi.minifi.controllers.KubernetesControllerService",
+                "properties": {
+                    "Namespace Filter": "default"
+                }
+            }
+        ]
+    }
+}

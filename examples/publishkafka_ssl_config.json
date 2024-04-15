@@ -1,0 +1,60 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "a78f9d7d-cc68-4f30-aac1-ee716d42bf9d",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Publish messages to Kafka topic test",
+                "identifier": "8c0791c7-920c-4541-bcde-f5d559f42ed2",
+                "type": "org.apache.nifi.processors.standard.PublishKafka",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "Batch Size": "10",
+                    "Client Name": "test_client",
+                    "Compress Codec": "none",
+                    "Delivery Guarantee": "1",
+                    "Known Brokers": "kafka-broker:9093",
+                    "Message Timeout": "12 sec",
+                    "Request Timeout": "10 sec",
+                    "Security CA": "/tmp/resources/certs/ca-cert",
+                    "Security Cert": "/tmp/resources/certs/client_test_client_client.pem",
+                    "Security Pass Phrase": "abcdefgh",
+                    "Security Private Key": "/tmp/resources/certs/client_test_client_client.key",
+                    "Security Protocol": "ssl",
+                    "Topic Name": "test"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "ab45e106-3d97-4a59-8021-e50aa68f1a32",
+                "name": "GetFile/success/PublishKafka",
+                "source": {
+                    "id": "a78f9d7d-cc68-4f30-aac1-ee716d42bf9d"
+                },
+                "destination": {
+                    "id": "8c0791c7-920c-4541-bcde-f5d559f42ed2"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}
