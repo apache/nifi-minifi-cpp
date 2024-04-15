@@ -518,7 +518,7 @@ bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& un
   return true;
 }
 
-nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_view input) {
+nonstd::expected<std::optional<char>, ParseError> parseCharacter(const std::string_view input) {
   if (input.empty()) { return std::nullopt; }
   if (input.size() == 1) { return input[0]; }
 
@@ -532,10 +532,65 @@ nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_vie
       case 'v': return '\v';  // Vertical Tab
       case 'f': return '\f';  // Form Feed
       case 'r': return '\r';  // Carriage Return
-      default: return input[1];
+      case '\\': return '\\';
+      default: break;
     }
   }
   return nonstd::make_unexpected(ParseError{});
+}
+
+std::string replaceEscapedCharacters(std::string_view input) {
+  std::stringstream result;
+  for (size_t i = 0; i < input.size(); ++i) {
+    char input_char = input[i];
+    if (input_char != '\\' || i == input.size() - 1) {
+      result << input_char;
+      continue;
+    }
+    char next_char = input[i+1];
+    switch (next_char) {
+      case '0':
+        result << '\0';  // Null
+        ++i;
+        break;
+      case 'a':
+        result << '\a';  // Bell
+        ++i;
+        break;
+      case 'b':
+        result << '\b';  // Backspace
+        ++i;
+        break;
+      case 't':
+        result << '\t';  // Horizontal Tab
+        ++i;
+        break;
+      case 'n':
+        result << '\n';  // Line Feed
+        ++i;
+        break;
+      case 'v':
+        result << '\v';  // Vertical Tab
+        ++i;
+        break;
+      case 'f':
+        result << '\f';  // Form Feed
+        ++i;
+        break;
+      case 'r':
+        result << '\r';  // Carriage Return
+        ++i;
+        break;
+      case '\\':
+        result << '\\';
+        ++i;
+        break;
+      default:
+        result << '\\';
+        break;
+    }
+  }
+  return result.str();
 }
 
 std::string repeat(std::string_view str, size_t count) {

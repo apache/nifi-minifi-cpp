@@ -32,7 +32,7 @@
 #include "IntegrationTestUtils.h"
 
 using namespace std::literals::chrono_literals;
-using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+using org::apache::nifi::minifi::utils::verifyLogLineVariantPresenceInPollTime;
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -236,7 +236,7 @@ class PutTCPTestFixture {
 
     uint16_t startTCPServer(std::optional<utils::net::SslServerOptions> ssl_server_options) {
       gsl_Expects(!cancellable_server && !server_thread_.joinable());
-      cancellable_server = std::make_unique<CancellableTcpServer>(std::nullopt, 0, core::logging::LoggerFactory<utils::net::Server>::getLogger(), std::move(ssl_server_options));
+      cancellable_server = std::make_unique<CancellableTcpServer>(std::nullopt, 0, core::logging::LoggerFactory<utils::net::Server>::getLogger(), std::move(ssl_server_options), true, "\n");
       server_thread_ = std::thread([this]() { cancellable_server->run(); });
       REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [this] { return cancellable_server->getPort() != 0; }, 20ms));
       return cancellable_server->getPort();
@@ -410,7 +410,7 @@ TEST_CASE("PutTCP test missing client cert", "[PutTCP]") {
 
   test_fixture.trigger("message for invalid-cert server");
 
-  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "peer did not return a certificate (SSL routines)"));
+  CHECK(verifyLogLineVariantPresenceInPollTime(std::chrono::seconds(3), "peer did not return a certificate (SSL routines)", "failed due to asio.ssl error"));
 }
 
 TEST_CASE("PutTCP test idle connection expiration", "[PutTCP]") {

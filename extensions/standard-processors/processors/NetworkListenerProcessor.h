@@ -57,8 +57,15 @@ class NetworkListenerProcessor : public core::Processor {
   }
 
  protected:
-  void startTcpServer(const core::ProcessContext& context, const core::PropertyReference& ssl_context_property, const core::PropertyReference& client_auth_property);
+  void startTcpServer(const core::ProcessContext& context,
+      const core::PropertyReference& ssl_context_property,
+      const core::PropertyReference& client_auth_property,
+      bool consume_delimiter,
+      std::string delimiter);
   void startUdpServer(const core::ProcessContext& context);
+
+ protected:
+  std::shared_ptr<core::logging::Logger> logger_;
 
  private:
   struct ServerOptions {
@@ -78,7 +85,6 @@ class NetworkListenerProcessor : public core::Processor {
   uint64_t max_batch_size_{500};
   std::unique_ptr<utils::net::Server> server_;
   std::thread server_thread_;
-  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

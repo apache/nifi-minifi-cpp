@@ -54,7 +54,7 @@ void ListenSyslog::onSchedule(core::ProcessContext& context, core::ProcessSessio
   auto protocol = utils::enumCast<utils::net::IpProtocol>(protocol_name);
 
   if (protocol == utils::net::IpProtocol::TCP) {
-    startTcpServer(context, SSLContextService, ClientAuth);
+    startTcpServer(context, SSLContextService, ClientAuth, true, "\n");
   } else if (protocol == utils::net::IpProtocol::UDP) {
     startUdpServer(context);
   } else {

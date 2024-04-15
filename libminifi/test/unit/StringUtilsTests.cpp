@@ -605,14 +605,27 @@ TEST_CASE("string::parseCharacter tests") {
   CHECK(string::parseCharacter("\\n") == '\n');
   CHECK(string::parseCharacter("\\t") == '\t');
   CHECK(string::parseCharacter("\\r") == '\r');
-  CHECK(string::parseCharacter("\\s") == 's');
-  CHECK(string::parseCharacter("\\'") == '\'');
   CHECK(string::parseCharacter("\\") == '\\');
-  CHECK(string::parseCharacter("\\?") == '\?');
+  CHECK(string::parseCharacter("\\\\") == '\\');
 
+  CHECK_FALSE(string::parseCharacter("\\s").has_value());
+  CHECK_FALSE(string::parseCharacter("\\?").has_value());
   CHECK_FALSE(string::parseCharacter("abc").has_value());
   CHECK_FALSE(string::parseCharacter("\\nd").has_value());
   CHECK(string::parseCharacter("") == std::nullopt);
+}
+
+TEST_CASE("string::replaceEscapedCharacters tests") {
+  CHECK(string::replaceEscapedCharacters("a") == "a");
+  CHECK(string::replaceEscapedCharacters(R"(\n)") == "\n");
+  CHECK(string::replaceEscapedCharacters(R"(\t)") == "\t");
+  CHECK(string::replaceEscapedCharacters(R"(\r)") == "\r");
+  CHECK(string::replaceEscapedCharacters(R"(\s)") == "\\s");
+  CHECK(string::replaceEscapedCharacters(R"(\\ foo \)") == "\\ foo \\");
+  CHECK(string::replaceEscapedCharacters(R"(\\s)") == "\\s");
+  CHECK(string::replaceEscapedCharacters(R"(\r\n)") == "\r\n");
+  CHECK(string::replaceEscapedCharacters(R"(foo\nbar)") == "foo\nbar");
+  CHECK(string::replaceEscapedCharacters(R"(\\n)") == "\\n");
 }
 
 #ifdef WIN32

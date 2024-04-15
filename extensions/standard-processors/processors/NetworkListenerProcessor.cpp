@@ -61,7 +61,11 @@ void NetworkListenerProcessor::startServer(const ServerOptions& options, utils::
                      max_batch_size_);
 }
 
-void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& context, const core::PropertyReference& ssl_context_property, const core::PropertyReference& client_auth_property) {
+void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& context,
+    const core::PropertyReference& ssl_context_property,
+    const core::PropertyReference& client_auth_property,
+    bool consume_delimiter,
+    std::string delimiter) {
   gsl_Expects(!server_thread_.joinable() && !server_);
   auto options = readServerOptions(context);
 
@@ -75,7 +79,7 @@ void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& contex
     auto client_auth = utils::parseEnumProperty<utils::net::ClientAuthOption>(context, client_auth_property);
     ssl_options.emplace(std::move(*ssl_data), client_auth);
   }
-  server_ = std::make_unique<utils::net::TcpServer>(options.max_queue_size, options.port, logger_, ssl_options);
+  server_ = std::make_unique<utils::net::TcpServer>(options.max_queue_size, options.port, logger_, ssl_options, consume_delimiter, std::move(delimiter));
 
   startServer(options, utils::net::IpProtocol::TCP);
 }
