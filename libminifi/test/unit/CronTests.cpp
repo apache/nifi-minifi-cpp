@@ -421,7 +421,7 @@ TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
   date::set_install(TZ_DATA_DIR);
 #endif
 
-  const std::vector<std::string> time_zones{ "Europe/Berlin", "Asia/Seoul", "America/Los_Angeles", "Asia/Singapore", "UCT" };
+  const std::vector<std::string> time_zones{ "Europe/Berlin", "Asia/Seoul", "America/Los_Angeles", "Asia/Singapore", "UTC" };
 
   for (const auto& time_zone: time_zones) {
     checkNext("0/15 * 1-4 * * ?",

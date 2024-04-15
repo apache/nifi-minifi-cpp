@@ -40,8 +40,6 @@ def _create_system_dependencies(minifi_options: MinifiOptions) -> Dict[str, Set[
         system_dependencies['automake'] = {'automake'}
         system_dependencies['autoconf'] = {'autoconf'}
         system_dependencies['libtool'] = {'libtool'}
-    if minifi_options.is_enabled("ENABLE_LUA_SCRIPTING"):
-        system_dependencies['lua'] = {'lua'}
     if minifi_options.is_enabled("ENABLE_PYTHON_SCRIPTING"):
         system_dependencies['python'] = {'python'}
     if minifi_options.is_enabled("MINIFI_OPENSSL"):

@@ -21,6 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_LUA_SCRIPTING))
     return()
 endif()
 
+include(Lua)
 include(Sol2)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
@@ -33,12 +34,11 @@ target_link_libraries(minifi-lua-script-extension PRIVATE ${LIBMINIFI} Threads::
 
 SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION ASC)
-find_package(Lua 5.1 REQUIRED)
 
 target_include_directories(minifi-lua-script-extension PRIVATE lua)
 target_include_directories(minifi-lua-script-extension PUBLIC ${LUA_INCLUDE_DIR})
 
-target_link_libraries(minifi-lua-script-extension PUBLIC ${LUA_LIBRARIES} sol2)
+target_link_libraries(minifi-lua-script-extension PUBLIC lua sol2)
 target_compile_features(minifi-lua-script-extension PUBLIC cxx_std_14)
 
 register_extension(minifi-lua-script-extension "LUA SCRIPTING EXTENSIONS" LUA-SCRIPTING-EXTENSIONS "This enables LUA scripting" "extensions/lua/tests")

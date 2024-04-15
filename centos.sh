@@ -100,9 +100,6 @@ build_deps() {
                         INSTALLED+=("maven")
                     elif [ "$FOUND_VALUE" = "python" ]; then
                         INSTALLED+=("python36-devel")
-                    elif [ "$FOUND_VALUE" = "lua" ]; then
-                        INSTALLED+=("lua-libs")
-                        INSTALLED+=("lua-devel")
                     elif [ "$FOUND_VALUE" = "gpsd" ]; then
                         INSTALLED+=("gpsd-devel")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then

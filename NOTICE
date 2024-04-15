@@ -81,6 +81,7 @@ This software includes third party software subject to the following copyrights:
 - protbuf - Copyright 2008 Google Inc.  All rights reserved.
 - RE2 - Copyright (c) 2009 The RE2 Authors. All rights reserved.
 - c-ares - Copyright (c) 1998 Massachusetts Institute of Technology Copyright (c) 2007 - 2023 Daniel Stenberg with many contributors, see AUTHORS file.
+- lua - Copyright (c) 1994–2023 Lua.org, PUC-Rio.
 
 The licenses for these third party components are included in LICENSE.txt
 

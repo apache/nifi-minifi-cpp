@@ -73,8 +73,6 @@ build_deps(){
             INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "python" ]; then
             INSTALLED+=("libpython3-dev")
-          elif [ "$FOUND_VALUE" = "lua" ]; then
-            INSTALLED+=("liblua5.1-0-dev")
           elif [ "$FOUND_VALUE" = "jnibuild" ]; then
             INSTALLED+=("openjdk-11-jdk")
             INSTALLED+=("openjdk-11-source")
