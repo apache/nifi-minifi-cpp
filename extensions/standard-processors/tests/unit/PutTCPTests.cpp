@@ -31,7 +31,7 @@
 #include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
-using org::apache::nifi::minifi::utils::verifyLogLineVariantPresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyLogLineVariantPresenceInPollTime;
 using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
 
 namespace org::apache::nifi::minifi::processors {

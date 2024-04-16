@@ -167,7 +167,7 @@ bool countLogOccurrencesUntil(const std::string& pattern,
                               const int occurrences,
                               const std::chrono::milliseconds max_duration,
                               const std::chrono::milliseconds wait_time = 50ms);
-std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint);
+std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint, const std::optional<std::string_view> delimiter = std::nullopt);
 std::error_code sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint);
 
 std::error_code sendUdpDatagram(const std::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint);

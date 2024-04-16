@@ -171,7 +171,7 @@ bool countLogOccurrencesUntil(const std::string& pattern,
   return false;
 }
 
-std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint) {
+std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint, const std::optional<std::string_view> delimiter) {
   asio::io_context io_context;
   asio::ip::tcp::socket socket(io_context);
   std::error_code err;
@@ -180,7 +180,8 @@ std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents
     return err;
   for (auto& content : contents) {
     std::string tcp_message(content);
-    tcp_message += '\n';
+    if (delimiter)
+      tcp_message += *delimiter;
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
     if (err)
       return err;
