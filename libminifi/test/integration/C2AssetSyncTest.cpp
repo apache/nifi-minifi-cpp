@@ -67,7 +67,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
       if (asset_hash != calculateAssetHash()) {
         std::unordered_map<std::string, std::string> args;
         for (auto& asset : expected_assets_) {
-          args[asset.id + ".path"] = asset.path;
+          args[asset.id + ".path"] = asset.path.string();
           args[asset.id + ".url"] = asset.url;
         }
         operations.push_back(C2Operation{
