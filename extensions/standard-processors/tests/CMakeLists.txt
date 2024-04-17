@@ -21,7 +21,7 @@ include(Coroutines)
 include(JoltTests)
 enable_coroutines()
 
-file(GLOB PROCESSOR_UNIT_TESTS  "unit/*.cpp")
+file(GLOB PROCESSOR_UNIT_TESTS  "unit/*.cpp" "unit/modbus/*.cpp")
 file(GLOB PROCESSOR_INTEGRATION_TESTS "integration/*.cpp")
 
 SET(PROCESSOR_INT_TEST_COUNT 0)
@@ -49,7 +49,7 @@ FOREACH(testfile ${PROCESSOR_UNIT_TESTS})
     MATH(EXPR PROCESSOR_INT_TEST_COUNT "${PROCESSOR_INT_TEST_COUNT}+1")
 ENDFOREACH()
 
-message("-- Finished building ${PROCESSOR_INT_TEST_COUNT} processor unit test file(s)...")
+message("-- Finished building ${PROCESSOR_UNIT_TESTS} processor unit test file(s)...")
 
 
 SET(INT_TEST_COUNT 0)

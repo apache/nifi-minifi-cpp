@@ -42,6 +42,7 @@ limitations under the License.
 - [FetchAzureDataLakeStorage](#FetchAzureDataLakeStorage)
 - [FetchFile](#FetchFile)
 - [FetchGCSObject](#FetchGCSObject)
+- [FetchModbusTcp](#FetchModbusTcp)
 - [FetchOPCProcessor](#FetchOPCProcessor)
 - [FetchS3Object](#FetchS3Object)
 - [FetchSFTP](#FetchSFTP)
@@ -904,6 +905,35 @@ In the list below, the names of required properties appear in bold. Any other pr
 | gcs.status.message | failure      | The status message received from google cloud.          |
 | gcs.error.reason   | failure      | The description of the error occurred during operation. |
 | gcs.error.domain   | failure      | The domain of the error occurred during operation.      |
+
+
+## FetchModbusTcp
+
+### Description
+
+Processor able to read data from industrial PLCs using Modbus TCP/IP
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                           | Default Value | Allowable Values | Description                                                                                                                                           |
+|--------------------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Hostname**                   |               |                  | The ip address or hostname of the destination.<br/>**Supports Expression Language: true**                                                             |
+| **Port**                       | 502           |                  | The port or service on the destination.<br/>**Supports Expression Language: true**                                                                    |
+| **Unit Identifier**            | 0             |                  | The port or service on the destination.<br/>**Supports Expression Language: true**                                                                    |
+| **Idle Connection Expiration** | 15 seconds    |                  | The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature. |
+| **Connection Per FlowFile**    | false         | true<br/>false   | Specifies whether to send each FlowFile's content on an individual connection.                                                                        |
+| **Timeout**                    | 15 seconds    |                  | The timeout for connecting to and communicating with the destination.                                                                                 |
+| SSL Context Service            |               |                  | The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.             |
+| **Record Set Writer**          |               |                  | Specifies the Controller Service to use for writing results to a FlowFile.                                                                            |
+
+### Relationships
+
+| Name    | Description                  |
+|---------|------------------------------|
+| success | Successfully processed       |
+| failure | An error occurred processing |
 
 
 ## FetchOPCProcessor

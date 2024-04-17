@@ -51,6 +51,8 @@ class ConnectionId {
   ConnectionId(std::string hostname, std::string port) : hostname_(std::move(hostname)), service_(std::move(port)) {}
   ConnectionId(const ConnectionId& connection_id) = default;
   ConnectionId(ConnectionId&& connection_id) = default;
+  ConnectionId& operator=(ConnectionId&&) = default;
+  ConnectionId& operator=(const ConnectionId&) = default;
 
   auto operator<=>(const ConnectionId&) const = default;
 
@@ -166,16 +168,14 @@ class AsioSocketConnection : public io::BaseStream {
 
 }  // namespace org::apache::nifi::minifi::utils::net
 
-namespace std {
 template<>
-struct hash<org::apache::nifi::minifi::utils::net::ConnectionId> {
-  size_t operator()(const org::apache::nifi::minifi::utils::net::ConnectionId& connection_id) const {
+struct std::hash<org::apache::nifi::minifi::utils::net::ConnectionId> {
+  size_t operator()(const org::apache::nifi::minifi::utils::net::ConnectionId& connection_id) const noexcept {
     return org::apache::nifi::minifi::utils::hash_combine(
         std::hash<std::string_view>{}(connection_id.getHostname()),
         std::hash<std::string_view>{}(connection_id.getService()));
   }
 };
-}  // namespace std
 
 template <typename InternetProtocol>
 struct fmt::formatter<asio::ip::basic_endpoint<InternetProtocol>> : fmt::ostream_formatter {};
