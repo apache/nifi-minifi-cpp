@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <charconv>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -432,6 +433,14 @@ struct ParseError {};
 nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_view input);
 
 std::string replaceEscapedCharacters(std::string_view input);
+
+template<typename T>
+nonstd::expected<T, ParseError> parse(std::string_view input) {
+  T t{};
+  if (const auto result = std::from_chars(input.data(), input.data() + input.size(), t); result.ptr != input.data() + input.size())
+    return nonstd::make_unexpected(ParseError{});
+  return t;
+}
 }  // namespace string
 
 }  // namespace org::apache::nifi::minifi::utils

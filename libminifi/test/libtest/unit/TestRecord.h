@@ -23,58 +23,58 @@
 
 namespace org::apache::nifi::minifi::core::test {
 
-inline Record createSampleRecord2(const bool stringify_date = false) {
+inline Record createSampleRecord2(const bool stringify = false) {
   using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
   Record record;
 
-  auto when = date::sys_days(2022_y / 11 / 01) + 19h + 52min + 11s;
-  if (!stringify_date) {
+  constexpr auto when = date::sys_days(2022_y / 11 / 01) + 19h + 52min + 11s;
+  if (!stringify) {
     record.emplace("when", RecordField{when});
   } else {
     record.emplace("when", RecordField{utils::timeutils::getDateTimeStr(std::chrono::floor<std::chrono::seconds>(when))});
   }
-  record.emplace("foo", RecordField{"Lorem ipsum dolor sit amet, consectetur adipiscing elit."});
+  record.emplace("foo", RecordField{std::string{"Lorem ipsum dolor sit amet, consectetur adipiscing elit."}});
   record.emplace("bar", RecordField{int64_t{98402134}});
   record.emplace("baz", RecordField{std::numbers::pi});
   record.emplace("is_test", RecordField{true});
   RecordArray qux;
-  qux.emplace_back(false);
-  qux.emplace_back(false);
-  qux.emplace_back(true);
+  qux.emplace_back('x');
+  qux.emplace_back('y');
+  qux.emplace_back('z');
   RecordObject quux;
-  quux["Apfel"] = BoxedRecordField{std::make_unique<RecordField>(RecordField{"pomme"})};
-  quux["Birne"] = BoxedRecordField{std::make_unique<RecordField>(RecordField{"poire"})};
-  quux["Aprikose"] = BoxedRecordField{std::make_unique<RecordField>(RecordField{"abricot"})};
+  quux["Apfel"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"pomme"})};
+  quux["Birne"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"poire"})};
+  quux["Aprikose"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"abricot"})};
 
   record.emplace("qux", RecordField{std::move(qux)});
   record.emplace("quux", RecordField{std::move(quux)});
   return record;
 }
 
-inline Record createSampleRecord(const bool stringify_date = false) {
+inline Record createSampleRecord(const bool stringify = false) {
   using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
   Record record;
 
-  auto when = date::sys_days(2012_y / 07 / 01) + 9h + 53min + 00s;
-  if (!stringify_date) {
+  constexpr auto when = date::sys_days(2012_y / 07 / 01) + 9h + 53min + 00s;
+  if (!stringify) {
     record.emplace("when", RecordField{when});
   } else {
     record.emplace("when", RecordField{utils::timeutils::getDateTimeStr(std::chrono::floor<std::chrono::seconds>(when))});
   }
-  record.emplace("foo", RecordField{"asd"});
+  record.emplace("foo", RecordField{std::string{"asd"}});
   record.emplace("bar", RecordField{int64_t{123}});
   record.emplace("baz", RecordField{3.14});
   record.emplace("is_test", RecordField{true});
   RecordArray qux;
-  qux.emplace_back(true);
-  qux.emplace_back(false);
-  qux.emplace_back(true);
+  qux.emplace_back('a');
+  qux.emplace_back('b');
+  qux.emplace_back('c');
   RecordObject quux;
-  quux["Apfel"] = BoxedRecordField{std::make_unique<RecordField>(RecordField{"apple"})};
-  quux["Birne"] = BoxedRecordField{std::make_unique<RecordField>(RecordField{"pear"})};
-  quux["Aprikose"] = BoxedRecordField{std::make_unique<RecordField>(RecordField{"apricot"})};
+  quux["Apfel"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"apple"})};
+  quux["Birne"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"pear"})};
+  quux["Aprikose"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"apricot"})};
 
   record.emplace("qux", RecordField{std::move(qux)});
   record.emplace("quux", RecordField{std::move(quux)});

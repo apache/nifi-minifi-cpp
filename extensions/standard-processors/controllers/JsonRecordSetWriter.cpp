@@ -20,6 +20,7 @@
 #include <rapidjson/prettywriter.h>
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::standard {
 

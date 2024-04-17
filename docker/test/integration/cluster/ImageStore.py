@@ -66,6 +66,8 @@ class ImageStore:
             image = self.__build_splunk_image()
         elif container_engine == "reverse-proxy":
             image = self.__build_reverse_proxy_image()
+        elif container_engine == "diag-slave-tcp":
+            image = self.__build_diagslave_image()
         else:
             raise Exception("There is no associated image for " + container_engine)
 
@@ -230,6 +232,9 @@ class ImageStore:
 
     def __build_reverse_proxy_image(self):
         return self.__build_image_by_path(self.test_dir + "/resources/reverse-proxy", 'reverse-proxy')
+
+    def __build_diagslave_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/diagslave", 'diag-slave-tcp')
 
     def __build_image(self, dockerfile, context_files=[]):
         conf_dockerfile_buffer = BytesIO()

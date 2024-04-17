@@ -30,6 +30,10 @@ class Record {
  public:
   Record() = default;
   Record(Record&& rhs) noexcept : fields_(std::move(rhs.fields_)) {}
+  Record& operator=(Record&& rhs)  noexcept {
+    fields_ = std::move(rhs.fields_);
+    return *this;
+  };
   auto emplace(std::string key, RecordField&& field) {
     return fields_.emplace(std::move(key), std::move(field));
   }

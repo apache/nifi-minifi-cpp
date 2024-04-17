@@ -65,6 +65,7 @@ __pycache__/
 /provenance_repository
 /logs
 msi/WixWin.wsi
+docker/behavex_output
 
 .vs/**
 *.swp
