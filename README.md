@@ -144,13 +144,17 @@ versions of OpenSSL, cURL, or zlib are used:
 
 and rebuild.
 
-#### Libraries / Development Headers
+#### System Libraries / Development Headers Required
 * Python 3 and development headers -- Required if Python support is enabled
 * libgps-dev -- Required if building libGPS support
 * perl -- Required for OpenSSL configuration
 * NASM -- Required for OpenSSL only on Windows
 
 **NOTE:** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the PATH environment variable as the patch executable in this directory interferes with git's patch executable. Alternatively [scoop](https://scoop.sh/) package manager can also be used to install Strawberry Perl using the command `scoop install perl` that does not pollute the PATH variable. Also on Windows CMake's CPack is used for MSI generation, building WIX files and calling WIX toolset tools to create an MSI. If Chocolatey package manager is used its CPack can conflict with CMake, so make sure that CMake's CPack is found in the %PATH% before that.
+
+#### Bundled Thirdparty Dependencies
+
+The [NOTICE](NOTICE) file lists all the bundled thirdparty dependencies that are built and linked statically to MiNiFi or one of its extensions. The licenses of these projects can be found in the [LICENSE](LICENSE) file.
 
 #### CentOS 7
 
@@ -177,7 +181,7 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 
 ### To run
 
-#### Libraries
+#### System Libraries Required
 * Python 3 -- Required if Python support is enabled
 * libusb -- Optional, unless USB Camera support is enabled
 * libpng -- Optional, unless USB Camera support is enabled
