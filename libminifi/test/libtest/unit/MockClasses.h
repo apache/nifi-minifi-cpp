@@ -115,11 +115,11 @@ class MockProcessor : public minifi::core::Processor {
       std::shared_ptr<minifi::core::controller::ControllerService> service = context.getControllerService(linked_service);
       std::lock_guard<std::mutex> lock(control_mutex);
       if (!disabled.load()) {
-        REQUIRE(true == context.isControllerServiceEnabled(linked_service));
+        REQUIRE(context.isControllerServiceEnabled(linked_service));
         REQUIRE(nullptr != service);
         REQUIRE("pushitrealgood" == std::static_pointer_cast<MockControllerService>(service)->doSomething());
       } else {
-        REQUIRE(false == context.isControllerServiceEnabled(linked_service));
+        REQUIRE_FALSE(context.isControllerServiceEnabled(linked_service));
       }
       // verify we have access to the controller service
       // and verify that we can execute it.

@@ -144,12 +144,8 @@ versions of OpenSSL, cURL, or zlib are used:
 and rebuild.
 
 #### Libraries / Development Headers
-* libcurl-openssl (built and statically linked)
-* libuuid and uuid-dev
-* openssl
 * Python 3 and development headers -- Required if Python support is enabled
 * libgps-dev -- Required if building libGPS support
-* Zlib headers
 * perl -- Required for OpenSSL configuration
 * NASM -- Required for OpenSSL only on Windows
 
@@ -181,12 +177,6 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 ### To run
 
 #### Libraries
-* libuuid
-* librocksdb (built and statically linked)
-* libcurl-openssl
-* libssl and libcrypto from openssl (built and statically linked)
-* libarchive (built and statically linked)
-* librdkafka (built and statically linked)
 * Python 3 -- Required if Python support is enabled
 * libusb -- Optional, unless USB Camera support is enabled
 * libpng -- Optional, unless USB Camera support is enabled

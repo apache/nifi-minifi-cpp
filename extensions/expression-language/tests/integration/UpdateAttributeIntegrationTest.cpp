@@ -41,7 +41,7 @@ class TestHarness : public IntegrationBase {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
         "key:route_check_attr value:good",
         "key:variable_attribute value:replacement_value"));
-    REQUIRE(false == minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "ProcessSession rollback"));  // No rollback happened
+    REQUIRE_FALSE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "ProcessSession rollback"));  // No rollback happened
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> /*pg*/) override {
