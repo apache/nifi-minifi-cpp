@@ -193,8 +193,8 @@ int main() {
 
   auto get_asset_structure = [&] () {
     std::unordered_map<std::string, std::string> contents;
-    for (auto file : utils::file::list_dir_all(asset_dir.string(), controller.getLogger())) {
-      contents[(file.first / file.second).string()] = utils::file::get_content(file.first / file.second);
+    for (auto& [dir, file] : utils::file::list_dir_all(asset_dir.string(), controller.getLogger())) {
+      contents[(dir / file).string()] = utils::file::get_content(dir / file);
     }
     return contents;
   };

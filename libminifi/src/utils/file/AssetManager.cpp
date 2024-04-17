@@ -96,7 +96,7 @@ std::string AssetManager::hash() const {
 
 nonstd::expected<void, std::string> AssetManager::sync(
     org::apache::nifi::minifi::utils::file::AssetLayout layout,
-    std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)> fetch) {
+    const std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)>& fetch) {
   std::lock_guard lock(mtx_);
   std::vector<std::pair<std::filesystem::path, std::vector<std::byte>>> new_file_contents;
   for (auto& new_entry : layout) {
@@ -119,7 +119,7 @@ nonstd::expected<void, std::string> AssetManager::sync(
 
   for (auto& [path, content] : new_file_contents) {
     utils::file::create_dir((root_ / path).parent_path());
-    std::ofstream{root_ / path, std::ios::binary}.write(reinterpret_cast<const char*>(content.data()), content.size());
+    std::ofstream{root_ / path, std::ios::binary}.write(reinterpret_cast<const char*>(content.data()), gsl::narrow<std::streamsize>(content.size()));
   }
 
   state_ = std::move(layout);
@@ -143,7 +143,7 @@ void AssetManager::persist() const {
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   doc.Accept(writer);
 
-  std::ofstream{root_ / ".state", std::ios::binary}.write(buffer.GetString(), buffer.GetSize());
+  std::ofstream{root_ / ".state", std::ios::binary}.write(buffer.GetString(), gsl::narrow<std::streamsize>(buffer.GetSize()));
 }
 
 std::filesystem::path AssetManager::getRoot() const {
