@@ -72,7 +72,7 @@ class HttpTestHarness : public HTTPIntegrationBase {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
       "curl performed",
       "Size:1024 Offset:0"));
-    REQUIRE(false == minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "Size:0 Offset:0"));
+    REQUIRE_FALSE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(200), "Size:0 Offset:0"));
   }
 
  protected:
