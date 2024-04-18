@@ -45,7 +45,15 @@ target_include_directories(minifi-python-script-extension PUBLIC ${Python_INCLUD
 
 get_target_property(TARGET_EXT minifi-python-script-extension SUFFIX)
 
-if (NOT WIN32)
+if (WIN32)
+    add_custom_command(
+        TARGET minifi-python-script-extension
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/extensions/python/pythonprocessors" "${CMAKE_BINARY_DIR}/pythonprocessors"
+        COMMENT "Copy example python processors to the build directory"
+    )
+else()
     add_custom_command(
         TARGET minifi-python-script-extension
         POST_BUILD
