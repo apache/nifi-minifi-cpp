@@ -46,33 +46,33 @@ class SpecialPropertyTypeChecker(FlowFileTransform):
         return self.property_descriptors
 
     def transform(self, context, flowFile):
-        time_in_ms = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.MICROSECONDS)
-        if time_in_ms != 7200000000:
+        time_in_microseconds = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.MICROSECONDS)
+        if time_in_microseconds != 7200000000:
             self.logger.error("Time period property conversion to microseconds is not working as expected")
             return FlowFileTransformResult("failure", contents="Time period property conversion to microseconds is not working as expected")
 
-        time_in_ms = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.MILLISECONDS)
-        if time_in_ms != 7200000:
+        time_in_milliseconds = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.MILLISECONDS)
+        if time_in_milliseconds != 7200000:
             self.logger.error("Time period property conversion to milliseconds is not working as expected")
             return FlowFileTransformResult("failure", contents="Time period property conversion to milliseconds is not working as expected")
 
-        time_in_s = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.SECONDS)
-        if time_in_s != 7200:
+        time_in_seconds = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.SECONDS)
+        if time_in_seconds != 7200:
             self.logger.error("Time period property conversion to seconds is not working as expected")
             return FlowFileTransformResult("failure", contents="Time period property conversion to seconds is not working as expected")
 
-        time_in_s = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.MINUTES)
-        if time_in_s != 120:
+        time_in_minutes = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.MINUTES)
+        if time_in_minutes != 120:
             self.logger.error("Time period property conversion to minutes is not working as expected")
             return FlowFileTransformResult("failure", contents="Time period property conversion to minutes is not working as expected")
 
-        time_in_s = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.HOURS)
-        if time_in_s != 2:
+        time_in_hours = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.HOURS)
+        if time_in_hours != 2:
             self.logger.error("Time period property conversion to hours is not working as expected")
             return FlowFileTransformResult("failure", contents="Time period property conversion to hours is not working as expected")
 
-        time_in_s = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.DAYS)
-        if time_in_s != 0:
+        time_in_days = context.getProperty(self.TIME_PERIOD_PROPERTY).asTimePeriod(TimeUnit.DAYS)
+        if time_in_days != 0:
             self.logger.error("Time period property conversion to days is not working as expected")
             return FlowFileTransformResult("failure", contents="Time period property conversion to days is not working as expected")
 
@@ -81,18 +81,18 @@ class SpecialPropertyTypeChecker(FlowFileTransform):
             self.logger.error("Data size property conversion to bytes is not working as expected")
             return FlowFileTransformResult("failure", contents="Data size property conversion to bytes is not working as expected")
 
-        data_size_in_kbytes = context.getProperty(self.DATA_SIZE_PROPERTY).asDataSize(DataUnit.KB)
-        if data_size_in_kbytes != 102400.0:
+        data_size_in_kilobytes = context.getProperty(self.DATA_SIZE_PROPERTY).asDataSize(DataUnit.KB)
+        if data_size_in_kilobytes != 102400.0:
             self.logger.error("Data size property conversion to kilobytes is not working as expected")
             return FlowFileTransformResult("failure", contents="Data size property conversion to kilobytes is not working as expected")
 
-        data_size_in_mbytes = context.getProperty(self.DATA_SIZE_PROPERTY).asDataSize(DataUnit.MB)
-        if data_size_in_mbytes != 100.0:
+        data_size_in_megabytes = context.getProperty(self.DATA_SIZE_PROPERTY).asDataSize(DataUnit.MB)
+        if data_size_in_megabytes != 100.0:
             self.logger.error("Data size property conversion to megabytes is not working as expected")
             return FlowFileTransformResult("failure", contents="Data size property conversion to megabytes is not working as expected")
 
-        data_size_in_mbytes = context.getProperty(self.DATA_SIZE_PROPERTY).asDataSize(DataUnit.GB)
-        if data_size_in_mbytes != 0.09765625:
+        data_size_in_gigabytes = context.getProperty(self.DATA_SIZE_PROPERTY).asDataSize(DataUnit.GB)
+        if data_size_in_gigabytes != 0.09765625:
             self.logger.error("Data size property conversion to gigabytes is not working as expected")
             return FlowFileTransformResult("failure", contents="Data size property conversion to gigabytes is not working as expected")
 
