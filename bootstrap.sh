@@ -445,7 +445,8 @@ build_cmake_command(){
       set_value=OFF
       option_value="${!option}"
       if { [[ "$option_value" = "${FALSE}" ]] && { [[ "$FOUND_VALUE" == "DISABLE"* ]] || [[ "$FOUND_VALUE" == *"OFF" ]]; }; } || \
-         { [[ "$option_value" = "${TRUE}" ]] && [[ "$FOUND_VALUE" == "ENABLE"* ]]; }; then
+         { [[ "$option_value" = "${TRUE}" ]] && [[ "$FOUND_VALUE" == "ENABLE"* ]]; } ||
+         { [[ "$option_value" = "${TRUE}" ]] && [[ "$FOUND_VALUE" != "ENABLE"* ]] && [[ "$FOUND_VALUE" != "DISABLE"* ]]; }; then
         set_value=ON
       fi
       CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -D${FOUND_VALUE}=${set_value}"
