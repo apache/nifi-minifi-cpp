@@ -216,7 +216,7 @@ jobs:
           Start-Process -FilePath ".\sqliteodbc_w64.exe" -ArgumentList "/S" -Wait
         shell: powershell
       - name: Add sccache to path
-        run: '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";C:\hostedtoolcache\windows\sccache\0.7.7\x64\", [EnvironmentVariableTarget]::Machine);'
+        run: '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";" + (Split-Path -Path $env:SCCACHE_PATH -Parent), [EnvironmentVariableTarget]::Machine);'
         shell: powershell
       - name: build
         run: |
