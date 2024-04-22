@@ -29,7 +29,8 @@ Feature: MiNiFi can use python processors in its flows
     Then the Minifi logs contain the following message: "key:Python attribute value:attributevalue" in less than 60 seconds
 
   Scenario: A MiNiFi instance can update attributes through native python processor
-    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    Given the example MiNiFi python processors are present
+    And a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a AddPythonAttribute processor
     And a LogAttribute processor
     And the "success" relationship of the GenerateFlowFile processor is connected to the AddPythonAttribute
@@ -39,7 +40,8 @@ Feature: MiNiFi can use python processors in its flows
     Then the Minifi logs contain the following message: "key:Python attribute value:attributevalue" in less than 60 seconds
 
   Scenario: Native python processor can read empty input stream
-    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    Given the example MiNiFi python processors are present
+    And a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a MoveContentToJson processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GenerateFlowFile processor is connected to the MoveContentToJson
@@ -56,7 +58,8 @@ Feature: MiNiFi can use python processors in its flows
     Then the Minifi logs contain the following message: "Removing flow file with UUID" in less than 30 seconds
 
   Scenario: Native python processors can be stateful
-    Given a CountingProcessor processor
+    Given the example MiNiFi python processors are present
+    And a CountingProcessor processor
     And the scheduling period of the CountingProcessor processor is set to "100 ms"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the CountingProcessor processor is connected to the PutFile

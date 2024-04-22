@@ -42,6 +42,7 @@ class MinifiOptions:
         self.set_ssl_context_properties = False
         self.enable_controller_socket = False
         self.enable_log_metrics_publisher = False
+        self.enable_example_minifi_python_processors = False
 
 
 class MinifiContainer(FlowContainer):
@@ -177,6 +178,8 @@ class MinifiContainer(FlowContainer):
 
         if self.options.enable_sql:
             image = self.image_store.get_image('minifi-cpp-sql')
+        elif self.options.enable_example_minifi_python_processors:
+            image = self.image_store.get_image('minifi-cpp-with-example-python-processors')
         elif self.options.use_nifi_python_processors_with_system_python_packages_installed:
             image = self.image_store.get_image('minifi-cpp-nifi-python-system-python-packages')
         elif self.options.use_nifi_python_processors_with_virtualenv or self.options.use_nifi_python_processors_with_virtualenv_packages_installed:

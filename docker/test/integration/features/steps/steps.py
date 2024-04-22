@@ -1288,3 +1288,8 @@ def step_impl(context, install_mode):
         context.test.remove_python_requirements_txt_in_minifi()
     else:
         raise Exception("Unknown python install mode.")
+
+
+@given("the example MiNiFi python processors are present")
+def step_impl(context):
+    context.test.enable_example_minifi_python_processors()
