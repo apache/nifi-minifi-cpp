@@ -61,6 +61,7 @@ ${WIX_EXTRA_FEATURES}
       <ComponentRef Id="UpdateConfigNotExist"/>
     </Feature>
 
+<?ifdef INCLUDE_PYTHON_PROCESSORS?>
     <Feature Id="InstallMiNiFiPython" Title="Apache NiFi MiNiFi C++ Python processors" AllowAdvertise="yes"  Level="1">
       <ComponentRef Id="PythonProcessorExampleFiles"/>
       <ComponentRef Id="NifiPythonProcessorFiles"/>
@@ -70,6 +71,7 @@ ${WIX_EXTRA_FEATURES}
       <ComponentRef Id="PythonProcessorGoogleFiles"/>
       <ComponentRef Id="NifiPythonProcessorUtilsFiles"/>
     </Feature>
+<?endif?>
 
     <FeatureRef Id="ProductFeature"/>
 
@@ -404,6 +406,7 @@ ${WIX_EXTRA_COMPONENTS}
 
             </Directory>
 
+<?ifdef INCLUDE_PYTHON_PROCESSORS?>
             <Directory Id="INSTALLPYTHONDIR" Name="minifi-python">
               <Directory Id="INSTALLGOOGLEDIR" Name="google">
                 <Component Id="PythonProcessorGoogleFiles" Guid="90b898a9-76fb-4888-a4aa-adcd22097863">
@@ -452,6 +455,8 @@ ${WIX_EXTRA_COMPONENTS}
                 <File Id="Examples_SentimentAnalysis" Name="SentimentAnalysis.py" KeyPath="no" Source="pythonprocessor-examples\SentimentAnalysis.py"/>
               </Component>
             </Directory>
+<?endif?>
+
           </Directory>
     </DirectoryRef>
   </Fragment>

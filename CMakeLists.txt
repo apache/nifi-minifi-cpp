@@ -647,13 +647,17 @@ foreach(extension ${selected_extensions})
     endif()
     cpack_add_component(${component-name} DISPLAY_NAME ${extension} ${maybe_disabled} GROUP extensions DEPENDS bin)
 endforeach()
-if (NOT WIN32 AND "python_script_extension" IN_LIST CPACK_COMPONENTS_ALL)
-    list(APPEND CPACK_COMPONENTS_ALL minifi_python_native_module)
-    cpack_add_component(minifi_python_native_module
-            DISPLAY_NAME "MiNiFi Python native module"
-            FILES "${CMAKE_BINARY_DIR}/bin/minifi_native$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
-            GROUP extensions
-            DEPENDS bin)
+if ("python_script_extension" IN_LIST CPACK_COMPONENTS_ALL)
+    if (WIN32)
+        set(CPACK_WIX_CANDLE_EXTRA_FLAGS "-dINCLUDE_PYTHON_PROCESSORS=yes")
+    else()
+        list(APPEND CPACK_COMPONENTS_ALL minifi_python_native_module)
+        cpack_add_component(minifi_python_native_module
+                DISPLAY_NAME "MiNiFi Python native module"
+                FILES "${CMAKE_BINARY_DIR}/bin/minifi_native$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
+                GROUP extensions
+                DEPENDS bin)
+    endif()
 endif()
 
 include(CPack)
