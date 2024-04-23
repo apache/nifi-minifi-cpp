@@ -623,6 +623,7 @@ set(EXTENSIONS_ENABLED_BY_DEFAULT (
     minifi-elasticsearch
     minifi-expression-language-extensions
     minifi-gcp
+    minifi-grafana-loki
     minifi-http-curl
     minifi-archive-extensions
     minifi-mqtt-extensions
@@ -630,6 +631,7 @@ set(EXTENSIONS_ENABLED_BY_DEFAULT (
     minifi-pdh
     minifi-prometheus
     minifi-rocksdb-repos
+    minifi-smb
     minifi-splunk
     minifi-sql
     minifi-standard-processors
