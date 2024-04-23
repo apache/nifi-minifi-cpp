@@ -405,16 +405,6 @@ ${WIX_EXTRA_COMPONENTS}
             </Directory>
 
             <Directory Id="INSTALLPYTHONDIR" Name="minifi-python">
-              <Directory Id="INSTALLEXAMPLESDIR" Name="examples">
-                <Component Id="PythonProcessorExampleFiles" Guid="2508ace9-6f5d-4cb1-af66-58d5f44ae2b1">
-                  <File Id="Examples_AddPythonAttribute" Name="AddPythonAttribute.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\AddPythonAttribute.py"/>
-                  <File Id="Examples_CountingProcessor" Name="CountingProcessor.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\CountingProcessor.py"/>
-                  <File Id="Examples_GaussianDistributionWithNumpy" Name="GaussianDistributionWithNumpy.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\GaussianDistributionWithNumpy.py"/>
-                  <File Id="Examples_MoveContentToJson" Name="MoveContentToJson.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\MoveContentToJson.py"/>
-                  <File Id="Examples_RemoveFlowFile" Name="RemoveFlowFile.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\RemoveFlowFile.py"/>
-                  <File Id="Examples_SentimentAnalysis" Name="SentimentAnalysis.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\SentimentAnalysis.py"/>
-                </Component>
-              </Directory>
               <Directory Id="INSTALLGOOGLEDIR" Name="google">
                 <Component Id="PythonProcessorGoogleFiles" Guid="90b898a9-76fb-4888-a4aa-adcd22097863">
                   <File Id="Google_SentimentAnalyzer" Name="SentimentAnalyzer.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\google\SentimentAnalyzer.py"/>
@@ -450,6 +440,17 @@ ${WIX_EXTRA_COMPONENTS}
                   </Component>
                 </Directory>
               </Directory>
+            </Directory>
+
+            <Directory Id="INSTALLPYTHONEXAMPLESDIR" Name="minifi-python-examples">
+              <Component Id="PythonProcessorExampleFiles" Guid="2508ace9-6f5d-4cb1-af66-58d5f44ae2b1">
+                <File Id="Examples_AddPythonAttribute" Name="AddPythonAttribute.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\AddPythonAttribute.py"/>
+                <File Id="Examples_CountingProcessor" Name="CountingProcessor.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\CountingProcessor.py"/>
+                <File Id="Examples_GaussianDistributionWithNumpy" Name="GaussianDistributionWithNumpy.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\GaussianDistributionWithNumpy.py"/>
+                <File Id="Examples_MoveContentToJson" Name="MoveContentToJson.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\MoveContentToJson.py"/>
+                <File Id="Examples_RemoveFlowFile" Name="RemoveFlowFile.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\RemoveFlowFile.py"/>
+                <File Id="Examples_SentimentAnalysis" Name="SentimentAnalysis.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\SentimentAnalysis.py"/>
+              </Component>
             </Directory>
           </Directory>
     </DirectoryRef>

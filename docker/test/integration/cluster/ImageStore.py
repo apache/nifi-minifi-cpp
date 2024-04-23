@@ -48,6 +48,8 @@ class ImageStore:
 
         if container_engine == "minifi-cpp-sql":
             image = self.__build_minifi_cpp_sql_image()
+        elif container_engine == "minifi-cpp-with-example-python-processors":
+            image = self.__build_minifi_cpp_image_with_example_minifi_python_processors()
         elif container_engine == "minifi-cpp-nifi-python":
             image = self.__build_minifi_cpp_image_with_nifi_python_processors(PythonOptions.REQUIREMENTS_FILE)
         elif container_engine == "minifi-cpp-nifi-python-system-python-packages":
@@ -101,6 +103,14 @@ class ImageStore:
                     echo "Password = password" >> /etc/odbc.ini && \
                     echo "Database = postgres" >> /etc/odbc.ini
                 USER minificpp
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION))
+
+        return self.__build_image(dockerfile)
+
+    def __build_minifi_cpp_image_with_example_minifi_python_processors(self):
+        dockerfile = dedent("""\
+                FROM {base_image}
+                RUN cp -r /opt/minifi/minifi-current/minifi-python-examples /opt/minifi/minifi-current/minifi-python/examples
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION))
 
         return self.__build_image(dockerfile)

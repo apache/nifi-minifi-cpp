@@ -474,6 +474,9 @@ class MiNiFi_integration_test:
     def enable_log_metrics_publisher_in_minifi(self):
         self.cluster.enable_log_metrics_publisher_in_minifi()
 
+    def enable_example_minifi_python_processors(self):
+        self.cluster.enable_example_minifi_python_processors()
+
     def debug_bundle_can_be_retrieved_through_minifi_controller(self, container_name: str):
         assert self.cluster.debug_bundle_can_be_retrieved_through_minifi_controller(container_name) or self.cluster.log_app_output()
 

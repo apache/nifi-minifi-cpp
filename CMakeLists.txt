@@ -556,6 +556,10 @@ if (NOT WIN32)
         DESTINATION minifi-python
         COMPONENT bin)
 
+    install(DIRECTORY extensions/python/pythonprocessor-examples/
+        DESTINATION minifi-python-examples
+        COMPONENT bin)
+
     install(PROGRAMS bin/minifi.sh bin/minifi.service
         DESTINATION bin
         COMPONENT bin)
