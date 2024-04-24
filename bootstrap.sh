@@ -444,8 +444,8 @@ build_cmake_command(){
     if [ "$FOUND" = "1" ]; then
       set_value=OFF
       option_value="${!option}"
-      if { [[ "$option_value" = "${FALSE}" ]] && { [[ "$FOUND_VALUE" == "DISABLE"* ]] || [[ "$FOUND_VALUE" == *"OFF" ]]; }; } || \
-         { [[ "$option_value" = "${TRUE}" ]] && [[ "$FOUND_VALUE" == "ENABLE"* ]]; } ||
+      if { [[ "$option_value" = "${FALSE}" ]] && [[ "$FOUND_VALUE" == "DISABLE"* ]]; } || \
+         { [[ "$option_value" = "${TRUE}" ]] && [[ "$FOUND_VALUE" == "ENABLE"* ]]; } || \
          { [[ "$option_value" = "${TRUE}" ]] && [[ "$FOUND_VALUE" != "ENABLE"* ]] && [[ "$FOUND_VALUE" != "DISABLE"* ]]; }; then
         set_value=ON
       fi
