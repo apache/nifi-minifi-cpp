@@ -211,6 +211,14 @@ std::map<std::string, core::Property> ExecutePythonProcessor::getProperties() co
   return result;
 }
 
+std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships() {
+  auto relationships = getSupportedRelationships();
+  auto custom_relationships = python_script_engine_->getCustomPythonRelationships();
+  relationships.reserve(relationships.size() + std::distance(custom_relationships.begin(), custom_relationships.end()));
+  relationships.insert(relationships.end(), custom_relationships.begin(), custom_relationships.end());
+  return relationships;
+}
+
 REGISTER_RESOURCE(ExecutePythonProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::python::processors

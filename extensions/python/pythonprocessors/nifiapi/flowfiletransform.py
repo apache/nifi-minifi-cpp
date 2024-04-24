@@ -16,7 +16,9 @@
 import traceback
 from abc import ABC, abstractmethod
 from typing import List
-from .properties import ExpressionLanguageScope, FlowFileProxy, ProcessContextProxy, PropertyDescriptor, translateStandardValidatorToMiNiFiPropertype
+from .properties import ExpressionLanguageScope, PropertyDescriptor, translateStandardValidatorToMiNiFiPropertype
+from .properties import FlowFile as FlowFileProxy
+from .properties import ProcessContext as ProcessContextProxy
 from minifi_native import OutputStream, Processor, ProcessContext, ProcessSession
 
 
@@ -76,7 +78,7 @@ class FlowFileTransform(ABC):
         pass
 
     def onSchedule(self, context: ProcessContext):
-        context_proxy = ProcessContextProxy(context)
+        context_proxy = ProcessContextProxy(context, self)
         self.onScheduled(context_proxy)
 
     def onTrigger(self, context: ProcessContext, session: ProcessSession):
@@ -87,7 +89,7 @@ class FlowFileTransform(ABC):
         flow_file = session.clone(original_flow_file)
 
         flow_file_proxy = FlowFileProxy(session, flow_file)
-        context_proxy = ProcessContextProxy(context)
+        context_proxy = ProcessContextProxy(context, self)
         try:
             result = self.transform(context_proxy, flow_file_proxy)
         except Exception:

@@ -29,6 +29,8 @@ static PyMethodDef PyProcessContext_methods[] = {  // NOLINT(cppcoreguidelines-a
     {"getProperty", (PyCFunction) PyProcessContext::getProperty, METH_VARARGS, nullptr},
     {"getStateManager", (PyCFunction) PyProcessContext::getStateManager, METH_VARARGS, nullptr},
     {"getControllerService", (PyCFunction) PyProcessContext::getControllerService, METH_VARARGS, nullptr},
+    {"getName", (PyCFunction) PyProcessContext::getName, METH_VARARGS, nullptr},
+    {"getProperties", (PyCFunction) PyProcessContext::getProperties, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -128,6 +130,32 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
   }
 
   Py_RETURN_NONE;
+}
+
+PyObject* PyProcessContext::getName(PyProcessContext* self, PyObject*) {
+  auto context = self->process_context_.lock();
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  return object::returnReference(context->getProcessorNode()->getName());
+}
+
+PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
+  auto context = self->process_context_.lock();
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  auto properties = context->getProcessorNode()->getProperties();
+  auto py_properties = OwnedDict::create();
+  for (const auto& [prop_name, property] : properties) {
+    py_properties.put(prop_name, std::string(property.getValue()));
+  }
+
+  return object::returnReference(py_properties);
 }
 
 PyTypeObject* PyProcessContext::typeObject() {

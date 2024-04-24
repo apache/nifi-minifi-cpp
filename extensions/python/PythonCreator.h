@@ -121,7 +121,7 @@ class PythonCreator : public minifi::core::CoreComponent {
       .full_name_ = full_name,
       .description_ = processor->getDescription(),
       .class_properties_ = processor->getPythonProperties(),
-      .class_relationships_ = processor->getSupportedRelationships(),
+      .class_relationships_ = processor->getPythonRelationships(),
       .supports_dynamic_properties_ = processor->getPythonSupportDynamicProperties(),
       .inputRequirement_ = toString(processor->getInputRequirement()),
       .isSingleThreaded_ = processor->isSingleThreaded()};
