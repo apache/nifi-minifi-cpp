@@ -61,6 +61,7 @@ ${WIX_EXTRA_FEATURES}
       <ComponentRef Id="UpdateConfigNotExist"/>
     </Feature>
 
+<?ifdef INCLUDE_PYTHON_PROCESSORS?>
     <Feature Id="InstallMiNiFiPython" Title="Apache NiFi MiNiFi C++ Python processors" AllowAdvertise="yes"  Level="1">
       <ComponentRef Id="PythonProcessorExampleFiles"/>
       <ComponentRef Id="NifiPythonProcessorFiles"/>
@@ -70,6 +71,7 @@ ${WIX_EXTRA_FEATURES}
       <ComponentRef Id="PythonProcessorGoogleFiles"/>
       <ComponentRef Id="NifiPythonProcessorUtilsFiles"/>
     </Feature>
+<?endif?>
 
     <FeatureRef Id="ProductFeature"/>
 
@@ -404,39 +406,40 @@ ${WIX_EXTRA_COMPONENTS}
 
             </Directory>
 
+<?ifdef INCLUDE_PYTHON_PROCESSORS?>
             <Directory Id="INSTALLPYTHONDIR" Name="minifi-python">
               <Directory Id="INSTALLGOOGLEDIR" Name="google">
                 <Component Id="PythonProcessorGoogleFiles" Guid="90b898a9-76fb-4888-a4aa-adcd22097863">
-                  <File Id="Google_SentimentAnalyzer" Name="SentimentAnalyzer.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\google\SentimentAnalyzer.py"/>
+                  <File Id="Google_SentimentAnalyzer" Name="SentimentAnalyzer.py" KeyPath="yes" Source="pythonprocessors\google\SentimentAnalyzer.py"/>
                 </Component>
               </Directory>
               <Directory Id="INSTALLH2ODIR" Name="h2o">
                 <Component Id="PythonProcessorH2oFiles" Guid="b290aeb3-c67a-4cd1-a0a4-1ba049a2e44e">
-                  <File Id="H2o_ConvertDsToCsv" Name="ConvertDsToCsv.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\h2o\ConvertDsToCsv.py"/>
+                  <File Id="H2o_ConvertDsToCsv" Name="ConvertDsToCsv.py" KeyPath="yes" Source="pythonprocessors\h2o\ConvertDsToCsv.py"/>
                 </Component>
                 <Directory Id="INSTALLH2O3DIR" Name="h2o3">
                   <Directory Id="INSTALLMOJODIR" Name="mojo">
                     <Component Id="PythonProcessorMojoFiles" Guid="d2b803da-1cd1-4925-802b-19f3e09fc0f7">
-                      <File Id="H2o_ExecuteH2oMojoScoring" Name="ExecuteH2oMojoScoring.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\h2o\h2o3\mojo\ExecuteH2oMojoScoring.py"/>
+                      <File Id="H2o_ExecuteH2oMojoScoring" Name="ExecuteH2oMojoScoring.py" KeyPath="yes" Source="pythonprocessors\h2o\h2o3\mojo\ExecuteH2oMojoScoring.py"/>
                     </Component>
                   </Directory>
                 </Directory>
               </Directory>
               <Directory Id="INSTALLNIFIAPIDIR" Name="nifiapi">
                 <Component Id="PythonProcessorNifiApiFiles" Guid="a9cb7b7b-e66d-4e32-9115-eab4aa980124">
-                  <File Id="NifiApi_flowfiletransform" Name="flowfiletransform.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\flowfiletransform.py"/>
-                  <File Id="NifiApi_properties" Name="properties.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\properties.py"/>
-                  <File Id="NifiApi_documentation" Name="documentation.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\documentation.py"/>
-                  <File Id="NifiApi_init" Name="__init__.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\__init__.py"/>
+                  <File Id="NifiApi_flowfiletransform" Name="flowfiletransform.py" KeyPath="no" Source="pythonprocessors\nifiapi\flowfiletransform.py"/>
+                  <File Id="NifiApi_properties" Name="properties.py" KeyPath="no" Source="pythonprocessors\nifiapi\properties.py"/>
+                  <File Id="NifiApi_documentation" Name="documentation.py" KeyPath="no" Source="pythonprocessors\nifiapi\documentation.py"/>
+                  <File Id="NifiApi_init" Name="__init__.py" KeyPath="no" Source="pythonprocessors\nifiapi\__init__.py"/>
                 </Component>
               </Directory>
               <Directory Id="INSTALLNIFIPYTHONPROCESSORSDIR" Name="nifi_python_processors">
                 <Component Id="NifiPythonProcessorFiles" Guid="66ce16d4-aea4-4fcb-bbbb-8a28813e2138">
-                  <File Id="NifiPythonProcessors_init" Name="__init__.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\nifi_python_processors\__init__.py"/>
+                  <File Id="NifiPythonProcessors_init" Name="__init__.py" KeyPath="yes" Source="pythonprocessors\nifi_python_processors\__init__.py"/>
                 </Component>
                 <Directory Id="INSTALLNIFIPYTHONPROCESSORSUTILSDIR" Name="utils">
                   <Component Id="NifiPythonProcessorUtilsFiles" Guid="6bb11f67-007f-4467-970a-c42c2bae0891">
-                    <File Id="NifiPythonProcessorUtils_dependency_installer" Name="inline_dependency_installer.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\nifi_python_processors\utils\inline_dependency_installer.py"/>
+                    <File Id="NifiPythonProcessorUtils_dependency_installer" Name="inline_dependency_installer.py" KeyPath="yes" Source="pythonprocessors\nifi_python_processors\utils\inline_dependency_installer.py"/>
                   </Component>
                 </Directory>
               </Directory>
@@ -444,14 +447,16 @@ ${WIX_EXTRA_COMPONENTS}
 
             <Directory Id="INSTALLPYTHONEXAMPLESDIR" Name="minifi-python-examples">
               <Component Id="PythonProcessorExampleFiles" Guid="2508ace9-6f5d-4cb1-af66-58d5f44ae2b1">
-                <File Id="Examples_AddPythonAttribute" Name="AddPythonAttribute.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\AddPythonAttribute.py"/>
-                <File Id="Examples_CountingProcessor" Name="CountingProcessor.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\CountingProcessor.py"/>
-                <File Id="Examples_GaussianDistributionWithNumpy" Name="GaussianDistributionWithNumpy.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\GaussianDistributionWithNumpy.py"/>
-                <File Id="Examples_MoveContentToJson" Name="MoveContentToJson.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\MoveContentToJson.py"/>
-                <File Id="Examples_RemoveFlowFile" Name="RemoveFlowFile.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\RemoveFlowFile.py"/>
-                <File Id="Examples_SentimentAnalysis" Name="SentimentAnalysis.py" KeyPath="no" Source="..\extensions\python\pythonprocessor-examples\SentimentAnalysis.py"/>
+                <File Id="Examples_AddPythonAttribute" Name="AddPythonAttribute.py" KeyPath="no" Source="pythonprocessor-examples\AddPythonAttribute.py"/>
+                <File Id="Examples_CountingProcessor" Name="CountingProcessor.py" KeyPath="no" Source="pythonprocessor-examples\CountingProcessor.py"/>
+                <File Id="Examples_GaussianDistributionWithNumpy" Name="GaussianDistributionWithNumpy.py" KeyPath="no" Source="pythonprocessor-examples\GaussianDistributionWithNumpy.py"/>
+                <File Id="Examples_MoveContentToJson" Name="MoveContentToJson.py" KeyPath="no" Source="pythonprocessor-examples\MoveContentToJson.py"/>
+                <File Id="Examples_RemoveFlowFile" Name="RemoveFlowFile.py" KeyPath="no" Source="pythonprocessor-examples\RemoveFlowFile.py"/>
+                <File Id="Examples_SentimentAnalysis" Name="SentimentAnalysis.py" KeyPath="no" Source="pythonprocessor-examples\SentimentAnalysis.py"/>
               </Component>
             </Directory>
+<?endif?>
+
           </Directory>
     </DirectoryRef>
   </Fragment>
