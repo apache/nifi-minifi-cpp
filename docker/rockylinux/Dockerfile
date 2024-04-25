@@ -40,26 +40,30 @@ COPY . ${MINIFI_BASE_DIR}
 
 # Install the system dependencies needed for a build
 # gpsd-devel and ccache are in EPEL
-RUN dnf -y install epel-release && dnf -y install sudo git which make libarchive ccache ca-certificates perl && \
+RUN dnf -y install epel-release && dnf -y install gcc-toolset-12 sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake && \
+    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_ALL=ON"; then dnf -y --enablerepo=devel install gpsd-devel libpng-devel libusbx-devel python3-devel java-1.8.0-openjdk maven libpcap-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_GPS=ON"; then dnf -y install gpsd-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_JNI=ON"; then dnf -y install java-1.8.0-openjdk maven; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PCAP=ON"; then dnf -y install libpcap-devel; fi && \
+    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PCAP=ON"; then dnf -y --enablerepo=devel install libpcap-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_USB_CAMERA=ON"; then dnf -y install libpng-devel libusbx-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then dnf -y install python3-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SFTP=ON" && [ "${DOCKER_SKIP_TESTS}" == "OFF" ]; then dnf -y install java-1.8.0-openjdk maven; fi
 
 RUN cd $MINIFI_BASE_DIR && \
-    ./bootstrap.sh -t && \
     ln -s /usr/bin/ccache /usr/lib64/ccache/c++
 
 # Setup minificpp user
 RUN groupadd -g ${GID} ${USER} && useradd -g ${GID} ${USER} && \
     chown -R ${USER}:${USER} ${MINIFI_BASE_DIR}
 
+RUN ls -lah ${MINIFI_BASE_DIR}/docker
+RUN patch -p1 /opt/rh/gcc-toolset-12/root/usr/include/c++/12/bits/basic_string.tcc ${MINIFI_BASE_DIR}/thirdparty/libstdc++/avoid_bogus_Wrestrict_PR105651.patch
+
 USER ${USER}
 
 # Perform the build
 RUN cd $MINIFI_BASE_DIR && \
+    mkdir build && \
     cd build && \
     source /opt/rh/gcc-toolset-12/enable && \
     export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \

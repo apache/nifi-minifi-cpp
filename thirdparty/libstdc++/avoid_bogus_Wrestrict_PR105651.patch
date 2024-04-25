@@ -1,0 +1,32 @@
+From 50dd920299f8f905f47475bf77c299d9a84512b8 Mon Sep 17 00:00:00 2001
+From: Jason Merrill <jason@redhat.com>
+Date: Thu, 18 Aug 2022 23:53:16 -0400
+Subject: [PATCH] libstdc++: avoid bogus -Wrestrict [PR105651]
+To: gcc-patches@gcc.gnu.org
+
+	PR tree-optimization/105651
+
+libstdc++-v3/ChangeLog:
+
+	* include/bits/basic_string.tcc (_M_replace): Add an assert
+	to avoid -Wrestrict false positive.
+---
+ libstdc++-v3/include/bits/basic_string.tcc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/libstdc++-v3/include/bits/basic_string.tcc b/libstdc++-v3/include/bits/basic_string.tcc
+index 4563c61429a..0d5c4d6191e 100644
+--- a/libstdc++-v3/include/bits/basic_string.tcc
++++ b/libstdc++-v3/include/bits/basic_string.tcc
+@@ -529,6 +529,9 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+ 		    {
+ 		      const size_type __nleft = (__p + __len1) - __s;
+ 		      this->_S_move(__p, __s, __nleft);
++		      // Tell the middle-end that the copy can't overlap
++		      // (PR105651).
++		      if (__len2 < __nleft) __builtin_unreachable ();
+ 		      this->_S_copy(__p + __nleft, __p + __len2,
+ 				    __len2 - __nleft);
+ 		    }
+--
+2.31.1

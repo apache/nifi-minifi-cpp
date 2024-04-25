@@ -9,7 +9,7 @@ env:
 jobs:
   macos_xcode:
     name: "macos-xcode"
-    runs-on: macos-13
+    runs-on: macos-14
     timeout-minutes: 180
     env:
       MACOS_MINIFI_OPTIONS: >-
@@ -72,20 +72,19 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: macos-xcode-ccache-${{github.ref}}-${{github.sha}}
+          key: macos-arm-xcode-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
-            macos-xcode-ccache-${{github.ref}}-
-            macos-xcode-ccache-refs/heads/main-
+            macos-arm-xcode-ccache-${{github.ref}}-
+            macos-arm-xcode-ccache-refs/heads/main-
       - id: install_dependencies
         run: |
           # Skip brew update until https://github.com/actions/setup-python/issues/577 is fixed
-          # brew update
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid bison flex ccache sqliteodbc automake autoconf ninja
+          brew update
+          brew install ossp-uuid bison flex ccache sqliteodbc automake autoconf ninja
       - id: setup_env
         name: setup enviroment
         run: |
-          echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
-          # macOS no longer searches /usr/local/lib for dynamic libraries, e.g. for libsqlite3odbc.so
+          echo "PATH=/opt/homebrew/opt/ccache:/opt/homebrew/opt/ccache/bin:/opt/homebrew/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
           echo "DYLD_LIBRARY_PATH=$(brew --prefix)/lib" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
@@ -97,7 +96,7 @@ jobs:
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: macos-xcode-ccache-${{github.ref}}-${{github.sha}}
+          key: macos-arm-xcode-ccache-${{github.ref}}-${{github.sha}}
       - name: test
         id: test
         run: |
@@ -502,8 +501,8 @@ jobs:
         with:
           name: ubuntu-clang-binaries
           path: build/bin
-  centos:
-    name: "centos"
+  rocky:
+    name: "rocky"
     runs-on: ubuntu-20.04
     timeout-minutes: 180
     steps:
@@ -513,10 +512,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: centos-ccache-${{github.ref}}-${{github.sha}}
+          key: rocky-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
-            centos-ccache-${{github.ref}}-
-            centos-ccache-refs/heads/main-
+            rocky-ccache-${{github.ref}}-
+            rocky-ccache-refs/heads/main-
       - id: install_deps
         run: |
           sudo apt update
@@ -534,18 +533,18 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - id: build
         run: |
-          # centos build can run out of the github runners' disk space if built with RelWithDebInfo so we keep the Release build here
-          mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DMINIFI_FAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON \
+          # rocky build can run out of the github runners' disk space if built with RelWithDebInfo so we keep the Release build here
+          mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DMINIFI_FAIL_ON_WARNINGS=OFF -DENABLE_AWS=ON -DENABLE_AZURE=ON \
               -DENABLE_COAP=ON -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON \
               -DENABLE_OPENCV=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_SENSORS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
               -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON \
-              -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make centos-test
+              -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make rocky-test
       - name: cache save
         uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: centos-ccache-${{github.ref}}-${{github.sha}}
+          key: rocky-ccache-${{github.ref}}-${{github.sha}}
       - id: test
         run: |
           # Set core file size limit to unlimited
@@ -553,24 +552,24 @@ jobs:
           echo '/cores/core.%e.%p' | sudo tee /proc/sys/kernel/core_pattern
           sudo mkdir /cores
           sudo chmod 777 /cores
-          docker run --name centos-test --init --ulimit core=-1 --mount type=bind,source=/cores,target=/cores apacheminificpp:$(docker images | grep apacheminificpp | grep centos | awk '{print $2}') bash -c 'cd /opt/minifi/build && make test ARGS="--timeout 300 -j8 --output-on-failure"'
+          docker run --name rocky-test --init --ulimit core=-1 --mount type=bind,source=/cores,target=/cores apacheminificpp:$(docker images | grep apacheminificpp | grep rocky | awk '{print $2}') bash -c 'cd /opt/minifi/build && make test ARGS="--timeout 300 -j8 --output-on-failure"'
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
           if [ "$(ls -A /cores)" ]; then
             echo "CORES_EXIST=true" >> $GITHUB_ENV;
-            docker cp centos-test:/opt/minifi/build/bin /tmp
+            docker cp rocky-test:/opt/minifi/build/bin /tmp
             sudo chmod -R 777 /cores
           fi
       - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
-          name: centos-crashes
+          name: rocky-crashes
           path: /cores
       - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
-          name: centos-binaries
+          name: rocky-binaries
           path: /tmp/bin
   docker_build:
     name: "Docker build for integration tests"

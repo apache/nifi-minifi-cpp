@@ -50,7 +50,7 @@ namespace {
 // the month parsing with '%b' and the weekday parsing with '%a' is case-sensitive in gcc11
 // This has been fixed in gcc12.2
 std::stringstream getCaseInsensitiveCStream(const std::string& str) {
-#if defined(__GNUC__) && (__GNUC__ < 12 || (__GNUC__ == 12 && __GNUC_MINOR__ < 2))
+#if defined(__GNUC__) && (__GNUC__ < 12 || (__GNUC__ == 12 && __GNUC_MINOR__ < 3))
   auto patched_str = string::toLower(str);
   if (!patched_str.empty())
     patched_str[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(patched_str[0])));
