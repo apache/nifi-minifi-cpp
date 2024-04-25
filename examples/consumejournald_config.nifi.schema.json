@@ -30,7 +30,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-systemd",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Timestamp Format": "%x %X %Z",
@@ -98,7 +98,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-standard-processors",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "FlowFiles To Log": "0",
