@@ -497,16 +497,12 @@ $ make docker-verify
 ```
 
 ### Building For Other Distros
-If you have docker installed on your machine you can build for CentOS 7, Fedora 34, Ubuntu 18.04, and Ubuntu 20.04 via our make docker commands. The following table
-provides the command to build your distro and the output file in your build directory. Since the versions are limited ( except for Ubuntu ) we output the archive based on the distro's name.
+Since only glibc and libstdc++ is dynamically linked to MiNiFi, the binary built with RHEL devtoolset should be distro-agnostic, and work on any relatively modern distro.
 
-
-| Distro                | command     | Output File                            |
-|-----------------------|:------------|:---------------------------------------|
-| CentOS 7              | make centos | nifi-minifi-cpp-centos-$VERSION.tar.gz |
-| Fedora 34             | make fedora | nifi-minifi-cpp-fedora-$VERSION.tar.gz |
-| Ubuntu 18.04 (bionic) | make u18    | nifi-minifi-cpp-bionic-$VERSION.tar.gz |
-| Ubuntu 20.04 (focal)  | make u20    | nifi-minifi-cpp-focal-$VERSION.tar.gz  |
+| Distro        | command     | Output File                                |
+|---------------|:------------|:-------------------------------------------|
+| centos 7      | make centos | nifi-minifi-cpp-centos-$VERSION.tar.gz     |
+| Rockylinux 8  | make rocky  | nifi-minifi-cpp-rockylinux-$VERSION.tar.gz |
 
 You can avoid the requirement of an up-to-date compiler when generating the build system by adding `-DDOCKER_BUILD_ONLY=ON` to the cmake command line. This disables all cmake targets except the docker build and test ones.
 

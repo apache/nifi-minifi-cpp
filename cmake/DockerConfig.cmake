@@ -87,13 +87,13 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
-    centos-test
+    rocky-test
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
         -u 1000
         -g 1000
         -v ${PROJECT_VERSION_STR}
         -o ${MINIFI_DOCKER_OPTIONS_STR}
-        -d centos
+        -d rockylinux
         -c BUILD_NUMBER=${BUILD_NUMBER}
         -c DOCKER_CCACHE_DUMP_LOCATION=${DOCKER_CCACHE_DUMP_LOCATION}
         -c DOCKER_SKIP_TESTS=OFF
@@ -104,59 +104,9 @@ add_custom_target(
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
-add_custom_target(
-    fedora
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
-        -u 1000
-        -g 1000
-        -v ${PROJECT_VERSION_STR}
-        -o ${MINIFI_DOCKER_OPTIONS_STR}
-        -l ${CMAKE_BINARY_DIR}
-        -d fedora
-        -c BUILD_NUMBER=${BUILD_NUMBER}
-        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
-        -c DOCKER_PUSH=${DOCKER_PUSH}
-        -c DOCKER_TAGS=${DOCKER_TAGS}
-        -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
-    u18
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
-        -u 1000
-        -g 1000
-        -v ${PROJECT_VERSION_STR}
-        -o ${MINIFI_DOCKER_OPTIONS_STR}
-        -l ${CMAKE_BINARY_DIR}
-        -d bionic
-        -c BUILD_NUMBER=${BUILD_NUMBER}
-        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
-        -c DOCKER_PUSH=${DOCKER_PUSH}
-        -c DOCKER_TAGS=${DOCKER_TAGS}
-        -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
-
-add_custom_target(
-    u20
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
-        -u 1000
-        -g 1000
-        -v ${PROJECT_VERSION_STR}
-        -o ${MINIFI_DOCKER_OPTIONS_STR}
-        -l ${CMAKE_BINARY_DIR}
-        -d focal
-        -c BUILD_NUMBER=${BUILD_NUMBER}
-        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
-        -c DOCKER_PUSH=${DOCKER_PUSH}
-        -c DOCKER_TAGS=${DOCKER_TAGS}
-        -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
-
-add_custom_target(
-    rockylinux
+    rocky
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
         -u 1000
         -g 1000
@@ -191,5 +141,18 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
         docker-verify
         COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh ${PROJECT_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} --parallel_processes=${DOCKER_VERIFY_THREADS})
 endif()
+
+function(CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE BASE_IMAGE TAG_PREFIX INSTALL_PACKAGE_CMD)
+    add_custom_target(
+            ${TAG_PREFIX}_from_rocky_package
+            COMMAND DOCKER_BUILDKIT=1 docker build
+            --build-arg MINIFI_VERSION=${MINIFI_VERSION_STR}
+            --build-arg BASE_IMAGE=${BASE_IMAGE}
+            --build-arg ARCHIVE_LOCATION=nifi-minifi-cpp-${MINIFI_VERSION_STR}-bin-rockylinux.tar.gz
+            --build-arg INSTALL_PACKAGE_CMD=${INSTALL_PACKAGE_CMD}
+            -t apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
+            -f ${CMAKE_SOURCE_DIR}/docker/python-verify/installed.Dockerfile
+            ${CMAKE_BINARY_DIR})
+endfunction()
 
 include(VerifyPythonCompatibility)
