@@ -36,7 +36,7 @@ def _create_system_dependencies(minifi_options: MinifiOptions) -> Dict[str, Set[
         system_dependencies['libpng'] = {'libpng'}
     if minifi_options.is_enabled("ENABLE_GPS"):
         system_dependencies['gpsd'] = {'gpsd'}
-    if minifi_options.is_enabled("ENABLE_COAP"):
+    if minifi_options.is_enabled("ENABLE_COAP") or (minifi_options.is_enabled("ENABLE_SQL") and platform.system() != "Windows"):
         system_dependencies['automake'] = {'automake'}
         system_dependencies['autoconf'] = {'autoconf'}
         system_dependencies['libtool'] = {'libtool'}
