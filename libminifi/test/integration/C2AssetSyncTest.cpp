@@ -205,8 +205,8 @@ int main() {
     {
       std::unordered_map<std::string, std::string> expected_assets{
           {(asset_dir / "A.txt").string(), file_A},
-          {(asset_dir / "nested/dir/B.txt").string(), file_B},
-          {(asset_dir / "nested/C.txt").string(), file_C},
+          {(asset_dir / "nested" / "dir" / "B.txt").string(), file_B},
+          {(asset_dir / "nested" / "C.txt").string(), file_C},
           {(asset_dir / ".state").string(), hb_handler.assetState()}
       };
       auto actual_assets = get_asset_structure();
@@ -232,7 +232,7 @@ int main() {
     {
       std::unordered_map<std::string, std::string> expected_assets{
           {(asset_dir / "A.txt").string(), file_A_v2},
-          {(asset_dir / "nested/dir/B.txt").string(), file_B},
+          {(asset_dir / "nested" / "dir" / "B.txt").string(), file_B},
           {(asset_dir / ".state").string(), hb_handler.assetState()}
       };
 
