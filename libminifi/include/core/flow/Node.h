@@ -52,6 +52,7 @@ class Node {
 
       virtual std::unique_ptr<IteratorImpl> clone() const = 0;
       virtual ~IteratorImpl() = default;
+      std::string path_;
     };
 
     Iterator& operator++() {
@@ -79,7 +80,6 @@ class Node {
 
    private:
     std::unique_ptr<IteratorImpl> impl_;
-    std::string path_;
     int idx_{0};
   };
 
@@ -108,6 +108,8 @@ class Node {
     virtual Node createEmpty() const = 0;
 
     virtual ~NodeImpl() = default;
+
+    std::string path_;
   };
 
   Node() = default;
@@ -124,7 +126,7 @@ class Node {
   nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const {return impl_->getIntegerAsString();}
   nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const {return impl_->getScalarAsString();}
 
-  // return a string representation of the node (need not to be deserializable)
+  // return a string representation of the node (need not be deserializable)
   std::string getDebugString() const {return impl_->getDebugString();}
 
   size_t size() const {return impl_->size();}
@@ -133,19 +135,19 @@ class Node {
   }
   Iterator begin() const {
     Iterator it = impl_->begin();
-    it.path_ = path_;
+    it.impl_->path_ = impl_->path_;
     return it;
   }
   Iterator end() const {
     Iterator it = impl_->end();
-    it.path_ = path_;
+    it.impl_->path_ = impl_->path_;
     return it;
   }
 
   // considers @key to be a member of this node as is
   Node getMember(std::string_view key) {
     Node result = impl_->operator[](key);
-    result.path_ = utils::string::join_pack(path_, "/", key);
+    result.impl_->path_ = utils::string::join_pack(impl_->path_, "/", key);
     return result;
   }
 
@@ -175,13 +177,12 @@ class Node {
     return impl_->createEmpty();
   }
 
-  std::string getPath() const {return path_;}
+  std::string getPath() const {return impl_->path_;}
 
   std::optional<Cursor> getCursor() const {return impl_->getCursor();}
 
  private:
   std::shared_ptr<NodeImpl> impl_;
-  std::string path_;
 };
 
 class Node::Iterator::Value : public Node, public std::pair<Node, Node> {
