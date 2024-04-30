@@ -25,6 +25,10 @@ cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted conten
 project(nifi-minifi-cpp VERSION 0.99.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+endif()
+
 # Optional build number for linux distribution targets' tar.gz output
 set(BUILD_NUMBER "" CACHE STRING "Build number")
 
