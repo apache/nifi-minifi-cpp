@@ -22,7 +22,7 @@ cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_
 cmake_policy(SET CMP0065 OLD) # default export policy, required for self-dlopen
 cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
 
-project(nifi-minifi-cpp VERSION 0.15.0)
+project(nifi-minifi-cpp VERSION 0.99.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
 
 # Optional build number for linux distribution targets' tar.gz output

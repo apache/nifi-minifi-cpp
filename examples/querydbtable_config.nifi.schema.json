@@ -30,7 +30,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-sql",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Table Name": "users",
@@ -103,7 +103,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-standard-processors",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Create Missing Directories": "true",
@@ -213,7 +213,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-sql",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Connection String": "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
@@ -231,7 +231,7 @@
                         "bundle": {
                             "group": "org.apache.nifi.minifi",
                             "artifact": "minifi-sql",
-                            "version": "0.15.0"
+                            "version": "0.99.0"
                         }
                     }
                 ],
