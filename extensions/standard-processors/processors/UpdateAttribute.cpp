@@ -57,7 +57,7 @@ void UpdateAttribute::onTrigger(core::ProcessContext& context, core::ProcessSess
       std::string value;
       context.getDynamicProperty(attribute, value, flow_file.get());
       flow_file->setAttribute(attribute.getName(), value);
-      logger_->log_info("Set attribute '{}' of flow file '{}' with value '{}'", attribute.getName(), flow_file->getUUIDStr(), value);
+      logger_->log_debug("Set attribute '{}' of flow file '{}' with value '{}'", attribute.getName(), flow_file->getUUIDStr(), value);
     }
     session.transfer(flow_file, Success);
   } catch (const std::exception &e) {

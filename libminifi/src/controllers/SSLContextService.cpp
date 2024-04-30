@@ -523,9 +523,9 @@ void SSLContextService::verifyCertificateExpiration() {
       if (end_date.value() < std::chrono::system_clock::now()) {
         logger_->log_error("Certificate in '{}' expired at {}", cert_file, end_date_str);
       } else if (auto diff = end_date.value() - std::chrono::system_clock::now(); diff < std::chrono::weeks{2}) {
-        logger_->log_error("Certificate in '{}' will expire at {}", cert_file, end_date_str);
+        logger_->log_warn("Certificate in '{}' will expire at {}", cert_file, end_date_str);
       } else {
-        logger_->log_error("Certificate in '{}' will expire at {}", cert_file, end_date_str);
+        logger_->log_debug("Certificate in '{}' will expire at {}", cert_file, end_date_str);
       }
     } else {
       logger_->log_error("Could not determine expiration date for certificate in '{}'", cert_file);
