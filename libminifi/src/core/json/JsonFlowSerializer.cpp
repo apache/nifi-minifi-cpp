@@ -106,7 +106,7 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup& process_grou
       logger_->log_warn("Invalid controller service ID found in the flow definition: {}", controller_service_id_str);
       continue;
     }
-    const auto controller_service_node = process_group.findControllerService(controller_service_id_str);
+    const auto* const controller_service_node = process_group.findControllerService(controller_service_id_str);
     if (!controller_service_node) {
       logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id_str);
       continue;

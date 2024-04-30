@@ -134,17 +134,11 @@ class FlowConfiguration : public CoreComponent {
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
  protected:
-  // service provider reference.
-  std::shared_ptr<core::controller::StandardControllerServiceProvider> service_provider_;
-  // based, shared controller service map.
-  std::shared_ptr<core::controller::ControllerServiceMap> controller_services_;
-  // configuration path
   std::optional<std::filesystem::path> config_path_;
-  // flow file repo
   std::shared_ptr<core::Repository> flow_file_repo_;
-  // content repository.
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::shared_ptr<Configure> configuration_;
+  std::shared_ptr<core::controller::StandardControllerServiceProvider> service_provider_;
   std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::shared_ptr<utils::file::FileSystem> filesystem_;
   utils::crypto::EncryptionProvider sensitive_properties_encryptor_;

@@ -37,7 +37,7 @@
 #include "Port.h"
 #include "core/logging/Logger.h"
 #include "controller/ControllerServiceNode.h"
-#include "controller/ControllerServiceMap.h"
+#include "controller/ControllerServiceNodeMap.h"
 #include "utils/Id.h"
 #include "utils/BaseHTTPClient.h"
 #include "utils/CallBackTimer.h"
@@ -198,12 +198,7 @@ class ProcessGroup : public CoreComponent {
    */
   void addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node);
 
-  /**
-   * Find controllerservice node will search child groups until the nodeId is found.
-   * @param node node identifier
-   * @return controller service node, if it exists.
-   */
-  std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(const std::string &nodeId) const;
+  core::controller::ControllerServiceNode* findControllerService(const std::string &nodeId) const;
 
   std::vector<const core::controller::ControllerServiceNode*> getAllControllerServices() const;
 
@@ -254,7 +249,7 @@ class ProcessGroup : public CoreComponent {
 
   // controller services
 
-  core::controller::ControllerServiceMap controller_service_map_;
+  core::controller::ControllerServiceNodeMap controller_service_map_;
 
  private:
   static Port* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid);

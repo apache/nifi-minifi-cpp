@@ -29,13 +29,13 @@
 #include "unit/MockClasses.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
-#include "core/controller/ControllerServiceMap.h"
+#include "core/controller/ControllerServiceNodeMap.h"
 #include "core/controller/StandardControllerServiceNode.h"
 
 namespace ControllerServiceTests {
 
 TEST_CASE("Test ControllerServicesMap", "[cs1]") {
-  core::controller::ControllerServiceMap map;
+  core::controller::ControllerServiceNodeMap map;
   REQUIRE(map.getAllControllerServices().empty());
 
   std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
@@ -44,18 +44,18 @@ TEST_CASE("Test ControllerServicesMap", "[cs1]") {
   map.put("ID", testNode);
   REQUIRE(1 == map.getAllControllerServices().size());
 
-  REQUIRE(nullptr != map.getControllerServiceNode("ID"));
+  REQUIRE(nullptr != map.get("ID"));
 
   REQUIRE(false== map.put("", testNode));
   REQUIRE(false== map.put("", nullptr));
 
   // ensure the pointer is the same
 
-  REQUIRE(service.get() == map.getControllerServiceNode("ID")->getControllerServiceImplementation().get());
+  REQUIRE(service.get() == map.get("ID")->getControllerServiceImplementation().get());
 }
 
 TEST_CASE("Test StandardControllerServiceNode nullPtr", "[cs1]") {
-  core::controller::ControllerServiceMap map;
+  core::controller::ControllerServiceNodeMap map;
 
   try {
     std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(nullptr, "ID", std::make_shared<minifi::Configure>());

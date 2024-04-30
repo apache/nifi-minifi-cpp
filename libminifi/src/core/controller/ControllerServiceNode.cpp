@@ -22,7 +22,7 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerService> &ControllerServiceNode::getControllerServiceImplementation() {
+std::shared_ptr<ControllerService> ControllerServiceNode::getControllerServiceImplementation() {
   return controller_service_;
 }
 
@@ -30,12 +30,8 @@ const ControllerService* ControllerServiceNode::getControllerServiceImplementati
   return controller_service_.get();
 }
 
-std::vector<std::shared_ptr<ControllerServiceNode> > &ControllerServiceNode::getLinkedControllerServices() {
+const std::vector<ControllerServiceNode*>& ControllerServiceNode::getLinkedControllerServices() const {
   return linked_controller_services_;
-}
-
-std::vector<std::shared_ptr<ConfigurableComponent> > &ControllerServiceNode::getLinkedComponents() {
-  return linked_components_;
 }
 
 }  // namespace org::apache::nifi::minifi::core::controller

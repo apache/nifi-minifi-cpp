@@ -27,7 +27,7 @@
 #include <thread>
 #include <vector>
 
-#include "core/controller/ControllerServiceMap.h"
+#include "core/controller/ControllerServiceNodeMap.h"
 #include "core/controller/StandardControllerServiceProvider.h"
 #include "controllers/SSLContextService.h"
 #include "core/ProcessGroup.h"
@@ -78,7 +78,6 @@ int main(int argc, char **argv) {
   const auto controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo);
 
   disabled = false;
-  std::shared_ptr<core::controller::ControllerServiceMap> map = std::make_shared<core::controller::ControllerServiceMap>();
 
   core::YamlConfiguration yaml_config(core::ConfigurationContext{
       .flow_file_repo = test_repo,
@@ -90,31 +89,30 @@ int main(int argc, char **argv) {
   });
   auto pg = yaml_config.getRoot();
 
-  auto provider = std::make_shared<core::controller::StandardControllerServiceProvider>(map, std::make_shared<minifi::Configure>());
-  std::shared_ptr<core::controller::ControllerServiceNode> mockNode = pg->findControllerService("MockItLikeIts1995");
+  auto provider = std::make_shared<core::controller::StandardControllerServiceProvider>(std::make_unique<core::controller::ControllerServiceNodeMap>(), std::make_shared<minifi::Configure>());
+  auto* mockNode = pg->findControllerService("MockItLikeIts1995");
   assert(mockNode != nullptr);
   mockNode->enable();
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode> > linkedNodes = mockNode->getLinkedControllerServices();
+  std::vector<core::controller::ControllerServiceNode*> linkedNodes = mockNode->getLinkedControllerServices();
   assert(linkedNodes.size() == 1);
 
-  std::shared_ptr<core::controller::ControllerServiceNode> notexistNode = pg->findControllerService("MockItLikeItsWrong");
+  core::controller::ControllerServiceNode* notexistNode = pg->findControllerService("MockItLikeItsWrong");
   assert(notexistNode == nullptr);
 
-  std::shared_ptr<core::controller::ControllerServiceNode> ssl_client_cont = nullptr;
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_client = nullptr;
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_client;
   {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->load();
     controller->start();
-    ssl_client_cont = controller->getControllerServiceNode("SSLClientServiceTest");
-    ssl_client_cont->enable();
-    assert(ssl_client_cont != nullptr);
-    assert(ssl_client_cont->getControllerServiceImplementation() != nullptr);
-    ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_cont->getControllerServiceImplementation());
+    auto* ssl_client_node = controller->getControllerServiceNode("SSLClientServiceTest");
+    ssl_client_node->enable();
+    assert(ssl_client_node != nullptr);
+    assert(ssl_client_node->getControllerServiceImplementation() != nullptr);
+    ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_node->getControllerServiceImplementation());
   }
   assert(!ssl_client->getCACertificate().empty());
   // now let's disable one of the controller services.
-  std::shared_ptr<core::controller::ControllerServiceNode> cs_id = controller->getControllerServiceNode("ID");
+  const auto* const cs_id = controller->getControllerServiceNode("ID");
   assert(cs_id != nullptr);
   // TODO(adebreceni): MINIFICPP-1992
 //  const auto checkCsIdEnabledMatchesDisabledFlag = [&cs_id] { return !disabled == cs_id->enabled(); };

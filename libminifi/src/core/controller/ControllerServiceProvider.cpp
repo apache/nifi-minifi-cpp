@@ -17,23 +17,16 @@
  */
 
 #include "core/controller/ControllerServiceProvider.h"
+
 #include <memory>
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+#include "utils/gsl.h"
 
-/**
- * @param identifier of controller service
- * @return the ControllerService that is registered with the given
- * identifier
- */
+namespace org::apache::nifi::minifi::core::controller {
+
 std::shared_ptr<ControllerService> ControllerServiceProvider::getControllerService(const std::string &identifier) const {
-  auto service = controller_map_->getControllerServiceNode(identifier);
+  auto service = controller_map_->get(identifier);
   if (service != nullptr) {
     return service->getControllerServiceImplementation();
   } else {
@@ -41,9 +34,9 @@ std::shared_ptr<ControllerService> ControllerServiceProvider::getControllerServi
   }
 }
 
-} /* namespace controller */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+void ControllerServiceProvider::putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node) {
+  gsl_Expects(controller_map_);
+  controller_map_->put(identifier, controller_service_node);
+}
+
+}  // namespace org::apache::nifi::minifi::core::controller

@@ -207,13 +207,13 @@ TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo
       content_repo_(std::move(content_repo)),
       flow_repo_(std::move(flow_repo)),
       prov_repo_(std::move(prov_repo)),
+      controller_services_provider_(std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(
+          std::make_unique<minifi::core::controller::ControllerServiceNodeMap>(), configuration_)),
       finalized(false),
       location(-1),
       current_flowfile_(nullptr),
       flow_version_(std::move(flow_version)),
       logger_(logging::LoggerFactory<TestPlan>::getLogger()) {
-  controller_services_ = std::make_shared<minifi::core::controller::ControllerServiceMap>();
-  controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, configuration_);
   /* Inject the default state storage ahead of ProcessContext to make sure we have a unique state directory */
   if (state_dir == nullptr) {
     state_dir_ = std::make_unique<TempDirectory>();

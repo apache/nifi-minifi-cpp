@@ -75,9 +75,9 @@ class SchedulingAgentTestFixture {
 
   TestController test_controller_;
   std::shared_ptr<TestPlan> test_plan = test_controller_.createPlan();
-  std::shared_ptr<minifi::core::controller::ControllerServiceMap> controller_services_ = std::make_shared<minifi::core::controller::ControllerServiceMap>();
   std::shared_ptr<minifi::Configure> configuration_ = std::make_shared<minifi::Configure>();
-  std::shared_ptr<StandardControllerServiceProvider> controller_services_provider_ = std::make_shared<StandardControllerServiceProvider>(controller_services_, configuration_);
+  std::shared_ptr<StandardControllerServiceProvider> controller_services_provider_ = std::make_shared<StandardControllerServiceProvider>(
+      std::make_unique<minifi::core::controller::ControllerServiceNodeMap>(), configuration_);
   utils::ThreadPool thread_pool_;
 
   std::shared_ptr<CountOnTriggersProcessor> count_proc_ = std::make_shared<CountOnTriggersProcessor>("count_proc");
