@@ -78,7 +78,6 @@ jobs:
             macos-arm-xcode-ccache-refs/heads/main-
       - id: install_dependencies
         run: |
-          # Skip brew update until https://github.com/actions/setup-python/issues/577 is fixed
           brew update
           brew install ossp-uuid bison flex ccache sqliteodbc automake autoconf ninja
       - id: setup_env
