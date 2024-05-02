@@ -251,4 +251,6 @@ int main() {
   });
 
   harness.run();
+
+  std::filesystem::current_path(minifi::utils::file::get_executable_dir());
 }
