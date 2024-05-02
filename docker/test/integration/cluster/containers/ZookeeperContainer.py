@@ -31,7 +31,7 @@ class ZookeeperContainer(Container):
 
         logging.info('Creating and running zookeeper docker container...')
         self.client.containers.run(
-            image="zookeeper:3.8.1",
+            image="zookeeper:3.9.2",
             detach=True,
             name=self.name,
             network=self.network.name,
