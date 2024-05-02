@@ -45,6 +45,10 @@ include(WholeArchive)
 
 include(MiNiFiOptions)
 
+message("Checking MiNiFi Options Updated by conanfile.py")
+message("USE_CONAN_PACKAGER = ${USE_CONAN_PACKAGER}")
+message("USE_CMAKE_FETCH_CONTENT = ${USE_CMAKE_FETCH_CONTENT}")
+
 include(DockerConfig)
 if (DOCKER_BUILD_ONLY)
     return()
