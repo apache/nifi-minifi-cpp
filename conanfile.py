@@ -12,8 +12,12 @@ from conan.tools.cmake import CMakeToolchain
 
 required_conan_version = ">=1.54 <2.0 || >=2.0.14"
 
+# Does conan have argparse?
+# https://github.com/p-ranav/argparse/archive/refs/tags/v3.0.tar.gz
+
 shared_requires = (
-    'abseil/20230125.3'
+    'abseil/20230125.3',
+    'argparse/3.0'
 )
 
 linux_requires = (
@@ -50,7 +54,6 @@ class MiNiFiCppMain(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
-        # tc.cache_variables["ENABLE_OPENCV"] = "OFF" # "ON"
         tc.cache_variables["USE_CONAN_PACKAGER"] = "ON"
         tc.cache_variables["USE_CMAKE_FETCH_CONTENT"] = "OFF"
         tc.generate()
