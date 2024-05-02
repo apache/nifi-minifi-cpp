@@ -12,12 +12,22 @@ from conan.tools.cmake import CMakeToolchain
 
 required_conan_version = ">=1.54 <2.0 || >=2.0.14"
 
-# Does conan have argparse?
-# https://github.com/p-ranav/argparse/archive/refs/tags/v3.0.tar.gz
-
-shared_requires = (
+conancenter_shared_requires = (
     'abseil/20230125.3',
-    'argparse/3.0'
+    'argparse/3.0',
+    'asio/1.30.2',
+    'catch2/3.5.4'
+)
+
+# packages not available on conancenter
+    # TODO (JG): Add conan recipes for building these packages from source, 
+    # later upload to github packages, so we can maintain our own prebuilt packages
+    # format: '{conan_package}/{version}@{user}/{channel}'
+    # version: commit hash or official tag version
+    # user: minifi, channels: stable, testing or dev, etc
+# - bustache: https://github.com/jamboree/bustache
+github_pcks_shared_requires = (
+    'bustache/1a6d442@minifi/dev'
 )
 
 linux_requires = (
@@ -42,7 +52,7 @@ class MiNiFiCppMain(ConanFile):
     name = "minifi-cpp-main"
     version = "0.15.0"
     license = "Apache-2.0"
-    requires = shared_requires
+    requires = conancenter_shared_requires
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"
     options = shared_options
