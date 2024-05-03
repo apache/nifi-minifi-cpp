@@ -20,11 +20,12 @@
 #ifndef WIN32
 #pragma once
 
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include <cerrno>
+#include <csignal>
+#include <cstdio>
 
 #include <chrono>
 #include <iostream>
@@ -43,13 +44,12 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "FlowFileRecord.h"
-#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 class ExecuteProcess : public core::Processor {
  public:
-  explicit ExecuteProcess(std::string_view name, const utils::Identifier& uuid = {})
+  explicit ExecuteProcess(const std::string_view name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         working_dir_(".") {
   }
@@ -108,10 +108,10 @@ class ExecuteProcess : public core::Processor {
  private:
   std::vector<std::string> readArgs() const;
   void executeProcessForkFailed();
-  void executeChildProcess();
+  void executeChildProcess() const;
   void collectChildProcessOutput(core::ProcessSession& session);
-  void readOutputInBatches(core::ProcessSession& session);
-  void readOutput(core::ProcessSession& session);
+  void readOutputInBatches(core::ProcessSession& session) const;
+  void readOutput(core::ProcessSession& session) const;
   bool writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer) const;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger(uuid_);

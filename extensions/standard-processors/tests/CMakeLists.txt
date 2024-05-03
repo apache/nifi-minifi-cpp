@@ -23,11 +23,7 @@ enable_coroutines()
 
 file(GLOB PROCESSOR_UNIT_TESTS  "unit/*.cpp")
 file(GLOB PROCESSOR_INTEGRATION_TESTS "integration/*.cpp")
-file(GLOB RESOURCE_APPS "resource_apps/*.cpp")
 
-if (WIN32)
-    list(REMOVE_ITEM PROCESSOR_UNIT_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/unit/ExecuteProcessTests.cpp")
-endif()
 SET(PROCESSOR_INT_TEST_COUNT 0)
 
 FOREACH(testfile ${PROCESSOR_UNIT_TESTS})
@@ -81,10 +77,5 @@ add_test(NAME TailFileTest COMMAND TailFileTest "${TEST_RESOURCES}/TestTailFile.
 add_test(NAME TailFileCronTest COMMAND TailFileTest "${TEST_RESOURCES}/TestTailFileCron.yml"  "${TEST_RESOURCES}/")
 add_test(NAME ProcessGroupTest COMMAND ProcessGroupTest "${TEST_RESOURCES}/TestProcessGroup.yml")
 
-FOREACH(resourcefile ${RESOURCE_APPS})
-    get_filename_component(resourcefilename "${resourcefile}" NAME_WE)
-    add_minifi_executable("${resourcefilename}" "${resourcefile}")
-    set_target_properties(${resourcefilename} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-ENDFOREACH()
 
 copyTestResources(${CMAKE_SOURCE_DIR}/libminifi/test/resources/certs ${CMAKE_BINARY_DIR}/bin/resources)

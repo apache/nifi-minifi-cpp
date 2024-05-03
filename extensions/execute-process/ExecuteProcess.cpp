@@ -19,7 +19,9 @@
  */
 #ifndef WIN32
 #include "ExecuteProcess.h"
+
 #include <array>
+
 #include <memory>
 #include <string>
 #include <iomanip>
@@ -27,7 +29,6 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
-#include "utils/TimeUtil.h"
 #include "core/TypedValues.h"
 #include "utils/gsl.h"
 #include "utils/Environment.h"
@@ -83,7 +84,7 @@ void ExecuteProcess::executeProcessForkFailed() {
   yield();
 }
 
-void ExecuteProcess::executeChildProcess() {
+void ExecuteProcess::executeChildProcess() const {
   std::vector<char*> argv;
   auto args = readArgs();
   argv.reserve(args.size() + 1);
@@ -110,7 +111,7 @@ void ExecuteProcess::executeChildProcess() {
   exit(0);
 }
 
-void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
+void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) const {
   while (true) {
     std::this_thread::sleep_for(batch_duration_);
     std::array<char, 4096> buffer;  // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -148,7 +149,7 @@ bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_
   return true;
 }
 
-void ExecuteProcess::readOutput(core::ProcessSession& session) {
+void ExecuteProcess::readOutput(core::ProcessSession& session) const {
   std::array<char, 4096> buffer;  // NOLINT(cppcoreguidelines-pro-type-member-init)
   char *buf_ptr = buffer.data();
   size_t read_to_buffer = 0;
@@ -206,7 +207,7 @@ void ExecuteProcess::collectChildProcessOutput(core::ProcessSession& session) {
 }
 
 void ExecuteProcess::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
-  if (full_command_.length() == 0) {
+  if (full_command_.empty()) {
     yield();
     return;
   }
