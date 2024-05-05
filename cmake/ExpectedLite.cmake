@@ -14,11 +14,19 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+if(USE_CONAN_PACKAGER)
+    message("Using Conan Packager to manage installing prebuilt expected-lite external lib")
+    include(${CMAKE_BINARY_DIR}/expected-lite-config.cmake)
+elseif(USE_CMAKE_FETCH_CONTENT)
+    message("Using CMAKE's FetchContent to manage source building expected-lite external lib")
 
-include(FetchContent)
+    include(FetchContent)
 
-FetchContent_Declare(expected-lite
-    URL      https://github.com/martinmoene/expected-lite/archive/refs/tags/v0.6.0.tar.gz
-    URL_HASH SHA256=90478ff7345100bf7539b12ea2c5ff04a7b6290bc5c280f02b473d5c65165342
-)
-FetchContent_MakeAvailable(expected-lite)
+    FetchContent_Declare(expected-lite
+        URL      https://github.com/martinmoene/expected-lite/archive/refs/tags/v0.6.0.tar.gz
+        URL_HASH SHA256=90478ff7345100bf7539b12ea2c5ff04a7b6290bc5c280f02b473d5c65165342
+    )
+    FetchContent_MakeAvailable(expected-lite)
+
+    add_library(nonstd::expected-lite ALIAS expected-lite)
+endif()

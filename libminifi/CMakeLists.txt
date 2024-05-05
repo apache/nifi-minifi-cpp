@@ -75,10 +75,11 @@ else()
     set_target_properties(core-minifi PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endif()
 
+# TODO (JG): Analyze the 3rd party lib dependencies (thirdparty, extensions, etc) on libminifi and replace them with the appropriate conan packages
 include(RangeV3)
 include(Asio)
 include(MagicEnum)
-list(APPEND LIBMINIFI_LIBRARIES yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite libsodium range-v3 expected-lite date::date date::tz asio magic_enum)
+list(APPEND LIBMINIFI_LIBRARIES yaml-cpp::yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog::spdlog Threads::Threads gsl::gsl-lite libsodium::libsodium range-v3::range-v3 nonstd::expected-lite date::date date::date-tz asio::asio magic_enum::magic_enum)
 if(NOT WIN32)
     list(APPEND LIBMINIFI_LIBRARIES OSSP::libuuid++)
 endif()

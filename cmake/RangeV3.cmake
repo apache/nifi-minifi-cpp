@@ -14,11 +14,23 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+if(USE_CONAN_PACKAGER)
+    message("Using Conan Packager to manage installing prebuilt range-v3 external lib")
+    include(${CMAKE_BINARY_DIR}/range-v3-config.cmake)
 
-include(FetchContent)
+    # set(RANGE_V3_INCLUDE_DIRS "${range-v3_INCLUDE_DIRS}" CACHE STRING "" FORCE)
+    # set(RANGE_V3_LIBRARIES "${range-v3_LIB_DIRS_RELEASE}" CACHE STRING "" FORCE)
 
-FetchContent_Declare(range-v3_src
-    URL      https://github.com/ericniebler/range-v3/archive/refs/tags/0.12.0.tar.gz
-    URL_HASH SHA256=015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb
-)
-FetchContent_MakeAvailable(range-v3_src)
+elseif(USE_CMAKE_FETCH_CONTENT)
+    message("Using CMAKE's FetchContent to manage source building range-v3 external lib")
+
+    include(FetchContent)
+
+    FetchContent_Declare(range-v3_src
+        URL      https://github.com/ericniebler/range-v3/archive/refs/tags/0.12.0.tar.gz
+        URL_HASH SHA256=015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb
+    )
+    FetchContent_MakeAvailable(range-v3_src)
+
+    add_library(range-v3::range-v3 ALIAS range-v3)
+endif()

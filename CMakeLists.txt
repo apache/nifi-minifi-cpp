@@ -252,13 +252,13 @@ if (MINIFI_OPENSSL)
     list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS OPENSSL_SUPPORT)
 endif()
 
-# libsodium
+# libsodium (libminifi C++ core)
 include(BundledLibSodium)
 use_bundled_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
 
 list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS SODIUM_STATIC=1)
 
-# zlib
+# zlib (libminifi C++ core)
 include(BundledZLIB)
 use_bundled_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
@@ -275,18 +275,18 @@ if(ENABLE_CURL)
     list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS ENABLE_CURL)
 endif()
 
-# spdlog
+# spdlog (libminifi C++ core)
 include(Spdlog)
 
-# yaml-cpp
+# yaml-cpp (libminifi C++ core)
 include(BundledYamlCpp)
 use_bundled_yamlcpp(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
-# concurrentqueue
+# concurrentqueue (libminifi C++ core)
 add_library(concurrentqueue INTERFACE)
 target_include_directories(concurrentqueue SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/concurrentqueue")
 
-# RapidJSON
+# RapidJSON (libminifi C++ core)
 add_library(RapidJSON INTERFACE)
 target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-48fbd8cd202ca54031fe799db2ad44ffa8e77c13/include")
 target_compile_definitions(RapidJSON INTERFACE RAPIDJSON_HAS_STDSTRING)
@@ -294,30 +294,16 @@ target_compile_definitions(RapidJSON INTERFACE RAPIDJSON_HAS_STDSTRING)
 include(Coroutines)
 enable_coroutines()
 
-# gsl-lite
+# gsl-lite (libminifi C++ core)
 include(GslLite)
 
-# Add necessary definitions based on the value of STRICT_GSL_CHECKS, see gsl-lite README for more details
-list(APPEND GslDefinitions gsl_CONFIG_DEFAULTS_VERSION=1)
-list(APPEND GslDefinitionsNonStrict gsl_CONFIG_CONTRACT_VIOLATION_THROWS gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1)
-if (STRICT_GSL_CHECKS STREQUAL "AUDIT")
-    list(APPEND GslDefinitions gsl_CONFIG_CONTRACT_CHECKING_AUDIT)
-endif()
-if (NOT STRICT_GSL_CHECKS)  # OFF (or any other falsey string) matches, AUDIT/ON/DEBUG_ONLY don't match
-    list(APPEND GslDefinitions ${GslDefinitionsNonStrict})
-endif()
-if (STRICT_GSL_CHECKS STREQUAL "DEBUG_ONLY")
-    list(APPEND GslDefinitions $<$<NOT:$<CONFIG:Debug>>:${GslDefinitionsNonStrict}>)
-endif()
-target_compile_definitions(gsl-lite INTERFACE ${GslDefinitions})
-
-# date
+# date (libminifi C++ core)
 include(Date)
 
-# expected-lite
+# expected-lite (libminifi C++ core)
 include(ExpectedLite)
 
-# magic_enum
+# magic_enum (libminifi C++ core)
 include(MagicEnum)
 
 # Setup warning flags
@@ -356,12 +342,15 @@ include(Extensions)
 add_subdirectory(libminifi)
 
 if ((ENABLE_OPENWSMAN AND ENABLE_CIVET AND ENABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
+    message("Enabled OpenWSMAN, Civet, and Curl for MiNiFi C++ Core")
+    message("Including BundledLibXml2")
     include(BundledLibXml2)
     use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
 endif()
 
 if (ENABLE_ALL OR ENABLE_PROMETHEUS OR ENABLE_CIVET)
+    message("Including CivetWeb")
     include(CivetWeb)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
 endif()
@@ -619,28 +608,131 @@ if(NOT WIN32)
     cpack_add_component(conf DISPLAY_NAME "Default configuration files" REQUIRED)
 endif()
 
+# Speed up MiNIFi C++ builds by just having standard processors being included by default
+message("Adding minifi-standard-processors to EXTENSIONS_ENABLED_BY_DEFAULT list")
 cpack_add_component_group(extensions DISPLAY_NAME "Extensions" EXPANDED)
-set(EXTENSIONS_ENABLED_BY_DEFAULT (
-    minifi-aws
-    minifi-azure
-    minifi-civet-extensions
-    minifi-elasticsearch
-    minifi-expression-language-extensions
-    minifi-gcp
-    minifi-grafana-loki
-    minifi-http-curl
-    minifi-archive-extensions
-    minifi-mqtt-extensions
-    minifi-rdkafka-extensions
-    minifi-pdh
-    minifi-prometheus
-    minifi-rocksdb-repos
-    minifi-smb
-    minifi-splunk
-    minifi-sql
+set(EXTENSIONS_ENABLED_BY_DEFAULT
     minifi-standard-processors
-    minifi-wel
-))
+)
+
+# Only append the remaining extensions that are enabled, so they dont take up time in the build
+message("Checking for enabled extensions to append to EXTENSIONS_ENABLED_BY_DEFAULT list")
+if(ENABLE_AWS)
+    message("AWS Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-aws)
+endif()
+
+if(ENABLE_AZURE)
+    message("Azure Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-azure)
+endif()
+
+if(ENABLE_CIVET)
+    message("Civet Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-civet-extensions)
+endif()
+
+if(ENABLE_ELASTICSEARCH)
+    message("Elasticsearch Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-elasticsearch)
+endif()
+
+if(ENABLE_EXPRESSION_LANGUAGE)
+    message("Expression Language Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-expression-language-extensions)
+endif()
+
+if(ENABLE_GCP)
+    message("GCP Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-gcp)
+endif()
+
+if(ENABLE_GRAFANA_LOKI)
+    message("Grafana Loki Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-grafana-loki)
+endif()
+
+if(ENABLE_HTTP_CURL)
+    message("HTTP CURL Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-http-curl)
+endif()
+
+if(ENABLE_LIBARCHIVE)
+    message("Libarchive Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-archive-extensions)
+endif()
+
+if(ENABLE_MQTT)
+    message("MQTT Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-mqtt-extensions)
+endif()
+
+if(ENABLE_LIBRDKAFKA)
+    message("RDKafka Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-rdkafka-extensions)
+endif()
+
+if(ENABLE_PDH)
+    message("PDH Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-pdh)
+endif()
+
+if(ENABLE_PROMETHEUS)
+    message("Prometheus Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-prometheus)
+endif()
+
+if(ENABLE_ROCKSDB)
+    message("RocksDB Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-rocksdb-repos)
+endif()
+
+if(ENABLE_SMB)
+    message("SMB Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-smb)
+endif()
+
+if(ENABLE_SPLUNK)
+    message("Splunk Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-splunk)
+endif()
+
+if(ENABLE_SQL)
+    message("SQL Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-sql)
+endif()
+
+if(ENABLE_WEL)
+    message("WEL Enabled appending to EXTENSIONS_ENABLED_BY_DEFAULT")
+    list(APPEND EXTENSIONS_ENABLED_BY_DEFAULT minifi-wel)
+endif()
+
+
+# TODO (JG): Planning to replace below with the above conditional approach, so we save time on building
+# MiNiFi C++ Core library and Main binary executable and whats needed for building minifi-standard-processors
+# like external libraries Openwsman, Openssl, Civet, Curl and their appropriate extensions.
+# cpack_add_component_group(extensions DISPLAY_NAME "Extensions" EXPANDED)
+# set(EXTENSIONS_ENABLED_BY_DEFAULT (
+#     # minifi-aws
+#     # minifi-azure
+#     # minifi-civet-extensions
+#     # minifi-elasticsearch
+#     # minifi-expression-language-extensions
+#     # minifi-gcp
+#     # minifi-grafana-loki
+#     # minifi-http-curl
+#     # minifi-archive-extensions
+#     # minifi-mqtt-extensions
+#     # minifi-rdkafka-extensions
+#     # minifi-pdh
+#     # minifi-prometheus
+#     # minifi-rocksdb-repos
+#     # minifi-smb
+#     # minifi-splunk
+#     # minifi-sql
+#     minifi-standard-processors
+#     # minifi-wel
+# ))
 foreach(extension ${selected_extensions})
     get_component_name(${extension} component-name)
     list(APPEND CPACK_COMPONENTS_ALL ${component-name})

@@ -17,10 +17,10 @@
 # under the License.
 #
 if(USE_CONAN_PACKAGER)
-    message("FAST: Using Conan Packager to manage installing prebuilt Abseil external lib")
+    message("Using Conan Packager to manage installing prebuilt Abseil external lib")
     include(${CMAKE_BINARY_DIR}/absl-config.cmake)
 elseif(USE_CMAKE_FETCH_CONTENT)
-    message("SLOW: Using CMAKE's FetchContent to manage source building Abseil external lib")
+    message("Using CMAKE's FetchContent to manage source building Abseil external lib")
     include(FetchContent)
     set(ABSL_PROPAGATE_CXX_STD ON CACHE INTERNAL absl-propagate-cxx)
     set(ABSL_ENABLE_INSTALL ON CACHE INTERNAL "")

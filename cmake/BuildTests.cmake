@@ -78,7 +78,7 @@ function(createTests testName)
 
     target_link_libraries(${testName} ${CMAKE_DL_LIBS})
     target_wholearchive_library(${testName} ${TEST_BASE_LIB})
-    target_link_libraries(${testName} core-minifi yaml-cpp spdlog Threads::Threads)
+    target_link_libraries(${testName} core-minifi yaml-cpp::yaml-cpp spdlog Threads::Threads)
     target_compile_definitions(${testName} PRIVATE LOAD_EXTENSIONS)
     set_target_properties(${testName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endfunction()

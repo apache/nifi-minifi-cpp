@@ -17,11 +17,11 @@
 # under the License.
 #
 if(USE_CONAN_PACKAGER)
-    message("FAST: Using Conan Packager to manage installing prebuilt Catch2 external lib")
+    message("Using Conan Packager to manage installing prebuilt Catch2 external lib")
     include(${CMAKE_BINARY_DIR}/Catch2Config.cmake)
 elseif(USE_CMAKE_FETCH_CONTENT)
-    message("SLOW: Using CMAKE's FetchContent to manage source building Catch2 external lib")
-    include(FetchContent)
+    message("Using CMAKE's FetchContent to manage source building Catch2 external lib")
+include(FetchContent)
 
     FetchContent_Declare(
             Catch2
@@ -29,4 +29,6 @@ elseif(USE_CMAKE_FETCH_CONTENT)
             URL_HASH SHA256=122928b814b75717316c71af69bd2b43387643ba076a6ec16e7882bfb2dfacbb
     )
     FetchContent_MakeAvailable(Catch2)
+
+    add_library(Catch2::Catch2WithMain ALIAS Catch2WithMain)
 endif()
