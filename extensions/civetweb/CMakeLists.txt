@@ -32,8 +32,12 @@ target_include_directories(minifi-civet-extensions BEFORE PUBLIC
                            ${CMAKE_SOURCE_DIR}/thirdparty/
                            ${civetweb_SOURCE_DIR}/include
                            ./include)
-# target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads civetweb::civetweb-cpp civetweb::c-library)
-target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads civetweb::civetweb)
+
+if(USE_CONAN_PACKAGER)
+    target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads civetweb::civetweb)
+elseif(USE_CMAKE_FETCH_CONTENT)
+    target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads civetweb::civetweb-cpp civetweb::c-library)
+endif()
 
 register_extension(minifi-civet-extensions CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb/tests")
 register_extension_linter(minifi-civet-extensions-linter)

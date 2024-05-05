@@ -31,5 +31,5 @@ elseif(USE_CMAKE_FETCH_CONTENT)
             OVERRIDE_FIND_PACKAGE
             )
     FetchContent_MakeAvailable(Spdlog)
-    add_library(spdlog::spdlog ALIAS Spdlog)
+
 endif()

@@ -29,5 +29,4 @@ elseif(USE_CMAKE_FETCH_CONTENT)
     
     FetchContent_MakeAvailable(magic_enum)
 
-    add_library(magic_enum::magic_enum ALIAS magic_enum)
 endif()

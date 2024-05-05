@@ -27,6 +27,4 @@ elseif(USE_CMAKE_FETCH_CONTENT)
         URL_HASH SHA256=90478ff7345100bf7539b12ea2c5ff04a7b6290bc5c280f02b473d5c65165342
     )
     FetchContent_MakeAvailable(expected-lite)
-
-    add_library(nonstd::expected-lite ALIAS expected-lite)
 endif()

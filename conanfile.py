@@ -10,8 +10,9 @@ from conan.tools.env import Environment
 from conan.tools.env.virtualrunenv import runenv_from_cpp_info
 from conan.tools.cmake import CMakeToolchain, CMake
 
-required_conan_version = ">=1.54 <2.0 || >=2.0.14"
+required_conan_version = ">=1.54 <2.0 || >=2.1.0"
 
+# conan has prebuilt binary conan packages for minifi
 minifi_core_external_libraries = (
     'libsodium/cci.20220430',
     'zlib/1.3.1',
@@ -23,21 +24,27 @@ minifi_core_external_libraries = (
     'expected-lite/0.6.3',
     'magic_enum/0.9.5',
     'abseil/20230125.3',
-    'catch2/3.5.4',
     'civetweb/1.16',
     'libcurl/8.6.0',
     'openssl/3.2.1',
     'asio/1.30.2',
     'range-v3/0.12.0',
-    'libxml2/2.12.6'
+    'libxml2/2.12.6',
+    # 'uthash/2.3.0',
+    # 'concurrentqueue/1.0.4',
+    # 'rapidjson/cci.20230929',
+)
+
+# since conan doesnt have prebuilt binary conan packages, we have source list
+minifi_core_external_source_libraries = (
+    'catch2/3.5.4',
 )
 
 # minifi_extension_external_libraries = (
     # 'argparse/3.0',
-
 # )
 
-shared_requires = minifi_core_external_libraries
+shared_requires = minifi_core_external_libraries + minifi_core_external_source_libraries
 
 # packages not available on conancenter
     # TODO (JG): Add conan recipes for building these packages from source, 
@@ -81,12 +88,6 @@ class MiNiFiCppMain(ConanFile):
     default_options = shared_default_options
     url = "https://nifi.apache.org/projects/minifi/"
 
-    # def configure(self):
-    #     cmake = CMake(self)
-    #     cmake.definitions["USE_CONAN_PACKAGER"] = "ON"
-    #     cmake.definitions["USE_CMAKE_FETCH_CONTENT"] = "OFF"
-    #     cmake.configure()
-
     def requirements(self):
         if self.settings.os == "Windows":
             for require in window_requires:
@@ -113,7 +114,6 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["ENABLE_OPC"] = "OFF"
         tc.cache_variables["ENABLE_NANOFI"] = "OFF"
         tc.cache_variables["BUILD_ROCKSDB"] = "OFF"
-        
 
         if self.settings.os == "Windows":
             tc.cache_variables["ENABLE_WEL"] = "OFF"

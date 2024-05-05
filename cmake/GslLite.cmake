@@ -20,16 +20,6 @@ if(USE_CONAN_PACKAGER)
 
     # Add necessary definitions based on the value of STRICT_GSL_CHECKS, see gsl-lite README for more details
     list(APPEND gsl-lite_DEFINITIONS_RELEASE gsl_CONFIG_DEFAULTS_VERSION=1)
-    # list(APPEND GslDefinitionsNonStrict gsl_CONFIG_CONTRACT_VIOLATION_THROWS gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1)
-    # if (STRICT_GSL_CHECKS STREQUAL "AUDIT")
-    #     list(APPEND GslDefinitions gsl_CONFIG_CONTRACT_CHECKING_AUDIT)
-    # endif()
-    # if (NOT STRICT_GSL_CHECKS)  # OFF (or any other falsey string) matches, AUDIT/ON/DEBUG_ONLY don't match
-    #     list(APPEND GslDefinitions ${GslDefinitionsNonStrict})
-    # endif()
-    # if (STRICT_GSL_CHECKS STREQUAL "DEBUG_ONLY")
-    #     list(APPEND GslDefinitions $<$<NOT:$<CONFIG:Debug>>:${GslDefinitionsNonStrict}>)
-    # endif()
 
     target_compile_definitions(gsl::gsl-lite INTERFACE ${gsl-lite_DEFINITIONS_RELEASE})
 elseif(USE_CMAKE_FETCH_CONTENT)
@@ -43,8 +33,6 @@ elseif(USE_CMAKE_FETCH_CONTENT)
     )
     FetchContent_MakeAvailable(gsl-lite)
 
-    add_library(gsl::gsl-lite ALIAS gsl-lite)
-
     # Add necessary definitions based on the value of STRICT_GSL_CHECKS, see gsl-lite README for more details
     list(APPEND GslDefinitions gsl_CONFIG_DEFAULTS_VERSION=1)
     list(APPEND GslDefinitionsNonStrict gsl_CONFIG_CONTRACT_VIOLATION_THROWS gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1)
@@ -57,7 +45,7 @@ elseif(USE_CMAKE_FETCH_CONTENT)
     if (STRICT_GSL_CHECKS STREQUAL "DEBUG_ONLY")
         list(APPEND GslDefinitions $<$<NOT:$<CONFIG:Debug>>:${GslDefinitionsNonStrict}>)
     endif()
-    target_compile_definitions(gsl::gsl-lite INTERFACE ${GslDefinitions})
+    target_compile_definitions(gsl-lite INTERFACE ${GslDefinitions})
 
 
 endif()

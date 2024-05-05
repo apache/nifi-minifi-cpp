@@ -31,9 +31,12 @@ file(GLOB SOURCES "processors/*.cpp")
 add_minifi_library(minifi-openwsman SHARED ${SOURCES})
 
 target_link_libraries(minifi-openwsman ${LIBMINIFI} Threads::Threads)
-# target_link_libraries(minifi-openwsman OpenWSMAN::libwsman civetweb::civetweb-cpp civetweb::c-library LibXml2::LibXml2)
 
-target_link_libraries(minifi-openwsman OpenWSMAN::libwsman civetweb::civetweb LibXml2::LibXml2)
+if(USE_CONAN_PACKAGER)
+    target_link_libraries(minifi-openwsman OpenWSMAN::libwsman civetweb::civetweb LibXml2::LibXml2)
+elseif(USE_CMAKE_FETCH_CONTENT)
+    target_link_libraries(minifi-openwsman OpenWSMAN::libwsman civetweb::civetweb-cpp civetweb::c-library LibXml2::LibXml2)
+endif()
 
 register_extension(minifi-openwsman "OPENWSMAN EXTENSIONS" OPENWSMAN-EXTENSIONS "This enables Openwsman support")
 register_extension_linter(minifi-openwsman-linter)

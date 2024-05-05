@@ -32,5 +32,4 @@ elseif(USE_CMAKE_FETCH_CONTENT)
     )
     FetchContent_MakeAvailable(range-v3_src)
 
-    add_library(range-v3::range-v3 ALIAS range-v3)
 endif()

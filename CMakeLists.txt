@@ -263,6 +263,7 @@ include(BundledZLIB)
 use_bundled_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
 
+# TODO (JG): Add uthash.cmake with condition to use conan package
 # uthash
 add_library(ut INTERFACE)
 target_include_directories(ut SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ut")
@@ -282,10 +283,12 @@ include(Spdlog)
 include(BundledYamlCpp)
 use_bundled_yamlcpp(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
+# TODO (JG): Add concurrentqueue.cmake with condition to use conan package
 # concurrentqueue (libminifi C++ core)
 add_library(concurrentqueue INTERFACE)
 target_include_directories(concurrentqueue SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/concurrentqueue")
 
+# TODO (JG): Add RapidJSON.cmake with condition to use conan package
 # RapidJSON (libminifi C++ core)
 add_library(RapidJSON INTERFACE)
 target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-48fbd8cd202ca54031fe799db2ad44ffa8e77c13/include")

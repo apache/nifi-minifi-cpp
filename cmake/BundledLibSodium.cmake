@@ -26,26 +26,6 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
         message("Conan libsodium library: ${libsodium_LIBRARIES}")
         message("Conan libsodium library dir: ${libsodium_LIB_DIRS_RELEASE}")
 
-        # # Define byproduct
-        # if (WIN32)
-        #     set(BYPRODUCT "sodium.lib")
-        # else()
-        #     set(BYPRODUCT "libsodium.a")
-        # endif()
-
-        # set(LBSODIUM_FOUND "YES" CACHE STRING "" FORCE)
-        # set(LIBSODIUM_INCLUDE_DIRS "${libsodium_INCLUDE_DIRS}" CACHE STRING "" FORCE)
-        # set(LIBSODIUM_LIBRARIES "${libsodium_LIB_DIRS_RELEASE}/${BYPRODUCT}" CACHE STRING "" FORCE)
-
-        # message("LIBSODIUM_LIBRARIES: ${LIBSODIUM_LIBRARIES}")
-
-        # # # Set exported variables for FindPackage.cmake
-        # set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_LIBSODIUM_INCLUDE_DIRS=${LIBSODIUM_INCLUDE_DIRS}" CACHE STRING "" FORCE)
-        # set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_LIBSODIUM_LIBRARIES=${LIBSODIUM_LIBRARIES}" CACHE STRING "" FORCE)
-
-        # target_link_libraries(libsodium::libsodium INTERFACE ${LIBSODIUM_LIBRARIES})
-        # set_property(TARGET libsodium::libsodium APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LIBSODIUM_INCLUDE_DIRS}")
-
     elseif(USE_CMAKE_FETCH_CONTENT)
         message("Using CMAKE's FetchContent to manage source building libsodium external lib")
 
@@ -121,8 +101,8 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
         # Create imported targets
         file(MAKE_DIRECTORY ${LIBSODIUM_INCLUDE_DIRS})
 
-        add_library(libsodium::libsodium ALIAS libsodium)
         add_library(libsodium STATIC IMPORTED)
+        add_library(libsodium::libsodium ALIAS libsodium)
         set_target_properties(libsodium PROPERTIES IMPORTED_LOCATION "${LIBSODIUM_LIBRARIES}")
         add_dependencies(libsodium libsodium-external)
         set_property(TARGET libsodium APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LIBSODIUM_INCLUDE_DIRS}")
