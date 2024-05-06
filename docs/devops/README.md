@@ -2,11 +2,14 @@
 
 - Build MiNiFi C++ with Conan & CMake
 - Build MiNiFi C++ with CMake
+- Appendix: Create Conan Packages for MiNiFi C++ Dependencies
 
 We show 2 examples of building MiNiFi C++ with the first one being the quick way with conan install and conan build while the second one being the previous way with standalone cmake. The first approach is faster because we use conan 2.2.3 to manage installing the external library dependencies for MiNiFi C++ and these external libraries are represented as prebuilt C++ binary conan packages and thus no need to download source and build source external library dependencies prior to actually building the MiNiFi C++ code. The prevoius approach was building MiNiFi C++ using CMake to first download the external source libraries and build those libraries and then build MiNiFi C++.
 
 For this particular case, we will build MiNiFi C++'s **core-minifi, minifiexe and minifi-standard-processors** and the external library dependencies and extensions these 3 core assets depend on using conan and then do it using standalone CMake. For conan, we
 already configured with tc.cache_variables["{MINIFI_BUILD_ARG0}"] in MiNiFi's conanfile.py to have just these core libraries and binary executables to be built. Similarly, in the case of CMake, we pass definitions to CMake generate, so the similar effect happens. You'll see the MiNiFi C++ conan build approach is faster than the MiNiFi C++ standalone CMake build approach.
+
+
 
 ## Build MiNiFi C++ with Conan & CMake
 
@@ -45,8 +48,8 @@ will not go through when MiNiFi C++ generates the build OS files and then compil
 ~~~bash
 cd nifi-minifi-cpp
 
-mkdir build_cmake
-cd build_cmake
+mkdir build_cmake2
+cd build_cmake2
 
 # NOTE: libminifi-http-curl fails without CMAKE_BUILD_TYPE=Debug else cant find libcurl-d.a
 
@@ -57,32 +60,38 @@ cd build_cmake
 #5th: 9:54PM - 9:55PM:
 #6th: 10:01PM - 10:02PM:
 # 7th: 10:59PM - 10:59PM:
+
+# building with gtests too
+# 1st: 8:34PM - 8:35PM; 9:10PM - 9:10PM
+# The definition args that are ON are for following:
+  # NEEDED for MiNiFi C++ Core, MainExe, Standard Processors
+  # NEEDED for MiNiFi C++ GTESTS (SKIP_TESTS=False, ENABLE_EXPRESSION_LANGUAGE, ENABLE_ROCKSDB, BUILD_ROCKSDB)
+
 cmake .. -DUSE_CONAN_PACKAGER=OFF \
          -DUSE_CMAKE_FETCH_CONTENT=ON \
          -DCMAKE_BUILD_TYPE=Debug \
-         -DSKIP_TESTS=ON \
          -DENABLE_OPENWSMAN=ON \
          -DMINIFI_OPENSSL=ON \
          -DENABLE_CIVET=ON \
          -DENABLE_CURL=ON \
+         -DSKIP_TESTS=OFF \
+         -DENABLE_EXPRESSION_LANGUAGE=ON \
+         -DENABLE_BZIP2=ON \
+         -DENABLE_ROCKSDB=ON \
+         -DBUILD_ROCKSDB=ON \
          -DENABLE_OPS=OFF \
          -DENABLE_JNI=OFF \
          -DENABLE_OPC=OFF \
          -DENABLE_NANOFI=OFF \
-         -DBUILD_ROCKSDB=OFF \
          -DENABLE_OPS=OFF \
          -DENABLE_JNI=OFF \
          -DENABLE_OPC=OFF \
          -DENABLE_NANOFI=OFF \
-         -DBUILD_ROCKSDB=OFF \
          -DENABLE_SYSTEMD=OFF \
          -DENABLE_PROCFS=OFF \
          -DENABLE_ALL=OFF \
-         -DENABLE_EXPRESSION_LANGUAGE=OFF \
-         -DENABLE_ROCKSDB=OFF \
          -DENABLE_LIBARCHIVE=OFF \
          -DENABLE_LZMA=OFF \
-         -DENABLE_BZIP2=OFF \
          -DENABLE_GPS=OFF \
          -DENABLE_COAP=OFF \
          -DENABLE_SQL=OFF \
@@ -109,7 +118,7 @@ cmake .. -DUSE_CONAN_PACKAGER=OFF \
          -DENABLE_GRPC_FOR_LOKI=OFF \
          -DENABLE_CONTROLLER=OFF
 
-#Build: 
+#Built MiNiFi C++ Core, MainExe, Standard-Processors & Needed Deps wout GTESTs: 
 # 1st FAILED: 9:29PM -9:32PM; 
 # 2nd FAILED: 9:33PM - 9:35PM; 
 # 3rd FAILED: 9:35PM - 9:37PM:
@@ -124,6 +133,10 @@ make
 # 6th SUCCESS: 10:02PM - 10:04PM:
 # 7th SUCCESS: 11PM - 11PM:
 
+make -j $(nproc)
+
+# Built with GTESTs too
+# 1st SUCCESS
 make -j $(nproc)
 ~~~
 
@@ -274,3 +287,12 @@ CMake Error at /home/ubuntu/src/james/pipeline/nifi-minifi-cpp/build_cmake/zlib-
 
           --- LOG END ---
 ~~~
+
+## Appendix: Create Conan Packages for MiNiFi C++ Dependencies
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/rocksdb/all
+conan create . --version=8.10.2 --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+More information on our conan packages: **`nifi-minifi-cpp/thirdparty/README.md`**

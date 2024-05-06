@@ -12,7 +12,7 @@ from conan.tools.cmake import CMakeToolchain, CMake
 
 required_conan_version = ">=1.54 <2.0 || >=2.1.0"
 
-# conan has prebuilt binary conan packages for minifi
+# conan prebuilt binary conan packages for minifi core, mainexe, standard processors
 minifi_core_external_libraries = (
     'libsodium/cci.20220430',
     'zlib/1.3.1',
@@ -35,7 +35,7 @@ minifi_core_external_libraries = (
     # 'rapidjson/cci.20230929',
 )
 
-# since conan doesnt have prebuilt binary conan packages, we have source list
+# conan non prebuilt binary conan packages for minifi core, so we have source list
 minifi_core_external_source_libraries = (
     'catch2/3.5.4',
 )
@@ -44,20 +44,27 @@ minifi_core_external_source_libraries = (
     # 'argparse/3.0',
 # )
 
-shared_requires = minifi_core_external_libraries + minifi_core_external_source_libraries
+shared_requires = minifi_core_external_libraries 
+shared_requires += minifi_core_external_source_libraries 
 
-# packages not available on conancenter
+# packages not available on conancenter or need to be prebuilt with MiNiFi C++ specific patches, etc
     # TODO (JG): Add conan recipes for building these packages from source, 
     # later upload to github packages, so we can maintain our own prebuilt packages
     # format: '{conan_package}/{version}@{user}/{channel}'
     # version: commit hash or official tag version
     # user: minifi, channels: stable, testing or dev, etc
-# - bustache: https://github.com/jamboree/bustache
-# github_pcks_shared_requires = (
-#     'bustache/1a6d442@minifi/dev',
+github_pcks_shared_requires = (
+    'rocksdb/8.10.2@minifi/dev', # nifi-minifi-cpp/thirdparty/rocksdb/all
+#     'bustache/1a6d442@minifi/dev', # - bustache: https://github.com/jamboree/bustache
 #     'ossp-uuid/1.6.2@minifi/dev',
 #     'openwsman/2.7.2@minifi/dev',
-# )
+    # 'bzip2/1.0.8@minifi/dev',
+)
+
+# conan packages for minifi core & standard-processor gtests
+minifi_core_gtests_external_libraries = github_pcks_shared_requires
+
+shared_requires += minifi_core_gtests_external_libraries
 
 linux_requires = (
 
@@ -100,20 +107,27 @@ class MiNiFiCppMain(ConanFile):
         tc = CMakeToolchain(self)
         tc.cache_variables["USE_CONAN_PACKAGER"] = "ON"
         tc.cache_variables["USE_CMAKE_FETCH_CONTENT"] = "OFF"
-        tc.cache_variables["SKIP_TESTS"] = "ON"
 
-        # NEEDED for MiNiFi C++ Core
+        # NEEDED for MiNiFi C++ Core, MainExe, Standard Processors
         tc.cache_variables["ENABLE_OPENWSMAN"] = "ON"
         tc.cache_variables["MINIFI_OPENSSL"] = "ON"
         tc.cache_variables["ENABLE_CIVET"] = "ON"
         tc.cache_variables["ENABLE_CURL"] = "ON"
+
+        # NEEDED for MiNiFi C++ GTESTS
+        tc.cache_variables["SKIP_TESTS"] = "OFF"
+        tc.cache_variables["ENABLE_EXPRESSION_LANGUAGE"] = "ON"
+            # NOTE: Realized Rocksdb depends on ZLib, BZip2, Zstd, Lz4 on standalone CMake and need to be explicitly ON
+                # whereas for rocksdb conan package, these lib deps are already handled by conan package
+        tc.cache_variables["ENABLE_BZIP2"] = "ON"
+        tc.cache_variables["ENABLE_ROCKSDB"] = "ON"
+        tc.cache_variables["BUILD_ROCKSDB"] = "ON"
 
         # NEEDED for MiNiFi C++ Extensions
         tc.cache_variables["ENABLE_OPS"] = "OFF"
         tc.cache_variables["ENABLE_JNI"] = "OFF"
         tc.cache_variables["ENABLE_OPC"] = "OFF"
         tc.cache_variables["ENABLE_NANOFI"] = "OFF"
-        tc.cache_variables["BUILD_ROCKSDB"] = "OFF"
 
         if self.settings.os == "Windows":
             tc.cache_variables["ENABLE_WEL"] = "OFF"
@@ -124,12 +138,10 @@ class MiNiFiCppMain(ConanFile):
             tc.cache_variables["ENABLE_PROCFS"] = "OFF"
 
         tc.cache_variables["ENABLE_ALL"] = "OFF"
-        tc.cache_variables["ENABLE_EXPRESSION_LANGUAGE"] = "OFF"
-        
-        tc.cache_variables["ENABLE_ROCKSDB"] = "OFF"
+
         tc.cache_variables["ENABLE_LIBARCHIVE"] = "OFF"
         tc.cache_variables["ENABLE_LZMA"] = "OFF"
-        tc.cache_variables["ENABLE_BZIP2"] = "OFF"
+
         tc.cache_variables["ENABLE_GPS"] = "OFF"
         tc.cache_variables["ENABLE_COAP"] = "OFF"
         tc.cache_variables["ENABLE_SQL"] = "OFF"

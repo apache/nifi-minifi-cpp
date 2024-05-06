@@ -30,5 +30,6 @@ include(FetchContent)
     )
     FetchContent_MakeAvailable(Catch2)
 
-    add_library(Catch2::Catch2WithMain ALIAS Catch2WithMain)
+    # add_library(Catch2WithMain STATIC IMPORTED)
+    # add_library(Catch2::Catch2WithMain ALIAS Catch2WithMain)
 endif()

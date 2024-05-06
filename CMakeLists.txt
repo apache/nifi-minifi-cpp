@@ -221,10 +221,14 @@ else()
     message(VERBOSE "No custom malloc implementation")
 endif()
 
+# rocksdb needed for minifi C++ GTESTs
 if (ENABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     include(BundledBZip2)
     use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
+
+    include(BundledRocksDB)
+    use_bundled_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 endif()
 
 if(NOT WIN32)
