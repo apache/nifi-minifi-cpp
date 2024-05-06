@@ -136,6 +136,7 @@ void PythonDependencyInstaller::evalScript(std::string_view script) {
   }
 
   OwnedDict bindings = OwnedDict::create();
+  bindings.put("__builtins__", OwnedObject(PyImport_ImportModule("builtins")));
   const auto result = OwnedObject(PyEval_EvalCode(compiled_string.get(), bindings.get(), bindings.get()));
   if (!result.get()) {
     throw PyException();

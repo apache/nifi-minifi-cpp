@@ -20,7 +20,8 @@ Feature: MiNiFi can use python modules
     Given the content of "/tmp/output" is monitored
 
   Scenario: MiNiFi can use python modules
-    Given a GaussianDistributionWithNumpy processor
+    Given the example MiNiFi python processors are present
+    And a GaussianDistributionWithNumpy processor
     And the scheduling period of the GaussianDistributionWithNumpy processor is set to "10 min"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GaussianDistributionWithNumpy processor is connected to the PutFile
