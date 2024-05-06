@@ -91,7 +91,7 @@ def describe(processor):
 
 onInitialize is also passed the processor reference and can be where you set properties. The first argument is the property display name,
 followed by the description, and default value. The next three arguments are booleans describing if the property is required, support expression language, and if it is a sensitive property.
-The last argument is the property type code. The property type code is an integer that represents the type of the property. The supported property type codes and their corresponding types:
+The seventh argument is the property type code. The property type code is an integer that represents the type of the property. The supported property type codes and their corresponding types:
 ```
 INTEGER = 0
 LONG = 1
@@ -102,10 +102,13 @@ NON_BLANK = 5
 PORT = 6
 ```
 
+The last parameter of addProperty is the controller service type. If the property is a controller service, the controller service type should be provided. It should be the non-qualified type name of the controller service. Currently SSLContextService is the only controller service type supported.
+
 ```python
 def onInitialize(processor):
   processor.setSupportsDynamicProperties()
-  processor.addProperty("property name","description","default value", True /*required*/, False /*expression language supported*/, False /*sensitive*/, 1 /*property type code*/)
+  # arguments: property name, description, default value, is required, expression language supported, is sensitive, property type code, controller service type name
+  processor.addProperty("property name", "description", "default value", True, False, False, 1, None)
 ```
 
 The onSchedule function is passed the context and session factory. This should be where your processor loads and reads properties via
@@ -158,7 +161,6 @@ In the flow configuration these Python processors can be referenced by their ful
 
 Due to some differences between the NiFi and MiNiFi C++ processors and implementation, there are some limitations using the NiFi Python processors:
 - Record based processors are not yet supported in MiNiFi C++, so the NiFi Python processors inherited from RecordTransform are not supported.
-- Controller properties are not supported at the moment.
 - There are some validators in NiFi that are not present in MiNiFi C++, so some property validations will be missing using the NiFi Python processors.
 - Allowable values specified in NiFi Python processors are ignored in MiNiFi C++ (due to MiNiFi C++ requiring them to be specified at compile time), so the property values are not pre-verified.
 - MiNiFi C++ only supports expression language with flow file attributes, so only FLOWFILE_ATTRIBUTES expression language scope is supported, otherwise the expression language will not be evaluated.

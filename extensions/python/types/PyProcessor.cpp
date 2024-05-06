@@ -133,7 +133,15 @@ PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
     }
   }
 
-  processor->addProperty(name.toUtf8String(), description.toUtf8String(), default_value, is_required, supports_expression_language, sensitive, validator_value);
+  std::optional<std::string> controller_service_type_name;
+  if (arg_size > 7) {
+    auto controller_service_type_name_pystr = BorrowedStr::fromTuple(args, 7);
+    if (controller_service_type_name_pystr.get() && controller_service_type_name_pystr.get() != Py_None) {
+      controller_service_type_name = controller_service_type_name_pystr.toUtf8String();
+    }
+  }
+
+  processor->addProperty(name.toUtf8String(), description.toUtf8String(), default_value, is_required, supports_expression_language, sensitive, validator_value, controller_service_type_name);
   Py_RETURN_NONE;
 }
 
