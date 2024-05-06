@@ -16,20 +16,19 @@
  * limitations under the License.
  */
 
-#include <cstdio>
-#include <iostream>
+#include <TestUtils.h>
+
 #include <string>
 #include <vector>
 
-#include "io/FileStream.h"
-#include "../TestBase.h"
 #include "../Catch.h"
-#include "utils/gsl.h"
+#include "../TestBase.h"
+#include "io/FileStream.h"
 #include "utils/file/FileUtils.h"
 
 TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   TestController testController;
-  auto path = testController.createTempDirectory() / "tstFile.ext";
+  const auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
   file.open(path, std::ios::out);
@@ -62,7 +61,7 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
 
 TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
   TestController testController;
-  auto path = testController.createTempDirectory() / "tstFile.ext";
+  const auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
   file.open(path, std::ios::out);
@@ -95,7 +94,7 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
 
 TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
   TestController testController;
-  auto path = testController.createTempDirectory() / "tstFile.ext";
+  const auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
   file.open(path, std::ios::out);
@@ -158,7 +157,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 
 TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   TestController testController;
-  auto path = testController.createTempDirectory() / "tstFile.ext";
+  const auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
   file.open(path, std::ios::out);
@@ -218,22 +217,22 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
 
 TEST_CASE("Write zero bytes") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  const auto dir = testController.createTempDirectory();
   minifi::io::FileStream stream(dir / "test.txt", 0, true);
   REQUIRE(stream.write(nullptr, 0) == 0);
 }
 
 TEST_CASE("Read zero bytes") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  const auto dir = testController.createTempDirectory();
   minifi::io::FileStream stream(dir / "test.txt", 0, true);
-  std::byte fake_buffer[1];
+  std::array<std::byte, 1> fake_buffer{};
   REQUIRE(stream.read(std::span(fake_buffer).subspan(0, 0)) == 0);
 }
 
 TEST_CASE("Non-existing file read/write test") {
   TestController test_controller;
-  auto dir = test_controller.createTempDirectory();
+  const auto dir = test_controller.createTempDirectory();
   minifi::io::FileStream stream(dir / "non_existing_file.txt", 0, true);
   REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
   REQUIRE(test_controller.getLog().getInstance().contains("No such file or directory", std::chrono::seconds(0)));
@@ -248,8 +247,8 @@ TEST_CASE("Non-existing file read/write test") {
 
 TEST_CASE("Existing file read/write test") {
   TestController test_controller;
-  auto dir = test_controller.createTempDirectory();
-  auto path_to_existing_file = dir / "existing_file.txt";
+  const auto dir = test_controller.createTempDirectory();
+  const auto path_to_existing_file = dir / "existing_file.txt";
   {
     std::ofstream outfile(path_to_existing_file);
     outfile << "lorem ipsum" << std::endl;
@@ -268,9 +267,11 @@ TEST_CASE("Existing file read/write test") {
 }
 
 TEST_CASE("Opening file without permission creates error logs") {
+  if (utils::runningAsUnixRoot())
+    SKIP("Cannot test insufficient permissions with root user");
   TestController test_controller;
-  auto dir = test_controller.createTempDirectory();
-  auto path_to_permissionless_file = dir / "permissionless_file.txt";
+  const auto dir = test_controller.createTempDirectory();
+  const auto path_to_permissionless_file = dir / "permissionless_file.txt";
   {
     std::ofstream outfile(path_to_permissionless_file);
     outfile << "this file has been just created" << std::endl;
@@ -285,8 +286,8 @@ TEST_CASE("Opening file without permission creates error logs") {
 
 TEST_CASE("Readonly filestream write test") {
   TestController test_controller;
-  auto dir = test_controller.createTempDirectory();
-  auto path_to_file = dir / "file_to_seek_in.txt";
+  const auto dir = test_controller.createTempDirectory();
+  const auto path_to_file = dir / "file_to_seek_in.txt";
   {
     std::ofstream outfile(path_to_file);
     outfile << "lorem ipsum" << std::endl;

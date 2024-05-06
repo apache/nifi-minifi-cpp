@@ -96,6 +96,8 @@ TEST_CASE("FileSystemRepository can clear orphan entries") {
 }
 
 TEST_CASE("FileSystemRepository can retry removing entry that previously failed to be removed") {
+  if (utils::runningAsUnixRoot())
+    SKIP("Cannot test insufficient permissions with root user");
   TestController testController;
   auto dir = testController.createTempDirectory();
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -103,14 +105,12 @@ TEST_CASE("FileSystemRepository can retry removing entry that previously failed 
 
   auto content_repo = std::make_shared<TestFileSystemRepository>();
   REQUIRE(content_repo->initialize(configuration));
-  std::string filename;
   {
     minifi::ResourceClaim claim(content_repo);
     content_repo->write(claim)->write("hi");
     auto files = minifi::utils::file::list_dir_all(dir, testController.getLogger());
     REQUIRE(files.size() == 1);
     // ensure that the content is not deleted during resource claim destruction
-    filename = (files[0].first / files[0].second).string();
     utils::makeFileOrDirectoryNotWritable(dir);
   }
 
@@ -127,6 +127,8 @@ TEST_CASE("FileSystemRepository can retry removing entry that previously failed 
 }
 
 TEST_CASE("FileSystemRepository removes non-existing resource file from purge list") {
+  if (utils::runningAsUnixRoot())
+    SKIP("Cannot test insufficient permissions with root user");
   TestController testController;
   auto dir = testController.createTempDirectory();
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
