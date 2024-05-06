@@ -1,8 +1,8 @@
 name: "MiNiFi-CPP Verify Python Compatibility"
 on: [workflow_dispatch]
 jobs:
-  centos-build:
-    name: "Build centos"
+  rocky-build:
+    name: "Build rocky"
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     steps:
@@ -12,10 +12,10 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.ccache
-          key: centos-build-with-python-ccache-${{github.ref}}-${{github.sha}}
+          key: rocky-build-with-python-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
-            centos-build-with-python-ccache-${{github.ref}}-
-            centos-build-with-python-ccache-refs/heads/main-
+            rocky-build-with-python-ccache-${{github.ref}}-
+            rocky-build-with-python-ccache-refs/heads/main-
       - id: install_deps
         run: |
           sudo apt update
@@ -26,45 +26,45 @@ jobs:
           if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
           mkdir build && cd build && cmake -DENABLE_AWS=OFF -DENABLE_LIBRDKAFKA=OFF -DENABLE_KUBERNETES=OFF -DENABLE_SYSTEMD=OFF -DENABLE_SQL=OFF -DENABLE_MQTT=OFF -DENABLE_GCP=OFF \
               -DENABLE_AZURE=OFF -DENABLE_SPLUNK=OFF -DENABLE_ELASTICSEARCH=OFF -DENABLE_PROMETHEUS=OFF -DDOCKER_BUILD_ONLY=ON -DENABLE_PROCFS=OFF -DENABLE_OPC=OFF \
-              -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make centos
+              -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make rocky
       - uses: actions/upload-artifact@v3
         with:
           name: minifi-tar
-          path: build/nifi-minifi-cpp-*-bin-centos.tar.gz
+          path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
           if-no-files-found: error
 
   docker-tests:
     name: "${{ matrix.platform.name }}"
     runs-on: ubuntu-20.04
     timeout-minutes: 180
-    needs: centos-build
+    needs: rocky-build
     strategy:
       fail-fast: false
       matrix:
         platform: [
           { name: "Rocky Linux 8",
             id: "rocky8",
-            build_cmd: "make rocky8_docker_from_centos_build",
+            build_cmd: "make rocky8_docker_from_rocky_build",
             verify_cmd: "make docker-verify-python-rocky8" },
           { name: "Rocky Linux 9",
             id: "rocky9",
-            build_cmd: "make rocky9_docker_from_centos_build",
+            build_cmd: "make rocky9_docker_from_rocky_build",
             verify_cmd: "make docker-verify-python-rocky9" },
           { name: "Patchelf-ed Ubuntu 22.04",
             id: "patchelfed_ubuntu22.04",
-            build_cmd: "make patched_jammy_docker_from_centos_build",
+            build_cmd: "make patched_jammy_docker_from_rocky_build",
             verify_cmd: "make docker-verify-python-patched_jammy" },
           { name: "Patchelf-ed Debian 11",
             id: "patchelfed_debian11",
-            build_cmd: "make patched_bullseye_docker_from_centos_build",
+            build_cmd: "make patched_bullseye_docker_from_rocky_build",
             verify_cmd: "make docker-verify-python-patched_bullseye" },
           { name: "Ubuntu 22.04 with Anaconda",
             id: "ubuntu22.04_anaconda",
-            build_cmd: "make jammy_docker_from_centos_build && make conda_jammy_docker_from_centos_build",
+            build_cmd: "make jammy_docker_from_rocky_build && make conda_jammy_docker_from_rocky_build",
             verify_cmd: "make docker-verify-python-conda_jammy" },
           { name: "Rocky Linux 9 in virtualenv",
             id: "rocky9_venv",
-            build_cmd: "make rocky9_docker_from_centos_build && make venv_rocky9_docker_from_centos_build",
+            build_cmd: "make rocky9_docker_from_rocky_build && make venv_rocky9_docker_from_rocky_build",
             verify_cmd: "make docker-verify-python-venv_rocky9" }
         ]
 

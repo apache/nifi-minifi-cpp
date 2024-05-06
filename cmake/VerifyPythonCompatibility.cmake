@@ -21,13 +21,13 @@ endif()
 
 set(MINIFI_VERSION_STR ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
-function(ADD_DOCKER_TARGET_FROM_CENTOS BASE_IMAGE TAG_PREFIX INSTALL_PACKAGE_CMD)
+function(ADD_DOCKER_TARGET_FROM_ROCKY BASE_IMAGE TAG_PREFIX INSTALL_PACKAGE_CMD)
     add_custom_target(
-            ${TAG_PREFIX}_docker_from_centos_build
+            ${TAG_PREFIX}_docker_from_rocky_build
             COMMAND DOCKER_BUILDKIT=1 docker build
             --build-arg MINIFI_VERSION=${MINIFI_VERSION_STR}
             --build-arg BASE_IMAGE=${BASE_IMAGE}
-            --build-arg ARCHIVE_LOCATION=nifi-minifi-cpp-${MINIFI_VERSION_STR}-bin-centos.tar.gz
+            --build-arg ARCHIVE_LOCATION=nifi-minifi-cpp-${MINIFI_VERSION_STR}-bin-rockylinux.tar.gz
             --build-arg INSTALL_PACKAGE_CMD=${INSTALL_PACKAGE_CMD}
             -t apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -f ${CMAKE_SOURCE_DIR}/docker/python-verify/installed.Dockerfile
@@ -48,7 +48,7 @@ endfunction()
 
 function(ADD_CONDA_TO_DOCKER TAG_PREFIX)
     add_custom_target(
-            conda_${TAG_PREFIX}_docker_from_centos_build
+            conda_${TAG_PREFIX}_docker_from_rocky_build
             COMMAND DOCKER_BUILDKIT=1 docker build
             --build-arg BASE_IMAGE=apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -t apacheminificpp:conda_${TAG_PREFIX}-${MINIFI_VERSION_STR}
@@ -58,7 +58,7 @@ endfunction()
 
 function(ADD_VENV_TO_DOCKER TAG_PREFIX)
     add_custom_target(
-            venv_${TAG_PREFIX}_docker_from_centos_build
+            venv_${TAG_PREFIX}_docker_from_rocky_build
             COMMAND DOCKER_BUILDKIT=1 docker build
             --build-arg BASE_IMAGE=apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -t apacheminificpp:venv_${TAG_PREFIX}-${MINIFI_VERSION_STR}
@@ -67,11 +67,11 @@ function(ADD_VENV_TO_DOCKER TAG_PREFIX)
 endfunction()
 
 
-ADD_DOCKER_TARGET_FROM_CENTOS(debian:bullseye patched_bullseye "apt update \\&\\& apt install -y patchelf libpython3-dev python3-venv python3-pip wget \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.9.so")
-ADD_DOCKER_TARGET_FROM_CENTOS(ubuntu:jammy patched_jammy "apt update \\&\\& apt install -y patchelf libpython3.10-dev python3.10-venv python3-pip wget \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.10.so.1.0")
-ADD_DOCKER_TARGET_FROM_CENTOS(rockylinux:8 rocky8 "yum install -y python3-libs python3-pip python3-devel gcc-c++ wget")
-ADD_DOCKER_TARGET_FROM_CENTOS(rockylinux:9 rocky9 "yum install -y python3-libs python3-pip wget")
-ADD_DOCKER_TARGET_FROM_CENTOS(ubuntu:jammy jammy "apt update \\&\\& apt install -y wget")
+ADD_DOCKER_TARGET_FROM_ROCKY(debian:bullseye patched_bullseye "apt update \\&\\& apt install -y patchelf libpython3-dev python3-venv python3-pip wget \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.9.so")
+ADD_DOCKER_TARGET_FROM_ROCKY(ubuntu:jammy patched_jammy "apt update \\&\\& apt install -y patchelf libpython3.10-dev python3.10-venv python3-pip wget \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.10.so.1.0")
+ADD_DOCKER_TARGET_FROM_ROCKY(rockylinux:8 rocky8 "yum install -y python3-libs python3-pip python3-devel gcc-c++ wget")
+ADD_DOCKER_TARGET_FROM_ROCKY(rockylinux:9 rocky9 "yum install -y python3-libs python3-pip wget")
+ADD_DOCKER_TARGET_FROM_ROCKY(ubuntu:jammy jammy "apt update \\&\\& apt install -y wget")
 ADD_CONDA_TO_DOCKER(jammy)
 ADD_VENV_TO_DOCKER(rocky9)
 
