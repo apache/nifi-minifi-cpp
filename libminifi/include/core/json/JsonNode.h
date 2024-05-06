@@ -150,7 +150,7 @@ class JsonNode : public flow::Node::NodeImpl {
       return flow::Node{std::make_shared<JsonNode>(nullptr)};
     }
     if (!node_->IsObject()) {
-      throw std::runtime_error(fmt::format("Cannot get member .{} of scalar json value {}", key, getDebugString()));
+      throw std::runtime_error("Cannot get member of scalar json value");
     }
     auto it = node_->FindMember(rapidjson::Value(rapidjson::StringRef(key.data(), key.length())));
     if (it == node_->MemberEnd()) {
