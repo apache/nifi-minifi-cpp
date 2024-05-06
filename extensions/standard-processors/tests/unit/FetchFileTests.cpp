@@ -112,6 +112,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "FileToFetch property set to a non-existe
 
 #ifndef WIN32
 TEST_CASE_METHOD(FetchFileTestFixture, "Permission denied to read file", "[testFetchFile]") {
+  if (utils::runningAsUnixRoot())
+    SKIP("Cannot test insufficient permissions with root user");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::FileToFetch, (input_dir_ / permission_denied_file_name_).string());
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::LogLevelWhenPermissionDenied, "WARN");
   const auto result = test_controller_->trigger("", attributes_);
@@ -255,6 +257,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "After flow completion the fetched file i
 
 #ifndef WIN32
 TEST_CASE_METHOD(FetchFileTestFixture, "Move completion strategy failure due to filesystem error still succeeds flow", "[testFetchFile]") {
+  if (utils::runningAsUnixRoot())
+    SKIP("Cannot test insufficient permissions with root user");
   auto move_dir = test_controller_->createTempDirectory();
   utils::file::FileUtils::set_permissions(move_dir, 0);
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::CompletionStrategy, "Move File");

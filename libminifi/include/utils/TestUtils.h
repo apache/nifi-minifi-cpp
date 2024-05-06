@@ -21,12 +21,10 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
-#include <memory>
 #include <string>
 #include <unordered_set>
 
 #include "utils/file/FileUtils.h"
-#include "utils/Environment.h"
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 
@@ -56,7 +54,7 @@ void makeFileOrDirectoryNotWritable(const std::filesystem::path& file_name);
 
 void makeFileOrDirectoryWritable(const std::filesystem::path& file_name);
 
-Identifier generateUUID() {
+inline Identifier generateUUID() {
   // TODO(hunyadi): Will make the Id generator manage lifetime using a unique_ptr and return a raw ptr on access
   static std::shared_ptr<utils::IdGenerator> id_generator = utils::IdGenerator::getIdGenerator();
   return id_generator->generate();
@@ -114,4 +112,11 @@ class ManualClock : public timeutils::SteadyClock {
 void dateSetInstall(const std::string& install);
 #endif
 
+inline bool runningAsUnixRoot() {
+#ifdef WIN32
+  return false;
+#else
+  return geteuid() == 0;
+#endif
+}
 }  // namespace org::apache::nifi::minifi::utils
