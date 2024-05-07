@@ -1,4 +1,4 @@
-name: "MiNiFi-CPP Verify Python Compatibility"
+name: "MiNiFi-CPP Verify Package"
 on: [workflow_dispatch]
 env:
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
@@ -12,15 +12,15 @@ jobs:
     timeout-minutes: 180
     steps:
       - id: checkout
-        uses: actions/checkout@v3
-      - id: cache
-        uses: actions/cache@v3
+        uses: actions/checkout@v4
+      - name: cache restore
+        uses: actions/cache/restore@v4
         with:
           path: ~/.ccache
-          key: rocky-build-py-ccache-${{github.ref}}-${{github.sha}}
+          key: verify-package-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
-            rocky-build-py-ccache-${{github.ref}}-
-            rocky-build-py-ccache-refs/heads/main-
+            verify-package-ccache-${{github.ref}}-
+            verify-package-ccache-refs/heads/main-
       - id: install_deps
         run: |
           sudo apt update
@@ -35,13 +35,77 @@ jobs:
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: rocky-build-py-ccache-${{github.ref}}-${{github.sha}}
-      - uses: actions/upload-artifact@v3
+          key: verify-package-ccache-${{github.ref}}-${{github.sha}}
+      - uses: actions/upload-artifact@v4
         with:
           name: minifi-tar
           path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
           if-no-files-found: error
 
+  docker-tests:
+    name: "${{ matrix.platform.name }}"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 180
+    needs: rocky-build
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [
+          { name: "Rocky Linux 8",
+            id: "rocky8",
+            build_cmd: "make rocky8_from_rocky_package",
+            verify_cmd: "make docker-verify-rocky8" },
+          { name: "Rocky Linux 9",
+            id: "rocky9",
+            build_cmd: "make rocky9_from_rocky_package",
+            verify_cmd: "make docker-verify-rocky9" },
+          { name: "Ubuntu 22.04",
+            id: "ubuntu_jammy",
+            build_cmd: "make jammy_from_rocky_package",
+            verify_cmd: "make docker-verify-jammy" },
+          { name: "Ubuntu 24.04",
+            id: "ubuntu_noble",
+            build_cmd: "make noble_from_rocky_package",
+            verify_cmd: "make docker-verify-noble" },
+          { name: "Debian 11",
+            id: "debian_bullseye",
+            build_cmd: "make bullseye_from_rocky_package",
+            verify_cmd: "make docker-verify-bullseye" },
+          { name: "Debian 12",
+            id: "debian_bookworm",
+            build_cmd: "make bookworm_from_rocky_package",
+            verify_cmd: "make docker-verify-bookworm" },
+        ]
+
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: minifi-tar
+          path: build
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+      - run: cd build && cmake ${DOCKER_CMAKE_FLAGS} .. \
+                && ${{ matrix.platform.build_cmd }} && ${{ matrix.platform.verify_cmd }}
+      - name: Test Reporter
+        if: always()
+        uses: phoenix-actions/test-reporting@v15
+        with:
+          name: "${{ matrix.platform.name }}"
+          path: build/behavex_output/behave/*.xml
+          reporter: java-junit
+          output-to: 'step-summary'
+          list-tests: 'failed'
+          list-suites: 'failed'
+      - name: Upload artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.id }}_behavex_output
+          path: build/behavex_output
   docker-python-tests:
     name: "${{ matrix.platform.name }}"
     runs-on: ubuntu-20.04
@@ -69,18 +133,18 @@ jobs:
             verify_cmd: "make docker-verify-patched_bullseye_py" },
           { name: "Ubuntu 22.04 with Anaconda Python",
             id: "ubuntu22.04_anaconda",
-            build_cmd: "make jammy_py_from_rocky_package && make conda_jammy_py_docker_from_centos_build",
+            build_cmd: "make jammy_py_from_rocky_package && make conda_jammy_py_from_rocky_package",
             verify_cmd: "make docker-verify-conda_jammy_py" },
           { name: "Rocky Linux 9 in virtualenv Python",
             id: "rocky9_venv",
-            build_cmd: "make rocky9_py_from_rocky_package && make venv_rocky9_py_docker_from_centos_build",
+            build_cmd: "make rocky9_py_from_rocky_package && make venv_rocky9_py_from_rocky_package",
             verify_cmd: "make docker-verify-venv_rocky9_py" }
         ]
 
     steps:
       - id: checkout
-        uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+        uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: minifi-tar
           path: build
@@ -89,7 +153,7 @@ jobs:
           sudo apt update
           sudo apt install -y python3-virtualenv
       - run: cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON .. \
-                && ${{ matrix.platform.build_cmd }} && ${{ matrix.platform.verify_cmd }}
+          && ${{ matrix.platform.build_cmd }} && ${{ matrix.platform.verify_cmd }}
       - name: Test Reporter
         if: always()
         uses: phoenix-actions/test-reporting@v15
@@ -102,7 +166,7 @@ jobs:
           list-suites: 'failed'
       - name: Upload artifact
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.id }}_behavex_output
           path: build/behavex_output

@@ -29,6 +29,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PutAzureBlobStorage
     And the "success" relationship of the PutAzureBlobStorage processor is connected to the PutFile
+    And the "failure" relationship of the PutAzureBlobStorage processor is connected to the PutAzureBlobStorage
 
     And an Azure storage server is set up
 

@@ -43,7 +43,7 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
         self.kubernetes_proxy = kubernetes_proxy
 
         docker_client = docker.from_env()
-        minifi_image = docker_client.images.get(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME + ':' + os.environ['MINIFI_VERSION'])
+        minifi_image = docker_client.images.get(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME + ':' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION)
         minifi_image.tag(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
 
     def _create_container_config_dir(self, config_dir):

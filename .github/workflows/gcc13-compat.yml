@@ -17,7 +17,7 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - id: install_deps
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -43,12 +43,12 @@ jobs:
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
           if [ "$(ls -A /var/lib/apport/coredump/)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: ubuntu-coredumps
           path: /var/lib/apport/coredump/
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: ubuntu-binaries

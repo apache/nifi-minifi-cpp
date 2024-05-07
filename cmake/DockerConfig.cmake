@@ -178,3 +178,4 @@ function(CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE BASE_IMAGE TAG_PREFIX INSTALL_P
 endfunction()
 
 include(VerifyPythonCompatibility)
+include(VerifyPackageWithDocker)

@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: clear cache
         run: |
           python3 -m venv github_env
