@@ -79,13 +79,9 @@ cmake .. -DUSE_CONAN_PACKAGER=OFF \
          -DENABLE_BZIP2=ON \
          -DENABLE_ROCKSDB=ON \
          -DBUILD_ROCKSDB=ON \
-         -DENABLE_OPS=OFF \
+         -DENABLE_OPS=ON \
          -DENABLE_JNI=OFF \
-         -DENABLE_OPC=OFF \
-         -DENABLE_NANOFI=OFF \
-         -DENABLE_OPS=OFF \
-         -DENABLE_JNI=OFF \
-         -DENABLE_OPC=OFF \
+         -DENABLE_OPC=ON \
          -DENABLE_NANOFI=OFF \
          -DENABLE_SYSTEMD=OFF \
          -DENABLE_PROCFS=OFF \
@@ -139,6 +135,8 @@ make -j $(nproc)
 # 1st SUCCESS
 make -j $(nproc)
 ~~~
+
+### Tracking MiNiFi C++ Standalone CMake Build Fails
 
 For reference, while building MiNiFi C++ because we also build the external lib dependencies for building the core-minifi, minifiexe and minifi-standard-processors, we ran into these issues from the extensios on waiting for unfinished jobs and the build failed (we'll rerun MiNiFi C++ to resolve this issue):
 

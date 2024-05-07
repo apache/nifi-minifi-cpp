@@ -30,6 +30,7 @@ class RocksDBConan(ConanFile):
         "with_snappy": [True, False],
         "with_lz4": [True, False],
         "with_zlib": [True, False],
+        "with_bz2": [True, False],
         "with_zstd": [True, False],
         "with_tbb": [True, False],
         "with_jemalloc": [True, False],
@@ -43,6 +44,7 @@ class RocksDBConan(ConanFile):
         "with_snappy": False,
         "with_lz4": True,
         "with_zlib": True,
+        "with_bz2": True,
         "with_zstd": True,
         "with_gflags": False,
         "with_tbb": False,
@@ -92,6 +94,8 @@ class RocksDBConan(ConanFile):
             self.requires("lz4/1.9.4")
         if self.options.with_zlib:
             self.requires("zlib/[>=1.2.11 <2]")
+        if self.options.with_bz2:
+            self.requires("bzip2/1.0.8@minifi/dev") # prebuilt with minifi bz2 patch
         if self.options.with_zstd:
             self.requires("zstd/1.5.5")
         if self.options.get_safe("with_tbb"):
@@ -139,6 +143,7 @@ class RocksDBConan(ConanFile):
         tc.variables["WITH_SNAPPY"] = self.options.with_snappy
         tc.variables["WITH_LZ4"] = self.options.with_lz4
         tc.variables["WITH_ZLIB"] = self.options.with_zlib
+        tc.variables["WITH_BZ2"] = self.options.with_bz2
         tc.variables["WITH_ZSTD"] = self.options.with_zstd
         tc.variables["WITH_TBB"] = self.options.get_safe("with_tbb", False)
         tc.variables["WITH_JEMALLOC"] = self.options.with_jemalloc
@@ -227,6 +232,8 @@ class RocksDBConan(ConanFile):
             self.cpp_info.components["librocksdb"].requires.append("lz4::lz4")
         if self.options.with_zlib:
             self.cpp_info.components["librocksdb"].requires.append("zlib::zlib")
+        if self.options.with_bz2:
+            self.cpp_info.components["librocksdb"].requires.append("bzip2::bzip2")
         if self.options.with_zstd:
             self.cpp_info.components["librocksdb"].requires.append("zstd::zstd")
         if self.options.get_safe("with_tbb"):

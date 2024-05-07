@@ -53,18 +53,32 @@ shared_requires += minifi_core_external_source_libraries
     # format: '{conan_package}/{version}@{user}/{channel}'
     # version: commit hash or official tag version
     # user: minifi, channels: stable, testing or dev, etc
-github_pcks_shared_requires = (
+github_pcks_minifi_core_gtests_ext_libs = (
     'rocksdb/8.10.2@minifi/dev', # nifi-minifi-cpp/thirdparty/rocksdb/all
+    'bzip2/1.0.8@minifi/dev', # need to check if there are any patches used
 #     'bustache/1a6d442@minifi/dev', # - bustache: https://github.com/jamboree/bustache
 #     'ossp-uuid/1.6.2@minifi/dev',
 #     'openwsman/2.7.2@minifi/dev',
-    # 'bzip2/1.0.8@minifi/dev',
+
 )
 
 # conan packages for minifi core & standard-processor gtests
-minifi_core_gtests_external_libraries = github_pcks_shared_requires
+minifi_core_gtests_external_libraries = github_pcks_minifi_core_gtests_ext_libs
 
 shared_requires += minifi_core_gtests_external_libraries
+
+minifi_extension_external_libraries = (
+)
+
+# packages not available on conancenter or need to be prebuilt with MiNiFi C++ specific patches, etc
+github_pcks_minifi_extension_ext_libs = (
+    'mbedtls/2.16.3@minifi/dev', # needed to fix mbedtls packaging issue to allow for open62541 to integrate with it
+    'open62541/1.3.3@minifi/dev', # minifi open62541 expects version 1.3.3 with patches
+)
+
+shared_requires += minifi_extension_external_libraries
+
+shared_requires += github_pcks_minifi_extension_ext_libs
 
 linux_requires = (
 
@@ -124,9 +138,9 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["BUILD_ROCKSDB"] = "ON"
 
         # NEEDED for MiNiFi C++ Extensions
-        tc.cache_variables["ENABLE_OPS"] = "OFF"
-        tc.cache_variables["ENABLE_JNI"] = "OFF"
-        tc.cache_variables["ENABLE_OPC"] = "OFF"
+        tc.cache_variables["ENABLE_OPS"] = "ON"
+        tc.cache_variables["ENABLE_JNI"] = "OFF" # Need to add Maven to my docker env: Could NOT find Maven (missing: MAVEN_EXECUTABLE); extensions jni CMakeLists.txt 29
+        tc.cache_variables["ENABLE_OPC"] = "ON"
         tc.cache_variables["ENABLE_NANOFI"] = "OFF"
 
         if self.settings.os == "Windows":

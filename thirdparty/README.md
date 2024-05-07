@@ -10,6 +10,13 @@ We'll also integrate conan into the MiNiFi C++ **bootstrap.py** file to install 
 
 ## Create Conan Packages for MiNiFi C++ Dependencies
 
+### Create BZip2 Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/bzip2/all
+conan create . --version=1.0.8 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
 ### Create Rocksdb Conan Package
 
 ~~~bash
@@ -57,11 +64,19 @@ Test project /home/ubuntu/src/james/pipeline/nifi-minifi-cpp/thirdparty/rocksdb/
 Total Test time (real) =   0.16 sec
 ~~~
 
-### Create BZip2 Conan Package
+### Create MBedTLS Conan Package
 
 ~~~bash
-pushd nifi-minifi-cpp/thirdparty/bzip2/all
-conan create . --version=1.0.8 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+pushd nifi-minifi-cpp/thirdparty/mbedtls/all
+conan create . --version=2.16.3 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+
+### Create Open62541 Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/open62541/all
+conan create . --version=1.3.3 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
 ~~~
 
 ## References

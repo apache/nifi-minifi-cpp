@@ -16,59 +16,71 @@
 # under the License.
 
 function(use_bundled_open62541 SOURCE_DIR BINARY_DIR)
-    # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/open62541/open62541.patch")
+    message("Using bundled Open62541")
 
-    # Define byproducts
-    if (WIN32)
-        set(BYPRODUCT "lib/open62541.lib")
-    else()
-        include(GNUInstallDirs)
-        string(REPLACE "/" ";" LIBDIR_LIST ${CMAKE_INSTALL_LIBDIR})
-        list(GET LIBDIR_LIST 0 LIBDIR)
-        set(BYPRODUCT "${LIBDIR}/libopen62541.a")
-    endif()
+    if(USE_CONAN_PACKAGER)
+        message("Using Conan Packager to manage installing prebuilt Open62541 external lib")
+        include(${CMAKE_BINARY_DIR}/open62541-config.cmake)
 
-    # Set build options
-    set(OPEN62541_BYPRODUCT_DIR "${BINARY_DIR}/thirdparty/open62541-install")
+        
+    elseif(USE_CMAKE_FETCH_CONTENT)
+        message("Using CMAKE's FetchContent to manage source building Open62541 external lib")
 
-    set(OPEN62541_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-            "-DCMAKE_INSTALL_PREFIX=${OPEN62541_BYPRODUCT_DIR}"
-            -DOPEN62541_VERSION=v1.3.3
-            -DUA_ENABLE_ENCRYPTION=ON
-            -DUA_FORCE_WERROR=OFF)
+        # Define patch step
+        set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/open62541/all/patches/open62541.patch")
 
-    append_third_party_passthrough_args(OPEN62541_CMAKE_ARGS "${OPEN62541_CMAKE_ARGS}")
+        # Define byproducts
+        if (WIN32)
+            set(BYPRODUCT "lib/open62541.lib")
+        else()
+            include(GNUInstallDirs)
+            string(REPLACE "/" ";" LIBDIR_LIST ${CMAKE_INSTALL_LIBDIR})
+            list(GET LIBDIR_LIST 0 LIBDIR)
+            set(BYPRODUCT "${LIBDIR}/libopen62541.a")
+        endif()
 
-    # Build project
-    ExternalProject_Add(
-            open62541-external
-            URL "https://github.com/open62541/open62541/archive/v1.3.3.tar.gz"
-            URL_HASH "SHA256=52c049c0f107b4cc382c9e480d677a6360cdd96c472f84689af91b423bd108cb"
-            SOURCE_DIR "${BINARY_DIR}/thirdparty/open62541-src"
-            PATCH_COMMAND ${PC}
-            LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
-            CMAKE_ARGS ${OPEN62541_CMAKE_ARGS}
-            BUILD_BYPRODUCTS "${OPEN62541_BYPRODUCT_DIR}/${BYPRODUCT}"
-            EXCLUDE_FROM_ALL TRUE
-    )
+        # Set build options
+        set(OPEN62541_BYPRODUCT_DIR "${BINARY_DIR}/thirdparty/open62541-install")
 
-    # Set dependencies
-    add_dependencies(open62541-external mbedTLS::mbedtls)
+        set(OPEN62541_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+                "-DCMAKE_INSTALL_PREFIX=${OPEN62541_BYPRODUCT_DIR}"
+                -DOPEN62541_VERSION=v1.3.3
+                -DUA_ENABLE_ENCRYPTION=ON
+                -DUA_FORCE_WERROR=OFF)
 
-    # Set variables
-    set(OPEN62541_FOUND "YES" CACHE STRING "" FORCE)
-    set(OPEN62541_INCLUDE_DIR "${OPEN62541_BYPRODUCT_DIR}/include" CACHE STRING "" FORCE)
-    set(OPEN62541_LIBRARY "${OPEN62541_BYPRODUCT_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
+        append_third_party_passthrough_args(OPEN62541_CMAKE_ARGS "${OPEN62541_CMAKE_ARGS}")
 
-    # Create imported targets
-    add_library(open62541::open62541 STATIC IMPORTED)
-    set_target_properties(open62541::open62541 PROPERTIES IMPORTED_LOCATION "${OPEN62541_LIBRARY}")
-    add_dependencies(open62541::open62541 open62541-external)
-    file(MAKE_DIRECTORY ${OPEN62541_INCLUDE_DIR})
-    set_property(TARGET open62541::open62541 APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${OPEN62541_INCLUDE_DIR})
-    set_property(TARGET open62541::open62541 APPEND PROPERTY INTERFACE_LINK_LIBRARIES mbedTLS::mbedtls Threads::Threads)
-    if(WIN32)
-        set_property(TARGET open62541::open62541 APPEND PROPERTY INTERFACE_LINK_LIBRARIES Ws2_32.lib Iphlpapi.lib)
+        # Build project
+        ExternalProject_Add(
+                open62541-external
+                URL "https://github.com/open62541/open62541/archive/v1.3.3.tar.gz"
+                URL_HASH "SHA256=52c049c0f107b4cc382c9e480d677a6360cdd96c472f84689af91b423bd108cb"
+                SOURCE_DIR "${BINARY_DIR}/thirdparty/open62541-src"
+                PATCH_COMMAND ${PC}
+                LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
+                CMAKE_ARGS ${OPEN62541_CMAKE_ARGS}
+                BUILD_BYPRODUCTS "${OPEN62541_BYPRODUCT_DIR}/${BYPRODUCT}"
+                EXCLUDE_FROM_ALL TRUE
+        )
+
+        # Set dependencies
+        add_dependencies(open62541-external mbedTLS::mbedtls)
+
+        # Set variables
+        set(OPEN62541_FOUND "YES" CACHE STRING "" FORCE)
+        set(OPEN62541_INCLUDE_DIR "${OPEN62541_BYPRODUCT_DIR}/include" CACHE STRING "" FORCE)
+        set(OPEN62541_LIBRARY "${OPEN62541_BYPRODUCT_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
+
+        # Create imported targets
+        add_library(open62541::open62541 STATIC IMPORTED)
+        set_target_properties(open62541::open62541 PROPERTIES IMPORTED_LOCATION "${OPEN62541_LIBRARY}")
+        add_dependencies(open62541::open62541 open62541-external)
+        
+        file(MAKE_DIRECTORY ${OPEN62541_INCLUDE_DIR})
+        set_property(TARGET open62541::open62541 APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${OPEN62541_INCLUDE_DIR})
+        set_property(TARGET open62541::open62541 APPEND PROPERTY INTERFACE_LINK_LIBRARIES mbedTLS::mbedtls Threads::Threads)
+        if(WIN32)
+            set_property(TARGET open62541::open62541 APPEND PROPERTY INTERFACE_LINK_LIBRARIES Ws2_32.lib Iphlpapi.lib)
+        endif()
     endif()
 endfunction(use_bundled_open62541)
