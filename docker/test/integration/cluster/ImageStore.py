@@ -73,13 +73,25 @@ class ImageStore:
         return image
 
     def __build_minifi_cpp_sql_image(self):
+        if "rocky" in MinifiContainer.MINIFI_TAG_PREFIX:
+            install_sql_cmd = "dnf -y install postgresql-odbc"
+            so_location = "psqlodbca.so"
+        elif "bullseye" in MinifiContainer.MINIFI_TAG_PREFIX or "bookworm" in MinifiContainer.MINIFI_TAG_PREFIX:
+            install_sql_cmd = "apt -y install odbc-postgresql"
+            so_location = "/usr/lib/x86_64-linux-gnu/odbc/psqlodbca.so"
+        elif "jammy" in MinifiContainer.MINIFI_TAG_PREFIX or "noble" in MinifiContainer.MINIFI_TAG_PREFIX:
+            install_sql_cmd = "apt -y install odbc-postgresql"
+            so_location = "/usr/lib/x86_64-linux-gnu/odbc/psqlodbca.so"
+        else:
+            install_sql_cmd = "apk --update --no-cache add psqlodbc"
+            so_location = "psqlodbca.so"
         dockerfile = dedent("""\
                 FROM {base_image}
                 USER root
-                RUN apk --update --no-cache add psqlodbc
+                RUN {install_sql_cmd}
                 RUN echo "[PostgreSQL ANSI]" > /odbcinst.ini.template && \
                     echo "Description=PostgreSQL ODBC driver (ANSI version)" >> /odbcinst.ini.template && \
-                    echo "Driver=psqlodbca.so" >> /odbcinst.ini.template && \
+                    echo "Driver={so_location}" >> /odbcinst.ini.template && \
                     echo "Setup=libodbcpsqlS.so" >> /odbcinst.ini.template && \
                     echo "Debug=0" >> /odbcinst.ini.template && \
                     echo "CommLog=1" >> /odbcinst.ini.template && \
@@ -103,7 +115,8 @@ class ImageStore:
                     echo "Password = password" >> /etc/odbc.ini && \
                     echo "Database = postgres" >> /etc/odbc.ini
                 USER minificpp
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION))
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
+                           install_sql_cmd=install_sql_cmd, so_location=so_location))
 
         return self.__build_image(dockerfile)
 
@@ -128,7 +141,10 @@ class ImageStore:
         parse_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
         chunk_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
         if python_option == PythonOptions.SYSTEM_INSTALLED_PACKAGES:
-            additional_cmd = "RUN pip3 install --break-system-packages 'langchain<=0.17.0'"
+            if not MinifiContainer.MINIFI_TAG_PREFIX:
+                additional_cmd = "RUN pip3 install --break-system-packages 'langchain<=0.17.0'"
+            else:
+                additional_cmd = "RUN pip3 install 'langchain<=0.17.0'"
         elif python_option == PythonOptions.REQUIREMENTS_FILE:
             requirements_install_command = "echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\"
         elif python_option == PythonOptions.INLINE_DEFINED_PACKAGES:

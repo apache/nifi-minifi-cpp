@@ -35,7 +35,7 @@ endfunction()
 
 function(ADD_CONDA_TO_DOCKER TAG_PREFIX)
     add_custom_target(
-            conda_${TAG_PREFIX}_docker_from_rocky_build
+            conda_${TAG_PREFIX}_from_rocky_package
             COMMAND DOCKER_BUILDKIT=1 docker build
             --build-arg BASE_IMAGE=apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -t apacheminificpp:conda_${TAG_PREFIX}-${MINIFI_VERSION_STR}
@@ -45,7 +45,7 @@ endfunction()
 
 function(ADD_VENV_TO_DOCKER TAG_PREFIX)
     add_custom_target(
-            venv_${TAG_PREFIX}_docker_from_rocky_build
+            venv_${TAG_PREFIX}_from_rocky_package
             COMMAND DOCKER_BUILDKIT=1 docker build
             --build-arg BASE_IMAGE=apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -t apacheminificpp:venv_${TAG_PREFIX}-${MINIFI_VERSION_STR}
