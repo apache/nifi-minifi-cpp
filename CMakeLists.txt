@@ -564,7 +564,7 @@ if (NOT WIN32)
         DESTINATION minifi-python-examples
         COMPONENT bin)
 
-    install(PROGRAMS bin/minifi.sh bin/minifi.service
+    install(PROGRAMS bin/minifi.sh bin/minifi.service bin/minifi.plist
         DESTINATION bin
         COMPONENT bin)
 endif()
