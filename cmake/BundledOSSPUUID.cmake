@@ -39,15 +39,16 @@ function(use_bundled_osspuuid SOURCE_DIR BINARY_DIR)
     ENDFOREACH(BYPRODUCT)
 
     # Build project
-    if(WIN32)
-        set(ADDITIONAL_COMPILER_FLAGS "")
-    else()
-        set(ADDITIONAL_COMPILER_FLAGS "-fPIC")
+    if(NOT WIN32)
+        string(APPEND ADDITIONAL_COMPILER_FLAGS "-fPIC ")
+    endif()
+    if(APPLE)
+        string(APPEND ADDITIONAL_COMPILER_FLAGS "-isysroot ${CMAKE_OSX_SYSROOT} ")
     endif()
     set(CONFIGURE_COMMAND ./configure "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${ADDITIONAL_COMPILER_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${ADDITIONAL_COMPILER_FLAGS}" --enable-shared=no --with-cxx --without-perl --without-php --without-pgsql "--prefix=${BINARY_DIR}/thirdparty/ossp-uuid-install")
 
     string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
-    if(NOT build_type MATCHES debug)
+    if(build_type MATCHES debug)
         list(APPEND CONFIGURE_COMMAND --enable-debug=yes)
     endif()
 
@@ -62,8 +63,8 @@ function(use_bundled_osspuuid SOURCE_DIR BINARY_DIR)
             UPDATE_COMMAND ""
             INSTALL_COMMAND make install
             BUILD_BYPRODUCTS ${OSSPUUID_LIBRARIES_LIST}
-            CONFIGURE_COMMAND ""
-            PATCH_COMMAND ${PC} && ${CONFIGURE_COMMAND}
+            CONFIGURE_COMMAND ${CONFIGURE_COMMAND}
+            PATCH_COMMAND ${PC}
             STEP_TARGETS build
             EXCLUDE_FROM_ALL TRUE
     )
