@@ -569,11 +569,11 @@ if (NOT WIN32)
             COMPONENT bin)
 
     if (APPLE)
-        install(PROGRAMS bin/minifi.plist
+        install(FILES bin/minifi.plist
             DESTINATION bin
             COMPONENT bin)
     else()
-        install(PROGRAMS bin/minifi.service
+        install(FILES bin/minifi.service
                 DESTINATION bin
                 COMPONENT bin)
     endif()
