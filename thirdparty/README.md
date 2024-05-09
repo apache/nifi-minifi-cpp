@@ -79,6 +79,29 @@ pushd nifi-minifi-cpp/thirdparty/open62541/all
 conan create . --version=1.3.3 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
 ~~~
 
+### Create LibLZMA XZ_Utils Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/liblzma/xz_utils/all
+conan create . --version=5.2.5 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+
+### Create OpenSSL Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/openssl/3.x.x
+conan create . --version=3.3.0 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+### Create LibArchive Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/libarchive/all
+conan create . --version=3.4.2 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+
 ## References
 
 - [Conan 2 - Devops Guide](https://docs.conan.io/2/devops.html): Designing and implementing conan in production. Shows information on using ConanCenter packages, local recipes index repository, backing up third-party sources, managing package metadata files, versioning, saving and restoring packages from/to cache
