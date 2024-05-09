@@ -75,7 +75,13 @@ FlowSchema FlowSchema::getDefault() {
       .rpg_input_ports = {"Input Ports"},
       .rpg_output_ports = {"Output Ports"},
       .rpg_port_properties = {"Properties"},
-      .rpg_port_target_id = {}
+      .rpg_port_target_id = {},
+
+      .parameter_contexts = {"Parameter Contexts"},
+      .parameters = {"Parameters"},
+      .description = {"description"},
+      .value = {"value"},
+      .parameter_context_name = {"Parameter Context Name"}
   };
 }
 
@@ -135,7 +141,13 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .rpg_input_ports = {"inputPorts"},
       .rpg_output_ports = {"outputPorts"},
       .rpg_port_properties = {},
-      .rpg_port_target_id = {"targetId"}
+      .rpg_port_target_id = {"targetId"},
+
+      .parameter_contexts = {"parameterContexts"},
+      .parameters = {"parameters"},
+      .description = {"description"},
+      .value = {"value"},
+      .parameter_context_name = {"parameterContextName"}
   };
 }
 

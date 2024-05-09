@@ -19,6 +19,7 @@
 
 - [Table of Contents](#table-of-contents)
 - [Configuring](#configuring)
+  - [Parameter Contexts](#parameter-contexts)
   - [Configuring flow configuration format](#configuring-flow-configuration-format)
   - [Scheduling strategies](#scheduling-strategies)
   - [Configuring encryption for flow configuration](#configuring-encryption-for-flow-configuration)
@@ -41,6 +42,7 @@
   - [Configuring Repository storage locations](#configuring-repository-storage-locations)
   - [Configuring compression for rocksdb database](#configuring-compression-for-rocksdb-database)
   - [Configuring compaction for rocksdb database](#configuring-compaction-for-rocksdb-database)
+  - [Global RocksDB options](#global-rocksdb-options)
     - [Shared database](#shared-database)
   - [Configuring Repository encryption](#configuring-repository-encryption)
     - [Mixing encryption with shared backend](#mixing-encryption-with-shared-backend)
@@ -57,6 +59,7 @@
   - [Network Prioritizer Controller Service](#network-prioritizer-controller-service)
   - [Disk space watchdog](#disk-space-watchdog)
   - [Extension configuration](#extension-configuration)
+  - [Python processors](#python-processors)
 - [Log configuration](#log-configuration)
   - [Log appenders](#log-appenders)
   - [Log levels](#log-levels)
@@ -120,7 +123,100 @@ It's recommended to create your configuration in YAML format or configure the ag
                 max concurrent tasks: 1
                 Properties:
 
+Besides YAML configuration format, MiNiFi C++ also supports JSON configuration. To see different uses cases in both formats, please refer to the [examples page](examples/README.md) for flow config examples.
+
 **NOTE:** Make sure to specify id for each component (Processor, Connection, Controller, RPG etc.) to make sure that Apache MiNiFi C++ can reload the state after a process restart. The id should be unique in the flow configuration.
+
+### Parameter Contexts
+
+Processor properties in flow configurations can be parameterized using parameters defined in parameter contexts. Flow configurations can define parameter contexts that define parameter-value pairs to be reused in the flow configuration as per the following rules:
+ - Parameters within a process group can only be used if the parameter context is assigned to that process group.
+ - Each process group can be assigned only one parameter context.
+ - Parameter contexts can be assigned to multiple process groups.
+ - The assigned parameter context has the scope of the process group, but not its child process groups.
+ - The parameters can be used in the flow configuration by using the `#{parameterName}` syntax for processor properties.
+ - Only alpha-numeric characters (a-z, A-Z, 0-9), hyphens ( - ), underscores ( _ ), periods ( . ), and spaces are allowed in parameter name.
+ - `#` character can be used to escape the parameter syntax. E.g. if the `parameterName` parameter's value is `xxx` then `#{parameterName}` will be replaced with `xxx`, `##{parameterName}` will be replaced with `#{parameterName}`, and `#####{parameterName}` will be replaced with `##xxx`.
+ - Parameters can only be used in values of non-sensitive processor properties.
+
+An example for using parameters in a JSON configuration file:
+
+```json
+{
+    "parameterContexts": [
+        {
+            "identifier": "804e6b47-ea22-45cd-a472-545801db98e6",
+            "name": "root-process-group-context",
+            "description": "Root process group parameter context",
+            "parameters": [
+                {
+                    "name": "tail_base_dir",
+                    "description": "Base dir of tailed files",
+                    "value": "/tmp/tail/file/path"
+                }
+            ]
+        }
+    ],
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Tail test_file1.log",
+                "identifier": "83b58f9f-e661-4634-96fb-0e82b92becdf",
+                "type": "org.apache.nifi.minifi.processors.TailFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1000 ms",
+                "properties": {
+                    "File to Tail": "#{tail_base_dir}/test_file1.log"
+                }
+            },
+            {
+                "name": "Tail test_file2.log",
+                "identifier": "8a772a10-7c34-48e7-b152-b1a32c5db83e",
+                "type": "org.apache.nifi.minifi.processors.TailFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1000 ms",
+                "properties": {
+                    "File to Tail": "#{tail_base_dir}/test_file2.log"
+                }
+            }
+        ],
+        "parameterContextName": "root-process-group-context"
+    }
+}
+```
+
+An example for using parameters in a YAML configuration file:
+
+```yaml
+    MiNiFi Config Version: 3
+    Flow Controller:
+      name: MiNiFi Flow
+    Parameter Contexts:
+      - id: 804e6b47-ea22-45cd-a472-545801db98e6
+        name: root-process-group-context
+        description: Root process group parameter context
+        Parameters:
+        - name: tail_base_dir
+          description: 'Base dir of tailed files'
+          value: /tmp/tail/file/path
+    Processors:
+    - name: Tail test_file1.log
+      id: 83b58f9f-e661-4634-96fb-0e82b92becdf
+      class: org.apache.nifi.minifi.processors.TailFile
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1000 ms
+      Properties:
+        File to Tail: "#{tail_base_dir}/test_file1.log"
+    - name: Tail test_file2.log
+      id: 8a772a10-7c34-48e7-b152-b1a32c5db83e
+      class: org.apache.nifi.minifi.processors.TailFile
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1000 ms
+      Properties:
+        File to Tail: "#{tail_base_dir}/test_file2.log"
+    Parameter Context Name: root-process-group-context
+```
 
 ### Configuring flow configuration format
 

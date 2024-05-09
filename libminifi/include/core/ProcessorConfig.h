@@ -50,6 +50,7 @@ struct ProcessorConfig {
   std::string runDurationNanos;
   std::vector<std::string> autoTerminatedRelationships;
   std::vector<core::Property> properties;
+  std::string parameterContextName;
 };
 
 }  // namespace core

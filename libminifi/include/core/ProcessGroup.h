@@ -217,6 +217,9 @@ class ProcessGroup : public CoreComponent {
 
   void verify() const;
 
+  void setParameterContextName(const std::string &name);
+  std::string getParameterContextName() const;
+
  protected:
   void startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler);
 
@@ -250,6 +253,8 @@ class ProcessGroup : public CoreComponent {
   // controller services
 
   core::controller::ControllerServiceNodeMap controller_service_map_;
+
+  std::string parameter_context_name_;
 
  private:
   static Port* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid);
