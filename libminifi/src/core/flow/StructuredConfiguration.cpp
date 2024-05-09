@@ -28,6 +28,8 @@
 #include "utils/TimeUtil.h"
 #include "utils/RegexUtils.h"
 #include "Funnel.h"
+#include "core/ParameterContext.h"
+#include "core/ParameterTokenParser.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -94,7 +96,9 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
   Node outputPortsNode = node[schema_.output_ports];
   Node remoteProcessingGroupsNode = node[schema_.remote_process_group];
   Node childProcessGroupNodeSeq = node[schema_.process_groups];
+  Node parameterContextNameNode = node[schema_.parameter_context_name];
 
+  parseParameterContext(parameterContextNameNode, *group);
   parseProcessorNode(processorsNode, group.get());
   parseRemoteProcessGroup(remoteProcessingGroupsNode, group.get());
   parseFunnels(funnelsNode, group.get());
@@ -116,9 +120,11 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
   try {
     schema_ = std::move(schema);
     uuids_.clear();
+    Node parameterContextsNode = root_node[schema_.parameter_contexts];
     Node controllerServiceNode = root_node[schema_.root_group][schema_.controller_services];
     Node provenanceReportNode = root_node[schema_.provenance_reporting];
 
+    parseParameterContexts(parameterContextsNode);
     parseControllerServices(controllerServiceNode);
     // Create the root process group
     std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
@@ -136,6 +142,36 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
   } catch (const std::exception& ex) {
     logger_->log_error("Error while processing configuration file: {}", ex.what());
     throw;
+  }
+}
+
+void StructuredConfiguration::parseParameterContexts(const Node& parameter_contexts_node) {
+  if (!parameter_contexts_node || !parameter_contexts_node.isSequence()) {
+    return;
+  }
+  for (const auto& parameter_context_node : parameter_contexts_node) {
+    checkRequiredField(parameter_context_node, schema_.name);
+
+    auto name = parameter_context_node[schema_.name].getString().value();
+    if (parameter_contexts_.find(name) != parameter_contexts_.end()) {
+      throw std::invalid_argument("Parameter context name '" + name + "' already exists, parameter context names must be unique!");
+    }
+    auto id = getRequiredIdField(parameter_context_node);
+
+    utils::Identifier uuid;
+    uuid = id;
+    auto parameter_context = std::make_unique<ParameterContext>(name, uuid);
+    parameter_context->setDescription(getOptionalField(parameter_context_node, schema_.description, ""));
+    for (const auto& parameter_node : parameter_context_node[schema_.parameters]) {
+      checkRequiredField(parameter_node, schema_.name);
+      checkRequiredField(parameter_node, schema_.value);
+      auto parameter_name = parameter_node[schema_.name].getString().value();
+      auto parameter_value = parameter_node[schema_.value].getString().value();
+      auto parameter_description = getOptionalField(parameter_node, schema_.description, "");
+      parameter_context->addParameter(Parameter{parameter_name, parameter_description, parameter_value});
+    }
+
+    parameter_contexts_.emplace(name, gsl::make_not_null(std::move(parameter_context)));
   }
 }
 
@@ -230,7 +266,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
 
     // handle processor properties
     if (Node propertiesNode = procNode[schema_.processor_properties]) {
-      parsePropertiesNode(propertiesNode, *processor, procCfg.name);
+      parsePropertiesNode(propertiesNode, *processor, procCfg.name, parentGroup->getParameterContext());
     }
 
     // Take care of scheduling
@@ -505,9 +541,9 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
       controller_service_node->initialize();
       if (Node propertiesNode = service_node[schema_.controller_service_properties]) {
         // we should propagate properties to the node and to the implementation
-        parsePropertiesNode(propertiesNode, *controller_service_node, name);
+        parsePropertiesNode(propertiesNode, *controller_service_node, name, nullptr);
         if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
-          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name);
+          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, nullptr);
         }
       }
     } else {
@@ -599,9 +635,9 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 
   // handle port properties
   if (Node propertiesNode = port_node[schema_.rpg_port_properties]) {
-    parsePropertiesNode(propertiesNode, *port, nameStr);
+    parsePropertiesNode(propertiesNode, *port, nameStr, nullptr);
   } else {
-    parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port);
+    parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port, nullptr);
     validateComponentProperties(*port, nameStr, port_node.getPath());
   }
 
@@ -621,7 +657,8 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   }
 }
 
-void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component) {
+void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component,
+    ParameterContext* parameter_context) {
   core::Property myProp(property_name, "", "");
   component.getProperty(property_name, myProp);
 
@@ -632,13 +669,22 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
       if (myProp.isSensitive()) {
         rawValueString = utils::crypto::property_encryption::decrypt(rawValueString, sensitive_properties_encryptor_);
       }
+
+      try {
+        core::ParameterTokenParser token_parser(rawValueString);
+        rawValueString = token_parser.replaceParameters(parameter_context, myProp.isSensitive());
+      } catch (const ParameterException& e) {
+        logger_->log_error("Error while substituting parameters in property '{}': {}", property_name, e.what());
+        throw;
+      }
+
       logger_->log_debug("Found property {}", property_name);
 
       if (!component.updateProperty(property_name, rawValueString)) {
         auto proc = dynamic_cast<core::Connectable*>(&component);
         if (proc) {
           logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
-          if (!component.setDynamicProperty(property_name, rawValueString)) {
+          if (!component.updateDynamicProperty(property_name, rawValueString)) {
             logger_->log_warn("Unable to set the dynamic property {}", property_name);
           } else {
             logger_->log_warn("Dynamic property {} has been set", property_name);
@@ -649,7 +695,8 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
   }
 }
 
-PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node) {
+PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node,
+    ParameterContext* parameter_context) {
   using state::response::Value;
   PropertyValue defaultValue;
   defaultValue = property_from_processor.getDefaultValue();
@@ -667,14 +714,23 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
       coercedValue = gsl::narrow<int>(int64_val.value());
     } else if (defaultType == Value::BOOL_TYPE && property_value_node.getBool()) {
       coercedValue = property_value_node.getBool().value();
-    } else if (property_from_processor.isSensitive()) {
-      coercedValue = utils::crypto::property_encryption::decrypt(property_value_node.getScalarAsString().value(), sensitive_properties_encryptor_);
     } else {
-      coercedValue = property_value_node.getScalarAsString().value();
+      std::string property_value_string;
+      if (property_from_processor.isSensitive()) {
+        property_value_string = utils::crypto::property_encryption::decrypt(property_value_node.getScalarAsString().value(), sensitive_properties_encryptor_);
+      } else {
+        property_value_string = property_value_node.getScalarAsString().value();
+      }
+      core::ParameterTokenParser token_parser(property_value_string);
+      property_value_string = token_parser.replaceParameters(parameter_context, property_from_processor.isSensitive());
+      coercedValue = property_value_string;
     }
     return coercedValue;
   } catch (const utils::crypto::EncryptionError& e) {
     logger_->log_error("Fetching property failed with a decryption error: {}", e.what());
+    throw;
+  } catch (const ParameterException& e) {
+    logger_->log_error("Error while substituting parameters in property '{}': {}", property_from_processor.getName(), e.what());
     throw;
   } catch (const std::exception& e) {
     logger_->log_error("Fetching property failed with an exception of {}", e.what());
@@ -685,11 +741,12 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
   return defaultValue;
 }
 
-void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor) {
+void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor,
+    ParameterContext* parameter_context) {
   core::Property myProp(property_name, "", "");
   processor.getProperty(property_name, myProp);
 
-  const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, property_value_node);
+  PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, property_value_node, parameter_context);
 
   bool property_set = false;
   try {
@@ -704,7 +761,7 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     throw;
   }
   if (!property_set) {
-    const auto rawValueString = property_value_node.getScalarAsString().value();
+    const auto rawValueString = coercedValue.getValue()->getStringValue();
     auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
       logger_->log_warn("Received property {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, proc->getName());
@@ -719,25 +776,27 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
   }
 }
 
-void StructuredConfiguration::parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor) {
+void StructuredConfiguration::parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor,
+    ParameterContext* parameter_context) {
   logger_->log_trace("Encountered {}", property_name);
   if (!property_value_node || property_value_node.isNull()) {
     return;
   }
   if (property_value_node.isSequence()) {
-    parsePropertyValueSequence(property_name, property_value_node, processor);
+    parsePropertyValueSequence(property_name, property_value_node, processor, parameter_context);
   } else {
-    parseSingleProperty(property_name, property_value_node, processor);
+    parseSingleProperty(property_name, property_value_node, processor, parameter_context);
   }
 }
 
-void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name) {
+void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name,
+    ParameterContext* parameter_context) {
   // Treat generically as a node so we can perform inspection on entries to ensure they are populated
   logger_->log_trace("Entered {}", component_name);
   for (const auto& property_node : properties_node) {
     const auto propertyName = property_node.first.getString().value();
     const Node propertyValueNode = property_node.second;
-    parsePropertyNodeElement(propertyName, propertyValueNode, component);
+    parsePropertyNodeElement(propertyName, propertyValueNode, component, parameter_context);
   }
 
   validateComponentProperties(component, component_name, properties_node.getPath());
@@ -796,6 +855,21 @@ void StructuredConfiguration::parsePorts(const flow::Node& node, core::ProcessGr
     port->setScheduledState(core::RUNNING);
     port->setSchedulingStrategy(core::EVENT_DRIVEN);
     parent->addPort(std::move(port));
+  }
+}
+
+void StructuredConfiguration::parseParameterContext(const flow::Node& node, core::ProcessGroup& parent) {
+  if (!node) {
+    return;
+  }
+
+  auto parameter_context_name = node.getString().value();
+  if (parameter_context_name.empty()) {
+    return;
+  }
+
+  if (parameter_contexts_.find(parameter_context_name) != parameter_contexts_.end()) {
+    parent.setParameterContext(parameter_contexts_.at(parameter_context_name).get());
   }
 }
 

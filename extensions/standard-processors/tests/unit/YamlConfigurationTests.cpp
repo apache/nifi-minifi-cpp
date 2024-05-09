@@ -29,8 +29,11 @@
 #include "utils/StringUtils.h"
 #include "unit/ConfigurationTestController.h"
 #include "unit/TestUtils.h"
+#include "core/Resource.h"
 
 using namespace std::literals::chrono_literals;
+
+namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   ConfigurationTestController test_controller;
@@ -145,7 +148,7 @@ Provenance Reporting:
 
     REQUIRE(rootFlowConfig);
     REQUIRE(rootFlowConfig->findProcessorByName("TailFile"));
-    utils::Identifier uuid = rootFlowConfig->findProcessorByName("TailFile")->getUUID();
+    minifi::utils::Identifier uuid = rootFlowConfig->findProcessorByName("TailFile")->getUUID();
     REQUIRE(uuid);
     REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
     REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
@@ -210,7 +213,7 @@ Remote Processing Groups: []
 Provenance Reporting:
       )";
 
-    REQUIRE_THROWS_AS(yamlConfig.getRootFromPayload(CONFIG_YAML_EMPTY_RETRY_ATTRIBUTE), utils::internal::InvalidValueException);
+    REQUIRE_THROWS_AS(yamlConfig.getRootFromPayload(CONFIG_YAML_EMPTY_RETRY_ATTRIBUTE), minifi::utils::internal::InvalidValueException);
     REQUIRE(LogTestController::getInstance().contains("Invalid value was set for property 'Retry Attribute' creating component 'RetryFlowFile'"));
   }
 }
@@ -455,7 +458,7 @@ NiFi Properties Overrides: {}
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("TailFile"));
-  utils::Identifier uuid = rootFlowConfig->findProcessorByName("TailFile")->getUUID();
+  minifi::utils::Identifier uuid = rootFlowConfig->findProcessorByName("TailFile")->getUUID();
   REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
@@ -497,7 +500,7 @@ Processors:
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile"));
-  const utils::Identifier uuid = rootFlowConfig->findProcessorByName("GenerateFlowFile")->getUUID();
+  const minifi::utils::Identifier uuid = rootFlowConfig->findProcessorByName("GenerateFlowFile")->getUUID();
   REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("GenerateFlowFile")->getUUIDStr().empty());
 
@@ -526,7 +529,7 @@ Processors:
 
     REQUIRE(rootFlowConfig);
     REQUIRE(rootFlowConfig->findProcessorByName("GetFile"));
-    utils::Identifier uuid = rootFlowConfig->findProcessorByName("GetFile")->getUUID();
+    minifi::utils::Identifier uuid = rootFlowConfig->findProcessorByName("GetFile")->getUUID();
     REQUIRE(uuid);
     REQUIRE(!rootFlowConfig->findProcessorByName("GetFile")->getUUIDStr().empty());
   } catch (const std::exception &e) {
@@ -557,7 +560,7 @@ Processors:
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("XYZ"));
-  utils::Identifier uuid = rootFlowConfig->findProcessorByName("XYZ")->getUUID();
+  minifi::utils::Identifier uuid = rootFlowConfig->findProcessorByName("XYZ")->getUUID();
   REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("XYZ")->getUUIDStr().empty());
 }
@@ -720,7 +723,7 @@ Remote Process Groups: []
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile1"));
   REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile2"));
-  REQUIRE(rootFlowConfig->findProcessorById(utils::Identifier::parse("01a2f910-7050-41c1-8528-942764e7591d").value()));
+  REQUIRE(rootFlowConfig->findProcessorById(minifi::utils::Identifier::parse("01a2f910-7050-41c1-8528-942764e7591d").value()));
 
   std::map<std::string, minifi::Connection*> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
@@ -783,7 +786,7 @@ TEST_CASE("Test UUID duplication checks", "[YamlConfiguration]") {
               class: SSLContextService
             )";
 
-      utils::string::replaceAll(config_yaml, std::string("00000000-0000-0000-0000-00000000000") + i, "99999999-9999-9999-9999-999999999999");
+      minifi::utils::string::replaceAll(config_yaml, std::string("00000000-0000-0000-0000-00000000000") + i, "99999999-9999-9999-9999-999999999999");
       REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(config_yaml), "General Operation: UUID 99999999-9999-9999-9999-999999999999 is duplicated in the flow configuration");
     }
   }
@@ -1072,3 +1075,582 @@ TEST_CASE("Test serialization", "[YamlConfiguration]") {
   const std::string serialized_flow_definition_masked = std::regex_replace(serialized_flow_definition, std::regex{"enc\\{.*\\}"}, "enc{...}");
   CHECK(serialized_flow_definition_masked == TEST_FLOW_WITH_SENSITIVE_PROPERTIES_ENCRYPTED);
 }
+
+TEST_CASE("Yaml configuration can use parameter contexts", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: Simple TailFile
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: lookup.frequency
+      description: ''
+      value: 12 min
+    - name: batch_size
+      description: ''
+      value: 12
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.standard.TailFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Batch Size: "#{batch_size}"
+    File to Tail: ./logs/minifi-app.log
+    Initial Start Position: Beginning of File
+    tail-mode: Single file
+    Lookup frequency: "#{lookup.frequency}"
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections: []
+Parameter Context Name: my-context
+NiFi Properties Overrides: {}
+      )";
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+  auto* proc = flow->findProcessorByName("TailFile");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Batch Size") == "12");
+  REQUIRE(proc->getProperty("Lookup frequency") == "12 min");
+}
+
+TEST_CASE("Yaml config should not replace parameter from different parameter context", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: Simple TailFile
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: lookup.frequency
+      description: ''
+      value: 12 min
+  - id: 123e10b7-8e00-3188-9a27-476cca376978
+    name: other-context
+    description: my other context
+    Parameters:
+    - name: batch_size
+      description: ''
+      value: 1
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.standard.TailFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Batch Size: "#{batch_size}"
+    File to Tail: ./logs/minifi-app.log
+    Initial Start Position: Beginning of File
+    tail-mode: Single file
+    Lookup frequency: "#{lookup.frequency}"
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections: []
+Parameter Context Name: my-context
+NiFi Properties Overrides: {}
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter Operation: Parameter 'batch_size' not found");
+}
+
+TEST_CASE("Cannot use the same parameter context name twice", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: Simple TailFile
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: lookup.frequency
+      description: ''
+      value: 12 min
+  - id: 123e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: batch_size
+      description: ''
+      value: 1
+Processors: []
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections: []
+Parameter Context Name: my-context
+NiFi Properties Overrides: {}
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter context name 'my-context' already exists, parameter context names must be unique!");
+}
+
+TEST_CASE("Cannot use the same parameter name within a parameter context twice", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: Simple TailFile
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: lookup.frequency
+      description: ''
+      value: 12 min
+    - name: lookup.frequency
+      description: ''
+      value: 1 min
+Processors: []
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections: []
+Parameter Context Name: my-context
+NiFi Properties Overrides: {}
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML),
+    "Parameter Operation: Parameter name 'lookup.frequency' already exists, parameter names must be unique within a parameter context!");
+}
+
+class DummyFlowYamlProcessor : public core::Processor {
+ public:
+  using core::Processor::Processor;
+
+  static constexpr const char* Description = "A processor that does nothing.";
+  static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")
+      .withDescription("Just a simple string property")
+      .build();
+  static constexpr auto SensitiveProperty = core::PropertyDefinitionBuilder<>::createProperty("Sensitive Property")
+      .withDescription("Sensitive property")
+      .isSensitive(true)
+      .build();
+  static constexpr auto Properties = std::array<core::PropertyReference, 2>{SimpleProperty, SensitiveProperty};
+  static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
+  static constexpr bool SupportsDynamicProperties = true;
+  static constexpr bool SupportsDynamicRelationships = true;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void initialize() override { setSupportedProperties(Properties); }
+};
+
+REGISTER_RESOURCE(DummyFlowYamlProcessor, Processor);
+
+TEST_CASE("Cannot use non-sensitive parameter in sensitive property", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: my_value
+      description: ''
+      value: value1
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: simple
+    Sensitive Property: "#{my_value}"
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections: []
+Parameter Context Name: my-context
+NiFi Properties Overrides: {}
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter Operation: Non-sensitive parameter 'my_value' cannot be referenced in a sensitive property");
+}
+
+TEST_CASE("Cannot use non-sensitive parameter in sensitive property value sequence", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: my_value
+      description: ''
+      value: value1
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: simple
+    Sensitive Property:
+    - value: first value
+    - value: "#{my_value}"
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections: []
+Parameter Context Name: my-context
+NiFi Properties Overrides: {}
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter Operation: Non-sensitive parameter 'my_value' cannot be referenced in a sensitive property");
+}
+
+TEST_CASE("Parameters can be used in nested process groups", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: Simple TailFile
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: lookup.frequency
+      description: ''
+      value: 12 min
+  - id: 123e10b7-8e00-3188-9a27-476cca376456
+    name: sub-context
+    description: my sub context
+    Parameters:
+    - name: batch_size
+      description: ''
+      value: 12
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.standard.TailFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Batch Size: 1
+    File to Tail: ./logs/minifi-app.log
+    Initial Start Position: Beginning of File
+    tail-mode: Single file
+    Lookup frequency: "#{lookup.frequency}"
+Controller Services: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections: []
+Parameter Context Name: my-context
+Process Groups:
+  - id: 2a3aaf32-8574-4fa7-b720-84001f8dde43
+    name: Sub process group
+    Processors:
+    - id: 12304f28-0158-1000-0000-000000000000
+      name: SubTailFile
+      class: org.apache.nifi.processors.standard.TailFile
+      max concurrent tasks: 1
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1 sec
+      auto-terminated relationships list: [success]
+      Properties:
+        Batch Size: "#{batch_size}"
+        File to Tail: ./logs/minifi-app.log
+        Initial Start Position: Beginning of File
+        tail-mode: Single file
+        Lookup frequency: 1 sec
+    Parameter Context Name: sub-context
+      )";
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+  auto* proc = flow->findProcessorByName("TailFile");
+  REQUIRE(proc);
+  CHECK(proc->getProperty("Batch Size") == "1");
+  CHECK(proc->getProperty("Lookup frequency") == "12 min");
+  auto* subproc = flow->findProcessorByName("SubTailFile");
+  REQUIRE(subproc);
+  CHECK(subproc->getProperty("Batch Size") == "12");
+  CHECK(subproc->getProperty("Lookup frequency") == "1 sec");
+}
+
+TEST_CASE("Subprocessgroups cannot inherit parameters from parent processgroup", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: Simple TailFile
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: lookup.frequency
+      description: ''
+      value: 12 min
+  - id: 123e10b7-8e00-3188-9a27-476cca376456
+    name: sub-context
+    description: my sub context
+    Parameters:
+    - name: batch_size
+      description: ''
+      value: 12
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.standard.TailFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Batch Size: 1
+    File to Tail: ./logs/minifi-app.log
+    Initial Start Position: Beginning of File
+    tail-mode: Single file
+    Lookup frequency: "#{lookup.frequency}"
+Controller Services: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections: []
+Parameter Context Name: my-context
+Process Groups:
+  - id: 2a3aaf32-8574-4fa7-b720-84001f8dde43
+    name: Sub process group
+    Processors:
+    - id: 12304f28-0158-1000-0000-000000000000
+      name: SubTailFile
+      class: org.apache.nifi.processors.standard.TailFile
+      max concurrent tasks: 1
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1 sec
+      auto-terminated relationships list: [success]
+      Properties:
+        Batch Size: "#{batch_size}"
+        File to Tail: ./logs/minifi-app.log
+        Initial Start Position: Beginning of File
+        tail-mode: Single file
+        Lookup frequency: "#{lookup.frequency}"
+    Parameter Context Name: sub-context
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter Operation: Parameter 'lookup.frequency' not found");
+}
+
+TEST_CASE("Cannot use parameters if no parameter context is defined", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{my_value}"
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter Operation: Property references a parameter in its value, but no parameter context was provided.");
+}
+
+TEST_CASE("Cannot use parameters in property value sequences if no parameter context is defined", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property:
+    - value: "#{first_value}"
+    - value: "#{second_value}"
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter Operation: Property references a parameter in its value, but no parameter context was provided.");
+}
+
+TEST_CASE("Property value sequences can use parameters", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flow
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: first_value
+      description: ''
+      value: value1
+    - name: second_value
+      description: ''
+      value: value2
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property:
+    - value: "#{first_value}"
+    - value: "#{second_value}"
+Parameter Context Name: my-context
+      )";
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+  auto* proc = flow->findProcessorByName("DummyProcessor");
+  REQUIRE(proc);
+  core::Property property("Simple Property", "");
+  proc->getProperty("Simple Property", property);
+  auto values = property.getValues();
+  REQUIRE(values.size() == 2);
+  CHECK(values[0] == "value1");
+  CHECK(values[1] == "value2");
+}
+
+TEST_CASE("Dynamic properties can use parameters", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flow
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: first_value
+      description: ''
+      value: value1
+    - name: second_value
+      description: ''
+      value: value2
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    My Dynamic Property Sequence:
+    - value: "#{first_value}"
+    - value: "#{second_value}"
+    My Dynamic Property: "#{first_value}"
+Parameter Context Name: my-context
+      )";
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("DummyProcessor");
+  REQUIRE(proc);
+  core::Property property("My Dynamic Property Sequence", "");
+  proc->getDynamicProperty("My Dynamic Property Sequence", property);
+  auto values = property.getValues();
+  REQUIRE(values.size() == 2);
+  CHECK(values[0] == "value1");
+  CHECK(values[1] == "value2");
+  std::string value;
+  REQUIRE(proc->getDynamicProperty("My Dynamic Property", value));
+  CHECK(value == "value1");
+}
+
+}  // namespace org::apache::nifi::minifi::test

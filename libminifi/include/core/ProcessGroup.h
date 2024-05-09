@@ -42,6 +42,7 @@
 #include "http/BaseHTTPClient.h"
 #include "utils/CallBackTimer.h"
 #include "range/v3/algorithm/find_if.hpp"
+#include "core/ParameterContext.h"
 
 struct ProcessGroupTestAccessor;
 
@@ -217,6 +218,9 @@ class ProcessGroup : public CoreComponent {
 
   void verify() const;
 
+  void setParameterContext(ParameterContext* parameter_context);
+  ParameterContext* getParameterContext() const;
+
  protected:
   void startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler);
 
@@ -250,6 +254,8 @@ class ProcessGroup : public CoreComponent {
   // controller services
 
   core::controller::ControllerServiceNodeMap controller_service_map_;
+
+  ParameterContext* parameter_context_ = nullptr;
 
  private:
   static Port* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid);

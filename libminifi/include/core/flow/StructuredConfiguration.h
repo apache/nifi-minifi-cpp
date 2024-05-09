@@ -71,6 +71,7 @@ class StructuredConfiguration : public FlowConfiguration {
   std::unique_ptr<core::ProcessGroup> createProcessGroup(const Node& node, bool is_root = false);
 
   std::unique_ptr<core::ProcessGroup> parseProcessGroup(const Node& header_node, const Node& node, bool is_root = false);
+
   /**
    * Parses processors from its corresponding config node and adds
    * them to a parent ProcessGroup. The processors_node argument must point
@@ -107,6 +108,7 @@ class StructuredConfiguration : public FlowConfiguration {
    */
   std::unique_ptr<core::ProcessGroup> parseRootProcessGroup(const Node& root_flow_node);
 
+  void parseParameterContexts(const Node& parameter_contexts_node);
   void parseControllerServices(const Node& controller_services_node);
 
   /**
@@ -149,7 +151,7 @@ class StructuredConfiguration : public FlowConfiguration {
    * @param properties_node the Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name);
+  void parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name, ParameterContext* parameter_context);
 
   /**
    * Parses the Funnels section of a configuration.
@@ -172,6 +174,8 @@ class StructuredConfiguration : public FlowConfiguration {
    *                 to add the funnels that are parsed
    */
   void parsePorts(const flow::Node& node, core::ProcessGroup* parent, PortType port_type);
+
+  void parseParameterContext(const flow::Node& node, core::ProcessGroup& parent);
 
   /**
    * A helper function for parsing or generating optional id fields.
@@ -216,10 +220,10 @@ class StructuredConfiguration : public FlowConfiguration {
   std::shared_ptr<logging::Logger> logger_;
 
  private:
-  PropertyValue getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node);
-  void parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component);
-  void parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
-  void parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
+  PropertyValue getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node, ParameterContext* parameter_context);
+  void parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component, ParameterContext* parameter_context);
+  void parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor, ParameterContext* parameter_context);
+  void parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor, ParameterContext* parameter_context);
   void addNewId(const std::string& uuid);
 
   /**

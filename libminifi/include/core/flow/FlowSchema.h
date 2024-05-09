@@ -80,6 +80,12 @@ struct FlowSchema {
   Keys rpg_port_properties;
   Keys rpg_port_target_id;
 
+  Keys parameter_contexts;
+  Keys parameters;
+  Keys description;
+  Keys value;
+  Keys parameter_context_name;
+
   static FlowSchema getDefault();
   static FlowSchema getNiFiFlowJson();
 };
