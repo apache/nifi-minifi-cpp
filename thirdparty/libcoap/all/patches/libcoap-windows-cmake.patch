@@ -1,6 +1,6 @@
-diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
---- orig/CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
-+++ patched/CMakeLists.txt	2019-11-21 17:42:30.000000000 +0100
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
 @@ -0,0 +1,77 @@
 +cmake_minimum_required(VERSION 3.10)
 +
@@ -79,9 +79,9 @@ diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
 +)
 +
 +install(FILES ${PUBLIC_HEADERS} DESTINATION include/coap2)
-diff -rupN orig/coap_config.h.windows patched/coap_config.h.windows
---- orig/coap_config.h.windows	2019-11-21 17:42:00.000000000 +0100
-+++ patched/coap_config.h.windows	2019-11-22 09:11:43.000000000 +0100
+diff --git a/coap_config.h.windows b/coap_config.h.windows
+--- a/coap_config.h.windows
++++ b/coap_config.h.windows
 @@ -67,7 +67,7 @@
  #define snprintf _snprintf
  #endif

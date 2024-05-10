@@ -101,6 +101,12 @@ pushd nifi-minifi-cpp/thirdparty/libarchive/all
 conan create . --version=3.4.2 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
 ~~~
 
+### Create LibCoap Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/libcoap/all
+conan create . --version=4.2.1 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
 
 ## References
 

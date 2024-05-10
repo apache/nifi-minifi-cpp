@@ -1,0 +1,13 @@
+sources:
+  "4.3.3":
+    url: "https://github.com/obgm/libcoap/archive/v4.3.3.tar.gz"
+    sha256: "3df6e1a51e42ef8fd45f16276505a47ed32aef150d348d60f251a0b470dda379"
+  "4.2.1":
+    url: "https://github.com/obgm/libcoap/archive/v4.2.1.tar.gz"
+    sha256: "29a0394a265d3febee41e5e2dc03d34292a0aede37f5f80334e529ac0dab2321"
+patches:
+  "4.2.1":
+    - patch_file: "patches/libcoap-windows-cmake.patch"
+      patch_description: "Creates a CMakeLists.txt for building MiNiFi C++ Dependency on Windows"
+      patch_type: "portability"
+      patch_source: "https://github.com/apache/nifi-minifi-cpp/commit/6b99991ba7ffb3dae471fda1f2e9649ff33ca14e"

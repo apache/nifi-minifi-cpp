@@ -75,7 +75,8 @@ github_pcks_minifi_extension_ext_libs = (
     'mbedtls/2.16.3@minifi/dev', # needed to fix mbedtls packaging issue to allow for open62541 to integrate with it
     'open62541/1.3.3@minifi/dev', # open62541 expects version 1.3.3 with patches for minifi
     'xz_utils/5.2.5@minifi/dev', # xz_utils (liblzma) expects version 5.2.5 with patches and configure args for minifi
-    'libarchive/3.4.2@minifi/dev' # libarchive with patches and configure args for minifi; need to add support for openssl enabled integration
+    'libarchive/3.4.2@minifi/dev', # libarchive with patches and configure args for minifi; need to add support for openssl enabled integration
+    'libcoap/4.2.1@minifi/dev', # updated libcoap 4.3.x conanfile.py to build for libcoap 4.2.1 needed by minifi
 )
 
 shared_requires += minifi_extension_external_libraries
@@ -187,8 +188,8 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["ENABLE_LIBARCHIVE"] = "ON" if self.options.enable_libarchive else "OFF"
         tc.cache_variables["ENABLE_LZMA"] = "ON" if self.options.enable_lzma else "OFF"
 
-        tc.cache_variables["ENABLE_GPS"] = "OFF"
-        tc.cache_variables["ENABLE_COAP"] = "OFF"
+        tc.cache_variables["ENABLE_GPS"] = "ON"
+        tc.cache_variables["ENABLE_COAP"] = "ON"
         tc.cache_variables["ENABLE_SQL"] = "OFF"
         tc.cache_variables["ENABLE_MQTT"] = "OFF"
         tc.cache_variables["ENABLE_PCAP"] = "OFF"
