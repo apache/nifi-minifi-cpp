@@ -21,7 +21,7 @@ function(use_bundled_libcoap SOURCE_DIR BINARY_DIR)
     message("Using bundled libcoap")
 
     if(USE_CONAN_PACKAGER)
-        message("Using Conan Packager to manage installing prebuilt LibArchive external lib")
+        message("Using Conan Packager to manage installing prebuilt LibCoap external lib")
         include(${CMAKE_BINARY_DIR}/libcoap-config.cmake)
 
         set(COAP_INCLUDE_DIRS "${libcoap_INCLUDE_DIRS}" CACHE STRING "" FORCE)
