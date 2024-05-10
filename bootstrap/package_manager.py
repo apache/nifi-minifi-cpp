@@ -105,6 +105,10 @@ class BrewPackageManager(PackageManager):
         lines = [line.split('@', 1)[0] for line in lines]
         return set(lines)
 
+    def run_cmd(self, cmd: str) -> bool:
+        add_m4_to_path_cmd = 'export PATH="$(brew --prefix m4)/bin:$PATH"'
+        result = subprocess.run(f"{add_m4_to_path_cmd} && {cmd}", shell=True, text=True)
+        return result.returncode == 0
 
 class AptPackageManager(PackageManager):
     def __init__(self, no_confirm):
