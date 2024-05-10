@@ -110,6 +110,7 @@ class BrewPackageManager(PackageManager):
         result = subprocess.run(f"{add_m4_to_path_cmd} && {cmd}", shell=True, text=True)
         return result.returncode == 0
 
+
 class AptPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
