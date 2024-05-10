@@ -564,9 +564,19 @@ if (NOT WIN32)
         DESTINATION minifi-python-examples
         COMPONENT bin)
 
-    install(PROGRAMS bin/minifi.sh bin/minifi.service
-        DESTINATION bin
-        COMPONENT bin)
+    install(PROGRAMS bin/minifi.sh
+            DESTINATION bin
+            COMPONENT bin)
+
+    if (APPLE)
+        install(FILES bin/minifi.plist
+            DESTINATION bin
+            COMPONENT bin)
+    else()
+        install(FILES bin/minifi.service
+                DESTINATION bin
+                COMPONENT bin)
+    endif()
 endif()
 
 install(FILES LICENSE NOTICE
