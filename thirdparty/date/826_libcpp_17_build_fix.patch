@@ -1,0 +1,69 @@
+diff --git a/include/date/date.h b/include/date/date.h
+index 7b6b4e4..db91ed6 100644
+--- a/include/date/date.h
++++ b/include/date/date.h
+@@ -4228,7 +4228,7 @@ inline
+ std::basic_ostream<CharT, Traits>&
+ operator<<(std::basic_ostream<CharT, Traits>& os, const local_time<Duration>& ut)
+ {
+-    return (os << sys_time<Duration>{ut.time_since_epoch()});
++    return (date::operator<<(os, sys_time<Duration>{ut.time_since_epoch()}));
+ }
+ 
+ namespace detail
+diff --git a/include/date/ptz.h b/include/date/ptz.h
+index ebd6e04..8b9a046 100644
+--- a/include/date/ptz.h
++++ b/include/date/ptz.h
+@@ -593,7 +593,7 @@ time_zone::name() const
+     auto print_offset = [](seconds off)
+         {
+             std::string nm;
+-            hh_mm_ss<seconds> offset{-off};
++            date::hh_mm_ss<seconds> offset{-off};
+             if (offset.is_negative())
+                 nm += '-';
+             nm += std::to_string(offset.hours().count());
+diff --git a/include/date/tz.h b/include/date/tz.h
+index 4921068..bacd055 100644
+--- a/include/date/tz.h
++++ b/include/date/tz.h
+@@ -231,8 +231,8 @@ nonexistent_local_time::make_msg(local_time<Duration> tp, const local_info& i)
+        << i.first.abbrev << " and\n"
+        << local_seconds{i.second.begin.time_since_epoch()} + i.second.offset << ' '
+        << i.second.abbrev
+-       << " which are both equivalent to\n"
+-       << i.first.end << " UTC";
++       << " which are both equivalent to\n";
++    date::operator<<(os, i.first.end) << " UTC";
+     return os.str();
+ }
+ 
+diff --git a/include/date/tz_private.h b/include/date/tz_private.h
+index aec01d0..1a01f17 100644
+--- a/include/date/tz_private.h
++++ b/include/date/tz_private.h
+@@ -289,8 +289,7 @@ struct transition
+     std::ostream&
+     operator<<(std::ostream& os, const transition& t)
+     {
+-        using date::operator<<;
+-        os << t.timepoint << "Z ";
++        date::operator<<(os, t.timepoint) << "Z ";
+         if (t.info->offset >= std::chrono::seconds{0})
+             os << '+';
+         os << make_time(t.info->offset);
+diff --git a/src/tz.cpp b/src/tz.cpp
+index 26babbd..98daeb4 100644
+--- a/src/tz.cpp
++++ b/src/tz.cpp
+@@ -2625,8 +2625,7 @@ operator<<(std::ostream& os, const time_zone& z)
+ std::ostream&
+ operator<<(std::ostream& os, const leap_second& x)
+ {
+-    using namespace date;
+-    return os << x.date_ << "  +";
++    return date::operator<<(os, x.date_) << "  +";
+ }
+ 
+ #if USE_OS_TZDB

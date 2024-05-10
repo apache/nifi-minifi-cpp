@@ -44,7 +44,7 @@
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
-#if defined(_LIBCPP_VERSION)
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 170000
 namespace org::apache::nifi::minifi::detail {
 template<typename T>
 concept has_spaceship_operator = requires(T t, T u) { t <=> u; };  // NOLINT(readability/braces)
