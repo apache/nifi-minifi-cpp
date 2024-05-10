@@ -1,6 +1,6 @@
-diff -rupN orig/cmake/modules/FindSQLite3.cmake patched/cmake/modules/FindSQLite3.cmake
---- orig/cmake/modules/FindSQLite3.cmake	2020-10-19 16:59:47
-+++ patched/cmake/modules/FindSQLite3.cmake	2024-02-14 13:05:00
+diff --git a/cmake/modules/FindSQLite3.cmake b/cmake/modules/FindSQLite3.cmake
+--- a/cmake/modules/FindSQLite3.cmake
++++ b/cmake/modules/FindSQLite3.cmake
 @@ -17,6 +17,8 @@ find_path(SQLITE3_INCLUDE_DIR
  find_path(SQLITE3_INCLUDE_DIR
    NAMES sqlite3.h

@@ -22,10 +22,7 @@ function(use_bundled_soci SOURCE_DIR BINARY_DIR)
 
     if(USE_CONAN_PACKAGER)
         message("Using Conan Packager to manage installing prebuilt SOCI external lib")
-        include(${CMAKE_BINARY_DIR}/soci-config.cmake)
-
-        set(SOCI_INCLUDE_DIRS "${soci_INCLUDE_DIRS}" CACHE STRING "" FORCE)
-        set(SOCI_LIBRARIES "${soci_LIBRARIES}" CACHE STRING "" FORCE)
+        include(${CMAKE_BINARY_DIR}/SOCIConfig.cmake)
 
     elseif(USE_CMAKE_FETCH_CONTENT)
         message("Using CMAKE's ExternalProject_Add to manage source building SOCI external lib")
@@ -91,7 +88,7 @@ function(use_bundled_soci SOURCE_DIR BINARY_DIR)
                 "-DEXPORTED_IODBC_LIBRARIES=${EXPORTED_IODBC_LIBRARIES}")
         endif()
 
-        set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/soci/sqlite3-path.patch")
+        set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/soci/all/patches/sqlite3-path.patch")
 
 
 

@@ -22,10 +22,7 @@ function(use_bundled_iodbc SOURCE_DIR BINARY_DIR)
 
     if(USE_CONAN_PACKAGER)
         message("Using Conan Packager to manage installing prebuilt iODBC external lib")
-        include(${CMAKE_BINARY_DIR}/iodbc-config.cmake)
-
-        set(IODBC_INCLUDE_DIRS "${iodbc_INCLUDE_DIRS}" CACHE STRING "" FORCE)
-        set(IODBC_LIBRARIES "${iodbc_LIBRARIES}" CACHE STRING "" FORCE)
+        include(${CMAKE_BINARY_DIR}/ODBCConfig.cmake)
 
     elseif(USE_CMAKE_FETCH_CONTENT)
         message("Using CMAKE's ExternalProject_Add to manage source building iODBC external lib")

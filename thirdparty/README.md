@@ -108,6 +108,18 @@ pushd nifi-minifi-cpp/thirdparty/libcoap/all
 conan create . --version=4.2.1 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
 ~~~
 
+NOTE: SOCI depends on ODBC. Our SOCI uses iODBC from openlink while conan's SOCI uses ODBC from unixodbc. Lets see if I can just use SOCI's default ODBC integration for conan approach. 
+
+### Create SOCI Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/soci/all
+conan create . --version=4.0.1 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+
+# conan create . --version=4.0.3 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+
+~~~
+
 ## References
 
 - [Conan 2 - Devops Guide](https://docs.conan.io/2/devops.html): Designing and implementing conan in production. Shows information on using ConanCenter packages, local recipes index repository, backing up third-party sources, managing package metadata files, versioning, saving and restoring packages from/to cache

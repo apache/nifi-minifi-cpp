@@ -68,6 +68,7 @@ minifi_core_gtests_external_libraries = github_pcks_minifi_core_gtests_ext_libs
 shared_requires += minifi_core_gtests_external_libraries
 
 minifi_extension_external_libraries = (
+    'odbc/2.3.11', # soci conan package uses unixodbc, might try openlink's iodbc if needed to build minifi
 )
 
 # packages not available on conancenter or need to be prebuilt with MiNiFi C++ specific patches, etc
@@ -77,6 +78,7 @@ github_pcks_minifi_extension_ext_libs = (
     'xz_utils/5.2.5@minifi/dev', # xz_utils (liblzma) expects version 5.2.5 with patches and configure args for minifi
     'libarchive/3.4.2@minifi/dev', # libarchive with patches and configure args for minifi; need to add support for openssl enabled integration
     'libcoap/4.2.1@minifi/dev', # updated libcoap 4.3.x conanfile.py to build for libcoap 4.2.1 needed by minifi
+    'soci/4.0.1@minifi/dev', # updated soci conanfile.py to build soci 4.0.1 with sqlite patch needed by minifi
 )
 
 shared_requires += minifi_extension_external_libraries
@@ -190,7 +192,7 @@ class MiNiFiCppMain(ConanFile):
 
         tc.cache_variables["ENABLE_GPS"] = "ON"
         tc.cache_variables["ENABLE_COAP"] = "ON"
-        tc.cache_variables["ENABLE_SQL"] = "OFF"
+        tc.cache_variables["ENABLE_SQL"] = "ON"
         tc.cache_variables["ENABLE_MQTT"] = "OFF"
         tc.cache_variables["ENABLE_PCAP"] = "OFF"
         tc.cache_variables["ENABLE_LIBRDKAFKA"] = "OFF"

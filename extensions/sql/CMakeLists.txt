@@ -28,7 +28,8 @@ include_directories(".")
 
 file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 
-add_minifi_library(minifi-sql SHARED ${SOURCES})
+# NOTE (JG): When building minifi-sql ODBC & SOCI deps with conan if SHARED, undefined reference issues, STATIC succeeds
+add_minifi_library(minifi-sql STATIC ${SOURCES})
 
 include(BundledIODBC)
 use_bundled_iodbc(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
