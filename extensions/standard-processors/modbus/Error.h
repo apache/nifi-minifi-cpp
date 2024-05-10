@@ -66,4 +66,4 @@ inline std::error_code make_error_code(ModbusExceptionCode c) {
 }  // namespace org::apache::nifi::minifi::modbus
 
 template <>
-struct std::is_error_code_enum<org::apache::nifi::minifi::modbus::ModbusExceptionCode> : true_type {};
+struct std::is_error_code_enum<org::apache::nifi::minifi::modbus::ModbusExceptionCode> : std::true_type {};

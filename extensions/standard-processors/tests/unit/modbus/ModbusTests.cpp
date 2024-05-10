@@ -62,20 +62,20 @@ TEST_CASE("ReadCoilStatus") {
   {
     auto shorter_than_expected_resp = read_coil_status.responseToRecordField(createByteVector(0x01, 0x02, 0xCD, 0x6B));
     REQUIRE(!shorter_than_expected_resp);
-    CHECK(shorter_than_expected_resp.error() == modbus::ModbusExceptionCode::InvalidResponse);
+    CHECK_THAT(shorter_than_expected_resp.error(), minifi::test::MatchesError(modbus::ModbusExceptionCode::InvalidResponse));
   }
 
 
   {
     auto longer_than_expected_resp = read_coil_status.responseToRecordField(createByteVector(0x01, 0x04, 0xCD, 0x6B, 0x05, 0x07));
     REQUIRE(!longer_than_expected_resp);
-    CHECK(longer_than_expected_resp.error() == modbus::ModbusExceptionCode::InvalidResponse);
+    CHECK_THAT(longer_than_expected_resp.error(), minifi::test::MatchesError(modbus::ModbusExceptionCode::InvalidResponse));
   }
 
   {
     auto mismatching_size_resp = read_coil_status.responseToRecordField(createByteVector(0x01, 0x03, 0xCD, 0x6B, 0x05, 0x07));
     REQUIRE(!mismatching_size_resp);
-    CHECK(mismatching_size_resp.error() == modbus::ModbusExceptionCode::InvalidResponse);
+    CHECK_THAT(mismatching_size_resp.error(), minifi::test::MatchesError(modbus::ModbusExceptionCode::InvalidResponse));
   }
 }
 

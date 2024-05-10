@@ -82,7 +82,7 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
 void FetchModbusTcp::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const auto flow_file = getFlowFile(session);
   if (!flow_file) {
-    yield();
+    logger_->log_error("No flowfile to work on");
     return;
   }
 
