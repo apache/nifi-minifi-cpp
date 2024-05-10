@@ -21,27 +21,14 @@ endif()
 
 set(MINIFI_VERSION_STR ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
-function(ADD_DOCKER_TARGET_FROM_ROCKY BASE_IMAGE TAG_PREFIX INSTALL_PACKAGE_CMD)
-    add_custom_target(
-            ${TAG_PREFIX}_docker_from_rocky_build
-            COMMAND DOCKER_BUILDKIT=1 docker build
-            --build-arg MINIFI_VERSION=${MINIFI_VERSION_STR}
-            --build-arg BASE_IMAGE=${BASE_IMAGE}
-            --build-arg ARCHIVE_LOCATION=nifi-minifi-cpp-${MINIFI_VERSION_STR}-bin-rockylinux.tar.gz
-            --build-arg INSTALL_PACKAGE_CMD=${INSTALL_PACKAGE_CMD}
-            -t apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
-            -f ${CMAKE_SOURCE_DIR}/docker/python-verify/installed.Dockerfile
-            ${CMAKE_BINARY_DIR})
-endfunction()
-
 function(ADD_DOCKER_VERIFY_PYTHON TAG_PREFIX HAS_MODULES)
     if (HAS_MODULES)
         add_custom_target(
-                docker-verify-python-${TAG_PREFIX}
+                docker-verify-${TAG_PREFIX}
                 COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ENABLE_PYTHON_SCRIPTING)
     else()
         add_custom_target(
-                docker-verify-python-${TAG_PREFIX}
+                docker-verify-${TAG_PREFIX}
                 COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ENABLE_PYTHON_SCRIPTING --tags_to_exclude NEEDS_NUMPY)
     endif()
 endfunction()
@@ -67,19 +54,19 @@ function(ADD_VENV_TO_DOCKER TAG_PREFIX)
 endfunction()
 
 
-ADD_DOCKER_TARGET_FROM_ROCKY(debian:bullseye patched_bullseye "apt update \\&\\& apt install -y patchelf libpython3-dev python3-venv python3-pip wget \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.9.so")
-ADD_DOCKER_TARGET_FROM_ROCKY(ubuntu:jammy patched_jammy "apt update \\&\\& apt install -y patchelf libpython3.10-dev python3.10-venv python3-pip wget \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.10.so.1.0")
-ADD_DOCKER_TARGET_FROM_ROCKY(rockylinux:8 rocky8 "yum install -y python3-libs python3-pip python3-devel gcc-c++ wget")
-ADD_DOCKER_TARGET_FROM_ROCKY(rockylinux:9 rocky9 "yum install -y python3-libs python3-pip wget")
-ADD_DOCKER_TARGET_FROM_ROCKY(ubuntu:jammy jammy "apt update \\&\\& apt install -y wget")
-ADD_CONDA_TO_DOCKER(jammy)
-ADD_VENV_TO_DOCKER(rocky9)
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(debian:bullseye patched_bullseye_py "apt update \\&\\& apt install -y patchelf libpython3-dev python3-venv python3-pip wget \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.9.so")
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(ubuntu:jammy patched_jammy_py "apt update \\&\\& apt install -y patchelf libpython3.10-dev python3.10-venv python3-pip wget \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.10.so.1.0")
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(rockylinux:8 rocky8_py "yum install -y python3-libs python3-pip python3-devel gcc-c++ wget")
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(rockylinux:9 rocky9_py "yum install -y python3-libs python3-pip wget")
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(ubuntu:jammy jammy_py "apt update \\&\\& apt install -y wget")
+ADD_CONDA_TO_DOCKER(jammy_py)
+ADD_VENV_TO_DOCKER(rocky9_py)
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
-    ADD_DOCKER_VERIFY_PYTHON(rocky8 FALSE)
-    ADD_DOCKER_VERIFY_PYTHON(rocky9 FALSE)
-    ADD_DOCKER_VERIFY_PYTHON(patched_jammy FALSE)
-    ADD_DOCKER_VERIFY_PYTHON(patched_bullseye FALSE)
-    ADD_DOCKER_VERIFY_PYTHON(conda_jammy TRUE)
-    ADD_DOCKER_VERIFY_PYTHON(venv_rocky9 TRUE)
+    ADD_DOCKER_VERIFY_PYTHON(rocky8_py FALSE)
+    ADD_DOCKER_VERIFY_PYTHON(rocky9_py FALSE)
+    ADD_DOCKER_VERIFY_PYTHON(patched_jammy_py FALSE)
+    ADD_DOCKER_VERIFY_PYTHON(patched_bullseye_py FALSE)
+    ADD_DOCKER_VERIFY_PYTHON(conda_jammy_py TRUE)
+    ADD_DOCKER_VERIFY_PYTHON(venv_rocky9_py TRUE)
 endif()
