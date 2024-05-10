@@ -29,9 +29,11 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     # Patch to fix build issue on ARM7 architecture: https://github.com/facebook/rocksdb/issues/8609#issuecomment-1009572506
     set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/rocksdb/arm7.patch")
     set(PATCH_FILE_2 "${SOURCE_DIR}/thirdparty/rocksdb/dboptions_equality_operator.patch")
+    set(PATCH_FILE_3 "${SOURCE_DIR}/thirdparty/rocksdb/cstdint.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\") &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\") ")
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_3}\") ")
 
     # Define byproducts
     if (WIN32)
