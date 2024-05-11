@@ -21,51 +21,15 @@ if(NOT (ENABLE_ALL OR ENABLE_PCAP))
     return()
 endif()
 
-find_package(PCAP REQUIRED)
-
-include(FetchContent)
-
-FetchContent_Declare(pcapplusplus
-    URL      https://github.com/seladb/PcapPlusPlus/archive/refs/tags/v22.05.tar.gz
-    URL_HASH SHA256=5f299c4503bf5d3c29f82b8d876a19be7dea29c2aadcb52f2f3b394846c21da9
-    )
-FetchContent_MakeAvailable(pcapplusplus)
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-set(PCAPPLUSPLUS_TP_BASE_DIR "${pcapplusplus_SOURCE_DIR}/")
-set(PCAPPLUSPLUS_BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pcap++" )
-set(PCAPPLUSPLUS_BASE_DIR PCAPPLUSPLUS_BASE_DIR PARENT_SCOPE)
-set(PCAPPLUSPLUS_HEADER_DIR "${PCAPPLUSPLUS_BASE_DIR}/Dist/header" )
-set(PCAPPLUSPLUS_HEADER_DIR PCAPPLUSPLUS_HEADER_DIR PARENT_SCOPE)
-
-file(COPY ${PCAPPLUSPLUS_TP_BASE_DIR} DESTINATION ${PCAPPLUSPLUS_BASE_DIR})
-
-if (WIN32)
-    execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-windows-visual-studio.bat WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
-elseif (APPLE)
-    execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-mac_os_x.sh  WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
-else ()
-    execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-linux.sh --default WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
-endif ()
-
-set(PCAPPLUSPLUS_LIB_DIR "${PCAPPLUSPLUS_BASE_DIR}/Dist")
-
-add_custom_target(
-    pcappp
-    COMMAND make libs
-    BYPRODUCTS ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a
-    WORKING_DIRECTORY ${PCAPPLUSPLUS_BASE_DIR}
-)
+include(PcapPlusPlus)
 
 file(GLOB SOURCES  "*.cpp")
 
 add_minifi_library(minifi-pcap SHARED ${SOURCES})
 target_include_directories(minifi-pcap PRIVATE ${PCAPPLUSPLUS_HEADER_DIR})
 
-add_dependencies(minifi-pcap pcappp)
+target_link_libraries(minifi-pcap ${PCAPPLUSPLUS_LIBRARIES} ${PCAP_LIBRARIES})
 
-target_link_libraries (minifi-pcap ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a ${PCAP_LIBRARIES})
 if (APPLE)
     target_link_libraries(minifi-pcap "-framework CoreFoundation")
     target_link_libraries(minifi-pcap "-framework SystemConfiguration")

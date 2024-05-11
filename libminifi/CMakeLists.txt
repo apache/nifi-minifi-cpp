@@ -75,6 +75,20 @@ else()
     set_target_properties(core-minifi PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endif()
 
+# Recursively get all LIBMINIFI header directories, store into generated include_dirs.cmake using python
+find_package(Python3 COMPONENTS Interpreter)
+execute_process(COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/python/get_include_dirs.py"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include" # LIBMINIFI include directory
+    "${CMAKE_CURRENT_BINARY_DIR}/include_dirs.cmake" # generated LIBMINIFI include_dirs.cmake file
+    "LIBMINIFI_INCLUDE_DIRS" # CMake variable name for LIBMINIFI INCLUDE_DIRS
+    )
+
+# Include the generated cmake file to set the LIBMINIFI_INCLUDE_DIRS variable
+include("${CMAKE_CURRENT_BINARY_DIR}/include_dirs.cmake")
+
+message("LIBMINIFI_INCLUDE_DIRS = ${LIBMINIFI_INCLUDE_DIRS}")
+target_include_directories(core-minifi PUBLIC ${LIBMINIFI_INCLUDE_DIRS})
+
 # TODO (JG): Analyze the 3rd party lib dependencies (thirdparty, extensions, etc) on libminifi and replace them with the appropriate conan packages
 include(RangeV3)
 include(Asio)

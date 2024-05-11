@@ -115,9 +115,13 @@ NOTE: SOCI depends on ODBC. Our SOCI uses iODBC from openlink while conan's SOCI
 ~~~bash
 pushd nifi-minifi-cpp/thirdparty/soci/all
 conan create . --version=4.0.1 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
 
-# conan create . --version=4.0.3 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+### Create PcapPlusPlus Conan Package
 
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/pcapplusplus/all
+conan create . --version=22.05 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
 ~~~
 
 ## References
