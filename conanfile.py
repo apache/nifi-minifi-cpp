@@ -40,10 +40,6 @@ minifi_core_external_source_libraries = (
     'openssl/3.3.0@minifi/dev', # conan-center-index didnt have 3.3.0, so built from source by local conan recipe, needed by core-minifi, optional for libarchive
 )
 
-# minifi_extension_external_libraries = (
-    # 'argparse/3.0',
-# )
-
 shared_requires = minifi_core_external_libraries 
 shared_requires += minifi_core_external_source_libraries 
 
@@ -69,6 +65,9 @@ shared_requires += minifi_core_gtests_external_libraries
 
 minifi_extension_external_libraries = (
     'odbc/2.3.11', # soci conan package uses unixodbc, might try openlink's iodbc if needed to build minifi
+    'argparse/3.0', # needed for minifi controller
+    'lua/5.4.6', 
+    'sol2/3.3.0', # applied minifi patch to sol2, is a C++ library binding to Lua for advanced featuers & top performance
 )
 
 # packages not available on conancenter or need to be prebuilt with MiNiFi C++ specific patches, etc
@@ -197,7 +196,7 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["ENABLE_MQTT"] = "ON"
         tc.cache_variables["ENABLE_PCAP"] = "ON"
         tc.cache_variables["ENABLE_LIBRDKAFKA"] = "OFF"
-        tc.cache_variables["ENABLE_LUA_SCRIPTING"] = "OFF"
+        tc.cache_variables["ENABLE_LUA_SCRIPTING"] = "ON"
         tc.cache_variables["ENABLE_PYTHON_SCRIPTING"] = "OFF"
         tc.cache_variables["ENABLE_SENSORS"] = "OFF"
         tc.cache_variables["ENABLE_USB_CAMERA"] = "OFF"
@@ -206,16 +205,16 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["ENABLE_BUSTACHE"] = "OFF"
         tc.cache_variables["ENABLE_SFTP"] = "OFF"
         tc.cache_variables["ENABLE_AZURE"] = "OFF"
-        tc.cache_variables["ENABLE_ENCRYPT_CONFIG"] = "OFF"
-        tc.cache_variables["ENABLE_SPLUNK"] = "OFF"
-        tc.cache_variables["ENABLE_ELASTICSEARCH"] = "OFF"
+        tc.cache_variables["ENABLE_ENCRYPT_CONFIG"] = "ON"
+        tc.cache_variables["ENABLE_SPLUNK"] = "ON"
+        tc.cache_variables["ENABLE_ELASTICSEARCH"] = "ON"
         tc.cache_variables["ENABLE_GCP"] = "OFF"
         tc.cache_variables["ENABLE_KUBERNETES"] = "OFF"
-        tc.cache_variables["ENABLE_TEST_PROCESSORS"] = "OFF"
+        tc.cache_variables["ENABLE_TEST_PROCESSORS"] = "ON"
         tc.cache_variables["ENABLE_PROMETHEUS"] = "OFF"
-        tc.cache_variables["ENABLE_GRAFANA_LOKI"] = "OFF"
+        tc.cache_variables["ENABLE_GRAFANA_LOKI"] = "ON"
         tc.cache_variables["ENABLE_GRPC_FOR_LOKI"] = "OFF"
-        tc.cache_variables["ENABLE_CONTROLLER"] = "OFF"
+        tc.cache_variables["ENABLE_CONTROLLER"] = "ON"
 
         tc.generate()
 
