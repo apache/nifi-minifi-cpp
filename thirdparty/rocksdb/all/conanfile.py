@@ -95,7 +95,8 @@ class RocksDBConan(ConanFile):
         if self.options.with_zlib:
             self.requires("zlib/[>=1.2.11 <2]")
         if self.options.with_bz2:
-            self.requires("bzip2/1.0.8@minifi/dev") # prebuilt with minifi bz2 patch
+            self.requires("bzip2/1.0.8")
+            # self.requires("bzip2/1.0.8@minifi/dev") # prebuilt with minifi bz2 patch
         if self.options.with_zstd:
             self.requires("zstd/1.5.5")
         if self.options.get_safe("with_tbb"):

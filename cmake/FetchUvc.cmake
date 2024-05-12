@@ -16,10 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-include(FetchContent)
-FetchContent_Declare(Uvc
-        URL  https://github.com/libuvc/libuvc/archive/refs/tags/v0.0.7.tar.gz
-        URL_HASH SHA256=7c6ba79723ad5d0ccdfbe6cadcfbd03f9f75b701d7ba96631eb1fd929a86ee72
-        OVERRIDE_FIND_PACKAGE
-)
-FetchContent_MakeAvailable(Uvc)
+if(USE_CONAN_PACKAGER)
+    message("Using Conan Packager to manage installing prebuilt libuvc external lib")
+    include(${CMAKE_BINARY_DIR}/libuvc-config.cmake)
+
+    add_library(LibUVC::UVC ALIAS LibUVC::UVCStatic)
+elseif(USE_CMAKE_FETCH_CONTENT)
+    message("Using CMAKE's FetchContent to manage source building libuvc external lib")
+    
+    include(FetchContent)
+    FetchContent_Declare(Uvc
+            URL  https://github.com/libuvc/libuvc/archive/refs/tags/v0.0.7.tar.gz
+            URL_HASH SHA256=7c6ba79723ad5d0ccdfbe6cadcfbd03f9f75b701d7ba96631eb1fd929a86ee72
+            OVERRIDE_FIND_PACKAGE
+    )
+    FetchContent_MakeAvailable(Uvc)
+
+    find_package(UVC REQUIRED)
+endif()

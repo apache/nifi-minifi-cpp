@@ -234,6 +234,13 @@ endif()
 if(NOT WIN32)
     if (ENABLE_JNI)
         list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS ENABLE_JNI)
+        # NOTE (JG): Mainly leverage conan to install the prebuilt Java OpenJDK and create custom Maven conan package for
+        # minifi exposing Maven Executable environment variable, so we can leverage conan to build Apache NiFi JNI Assembly
+        # and Framework without having to rely on user having Java & Maven installed on their system. Kept backward
+        # compatibility using find_package for Java and Maven
+        include(JavaOpenJDK)
+        include(JavaMaven)
+        use_javamaven(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     endif()
 endif()
 

@@ -14,15 +14,28 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+if(USE_CONAN_PACKAGER)
+    # Verified can build minifi C++ with cpython 3.9.19
+    message("Using Conan Packager to manage installing prebuilt Python3 external lib")
+    include(${CMAKE_BINARY_DIR}/cpython-config.cmake)
 
-find_package(Python 3.6 REQUIRED COMPONENTS Development Interpreter)
+    set(Python_LIBRARIES ${cpython_LIBRARIES})
+    set(Python_INCLUDE_DIRS ${cpython_INCLUDE_DIRS})
+    add_library(Python::Python ALIAS cpython::cpython)
 
-if(WIN32)
-  set(Python_LIBRARIES ${Python_LIBRARY_DIRS}/python3.lib)
-else()
-  find_library(generic_lib_python NAMES libpython3.so)
-  if (NOT generic_lib_python STREQUAL generic_lib_python-NOTFOUND)
-    message(VERBOSE "Using generic python library at " ${generic_lib_python})
-    set(Python_LIBRARIES ${generic_lib_python})
-  endif()
+elseif(USE_CMAKE_FETCH_CONTENT)
+    message("Using CMAKE to try to find system Python3 library")
+
+    find_package(Python 3.6 REQUIRED COMPONENTS Development Interpreter)
+
+    if(WIN32)
+      set(Python_LIBRARIES ${Python_LIBRARY_DIRS}/python3.lib)
+    else()
+      find_library(generic_lib_python NAMES libpython3.so)
+      if (NOT generic_lib_python STREQUAL generic_lib_python-NOTFOUND)
+        message(VERBOSE "Using generic python library at " ${generic_lib_python})
+        set(Python_LIBRARIES ${generic_lib_python})
+      endif()
+    endif()
+
 endif()

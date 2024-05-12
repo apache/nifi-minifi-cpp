@@ -124,6 +124,48 @@ pushd nifi-minifi-cpp/thirdparty/pcapplusplus/all
 conan create . --version=22.05 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
 ~~~
 
+### Create CPython Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/cpython/all
+conan create . --version=3.9.19 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+### Create LibTiff Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/libtiff/all
+conan create . --version=4.6.0 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+### Create FFMPEG Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/ffmpeg/all
+conan create . --version=4.4.4 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+### Create OpenCV Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/opencv/4.x
+conan create . --version=4.8.1 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+### Create LibSSH2 Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/libssh2/all
+conan create . --version=1.10.0 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+### Create Maven Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/maven/all
+conan create . --version=3.9.6 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
 ## References
 
 - [Conan 2 - Devops Guide](https://docs.conan.io/2/devops.html): Designing and implementing conan in production. Shows information on using ConanCenter packages, local recipes index repository, backing up third-party sources, managing package metadata files, versioning, saving and restoring packages from/to cache

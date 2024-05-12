@@ -52,7 +52,6 @@ if(NOT TARGET PNG::PNG)
 endif()
 
 include(FetchUvc)
-find_package(UVC REQUIRED)
 
 file(GLOB SOURCES  "*.cpp")
 

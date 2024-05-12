@@ -67,6 +67,10 @@ cd build_cmake2
   # NEEDED for MiNiFi C++ Core, MainExe, Standard Processors
   # NEEDED for MiNiFi C++ GTESTS (SKIP_TESTS=False, ENABLE_EXPRESSION_LANGUAGE, ENABLE_ROCKSDB, BUILD_ROCKSDB)
 
+# NOTE: To build minifi with JNI and SFTP and its tests requires system java and maven installed
+  # and the environment variables for java and maven must be set on the system
+  # However, the conan approach is less reliant on system since conan installs java and maven
+  # and establishes the necessary environment variables for easier integration with minifi C++
 cmake .. -DUSE_CONAN_PACKAGER=OFF \
          -DUSE_CMAKE_FETCH_CONTENT=ON \
          -DCMAKE_BUILD_TYPE=Debug \
@@ -80,7 +84,7 @@ cmake .. -DUSE_CONAN_PACKAGER=OFF \
          -DENABLE_ROCKSDB=ON \
          -DBUILD_ROCKSDB=ON \
          -DENABLE_OPS=ON \
-         -DENABLE_JNI=OFF \
+         -DENABLE_JNI=ON \
          -DENABLE_OPC=ON \
          -DENABLE_NANOFI=ON \
          -DENABLE_SYSTEMD=ON \
@@ -95,13 +99,13 @@ cmake .. -DUSE_CONAN_PACKAGER=OFF \
          -DENABLE_PCAP=ON \
          -DENABLE_LIBRDKAFKA=OFF \
          -DENABLE_LUA_SCRIPTING=ON \
-         -DENABLE_PYTHON_SCRIPTING=OFF \
-         -DENABLE_SENSORS=OFF \
-         -DENABLE_USB_CAMERA=OFF \
+         -DENABLE_PYTHON_SCRIPTING=ON \
+         -DENABLE_SENSORS=ON \
+         -DENABLE_USB_CAMERA=ON \
          -DENABLE_AWS=OFF \
-         -DENABLE_OPENCV=OFF \
+         -DENABLE_OPENCV=ON \
          -DENABLE_BUSTACHE=OFF \
-         -DENABLE_SFTP=OFF \
+         -DENABLE_SFTP=ON \
          -DENABLE_AZURE=OFF \
          -DENABLE_ENCRYPT_CONFIG=ON \
          -DENABLE_SPLUNK=ON \

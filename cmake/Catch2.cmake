@@ -29,7 +29,4 @@ include(FetchContent)
             URL_HASH SHA256=122928b814b75717316c71af69bd2b43387643ba076a6ec16e7882bfb2dfacbb
     )
     FetchContent_MakeAvailable(Catch2)
-
-    # add_library(Catch2WithMain STATIC IMPORTED)
-    # add_library(Catch2::Catch2WithMain ALIAS Catch2WithMain)
 endif()

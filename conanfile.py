@@ -51,7 +51,7 @@ shared_requires += minifi_core_external_source_libraries
     # user: minifi, channels: stable, testing or dev, etc
 github_pcks_minifi_core_gtests_ext_libs = (
     'rocksdb/8.10.2@minifi/dev', # nifi-minifi-cpp/thirdparty/rocksdb/all
-    'bzip2/1.0.8@minifi/dev', # need to check if there are any patches used
+    # 'bzip2/1.0.8@minifi/dev', # create bzip2 conan package with patches for minifi
 #     'bustache/1a6d442@minifi/dev', # - bustache: https://github.com/jamboree/bustache
 #     'ossp-uuid/1.6.2@minifi/dev',
 #     'openwsman/2.7.2@minifi/dev',
@@ -68,6 +68,9 @@ minifi_extension_external_libraries = (
     'argparse/3.0', # needed for minifi controller
     'lua/5.4.6', 
     'sol2/3.3.0', # applied minifi patch to sol2, is a C++ library binding to Lua for advanced featuers & top performance
+    'bzip2/1.0.8',
+    'libuvc/0.0.7',
+    'openjdk/21.0.2',
 )
 
 # packages not available on conancenter or need to be prebuilt with MiNiFi C++ specific patches, etc
@@ -79,6 +82,14 @@ github_pcks_minifi_extension_ext_libs = (
     'libcoap/4.2.1@minifi/dev', # updated libcoap 4.3.x conanfile.py to build for libcoap 4.2.1 needed by minifi
     'soci/4.0.1@minifi/dev', # updated soci conanfile.py to build soci 4.0.1 with sqlite patch needed by minifi
     'pcapplusplus/22.05@minifi/dev', # updated pcapplusplus conanfile.py to build pcapplusplus 22.05 needed by minifi
+    # 'cpython/3.9.19@minifi/dev' # use python3.9+ conan package to match nifi custom python extensibility recommended python version
+    # 'cpython/3.12.2@minifi/dev' # use python3.12.2 conan package to meet nifi custom python extensibility python version requirement
+    # 'aws-sdk-cpp/1.9.234',
+    'ffmpeg/4.4.4@minifi/dev', # opencv requires ffempg, ffempeg requires xz_utils
+    'libtiff/4.6.0@minifi/dev', # opencv requires libtiff, libtiff requires xz_utils
+    'opencv/4.8.1@minifi/dev',
+    'libssh2/1.10.0@minifi/dev', # requires openssl and mbedtls, so use minifi ones
+    'maven/3.9.6@minifi/dev', # updated maven conan package with MAVEN_EXECUTABLE env variable
 )
 
 shared_requires += minifi_extension_external_libraries
@@ -175,7 +186,7 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["ENABLE_ALL"] = "OFF"
 
         tc.cache_variables["ENABLE_OPS"] = "ON"
-        tc.cache_variables["ENABLE_JNI"] = "OFF" # Need to add Maven to my docker env: Could NOT find Maven (missing: MAVEN_EXECUTABLE); extensions jni CMakeLists.txt 29
+        tc.cache_variables["ENABLE_JNI"] = "ON" # for JNI extension, I saw for conan approach, it needs to be updated to use Py Maven Executable
         tc.cache_variables["ENABLE_OPC"] = "ON"
         tc.cache_variables["ENABLE_NANOFI"] = "ON"
 
@@ -198,12 +209,12 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["ENABLE_LIBRDKAFKA"] = "OFF"
         tc.cache_variables["ENABLE_LUA_SCRIPTING"] = "ON"
         tc.cache_variables["ENABLE_PYTHON_SCRIPTING"] = "OFF"
-        tc.cache_variables["ENABLE_SENSORS"] = "OFF"
-        tc.cache_variables["ENABLE_USB_CAMERA"] = "OFF"
+        tc.cache_variables["ENABLE_SENSORS"] = "ON"
+        tc.cache_variables["ENABLE_USB_CAMERA"] = "ON"
         tc.cache_variables["ENABLE_AWS"] = "OFF"
-        tc.cache_variables["ENABLE_OPENCV"] = "OFF"
+        tc.cache_variables["ENABLE_OPENCV"] = "ON"
         tc.cache_variables["ENABLE_BUSTACHE"] = "OFF"
-        tc.cache_variables["ENABLE_SFTP"] = "OFF"
+        tc.cache_variables["ENABLE_SFTP"] = "ON"
         tc.cache_variables["ENABLE_AZURE"] = "OFF"
         tc.cache_variables["ENABLE_ENCRYPT_CONFIG"] = "ON"
         tc.cache_variables["ENABLE_SPLUNK"] = "ON"
