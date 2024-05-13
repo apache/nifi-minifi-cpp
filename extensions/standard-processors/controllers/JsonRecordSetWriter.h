@@ -24,16 +24,32 @@
 #include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::standard {
-
 enum class OutputGroupingType {
-  Array,
-  OneLinePerObject
+  ARRAY,
+  ONE_LINE_PER_OBJECT
 };
+}  // namespace org::apache::nifi::minifi::standard
+
+namespace magic_enum::customize {
+using OutputGroupingType = org::apache::nifi::minifi::standard::OutputGroupingType;
+
+template <>
+constexpr customize_t enum_name<OutputGroupingType>(OutputGroupingType value) noexcept {
+  switch (value) {
+    case OutputGroupingType::ARRAY:
+      return "Array";
+    case OutputGroupingType::ONE_LINE_PER_OBJECT:
+      return "One Line Per Object";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::standard {
 
 class JsonRecordSetWriter final : public core::RecordSetWriter {
  public:
-  explicit JsonRecordSetWriter(const std::string& name, const utils::Identifier& uuid = {});
-  explicit JsonRecordSetWriter(const std::string& name, const std::shared_ptr<Configure>& configuration);
+  explicit JsonRecordSetWriter(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetWriter(name, uuid) {}
 
   JsonRecordSetWriter(JsonRecordSetWriter&&) = delete;
   JsonRecordSetWriter(const JsonRecordSetWriter&) = delete;
@@ -49,15 +65,15 @@ class JsonRecordSetWriter final : public core::RecordSetWriter {
 
   EXTENSIONAPI static constexpr auto OutputGrouping = core::PropertyDefinitionBuilder<magic_enum::enum_count<OutputGroupingType>()>::createProperty("Output Grouping")
     .withDescription("Specifies how the writer should output the JSON records (as an array or one object per line, e.g.) "
-                    "Note that if 'One Line Per Object' is selected, then Pretty Print JSON must be false.")
-    .withDefaultValue(magic_enum::enum_name(OutputGroupingType::Array))
+                    "Note that if 'One Line Per Object' is selected, then Pretty Print JSON is ignored.")
+    .withDefaultValue(magic_enum::enum_name(OutputGroupingType::ARRAY))
     .withAllowedValues(magic_enum::enum_names<OutputGroupingType>())
     .supportsExpressionLanguage(false)
     .isRequired(true)
     .build();
 
   EXTENSIONAPI static constexpr auto PrettyPrint = core::PropertyDefinitionBuilder<>::createProperty("Pretty Print JSON")
-    .withDescription("Specifies whether or not the JSON should be pretty printed")
+    .withDescription("Specifies whether or not the JSON should be pretty printed (only used when Array output is selected)")
     .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
     .withDefaultValue("false")
     .build();
@@ -68,8 +84,6 @@ class JsonRecordSetWriter final : public core::RecordSetWriter {
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
-
-  using RecordSetWriter::RecordSetWriter;
 
   void write(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) override;
 
@@ -86,7 +100,7 @@ class JsonRecordSetWriter final : public core::RecordSetWriter {
   static void writePerLine(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session);
   static void convertRecord(const core::Record& record, rapidjson::Value& record_json, rapidjson::Document::AllocatorType& alloc);
 
-  OutputGroupingType output_grouping_ = OutputGroupingType::Array;
+  OutputGroupingType output_grouping_ = OutputGroupingType::ARRAY;
   bool pretty_print_ = false;
 };
 

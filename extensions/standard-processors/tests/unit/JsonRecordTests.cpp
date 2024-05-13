@@ -17,6 +17,7 @@
 
 #include <numbers>
 #include <variant>
+#include <catch2/generators/catch_generators.hpp>
 
 #include "Catch.h"
 #include "RecordSetTesters.h"
@@ -69,7 +70,7 @@ constexpr std::string_view array_pretty_str = R"([
     }
 ])";
 
-bool test_json_equality(const std::string_view expected_str, const std::string_view actual_str) {
+bool testJsonEquality(const std::string_view expected_str, const std::string_view actual_str) {
   rapidjson::Document expected;
   expected.Parse(expected_str.data());
   rapidjson::Document actual;
@@ -77,69 +78,33 @@ bool test_json_equality(const std::string_view expected_str, const std::string_v
   return actual == expected;
 }
 
-TEST_CASE("JsonRecordSetWriter test Record Per Line") {
+TEST_CASE("JsonRecordSetWriter tests") {
   core::RecordSet record_set;
   record_set.push_back(core::test::createSampleRecord());
   record_set.push_back(core::test::createSampleRecord2());
 
-  JsonRecordSetWriter json_record_set_writer;
+  JsonRecordSetWriter json_record_set_writer{"json_record_set_writer"};
+  const auto [output_grouping, prety_print, output_str] = GENERATE(
+      std::make_tuple("One Line Per Object", "false", record_per_line_str),
+      std::make_tuple("Array", "false", array_compressed_str),
+      std::make_tuple("Array", "true", array_pretty_str));
   json_record_set_writer.initialize();
-  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::OutputGrouping, "OneLinePerObject"));
+  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::OutputGrouping, output_grouping));
+  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::PrettyPrint, prety_print));
   json_record_set_writer.onEnable();
-  CHECK(core::test::testRecordWriter(json_record_set_writer, record_set, [](auto serialized_record_set) -> bool {
-    return test_json_equality(record_per_line_str, serialized_record_set);
+  CHECK(core::test::testRecordWriter(json_record_set_writer, record_set, [expected = output_str](auto serialized_record_set) -> bool {
+    return testJsonEquality(expected, serialized_record_set);
   }));
 }
 
-TEST_CASE("JsonRecordSetWriter test array") {
-  core::RecordSet record_set;
-  record_set.push_back(core::test::createSampleRecord());
-  record_set.push_back(core::test::createSampleRecord2());
-
-  JsonRecordSetWriter json_record_set_writer;
-  CHECK(core::test::testRecordWriter(json_record_set_writer, record_set, [](auto serialized_record_set) -> bool {
-    return test_json_equality(array_compressed_str, serialized_record_set);
-  }));
-}
-
-TEST_CASE("JsonRecordSetWriter test pretty array") {
-  core::RecordSet record_set;
-  record_set.push_back(core::test::createSampleRecord());
-  record_set.push_back(core::test::createSampleRecord2());
-
-  JsonRecordSetWriter json_record_set_writer;
-  json_record_set_writer.initialize();
-  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::PrettyPrint, "true"));
-  json_record_set_writer.onEnable();
-  CHECK(core::test::testRecordWriter(json_record_set_writer, record_set, [](auto serialized_record_set) -> bool {
-    return test_json_equality(array_pretty_str, serialized_record_set);
-  }));
-}
-
-TEST_CASE("JsonRecordSetReader per line") {
+TEST_CASE("JsonRecordSetReader tests") {
   core::RecordSet expected_record_set;
   expected_record_set.push_back(core::test::createSampleRecord(true));
   expected_record_set.push_back(core::test::createSampleRecord2(true));
 
-  JsonRecordSetReader json_record_set_reader;
-  CHECK(core::test::testRecordReader(json_record_set_reader, record_per_line_str, expected_record_set));
+  JsonRecordSetReader json_record_set_reader{"json_record_set_reader"};
+  const auto input_str = GENERATE(record_per_line_str, array_compressed_str, array_pretty_str);
+  CHECK(core::test::testRecordReader(json_record_set_reader, input_str, expected_record_set));
 }
 
-TEST_CASE("JsonRecordSetReader compressed array") {
-  core::RecordSet expected_record_set;
-  expected_record_set.push_back(core::test::createSampleRecord(true));
-  expected_record_set.push_back(core::test::createSampleRecord2(true));
-
-  JsonRecordSetReader json_record_set_reader;
-  CHECK(core::test::testRecordReader(json_record_set_reader, array_compressed_str, expected_record_set));
-}
-
-TEST_CASE("JsonRecordSetReader pretty array") {
-  core::RecordSet expected_record_set;
-  expected_record_set.push_back(core::test::createSampleRecord(true));
-  expected_record_set.push_back(core::test::createSampleRecord2(true));
-
-  JsonRecordSetReader json_record_set_reader;
-  CHECK(core::test::testRecordReader(json_record_set_reader, array_pretty_str, expected_record_set));
-}
 }  // namespace org::apache::nifi::minifi::standard::test

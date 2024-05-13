@@ -18,6 +18,7 @@
 #include "JsonRecordSetWriter.h"
 
 #include <rapidjson/prettywriter.h>
+#include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::standard {
@@ -69,7 +70,7 @@ rapidjson::Value toJson(const core::RecordObject& field, rapidjson::Document::Al
 }  // namespace
 
 void JsonRecordSetWriter::onEnable() {
-  output_grouping_ = utils::parseOptionalEnumProperty<OutputGroupingType>(*this, OutputGrouping).value_or(OutputGroupingType::Array);
+  output_grouping_ = utils::parseOptionalEnumProperty<OutputGroupingType>(*this, OutputGrouping).value_or(OutputGroupingType::ARRAY);
   pretty_print_ = getProperty<bool>(PrettyPrint).value_or(false);
 }
 
@@ -112,9 +113,9 @@ void JsonRecordSetWriter::writeAsArray(const core::RecordSet& record_set, const 
 
 void JsonRecordSetWriter::write(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
   switch (output_grouping_) {
-    case OutputGroupingType::Array:
+    case OutputGroupingType::ARRAY:
       return writeAsArray(record_set, flow_file, session);
-    case OutputGroupingType::OneLinePerObject:
+    case OutputGroupingType::ONE_LINE_PER_OBJECT:
         return writePerLine(record_set, flow_file, session);
   }
 }
@@ -127,5 +128,6 @@ void JsonRecordSetWriter::convertRecord(const core::Record& record, rapidjson::V
   }
 }
 
+REGISTER_RESOURCE(JsonRecordSetWriter, ControllerService);
 
 }  // namespace org::apache::nifi::minifi::standard

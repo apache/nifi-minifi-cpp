@@ -16,6 +16,7 @@
  */
 
 #include "JsonRecordSetReader.h"
+#include "core/Resource.h"
 
 #ifdef WIN32
 #pragma push_macro("GetObject")
@@ -131,6 +132,7 @@ nonstd::expected<core::RecordSet, std::error_code> JsonRecordSetReader::read(con
   return record_set;
 }
 
+REGISTER_RESOURCE(JsonRecordSetReader, ControllerService);
 }  // namespace org::apache::nifi::minifi::standard
 
 #ifdef WIN32

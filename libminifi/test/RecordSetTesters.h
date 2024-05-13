@@ -72,9 +72,6 @@ inline bool testRecordReader(RecordSetReader& record_set_reader, const std::stri
   const auto record_set = record_set_reader.read(flow_file, process_session);
   if (!record_set)
     return false;
-  auto& record_set_0 = (*record_set)[0];
-  auto& expected_set_0 = expected_record_set[0];
-  CHECK(record_set_0 == expected_set_0);
 
   return *record_set == expected_record_set;
 }

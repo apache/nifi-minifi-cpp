@@ -32,7 +32,6 @@ class RecordSetReader : public controller::ControllerService {
  public:
   using ControllerService::ControllerService;
 
-
   virtual nonstd::expected<RecordSet, std::error_code> read(const std::shared_ptr<FlowFile>& flow_file, ProcessSession& session) = 0;
 };
 

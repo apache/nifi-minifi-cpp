@@ -25,8 +25,7 @@ namespace org::apache::nifi::minifi::standard {
 
 class JsonRecordSetReader final : public core::RecordSetReader {
  public:
-  explicit JsonRecordSetReader(const std::string& name, const utils::Identifier& uuid = {});
-  explicit JsonRecordSetReader(const std::string& name, const std::shared_ptr<Configure>& configuration);
+  explicit JsonRecordSetReader(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetReader(name, uuid) {}
 
   JsonRecordSetReader(JsonRecordSetReader&&) = delete;
   JsonRecordSetReader(const JsonRecordSetReader&) = delete;
@@ -42,16 +41,19 @@ class JsonRecordSetReader final : public core::RecordSetReader {
     "If the schema that is configured contains a field that is not present in the JSON, a null value will be used. "
     "If the JSON contains a field that is not present in the schema, that field will be skipped.";
 
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  using RecordSetReader::RecordSetReader;
-
   nonstd::expected<core::RecordSet, std::error_code> read(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) override;
 
+  void initialize() override {
+    setSupportedProperties(Properties);
+  }
+  void onEnable() override {}
   void yield() override {}
-  bool isRunning() const override {    return getState() == core::controller::ControllerServiceState::ENABLED; }
+  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
   bool isWorkAvailable() override { return false; }
 };
 
