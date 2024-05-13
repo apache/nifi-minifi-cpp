@@ -71,6 +71,7 @@ minifi_extension_external_libraries = (
     'bzip2/1.0.8',
     'libuvc/0.0.7',
     'openjdk/21.0.2',
+    'libpcap/1.10.1',
 )
 
 # packages not available on conancenter or need to be prebuilt with MiNiFi C++ specific patches, etc
@@ -90,6 +91,9 @@ github_pcks_minifi_extension_ext_libs = (
     'opencv/4.8.1@minifi/dev',
     'libssh2/1.10.0@minifi/dev', # requires openssl and mbedtls, so use minifi ones
     'maven/3.9.6@minifi/dev', # updated maven conan package with MAVEN_EXECUTABLE env variable
+    'librdkafka/1.9.2@minifi/dev', # updated librdkafka conan package CMake definition args similar to ExternalProject_Add
+    'libsystemd/255@minifi/dev', # updated libsystemd to use minifi's xz_utils
+    'grpc/1.54.3@minifi/dev', # updated grpc conan package to use minifi's openssl, libsystemd
 )
 
 shared_requires += minifi_extension_external_libraries
@@ -206,7 +210,7 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["ENABLE_SQL"] = "ON"
         tc.cache_variables["ENABLE_MQTT"] = "ON"
         tc.cache_variables["ENABLE_PCAP"] = "ON"
-        tc.cache_variables["ENABLE_LIBRDKAFKA"] = "OFF"
+        tc.cache_variables["ENABLE_LIBRDKAFKA"] = "ON"
         tc.cache_variables["ENABLE_LUA_SCRIPTING"] = "ON"
         tc.cache_variables["ENABLE_PYTHON_SCRIPTING"] = "OFF"
         tc.cache_variables["ENABLE_SENSORS"] = "ON"
@@ -224,7 +228,7 @@ class MiNiFiCppMain(ConanFile):
         tc.cache_variables["ENABLE_TEST_PROCESSORS"] = "ON"
         tc.cache_variables["ENABLE_PROMETHEUS"] = "OFF"
         tc.cache_variables["ENABLE_GRAFANA_LOKI"] = "ON"
-        tc.cache_variables["ENABLE_GRPC_FOR_LOKI"] = "OFF"
+        tc.cache_variables["ENABLE_GRPC_FOR_LOKI"] = "ON"
         tc.cache_variables["ENABLE_CONTROLLER"] = "ON"
 
         tc.generate()

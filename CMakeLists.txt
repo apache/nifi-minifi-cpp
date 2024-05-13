@@ -241,6 +241,9 @@ if(NOT WIN32)
         include(JavaOpenJDK)
         include(JavaMaven)
         use_javamaven(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
+        include(CheckJavaMaven)
+        check_javamaven_version()
     endif()
 endif()
 

@@ -166,6 +166,27 @@ pushd nifi-minifi-cpp/thirdparty/maven/all
 conan create . --version=3.9.6 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
 ~~~
 
+### Create LibRdKafka Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/librdkafka/all
+conan create . --version=1.9.2 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+### Create LibSystemd Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/libsystemd/all
+conan create . --version=255 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
+### Create GRPC Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/grpc/all
+conan create . --version=1.54.3 --user=minifi --channel=dev --build=missing -pr=$HOME/src/james/pipeline/nifi-minifi-cpp/etc/build/conan/profiles/release-linux
+~~~
+
 ## References
 
 - [Conan 2 - Devops Guide](https://docs.conan.io/2/devops.html): Designing and implementing conan in production. Shows information on using ConanCenter packages, local recipes index repository, backing up third-party sources, managing package metadata files, versioning, saving and restoring packages from/to cache

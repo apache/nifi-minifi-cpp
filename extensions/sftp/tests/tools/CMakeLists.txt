@@ -50,6 +50,7 @@ if(USE_CONAN_PACKAGER)
     message("-----Execute Py Maven Script to build Java SFTP Test Server")
     if (WIN32)
         execute_process(COMMAND cmd /c "${PY_MAVEN_EXECUTABLE}" 
+            --maven_executable=$ENV{MAVEN_EXECUTABLE}
             --working_directory=${WORKING_DIR}
             --maven_arg1=${MAVEN_ARG1}
             --maven_arg2=${MAVEN_ARG2}
@@ -60,6 +61,7 @@ if(USE_CONAN_PACKAGER)
         )
     else()
         execute_process(COMMAND ${PY_MAVEN_EXECUTABLE} 
+            --maven_executable=$ENV{MAVEN_EXECUTABLE}
             --working_directory=${WORKING_DIR}
             --maven_arg1=${MAVEN_ARG1}
             --maven_arg2=${MAVEN_ARG2}

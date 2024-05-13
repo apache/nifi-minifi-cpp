@@ -115,7 +115,7 @@ cmake .. -DUSE_CONAN_PACKAGER=OFF \
          -DENABLE_TEST_PROCESSORS=ON \
          -DENABLE_PROMETHEUS=OFF \
          -DENABLE_GRAFANA_LOKI=ON \
-         -DENABLE_GRPC_FOR_LOKI=OFF \
+         -DENABLE_GRPC_FOR_LOKI=ON \
          -DENABLE_CONTROLLER=ON
 
 #Built MiNiFi C++ Core, MainExe, Standard-Processors & Needed Deps wout GTESTs: 

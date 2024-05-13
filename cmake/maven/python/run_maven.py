@@ -5,7 +5,8 @@ import subprocess
 SCRIPT_PATH = os.path.realpath(__file__)
 SCRIPT_DIR = os.path.dirname(SCRIPT_PATH)
 
-def run_maven(maven_executable, maven_arg1=None, maven_nargs=None):
+def run_maven(maven_executable, maven_arg1):
+    print(f"Running Maven version command")
     output = subprocess.check_output([maven_executable, maven_arg1], universal_newlines=True)
 
     print(output)
@@ -27,7 +28,7 @@ def run_maven_from_wk_dir(maven_executable, maven_nargs=None, working_dir=None):
 if __name__ == "__main__":
     print("Running Python to Run Conan Maven")
     parser = argparse.ArgumentParser(description="Generate include_dirs.cmake file")
-    parser.add_argument("maven_executable_path", help="Path to the maven executable")
+    parser.add_argument("--maven_executable_path", dest="maven_executable_path", help="Path to the maven executable")
     parser.add_argument("--maven_arg1", dest="maven_arg1", nargs="?", help="Maven 1st argument")
     parser.add_argument("--maven_arg2", dest="maven_arg2", nargs="?", help="Maven 2nd argument")
     parser.add_argument("--maven_arg3", dest="maven_arg3", nargs="?", help="Maven 3rd argument")
@@ -40,14 +41,17 @@ if __name__ == "__main__":
         print(f"-----maven_nargs: {args.maven_arg1}; {args.maven_arg2}; {args.maven_arg3}")
         print(f"-----working_directory: {args.working_directory}")
 
+        # run_maven(maven_executable, "--version")
         run_maven_from_wk_dir(maven_executable, maven_nargs=[args.maven_arg1, args.maven_arg2, args.maven_arg3], working_dir=args.working_directory)
-    if args.maven_arg1 and args.maven_arg2 and args.working_directory:
+    elif args.maven_arg1 and args.maven_arg2 and args.working_directory:
         print(f"-----maven_nargs: {args.maven_arg1}; {args.maven_arg2}")
         print(f"-----working_directory: {args.working_directory}")
 
+        # run_maven(maven_executable, "--version")
         run_maven_from_wk_dir(maven_executable, maven_nargs=[args.maven_arg1, args.maven_arg2], working_dir=args.working_directory)
     elif args.maven_arg1:
         print(f"-----maven_arg1: {args.maven_arg1}")
-        run_maven(maven_executable, maven_arg1=args.maven_arg1)
+        # run_maven(maven_executable, "--version")
+        run_maven(maven_executable, args.maven_arg1)
     else:
         run_maven(maven_executable, "--version")

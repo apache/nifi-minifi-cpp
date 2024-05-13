@@ -19,6 +19,8 @@
 if(USE_CONAN_PACKAGER)
     message("Using Conan Packager to manage installing prebuilt Abseil external lib")
     include(${CMAKE_BINARY_DIR}/absl-config.cmake)
+    set(ABSL_INCLUDE_DIRS "${absl_INCLUDE_DIRS}" CACHE STRING "" FORCE)
+
 elseif(USE_CMAKE_FETCH_CONTENT)
     message("Using CMAKE's FetchContent to manage source building Abseil external lib")
     include(FetchContent)
@@ -38,4 +40,8 @@ elseif(USE_CMAKE_FETCH_CONTENT)
             OVERRIDE_FIND_PACKAGE
     )
     FetchContent_MakeAvailable(absl)
+
+    add_library(abseil::abseil INTERFACE IMPORTED)
+    set(ABSL_INCLUDE_DIRS "${absl_SOURCE_DIR}/absl" CACHE STRING "" FORCE)
+    target_include_directories(abseil::abseil SYSTEM INTERFACE ${ABSL_INCLUDE_DIRS})
 endif()

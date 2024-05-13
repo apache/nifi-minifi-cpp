@@ -25,13 +25,11 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 message(STATUS "JAVA_HOME: '$ENV{JAVA_HOME}'")
 find_package(JNI REQUIRED)
-# find_package(Java REQUIRED)
-find_package(Maven REQUIRED)
 
 include(JavaOpenJDK)
+include(JavaMaven)
 
-
-message(STATUS "MAVEN: ${MAVEN_EXECUTABLE}")
+message(STATUS "MAVEN: $ENV{MAVEN_EXECUTABLE}")
 include_directories(${JNI_INCLUDE_DIRS})
 
 file(GLOB SOURCES  "jvm/*.cpp" "*.cpp")
@@ -61,10 +59,11 @@ if(USE_CONAN_PACKAGER)
 
     message("-----Prep Conan Py Maven Command: ${PY_MAVEN_EXECUTABLE}")
     message("-----Passed Maven Args to Py Script: ${MAVEN_ARG1} ${MAVEN_ARG2} ${MAVEN_ARG3}")
-    message("-----Passed Working Dir to Py Script: ${WORKING_DIR}")
+    message("-----Passed Working Dir to Py Script: ${JNI_ASSEMBLY_WORKING_DIR}")
     message("-----Execute Py Maven Script to build Apache NiFi JNI Assembly")
     if (WIN32)
         execute_process(COMMAND cmd /c "${PY_MAVEN_EXECUTABLE}" 
+            --maven_executable=$ENV{MAVEN_EXECUTABLE}
             --working_directory=${JNI_ASSEMBLY_WORKING_DIR}
             --maven_arg1=${MAVEN_ARG1}
             --maven_arg2=${MAVEN_ARG2}
@@ -75,6 +74,7 @@ if(USE_CONAN_PACKAGER)
         )
     else()
         execute_process(COMMAND ${PY_MAVEN_EXECUTABLE} 
+            --maven_executable=$ENV{MAVEN_EXECUTABLE}
             --working_directory=${JNI_ASSEMBLY_WORKING_DIR}
             --maven_arg1=${MAVEN_ARG1}
             --maven_arg2=${MAVEN_ARG2}
@@ -126,10 +126,11 @@ if(USE_CONAN_PACKAGER)
 
     message("-----Prep Conan Py Maven Command: ${PY_MAVEN_EXECUTABLE}")
     message("-----Passed Maven Args to Py Script: ${MAVEN_ARG1} ${MAVEN_ARG2} ${MAVEN_ARG3}")
-    message("-----Passed Working Dir to Py Script: ${WORKING_DIR}")
+    message("-----Passed Working Dir to Py Script: ${JNI_FRAMEWORK_WORKING_DIR}")
     message("-----Execute Py Maven Script to build Apache NiFi JNI Framework")
     if (WIN32)
         execute_process(COMMAND cmd /c "${PY_MAVEN_EXECUTABLE}" 
+            --maven_executable=$ENV{MAVEN_EXECUTABLE}
             --working_directory=${JNI_FRAMEWORK_WORKING_DIR}
             --maven_arg1=${MAVEN_ARG1}
             --maven_arg2=${MAVEN_ARG2}
@@ -139,6 +140,7 @@ if(USE_CONAN_PACKAGER)
         )
     else()
         execute_process(COMMAND ${PY_MAVEN_EXECUTABLE} 
+            --maven_executable=$ENV{MAVEN_EXECUTABLE}
             --working_directory=${JNI_FRAMEWORK_WORKING_DIR}
             --maven_arg1=${MAVEN_ARG1}
             --maven_arg2=${MAVEN_ARG2}

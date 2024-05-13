@@ -21,20 +21,19 @@ if(NOT (ENABLE_ALL OR ENABLE_PCAP))
     return()
 endif()
 
-include(PcapPlusPlus)
+include(BundledLibPcap)
+use_bundled_libpcap(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
+include(BundledPcapPlusPlus)
+use_bundled_pcapplusplus(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
 add_minifi_library(minifi-pcap SHARED ${SOURCES})
-target_include_directories(minifi-pcap PRIVATE ${PCAPPLUSPLUS_HEADER_DIR})
 
-target_link_libraries(minifi-pcap ${PCAPPLUSPLUS_LIBRARIES} ${PCAP_LIBRARIES})
-
-if (APPLE)
-    target_link_libraries(minifi-pcap "-framework CoreFoundation")
-    target_link_libraries(minifi-pcap "-framework SystemConfiguration")
-    set_target_properties(minifi-pcap PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
-endif ()
+target_link_libraries(minifi-pcap pcapplusplus::pcapplusplus)
 
 target_link_libraries(minifi-pcap ${LIBMINIFI} Threads::Threads)
 

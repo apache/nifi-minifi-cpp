@@ -22,6 +22,5 @@ if(USE_CONAN_PACKAGER)
 
 elseif(USE_CMAKE_FETCH_CONTENT)
     message("Using CMAKE's find_package to integrate system Java OpenJDK external lib")
-
     find_package(Java)
 endif()

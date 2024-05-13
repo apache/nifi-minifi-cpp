@@ -20,10 +20,6 @@
 # Java is required for SFTPTestServer, we will disable tests if we can't find it
 # TODO (JG): Why is Java required for SFTPTestServer? Cant this be an alternative
     # for SFTPTestServer? Like we could create a C++ SFTPTestServer, even Python one, etc.
-    
-message(STATUS "JAVA_HOME: '$ENV{JAVA_HOME}'")
-message(STATUS "MAVEN: $ENV{MAVEN_EXECUTABLE}")
-
 function(build_sftp_extension_test)
     file(GLOB SFTP_INTEGRATION_TESTS "*.cpp")
     SET(SFTP-EXTENSIONS_TEST_COUNT 0)
