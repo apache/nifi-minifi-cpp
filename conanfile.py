@@ -120,7 +120,7 @@ shared_default_options = {
 
 class MiNiFiCppMain(ConanFile):
     name = "minifi-cpp-main"
-    version = "0.15.0"
+    version = "0.99.0"
     license = "Apache-2.0"
     requires = shared_requires
     settings = "os", "compiler", "build_type", "arch"
