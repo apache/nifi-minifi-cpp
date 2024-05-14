@@ -53,10 +53,10 @@ class JsonNode : public flow::Node::NodeImpl {
   nonstd::expected<std::string, std::exception_ptr> getString() const override {
     try {
       if (!node_) {
-        throw std::runtime_error("Cannot get string of invalid json value");
+        throw std::runtime_error(fmt::format("Cannot get string of invalid json value at '{}'", path_));
       }
       if (!node_->IsString()) {
-        throw std::runtime_error("Cannot get string of non-string json value");
+        throw std::runtime_error(fmt::format("Cannot get string of non-string json value at '{}'", path_));
       }
       return std::string{node_->GetString(), node_->GetStringLength()};
     } catch (...) {
@@ -67,10 +67,10 @@ class JsonNode : public flow::Node::NodeImpl {
   nonstd::expected<int64_t, std::exception_ptr> getInt64() const override {
     try {
       if (!node_) {
-        throw std::runtime_error("Cannot get int64 of invalid json value");
+        throw std::runtime_error(fmt::format("Cannot get int64 of invalid json value at '{}'", path_));
       }
       if (!node_->IsInt64()) {
-        throw std::runtime_error("Cannot get int64 of non-int64 json value");
+        throw std::runtime_error(fmt::format("Cannot get int64 of non-int64 json value at '{}'", path_));
       }
       return node_->GetInt64();
     } catch (...) {
@@ -81,10 +81,10 @@ class JsonNode : public flow::Node::NodeImpl {
   nonstd::expected<bool, std::exception_ptr> getBool() const override {
     try {
       if (!node_) {
-        throw std::runtime_error("Cannot get bool of invalid json value");
+        throw std::runtime_error(fmt::format("Cannot get bool of invalid json value at '{}'", path_));
       }
       if (!node_->IsBool()) {
-        throw std::runtime_error("Cannot get bool of non-bool json value");
+        throw std::runtime_error(fmt::format("Cannot get bool of non-bool json value at '{}'", path_));
       }
       return node_->GetBool();
     } catch (...) {
@@ -94,11 +94,11 @@ class JsonNode : public flow::Node::NodeImpl {
 
   nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const override {
     try {
-      if (!node_) throw std::runtime_error("Cannot get string from invalid json value");
+      if (!node_) throw std::runtime_error(fmt::format("Cannot get string from invalid json value at '{}'", path_));
       if (node_->IsInt64()) return std::to_string(node_->GetInt64());
       if (node_->IsUint64()) return std::to_string(node_->GetUint64());
       if (node_->IsString()) return std::string(node_->GetString(), node_->GetStringLength());
-      throw std::runtime_error("Cannot get string from non-integer json value");
+      throw std::runtime_error(fmt::format("Cannot get string from non-integer json value at '{}'", path_));
     } catch (...) {
       return nonstd::make_unexpected(std::current_exception());
     }
@@ -106,13 +106,13 @@ class JsonNode : public flow::Node::NodeImpl {
 
   nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const override {
     try {
-      if (!node_) throw std::runtime_error("Cannot get string from invalid json value");
+      if (!node_) throw std::runtime_error(fmt::format("Cannot get string from invalid json value at '{}'", path_));
       if (node_->IsBool()) return node_->GetBool() ? "true" : "false";
       if (node_->IsInt64()) return std::to_string(node_->GetInt64());
       if (node_->IsUint64()) return std::to_string(node_->GetUint64());
       if (node_->IsString()) return std::string(node_->GetString(), node_->GetStringLength());
       if (node_->IsDouble()) return std::to_string(node_->GetDouble());
-      throw std::runtime_error("Cannot convert non-scalar json value to string");
+      throw std::runtime_error(fmt::format("Cannot convert non-scalar json value to string at '{}'", path_));
     } catch (...) {
       return nonstd::make_unexpected(std::current_exception());
     }
@@ -135,10 +135,10 @@ class JsonNode : public flow::Node::NodeImpl {
 
   size_t size() const override {
     if (!node_) {
-      throw std::runtime_error("Cannot get size of invalid json value");
+      throw std::runtime_error(fmt::format("Cannot get size of invalid json value at '{}'", path_));
     }
     if (!node_->IsArray()) {
-      throw std::runtime_error("Cannot get size of non-array json value");
+      throw std::runtime_error(fmt::format("Cannot get size of non-array json value at '{}'", path_));
     }
     return node_->Size();
   }
@@ -150,7 +150,7 @@ class JsonNode : public flow::Node::NodeImpl {
       return flow::Node{std::make_shared<JsonNode>(nullptr)};
     }
     if (!node_->IsObject()) {
-      throw std::runtime_error("Cannot get member of scalar json value");
+      throw std::runtime_error(fmt::format("Cannot get member '{}' of scalar json value at '{}'", key, path_));
     }
     auto it = node_->FindMember(rapidjson::Value(rapidjson::StringRef(key.data(), key.length())));
     if (it == node_->MemberEnd()) {
@@ -225,27 +225,27 @@ class JsonMemberIterator : public flow::Node::Iterator::IteratorImpl {
 
 inline flow::Node::Iterator JsonNode::begin() const {
   if (!node_) {
-    throw std::runtime_error("Cannot get begin of invalid json value");
+    throw std::runtime_error(fmt::format("Cannot get begin of invalid json value at '{}'", path_));
   }
   if (node_->IsArray()) {
     return flow::Node::Iterator{std::make_unique<JsonValueIterator>(node_->Begin())};
   } else if (node_->IsObject()) {
     return flow::Node::Iterator{std::make_unique<JsonMemberIterator>(node_->MemberBegin())};
   } else {
-    throw std::runtime_error("Json node is not iterable, neither array nor object");
+    throw std::runtime_error(fmt::format("Json node is not iterable, neither array nor object at '{}'", path_));
   }
 }
 
 inline flow::Node::Iterator JsonNode::end() const {
   if (!node_) {
-    throw std::runtime_error("Cannot get end of invalid json value");
+    throw std::runtime_error(fmt::format("Cannot get end of invalid json value at '{}'", path_));
   }
   if (node_->IsArray()) {
     return flow::Node::Iterator{std::make_unique<JsonValueIterator>(node_->End())};
   } else if (node_->IsObject()) {
     return flow::Node::Iterator{std::make_unique<JsonMemberIterator>(node_->MemberEnd())};
   } else {
-    throw std::runtime_error("Json node is not iterable, neither array nor object");
+    throw std::runtime_error(fmt::format("Json node is not iterable, neither array nor object at '{}'", path_));
   }
 }
 

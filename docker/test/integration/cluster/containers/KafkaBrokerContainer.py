@@ -43,6 +43,7 @@ class KafkaBrokerContainer(Container):
         self.server_truststore_file.close()
 
         self.server_properties_file = tempfile.NamedTemporaryFile(delete=False)
+        self.feature_id = feature_context.id
         with open(os.environ['TEST_DIRECTORY'] + "/resources/kafka_broker/conf/server.properties") as server_properties_file:
             server_properties_content = server_properties_file.read()
             patched_server_properties_content = server_properties_content.replace("kafka-broker", f"kafka-broker-{feature_context.id}")
@@ -65,6 +66,10 @@ class KafkaBrokerContainer(Container):
             name=self.name,
             network=self.network.name,
             ports={'9092/tcp': 9092, '29092/tcp': 29092, '9093/tcp': 9093, '29093/tcp': 29093, '9094/tcp': 9094, '29094/tcp': 29094, '9094/tcp': 9094, '29095/tcp': 29095},
+            environment=[
+                "ZOOKEEPER_HOST=zookeeper-" + self.feature_id,
+                "ZOOKEEPER_PORT=2181"
+            ],
             mounts=[
                 docker.types.Mount(
                     type='bind',
@@ -85,6 +90,7 @@ class KafkaBrokerContainer(Container):
                     type='bind',
                     source=self.server_truststore_file.name,
                     target='/usr/local/etc/kafka/certs/server_truststore.pem'
-                )],
+                )
+            ],
             entrypoint=self.command)
         logging.info('Added container \'%s\'', self.name)

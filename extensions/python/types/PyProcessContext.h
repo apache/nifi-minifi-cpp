@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "core/ProcessContext.h"
+#include "PySSLContextService.h"
 #include "../PythonBindings.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
@@ -35,6 +36,7 @@ struct PyProcessContext {
 
   static PyObject* getProperty(PyProcessContext* self, PyObject* args);
   static PyObject* getStateManager(PyProcessContext* self, PyObject* args);
+  static PyObject* getControllerService(PyProcessContext* self, PyObject* args);
 
   static PyTypeObject* typeObject();
 };

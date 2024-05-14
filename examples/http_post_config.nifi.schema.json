@@ -30,7 +30,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-standard-processors",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "FlowFiles To Log": "0",
@@ -109,7 +109,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-http-curl",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Invalid HTTP Header Field Handling Strategy": "transform",
@@ -275,7 +275,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-standard-processors",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Reuse Mode": "Fail on Reuse",
@@ -338,7 +338,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-standard-processors",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Keep Source File": "true",

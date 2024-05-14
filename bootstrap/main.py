@@ -52,6 +52,7 @@ if __name__ == '__main__':
                                               cmake_options_for_parsing,
                                               package_manager,
                                               cmake_cache_dir)
+        minifi_options.load_option_state()
         minifi_options.no_confirm = no_confirm
         minifi_options.set_cmake_override(cmake_options_for_cmake)
 

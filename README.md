@@ -456,7 +456,7 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.15.0.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.99.0.tar.gz generated.
   ```
 
 - Create a source assembly located in your build directory with suffix -source.tar.gz
@@ -468,7 +468,7 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.15.0-source.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.99.0-source.tar.gz generated.
   ```
 
 ### Building a docker image

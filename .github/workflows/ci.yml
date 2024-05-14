@@ -90,9 +90,6 @@ jobs:
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
-          export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison/bin:$PATH"
-          export LDFLAGS="-L/usr/local/opt/flex/lib,-L/usr/local/opt/bison/lib"
-          export CPPFLAGS="-I/usr/local/opt/flex/include"
           python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python main.py --noninteractive --skip-compiler-install --cmake-options="-DCMAKE_C_FLAGS=${CPPFLAGS} ${CFLAGS} -DCMAKE_CXX_FLAGS=${CPPFLAGS} ${CXXFLAGS}" --minifi-options="${MACOS_MINIFI_OPTIONS}"
         working-directory: bootstrap
       - name: cache save

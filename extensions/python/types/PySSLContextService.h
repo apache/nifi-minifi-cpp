@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,34 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <string>
 #include <memory>
-#include <optional>
 
-#include "core/Processor.h"
+#include "controllers/SSLContextService.h"
+#include "../PythonBindings.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
-namespace processors {
-class ExecutePythonProcessor;
-}
+struct PySSLContextService {
+  PySSLContextService() {}
+  using HeldType = std::weak_ptr<controllers::SSLContextService>;
+  static constexpr const char* HeldTypeName = "PySSLContextService::HeldType";
 
-class PythonProcessor {
- public:
-  explicit PythonProcessor(core::Processor* proc);
+  PyObject_HEAD
+  HeldType ssl_context_service_;
 
-  void setSupportsDynamicProperties();
+  static int init(PySSLContextService* self, PyObject* args, PyObject* kwds);
 
-  void setDescription(const std::string& desc);
+  static PyObject* getCertificateFile(PySSLContextService* self, PyObject* args);
+  static PyObject* getPassphrase(PySSLContextService* self, PyObject* args);
+  static PyObject* getPrivateKeyFile(PySSLContextService* self, PyObject* args);
+  static PyObject* getCACertificate(PySSLContextService* self, PyObject* args);
 
-  void addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue,
-    bool required, bool el, bool sensitive, const std::optional<int64_t>& property_type_code, const std::optional<std::string>& controller_service_type_name);
-
- private:
-  python::processors::ExecutePythonProcessor* processor_;
+  static PyTypeObject* typeObject();
 };
 
+namespace object {
+template<>
+struct Converter<PySSLContextService::HeldType> : public HolderTypeConverter<PySSLContextService> {};
+}  // namespace object
 }  // namespace org::apache::nifi::minifi::extensions::python

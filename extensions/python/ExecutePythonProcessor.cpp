@@ -23,6 +23,7 @@
 #include "PythonConfigState.h"
 #include "types/PyRelationship.h"
 #include "types/PyLogger.h"
+#include "controllers/SSLContextService.h"
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
@@ -158,13 +159,17 @@ std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine()
 }
 
 void ExecutePythonProcessor::addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el,
-      bool sensitive, const std::optional<int64_t>& property_type_code) {
+      bool sensitive, const std::optional<int64_t>& property_type_code, const std::optional<std::string>& controller_service_type_name) {
   auto property = core::PropertyDefinitionBuilder<>::createProperty(name).withDescription(description).isRequired(required).supportsExpressionLanguage(el).isSensitive(sensitive);
   if (defaultvalue) {
     property.withDefaultValue(*defaultvalue);
   }
   if (property_type_code) {
     property.withPropertyType(core::StandardPropertyTypes::translateCodeToPropertyType(static_cast<core::StandardPropertyTypes::PropertyTypeCode>(*property_type_code)));
+  }
+
+  if (controller_service_type_name && *controller_service_type_name == "SSLContextService") {
+    property.withAllowedTypes<controllers::SSLContextService>();
   }
 
   std::lock_guard<std::mutex> lock(python_properties_mutex_);

@@ -22,6 +22,8 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
         message("Using Conan Packager to manage installing prebuilt RocksDB external lib")
         include(${CMAKE_BINARY_DIR}/RocksDBConfig.cmake)
 
+        add_library(RocksDB::RocksDB ALIAS RocksDB::rocksdb)
+
     elseif(USE_CMAKE_FETCH_CONTENT)
         message("Using CMAKE's FetchContent to manage source building RocksDB external lib")
 
@@ -34,12 +36,15 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
             list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/lz4/dummy")
         endif()
 
+        # /home/ubuntu/src/james/pipeline/nifi-minifi-cpp/thirdparty/rocksdb/all/patches/arm7.patch
         # Patch to fix build issue on ARM7 architecture: https://github.com/facebook/rocksdb/issues/8609#issuecomment-1009572506
         set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/rocksdb/all/patches/arm7.patch")
         set(PATCH_FILE_2 "${SOURCE_DIR}/thirdparty/rocksdb/all/patches/dboptions_equality_operator.patch")
+        set(PATCH_FILE_3 "${SOURCE_DIR}/thirdparty/rocksdb/all/patches/cstdint.patch")
         set(PC ${Bash_EXECUTABLE} -c "set -x &&\
                 (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\") &&\
-                (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\") ")
+                (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\") &&\
+                (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_3}\") ")
 
         # Define byproducts
         if (WIN32)
@@ -98,21 +103,22 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
         set(ROCKSDB_LIBRARIES ${ROCKSDB_LIBRARY} CACHE STRING "" FORCE)
 
         # Create imported targets
-        add_library(RocksDB::rocksdb STATIC IMPORTED)
-        set_target_properties(RocksDB::rocksdb PROPERTIES IMPORTED_LOCATION "${ROCKSDB_LIBRARY}")
+        add_library(RocksDB::RocksDB STATIC IMPORTED)
+        set_target_properties(RocksDB::RocksDB PROPERTIES IMPORTED_LOCATION "${ROCKSDB_LIBRARY}")
         if (NOT WIN32)
             add_dependencies(rocksdb-external ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
         endif()
-        add_dependencies(RocksDB::rocksdb rocksdb-external)
+        add_dependencies(RocksDB::RocksDB rocksdb-external)
         file(MAKE_DIRECTORY ${ROCKSDB_INCLUDE_DIR})
-        target_include_directories(RocksDB::rocksdb INTERFACE ${ROCKSDB_INCLUDE_DIR})
-        set_property(TARGET RocksDB::rocksdb APPEND PROPERTY INTERFACE_LINK_LIBRARIES Threads::Threads)
-        target_link_libraries(RocksDB::rocksdb INTERFACE Threads::Threads)
+        target_include_directories(RocksDB::RocksDB INTERFACE ${ROCKSDB_INCLUDE_DIR})
+        set_property(TARGET RocksDB::RocksDB APPEND PROPERTY INTERFACE_LINK_LIBRARIES Threads::Threads)
+        target_link_libraries(RocksDB::RocksDB INTERFACE Threads::Threads)
         if(WIN32)
-            target_link_libraries(RocksDB::rocksdb INTERFACE Rpcrt4.lib Cabinet.lib)
+            target_link_libraries(RocksDB::RocksDB INTERFACE Rpcrt4.lib Cabinet.lib)
         else()
-            target_link_libraries(RocksDB::rocksdb INTERFACE ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
+            target_link_libraries(RocksDB::RocksDB INTERFACE ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
         endif()
-    endif()
+        
 
+    endif()
 endfunction(use_bundled_rocksdb)

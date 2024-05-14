@@ -27,6 +27,7 @@
 #include "types/PyOutputStream.h"
 #include "types/PyStateManager.h"
 #include "types/PyDataConverter.h"
+#include "types/PySSLContextService.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 extern "C" {
@@ -60,7 +61,8 @@ PyInit_minifi_native(void) {
       std::make_pair(PyRelationship::typeObject(), "Relationship"),
       std::make_pair(PyInputStream::typeObject(), "InputStream"),
       std::make_pair(PyOutputStream::typeObject(), "OutputStream"),
-      std::make_pair(PyStateManager::typeObject(), "StateManager")
+      std::make_pair(PyStateManager::typeObject(), "StateManager"),
+      std::make_pair(PySSLContextService::typeObject(), "SSLContextService")
   });
 
   for (const auto& type : types) {

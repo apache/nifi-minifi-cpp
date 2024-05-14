@@ -15,7 +15,6 @@
 
 
 import os
-
 import inquirer
 
 from minifi_option import MinifiOptions
@@ -32,21 +31,26 @@ def install_dependencies(minifi_options: MinifiOptions, package_manager: Package
 def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
     if not os.path.exists(minifi_options.build_dir):
         os.mkdir(minifi_options.build_dir)
-    cmake_cmd = f"cmake -G Ninja {minifi_options.create_cmake_options_str()} {minifi_options.source_dir} -B {minifi_options.build_dir}"
+    cmake_cmd = f"cmake {minifi_options.create_cmake_generator_str()} {minifi_options.create_cmake_options_str()} {minifi_options.source_dir} -B {minifi_options.build_dir}"
     res = package_manager.run_cmd(cmake_cmd)
     print("CMake command run successfully" if res else "CMake command run unsuccessfully")
     return res
 
 
 def do_build(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"cmake --build {str(minifi_options.build_dir)}"
+    build_cmd = f"cmake --build {str(minifi_options.build_dir)} {minifi_options.create_cmake_build_flags_str()}"
     res = package_manager.run_cmd(build_cmd)
     print("Build was successful" if res else "Build was unsuccessful")
     return res
 
 
 def do_package(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"cmake --build {str(minifi_options.build_dir)} --target package"
+    build_cmd = f"cmake --build {str(minifi_options.build_dir)} --target package {minifi_options.create_cmake_build_flags_str()}"
+    return package_manager.run_cmd(build_cmd)
+
+
+def do_docker_build(minifi_options: MinifiOptions, package_manager: PackageManager):
+    build_cmd = f"cmake --build {str(minifi_options.build_dir)} --target docker"
     return package_manager.run_cmd(build_cmd)
 
 
@@ -64,7 +68,8 @@ def main_menu(minifi_options: MinifiOptions, package_manager: PackageManager):
         main_menu_options = {
             f"Build dir: {minifi_options.build_dir}": build_dir_menu,
             f"Build type: {minifi_options.build_type.value}": build_type_menu,
-            "Build options": bool_menu,
+            "Build options": build_options_menu,
+            "Extension options": extension_options_menu,
             "One click build": do_one_click_build,
             "Step by step build": step_by_step_menu,
             "Exit": lambda _options, _manager: True,
@@ -107,25 +112,49 @@ def build_dir_menu(minifi_options: MinifiOptions, _package_manager: PackageManag
     return False
 
 
-def bool_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
-    possible_values = [option_name for option_name in minifi_options.bool_options]
-    selected_values = [option.name for option in minifi_options.bool_options.values() if option.value == "ON"]
+def extension_options_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
+    possible_values = [option_name for option_name in minifi_options.extension_options]
+    selected_values = [option.name for option in minifi_options.extension_options.values() if option.value == "ON"]
     questions = [
         inquirer.Checkbox(
             "options",
-            message="MiNiFi C++ Options (space to select, enter to confirm)",
+            message="MiNiFi C++ Extension Options (space to select, enter to confirm)",
             choices=possible_values,
             default=selected_values
         ),
     ]
 
     answers = inquirer.prompt(questions)
-    for bool_option in minifi_options.bool_options.values():
-        if bool_option.name in answers["options"]:
-            bool_option.value = "ON"
+    for extension_option in minifi_options.extension_options.values():
+        if extension_option.name in answers["options"]:
+            extension_option.value = "ON"
         else:
-            bool_option.value = "OFF"
+            extension_option.value = "OFF"
 
+    minifi_options.save_option_state()
+    return False
+
+
+def build_options_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
+    possible_values = [option_name for option_name in minifi_options.build_options]
+    selected_values = [option.name for option in minifi_options.build_options.values() if option.value == "ON"]
+    questions = [
+        inquirer.Checkbox(
+            "options",
+            message="MiNiFi C++ Build Options (space to select, enter to confirm)",
+            choices=possible_values,
+            default=selected_values
+        ),
+    ]
+
+    answers = inquirer.prompt(questions)
+    for build_option in minifi_options.build_options.values():
+        if build_option.name in answers["options"]:
+            build_option.value = "ON"
+        else:
+            build_option.value = "OFF"
+
+    minifi_options.save_option_state()
     return False
 
 
@@ -138,6 +167,7 @@ def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageMan
             "Run cmake": run_cmake,
             "Build": do_build,
             "Package": do_package,
+            "Docker build": do_docker_build,
             "Back": lambda _options, _manager: True,
         }
         questions = [
