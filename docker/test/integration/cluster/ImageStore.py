@@ -128,7 +128,7 @@ class ImageStore:
         parse_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
         chunk_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
         if python_option == PythonOptions.SYSTEM_INSTALLED_PACKAGES:
-            additional_cmd = "RUN pip3 install 'langchain<=0.17.0'"
+            additional_cmd = "RUN pip3 install --break-system-packages 'langchain<=0.17.0'"
         elif python_option == PythonOptions.REQUIREMENTS_FILE:
             requirements_install_command = "echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\"
         elif python_option == PythonOptions.INLINE_DEFINED_PACKAGES:

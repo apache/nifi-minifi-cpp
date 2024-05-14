@@ -22,8 +22,12 @@ cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_
 cmake_policy(SET CMP0065 OLD) # default export policy, required for self-dlopen
 cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
 
-project(nifi-minifi-cpp VERSION 0.15.0)
+project(nifi-minifi-cpp VERSION 0.99.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
+
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+endif()
 
 # Optional build number for linux distribution targets' tar.gz output
 set(BUILD_NUMBER "" CACHE STRING "Build number")
@@ -226,9 +230,6 @@ if (ENABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     include(BundledBZip2)
     use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
-
-    include(BundledRocksDB)
-    use_bundled_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 endif()
 
 if(NOT WIN32)
@@ -570,9 +571,19 @@ if (NOT WIN32)
         DESTINATION minifi-python-examples
         COMPONENT bin)
 
-    install(PROGRAMS bin/minifi.sh bin/minifi.service
-        DESTINATION bin
-        COMPONENT bin)
+    install(PROGRAMS bin/minifi.sh
+            DESTINATION bin
+            COMPONENT bin)
+
+    if (APPLE)
+        install(FILES bin/minifi.plist
+            DESTINATION bin
+            COMPONENT bin)
+    else()
+        install(FILES bin/minifi.service
+                DESTINATION bin
+                COMPONENT bin)
+    endif()
 endif()
 
 install(FILES LICENSE NOTICE
@@ -767,7 +778,7 @@ if ("python_script_extension" IN_LIST CPACK_COMPONENTS_ALL)
         list(APPEND CPACK_COMPONENTS_ALL minifi_python_native_module)
         cpack_add_component(minifi_python_native_module
                 DISPLAY_NAME "MiNiFi Python native module"
-                FILES "${CMAKE_BINARY_DIR}/bin/minifi_native$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
+                FILES "${CMAKE_BINARY_DIR}/bin/minifi_native.so"
                 GROUP extensions
                 DEPENDS bin)
     endif()

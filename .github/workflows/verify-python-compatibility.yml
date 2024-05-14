@@ -24,7 +24,9 @@ jobs:
       - id: build
         run: |
           if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
-          mkdir build && cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make centos
+          mkdir build && cd build && cmake -DENABLE_AWS=OFF -DENABLE_LIBRDKAFKA=OFF -DENABLE_KUBERNETES=OFF -DENABLE_SYSTEMD=OFF -DENABLE_SQL=OFF -DENABLE_MQTT=OFF -DENABLE_GCP=OFF \
+              -DENABLE_AZURE=OFF -DENABLE_SPLUNK=OFF -DENABLE_ELASTICSEARCH=OFF -DENABLE_PROMETHEUS=OFF -DDOCKER_BUILD_ONLY=ON -DENABLE_PROCFS=OFF -DENABLE_OPC=OFF \
+              -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make centos
       - uses: actions/upload-artifact@v3
         with:
           name: minifi-tar

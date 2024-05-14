@@ -66,12 +66,12 @@ else()
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
             "libminifi-python-script-extension$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
-            "${CMAKE_BINARY_DIR}/bin/minifi_native$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
+            "${CMAKE_BINARY_DIR}/bin/minifi_native.so"
         COMMENT "Creating symlink for minifi-python-script-extension"
     )
 
     install(
-        FILES "${CMAKE_BINARY_DIR}/bin/minifi_native$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
+        FILES "${CMAKE_BINARY_DIR}/bin/minifi_native.so"
         DESTINATION extensions
         COMPONENT minifi_python_native_module
     )

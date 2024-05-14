@@ -33,10 +33,17 @@ class SpecialPropertyTypeChecker(FlowFileTransform):
         default_value="100 MB",
         required=True
     )
+    SSL_CONTEXT_PROPERTY = PropertyDescriptor(
+        name="SSL Context Service",
+        description="Dummy property that should be an SSL Context",
+        controller_service_definition="SSLContextService",
+        required=True
+    )
 
     property_descriptors = [
         TIME_PERIOD_PROPERTY,
-        DATA_SIZE_PROPERTY
+        DATA_SIZE_PROPERTY,
+        SSL_CONTEXT_PROPERTY
     ]
 
     def __init__(self, **kwargs):
@@ -95,5 +102,11 @@ class SpecialPropertyTypeChecker(FlowFileTransform):
         if data_size_in_gigabytes != 0.09765625:
             self.logger.error("Data size property conversion to gigabytes is not working as expected")
             return FlowFileTransformResult("failure", contents="Data size property conversion to gigabytes is not working as expected")
+
+        ssl_context = context.getProperty(self.SSL_CONTEXT_PROPERTY).asControllerService()
+        cert = ssl_context.getCertificateFile()
+        if cert != "/tmp/resources/minifi_client.crt":
+            self.logger.error("SSL Context Service property is not working as expected")
+            return FlowFileTransformResult("failure", contents="SSL Context Service property is not working as expected")
 
         return FlowFileTransformResult("success", contents="Check successful!")

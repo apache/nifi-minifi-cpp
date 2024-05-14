@@ -30,7 +30,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-azure",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Blob": "test-blob",
@@ -120,7 +120,7 @@
                 "bundle": {
                     "group": "org.apache.nifi.minifi",
                     "artifact": "minifi-standard-processors",
-                    "version": "0.15.0"
+                    "version": "0.99.0"
                 },
                 "properties": {
                     "Keep Source File": "false",

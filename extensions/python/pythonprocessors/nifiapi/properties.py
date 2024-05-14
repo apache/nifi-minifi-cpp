@@ -192,13 +192,14 @@ class FlowFileProxy:
 
 
 class PythonPropertyValue:
-    def __init__(self, cpp_context: ProcessContext, name: str, string_value: str, el_supported: bool):
+    def __init__(self, cpp_context: ProcessContext, name: str, string_value: str, el_supported: bool, controller_service_definition: str):
         self.cpp_context = cpp_context
         self.value = None
         self.name = name
         if string_value is not None:
             self.value = string_value
         self.el_supported = el_supported
+        self.controller_service_definition = controller_service_definition
 
     def getValue(self) -> str:
         return self.value
@@ -263,7 +264,12 @@ class PythonPropertyValue:
         # If Expression Language is supported and present, evaluate it and return a new PropertyValue.
         # Otherwise just return self, in order to avoid the cost of making the call to cpp for getProperty
         new_string_value = self.cpp_context.getProperty(self.name, flow_file_proxy.flow_file)
-        return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported)
+        return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported, self.controller_service_definition)
+
+    def asControllerService(self):
+        if not self.controller_service_definition:
+            raise Exception("Controller Service definition is not set, getProperty must be called with a property descriptor instead of string value")
+        return self.cpp_context.getControllerService(self.value, self.controller_service_definition)
 
 
 class ProcessContextProxy:
@@ -276,8 +282,10 @@ class ProcessContextProxy:
         if isinstance(descriptor, str):
             property_name = descriptor
             expression_language_support = True
+            controller_service_definition = None
         else:
             property_name = descriptor.name
             expression_language_support = descriptor.expressionLanguageScope != ExpressionLanguageScope.NONE
+            controller_service_definition = descriptor.controllerServiceDefinition
         property_value = self.cpp_context.getProperty(property_name)
-        return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support)
+        return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support, controller_service_definition)
