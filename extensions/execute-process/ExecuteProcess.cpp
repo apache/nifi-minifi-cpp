@@ -17,7 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef WIN32
 #include "ExecuteProcess.h"
 
 #include <array>
@@ -239,4 +238,3 @@ void ExecuteProcess::onTrigger(core::ProcessContext&, core::ProcessSession& sess
 REGISTER_RESOURCE(ExecuteProcess, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors
-#endif

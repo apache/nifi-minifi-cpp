@@ -17,7 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef WIN32
 #pragma once
 
 #include <sys/types.h>
@@ -126,4 +125,3 @@ class ExecuteProcess : public core::Processor {
 };
 
 }  // namespace org::apache::nifi::minifi::processors
-#endif
