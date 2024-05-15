@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-#include <TestUtils.h>
-
 #include <string>
 #include <vector>
 
 #include "../Catch.h"
 #include "../TestBase.h"
+#include "TestUtils.h"
 #include "io/FileStream.h"
 #include "utils/file/FileUtils.h"
 
