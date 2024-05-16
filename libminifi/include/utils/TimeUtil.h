@@ -42,10 +42,6 @@
 
 #include "date/date.h"
 
-#ifdef WIN32
-#include "date/tz.h"
-#endif
-
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 170000

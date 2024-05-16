@@ -18,6 +18,10 @@
 #include "utils/TimeUtil.h"
 #include "range/v3/algorithm/contains.hpp"
 
+#ifdef WIN32
+#include "date/tz.h"
+#endif
+
 namespace org::apache::nifi::minifi::utils::timeutils {
 
 using namespace std::literals::chrono_literals;
