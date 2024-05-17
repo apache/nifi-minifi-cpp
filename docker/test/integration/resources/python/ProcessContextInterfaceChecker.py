@@ -61,6 +61,22 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
         return [Relationship("myrelationship", "Dummy dynamic relationship")]
 
     def transform(self, context, flowFile):
+        properties = context.getProperties()
+        if len(properties) != 3:
+            return FlowFileTransformResult("failure", contents="Property count is invalid")
+
+        property_names = [property.name for property in properties]
+        if "Secret Password" not in property_names or "Request Timeout" not in property_names or "Wish Count" not in property_names:
+            return FlowFileTransformResult("failure", contents="Missing properties")
+
+        for property in properties:
+            if property.name == "Secret Password" and properties[property] != "mysecret":
+                return FlowFileTransformResult("failure", contents="Secret Password value is invalid")
+            elif property.name == "Request Timeout" and properties[property] != "60 sec":
+                return FlowFileTransformResult("failure", contents="Request Timeout value is invalid")
+            elif property.name == "Wish Count" and properties[property] != "3":
+                return FlowFileTransformResult("failure", contents="Wish Count value is invalid")
+
         secret_password = context.getProperty(self.SECRET_PASSWORD).getValue()
         if secret_password != "mysecret":
             return FlowFileTransformResult("failure", contents="Secret password is invalid")

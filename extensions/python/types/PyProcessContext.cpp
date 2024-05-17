@@ -21,6 +21,7 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 #include "PyStateManager.h"
 #include "PyScriptFlowFile.h"
+#include "core/Processor.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
@@ -149,10 +150,19 @@ PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
     return nullptr;
   }
 
-  auto properties = context->getProcessorNode()->getProperties();
+  auto processor = dynamic_cast<core::Processor*>(context->getProcessorNode()->getProcessor());
+  if (!processor) {
+    PyErr_SetString(PyExc_AttributeError, "Processor not available in getProperties");
+    return nullptr;
+  }
+  auto properties = processor->getProperties();
   auto py_properties = OwnedDict::create();
-  for (const auto& [prop_name, property] : properties) {
-    py_properties.put(prop_name, std::string(property.getValue()));
+  for (const auto& [property_name, property] : properties) {
+    std::string value;
+    if (!context->getProperty(property_name, value)) {
+      continue;
+    }
+    py_properties.put(property_name, value);
   }
 
   return object::returnReference(py_properties);

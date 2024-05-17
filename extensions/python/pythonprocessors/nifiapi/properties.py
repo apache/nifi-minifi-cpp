@@ -303,10 +303,8 @@ class ProcessContext:
         properties = dict()
         cpp_properties = self.cpp_context.getProperties()
 
-        for property_name in cpp_properties:
-            for property_descriptor in self.processor.getPropertyDescriptors():
-                if property_descriptor.name == property_name:
-                    properties[property_descriptor] = cpp_properties[property_name]
-                    break
+        for property_descriptor in self.processor.getPropertyDescriptors():
+            if property_descriptor.name in cpp_properties:
+                properties[property_descriptor] = cpp_properties[property_descriptor.name]
 
         return properties
