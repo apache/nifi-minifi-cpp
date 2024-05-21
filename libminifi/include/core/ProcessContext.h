@@ -268,7 +268,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     std::lock_guard<std::mutex> lock(mutex);
 
     /* See if we have already created a default provider */
-    std::shared_ptr<core::controller::ControllerServiceNode> node = controller_service_provider->getControllerServiceNode(DefaultStateStorageName);
+    core::controller::ControllerServiceNode* node = controller_service_provider->getControllerServiceNode(DefaultStateStorageName);
     if (node != nullptr) {
       return std::dynamic_pointer_cast<core::StateStorage>(node->getControllerServiceImplementation());
     }
@@ -286,12 +286,12 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         const std::string& type,
         const std::string& longType,
         const std::unordered_map<std::string, std::string>& extraProperties) -> std::shared_ptr<core::StateStorage> {
-      node = controller_service_provider->createControllerService(type, longType, DefaultStateStorageName, true /*firstTimeAdded*/);
-      if (node == nullptr) {
+      auto new_node = controller_service_provider->createControllerService(type, longType, DefaultStateStorageName, true /*firstTimeAdded*/);
+      if (new_node == nullptr) {
         return nullptr;
       }
-      node->initialize();
-      auto storage = node->getControllerServiceImplementation();
+      new_node->initialize();
+      auto storage = new_node->getControllerServiceImplementation();
       if (storage == nullptr) {
         return nullptr;
       }
@@ -306,7 +306,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
           return nullptr;
         }
       }
-      if (!node->enable()) {
+      if (!new_node->enable()) {
         return nullptr;
       }
       return std::dynamic_pointer_cast<core::StateStorage>(storage);

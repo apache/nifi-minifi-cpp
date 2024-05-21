@@ -60,7 +60,7 @@ class ProcessSessionFactory;
 class Repository;
 namespace controller {
 class ControllerServiceNode;
-class ControllerServiceMap;
+class ControllerServiceNodeMap;
 class ControllerServiceProvider;
 }  // namespace controller
 }  // namespace core
@@ -304,7 +304,6 @@ class TestPlan {
   std::shared_ptr<minifi::core::Repository> flow_repo_;
   std::shared_ptr<minifi::core::Repository> prov_repo_;
 
-  std::shared_ptr<minifi::core::controller::ControllerServiceMap> controller_services_;
   std::shared_ptr<minifi::core::controller::ControllerServiceProvider> controller_services_provider_;
 
   std::shared_ptr<minifi::core::StateStorage> state_storage_;

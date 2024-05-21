@@ -78,10 +78,9 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    * maintains
    * @return the implementation of the Controller Service
    */
-  std::shared_ptr<ControllerService> &getControllerServiceImplementation();
+  std::shared_ptr<ControllerService> getControllerServiceImplementation();
   const ControllerService* getControllerServiceImplementation() const;
-  std::vector<std::shared_ptr<ControllerServiceNode> > &getLinkedControllerServices();
-  std::vector<std::shared_ptr<ConfigurableComponent> > &getLinkedComponents();
+  const std::vector<ControllerServiceNode*>& getLinkedControllerServices() const;
 
   /**
    * Returns true if we can be enabled.
@@ -124,8 +123,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
   // controller service.
   std::shared_ptr<ControllerService> controller_service_;
   // linked controller services.
-  std::vector<std::shared_ptr<ControllerServiceNode> > linked_controller_services_;
-  std::vector<std::shared_ptr<ConfigurableComponent> > linked_components_;
+  std::vector<ControllerServiceNode*> linked_controller_services_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

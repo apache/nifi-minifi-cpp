@@ -69,7 +69,7 @@ class VolatileMapStateStorageTestFixture {
     content_repo->initialize(configuration);
 
     process_group = yaml_config->getRoot();
-    key_value_store_service_node = process_group->findControllerService("testcontroller");
+    auto* key_value_store_service_node = process_group->findControllerService("testcontroller");
     REQUIRE(key_value_store_service_node != nullptr);
     key_value_store_service_node->enable();
 
@@ -104,7 +104,6 @@ class VolatileMapStateStorageTestFixture {
   });
   std::unique_ptr<core::ProcessGroup> process_group;
 
-  std::shared_ptr<core::controller::ControllerServiceNode> key_value_store_service_node;
   std::shared_ptr<minifi::controllers::KeyValueStateStorage> controller;
 
   TestController testController;

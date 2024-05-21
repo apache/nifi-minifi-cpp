@@ -82,7 +82,6 @@ class PersistentStateStorageTestsFixture {
 
   void loadYaml() {
     controller.reset();
-    persistable_key_value_store_service_node.reset();
 
     process_group.reset();
     yaml_config.reset();
@@ -110,7 +109,7 @@ class PersistentStateStorageTestsFixture {
         .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
     });
     process_group = yaml_config->getRoot();
-    persistable_key_value_store_service_node = process_group->findControllerService("testcontroller");
+    auto* persistable_key_value_store_service_node = process_group->findControllerService("testcontroller");
     REQUIRE(persistable_key_value_store_service_node != nullptr);
     persistable_key_value_store_service_node->enable();
 
@@ -129,7 +128,6 @@ class PersistentStateStorageTestsFixture {
   std::unique_ptr<core::YamlConfiguration> yaml_config;
   std::unique_ptr<core::ProcessGroup> process_group;
 
-  std::shared_ptr<core::controller::ControllerServiceNode> persistable_key_value_store_service_node;
   std::shared_ptr<minifi::controllers::KeyValueStateStorage> controller;
 };
 

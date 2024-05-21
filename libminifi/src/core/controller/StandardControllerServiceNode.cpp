@@ -29,18 +29,18 @@ bool StandardControllerServiceNode::enable() {
   if (getProperty(property.getName(), property)) {
     active = true;
     for (const auto& linked_service : property.getValues()) {
-      std::shared_ptr<ControllerServiceNode> csNode = provider->getControllerServiceNode(linked_service);
+      ControllerServiceNode* csNode = provider->getControllerServiceNode(linked_service);
       if (nullptr != csNode) {
         std::lock_guard<std::mutex> lock(mutex_);
         linked_controller_services_.push_back(csNode);
       }
     }
-  } else {
   }
   std::shared_ptr<ControllerService> impl = getControllerServiceImplementation();
   if (nullptr != impl) {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::vector<std::shared_ptr<ControllerService> > services;
+    std::vector<std::shared_ptr<ControllerService>> services;
+    services.reserve(linked_controller_services_.size());
     for (const auto& service : linked_controller_services_) {
       services.push_back(service->getControllerServiceImplementation());
     }

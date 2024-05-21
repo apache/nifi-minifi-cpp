@@ -261,13 +261,8 @@ void ProcessGroup::addControllerService(const std::string &nodeId, const std::sh
   controller_service_map_.put(nodeId, node);
 }
 
-/**
- * Find controllerservice node will search child groups until the nodeId is found.
- * @param node node identifier
- * @return controller service node, if it exists.
- */
-std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findControllerService(const std::string &nodeId) const {
-  return controller_service_map_.getControllerServiceNode(nodeId);
+core::controller::ControllerServiceNode* ProcessGroup::findControllerService(const std::string &nodeId) const {
+  return controller_service_map_.get(nodeId);
 }
 
 std::vector<const core::controller::ControllerServiceNode*> ProcessGroup::getAllControllerServices() const {

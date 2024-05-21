@@ -302,13 +302,13 @@ TEST_CASE("The encrypted flow configuration can be decrypted with the correct ke
   CHECK(processor_before->getProperties().at("invokehttp-proxy-password").getValue() == processor_after->getProperties().at("invokehttp-proxy-password").getValue());
 
   const auto controller_service_id = "b9801278-7b5d-4314-aed6-713fd4b5f933";
-  const auto controller_service_node_before = process_group_before->findControllerService(controller_service_id);
+  const auto* const controller_service_node_before = process_group_before->findControllerService(controller_service_id);
   REQUIRE(controller_service_node_before);
-  const auto controller_service_before = controller_service_node_before->getControllerServiceImplementation();
+  const auto* const controller_service_before = controller_service_node_before->getControllerServiceImplementation();
   REQUIRE(controller_service_node_before);
-  const auto controller_service_node_after = process_group_after->findControllerService(controller_service_id);
+  const auto* const controller_service_node_after = process_group_after->findControllerService(controller_service_id);
   REQUIRE(controller_service_node_after);
-  const auto controller_service_after = controller_service_node_before->getControllerServiceImplementation();
+  const auto* const controller_service_after = controller_service_node_before->getControllerServiceImplementation();
   REQUIRE(controller_service_after);
   CHECK(controller_service_before->getProperties().at("CA Certificate").getValue() == controller_service_after->getProperties().at("CA Certificate").getValue());
   CHECK(controller_service_before->getProperties().at("Passphrase").getValue() == controller_service_after->getProperties().at("Passphrase").getValue());

@@ -125,7 +125,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
     parseProvenanceReporting(provenanceReportNode, root.get());
 
     // set the controller services into the root group.
-    for (const auto& controller_service : controller_services_->getAllControllerServices()) {
+    for (const auto& controller_service : service_provider_->getAllControllerServices()) {
       root->addControllerService(controller_service->getName(), controller_service);
       root->addControllerService(controller_service->getUUIDStr(), controller_service);
     }
@@ -513,8 +513,8 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
     } else {
       logger_->log_debug("Could not locate {}", type);
     }
-    controller_services_->put(id, controller_service_node);
-    controller_services_->put(name, controller_service_node);
+    service_provider_->putControllerServiceNode(id, controller_service_node);
+    service_provider_->putControllerServiceNode(name, controller_service_node);
   }
 }
 
