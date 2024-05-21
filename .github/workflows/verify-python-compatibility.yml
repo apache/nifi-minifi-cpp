@@ -83,7 +83,7 @@ jobs:
                 && ${{ matrix.platform.build_cmd }} && ${{ matrix.platform.verify_cmd }}
       - name: Test Reporter
         if: always()
-        uses: phoenix-actions/test-reporting@v12
+        uses: phoenix-actions/test-reporting@v15
         with:
           name: "${{ matrix.platform.name }}"
           path: build/behavex_output/behave/*.xml

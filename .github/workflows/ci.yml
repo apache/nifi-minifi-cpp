@@ -639,7 +639,7 @@ jobs:
         run: make docker-verify
       - name: Test Reporter
         if: always()
-        uses: phoenix-actions/test-reporting@v12
+        uses: phoenix-actions/test-reporting@v15
         with:
           name: Docker integration tests
           path: build/behavex_output/behave/*.xml
