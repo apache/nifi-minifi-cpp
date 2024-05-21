@@ -232,7 +232,7 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
     return session.read(ff, cb);
   };
 
-  const char* mimeType;
+  const char* mimeType = nullptr;
   std::unique_ptr<MergeBin> mergeBin;
   std::unique_ptr<minifi::FlowFileSerializer> serializer = std::make_unique<PayloadSerializer>(flowFileReader);
   if (mergeFormat_ == merge_content_options::MERGE_FORMAT_CONCAT_VALUE) {
@@ -272,7 +272,7 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
   for (const auto& flow : flows) {
     session.transfer(flow, Original);
   }
-  logger_->log_info("Merge FlowFile record UUID {}, payload length {}", merge_flow->getUUIDStr(), merge_flow->getSize());
+  logger_->log_debug("Merge FlowFile record UUID {}, payload length {}", merge_flow->getUUIDStr(), merge_flow->getSize());
 
   return true;
 }

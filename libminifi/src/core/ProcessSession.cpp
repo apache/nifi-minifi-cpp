@@ -194,7 +194,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const FlowFile& parent, in
 }
 
 void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
-  logger_->log_trace("Removing flow file with UUID: {}", flow->getUUIDStr());
+  logger_->log_debug("Removing flow file with UUID: {}", flow->getUUIDStr());
   flow->setDeleted(true);
   deleted_flowfiles_.push_back(flow);
   std::string reason = process_context_->getProcessorNode()->getName() + " drop flow record " + flow->getUUIDStr();
@@ -220,7 +220,7 @@ void ProcessSession::penalize(const std::shared_ptr<core::FlowFile> &flow) {
 }
 
 void ProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) {
-  logger_->log_info("Transferring {} from {} to relationship {}", flow->getUUIDStr(), process_context_->getProcessorNode()->getName(), relationship.getName());
+  logger_->log_debug("Transferring {} from {} to relationship {}", flow->getUUIDStr(), process_context_->getProcessorNode()->getName(), relationship.getName());
   utils::Identifier uuid = flow->getUUID();
   if (auto it = added_flowfiles_.find(uuid); it != added_flowfiles_.end()) {
     it->second.rel = &*relationships_.insert(relationship).first;
@@ -915,7 +915,7 @@ void ProcessSession::commit() {
     relationships_.clear();
     // persistent the provenance report
     this->provenance_report_->commit();
-    logger_->log_trace("ProcessSession committed for {}", process_context_->getProcessorNode()->getName());
+    logger_->log_debug("ProcessSession committed for {}", process_context_->getProcessorNode()->getName());
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception during process session commit, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;

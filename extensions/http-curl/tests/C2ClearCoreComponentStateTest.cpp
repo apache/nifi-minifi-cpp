@@ -41,7 +41,7 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessContext>();
-    LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
+    LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     LogTestController::getInstance().setDebug<minifi::processors::TailFile>();
     VerifyC2Base::testSetup();
   }
@@ -139,7 +139,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
         auto tail_file_ran_again_checker = [this] {
           const auto log_contents = LogTestController::getInstance().getLogs();
           const std::string tailing_file_pattern = "[debug] Tailing file " + file_1_location_.string();
-          const std::string tail_file_committed_pattern = "[trace] ProcessSession committed for TailFile1";
+          const std::string tail_file_committed_pattern = "ProcessSession committed for TailFile1";
           const std::vector<std::string> patterns = {tailing_file_pattern, tailing_file_pattern, tail_file_committed_pattern};
           return utils::string::matchesSequence(log_contents, patterns);
         };
