@@ -105,8 +105,8 @@ int main(int argc, char **argv) {
     controller->load();
     controller->start();
     auto* ssl_client_node = controller->getControllerServiceNode("SSLClientServiceTest");
-    ssl_client_node->enable();
     assert(ssl_client_node != nullptr);
+    ssl_client_node->enable();
     assert(ssl_client_node->getControllerServiceImplementation() != nullptr);
     ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_node->getControllerServiceImplementation());
   }
