@@ -52,7 +52,7 @@ if (NOT USE_SHARED_LIBS)
 endif(NOT USE_SHARED_LIBS)
 target_link_libraries(minifiexe Threads::Threads)
 
-target_link_libraries(minifiexe yaml-cpp)
+target_link_libraries(minifiexe yaml-cpp::yaml-cpp)
 if(CUSTOM_MALLOC_LIB)
     message(VERBOSE "Using custom malloc lib ${CUSTOM_MALLOC_LIB} for minifiexe")
     target_link_libraries(minifiexe ${CUSTOM_MALLOC_LIB})
@@ -65,7 +65,7 @@ endif()
 
 get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 include(ArgParse)
-target_link_libraries(minifiexe spdlog libsodium gsl-lite argparse ${LIBMINIFI})
+target_link_libraries(minifiexe spdlog::spdlog libsodium::libsodium gsl::gsl-lite argparse::argparse ${LIBMINIFI})
 
 set_target_properties(minifiexe PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set_target_properties(minifiexe PROPERTIES OUTPUT_NAME minifi)

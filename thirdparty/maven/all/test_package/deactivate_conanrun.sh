@@ -1,0 +1,1 @@
+. "/home/ubuntu/src/james/pipeline/nifi-minifi-cpp/thirdparty/maven/all/test_package/deactivate_conanrunenv-release-x86_64.sh"

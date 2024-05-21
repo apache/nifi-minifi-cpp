@@ -16,11 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+if(USE_CONAN_PACKAGER)
+    message("Using Conan Packager to manage installing prebuilt Catch2 external lib")
+    include(${CMAKE_BINARY_DIR}/Catch2Config.cmake)
+elseif(USE_CMAKE_FETCH_CONTENT)
+    message("Using CMAKE's FetchContent to manage source building Catch2 external lib")
 include(FetchContent)
 
-FetchContent_Declare(
-        Catch2
-        URL      https://github.com/catchorg/Catch2/archive/refs/tags/v3.4.0.tar.gz
-        URL_HASH SHA256=122928b814b75717316c71af69bd2b43387643ba076a6ec16e7882bfb2dfacbb
-)
-FetchContent_MakeAvailable(Catch2)
+    FetchContent_Declare(
+            Catch2
+            URL      https://github.com/catchorg/Catch2/archive/refs/tags/v3.4.0.tar.gz
+            URL_HASH SHA256=122928b814b75717316c71af69bd2b43387643ba076a6ec16e7882bfb2dfacbb
+    )
+    FetchContent_MakeAvailable(Catch2)
+endif()

@@ -50,11 +50,11 @@ if(ROCKSDB_INCLUDE_DIR AND ROCKSDB_LIBRARIES)
     message(STATUS "Found RocksDB...${ROCKSDB_LIBRARIES}")
 endif()
 
-if(NOT TARGET RocksDB::RocksDB)
-    add_library(RocksDB::RocksDB UNKNOWN IMPORTED)
-    set_target_properties(RocksDB::RocksDB PROPERTIES
+if(NOT TARGET RocksDB::rocksdb)
+    add_library(RocksDB::rocksdb UNKNOWN IMPORTED)
+    set_target_properties(RocksDB::rocksdb PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${ROCKSDB_INCLUDE_DIR}")
-    set_target_properties(RocksDB::RocksDB PROPERTIES
+    set_target_properties(RocksDB::rocksdb PROPERTIES
         IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
         IMPORTED_LOCATION "${ROCKSDB_LIBRARIES}")
 endif()

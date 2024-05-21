@@ -1,0 +1,14 @@
+sources:
+  "8.10.2":
+    url: "https://github.com/facebook/rocksdb/archive/refs/tags/v8.10.2.tar.gz"
+    sha256: "44b6ec2f4723a0d495762da245d4a59d38704e0d9d3d31c45af4014bee853256"
+patches:
+  "8.10.2":
+    - patch_file: "patches/arm7.patch"
+      patch_description: "Fix for ARM7"
+      patch_type: "portability"
+      patch_source: "https://github.com/apache/nifi-minifi-cpp/commit/36244376bb46c5c85657c6dfe92a6a0c4cea650a"
+    - patch_file: "patches/dboptions_equality_operator.patch"
+      patch_description: "Fix for missing equality operator in DBOptions and make DBOptions configurable"
+      patch_type: "portability"
+      patch_source: "https://github.com/apache/nifi-minifi-cpp/commit/545236fd06b613f2d2b38f74ff9ee85df9190d59"

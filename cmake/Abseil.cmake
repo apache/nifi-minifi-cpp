@@ -16,20 +16,32 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-include(FetchContent)
-set(ABSL_PROPAGATE_CXX_STD ON CACHE INTERNAL absl-propagate-cxx)
-set(ABSL_ENABLE_INSTALL ON CACHE INTERNAL "")
-set(BUILD_TESTING OFF CACHE STRING "" FORCE)
+if(USE_CONAN_PACKAGER)
+    message("Using Conan Packager to manage installing prebuilt Abseil external lib")
+    include(${CMAKE_BINARY_DIR}/absl-config.cmake)
+    set(ABSL_INCLUDE_DIRS "${absl_INCLUDE_DIRS}" CACHE STRING "" FORCE)
 
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/abseil/rename-crc32.patch")
-set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+elseif(USE_CMAKE_FETCH_CONTENT)
+    message("Using CMAKE's FetchContent to manage source building Abseil external lib")
+    include(FetchContent)
+    set(ABSL_PROPAGATE_CXX_STD ON CACHE INTERNAL absl-propagate-cxx)
+    set(ABSL_ENABLE_INSTALL ON CACHE INTERNAL "")
+    set(BUILD_TESTING OFF CACHE STRING "" FORCE)
 
-FetchContent_Declare(
-        absl
-        URL      https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.0.tar.gz
-        URL_HASH SHA256=59d2976af9d6ecf001a81a35749a6e551a335b949d34918cfade07737b9d93c5
-        PATCH_COMMAND "${PC}"
-        OVERRIDE_FIND_PACKAGE
-)
-FetchContent_MakeAvailable(absl)
+    set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/abseil/rename-crc32.patch")
+    set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+
+    FetchContent_Declare(
+            absl
+            URL      https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.0.tar.gz
+            URL_HASH SHA256=59d2976af9d6ecf001a81a35749a6e551a335b949d34918cfade07737b9d93c5
+            PATCH_COMMAND "${PC}"
+            OVERRIDE_FIND_PACKAGE
+    )
+    FetchContent_MakeAvailable(absl)
+
+    add_library(abseil::abseil INTERFACE IMPORTED)
+    set(ABSL_INCLUDE_DIRS "${absl_SOURCE_DIR}/absl" CACHE STRING "" FORCE)
+    target_include_directories(abseil::abseil SYSTEM INTERFACE ${ABSL_INCLUDE_DIRS})
+endif()

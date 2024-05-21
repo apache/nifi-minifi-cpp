@@ -14,24 +14,34 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+if(USE_CONAN_PACKAGER)
+    message("Using Conan Packager to manage installing prebuilt Lua external lib")
+    include(${CMAKE_BINARY_DIR}/lua-config.cmake)
 
-include(FetchContent)
+    set(LUA_INCLUDE_DIR ${lua_INCLUDE_DIRS})
+elseif(USE_CMAKE_FETCH_CONTENT)
+    message("Using CMAKE's FetchContent to manage source building Lua external lib")
+    
+    include(FetchContent)
 
-FetchContent_Declare(lua
-    URL         "https://www.lua.org/ftp/lua-5.4.6.tar.gz"
-    URL_HASH    "SHA256=7d5ea1b9cb6aa0b59ca3dde1c6adcb57ef83a1ba8e5432c0ecd06bf439b3ad88"
-)
+    FetchContent_Declare(lua
+        URL         "https://www.lua.org/ftp/lua-5.4.6.tar.gz"
+        URL_HASH    "SHA256=7d5ea1b9cb6aa0b59ca3dde1c6adcb57ef83a1ba8e5432c0ecd06bf439b3ad88"
+    )
 
-FetchContent_GetProperties(lua)
-if(NOT lua_POPULATED)
-    FetchContent_Populate(lua)
+    FetchContent_GetProperties(lua)
+    if(NOT lua_POPULATED)
+        FetchContent_Populate(lua)
 
-    file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")
-    add_library(lua STATIC ${LUA_SOURCES})
+        file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")
+        add_library(lua STATIC ${LUA_SOURCES})
 
-    file(MAKE_DIRECTORY "${lua_BINARY_DIR}/include")
-    foreach(HEADER lua.h luaconf.h lualib.h lauxlib.h lua.hpp)
-        file(COPY "${lua_SOURCE_DIR}/src/${HEADER}" DESTINATION "${lua_BINARY_DIR}/include")
-    endforeach()
-    set(LUA_INCLUDE_DIR "${lua_BINARY_DIR}/include" CACHE STRING "" FORCE)
+        file(MAKE_DIRECTORY "${lua_BINARY_DIR}/include")
+        foreach(HEADER lua.h luaconf.h lualib.h lauxlib.h lua.hpp)
+            file(COPY "${lua_SOURCE_DIR}/src/${HEADER}" DESTINATION "${lua_BINARY_DIR}/include")
+        endforeach()
+        set(LUA_INCLUDE_DIR "${lua_BINARY_DIR}/include" CACHE STRING "" FORCE)
+    endif()
+    add_library(lua::lua ALIAS lua)
+
 endif()

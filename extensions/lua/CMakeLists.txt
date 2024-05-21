@@ -35,10 +35,10 @@ target_link_libraries(minifi-lua-script-extension PRIVATE ${LIBMINIFI} Threads::
 SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION ASC)
 
-target_include_directories(minifi-lua-script-extension PRIVATE lua)
+# target_include_directories(minifi-lua-script-extension PRIVATE lua::lua)
 target_include_directories(minifi-lua-script-extension PUBLIC ${LUA_INCLUDE_DIR})
 
-target_link_libraries(minifi-lua-script-extension PUBLIC lua sol2)
+target_link_libraries(minifi-lua-script-extension PUBLIC lua::lua sol2::sol2)
 target_compile_features(minifi-lua-script-extension PUBLIC cxx_std_14)
 
 register_extension(minifi-lua-script-extension "LUA SCRIPTING EXTENSIONS" LUA-SCRIPTING-EXTENSIONS "This enables LUA scripting" "extensions/lua/tests")

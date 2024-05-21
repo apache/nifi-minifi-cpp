@@ -14,70 +14,82 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+if(USE_CONAN_PACKAGER)
+    message("Using Conan Packager to manage installing prebuilt date external lib")
+    include(${CMAKE_BINARY_DIR}/date-config.cmake)
 
-include(FetchContent)
+    message("Using Conan Packager to manage installing prebuilt tz data external lib")
+    include(${CMAKE_BINARY_DIR}/tz-config.cmake)
 
-if (WIN32)
-    # tzdata and windowsZones.xml from unicode cldr-common are required to be installed for date-tz operation on Windows
-    FetchContent_Declare(tzdata
-        URL         https://data.iana.org/time-zones/releases/tzdata2020e.tar.gz
-        URL_HASH    SHA256=0be1ba329eae29ae1b54057c3547b3e672f73b3ae7643aa87dac85122bec037e
-    )
-    FetchContent_GetProperties(tzdata)
-    if (NOT tzdata_POPULATED)
-        FetchContent_Populate(tzdata)
-    endif()
+elseif(USE_CMAKE_FETCH_CONTENT)
+    message("Using CMAKE's FetchContent to manage source building tzdata external lib")
+    message("Using CMAKE's FetchContent to manage source building date external lib")
 
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tzdata)
+    include(FetchContent)
 
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
-        DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
-
-    file(COPY ${tzdata_SOURCE_DIR}/
-        DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
-
-    install(DIRECTORY ${tzdata_SOURCE_DIR}/
-        DESTINATION tzdata
-        COMPONENT bin)
-
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
-        DESTINATION tzdata
-        COMPONENT bin)
-endif()
-
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/date/826_libcpp_17_build_fix.patch")
-set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
-
-
-FetchContent_Declare(date_src
-    URL             https://github.com/HowardHinnant/date/archive/refs/tags/v3.0.1.tar.gz
-    URL_HASH        SHA256=7a390f200f0ccd207e8cff6757e04817c1a0aec3e327b006b7eb451c57ee3538
-    PATCH_COMMAND "${PC}"
-)
-FetchContent_GetProperties(date_src)
-if (NOT date_src_POPULATED)
-    FetchContent_Populate(date_src)
-    set(DATE_INCLUDE_DIR "${date_src_SOURCE_DIR}/include" CACHE STRING "" FORCE)
-    add_library(date INTERFACE)
-    add_library(date::date ALIAS date)
-    target_sources(date INTERFACE ${DATE_INCLUDE_DIR}/date/date.h)
-    target_include_directories(date SYSTEM INTERFACE ${DATE_INCLUDE_DIR})
-    target_compile_features(date INTERFACE cxx_std_11)
-
-    add_library(date-tz STATIC ${date_src_SOURCE_DIR}/src/tz.cpp)
-    add_library(date::tz ALIAS date-tz)
-    target_include_directories(date-tz SYSTEM PUBLIC ${DATE_INCLUDE_DIR})
-    target_compile_features(date-tz PUBLIC cxx_std_11)
-    target_compile_options(date-tz PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,/w,-w>)
-    target_compile_definitions(date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0)
     if (WIN32)
-        target_compile_definitions(date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=0)
-    else()
-        target_compile_definitions(date-tz PUBLIC USE_OS_TZDB=1)
+        # tzdata and windowsZones.xml from unicode cldr-common are required to be installed for date-tz operation on Windows
+        FetchContent_Declare(tzdata
+            URL         https://data.iana.org/time-zones/releases/tzdata2020e.tar.gz
+            URL_HASH    SHA256=0be1ba329eae29ae1b54057c3547b3e672f73b3ae7643aa87dac85122bec037e
+        )
+        FetchContent_GetProperties(tzdata)
+        if (NOT tzdata_POPULATED)
+            FetchContent_Populate(tzdata)
+        endif()
+
+        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tzdata)
+
+        file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
+            DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
+
+        file(COPY ${tzdata_SOURCE_DIR}/
+            DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
+
+        install(DIRECTORY ${tzdata_SOURCE_DIR}/
+            DESTINATION tzdata
+            COMPONENT bin)
+
+        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
+            DESTINATION tzdata
+            COMPONENT bin)
     endif()
-    if (NOT MSVC)
-        find_package(Threads)
-        target_link_libraries(date-tz PUBLIC Threads::Threads)
+
+    set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/date/826_libcpp_17_build_fix.patch")
+    set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+    
+    
+    FetchContent_Declare(date_src
+        URL             https://github.com/HowardHinnant/date/archive/refs/tags/v3.0.1.tar.gz
+        URL_HASH        SHA256=7a390f200f0ccd207e8cff6757e04817c1a0aec3e327b006b7eb451c57ee3538
+        PATCH_COMMAND "${PC}"
+    )
+    FetchContent_GetProperties(date_src)
+    if (NOT date_src_POPULATED)
+        FetchContent_Populate(date_src)
+        set(DATE_INCLUDE_DIR "${date_src_SOURCE_DIR}/include" CACHE STRING "" FORCE)
+        add_library(date INTERFACE)
+        add_library(date::date ALIAS date)
+        target_sources(date INTERFACE ${DATE_INCLUDE_DIR}/date/date.h)
+        target_include_directories(date SYSTEM INTERFACE ${DATE_INCLUDE_DIR})
+        target_compile_features(date INTERFACE cxx_std_11)
+
+        add_library(date-tz STATIC ${date_src_SOURCE_DIR}/src/tz.cpp)
+        add_library(date::date-tz ALIAS date-tz)
+        target_include_directories(date-tz SYSTEM PUBLIC ${DATE_INCLUDE_DIR})
+        target_compile_features(date-tz PUBLIC cxx_std_11)
+        target_compile_options(date-tz PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,/w,-w>)
+        target_compile_definitions(date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0)
+        if (WIN32)
+            target_compile_definitions(date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=0)
+        else()
+            target_compile_definitions(date-tz PUBLIC USE_OS_TZDB=1)
+        endif()
+        if (NOT MSVC)
+            find_package(Threads)
+            target_link_libraries(date-tz PUBLIC Threads::Threads)
+        endif()
     endif()
+
 endif()

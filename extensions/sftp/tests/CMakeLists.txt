@@ -18,12 +18,9 @@
 #
 
 # Java is required for SFTPTestServer, we will disable tests if we can't find it
-find_package(Java)
-find_package(Maven)
-message(STATUS "JAVA_HOME: '$ENV{JAVA_HOME}'")
-message(STATUS "MAVEN: ${MAVEN_EXECUTABLE}")
-
-if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND ENABLE_EXPRESSION_LANGUAGE)
+# TODO (JG): Why is Java required for SFTPTestServer? Cant this be an alternative
+    # for SFTPTestServer? Like we could create a C++ SFTPTestServer, even Python one, etc.
+function(build_sftp_extension_test)
     file(GLOB SFTP_INTEGRATION_TESTS "*.cpp")
     SET(SFTP-EXTENSIONS_TEST_COUNT 0)
     FOREACH(testfile ${SFTP_INTEGRATION_TESTS})
@@ -42,7 +39,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND ENABLE_EXPRESSION_LANGUAGE
         target_include_directories(${testfilename} BEFORE PRIVATE ./tools)
 
         createTests("${testfilename}")
-        target_link_libraries(${testfilename} Catch2WithMain core-minifi sftp-test-tools)
+        target_link_libraries(${testfilename} Catch2::Catch2WithMain core-minifi sftp-test-tools)
         target_link_libraries(${testfilename} minifi-sftp)
         target_link_libraries(${testfilename} minifi-expression-language-extensions)
         target_link_libraries(${testfilename} minifi-standard-processors)
@@ -59,6 +56,14 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND ENABLE_EXPRESSION_LANGUAGE
     file(COPY "${CMAKE_SOURCE_DIR}/extensions/sftp/tests/resources" DESTINATION "${CMAKE_BINARY_DIR}/bin/sftp-test/")
 
     add_subdirectory(tools)
-else()
-    message("Could find Java and Maven to build SFTPTestServer, disabling SFTP tests")
+endfunction(build_sftp_extension_test)
+
+if (NOT SKIP_TESTS AND ENABLE_EXPRESSION_LANGUAGE)
+    if(Java_FOUND AND Maven_FOUND)
+        build_sftp_extension_test()
+    elseif (TARGET openjdk::openjdk AND TARGET maven::maven)
+        build_sftp_extension_test()
+    else()
+        message("Could find Java and Maven to build SFTPTestServer, disabling SFTP tests")
+    endif()
 endif()

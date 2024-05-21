@@ -37,7 +37,7 @@ foreach(testfile ${CONTROLLER_TESTS})
 
     createTests(${testfilename})
 
-    target_link_libraries(${testfilename} Catch2WithMain ${LIBMINIFI} ${TEST_BASE_LIB})
+    target_link_libraries(${testfilename} Catch2::Catch2WithMain ${LIBMINIFI} ${TEST_BASE_LIB})
     add_test(NAME ${testfilename} COMMAND ${testfilename} WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
     math(EXPR CONTROLLER_TEST_COUNT "${CONTROLLER_TEST_COUNT}+1")

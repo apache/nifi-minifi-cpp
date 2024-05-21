@@ -35,7 +35,7 @@ foreach(testfile ${SQL_TESTS})
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test")
 
     createTests("${testfilename}")
-    target_link_libraries(${testfilename} Catch2WithMain)
+    target_link_libraries(${testfilename} Catch2::Catch2WithMain)
     target_link_libraries(${testfilename} minifi-sql-mocks)
     target_link_libraries(${testfilename} minifi-sql)
     target_link_libraries(${testfilename} minifi-standard-processors)

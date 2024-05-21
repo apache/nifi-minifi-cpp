@@ -41,7 +41,7 @@ endif()
 
 add_minifi_executable(minificontroller ${MINIFI_CONTROLLER_SOURCES})
 include(ArgParse)
-target_link_libraries(minificontroller ${LIBMINIFI} argparse Threads::Threads)
+target_link_libraries(minificontroller ${LIBMINIFI} argparse::argparse Threads::Threads)
 
 set_target_properties(minificontroller PROPERTIES
     OUTPUT_NAME minificontroller
