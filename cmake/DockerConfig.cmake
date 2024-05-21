@@ -46,17 +46,39 @@ add_custom_target(
         -g 1000
         -p minimal
         -v ${PROJECT_VERSION_STR}
-        -o \"-DENABLE_LIBRDKAFKA=ON
-             -DENABLE_AWS=ON
-             -DENABLE_AZURE=ON
-             -DENABLE_CONTROLLER=ON
-             -DENABLE_PROMETHEUS=ON
+        -o \"-DENABLE_OPC=OFF
+             -DENABLE_SYSTEMD=OFF
+             -DENABLE_CIVET=OFF
+             -DENABLE_SQL=OFF
              -DENABLE_MQTT=OFF
-             -DENABLE_ELASTICSEARCH=OFF
+             -DENABLE_LIBRDKAFKA=OFF
              -DENABLE_LUA_SCRIPTING=OFF
              -DENABLE_PYTHON_SCRIPTING=OFF
-             -DENABLE_OPC=OFF
+             -DENABLE_AWS=OFF
+             -DENABLE_AZURE=OFF
              -DENABLE_ENCRYPT_CONFIG=OFF
+             -DENABLE_SPLUNK=OFF
+             -DENABLE_ELASTICSEARCH=OFF
+             -DENABLE_GCP=OFF
+             -DENABLE_KUBERNETES=OFF
+             -DENABLE_PROMETHEUS=OFF
+             -DENABLE_GRPC_FOR_LOKI=OFF
+             -DENABLE_PROCFS=OFF
+             -DENABLE_GPS=OFF
+             -DENABLE_COAP=OFF
+             -DENABLE_PCAP=OFF
+             -DENABLE_SENSORS=OFF
+             -DENABLE_USB_CAMERA=OFF
+             -DENABLE_OPENCV=OFF
+             -DENABLE_BUSTACHE=OFF
+             -DENABLE_SFTP=OFF
+             -DENABLE_OPENWSMAN=OFF
+             -DENABLE_TEST_PROCESSORS=OFF
+             -DENABLE_ROCKSDB=ON
+             -DENABLE_LIBARCHIVE=ON
+             -DENABLE_EXPRESSION_LANGUAGE=ON
+             -DENABLE_LZMA=ON
+             -DENABLE_BZIP2=ON
              -DCI_BUILD=${CI_BUILD}\"
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
