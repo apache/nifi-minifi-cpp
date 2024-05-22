@@ -25,6 +25,7 @@
 
 #include "ParameterContext.h"
 #include "Exception.h"
+#include "utils/crypto/EncryptionProvider.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -114,21 +115,49 @@ class ParameterTokenParser {
     InToken
   };
 
-  explicit ParameterTokenParser(std::string input) : input_(std::move(input)) {
+  explicit ParameterTokenParser(std::string input)
+      : input_(std::move(input)) {
     parse();
   }
+
+  virtual ~ParameterTokenParser() = default;
 
   const std::vector<std::unique_ptr<ParameterToken>>& getTokens() const {
     return tokens_;
   }
 
-  std::string replaceParameters(ParameterContext* parameter_context, bool is_sensitive) const;
+  std::string replaceParameters(ParameterContext* parameter_context) const;
+
+ protected:
+  virtual std::string getRawParameterValue(const Parameter& parameter) const = 0;
 
  private:
   void parse();
 
   std::string input_;
   std::vector<std::unique_ptr<ParameterToken>> tokens_;
+};
+
+class NonSensitiveParameterTokenParser : public ParameterTokenParser {
+ public:
+  using ParameterTokenParser::ParameterTokenParser;
+
+ protected:
+  std::string getRawParameterValue(const Parameter& parameter) const override;
+};
+
+class SensitiveParameterTokenParser : public ParameterTokenParser {
+ public:
+  SensitiveParameterTokenParser(std::string input, utils::crypto::EncryptionProvider& sensitive_values_encryptor)
+      : ParameterTokenParser(std::move(input)),
+        sensitive_values_encryptor_(sensitive_values_encryptor) {
+  }
+
+ protected:
+  std::string getRawParameterValue(const Parameter& parameter) const override;
+
+ private:
+  utils::crypto::EncryptionProvider& sensitive_values_encryptor_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

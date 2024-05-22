@@ -35,6 +35,7 @@ class ParameterException : public Exception {
 struct Parameter {
   std::string name;
   std::string description;
+  bool sensitive = false;
   std::string value;
 };
 
@@ -52,6 +53,9 @@ class ParameterContext : public CoreComponent {
 
   void addParameter(const Parameter &parameter);
   std::optional<Parameter> getParameter(const std::string &name) const;
+  const std::unordered_map<std::string, Parameter>& getParameters() const {
+    return parameters_;
+  }
 
  private:
   std::string description_;

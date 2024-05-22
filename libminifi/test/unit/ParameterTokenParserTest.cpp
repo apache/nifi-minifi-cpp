@@ -18,16 +18,17 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "core/ParameterTokenParser.h"
+#include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("Empty string has zero parameters") {
-  core::ParameterTokenParser parser("");
+  core::NonSensitiveParameterTokenParser parser("");
   REQUIRE(parser.getTokens().empty());
 }
 
 TEST_CASE("Parse a single token") {
-  core::ParameterTokenParser parser("#{token.1}");
+  core::NonSensitiveParameterTokenParser parser("#{token.1}");
   auto& tokens = parser.getTokens();
   REQUIRE(tokens.size() == 1);
   CHECK(tokens.at(0)->getName().value() == "token.1");
@@ -36,7 +37,7 @@ TEST_CASE("Parse a single token") {
 }
 
 TEST_CASE("Parse multiple tokens") {
-  core::ParameterTokenParser parser("#{token1} #{token-2}");
+  core::NonSensitiveParameterTokenParser parser("#{token1} #{token-2}");
   auto& tokens = parser.getTokens();
   REQUIRE(tokens.size() == 2);
   CHECK(tokens.at(0)->getName().value() == "token1");
@@ -48,7 +49,7 @@ TEST_CASE("Parse multiple tokens") {
 }
 
 TEST_CASE("Parse the same token multiple times") {
-  core::ParameterTokenParser parser("#{token1} #{token-2} #{token1}");
+  core::NonSensitiveParameterTokenParser parser("#{token1} #{token-2} #{token1}");
   auto& tokens = parser.getTokens();
   REQUIRE(tokens.size() == 3);
   CHECK(tokens.at(0)->getName().value() == "token1");
@@ -63,7 +64,7 @@ TEST_CASE("Parse the same token multiple times") {
 }
 
 TEST_CASE("Tokens can be escaped") {
-  core::ParameterTokenParser parser("## ##{token1} #{token-2} ###{token_3}# ## ##not_a_token");
+  core::NonSensitiveParameterTokenParser parser("## ##{token1} #{token-2} ###{token_3}# ## ##not_a_token");
   auto& tokens = parser.getTokens();
   REQUIRE(tokens.size() == 3);
   CHECK(tokens.at(0)->getValue().value() == "#{token1}");
@@ -78,7 +79,7 @@ TEST_CASE("Tokens can be escaped") {
 }
 
 TEST_CASE("Unfinished token is not a token") {
-  core::ParameterTokenParser parser("this is #{_token_ 1} and #{token-2 not finished");
+  core::NonSensitiveParameterTokenParser parser("this is #{_token_ 1} and #{token-2 not finished");
   auto& tokens = parser.getTokens();
   REQUIRE(tokens.size() == 1);
   CHECK(tokens.at(0)->getName().value() == "_token_ 1");
@@ -91,54 +92,71 @@ TEST_CASE("Test invalid token names") {
     return "Parameter Operation: Invalid token name: '" + invalid_name +
       "'. Only alpha-numeric characters (a-z, A-Z, 0-9), hyphens ( - ), underscores ( _ ), periods ( . ), and spaces are allowed in token name.";
   };
-  CHECK_THROWS_WITH(core::ParameterTokenParser("#{}"), create_error_message(""));
-  CHECK_THROWS_WITH(core::ParameterTokenParser("#{#}"), create_error_message("#"));
-  CHECK_THROWS_WITH(core::ParameterTokenParser("#{[]}"), create_error_message("[]"));
-  CHECK_THROWS_WITH(core::ParameterTokenParser("#{a{}"), create_error_message("a{"));
-  CHECK_THROWS_WITH(core::ParameterTokenParser("#{$$}"), create_error_message("$$"));
+  CHECK_THROWS_WITH(core::NonSensitiveParameterTokenParser("#{}"), create_error_message(""));
+  CHECK_THROWS_WITH(core::NonSensitiveParameterTokenParser("#{#}"), create_error_message("#"));
+  CHECK_THROWS_WITH(core::NonSensitiveParameterTokenParser("#{[]}"), create_error_message("[]"));
+  CHECK_THROWS_WITH(core::NonSensitiveParameterTokenParser("#{a{}"), create_error_message("a{"));
+  CHECK_THROWS_WITH(core::NonSensitiveParameterTokenParser("#{$$}"), create_error_message("$$"));
 }
 
 TEST_CASE("Test token replacement") {
-  core::ParameterTokenParser parser("## What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more ##");
+  core::NonSensitiveParameterTokenParser parser("## What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more ##");
   core::ParameterContext context("test_context");
-  context.addParameter(core::Parameter{"what", "", "love"});
-  context.addParameter(core::Parameter{"who", "", "me"});
-  REQUIRE(parser.replaceParameters(&context, false) == "## What is love, baby don't hurt me, don't hurt me, no more ##");
+  context.addParameter(core::Parameter{"what", "", false, "love"});
+  context.addParameter(core::Parameter{"who", "", false, "me"});
+  REQUIRE(parser.replaceParameters(&context) == "## What is love, baby don't hurt me, don't hurt me, no more ##");
 }
 
 TEST_CASE("Test replacement with escaped tokens") {
-  core::ParameterTokenParser parser("### What is #####{what}, baby don't hurt ###{who}, don't hurt ###{who}, no ####{more} ##{");
+  core::NonSensitiveParameterTokenParser parser("### What is #####{what}, baby don't hurt ###{who}, don't hurt ###{who}, no ####{more} ##{");
   REQUIRE(parser.getTokens().size() == 4);
   core::ParameterContext context("test_context");
-  context.addParameter(core::Parameter{"what", "", "love"});
-  context.addParameter(core::Parameter{"who", "", "me"});
-  REQUIRE(parser.replaceParameters(&context, false) == "### What is ##love, baby don't hurt #me, don't hurt #me, no ##{more} ##{");
+  context.addParameter(core::Parameter{"what", "", false, "love"});
+  context.addParameter(core::Parameter{"who", "", false, "me"});
+  REQUIRE(parser.replaceParameters(&context) == "### What is ##love, baby don't hurt #me, don't hurt #me, no ##{more} ##{");
 }
 
 TEST_CASE("Test replacement with missing token in context") {
-  core::ParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more");
+  core::NonSensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more");
   core::ParameterContext context("test_context");
-  context.addParameter(core::Parameter{"what", "", "love"});
-  REQUIRE_THROWS_WITH(parser.replaceParameters(&context, false), "Parameter Operation: Parameter 'who' not found");
+  context.addParameter(core::Parameter{"what", "", false, "love"});
+  REQUIRE_THROWS_WITH(parser.replaceParameters(&context), "Parameter Operation: Parameter 'who' not found");
 }
 
 TEST_CASE("Sensitive property parameter replacement is not supported") {
-  core::ParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more");
+  utils::crypto::Bytes secret_key = utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
+  utils::crypto::EncryptionProvider encryption_provider{secret_key};
+  core::SensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more", encryption_provider);
   core::ParameterContext context("test_context");
-  context.addParameter(core::Parameter{"what", "", "love"});
-  context.addParameter(core::Parameter{"who", "", "me"});
-  REQUIRE_THROWS_WITH(parser.replaceParameters(&context, true), "Parameter Operation: Non-sensitive parameter 'what' cannot be referenced in a sensitive property");
+  context.addParameter(core::Parameter{"what", "", false, "love"});
+  context.addParameter(core::Parameter{"who", "", false, "me"});
+  REQUIRE_THROWS_WITH(parser.replaceParameters(&context), "Parameter Operation: Non-sensitive parameter 'what' cannot be referenced in a sensitive property");
 }
 
 TEST_CASE("Parameter context is not provided when parameter is referenced") {
-  core::ParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more");
-  REQUIRE_THROWS_WITH(parser.replaceParameters(nullptr, false), "Parameter Operation: Property references a parameter in its value, but no parameter context was provided.");
+  core::NonSensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more");
+  REQUIRE_THROWS_WITH(parser.replaceParameters(nullptr), "Parameter Operation: Property references a parameter in its value, but no parameter context was provided.");
 }
 
 TEST_CASE("Replace only escaped tokens") {
-  core::ParameterTokenParser parser("No ##{parameters} are ####{present}");
-  REQUIRE(parser.replaceParameters(nullptr, false) == "No #{parameters} are ##{present}");
-  REQUIRE(parser.replaceParameters(nullptr, true) == "No #{parameters} are ##{present}");
+  core::NonSensitiveParameterTokenParser non_sensitive_parser("No ##{parameters} are ####{present}");
+  REQUIRE(non_sensitive_parser.replaceParameters(nullptr) == "No #{parameters} are ##{present}");
+  utils::crypto::Bytes secret_key = utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
+  utils::crypto::EncryptionProvider encryption_provider{secret_key};
+  core::SensitiveParameterTokenParser sensitive_parser("No ##{parameters} are ####{present}", encryption_provider);
+  REQUIRE(sensitive_parser.replaceParameters(nullptr) == "No #{parameters} are ##{present}");
+}
+
+TEST_CASE("Test sensitive token replacement") {
+  core::ParameterContext context("test_context");
+  utils::crypto::Bytes secret_key = utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
+  utils::crypto::EncryptionProvider encryption_provider{secret_key};
+  core::SensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more", encryption_provider);
+  auto value1 = utils::crypto::property_encryption::encrypt("love", encryption_provider);
+  auto value2 = utils::crypto::property_encryption::encrypt("me", encryption_provider);
+  context.addParameter(core::Parameter{"what", "", true, value1});
+  context.addParameter(core::Parameter{"who", "", true, value2});
+  REQUIRE(parser.replaceParameters(&context) == "What is love, baby don't hurt me, don't hurt me, no more");
 }
 
 }  // namespace org::apache::nifi::minifi::test

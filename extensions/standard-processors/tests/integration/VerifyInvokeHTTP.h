@@ -101,7 +101,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
         .configuration = configuration,
         .path = flow_yml_path,
         .filesystem = std::make_shared<minifi::utils::file::FileSystem>(),
-        .sensitive_properties_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{encryption_key}}
+        .sensitive_values_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{encryption_key}}
     };
     auto yaml_ptr = std::make_unique<core::YamlConfiguration>(configuration_context);
     flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo);

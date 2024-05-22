@@ -32,17 +32,19 @@ namespace minifi = org::apache::nifi::minifi;
 namespace {
 enum class ComponentType {
   Processor,
-  ControllerService
+  ControllerService,
+  ParameterContext
 };
 
-struct SensitiveProperty {
+struct SensitiveItem {
   ComponentType component_type;
   minifi::utils::Identifier component_id;
   std::string component_name;
-  std::string property_name;
-  std::string property_display_name;
-  std::string property_value;
+  std::string item_name;
+  std::string item_display_name;
+  std::string item_value;
 };
+
 }  // namespace
 
 namespace magic_enum::customize {
@@ -51,14 +53,30 @@ constexpr customize_t enum_name<ComponentType>(ComponentType type) noexcept {
   switch (type) {
     case ComponentType::Processor: return "Processor";
     case ComponentType::ControllerService: return "Controller service";
+    case ComponentType::ParameterContext: return "Parameter context";
   }
   return invalid_tag;
 }
 }  // namespace magic_enum::customize
 
 namespace {
-std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::ProcessGroup &process_group) {
-  std::vector<SensitiveProperty> sensitive_properties;
+std::vector<SensitiveItem> listSensitiveItems(const minifi::core::ProcessGroup &process_group,
+    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<minifi::core::ParameterContext>>>& parameter_contexts) {
+  std::vector<SensitiveItem> sensitive_items;
+
+  for (const auto& [parameter_context_name, parameter_context] : parameter_contexts) {
+    for (const auto& [parameter_name, parameter] : parameter_context->getParameters()) {
+      if (parameter.sensitive) {
+        sensitive_items.push_back(SensitiveItem{
+            .component_type = ComponentType::ParameterContext,
+            .component_id = parameter_context->getUUID(),
+            .component_name = parameter_context_name,
+            .item_name = parameter_name,
+            .item_display_name = parameter_name,
+            .item_value = parameter.value});
+      }
+    }
+  }
 
   std::vector<minifi::core::Processor *> processors;
   process_group.getAllProcessors(processors);
@@ -66,13 +84,13 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
     gsl_Expects(processor);
     for (const auto& [_, property] : processor->getProperties()) {
       if (property.isSensitive()) {
-        sensitive_properties.push_back(SensitiveProperty{
+        sensitive_items.push_back(SensitiveItem{
             .component_type = ComponentType::Processor,
             .component_id = processor->getUUID(),
             .component_name = processor->getName(),
-            .property_name = property.getName(),
-            .property_display_name = property.getDisplayName(),
-            .property_value = property.getValue().to_string()});
+            .item_name = property.getName(),
+            .item_display_name = property.getDisplayName(),
+            .item_value = property.getValue().to_string()});
       }
     }
   }
@@ -82,58 +100,59 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
     gsl_Expects(controller_service_node);
     const auto* controller_service = controller_service_node->getControllerServiceImplementation();
     gsl_Expects(controller_service);
+    auto props = controller_service->getProperties();
     if (processed_controller_services.contains(controller_service->getUUID())) {
       continue;
     }
     processed_controller_services.insert(controller_service->getUUID());
-    for (const auto& [_, property] : controller_service->getProperties()) {
+    for (const auto& [_, property] : props) {
       if (property.isSensitive()) {
-        sensitive_properties.push_back(SensitiveProperty{
+        sensitive_items.push_back(SensitiveItem{
             .component_type = ComponentType::ControllerService,
             .component_id = controller_service->getUUID(),
             .component_name = controller_service->getName(),
-            .property_name = property.getName(),
-            .property_display_name = property.getDisplayName(),
-            .property_value = property.getValue().to_string()});
+            .item_name = property.getName(),
+            .item_display_name = property.getDisplayName(),
+            .item_value = property.getValue().to_string()});
       }
     }
   }
 
-  return sensitive_properties;
+  return sensitive_items;
 }
 
-std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> createOverridesInteractively(const std::vector<SensitiveProperty>& sensitive_properties) {
+std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> createOverridesInteractively(const std::vector<SensitiveItem>& sensitive_items) {
   std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> overrides;
   std::cout << '\n';
-  for (const auto& sensitive_property : sensitive_properties) {
-    std::cout << magic_enum::enum_name(sensitive_property.component_type) << " " << sensitive_property.component_name << " (" << sensitive_property.component_id.to_string() << ") "
-              << "has sensitive property " << sensitive_property.property_display_name << "\n    enter a new value or press Enter to keep the current value unchanged: ";
+  for (const auto& sensitive_item : sensitive_items) {
+    std::cout << magic_enum::enum_name(sensitive_item.component_type) << " " << sensitive_item.component_name << " (" << sensitive_item.component_id.to_string() << ") "
+              << "has sensitive item " << sensitive_item.item_display_name << "\n    enter a new value or press Enter to keep the current value unchanged: ";
     std::cout.flush();
     std::string new_value;
     std::getline(std::cin, new_value);
     if (!new_value.empty()) {
-      overrides[sensitive_property.component_id].add(sensitive_property.property_name, new_value);
+      overrides[sensitive_item.component_id].add(sensitive_item.item_name, new_value);
     }
   }
   return overrides;
 }
 
-std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> createOverridesForSingleProperty(
-    const std::vector<SensitiveProperty>& sensitive_properties, const std::string& component_id, const std::string& property_name, const std::string& property_value) {
-  const auto sensitive_property_it = std::ranges::find_if(sensitive_properties, [&](const auto& sensitive_property) {
-    return sensitive_property.component_id.to_string().view() == component_id && (sensitive_property.property_name == property_name || sensitive_property.property_display_name == property_name);
+std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> createOverridesForSingleItem(
+    const std::vector<SensitiveItem>& sensitive_items, const std::string& component_id, const std::string& item_name, const std::string& item_value) {
+  const auto sensitive_item_it = std::ranges::find_if(sensitive_items, [&](const auto& sensitive_item) {
+    return sensitive_item.component_id.to_string().view() == component_id && (sensitive_item.item_name == item_name || sensitive_item.item_display_name == item_name);
   });
-  if (sensitive_property_it == sensitive_properties.end()) {
-    std::cout << "No sensitive property found with this component ID and property name.\n";
+  if (sensitive_item_it == sensitive_items.end()) {
+    std::cout << "No sensitive item found with this component ID and item name.\n";
     return {};
   }
-  return {{sensitive_property_it->component_id, minifi::core::flow::Overrides{}.add(sensitive_property_it->property_name, property_value)}};
+  return {{sensitive_item_it->component_id, minifi::core::flow::Overrides{}.add(sensitive_item_it->item_name, item_value)}};
 }
 
-std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> createOverridesForReEncryption(const std::vector<SensitiveProperty>& sensitive_properties) {
+std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> createOverridesForReEncryption(const std::vector<SensitiveItem>& sensitive_items) {
   std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> overrides;
-  for (const auto& sensitive_property : sensitive_properties) {
-    overrides[sensitive_property.component_id].addOptional(sensitive_property.property_name, sensitive_property.property_value);
+  for (const auto& sensitive_item : sensitive_items) {
+    overrides[sensitive_item.component_id].addOptional(sensitive_item.item_name, sensitive_item.item_value);
   }
   return overrides;
 }
@@ -169,7 +188,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
   auto whole_file_encryptor = encrypt_whole_flow_config_file ? utils::crypto::EncryptionProvider::create(minifi_home) : std::nullopt;
   auto filesystem = std::make_shared<utils::file::FileSystem>(encrypt_whole_flow_config_file, whole_file_encryptor);
 
-  auto sensitive_properties_decryptor = is_re_encrypting ?
+  auto sensitive_values_decryptor = is_re_encrypting ?
       utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{*keys.old_key}} :
       utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{keys.encryption_key}};
 
@@ -181,7 +200,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
       .configuration = configure,
       .path = flow_config_path,
       .filesystem = filesystem,
-      .sensitive_properties_encryptor = sensitive_properties_decryptor
+      .sensitive_values_encryptor = sensitive_values_decryptor
   }};
 
   const auto flow_config_content = filesystem->read(flow_config_path);
@@ -191,16 +210,17 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
 
   const auto process_group = adaptive_configuration.getRootFromPayload(*flow_config_content);
   gsl_Expects(process_group);
-  const auto sensitive_properties = listSensitiveProperties(*process_group);
+  const auto sensitive_items = listSensitiveItems(*process_group, adaptive_configuration.getParameterContexts());
 
   const auto overrides = [&]() -> std::unordered_map<utils::Identifier, core::flow::Overrides> {
     switch (request.type) {
-      case EncryptionType::Interactive: return createOverridesInteractively(sensitive_properties);
-      case EncryptionType::SingleProperty: return createOverridesForSingleProperty(sensitive_properties, request.component_id, request.property_name, request.property_value);
-      case EncryptionType::ReEncrypt: return createOverridesForReEncryption(sensitive_properties);
+      case EncryptionType::Interactive: return createOverridesInteractively(sensitive_items);
+      case EncryptionType::SingleProperty: return createOverridesForSingleItem(sensitive_items, request.component_id, request.property_name, request.property_value);
+      case EncryptionType::ReEncrypt: return createOverridesForReEncryption(sensitive_items);
     }
     return {};
   }();
+
   if (overrides.empty()) {
     std::cout << "Nothing to do, exiting.\n";
     return;

@@ -42,12 +42,12 @@ int main(int argc, char* argv[]) try {
   argument_parser.add_argument("--component-id")
       .metavar("ID")
       .help(minifi::utils::string::join_pack("Processor or controller service id (", OPERATION_FLOW_CONFIG, " only)"));
-  argument_parser.add_argument("--property-name")
+  argument_parser.add_argument("--property-name", "--parameter-name", "--item-name")
       .metavar("NAME")
-      .help(minifi::utils::string::join_pack("The name of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
-  argument_parser.add_argument("--property-value")
+      .help(minifi::utils::string::join_pack("The name of the sensitive property or parameter (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--property-value", "--parameter-value", "--item-value")
       .metavar("VALUE")
-      .help(minifi::utils::string::join_pack("The new value of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
+      .help(minifi::utils::string::join_pack("The new value of the sensitive property or parameter (", OPERATION_FLOW_CONFIG, " only)"));
   argument_parser.add_argument("--re-encrypt")
       .flag()
       .help(minifi::utils::string::join_pack("Decrypt all properties with the old key and re-encrypt them with a new key (", OPERATION_FLOW_CONFIG, " only)"));

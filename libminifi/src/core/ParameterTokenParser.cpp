@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include "utils/RegexUtils.h"
+#include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -68,7 +69,7 @@ void ParameterTokenParser::parse() {
   }
 }
 
-std::string ParameterTokenParser::replaceParameters(ParameterContext* parameter_context, bool is_sensitive) const {
+std::string ParameterTokenParser::replaceParameters(ParameterContext* parameter_context) const {
   if (tokens_.empty()) {
     return input_;
   }
@@ -85,20 +86,30 @@ std::string ParameterTokenParser::replaceParameters(ParameterContext* parameter_
     if (!parameter_context) {
       throw ParameterException("Property references a parameter in its value, but no parameter context was provided.");
     }
-
     gsl_Assert(token->getName().has_value());
     auto parameter = parameter_context->getParameter(token->getName().value());
     if (!parameter.has_value()) {
       throw ParameterException("Parameter '" + token->getName().value() + "' not found");
     }
-    if (is_sensitive) {
-      throw ParameterException("Non-sensitive parameter '" + parameter->name + "' cannot be referenced in a sensitive property");
-    }
-    result.append(std::string(token->getAdditionalHashmarks(), '#') + parameter->value);
+    result.append(std::string(token->getAdditionalHashmarks(), '#') + getRawParameterValue(*parameter));
     last_end = token->getStart() + token->getSize();
   }
   result.append(input_.substr(last_end));
   return result;
+}
+
+std::string NonSensitiveParameterTokenParser::getRawParameterValue(const Parameter& parameter) const {
+  if (parameter.sensitive) {
+    throw ParameterException("Sensitive parameter '" + parameter.name + "' cannot be referenced in a non-sensitive property");
+  }
+  return parameter.value;
+}
+
+std::string SensitiveParameterTokenParser::getRawParameterValue(const Parameter& parameter) const {
+  if (!parameter.sensitive) {
+    throw ParameterException("Non-sensitive parameter '" + parameter.name + "' cannot be referenced in a sensitive property");
+  }
+  return utils::crypto::property_encryption::decrypt(parameter.value, sensitive_values_encryptor_);
 }
 
 }  // namespace org::apache::nifi::minifi::core
