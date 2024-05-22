@@ -100,7 +100,7 @@ class VolatileMapStateStorageTestFixture {
       .configuration = configuration,
       .path = config_yaml,
       .filesystem = std::make_shared<utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+      .sensitive_values_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
   });
   std::unique_ptr<core::ProcessGroup> process_group;
 

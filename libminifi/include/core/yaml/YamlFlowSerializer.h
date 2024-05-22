@@ -29,6 +29,12 @@ class YamlFlowSerializer : public core::flow::FlowSerializer {
       const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const override;
 
  private:
+  void encryptSensitiveParameters(YAML::Node& flow_definition_yaml, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
+    const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const;
+  void encryptSensitiveProcessorProperties(YAML::Node& flow_definition_yaml, const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema,
+    const utils::crypto::EncryptionProvider& encryption_provider, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const;
+  void encryptSensitiveControllerServiceProperties(YAML::Node& flow_definition_yaml, const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema,
+    const utils::crypto::EncryptionProvider& encryption_provider, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const;
   void encryptSensitiveProperties(YAML::Node property_yamls, const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
       const core::flow::Overrides& overrides) const;
 

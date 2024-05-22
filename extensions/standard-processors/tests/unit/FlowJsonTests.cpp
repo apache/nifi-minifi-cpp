@@ -28,6 +28,7 @@
 #include "unit/ConfigurationTestController.h"
 #include "Funnel.h"
 #include "core/Resource.h"
+#include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -50,11 +51,13 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
         {
           "name": "file_size",
           "description": "",
+          "sensitive": false,
           "value": "10 B"
         },
         {
           "name": "batch_size",
           "description": "",
+          "sensitive": false,
           "value": "12"
         }
       ]
@@ -201,6 +204,7 @@ TEST_CASE("Parameters from different parameter contexts should not be replaced")
         {
           "name": "file_size",
           "description": "",
+          "sensitive": false,
           "value": "10 B"
         }
       ]
@@ -213,6 +217,7 @@ TEST_CASE("Parameters from different parameter contexts should not be replaced")
         {
           "name": "batch_size",
           "description": "",
+          "sensitive": false,
           "value": "12"
         }
       ]
@@ -260,6 +265,7 @@ TEST_CASE("Cannot use the same parameter context name twice") {
         {
           "name": "file_size",
           "description": "",
+          "sensitive": false,
           "value": "10 B"
         }
       ]
@@ -272,6 +278,7 @@ TEST_CASE("Cannot use the same parameter context name twice") {
         {
           "name": "batch_size",
           "description": "",
+          "sensitive": false,
           "value": "12"
         }
       ]
@@ -304,11 +311,13 @@ TEST_CASE("Cannot use the same parameter name within a parameter context twice")
         {
           "name": "file_size",
           "description": "",
+          "sensitive": false,
           "value": "10 B"
         },
         {
           "name": "file_size",
           "description": "",
+          "sensitive": false,
           "value": "12 B"
         }
       ]
@@ -366,6 +375,7 @@ TEST_CASE("Cannot use non-sensitive parameter in sensitive property") {
         {
           "name": "my_value",
           "description": "",
+          "sensitive": false,
           "value": "value1"
         }
       ]
@@ -408,6 +418,7 @@ TEST_CASE("Cannot use non-sensitive parameter in sensitive property value sequen
         {
           "name": "my_value",
           "description": "",
+          "sensitive": false,
           "value": "value1"
         }
       ]
@@ -453,6 +464,7 @@ TEST_CASE("Parameters can be used in nested process groups") {
         {
           "name": "batch_size",
           "description": "",
+          "sensitive": false,
           "value": "12"
         }
       ]
@@ -465,6 +477,7 @@ TEST_CASE("Parameters can be used in nested process groups") {
         {
           "name": "file_size",
           "description": "",
+          "sensitive": false,
           "value": "10 B"
         }
       ]
@@ -546,6 +559,7 @@ TEST_CASE("Subprocessgroups cannot inherit parameters from parent processgroup")
         {
           "name": "batch_size",
           "description": "",
+          "sensitive": false,
           "value": "12"
         }
       ]
@@ -558,6 +572,7 @@ TEST_CASE("Subprocessgroups cannot inherit parameters from parent processgroup")
         {
           "name": "file_size",
           "description": "",
+          "sensitive": false,
           "value": "10 B"
         }
       ]
@@ -684,11 +699,13 @@ TEST_CASE("Property value sequences can use parameters") {
         {
           "name": "first_value",
           "description": "",
+          "sensitive": false,
           "value": "value1"
         },
         {
           "name": "second_value",
           "description": "",
+          "sensitive": false,
           "value": "value2"
         }
       ]
@@ -743,11 +760,13 @@ TEST_CASE("Dynamic properties can use parameters") {
         {
           "name": "first_value",
           "description": "",
+          "sensitive": false,
           "value": "value1"
         },
         {
           "name": "second_value",
           "description": "",
+          "sensitive": false,
           "value": "value2"
         }
       ]
@@ -787,6 +806,120 @@ TEST_CASE("Dynamic properties can use parameters") {
   std::string value;
   REQUIRE(proc->getDynamicProperty("My Dynamic Property", value));
   CHECK(value == "value1");
+}
+
+TEST_CASE("Test sensitive parameters in sensitive properties") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_parameter_value = minifi::utils::crypto::property_encryption::encrypt("value1", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{my_value}", *context.sensitive_values_encryptor);
+  core::flow::AdaptiveConfiguration config(context);
+
+  static const std::string CONFIG_JSON =
+      fmt::format(R"(
+{{
+  "parameterContexts": [
+    {{
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "my-context",
+      "description": "my parameter context",
+      "parameters": [
+        {{
+          "name": "my_value",
+          "description": "",
+          "sensitive": true,
+          "value": "{}"
+        }}
+      ]
+    }}
+  ],
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [{{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {{
+        "Sensitive Property": "{}"
+      }}
+    }}],
+    "parameterContextName": "my-context"
+  }}
+}})", encrypted_parameter_value, encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+}
+
+TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_parameter_value_1 = minifi::utils::crypto::property_encryption::encrypt("value1", *context.sensitive_values_encryptor);
+  auto encrypted_parameter_value_2 = minifi::utils::crypto::property_encryption::encrypt("value2", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value_1 = minifi::utils::crypto::property_encryption::encrypt("#{first_value}", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value_2 = minifi::utils::crypto::property_encryption::encrypt("#{second_value}", *context.sensitive_values_encryptor);
+  core::flow::AdaptiveConfiguration config(context);
+
+  static const std::string CONFIG_JSON =
+      fmt::format(R"(
+{{
+  "parameterContexts": [
+    {{
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "my-context",
+      "description": "my parameter context",
+      "parameters": [
+        {{
+          "name": "first_value",
+          "description": "",
+          "sensitive": true,
+          "value": "{}"
+        }},
+        {{
+          "name": "second_value",
+          "description": "",
+          "sensitive": true,
+          "value": "{}"
+        }}
+      ]
+    }}
+  ],
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [{{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {{
+        "Sensitive Property": [
+          {{"value": "{}"}},
+          {{"value": "{}"}}
+        ]
+      }}
+    }}],
+    "parameterContextName": "my-context"
+  }}
+}})", encrypted_parameter_value_1, encrypted_parameter_value_2, encrypted_sensitive_property_value_1, encrypted_sensitive_property_value_2);
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  REQUIRE(proc);
+  core::Property property("Sensitive Property", "");
+  proc->getProperty("Sensitive Property", property);
+  auto values = property.getValues();
+  REQUIRE(values.size() == 2);
+  CHECK(values[0] == "value1");
+  CHECK(values[1] == "value2");
 }
 
 }  // namespace org::apache::nifi::minifi::test

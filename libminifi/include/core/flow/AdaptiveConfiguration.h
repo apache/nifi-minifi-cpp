@@ -35,7 +35,7 @@ class AdaptiveConfiguration : public StructuredConfiguration {
 
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &payload) override;
 
-  void setSensitivePropertiesEncryptor(utils::crypto::EncryptionProvider sensitive_properties_encryptor);
+  void setSensitivePropertiesEncryptor(utils::crypto::EncryptionProvider sensitive_values_encryptor);
   std::string serializeWithOverrides(const core::ProcessGroup& process_group, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const;
 };
 
