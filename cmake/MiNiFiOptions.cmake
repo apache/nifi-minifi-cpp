@@ -42,8 +42,7 @@ add_minifi_option(DOCKER_SKIP_TESTS "Skip building tests in docker image targets
 add_minifi_option(DOCKER_PUSH "Push created images to the specified tags" OFF)
 
 add_minifi_option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
-add_minifi_option(USE_CONAN_PACKAGER "Instructs cmake to use conan packager to install external libs & build MiNiFi C++" OFF)
-add_minifi_option(USE_STANDALONE_CMAKE "Instructs cmake to use only cmake to install external libs & build MiNiFi C++" ON)
+add_minifi_option(MINIFI_USE_CONAN_PACKAGER "Instructs cmake to use conan packager to install external libs & build MiNiFi C++" OFF)
 add_minifi_option(USE_SHARED_LIBS "Builds using shared libraries" ON)
 add_minifi_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT USE_SHARED_LIBS" OFF)
 add_minifi_option(LIBC_STATIC "Instructs the build system to statically link libstdc++ and glibc into minifiexe. Experiemental" OFF)
