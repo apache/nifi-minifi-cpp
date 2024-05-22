@@ -142,7 +142,7 @@ TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Remove aged off state"
   state1.uploaded_size = 150_MiB;
   state1.part_size = 50_MiB;
   state1.full_size = 200_MiB;
-  state1.upload_time = Aws::Utils::DateTime(Aws::Utils::DateTime::CurrentTimeMillis()) - std::chrono::minutes(10);
+  state1.upload_time = (Aws::Utils::DateTime::Now() - std::chrono::minutes(10)).Millis();
   state1.uploaded_etags = {"etag1", "etag2", "etag3"};
   upload_storage_->storeState("test_bucket", "key1", state1);
   minifi::aws::s3::MultipartUploadState state2;
