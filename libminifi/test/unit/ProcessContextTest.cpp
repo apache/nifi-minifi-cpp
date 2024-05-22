@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include <memory>
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "ProcessContext.h"
 #include "core/FlowFile.h"
 #include "utils/meta/detected.h"

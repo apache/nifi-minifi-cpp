@@ -18,7 +18,7 @@
 #include "core/logging/alert/AlertSink.h"
 #include "core/TypedValues.h"
 #include "core/ClassLoader.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "utils/Hash.h"
 #include "core/logging/Utils.h"
 #include "controllers/SSLContextService.h"
@@ -194,12 +194,12 @@ void AlertSink::send(Services& services) {
     return;
   }
 
-  auto client = core::ClassLoader::getDefaultClassLoader().instantiate<utils::BaseHTTPClient>("HTTPClient", "HTTPClient");
+  auto client = core::ClassLoader::getDefaultClassLoader().instantiate<http::BaseHTTPClient>("HTTPClient", "HTTPClient");
   if (!client) {
     logger_->log_error("Could not instantiate a HTTPClient object");
     return;
   }
-  client->initialize(utils::HttpRequestMethod::PUT, config_.url, services.ssl_service);
+  client->initialize(http::HttpRequestMethod::PUT, config_.url, services.ssl_service);
 
   rapidjson::Document doc(rapidjson::kObjectType);
   std::string agent_id = services.agent_id->getAgentIdentifier();
@@ -212,7 +212,7 @@ void AlertSink::send(Services& services) {
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   doc.Accept(writer);
 
-  auto data_input = std::make_unique<utils::HTTPUploadByteArrayInputCallback>();
+  auto data_input = std::make_unique<http::HTTPUploadByteArrayInputCallback>();
   data_input->write(std::string(buffer.GetString(), buffer.GetSize()));
   client->setUploadCallback(std::move(data_input));
   client->setContentType("application/json");

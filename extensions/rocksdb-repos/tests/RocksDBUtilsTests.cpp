@@ -18,8 +18,8 @@
 #include <unordered_map>
 #include <string>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "../database/RocksDbUtils.h"
 #include "properties/Configure.h"
 

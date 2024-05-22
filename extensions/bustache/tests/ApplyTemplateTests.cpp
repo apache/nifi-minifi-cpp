@@ -21,8 +21,8 @@
 #include <string>
 #include <iostream>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Core.h"
 
 #include "core/FlowFile.h"

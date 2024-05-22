@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "MockDataLakeStorageClient.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "processors/LogAttribute.h"
 #include "processors/ListAzureDataLakeStorage.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
@@ -89,7 +89,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Azure storage credential
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Filesystem name is not set", "[azureDataLakeStorageParameters]") {
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FilesystemName, "");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "Filesystem Name '' is invalid or empty!"));
 }
 
@@ -102,7 +102,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "List all files every tim
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::none));
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::RecurseSubdirectories, "false");
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto run_assertions = [this]() {
     auto passed_params = mock_data_lake_storage_client_ptr_->getPassedListParams();
     CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
@@ -131,7 +131,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list same files t
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::timestamps));
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::RecurseSubdirectories, "false");
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedListParams();
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   CHECK(passed_params.file_system_name == FILESYSTEM_NAME);
@@ -158,7 +158,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list same files t
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered files", "[listAzureDataLakeStorage]") {
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FileFilter, "item1.*g");
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedListParams();
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   CHECK(passed_params.file_system_name == FILESYSTEM_NAME);
@@ -181,7 +181,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered fil
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered paths", "[listAzureDataLakeStorage]") {
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::PathFilter, "su.*");
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedListParams();
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   CHECK(passed_params.file_system_name == FILESYSTEM_NAME);

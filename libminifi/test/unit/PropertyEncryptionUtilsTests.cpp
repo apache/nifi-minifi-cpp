@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "utils/crypto/EncryptionProvider.h"
 #include "utils/crypto/EncryptionUtils.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"

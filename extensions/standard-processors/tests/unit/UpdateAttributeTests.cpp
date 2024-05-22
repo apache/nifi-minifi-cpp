@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "TestBase.h"
-#include "Catch.h"
 #include <memory>
+
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+
 #include "LogAttribute.h"
 #include "UpdateAttribute.h"
 #include "GenerateFlowFile.h"

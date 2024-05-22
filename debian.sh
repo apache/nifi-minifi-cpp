@@ -43,10 +43,9 @@ build_deps(){
   if [ "$RETVAL" -ne "0" ]; then
     sudo apt-get install -y libssl-dev > /dev/null
   fi
-  COMMAND="sudo apt-get -y install gcc g++ zlib1g-dev uuid uuid-dev"
+  COMMAND="sudo apt-get -y install gcc g++ zlib1g-dev uuid uuid-dev perl libbz2-dev"
   export DEBIAN_FRONTEND=noninteractive
   INSTALLED=()
-  INSTALLED+=("libbz2-dev")
   sudo apt-get -y update
   for option in "${OPTIONS[@]}" ; do
     option_value="${!option}"
@@ -85,8 +84,6 @@ build_deps(){
             INSTALLED+=("liblzma-dev")
           elif [ "$FOUND_VALUE" = "libssh2" ]; then
             INSTALLED+=("libssh2-1-dev")
-          elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
-            INSTALLED+=("perl")
           fi
         fi
       done

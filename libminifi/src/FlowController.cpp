@@ -37,7 +37,7 @@
 #include "core/Connectable.h"
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileSystem.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/FileStream.h"
 #include "core/ClassLoader.h"

@@ -18,8 +18,8 @@
 
 #include <chrono>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 #include "properties/Configure.h"
 #include "DiskSpaceWatchdog.h"

@@ -19,17 +19,17 @@
 #include <memory>
 #include <utility>
 #include <string>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/controller/ControllerService.h"
 #include "controllers/NetworkPrioritizerService.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 
 namespace {
 
 std::shared_ptr<minifi::controllers::NetworkPrioritizerService> createNetworkPrioritizerService(
     const std::string& name,
-    const std::shared_ptr<utils::timeutils::Clock>& clock = std::make_shared<utils::ManualClock>()) {
+    const std::shared_ptr<utils::timeutils::Clock>& clock = std::make_shared<minifi::test::utils::ManualClock>()) {
   return std::make_shared<minifi::controllers::NetworkPrioritizerService>(name, utils::Identifier{}, clock);
 }
 
@@ -61,7 +61,7 @@ TEST_CASE("TestPrioritizerOneInterfaceMaxPayload", "[test2]") {
 }
 
 TEST_CASE("TestPrioritizerOneInterfaceMaxThroughput", "[test3]") {
-  auto clock = std::make_shared<utils::ManualClock>();
+  auto clock = std::make_shared<minifi::test::utils::ManualClock>();
   auto controller = createNetworkPrioritizerService("TestService", clock);
   controller->initialize();
   controller->setProperty(minifi::controllers::NetworkPrioritizerService::NetworkControllers, "eth0,eth1");
@@ -76,7 +76,7 @@ TEST_CASE("TestPrioritizerOneInterfaceMaxThroughput", "[test3]") {
 }
 
 TEST_CASE("TestPriorotizerMultipleInterfaces", "[test4]") {
-  auto clock = std::make_shared<utils::ManualClock>();
+  auto clock = std::make_shared<minifi::test::utils::ManualClock>();
   auto parent_controller = createNetworkPrioritizerService("TestService", clock);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   parent_controller->initialize();

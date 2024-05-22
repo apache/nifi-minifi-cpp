@@ -17,8 +17,8 @@
  */
 #include <memory>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "s3/MultipartUploadStateStorage.h"
 #include "utils/Environment.h"
 #include "MockS3RequestSender.h"

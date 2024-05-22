@@ -18,6 +18,10 @@
 #include "utils/TimeUtil.h"
 #include "range/v3/algorithm/contains.hpp"
 
+#ifdef WIN32
+#include "date/tz.h"
+#endif
+
 namespace org::apache::nifi::minifi::utils::timeutils {
 
 using namespace std::literals::chrono_literals;
@@ -66,5 +70,13 @@ std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::str
 
   return date::sys_days(date_part) + time_part - offset;
 }
+
+#ifdef WIN32
+// If minifi is not installed through the MSI installer, then TZDATA might be missing
+// date::set_install can point to the TZDATA location, but it has to be called from each library/executable that wants to use timezones
+void dateSetInstall(const std::string& install) {
+  date::set_install(install);
+}
+#endif
 
 }  // namespace org::apache::nifi::minifi::utils::timeutils

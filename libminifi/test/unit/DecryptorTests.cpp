@@ -16,8 +16,8 @@
  */
 
 #include "properties/Decryptor.h"
-#include "../Catch.h"
-#include "../TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestBase.h"
 #include "StringUtils.h"
 #include "properties/Configure.h"
 
@@ -89,7 +89,8 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
   minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
 
   minifi::Configure configuration{decryptor};
-  configuration.setHome("resources");
+  std::filesystem::path resources_dir{TEST_RESOURCES};
+  configuration.setHome(resources_dir);
   configuration.loadConfigureFile("encrypted.minifi.properties");
   REQUIRE_FALSE(configuration.getConfiguredKeys().empty());
 
@@ -114,7 +115,8 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
 }
 
 TEST_CASE("Decryptor can be created from a bootstrap file", "[create]") {
-  const auto valid_decryptor = minifi::Decryptor::create("resources");
+  std::filesystem::path resources_dir{TEST_RESOURCES};
+  const auto valid_decryptor = minifi::Decryptor::create(resources_dir);
   REQUIRE(valid_decryptor);
   REQUIRE(valid_decryptor->decrypt("HvbPejGT3ur9/00gXQK/dJCYwaNqhopf||CiXKiNaljSN7VkLXP5zfJnb4+4UcKIG3ddwuVfSPpkRRfT4=") == "SpeakFriendAndEnter");
 

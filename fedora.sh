@@ -38,9 +38,8 @@ build_deps(){
     wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
     sudo yum -y install epel-release-latest-7.noarch.rpm
 
-    COMMAND="sudo yum -y install libuuid libuuid-devel patch"
+    COMMAND="sudo yum -y install libuuid libuuid-devel patch perl bzip2-devel"
     INSTALLED=()
-    INSTALLED+=("bzip2-devel")
     for option in "${OPTIONS[@]}" ; do
         option_value="${!option}"
         if [ "$option_value" = "${TRUE}" ]; then
@@ -80,8 +79,6 @@ build_deps(){
                         INSTALLED+=("xz-devel")
                     elif [ "$FOUND_VALUE" = "libssh2" ]; then
                         INSTALLED+=("libssh2-devel")
-                    elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
-                        INSTALLED+=("perl")
                     fi
                 fi
             done

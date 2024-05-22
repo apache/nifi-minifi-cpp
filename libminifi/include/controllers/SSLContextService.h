@@ -25,12 +25,10 @@
 #include <wincrypt.h>
 #endif
 
-#ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 #include <openssl/pkcs12.h>
-#endif
 
 #include <iostream>
 #include <memory>
@@ -52,24 +50,16 @@ namespace org::apache::nifi::minifi::controllers {
 
 class SSLContext {
  public:
-#ifdef OPENSSL_SUPPORT
   SSLContext(SSL_CTX *context) // NOLINT
       : context_(context) {
   }
-#else
-  SSLContext(void*) {} // NOLINT
-#endif
   ~SSLContext() {
-#ifdef OPENSSL_SUPPORT
     if (context_) {
       SSL_CTX_free(context_);
     }
-#endif
   }
  protected:
-#ifdef OPENSSL_SUPPORT
   SSL_CTX *context_;
-#endif
 };
 
 /**
@@ -160,7 +150,6 @@ class SSLContextService : public core::controller::ControllerService {
     return false;
   }
 
-#ifdef OPENSSL_SUPPORT
   void setMinTlsVersion(long min_version) {  // NOLINT(runtime/int) long due to SSL lib API
     minimum_tls_version_ = min_version;
   }
@@ -169,7 +158,6 @@ class SSLContextService : public core::controller::ControllerService {
     maximum_tls_version_ = max_version;
   }
   bool configure_ssl_context(SSL_CTX *ctx);
-#endif
 
   void onEnable() override;
 
@@ -264,7 +252,6 @@ class SSLContextService : public core::controller::ControllerService {
   utils::tls::ExtendedKeyUsage client_cert_key_usage_;
 #endif  // WIN32
 
-#ifdef OPENSSL_SUPPORT
   static std::string getLatestOpenSSLErrorString() {
     unsigned long err = ERR_peek_last_error(); // NOLINT
     if (err == 0U) {
@@ -274,14 +261,12 @@ class SSLContextService : public core::controller::ControllerService {
     ERR_error_string_n(err, buf, sizeof(buf));
     return buf;
   }
-#endif
 
   static bool isFileTypeP12(const std::filesystem::path& filename) {
     return utils::string::endsWith(filename.string(), "p12", false);
   }
 
  private:
-#ifdef OPENSSL_SUPPORT
   bool addP12CertificateToSSLContext(SSL_CTX* ctx) const;
   bool addPemCertificateToSSLContext(SSL_CTX* ctx) const;
   bool addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const;
@@ -298,7 +283,6 @@ class SSLContextService : public core::controller::ControllerService {
 #endif  // WIN32
   long minimum_tls_version_ = -1;  // NOLINT(runtime/int) long due to SSL lib API
   long maximum_tls_version_ = -1;  // NOLINT(runtime/int) long due to SSL lib API
-#endif  // OPENSSL_SUPPORT
 
   void verifyCertificateExpiration();
 

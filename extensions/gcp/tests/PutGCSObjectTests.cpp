@@ -18,7 +18,7 @@
 #include "../controllerservices/GCPCredentialsControllerService.h"
 #include "GCPAttributes.h"
 #include "core/Resource.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 #include "ProcessContextExpr.h"
 #include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"

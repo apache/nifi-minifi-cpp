@@ -30,7 +30,7 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "utils/Enum.h"
-#include "client/HTTPClient.h"
+#include "http/HTTPClient.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
 
@@ -112,7 +112,7 @@ class PostElasticsearch : public core::Processor {
   uint64_t max_batch_size_ = 100;
   std::string host_url_;
   std::shared_ptr<ElasticsearchCredentialsControllerService> credentials_service_;
-  curl::HTTPClient client_;
+  http::HTTPClient client_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger(uuid_);
 };
 

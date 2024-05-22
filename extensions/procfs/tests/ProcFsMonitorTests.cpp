@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 #include "processors/ProcFsMonitor.h"
 
 namespace org::apache::nifi::minifi::extensions::procfs::tests {

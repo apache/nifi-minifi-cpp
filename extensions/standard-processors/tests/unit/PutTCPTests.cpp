@@ -20,19 +20,19 @@
 #include <new>
 #include <string>
 
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 #include "PutTCP.h"
 #include "controllers/SSLContextService.h"
 #include "core/ProcessSession.h"
 #include "utils/net/TcpServer.h"
 #include "utils/net/AsioCoro.h"
 #include "utils/expected.h"
-#include "utils/StringUtils.h"
-#include "IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
-using org::apache::nifi::minifi::utils::verifyLogLineVariantPresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyLogLineVariantPresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -238,7 +238,7 @@ class PutTCPTestFixture {
       gsl_Expects(!cancellable_server && !server_thread_.joinable());
       cancellable_server = std::make_unique<CancellableTcpServer>(std::nullopt, 0, core::logging::LoggerFactory<utils::net::Server>::getLogger(), std::move(ssl_server_options), true, "\n");
       server_thread_ = std::thread([this]() { cancellable_server->run(); });
-      REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [this] { return cancellable_server->getPort() != 0; }, 20ms));
+      REQUIRE(verifyEventHappenedInPollTime(250ms, [this] { return cancellable_server->getPort() != 0; }, 20ms));
       return cancellable_server->getPort();
     }
 

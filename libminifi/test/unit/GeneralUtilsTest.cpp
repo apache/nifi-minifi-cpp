@@ -20,8 +20,8 @@
 #include <string>
 #include <type_traits>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/GeneralUtils.h"
 
 namespace org::apache::nifi::minifi::test {

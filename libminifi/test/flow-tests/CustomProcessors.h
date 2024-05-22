@@ -25,8 +25,8 @@
 #include <utility>
 
 #include "core/Processor.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "processors/GenerateFlowFile.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -100,10 +100,10 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override {
     int apple;
     bool appleSuccess = context.getProperty(AppleProbability, apple);
-    assert(appleSuccess);
+    REQUIRE(appleSuccess);
     int banana;
     bool bananaSuccess = context.getProperty(BananaProbability, banana);
-    assert(bananaSuccess);
+    REQUIRE(bananaSuccess);
     apple_probability_ = apple;
     banana_probability_ = banana;
   }

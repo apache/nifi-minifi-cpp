@@ -16,9 +16,9 @@
  */
 #include <string>
 
-#include "../test/Catch.h"
+#include "unit/Catch.h"
 #include "../ExecuteProcess.h"
-#include "../test/SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 #include "utils/file/FileUtils.h"
 
 using namespace std::literals::chrono_literals;

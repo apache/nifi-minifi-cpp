@@ -18,8 +18,8 @@
 #include <memory>
 
 #include "../../include/core/state/Value.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 using ValueNode = org::apache::nifi::minifi::state::response::ValueNode;
 using Value = org::apache::nifi::minifi::state::response::Value;

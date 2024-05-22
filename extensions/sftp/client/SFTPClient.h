@@ -29,7 +29,7 @@
 
 #include "Exception.h"
 #include "utils/Enum.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::utils {
@@ -126,7 +126,7 @@ class SFTPClient {
     Socks
   };
 
-  bool setProxy(ProxyType type, const utils::HTTPProxy& proxy);
+  bool setProxy(ProxyType type, const http::HTTPProxy& proxy);
 
   bool setConnectionTimeout(std::chrono::milliseconds timeout);
 

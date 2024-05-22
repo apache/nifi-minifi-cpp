@@ -26,8 +26,8 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
-#include "client/HTTPClient.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/HTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "utils/OptionalUtils.h"
 #include "utils/ByteArrayCallback.h"
 
@@ -40,7 +40,7 @@ void PutSplunkHTTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-std::string PutSplunkHTTP::getEndpoint(curl::HTTPClient& client) {
+std::string PutSplunkHTTP::getEndpoint(http::HTTPClient& client) {
   std::stringstream endpoint;
   endpoint << "/services/collector/raw";
   std::vector<std::string> parameters;
@@ -67,7 +67,7 @@ std::optional<std::string> getContentType(core::ProcessContext& context, const c
   return context.getProperty(PutSplunkHTTP::ContentType) | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
 }
 
-bool setAttributesFromClientResponse(core::FlowFile& flow_file, curl::HTTPClient& client) {
+bool setAttributesFromClientResponse(core::FlowFile& flow_file, http::HTTPClient& client) {
   rapidjson::Document response_json;
   rapidjson::ParseResult parse_result = response_json.Parse<rapidjson::kParseStopWhenDoneFlag>(client.getResponseBody().data());
   bool result = true;
@@ -87,7 +87,7 @@ bool setAttributesFromClientResponse(core::FlowFile& flow_file, curl::HTTPClient
   return result;
 }
 
-bool enrichFlowFileWithAttributes(core::FlowFile& flow_file, curl::HTTPClient& client) {
+bool enrichFlowFileWithAttributes(core::FlowFile& flow_file, http::HTTPClient& client) {
   flow_file.setAttribute(SPLUNK_STATUS_CODE, std::to_string(client.getResponseCode()));
   flow_file.setAttribute(SPLUNK_RESPONSE_TIME, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
@@ -96,9 +96,9 @@ bool enrichFlowFileWithAttributes(core::FlowFile& flow_file, curl::HTTPClient& c
 
 void setFlowFileAsPayload(core::ProcessSession& session,
                           core::ProcessContext& context,
-                          curl::HTTPClient& client,
+                          http::HTTPClient& client,
                           const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file) {
-  auto payload = std::make_unique<utils::HTTPUploadByteArrayInputCallback>();
+  auto payload = std::make_unique<http::HTTPUploadByteArrayInputCallback>();
   session.read(flow_file, std::ref(*payload));
   payload->pos = 0;
   client.setRequestHeader("Content-Length", std::to_string(flow_file->getSize()));
@@ -115,13 +115,13 @@ void setFlowFileAsPayload(core::ProcessSession& session,
 void PutSplunkHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   SplunkHECProcessor::onSchedule(context, session_factory);
   ssl_context_service_ = getSSLContextService(context);
-  auto create_client = [this]() -> std::unique_ptr<minifi::extensions::curl::HTTPClient> {
-    auto client = std::make_unique<curl::HTTPClient>();
+  auto create_client = [this]() -> std::unique_ptr<minifi::http::HTTPClient> {
+    auto client = std::make_unique<http::HTTPClient>();
     initializeClient(*client, getNetworkLocation().append(getEndpoint(*client)), ssl_context_service_);
     return client;
   };
 
-  client_queue_ = utils::ResourceQueue<extensions::curl::HTTPClient>::create(create_client, getMaxConcurrentTasks(), std::nullopt, logger_);
+  client_queue_ = utils::ResourceQueue<http::HTTPClient>::create(create_client, getMaxConcurrentTasks(), std::nullopt, logger_);
   source_type_ = context.getProperty(PutSplunkHTTP::SourceType);
   source_ = context.getProperty(PutSplunkHTTP::Source);
   host_ = context.getProperty(PutSplunkHTTP::Host);

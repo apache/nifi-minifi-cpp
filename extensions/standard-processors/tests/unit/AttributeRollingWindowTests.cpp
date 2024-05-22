@@ -17,9 +17,10 @@
 
 #include <memory>
 #include <string_view>
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "AttributeRollingWindow.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
+#include "core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::test {
 using AttributeRollingWindow = processors::AttributeRollingWindow;

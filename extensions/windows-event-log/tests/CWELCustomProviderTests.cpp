@@ -14,25 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
-
 #include "ConsumeWindowsEventLog.h"
 
 #include "core/ConfigurableComponent.h"
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
-#include "TestBase.h"
-#include "Catch.h"
-#include "utils/TestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "utils/file/FileUtils.h"
 #include "wel/UniqueEvtHandle.h"
-#include "IntegrationTestUtils.h"
 
 #include "rapidjson/document.h"
 
 #include "CWELTestUtils.h"
-#include "Utils.h"
 
 // generated from the manifest file "custom-provider/unit-test-provider.man"
 // using the command "mc -um unit-test-provider.man"
@@ -122,7 +117,7 @@ class CustomProviderController : public OutputFormatTestController {
 
  private:
   bool checkNewEventAvailable() {
-    return org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
+    return org::apache::nifi::utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
       return advanceBookmark(bookmark_, channel_, query_);
     });
   }

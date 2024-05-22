@@ -70,7 +70,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Test Azure credentials wi
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Filesystem name is not set", "[azureDataLakeStorageParameters]") {
   plan_->setDynamicProperty(update_attribute_, "test.filesystemname", "");
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   CHECK(verifyLogLinePresenceInPollTime(1s, "Filesystem Name '' is invalid or empty!"));
   auto failed_flowfiles = getFailedFlowFileContents();
   REQUIRE(failed_flowfiles.size() == 1);
@@ -92,7 +92,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Upload to Azure Data Lake
   CHECK(passed_params.filename == GETFILE_FILE_NAME);
   CHECK_FALSE(passed_params.replace_file);
   REQUIRE(getFailedFlowFileContents().empty());
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.directory value:" + DIRECTORY_NAME));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.filename value:" + GETFILE_FILE_NAME));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.filesystem value:" + FILESYSTEM_NAME));
@@ -130,7 +130,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to success on 'i
   mock_data_lake_storage_client_ptr_->setFileCreation(false);
   test_controller_.runSession(plan_, true);
   REQUIRE(getFailedFlowFileContents().empty());
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:filename value:" + GETFILE_FILE_NAME));
   CHECK_FALSE(LogTestController::getInstance().contains("key:azure", 0s, 0ms));
 }
@@ -147,7 +147,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Replace old file on 'repl
   CHECK(passed_params.filename == GETFILE_FILE_NAME);
   CHECK(passed_params.replace_file);
   REQUIRE(getFailedFlowFileContents().empty());
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.directory value:" + DIRECTORY_NAME));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.filename value:" + GETFILE_FILE_NAME));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.filesystem value:" + FILESYSTEM_NAME));
@@ -161,7 +161,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Upload to Azure Data Lake
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedPutParams();
   CHECK(passed_params.directory_name.empty());
   REQUIRE(getFailedFlowFileContents().empty());
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.directory value:\n"));
 }
 

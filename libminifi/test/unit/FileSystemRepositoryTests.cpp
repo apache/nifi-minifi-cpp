@@ -24,12 +24,11 @@
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
-#include "utils/TestUtils.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/Literals.h"
 #include "core/repository/FileSystemRepository.h"
-#include "utils/IntegrationTestUtils.h"
 #include "utils/file/FileUtils.h"
 
 using namespace std::literals::chrono_literals;
@@ -63,7 +62,7 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
     stream->write(as_bytes(fragment));
   }
 
-  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
   CHECK(verifyEventHappenedInPollTime(5s, [&] {
       const auto end_memory = minifi::utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
       REQUIRE(end_memory > 0);

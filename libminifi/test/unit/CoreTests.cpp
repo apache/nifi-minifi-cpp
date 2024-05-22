@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "../Catch.h"
+#include "unit/Catch.h"
 #include "core/Core.h"
 
 namespace org::apache::nifi::minifi::test {

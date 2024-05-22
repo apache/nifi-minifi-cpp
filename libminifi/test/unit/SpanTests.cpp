@@ -18,8 +18,8 @@
 
 #include <vector>
 #include <string>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/span.h"
 
 namespace utils = org::apache::nifi::minifi::utils;

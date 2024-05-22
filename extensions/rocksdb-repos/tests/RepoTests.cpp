@@ -31,10 +31,10 @@
 #include "provenance/Provenance.h"
 #include "properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/gsl.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "core/repository/VolatileProvenanceRepository.h"
 #include "DatabaseContentRepository.h"
@@ -350,13 +350,12 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   // check if the @input Connection's FlowFile was restored
   // upon the FlowFileRepository's startup
   std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> newFlow = nullptr;
-  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
   const auto flowFileArrivedInOutput = [&newFlow, &expiredFiles, inputPtr] {
     newFlow = inputPtr->poll(expiredFiles);
     return newFlow != nullptr;
   };
-  assert(verifyEventHappenedInPollTime(std::chrono::seconds(10), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
-  (void)flowFileArrivedInOutput;  // unused in release builds
+  REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(10), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
   REQUIRE(expiredFiles.empty());
 
   LogTestController::getInstance().reset();
@@ -445,8 +444,8 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     ff_repository->loadComponent(content_repo);
     ff_repository->start();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&connection]{ return connection->getQueueSize() == 50; }, std::chrono::milliseconds(50)));
+    using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
+    REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&connection]{ return connection->getQueueSize() == 50; }, std::chrono::milliseconds(50)));
   }
 }
 
@@ -587,7 +586,7 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
   }
 
   auto original_size = repository->getRepositorySize();
-  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
   REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&original_size, &repository] {
       auto old_size = original_size;
       original_size = repository->getRepositorySize();
@@ -700,7 +699,7 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
   repository->flush();
   repository->stop();
 
-  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
   REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&original_content_repo_size, &content_repo] {
       auto new_content_repo_size = content_repo->getRepositorySize();
       return new_content_repo_size > original_content_repo_size;
@@ -814,14 +813,30 @@ TEST_CASE("FlowFileRepository can filter out too small contents") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
 
-  const auto [check_health, expected_flowfiles] = GENERATE(
-      std::make_tuple("false", size_t{2}),
-      std::make_tuple("true", size_t{1}));
-  config->set(minifi::Configure::nifi_flow_file_repository_check_health, check_health);
-  const auto content_repo = GENERATE(
-      static_cast<std::shared_ptr<core::ContentRepository>>(std::make_shared<core::repository::FileSystemRepository>()),
-      static_cast<std::shared_ptr<core::ContentRepository>>(std::make_shared<core::repository::DatabaseContentRepository>()));
+  size_t expected_flowfiles = std::numeric_limits<size_t>::max();
+  std::shared_ptr<core::ContentRepository> content_repo;
 
+  // Sections are used instead of GENERATE macro to have the content_repo destructed before testController and be able to delete the temp directories
+  SECTION("nifi.flowfile.repository.check.health set to false") {
+    config->set(minifi::Configure::nifi_flow_file_repository_check_health, "false");
+    expected_flowfiles = 2;
+    SECTION("FileSystemRepository") {
+      content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    }
+    SECTION("RocksDB") {
+      content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+    }
+  }
+  SECTION("nifi.flowfile.repository.check.health set to true") {
+    config->set(minifi::Configure::nifi_flow_file_repository_check_health, "true");
+    expected_flowfiles = 1;
+    SECTION("FileSystemRepository") {
+      content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    }
+    SECTION("RocksDB") {
+      content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+    }
+  }
 
   auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
   REQUIRE(ff_repo->initialize(config));

@@ -18,9 +18,9 @@
 #include <chrono>
 #include "FlowFileQueue.h"
 
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 
 namespace core = minifi::core;
 
@@ -120,19 +120,19 @@ TEST_CASE("Penalized flow files are popped from the FlowFileQueue in the order t
 
   REQUIRE_FALSE(queue.isWorkAvailable());
 
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_2}, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_2}, std::chrono::milliseconds{10}));
   REQUIRE(queue.isWorkAvailable());
   REQUIRE(queue.pop() == flow_file_2);
 
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_4}, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_4}, std::chrono::milliseconds{10}));
   REQUIRE(queue.isWorkAvailable());
   REQUIRE(queue.pop() == flow_file_4);
 
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_1}, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_1}, std::chrono::milliseconds{10}));
   REQUIRE(queue.isWorkAvailable());
   REQUIRE(queue.pop() == flow_file_1);
 
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_3}, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_3}, std::chrono::milliseconds{10}));
   REQUIRE(queue.isWorkAvailable());
   REQUIRE(queue.pop() == flow_file_3);
 
@@ -154,7 +154,7 @@ TEST_CASE("If a penalized then a non-penalized flow file is added to the FlowFil
   }
 
   SECTION("Wait until the penalty expires, then pop") {
-    REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{penalized_flow_file}, std::chrono::milliseconds{10}));
+    REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{penalized_flow_file}, std::chrono::milliseconds{10}));
 
     REQUIRE(queue.isWorkAvailable());
     REQUIRE(queue.pop() == flow_file);

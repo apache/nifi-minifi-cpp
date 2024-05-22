@@ -23,7 +23,7 @@
 #include "utils/OsUtils.h"
 #include "utils/file/FileUtils.h"
 #include "ListSmb.h"
-#include "Catch.h"
+#include "unit/Catch.h"
 
 using namespace std::literals::chrono_literals;
 

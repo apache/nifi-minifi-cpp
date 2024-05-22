@@ -28,7 +28,7 @@
 #include "core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
-#include "client/HTTPClient.h"
+#include "http/HTTPClient.h"
 #include "rapidjson/stringbuffer.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
@@ -123,7 +123,7 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
  protected:
   uint32_t batch_size_ = 1000;
   std::chrono::milliseconds max_age_ = std::chrono::hours(1);
-  curl::HTTPClient client_;
+  http::HTTPClient client_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

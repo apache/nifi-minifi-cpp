@@ -16,10 +16,10 @@
  */
 #include <string>
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "processors/GetTCP.h"
-#include "SingleProcessorTestController.h"
-#include "Utils.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/TestUtils.h"
 #include "utils/net/AsioCoro.h"
 #include "utils/net/AsioSocketUtils.h"
 #include "controllers/SSLContextService.h"
@@ -170,7 +170,7 @@ TEST_CASE("GetTCP test with delimiter", "[GetTCP]") {
 
   tcp_test_server.queueMessage("Hello\n");
   tcp_test_server.run();
-  REQUIRE(minifi::utils::verifyEventHappenedInPollTime(250ms, [&] { return tcp_test_server.getPort() != 0; }, 20ms));
+  REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [&] { return tcp_test_server.getPort() != 0; }, 20ms));
 
   REQUIRE(get_tcp->setProperty(GetTCP::EndpointList, fmt::format("localhost:{}", tcp_test_server.getPort())));
   controller.plan->scheduleProcessor(get_tcp);
@@ -203,7 +203,7 @@ TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
   tcp_test_server.queueMessage("abcdefghijklmnopqrstuvwxyz\rBye\r");
   tcp_test_server.run();
 
-  REQUIRE(minifi::utils::verifyEventHappenedInPollTime(250ms, [&] { return tcp_test_server.getPort() != 0; }, 20ms));
+  REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [&] { return tcp_test_server.getPort() != 0; }, 20ms));
 
   REQUIRE(get_tcp->setProperty(GetTCP::EndpointList, fmt::format("localhost:{}", tcp_test_server.getPort())));
   controller.plan->scheduleProcessor(get_tcp);
@@ -247,7 +247,7 @@ TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
   server_2.queueMessage("012345678901234567890\nAuf Wiedersehen\n");
   server_2.run();
 
-  REQUIRE(minifi::utils::verifyEventHappenedInPollTime(250ms, [&] { return server_1.getPort() != 0 && server_2.getPort() != 0; }, 20ms));
+  REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [&] { return server_1.getPort() != 0 && server_2.getPort() != 0; }, 20ms));
 
   REQUIRE(get_tcp->setProperty(GetTCP::EndpointList, fmt::format("localhost:{},localhost:{}", server_1.getPort(), server_2.getPort())));
   controller.plan->scheduleProcessor(get_tcp);
@@ -291,7 +291,7 @@ TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
 
   server.run();
 
-  REQUIRE(minifi::utils::verifyEventHappenedInPollTime(250ms, [&] { return server.getPort() != 0; }, 20ms));
+  REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [&] { return server.getPort() != 0; }, 20ms));
 
   REQUIRE(get_tcp->setProperty(GetTCP::EndpointList, fmt::format("localhost:{}", server.getPort())));
   controller.plan->scheduleProcessor(get_tcp);

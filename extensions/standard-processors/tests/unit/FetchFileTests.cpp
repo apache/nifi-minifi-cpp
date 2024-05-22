@@ -21,14 +21,13 @@
 #include <unordered_map>
 #include <filesystem>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "processors/FetchFile.h"
-#include "utils/TestUtils.h"
-#include "utils/IntegrationTestUtils.h"
-#include "SingleProcessorTestController.h"
+#include "unit/TestUtils.h"
+#include "unit/SingleProcessorTestController.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -67,8 +66,8 @@ FetchFileTestFixture::FetchFileTestFixture()
 
   attributes_ = {{"absolute.path", input_dir_.string()}, {"filename", input_file_name_.string()}};
 
-  utils::putFileToDir(input_dir_, input_file_name_, file_content_);
-  utils::putFileToDir(input_dir_, permission_denied_file_name_, file_content_);
+  minifi::test::utils::putFileToDir(input_dir_, input_file_name_, file_content_);
+  minifi::test::utils::putFileToDir(input_dir_, permission_denied_file_name_, file_content_);
   std::filesystem::permissions(input_dir_ / permission_denied_file_name_, static_cast<std::filesystem::perms>(0));
 }
 
@@ -95,7 +94,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Test fetching file with default but non-
   auto file_contents = result.at(minifi::processors::FetchFile::NotFound);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller_->plan->getContent(file_contents[0]).empty());
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "[error] File to fetch was not found"));
 }
 
@@ -106,13 +105,13 @@ TEST_CASE_METHOD(FetchFileTestFixture, "FileToFetch property set to a non-existe
   auto file_contents = result.at(minifi::processors::FetchFile::NotFound);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller_->plan->getContent(file_contents[0]).empty());
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "[info] File to fetch was not found"));
 }
 
 #ifndef WIN32
 TEST_CASE_METHOD(FetchFileTestFixture, "Permission denied to read file", "[testFetchFile]") {
-  if (utils::runningAsUnixRoot())
+  if (minifi::test::utils::runningAsUnixRoot())
     SKIP("Cannot test insufficient permissions with root user");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::FileToFetch, (input_dir_ / permission_denied_file_name_).string());
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::LogLevelWhenPermissionDenied, "WARN");
@@ -120,7 +119,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Permission denied to read file", "[testF
   auto file_contents = result.at(minifi::processors::FetchFile::PermissionDenied);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller_->plan->getContent(file_contents[0]).empty());
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "[warning] Read permission denied for file"));
 }
 #endif
@@ -135,7 +134,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Test fetching file with default file pat
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Test fetching file from a custom path", "[testFetchFile]") {
   REQUIRE(0 == utils::file::FileUtils::create_dir(input_dir_ / "sub"));
-  utils::putFileToDir(input_dir_ / "sub", input_file_name_, file_content_);
+  minifi::test::utils::putFileToDir(input_dir_ / "sub", input_file_name_, file_content_);
   auto file_path = input_dir_ / "sub" / input_file_name_;
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::FileToFetch, file_path.string());
   const auto result = test_controller_->trigger("", attributes_);
@@ -152,7 +151,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Flow scheduling fails due to missing mov
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Flow fails due to move conflict", "[testFetchFile]") {
   auto move_dir = test_controller_->createTempDirectory();
-  utils::putFileToDir(move_dir, input_file_name_, "old content");
+  minifi::test::utils::putFileToDir(move_dir, input_file_name_, "old content");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::CompletionStrategy, "Move File");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory, move_dir.string());
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy, "Fail");
@@ -168,7 +167,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Flow fails due to move conflict", "[test
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Move specific properties are ignored when completion strategy is not move file", "[testFetchFile]") {
   auto move_dir = test_controller_->createTempDirectory();
-  utils::putFileToDir(move_dir, input_file_name_, "old content");
+  minifi::test::utils::putFileToDir(move_dir, input_file_name_, "old content");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory, move_dir.string());
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy, "Fail");
   const auto result = test_controller_->trigger("", attributes_);
@@ -179,7 +178,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move specific properties are ignored whe
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved with replace file", "[testFetchFile]") {
   auto move_dir = test_controller_->createTempDirectory();
-  utils::putFileToDir(move_dir, input_file_name_, "old content");
+  minifi::test::utils::putFileToDir(move_dir, input_file_name_, "old content");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::CompletionStrategy, "Move File");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory, move_dir.string());
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy, "Replace File");
@@ -195,7 +194,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved wi
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved with renaming file to a new random filename", "[testFetchFile]") {
   auto move_dir = test_controller_->createTempDirectory();
-  utils::putFileToDir(move_dir, input_file_name_, "old content");
+  minifi::test::utils::putFileToDir(move_dir, input_file_name_, "old content");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::CompletionStrategy, "Move File");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory, move_dir.string());
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy, "Rename");
@@ -212,7 +211,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved wi
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved with deleting the new file and keeping the old one", "[testFetchFile]") {
   auto move_dir = test_controller_->createTempDirectory();
-  utils::putFileToDir(move_dir, input_file_name_, "old content");
+  minifi::test::utils::putFileToDir(move_dir, input_file_name_, "old content");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::CompletionStrategy, "Move File");
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory, move_dir.string());
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy, "Keep Existing");
@@ -257,7 +256,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "After flow completion the fetched file i
 
 #ifndef WIN32
 TEST_CASE_METHOD(FetchFileTestFixture, "Move completion strategy failure due to filesystem error still succeeds flow", "[testFetchFile]") {
-  if (utils::runningAsUnixRoot())
+  if (minifi::test::utils::runningAsUnixRoot())
     SKIP("Cannot test insufficient permissions with root user");
   auto move_dir = test_controller_->createTempDirectory();
   utils::file::FileUtils::set_permissions(move_dir, 0);
@@ -268,7 +267,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move completion strategy failure due to 
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller_->plan->getContent(file_contents[0]) == file_content_);
   REQUIRE(utils::file::FileUtils::exists(input_dir_ / input_file_name_));
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "completion strategy failed"));
   utils::file::FileUtils::set_permissions(move_dir, 0644);
 }

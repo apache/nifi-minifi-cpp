@@ -17,7 +17,7 @@
 #include "../processors/ListGCSBucket.h"
 #include "../controllerservices/GCPCredentialsControllerService.h"
 #include "core/Resource.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 #include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"
 #include "google/cloud/storage/testing/canonical_errors.h"

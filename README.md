@@ -65,9 +65,9 @@ The following table lists the base set of processors.
 
 | Extension Set | Processors                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 |---------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Base**      | [AppendHostInfo](PROCESSORS.md#appendhostinfo)<br/>[AttributesToJSON](PROCESSORS.md#attributestojson)<br/>[DefragmentText](PROCESSORS.md#defragmenttext)<br/>[ExecuteProcess](PROCESSORS.md#executeprocess)<br/>[ExtractText](PROCESSORS.md#extracttext)<br/>[FetchFile](PROCESSORS.md#fetchfile)<br/>[GenerateFlowFile](PROCESSORS.md#generateflowfile)<br/>[GetFile](PROCESSORS.md#getfile)<br/>[GetTCP](PROCESSORS.md#gettcp)<br/>[HashContent](PROCESSORS.md#hashcontent)<br/>[ListenSyslog](PROCESSORS.md#listensyslog)<br/>[ListenTCP](PROCESSORS.md#listentcp)<br/>[ListenUDP](PROCESSORS.md#listenudp)<br/>[ListFile](PROCESSORS.md#listfile)<br/>[LogAttribute](PROCESSORS.md#logattribute)<br/>[PutFile](PROCESSORS.md#putfile)<br/>[PutTCP](PROCESSORS.md#puttcp)<br/>[PutUDP](PROCESSORS.md#putudp)<br/>[ReplaceText](PROCESSORS.md#replacetext)<br/>[RetryFlowFile](PROCESSORS.md#retryflowfile)<br/>[RouteOnAttribute](PROCESSORS.md#routeonattribute)<br/>[RouteText](PROCESSORS.md#routetext)<br/>[SplitText](PROCESSORS.md#splittext)<br/>[TailFile](PROCESSORS.md#tailfile)<br/>[UpdateAttribute](PROCESSORS.md#updateattribute) |
+| **Base**      | [AppendHostInfo](PROCESSORS.md#appendhostinfo)<br/>[AttributesToJSON](PROCESSORS.md#attributestojson)<br/>[DefragmentText](PROCESSORS.md#defragmenttext)<br/>[ExecuteProcess](PROCESSORS.md#executeprocess)<br/>[ExtractText](PROCESSORS.md#extracttext)<br/>[FetchFile](PROCESSORS.md#fetchfile)<br/>[GenerateFlowFile](PROCESSORS.md#generateflowfile)<br/>[GetFile](PROCESSORS.md#getfile)<br/>[GetTCP](PROCESSORS.md#gettcp)<br/>[HashContent](PROCESSORS.md#hashcontent)<br/>[InvokeHTTP](PROCESSORS.md#invokehttp)<br/>[ListenSyslog](PROCESSORS.md#listensyslog)<br/>[ListenTCP](PROCESSORS.md#listentcp)<br/>[ListenUDP](PROCESSORS.md#listenudp)<br/>[ListFile](PROCESSORS.md#listfile)<br/>[LogAttribute](PROCESSORS.md#logattribute)<br/>[PutFile](PROCESSORS.md#putfile)<br/>[PutTCP](PROCESSORS.md#puttcp)<br/>[PutUDP](PROCESSORS.md#putudp)<br/>[ReplaceText](PROCESSORS.md#replacetext)<br/>[RetryFlowFile](PROCESSORS.md#retryflowfile)<br/>[RouteOnAttribute](PROCESSORS.md#routeonattribute)<br/>[RouteText](PROCESSORS.md#routetext)<br/>[SplitText](PROCESSORS.md#splittext)<br/>[TailFile](PROCESSORS.md#tailfile)<br/>[UpdateAttribute](PROCESSORS.md#updateattribute) |
 
-The next table outlines CMAKE flags that correspond with MiNiFi extensions. Extensions that are enabled by default ( such as CURL ), can be disabled with the respective CMAKE flag on the command line.
+The next table outlines CMAKE flags that correspond with MiNiFi extensions. Extensions that are enabled by default ( such as RocksDB ), can be disabled with the respective CMAKE flag on the command line.
 
 Through JNI extensions you can run NiFi processors using NARs. The JNI extension set allows you to run these Java processors. MiNiFi C++ will favor C++ implementations over Java implements. In the case where a processor is implemented in either language, the one in C++ will be selected; however, will remain transparent to the consumer.
 
@@ -78,7 +78,6 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | AWS                              | [AWSCredentialsService](CONTROLLERS.md#awscredentialsservice)<br/>[PutS3Object](PROCESSORS.md#puts3object)<br/>[DeleteS3Object](PROCESSORS.md#deletes3object)<br/>[FetchS3Object](PROCESSORS.md#fetchs3object)<br/>[ListS3](PROCESSORS.md#lists3)                                                                                                                                                                                                                                                                                                                                                                                               | -DENABLE_AWS=ON              |
 | Azure                            | [AzureStorageCredentialsService](CONTROLLERS.md#azurestoragecredentialsservice)<br/>[PutAzureBlobStorage](PROCESSORS.md#putazureblobstorage)<br/>[DeleteAzureBlobStorage](PROCESSORS.md#deleteazureblobstorage)<br/>[FetchAzureBlobStorage](PROCESSORS.md#fetchazureblobstorage)<br/>[ListAzureBlobStorage](PROCESSORS.md#listazureblobstorage)<br/>[PutAzureDataLakeStorage](PROCESSORS.md#putazuredatalakestorage)<br/>[DeleteAzureDataLakeStorage](PROCESSORS.md#deleteazuredatalakestorage)<br/>[FetchAzureDataLakeStorage](PROCESSORS.md#fetchazuredatalakestorage)<br/>[ListAzureDataLakeStorage](PROCESSORS.md#listazuredatalakestorage) | -DENABLE_AZURE=ON            |
 | CivetWeb                         | [ListenHTTP](PROCESSORS.md#listenhttp)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -DENABLE_CIVET=ON            |
-| CURL                             | [InvokeHTTP](PROCESSORS.md#invokehttp)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -DENABLE_CURL=ON             |
 | Elasticsearch                    | [ElasticsearchCredentialsControllerService](CONTROLLERS.md#elasticsearchcredentialscontrollerservice)<br/>[PostElasticsearch](PROCESSORS.md#postelasticsearch)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_ELASTICSEARCH=ON    |
 | ExecuteProcess (Linux and macOS) | [ExecuteProcess](PROCESSORS.md#executeprocess)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_EXECUTE_PROCESS=ON  |
 | GPS (Linux and macOS)            | [GetGPS](PROCESSORS.md#getgps)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_GPS=ON              |
@@ -145,17 +144,17 @@ versions of OpenSSL, cURL, or zlib are used:
 
 and rebuild.
 
-#### Libraries / Development Headers
-* libcurl-openssl (If not available or desired, NSS will be used)
-* libuuid and uuid-dev
-* openssl
+#### System Libraries / Development Headers Required
 * Python 3 and development headers -- Required if Python support is enabled
 * libgps-dev -- Required if building libGPS support
-* Zlib headers
 * perl -- Required for OpenSSL configuration
 * NASM -- Required for OpenSSL only on Windows
 
 **NOTE:** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the PATH environment variable as the patch executable in this directory interferes with git's patch executable. Alternatively [scoop](https://scoop.sh/) package manager can also be used to install Strawberry Perl using the command `scoop install perl` that does not pollute the PATH variable. Also on Windows CMake's CPack is used for MSI generation, building WIX files and calling WIX toolset tools to create an MSI. If Chocolatey package manager is used its CPack can conflict with CMake, so make sure that CMake's CPack is found in the %PATH% before that.
+
+#### Bundled Thirdparty Dependencies
+
+The [NOTICE](NOTICE) file lists all the bundled thirdparty dependencies that are built and linked statically to MiNiFi or one of its extensions. The licenses of these projects can be found in the [LICENSE](LICENSE) file.
 
 #### CentOS 7
 
@@ -182,13 +181,7 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 
 ### To run
 
-#### Libraries
-* libuuid
-* librocksdb (built and statically linked)
-* libcurl-openssl (If not available or desired, NSS will be used)
-* libssl and libcrypto from openssl (built and statically linked)
-* libarchive (built and statically linked)
-* librdkafka (built and statically linked)
+#### System Libraries Required
 * Python 3 -- Required if Python support is enabled
 * libusb -- Optional, unless USB Camera support is enabled
 * libpng -- Optional, unless USB Camera support is enabled
@@ -352,7 +345,6 @@ This will set up a virtual environment in the bootstrap folder, and guide you th
      Select MiNiFi C++ Features to toggle.
     ****************************************
     A. Persistent Repositories .....Enabled
-    B. libcurl features ............Enabled
     C. libarchive features .........Enabled
     D. Python Scripting support ....Enabled
     E. Expression Language support .Enabled

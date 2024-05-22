@@ -24,8 +24,8 @@
 #include <iostream>
 #include <iterator>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/file/FileUtils.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"

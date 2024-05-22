@@ -49,11 +49,10 @@ bootstrap_compiler() {
     sudo apt-get -y install $compiler_pkgs
 }
 build_deps(){
-    COMMAND="sudo apt-get -y install zlib1g-dev libssl-dev uuid uuid-dev"
+    COMMAND="sudo apt-get -y install zlib1g-dev libssl-dev uuid uuid-dev perl libbz2-dev libcurl4-openssl-dev"
 
     export DEBIAN_FRONTEND=noninteractive
     INSTALLED=()
-    INSTALLED+=("libbz2-dev")
     sudo apt-get -y update
     for option in "${OPTIONS[@]}" ; do
         option_value="${!option}"
@@ -65,9 +64,7 @@ build_deps(){
                 VALUE=${cmake_opt#*:}
                 if [ "$KEY" = "$option" ]; then
                     FOUND_VALUE="$VALUE"
-                    if [ "$FOUND_VALUE" = "libcurl" ]; then
-                        INSTALLED+=("libcurl4-openssl-dev")
-                    elif [ "$FOUND_VALUE" = "libpcap" ]; then
+                    if [ "$FOUND_VALUE" = "libpcap" ]; then
                         INSTALLED+=("libpcap-dev")
                     elif [ "$FOUND_VALUE" = "openssl" ]; then
                         INSTALLED+=("openssl")
@@ -96,8 +93,6 @@ build_deps(){
                         INSTALLED+=("libgps-dev")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
                         INSTALLED+=("liblzma-dev")
-                    elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
-                        INSTALLED+=("perl")
                     fi
                 fi
             done

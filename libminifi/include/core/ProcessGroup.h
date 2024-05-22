@@ -39,7 +39,7 @@
 #include "controller/ControllerServiceNode.h"
 #include "controller/ControllerServiceNodeMap.h"
 #include "utils/Id.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "utils/CallBackTimer.h"
 #include "range/v3/algorithm/find_if.hpp"
 
@@ -120,7 +120,7 @@ class ProcessGroup : public CoreComponent {
   void setHttpProxyPort(int port) {
     proxy_.port = port;
   }
-  utils::HTTPProxy getHTTPProxy() {
+  http::HTTPProxy getHTTPProxy() {
     return proxy_;
   }
   // Set Processor yield period in MilliSecond
@@ -244,7 +244,7 @@ class ProcessGroup : public CoreComponent {
   // Transmitting
   std::atomic<bool> transmitting_;
   // http proxy
-  utils::HTTPProxy proxy_;
+  http::HTTPProxy proxy_;
   std::string transport_protocol_;
 
   // controller services

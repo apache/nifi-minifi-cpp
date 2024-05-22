@@ -66,9 +66,8 @@ bootstrap_compiler() {
 }
 build_deps(){
 
-    COMMAND="brew install cmake"
+    COMMAND="brew install cmake perl bzip2"
     INSTALLED=()
-    INSTALLED+=("bzip2")
     for option in "${OPTIONS[@]}" ; do
         option_value="${!option}"
         if [ "$option_value" = "${TRUE}" ]; then
@@ -105,8 +104,6 @@ build_deps(){
                         INSTALLED+=("bzip2")
                     elif [ "$FOUND_VALUE" = "libssh2" ]; then
                         INSTALLED+=("libssh2")
-                    elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
-                        INSTALLED+=("perl")
                     fi
                 fi
             done

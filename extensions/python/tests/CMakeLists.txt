@@ -28,7 +28,6 @@ FOREACH(testfile ${EXECUTESCRIPT_PYTHON_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
     add_minifi_executable("${testfilename}" "${testfile}")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/python")
-    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
     target_link_libraries(${testfilename} minifi-python-script-extension minifi-script-extension Catch2WithMain Python::Python)
     createTests("${testfilename}")
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
@@ -44,7 +43,6 @@ FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
 
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/python")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
-    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
 
     target_link_libraries(${testfilename} minifi-python-script-extension minifi-script-extension minifi-standard-processors Catch2WithMain Python::Python)
 

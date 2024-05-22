@@ -32,7 +32,7 @@
 #include "io/BaseStream.h"
 #include "io/BufferStream.h"
 #include "properties/Configure.h"
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "utils/TimeUtil.h"
 #include "io/NetworkPrioritizer.h"
 
@@ -264,10 +264,10 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   std::chrono::milliseconds getTimeout() {
     return timeout_;
   }
-  void setHTTPProxy(const utils::HTTPProxy &proxy) {
+  void setHTTPProxy(const http::HTTPProxy &proxy) {
     this->proxy_ = proxy;
   }
-  utils::HTTPProxy getHTTPProxy() {
+  http::HTTPProxy getHTTPProxy() {
     return this->proxy_;
   }
 
@@ -327,7 +327,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
 
   io::NetworkInterface local_network_interface_;
 
-  utils::HTTPProxy proxy_;
+  http::HTTPProxy proxy_;
 
   // Mutex for protection
   std::mutex mutex_;
