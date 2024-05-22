@@ -21,7 +21,7 @@
 
 #include "unit/Catch.h"
 #include "unit/TestBase.h"
-#include "TestUtils.h"
+#include "unit/TestUtils.h"
 #include "io/FileStream.h"
 #include "utils/file/FileUtils.h"
 
@@ -266,7 +266,7 @@ TEST_CASE("Existing file read/write test") {
 }
 
 TEST_CASE("Opening file without permission creates error logs") {
-  if (utils::runningAsUnixRoot())
+  if (minifi::test::utils::runningAsUnixRoot())
     SKIP("Cannot test insufficient permissions with root user");
   TestController test_controller;
   const auto dir = test_controller.createTempDirectory();
