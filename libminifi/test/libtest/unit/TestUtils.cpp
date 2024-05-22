@@ -66,9 +66,8 @@ namespace org::apache::nifi::minifi::test::utils {
 std::filesystem::path putFileToDir(const std::filesystem::path& dir_path, const std::filesystem::path& file_name, const std::string& content) {
   auto file_path = dir_path/file_name;
   std::ofstream out_file(file_path, std::ios::binary | std::ios::out);
-  if (out_file.is_open()) {
-    out_file << content;
-  }
+  assert(out_file.is_open());
+  out_file << content;
   return file_path;
 }
 
