@@ -239,8 +239,8 @@ if(NOT WIN32)
 endif()
 
 # OpenSSL
-include(BundledOpenSSL)
-use_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+include(GetOpenSSL)
+get_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
 
 # libsodium
@@ -250,13 +250,13 @@ use_bundled_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}
 list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS SODIUM_STATIC=1)
 
 # zlib
-include(BundledZLIB)
-use_bundled_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+include(GetZLIB)
+get_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
 
 # cURL
-include(BundledLibcURL)
-use_bundled_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+include(GetLibCURL)
+get_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
 
 # spdlog
