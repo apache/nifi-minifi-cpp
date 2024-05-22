@@ -35,6 +35,7 @@
 #include "asio.hpp"
 #include "asio/ssl.hpp"
 #include "utils/net/Ssl.h"
+#include "range/v3/algorithm/any_of.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -150,11 +151,9 @@ class ExceptionSubStringMatcher : public Catch::Matchers::MatcherBase<T> {
       possible_exception_substrs_(std::move(exception_substr)) {}
 
   bool match(T const& script_exception) const override {
-    for (auto& possible_exception_substr : possible_exception_substrs_) {
-      if (std::string(script_exception.what()).find(possible_exception_substr) != std::string::npos)
-        return true;
-    }
-    return false;
+    return ranges::any_of(possible_exception_substrs_, [what = std::string_view{script_exception.what()}](const auto& possible_exception_substr) {
+      return what.find(possible_exception_substr) != std::string_view::npos;
+    });
   }
 
   std::string describe() const override { return "Checks whether the exception message contains at least one of the provided exception substrings"; }
