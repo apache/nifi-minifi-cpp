@@ -20,7 +20,7 @@
 cmake_minimum_required (VERSION 3.24)
 cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_VERSION_{MAJOR,MINOR,PATCH,TWEAK}
 cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
-project(nifi-libcore-minifi VERSION 0.99.0)
+project(nifi-libcore-minifi VERSION 0.99.1)
 set(PROJECT_NAME "nifi-libcore-minifi")
 
 if (WIN32)
