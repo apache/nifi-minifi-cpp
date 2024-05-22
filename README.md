@@ -149,6 +149,7 @@ and rebuild.
 * libgps-dev -- Required if building libGPS support
 * perl -- Required for OpenSSL configuration
 * NASM -- Required for OpenSSL only on Windows
+* jom (optional) -- for parallel build of OpenSSL on Windows
 
 **NOTE:** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the PATH environment variable as the patch executable in this directory interferes with git's patch executable. Alternatively [scoop](https://scoop.sh/) package manager can also be used to install Strawberry Perl using the command `scoop install perl` that does not pollute the PATH variable. Also on Windows CMake's CPack is used for MSI generation, building WIX files and calling WIX toolset tools to create an MSI. If Chocolatey package manager is used its CPack can conflict with CMake, so make sure that CMake's CPack is found in the %PATH% before that.
 

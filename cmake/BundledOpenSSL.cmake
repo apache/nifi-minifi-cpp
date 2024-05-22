@@ -71,17 +71,37 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     # Note: when upgrading to a later release than 3.1.1 the --no-apps could be used instead of --no-tests to minimize the build size
     if (WIN32)
+        if(MINIFI_USE_JOM_FOR_OPENSSL_BUILD)
+            find_program(JOM_EXECUTABLE_PATH
+                NAMES jom.exe
+                PATHS ENV PATH
+                NO_DEFAULT_PATH)
+            if (NOT JOM_EXECUTABLE_PATH)
+                message(FATAL_ERROR "jom.exe not found. Please install jom and add it to the PATH or turn MINIFI_USE_JOM_FOR_OPENSSL_BUILD option off.")
+            endif()
+            message("Using jom for OpenSSL build: ${JOM_EXECUTABLE_PATH}")
+            include(ProcessorCount)
+            processorcount(jobs)
+            set(OPENSSL_BUILD_COMMAND ${JOM_EXECUTABLE_PATH} -j${jobs})
+            set(OPENSSL_INSTALL_COMMAND ${JOM_EXECUTABLE_PATH} install)
+            set(OPENSSL_WINDOWS_COMPILE_FLAGS /FS)
+        else()
+            message("Using nmake for OpenSSL build")
+            set(OPENSSL_BUILD_COMMAND nmake)
+            set(OPENSSL_INSTALL_COMMAND nmake install)
+            set(OPENSSL_WINDOWS_COMPILE_FLAGS "")
+        endif()
         ExternalProject_Add(
                 openssl-external
                 URL https://github.com/openssl/openssl/releases/download/openssl-3.3.0/openssl-3.3.0.tar.gz
                 URL_HASH "SHA256=53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
-                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS}" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
+                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
                 EXCLUDE_FROM_ALL TRUE
-                BUILD_COMMAND nmake
-                INSTALL_COMMAND nmake install
+                BUILD_COMMAND ${OPENSSL_BUILD_COMMAND}
+                INSTALL_COMMAND ${OPENSSL_INSTALL_COMMAND}
             )
     else()
         ExternalProject_Add(

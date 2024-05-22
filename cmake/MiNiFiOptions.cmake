@@ -83,6 +83,7 @@ if (WIN32)
     add_minifi_option(ENABLE_WEL "Enables the suite of Windows Event Log extensions." ON)
     add_minifi_option(ENABLE_PDH "Enables PDH support." ON)
     add_minifi_option(ENABLE_SMB "Enables SMB support." ON)
+    add_minifi_option(MINIFI_USE_JOM_FOR_OPENSSL_BUILD "Use jom instead of nmake for parallel build of OpenSSL." OFF)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

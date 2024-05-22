@@ -180,6 +180,7 @@ jobs:
         -DSKIP_TESTS=OFF
         -DSTATIC_BUILD=ON
         -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=ON
+        -DMINIFI_USE_JOM_FOR_OPENSSL_BUILD=ON
         -DUSE_SHARED_LIBS=OFF
     steps:
       - name: Support longpaths
@@ -208,6 +209,13 @@ jobs:
         shell: powershell
       - name: Add sccache to path
         run: '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";" + (Split-Path -Path $env:SCCACHE_PATH -Parent), [EnvironmentVariableTarget]::Machine);'
+        shell: powershell
+      - name: Install jom
+        run: |
+          Invoke-WebRequest -Uri "http://download.qt.io/official_releases/jom/jom.zip" -OutFile "jom.zip"
+          New-Item -ItemType Directory -Path D:\jom
+          Expand-Archive -Path jom.zip -DestinationPath D:\jom
+          [Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";D:\jom", [EnvironmentVariableTarget]::Machine);
         shell: powershell
       - name: build
         run: |
