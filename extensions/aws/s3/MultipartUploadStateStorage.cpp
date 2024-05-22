@@ -26,7 +26,7 @@ void MultipartUploadStateStorage::storeState(const std::string& bucket, const st
   state_manager_->get(stored_state);
   std::string state_key = bucket + "/" + key;
   stored_state[state_key + ".upload_id"] = state.upload_id;
-  stored_state[state_key + ".upload_time"] = std::to_string(state.upload_time);
+  stored_state[state_key + ".upload_time"] = std::to_string(state.upload_time_ms_since_epoch);
   stored_state[state_key + ".uploaded_parts"] = std::to_string(state.uploaded_parts);
   stored_state[state_key + ".uploaded_size"] = std::to_string(state.uploaded_size);
   stored_state[state_key + ".part_size"] = std::to_string(state.part_size);
@@ -56,7 +56,7 @@ std::optional<MultipartUploadState> MultipartUploadStateStorage::getState(const 
   MultipartUploadState state;
   state.upload_id = state_map[state_key + ".upload_id"];
 
-  core::Property::StringToInt(state_map[state_key + ".upload_time"], state.upload_time);
+  core::Property::StringToInt(state_map[state_key + ".upload_time"], state.upload_time_ms_since_epoch);
   core::Property::StringToInt(state_map[state_key + ".uploaded_parts"], state.uploaded_parts);
   core::Property::StringToInt(state_map[state_key + ".uploaded_size"], state.uploaded_size);
   core::Property::StringToInt(state_map[state_key + ".part_size"], state.part_size);
@@ -105,7 +105,7 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
 
   std::vector<std::string> keys_to_remove;
   for (const auto& [property_key, value] : state_map) {
-    std::string upload_time_suffix = ".upload_time";
+    static constexpr std::string_view upload_time_suffix = ".upload_time";
     if (!minifi::utils::string::endsWith(property_key, upload_time_suffix)) {
       continue;
     }

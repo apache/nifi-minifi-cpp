@@ -41,13 +41,13 @@ struct MultipartUploadState {
     : upload_id(upload_id),
       part_size(part_size),
       full_size(full_size),
-      upload_time(upload_time.Millis()) {}
+      upload_time_ms_since_epoch(upload_time.Millis()) {}
   std::string upload_id;
   size_t uploaded_parts{};
   uint64_t uploaded_size{};
   uint64_t part_size{};
   uint64_t full_size{};
-  int64_t upload_time;
+  int64_t upload_time_ms_since_epoch;
   std::vector<std::string> uploaded_etags;
 
   bool operator==(const MultipartUploadState&) const = default;
