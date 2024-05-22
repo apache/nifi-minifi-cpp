@@ -154,7 +154,7 @@ TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Remove aged off state"
   state2.upload_time = Aws::Utils::DateTime::CurrentTimeMillis();
   state2.uploaded_etags = {"etag4", "etag5"};
   upload_storage_->storeState("test_bucket", "key2", state2);
-  upload_storage_->removeAgedStates(std::chrono::milliseconds(10));
+  upload_storage_->removeAgedStates(std::chrono::minutes(10));
   REQUIRE(upload_storage_->getState("test_bucket", "key1") == std::nullopt);
   REQUIRE(upload_storage_->getState("test_bucket", "key2") == state2);
 }
