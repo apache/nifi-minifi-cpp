@@ -21,7 +21,7 @@
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
-static PyMethodDef PyLogger_methods[] = {
+static PyMethodDef PyLogger_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"error", (PyCFunction) PyLogger::error, METH_VARARGS, nullptr},
     {"warn", (PyCFunction) PyLogger::warn, METH_VARARGS, nullptr},
     {"info", (PyCFunction) PyLogger::info, METH_VARARGS, nullptr},
@@ -30,7 +30,7 @@ static PyMethodDef PyLogger_methods[] = {
     {}  /* Sentinel */
 };
 
-static PyType_Slot PyLoggerTypeSpecSlots[] = {
+static PyType_Slot PyLoggerTypeSpecSlots[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {Py_tp_dealloc, reinterpret_cast<void*>(pythonAllocatedInstanceDealloc<PyLogger>)},
     {Py_tp_init, reinterpret_cast<void*>(PyLogger::init)},
     {Py_tp_methods, reinterpret_cast<void*>(PyLogger_methods)},
@@ -54,7 +54,7 @@ int PyLogger::init(PyLogger* self, PyObject* args, PyObject*) {
 
   auto weak_ptr = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
   if (!weak_ptr)
-    throw PyException();
+    return -1;
   self->logger_ = *static_cast<HeldType*>(weak_ptr);
   return 0;
 }
@@ -63,12 +63,12 @@ PyObject* PyLogger::error(PyLogger* self, PyObject* args) {
   auto logger = self->logger_.lock();
   if (logger == nullptr) {
     PyErr_SetString(PyExc_AttributeError, "internal 'logger' instance is null");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
-  const char* message;
+  const char* message = nullptr;
   if (!PyArg_ParseTuple(args, "s", &message)) {
-    throw PyException();
+    return nullptr;
   }
   logger->log_error("{}", message);
   Py_RETURN_NONE;
@@ -78,12 +78,12 @@ PyObject* PyLogger::warn(PyLogger* self, PyObject* args) {
   auto logger = self->logger_.lock();
   if (logger == nullptr) {
     PyErr_SetString(PyExc_AttributeError, "internal 'logger' instance is null");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
-  const char* message;
+  const char* message = nullptr;
   if (!PyArg_ParseTuple(args, "s", &message)) {
-    throw PyException();
+    return nullptr;
   }
   logger->log_warn("{}", message);
   Py_RETURN_NONE;
@@ -93,12 +93,12 @@ PyObject* PyLogger::info(PyLogger* self, PyObject* args) {
   auto logger = self->logger_.lock();
   if (logger == nullptr) {
     PyErr_SetString(PyExc_AttributeError, "internal 'logger' instance is null");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
-  const char* message;
+  const char* message = nullptr;
   if (!PyArg_ParseTuple(args, "s", &message)) {
-    throw PyException();
+    return nullptr;
   }
   logger->log_info("{}", message);
   Py_RETURN_NONE;
@@ -108,12 +108,12 @@ PyObject* PyLogger::debug(PyLogger* self, PyObject* args) {
   auto logger = self->logger_.lock();
   if (logger == nullptr) {
     PyErr_SetString(PyExc_AttributeError, "internal 'logger' instance is null");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
-  const char* message;
+  const char* message = nullptr;
   if (!PyArg_ParseTuple(args, "s", &message)) {
-    throw PyException();
+    return nullptr;
   }
   logger->log_debug("{}", message);
   Py_RETURN_NONE;
@@ -123,12 +123,12 @@ PyObject* PyLogger::trace(PyLogger* self, PyObject* args) {
   auto logger = self->logger_.lock();
   if (logger == nullptr) {
     PyErr_SetString(PyExc_AttributeError, "internal 'logger' instance is null");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
-  const char* message;
+  const char* message = nullptr;
   if (!PyArg_ParseTuple(args, "s", &message)) {
-    throw PyException();
+    return nullptr;
   }
   logger->log_trace("{}", message);
   Py_RETURN_NONE;

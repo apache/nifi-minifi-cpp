@@ -21,7 +21,6 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 #include "PyStateManager.h"
 #include "PyScriptFlowFile.h"
-#include "PyException.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
@@ -57,7 +56,7 @@ int PyProcessContext::init(PyProcessContext* self, PyObject* args, PyObject*) {
 
   auto process_context = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
   if (!process_context)
-    throw PyException();
+    return -1;
   self->process_context_ = *static_cast<HeldType*>(process_context);
   return 0;
 }
@@ -72,7 +71,7 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
   const char* property_name = nullptr;
   PyObject* script_flow_file = nullptr;
   if (!PyArg_ParseTuple(args, "s|O", &property_name, &script_flow_file)) {
-    throw PyException();
+    return nullptr;
   }
 
   std::string value;
@@ -117,7 +116,7 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
   const char* controller_service_name = nullptr;
   const char* controller_service_type = nullptr;
   if (!PyArg_ParseTuple(args, "s|s", &controller_service_name, &controller_service_type)) {
-    throw PyException();
+    return nullptr;
   }
 
   if (auto controller_service = context->getControllerService(controller_service_name)) {

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import traceback
 from abc import ABC, abstractmethod
 from typing import List
 from .properties import ExpressionLanguageScope, FlowFileProxy, ProcessContextProxy, PropertyDescriptor, translateStandardValidatorToMiNiFiPropertype
@@ -89,8 +90,8 @@ class FlowFileTransform(ABC):
         context_proxy = ProcessContextProxy(context)
         try:
             result = self.transform(context_proxy, flow_file_proxy)
-        except Exception as e:
-            self.logger.error("Failed to transform flow file due to error: {}".format(str(e)))
+        except Exception:
+            self.logger.error("Failed to transform flow file due to error:\n{}".format(traceback.format_exc()))
             session.remove(flow_file)
             session.transfer(original_flow_file, self.REL_FAILURE)
             return

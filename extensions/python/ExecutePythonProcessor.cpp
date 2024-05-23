@@ -58,15 +58,21 @@ void ExecutePythonProcessor::initialize() {
 }
 
 void ExecutePythonProcessor::initalizeThroughScriptEngine() {
-  appendPathForImportModules();
-  python_script_engine_->appendModulePaths(python_paths_);
-  python_script_engine_->eval(script_to_exec_);
-  if (python_class_name_) {
-    python_script_engine_->initializeProcessorObject(*python_class_name_);
+  try {
+    appendPathForImportModules();
+    python_script_engine_->appendModulePaths(python_paths_);
+    python_script_engine_->eval(script_to_exec_);
+    if (python_class_name_) {
+      python_script_engine_->initializeProcessorObject(*python_class_name_);
+    }
+    python_script_engine_->describe(this);
+    python_script_engine_->onInitialize(this);
+    processor_initialized_ = true;
+  } catch (const std::exception& e) {
+    std::string python_processor_name = python_class_name_ ? *python_class_name_ : script_file_path_;
+    logger_->log_error("Failed to initialize python processor '{}' due to error: {}", python_processor_name, e.what());
+    throw;
   }
-  python_script_engine_->describe(this);
-  python_script_engine_->onInitialize(this);
-  processor_initialized_ = true;
 }
 
 void ExecutePythonProcessor::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {

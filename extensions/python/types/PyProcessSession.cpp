@@ -18,7 +18,6 @@
 
 #include "PyProcessSession.h"
 #include <utility>
-#include "PyException.h"
 #include "PyScriptFlowFile.h"
 #include "PyRelationship.h"
 #include "types/PyOutputStream.h"
@@ -195,7 +194,7 @@ int PyProcessSessionObject::init(PyProcessSessionObject* self, PyObject* args, P
 
   auto process_session = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
   if (!process_session)
-    throw PyException();
+    return -1;
   self->process_session_ = *static_cast<std::weak_ptr<PyProcessSession>*>(process_session);
   return 0;
 }
@@ -231,7 +230,7 @@ PyObject* PyProcessSessionObject::clone(PyProcessSessionObject* self, PyObject* 
   }
   PyObject* script_flow_file = nullptr;
   if (!PyArg_ParseTuple(args, "O!", PyScriptFlowFile::typeObject(), &script_flow_file)) {
-    throw PyException();
+    return nullptr;
   }
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
 
@@ -248,7 +247,7 @@ PyObject* PyProcessSessionObject::remove(PyProcessSessionObject* self, PyObject*
   }
   PyObject* script_flow_file = nullptr;
   if (!PyArg_ParseTuple(args, "O!", PyScriptFlowFile::typeObject(), &script_flow_file)) {
-    throw PyException();
+    return nullptr;
   }
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
   session->remove(flow_file);
@@ -259,19 +258,19 @@ PyObject* PyProcessSessionObject::read(PyProcessSessionObject* self, PyObject* a
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
   PyObject* script_flow_file = nullptr;
   PyObject* callback = nullptr;
   if (!PyArg_ParseTuple(args, "O!O", PyScriptFlowFile::typeObject(), &script_flow_file, &callback)) {
-    throw PyException();
+    return nullptr;
   }
 
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
   session->read(flow_file, BorrowedObject(callback));
   Py_RETURN_NONE;
@@ -281,19 +280,19 @@ PyObject* PyProcessSessionObject::write(PyProcessSessionObject* self, PyObject* 
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
   PyObject* script_flow_file = nullptr;
   PyObject* callback = nullptr;
   if (!PyArg_ParseTuple(args, "O!O", PyScriptFlowFile::typeObject(), &script_flow_file, &callback)) {
-    throw PyException();
+    return nullptr;
   }
 
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
   session->write(flow_file, BorrowedObject(callback));
   Py_RETURN_NONE;
@@ -303,19 +302,19 @@ PyObject* PyProcessSessionObject::transfer(PyProcessSessionObject* self, PyObjec
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
   PyObject* script_flow_file = nullptr;
   PyObject* relationship = nullptr;
   if (!PyArg_ParseTuple(args, "O!O!", PyScriptFlowFile::typeObject(), &script_flow_file, PyRelationship::typeObject(), &relationship)) {
-    throw PyException();
+    return nullptr;
   }
 
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
   session->transfer(flow_file, reinterpret_cast<PyRelationship*>(relationship)->relationship_);
   Py_RETURN_NONE;
@@ -325,13 +324,13 @@ PyObject* PyProcessSessionObject::transferToCustomRelationship(PyProcessSessionO
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
   PyObject* script_flow_file = nullptr;
   const char* relationship_name = nullptr;
   if (!PyArg_ParseTuple(args, "O!s", PyScriptFlowFile::typeObject(), &script_flow_file, &relationship_name)) {
-    throw PyException();
+    return nullptr;
   }
 
   if (!relationship_name) {
@@ -348,7 +347,7 @@ PyObject* PyProcessSessionObject::transferToCustomRelationship(PyProcessSessionO
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
   BorrowedStr name = BorrowedStr::fromTuple(args, 0);
@@ -364,7 +363,7 @@ PyObject* PyProcessSessionObject::getContentsAsBytes(PyProcessSessionObject* sel
   }
   PyObject* script_flow_file = nullptr;
   if (!PyArg_ParseTuple(args, "O!", PyScriptFlowFile::typeObject(), &script_flow_file)) {
-    throw PyException();
+    return nullptr;
   }
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
   auto content = session->getContentsAsString(flow_file);
