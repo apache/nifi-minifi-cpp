@@ -19,19 +19,18 @@
 #include "PyInputStream.h"
 #include <vector>
 
-#include "PyException.h"
 #include "Types.h"
 #include "utils/gsl.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
-static PyMethodDef PyInputStream_methods[] = {
+static PyMethodDef PyInputStream_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"read", (PyCFunction) PyInputStream::read, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
-static PyType_Slot PyInputStreamTypeSpecSlots[] = {
+static PyType_Slot PyInputStreamTypeSpecSlots[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {Py_tp_dealloc, reinterpret_cast<void*>(pythonAllocatedInstanceDealloc<PyInputStream>)},
     {Py_tp_init, reinterpret_cast<void*>(PyInputStream::init)},
     {Py_tp_methods, reinterpret_cast<void*>(PyInputStream_methods)},
@@ -55,7 +54,7 @@ int PyInputStream::init(PyInputStream* self, PyObject* args, PyObject*) {
 
   auto input_stream = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
   if (!input_stream)
-    throw PyException();
+    return -1;
   self->input_stream_ = *static_cast<HeldType*>(input_stream);
   return 0;
 }
@@ -69,7 +68,7 @@ PyObject* PyInputStream::read(PyInputStream* self, PyObject* args) {
 
   size_t len = input_stream->size();
   if (!PyArg_ParseTuple(args, "|K")) {
-    throw PyException();
+    return nullptr;
   }
 
   if (len == 0) {

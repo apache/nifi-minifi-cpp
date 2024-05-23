@@ -18,7 +18,6 @@
 #include "PyProcessor.h"
 #include <string>
 #include <optional>
-#include "PyException.h"
 #include "Types.h"
 
 extern "C" {
@@ -55,7 +54,7 @@ int PyProcessor::init(PyProcessor* self, PyObject* args, PyObject*) {
 
   auto processor = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
   if (!processor)
-    throw PyException();
+    return -1;
   self->processor_ = *static_cast<HeldType*>(processor);
   return 0;
 }
@@ -64,7 +63,7 @@ PyObject* PyProcessor::setSupportsDynamicProperties(PyProcessor* self, PyObject*
   auto processor = self->processor_.lock();
   if (!processor) {
     PyErr_SetString(PyExc_AttributeError, "tried reading processor outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
   processor->setSupportsDynamicProperties();
@@ -75,12 +74,12 @@ PyObject* PyProcessor::setDescription(PyProcessor* self, PyObject* args) {
   auto processor = self->processor_.lock();
   if (!processor) {
     PyErr_SetString(PyExc_AttributeError, "tried reading processor outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
   const char* description = nullptr;
   if (!PyArg_ParseTuple(args, "s", &description)) {
-    throw PyException();
+    return nullptr;
   }
   processor->setDescription(std::string(description));
   Py_RETURN_NONE;
@@ -90,14 +89,17 @@ namespace {
 bool getBoolFromTuple(PyObject* tuple, Py_ssize_t location) {
   auto object = PyTuple_GetItem(tuple, location);
 
-  if (!object)
+  if (!object) {
     throw PyException();
+  }
 
   if (object == Py_True)
     return true;
   if (object == Py_False)
     return false;
-  throw std::invalid_argument("Expected to get Py_True or Py_False, but got something else");
+
+  PyErr_SetString(PyExc_AttributeError, "Expected to get boolean parameter, but got something else");
+  throw PyException();
 }
 }  // namespace
 
@@ -106,7 +108,7 @@ PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
   auto processor = self->processor_.lock();
   if (!processor) {
     PyErr_SetString(PyExc_AttributeError, "tried reading processor outside 'on_trigger'");
-    Py_RETURN_NONE;
+    return nullptr;
   }
 
   BorrowedStr name = BorrowedStr::fromTuple(args, 0);
@@ -116,13 +118,21 @@ PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
   if (default_value_pystr.get() && default_value_pystr.get() != Py_None) {
     default_value = default_value_pystr.toUtf8String();
   }
-  bool is_required = getBoolFromTuple(args, 3);
-  bool supports_expression_language = getBoolFromTuple(args, 4);
 
+  bool is_required = false;
+  bool supports_expression_language = false;
   bool sensitive = false;
   auto arg_size = PyTuple_Size(args);
-  if (arg_size > 5) {
-    sensitive = getBoolFromTuple(args, 5);
+
+  try {
+    is_required = getBoolFromTuple(args, 3);
+    supports_expression_language = getBoolFromTuple(args, 4);
+
+    if (arg_size > 5) {
+      sensitive = getBoolFromTuple(args, 5);
+    }
+  } catch (const PyException&) {
+    return nullptr;
   }
 
   std::optional<int64_t> validator_value;

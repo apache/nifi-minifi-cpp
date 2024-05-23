@@ -20,13 +20,13 @@
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
-static PyMethodDef PyRelationship_methods[] = {
+static PyMethodDef PyRelationship_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"getName", (PyCFunction) PyRelationship::getName, METH_VARARGS, nullptr},
     {"getDescription", (PyCFunction) PyRelationship::getDescription, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
-static PyType_Slot PyRelationshipTypeSpecSlots[] = {
+static PyType_Slot PyRelationshipTypeSpecSlots[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {Py_tp_dealloc, reinterpret_cast<void*>(pythonAllocatedInstanceDealloc<PyRelationship>)},
     {Py_tp_init, reinterpret_cast<void*>(PyRelationship::init)},
     {Py_tp_methods, reinterpret_cast<void*>(PyRelationship_methods)},
@@ -50,7 +50,7 @@ int PyRelationship::init(PyRelationship* self, PyObject* args, PyObject*) {
 
   auto relationship = PyCapsule_GetPointer(capsule, HeldTypeName);
   if (!relationship)
-    throw PyException();
+    return -1;
   self->relationship_ = *static_cast<HeldType*>(relationship);
   return 0;
 }

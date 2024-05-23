@@ -18,7 +18,6 @@
 
 #include "PyDataConverter.h"
 
-#include "PyException.h"
 #include "core/TypedValues.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
@@ -26,7 +25,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 PyObject* timePeriodStringToMilliseconds(PyObject* /*self*/, PyObject* args) {
   const char* time_period_str = nullptr;
   if (!PyArg_ParseTuple(args, "s", &time_period_str)) {
-    throw PyException();
+    return nullptr;
   }
 
   auto milliseconds = core::TimePeriodValue(std::string(time_period_str)).getMilliseconds().count();
@@ -37,7 +36,7 @@ PyObject* timePeriodStringToMilliseconds(PyObject* /*self*/, PyObject* args) {
 PyObject* dataSizeStringToBytes(PyObject* /*self*/, PyObject* args) {
   const char* data_size_str = nullptr;
   if (!PyArg_ParseTuple(args, "s", &data_size_str)) {
-    throw PyException();
+    return nullptr;
   }
 
   uint64_t bytes = core::DataSizeValue(std::string(data_size_str)).getValue();

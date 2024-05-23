@@ -17,7 +17,6 @@
 
 #include "PyScriptFlowFile.h"
 #include <string>
-#include "PyException.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
@@ -57,7 +56,7 @@ int PyScriptFlowFile::init(PyScriptFlowFile* self, PyObject* args, PyObject*) {
 
   auto script_flow_file = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
   if (!script_flow_file)
-    throw PyException();
+    return -1;
   self->script_flow_file_ = *static_cast<HeldType*>(script_flow_file);
 
   return 0;
@@ -72,7 +71,7 @@ PyObject* PyScriptFlowFile::getAttribute(PyScriptFlowFile* self, PyObject* args)
 
   const char* attribute = nullptr;
   if (!PyArg_ParseTuple(args, "s", &attribute)) {
-    throw PyException();
+    return nullptr;
   }
   return object::returnReference(flow_file->getAttribute(attribute).value_or(""));
 }
@@ -87,7 +86,7 @@ PyObject* PyScriptFlowFile::addAttribute(PyScriptFlowFile* self, PyObject* args)
   const char* key = nullptr;
   const char* value = nullptr;
   if (!PyArg_ParseTuple(args, "ss", &key, &value)) {
-    throw PyException();
+    return nullptr;
   }
 
   return object::returnReference(flow_file->addAttribute(key, std::string(value)));
@@ -103,7 +102,7 @@ PyObject* PyScriptFlowFile::updateAttribute(PyScriptFlowFile* self, PyObject* ar
   const char* key = nullptr;
   const char* value = nullptr;
   if (!PyArg_ParseTuple(args, "ss", &key, &value)) {
-    throw PyException();
+    return nullptr;
   }
 
   return object::returnReference(flow_file->updateAttribute(key, std::string(value)));
@@ -118,7 +117,7 @@ PyObject* PyScriptFlowFile::removeAttribute(PyScriptFlowFile* self, PyObject* ar
 
   const char* attribute = nullptr;
   if (!PyArg_ParseTuple(args, "s", &attribute)) {
-    throw PyException();
+    return nullptr;
   }
   return object::returnReference(flow_file->removeAttribute(attribute));
 }
@@ -133,7 +132,7 @@ PyObject* PyScriptFlowFile::setAttribute(PyScriptFlowFile* self, PyObject* args)
   const char* key = nullptr;
   const char* value = nullptr;
   if (!PyArg_ParseTuple(args, "ss", &key, &value)) {
-    throw PyException();
+    return nullptr;
   }
 
   return object::returnReference(flow_file->setAttribute(key, value));
