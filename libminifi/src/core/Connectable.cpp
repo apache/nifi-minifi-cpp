@@ -59,6 +59,7 @@ void Connectable::setSupportedRelationships(std::span<const core::RelationshipDe
 
 std::vector<Relationship> Connectable::getSupportedRelationships() const {
   std::vector<Relationship> relationships;
+  relationships.reserve(relationships_.size());
   for (auto const &item : relationships_) {
     relationships.push_back(item.second);
   }
