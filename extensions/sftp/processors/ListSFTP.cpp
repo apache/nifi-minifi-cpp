@@ -100,14 +100,14 @@ void ListSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   if (context.getProperty(FileFilterRegex, file_filter_regex_) && !file_filter_regex_.empty()) {
     try {
       compiled_file_filter_regex_ = utils::Regex(file_filter_regex_);
-    } catch (const Exception &e) {
+    } catch (const Exception&) {
       logger_->log_error("Failed to compile File Filter Regex \"{}\"", file_filter_regex_.c_str());
     }
   }
   if (context.getProperty(PathFilterRegex, path_filter_regex_) && !path_filter_regex_.empty()) {
     try {
       compiled_path_filter_regex_ = utils::Regex(path_filter_regex_);
-    } catch (const Exception &e) {
+    } catch (const Exception&) {
       logger_->log_error("Failed to compile Path Filter Regex \"{}\"", path_filter_regex_.c_str());
     }
   }
@@ -290,7 +290,7 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
     const ListSFTP::Child& child) {
   /* Convert mtime to string */
   if (child.attrs.mtime > gsl::narrow<uint64_t>(std::numeric_limits<int64_t>::max())) {
-    logger_->log_error("Modification date {} of \"{}/{}\" larger than int64_t max", child.attrs.mtime, child.parent_path.c_str(), child.filename.c_str());
+    logger_->log_error("Modification date {} of \"{}/{}\" larger than int64_t max", child.attrs.mtime, child.parent_path.string(), child.filename);
     return true;
   }
   auto mtime_str = utils::timeutils::getDateTimeStr(date::sys_seconds{std::chrono::seconds(child.attrs.mtime)});

@@ -189,24 +189,24 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
       }
     } else {
       if ((attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) && LIBSSH2_SFTP_S_ISDIR(attrs.permissions)) {
-        logger_->log_error("Rejecting {} because a directory with the same name already exists", filename.c_str());
+        logger_->log_error("Rejecting {} because a directory with the same name already exists", filename.string());
         session.transfer(flow_file, Reject);
         put_connection_back_to_cache();
         return true;
       }
-      logger_->log_debug("Found file with the same name as the target file: {}", filename.c_str());
+      logger_->log_debug("Found file with the same name as the target file: {}", filename.string());
       if (conflict_resolution_ == CONFLICT_RESOLUTION_IGNORE) {
-        logger_->log_debug("Routing {} to SUCCESS despite a file with the same name already existing", filename.c_str());
+        logger_->log_debug("Routing {} to SUCCESS despite a file with the same name already existing", filename.string());
         session.transfer(flow_file, Success);
         put_connection_back_to_cache();
         return true;
       } else if (conflict_resolution_ == CONFLICT_RESOLUTION_REJECT) {
-        logger_->log_debug("Routing {} to REJECT because a file with the same name already exists", filename.c_str());
+        logger_->log_debug("Routing {} to REJECT because a file with the same name already exists", filename.string());
         session.transfer(flow_file, Reject);
         put_connection_back_to_cache();
         return true;
       } else if (conflict_resolution_ == CONFLICT_RESOLUTION_FAIL) {
-        logger_->log_debug("Routing {} to FAILURE because a file with the same name already exists", filename.c_str());
+        logger_->log_debug("Routing {} to FAILURE because a file with the same name already exists", filename.string());
         session.transfer(flow_file, Failure);
         put_connection_back_to_cache();
         return true;
@@ -231,7 +231,7 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
           logger_->log_debug("Resolved {} to {}", filename.generic_string(), possible_resolved_filename);
           resolved_filename = std::move(possible_resolved_filename);
         } else {
-          logger_->log_error("Rejecting {} because a unique name could not be determined after 99 attempts", filename.c_str());
+          logger_->log_error("Rejecting {} because a unique name could not be determined after 99 attempts", filename.string());
           session.transfer(flow_file, Reject);
           put_connection_back_to_cache();
           return true;
@@ -273,7 +273,7 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
   }
 
   std::string final_target_path = (remote_path / resolved_filename).generic_string();
-  logger_->log_debug("The target path is {}, final target path is {}", target_path.c_str(), final_target_path.c_str());
+  logger_->log_debug("The target path is {}, final target path is {}", target_path.string(), final_target_path);
 
   try {
     session.read(flow_file, [&client, &target_path, this](const std::shared_ptr<io::InputStream>& stream) {

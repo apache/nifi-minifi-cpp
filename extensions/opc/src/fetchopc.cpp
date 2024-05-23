@@ -62,7 +62,7 @@ namespace org::apache::nifi::minifi::processors {
 
     if (idType_ == opc::OPCNodeIDType::Int) {
       try {
-        std::stoi(nodeID_);
+        static_cast<void>(std::stoi(nodeID_));
       } catch(...) {
         auto error_msg = utils::string::join_pack(nodeID_, " cannot be used as an int type node ID");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);

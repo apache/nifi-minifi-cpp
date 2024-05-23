@@ -55,3 +55,8 @@ FetchContent_Declare(google-cloud-cpp
         PATCH_COMMAND "${PC}")
 add_compile_definitions(_SILENCE_CXX20_REL_OPS_DEPRECATION_WARNING _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING CURL_STATICLIB)
 FetchContent_MakeAvailable(google-cloud-cpp)
+
+if (NOT SKIP_TESTS)
+    get_target_property(GMOCK_INC_DIR mock_google_cloud_client INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(mock_google_cloud_client PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${GMOCK_INC_DIR}")
+endif()

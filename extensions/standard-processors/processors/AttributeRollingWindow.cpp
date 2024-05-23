@@ -53,7 +53,7 @@ void AttributeRollingWindow::onTrigger(core::ProcessContext& context, core::Proc
   const auto current_value = [&current_value_opt_str]() -> std::optional<double> {
     try {
       return std::stod(*current_value_opt_str);
-    } catch (const std::exception& ex) {
+    } catch (const std::exception&) {
       return std::nullopt;
     }
   }();

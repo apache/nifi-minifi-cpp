@@ -17,7 +17,9 @@
  */
 
 #ifdef _WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
@@ -201,7 +203,7 @@ cstream * create_socket(const char * host, uint16_t portnum) {
       continue;
     }
 
-    if (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1) {
+    if (connect(sock, rp->ai_addr, (int)rp->ai_addrlen) != -1) {
       break;
     }
 

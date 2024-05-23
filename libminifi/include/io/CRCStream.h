@@ -27,6 +27,7 @@
 #include <cassert>
 
 #ifdef WIN32
+#pragma warning(disable : 4250)
 #include <winsock2.h>
 
 #else

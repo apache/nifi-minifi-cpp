@@ -419,7 +419,7 @@ int get_attribute_quantity(const flow_file_record *ff) {
   NULL_CHECK(0, ff);
   NULL_CHECK(0, ff->attributes);
   auto attribute_map = static_cast<AttributeMap*>(ff->attributes);
-  return attribute_map ? attribute_map->size() : 0;
+  return attribute_map ? (int)attribute_map->size() : 0;
 }
 
 int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
@@ -470,7 +470,7 @@ int get_content(const flow_file_record* ff, uint8_t* target, int size) {
     size_t copy_size = static_cast<size_t>(size) < fb.file_len ? size : gsl::narrow<size_t>(fb.file_len);
     memcpy(target, fb.buffer, copy_size*sizeof(uint8_t));
     free(fb.buffer);
-    return copy_size;
+    return (int)copy_size;
   }
 }
 

@@ -96,13 +96,13 @@ find_package(FLEX REQUIRED)
 bison_target(
     el-parser
     ${CMAKE_CURRENT_SOURCE_DIR}/Parser.yy
-    ${CMAKE_CURRENT_SOURCE_DIR}/Parser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/el-parser/Parser.cpp
 )
 
 flex_target(
     el-scanner
     ${CMAKE_CURRENT_SOURCE_DIR}/Scanner.ll
-    ${CMAKE_CURRENT_SOURCE_DIR}/Scanner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/el-scanner/Scanner.cpp
     COMPILE_FLAGS --c++
 )
 
@@ -110,6 +110,8 @@ add_flex_bison_dependency(el-scanner el-parser)
 
 include_directories(./ ../../libminifi/include  ../../libminifi/include/core)
 include_directories(SYSTEM ../../thirdparty/)
+include_directories(SYSTEM el-parser)
+include_directories(SYSTEM el-scanner)
 include_directories(common)
 include_directories(impl)
 
@@ -127,6 +129,9 @@ file(GLOB SOURCES  "*.cpp")
 if (NOT WIN32)
     set_source_files_properties(${BISON_el-parser_OUTPUTS} PROPERTIES COMPILE_FLAGS -Wno-error)
     set_source_files_properties(${FLEX_el-scanner_OUTPUTS} PROPERTIES COMPILE_FLAGS -Wno-error)
+else()
+    set_source_files_properties(${BISON_el-parser_OUTPUTS} PROPERTIES COMPILE_FLAGS /wd4244)
+    set_source_files_properties(${FLEX_el-scanner_OUTPUTS} PROPERTIES COMPILE_FLAGS /wd4244)
 endif()
 
 add_minifi_library(minifi-expression-language-extensions SHARED ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})

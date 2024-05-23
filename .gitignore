@@ -65,6 +65,12 @@ __pycache__/
 /provenance_repository
 /logs
 msi/WixWin.wsi
+extensions/expression-language/el-scanner/Scanner.cpp
+extensions/expression-language/el-parser/Parser.cpp
+extensions/expression-language/el-parser/Parser.hpp
+extensions/expression-language/el-parser/location.hh
+extensions/expression-language/el-parser/position.hh
+extensions/expression-language/el-parser/stack.hh
 
 .vs/**
 *.swp

@@ -51,12 +51,12 @@ provenance_repository
 logs
 compile_commands.json
 
-extensions/expression-language/Parser.cpp
-extensions/expression-language/Parser.hpp
-extensions/expression-language/Scanner.cpp
-extensions/expression-language/location.hh
-extensions/expression-language/position.hh
-extensions/expression-language/stack.h
+extensions/expression-language/el-parser/Parser.cpp
+extensions/expression-language/el-parser/Parser.hpp
+extensions/expression-language/el-scanner/Scanner.cpp
+extensions/expression-language/el-parser/location.hh
+extensions/expression-language/el-parser/position.hh
+extensions/expression-language/el-parser/stack.h
 
 thirdparty/uuid/tst_uuid*
 thirdparty/apache-rat/apache-rat*

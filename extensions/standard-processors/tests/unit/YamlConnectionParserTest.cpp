@@ -187,7 +187,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
         CHECK(minifi::Connection::DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE == yaml_connection_parser.getWorkQueueDataSize());
         CHECK(0 == yaml_connection_parser.getSwapThreshold());
         CHECK(0s == yaml_connection_parser.getFlowFileExpiration());
-        CHECK(0 == yaml_connection_parser.getDropEmpty());
+        CHECK_FALSE(yaml_connection_parser.getDropEmpty());
       }
     }
     SECTION("With a configuration that has values of incorrect format") {
@@ -213,7 +213,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
       StructuredConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
       CHECK(2 == yaml_connection_parser.getWorkQueueDataSize());
       CHECK(0s == yaml_connection_parser.getFlowFileExpiration());
-      CHECK(0 == yaml_connection_parser.getDropEmpty());
+      CHECK_FALSE(yaml_connection_parser.getDropEmpty());
     }
   }
 }

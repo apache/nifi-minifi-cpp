@@ -338,7 +338,7 @@ static inline int write_UTF_len(CTransaction * transaction, const char * str, si
     uint16_t shortlen = (uint16_t)len;
     ret = write_uint16t(transaction, shortlen);
   } else {
-    ret = write_uint32t(transaction, len);
+    ret = write_uint32t(transaction, (uint32_t)len);
   }
 
   if (len == 0 || ret < 0) {
@@ -351,7 +351,7 @@ static inline int write_UTF_len(CTransaction * transaction, const char * str, si
     uint16_t short_length = (uint16_t)len;
     ret = writeData(transaction, underlyingPtr, short_length);
   } else {
-    ret = writeData(transaction, underlyingPtr, len);
+    ret = writeData(transaction, underlyingPtr, (int)len);
   }
   return ret;
 }

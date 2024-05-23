@@ -65,8 +65,11 @@ TEST_CASE("GPSD Create", "[gpsdtest1]") {
   file.close();
   plan->reset();
   testController.runSession(plan, false);
-
+#if WIN32
+  _unlink(ss.str().c_str());
+#else
   unlink(ss.str().c_str());
+#endif
 
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
