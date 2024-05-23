@@ -62,6 +62,7 @@ class Connectable : public CoreComponent {
 
   std::vector<Relationship> getSupportedRelationships() const;
 
+  void addAutoTerminatedRelationship(const core::Relationship& relationship);
   void setAutoTerminatedRelationships(std::span<const core::Relationship> relationships);
 
   bool isAutoTerminated(const Relationship &relationship);

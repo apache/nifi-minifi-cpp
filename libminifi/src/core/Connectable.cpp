@@ -75,6 +75,17 @@ bool Connectable::isSupportedRelationship(const core::Relationship &relationship
   return relationships_.contains(relationship.getName());
 }
 
+void Connectable::addAutoTerminatedRelationship(const core::Relationship& relationship) {
+  if (isRunning()) {
+    logger_->log_warn("Can not add processor auto terminated relationship while the process {} is running", name_);
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock(relationship_mutex_);
+
+  auto_terminated_relationships_[relationship.getName()] = relationship;
+}
+
 void Connectable::setAutoTerminatedRelationships(std::span<const core::Relationship> relationships) {
   if (isRunning()) {
     logger_->log_warn("Can not set processor auto terminated relationship while the process {} is running", name_);
