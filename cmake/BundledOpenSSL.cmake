@@ -79,12 +79,10 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
             include(ProcessorCount)
             processorcount(jobs)
             set(OPENSSL_BUILD_COMMAND ${JOM_EXECUTABLE_PATH} -j${jobs})
-            set(OPENSSL_INSTALL_COMMAND ${JOM_EXECUTABLE_PATH} install)
             set(OPENSSL_WINDOWS_COMPILE_FLAGS /FS)
         else()
             message("Using nmake for OpenSSL build")
             set(OPENSSL_BUILD_COMMAND nmake)
-            set(OPENSSL_INSTALL_COMMAND nmake install)
             set(OPENSSL_WINDOWS_COMPILE_FLAGS "")
         endif()
         ExternalProject_Add(
@@ -97,7 +95,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
                 EXCLUDE_FROM_ALL TRUE
                 BUILD_COMMAND ${OPENSSL_BUILD_COMMAND}
-                INSTALL_COMMAND ${OPENSSL_INSTALL_COMMAND}
+                INSTALL_COMMAND nmake install
             )
     else()
         ExternalProject_Add(
