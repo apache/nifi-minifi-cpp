@@ -71,15 +71,11 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     # Note: when upgrading to a later release than 3.1.1 the --no-apps could be used instead of --no-tests to minimize the build size
     if (WIN32)
-        if(MINIFI_USE_JOM_FOR_OPENSSL_BUILD)
-            find_program(JOM_EXECUTABLE_PATH
-                NAMES jom.exe
-                PATHS ENV PATH
-                NO_DEFAULT_PATH)
-            if (NOT JOM_EXECUTABLE_PATH)
-                message(FATAL_ERROR "jom.exe not found. Please install jom and add it to the PATH or turn MINIFI_USE_JOM_FOR_OPENSSL_BUILD option off.")
-            endif()
-            message("Using jom for OpenSSL build: ${JOM_EXECUTABLE_PATH}")
+        find_program(JOM_EXECUTABLE_PATH
+            NAMES jom.exe
+            PATHS ENV PATH
+            NO_DEFAULT_PATH)
+        if(JOM_EXECUTABLE_PATH)
             include(ProcessorCount)
             processorcount(jobs)
             set(OPENSSL_BUILD_COMMAND ${JOM_EXECUTABLE_PATH} -j${jobs})
