@@ -72,7 +72,7 @@ enum class ClearOperand : uint8_t{
 };
 
 enum class SyncOperand : uint8_t{
-  asset
+  resource
 };
 
 #define PAYLOAD_NO_STATUS 0

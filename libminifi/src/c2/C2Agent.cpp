@@ -719,7 +719,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     return;
   }
 
-  SyncOperand operand = SyncOperand::asset;
+  SyncOperand operand = SyncOperand::resource;
   try {
     operand = utils::enumCast<SyncOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
@@ -727,7 +727,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     return;
   }
 
-  gsl_Assert(operand == SyncOperand::asset);
+  gsl_Assert(operand == SyncOperand::resource);
 
   // we are expecting the format
   // args: {
