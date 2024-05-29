@@ -45,7 +45,7 @@ class ConcurrentQueue {
   ConcurrentQueue(const ConcurrentQueue& other) = delete;
   ConcurrentQueue& operator=(const ConcurrentQueue& other) = delete;
   ConcurrentQueue(ConcurrentQueue&& other)
-    : ConcurrentQueue(std::move(other), std::lock_guard<std::mutex>(other.mutex_)) {}
+    : ConcurrentQueue(std::move(other), std::lock_guard<std::mutex>(other.mtx_)) {}
 
   ConcurrentQueue& operator=(ConcurrentQueue&& other) {
     if (this != &other) {
