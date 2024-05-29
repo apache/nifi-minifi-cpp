@@ -39,7 +39,7 @@ void AssetManager::refreshState() {
     std::filesystem::create_directory(root_);
   }
   if (!utils::file::FileUtils::exists(root_ / ".state")) {
-    std::ofstream{root_ / ".state", std::ios::binary} << "{}";
+    std::ofstream{root_ / ".state", std::ios::binary} << "{\"digest\": \"\", \"assets\": {}}";
   }
   rapidjson::Document doc;
 
@@ -54,8 +54,28 @@ void AssetManager::refreshState() {
     logger_->log_error("Asset '.state' file is malformed");
     return;
   }
+  if (!doc.HasMember("digest")) {
+    logger_->log_error("Asset '.state' file is malformed, missing 'digest'");
+    return;
+  }
+  if (!doc["digest"].IsString()) {
+    logger_->log_error("Asset '.state' file is malformed, 'digest' is not a string");
+    return;
+  }
+  if (!doc.HasMember("assets")) {
+    logger_->log_error("Asset '.state' file is malformed, missing 'assets'");
+    return;
+  }
+  if (!doc["assets"].IsObject()) {
+    logger_->log_error("Asset '.state' file is malformed, 'assets' is not an object");
+    return;
+  }
+
+
   AssetLayout new_state;
-  for (auto& [id, entry] : doc.GetObject()) {
+  new_state.digest = std::string{doc["digest"].GetString(), doc["digest"].GetStringLength()};
+
+  for (auto& [id, entry] : doc["assets"].GetObject()) {
     if (!entry.IsObject()) {
       logger_->log_error("Asset '.state' file is malformed");
       return;
@@ -74,7 +94,7 @@ void AssetManager::refreshState() {
     description.url = std::string{entry["url"].GetString(), entry["url"].GetStringLength()};
 
     if (utils::file::FileUtils::exists(root_ / description.id)) {
-      new_state.insert(std::move(description));
+      new_state.assets.insert(std::move(description));
     } else {
       logger_->log_error("Asset '.state' file contains entry that does not exist on the filesystem");
     }
@@ -84,14 +104,7 @@ void AssetManager::refreshState() {
 
 std::string AssetManager::hash() const {
   std::lock_guard lock(mtx_);
-  if (!cached_hash_) {
-    size_t hash_value{0};
-    for (auto& entry : state_) {
-      hash_value = utils::hash_combine(hash_value, std::hash<std::string>{}(entry.id));
-    }
-    cached_hash_ = std::to_string(hash_value);
-  }
-  return cached_hash_.value();
+  return state_.digest.empty() ? "null" : state_.digest;
 }
 
 nonstd::expected<void, std::string> AssetManager::sync(
@@ -99,8 +112,8 @@ nonstd::expected<void, std::string> AssetManager::sync(
     const std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)>& fetch) {
   std::lock_guard lock(mtx_);
   std::vector<std::pair<std::filesystem::path, std::vector<std::byte>>> new_file_contents;
-  for (auto& new_entry : layout) {
-    if (std::find_if(state_.begin(), state_.end(), [&] (auto& entry) {return entry.id == new_entry.id;}) == state_.end()) {
+  for (auto& new_entry : layout.assets) {
+    if (std::find_if(state_.assets.begin(), state_.assets.end(), [&] (auto& entry) {return entry.id == new_entry.id;}) == state_.assets.end()) {
       if (auto data = fetch(new_entry.url)) {
         new_file_contents.emplace_back(new_entry.path, data.value());
       } else {
@@ -108,10 +121,9 @@ nonstd::expected<void, std::string> AssetManager::sync(
       }
     }
   }
-  cached_hash_.reset();
 
-  for (auto& old_entry : state_) {
-    if (std::find_if(layout.begin(), layout.end(), [&] (auto& entry) {return entry.id == old_entry.id;}) == layout.end()) {
+  for (auto& old_entry : state_.assets) {
+    if (std::find_if(layout.assets.begin(), layout.assets.end(), [&] (auto& entry) {return entry.id == old_entry.id;}) == layout.assets.end()) {
       // we no longer need this asset
       std::filesystem::remove(root_ / old_entry.path);
     }
@@ -132,11 +144,14 @@ void AssetManager::persist() const {
   rapidjson::Document doc;
   doc.SetObject();
 
-  for (auto& entry : state_) {
+  doc.AddMember(rapidjson::StringRef("digest"), rapidjson::Value{state_.digest, doc.GetAllocator()}, doc.GetAllocator());
+  doc.AddMember(rapidjson::StringRef("assets"), rapidjson::Value{rapidjson::kObjectType}, doc.GetAllocator());
+
+  for (auto& entry : state_.assets) {
     rapidjson::Value entry_val(rapidjson::kObjectType);
     entry_val.AddMember(rapidjson::StringRef("path"), rapidjson::Value(entry.path.string().c_str(), doc.GetAllocator()), doc.GetAllocator());
     entry_val.AddMember(rapidjson::StringRef("url"), rapidjson::StringRef(entry.url), doc.GetAllocator());
-    doc.AddMember(rapidjson::StringRef(entry.id), entry_val, doc.GetAllocator());
+    doc["assets"].AddMember(rapidjson::StringRef(entry.id), entry_val, doc.GetAllocator());
   }
 
   rapidjson::StringBuffer buffer;
