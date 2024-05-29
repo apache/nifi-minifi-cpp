@@ -62,7 +62,7 @@ class MetricsHandler: public HeartbeatHandler {
   explicit MetricsHandler(std::atomic_bool& metrics_updated_successfully, std::shared_ptr<minifi::Configure> configuration, const std::filesystem::path& replacement_config_path)
     : HeartbeatHandler(std::move(configuration)),
       metrics_updated_successfully_(metrics_updated_successfully),
-      replacement_config_(getReplacementConfigAsJsonValue(replacement_config_path.string())) {
+      replacement_config_(getReplacementConfig(replacement_config_path.string())) {
   }
 
   void handleHeartbeat(const rapidjson::Document& root, struct mg_connection* conn) override {
@@ -178,12 +178,9 @@ class MetricsHandler: public HeartbeatHandler {
       processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("TransferredBytes");
   }
 
-  [[nodiscard]] static std::string getReplacementConfigAsJsonValue(const std::string& replacement_config_path) {
+  [[nodiscard]] static std::string getReplacementConfig(const std::string& replacement_config_path) {
     std::ifstream is(replacement_config_path);
-    auto content = std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-    content = minifi::utils::string::replaceAll(content, "\n", "\\n");
-    content = minifi::utils::string::replaceAll(content, "\"", "\\\"");
-    return content;
+    return std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
   }
 
   std::atomic_bool& metrics_updated_successfully_;

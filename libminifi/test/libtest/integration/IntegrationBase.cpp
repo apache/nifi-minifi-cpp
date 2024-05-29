@@ -23,6 +23,7 @@
 #include "utils/HTTPUtils.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "utils/FifoExecutor.h"
+#include "utils/file/AssetManager.h"
 #include "core/ConfigurationFactory.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -117,9 +118,10 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
     };
 
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{test_repo, test_flow_repo, content_repo};
-    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, flow_config);
+    auto asset_manager = std::make_shared<minifi::utils::file::AssetManager>(*configuration);
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, flow_config, asset_manager);
     flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration,
-      std::move(flow_config), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
+      std::move(flow_config), content_repo, std::move(metrics_publisher_store), filesystem, request_restart, asset_manager);
     flowController_->load();
     updateProperties(*flowController_);
     flowController_->start();

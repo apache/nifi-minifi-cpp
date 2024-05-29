@@ -47,6 +47,7 @@
 #include "utils/Id.h"
 #include "c2/C2Utils.h"
 #include "c2/protocols/RESTSender.h"
+#include "rapidjson/error/en.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -729,44 +730,111 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
 
   gsl_Assert(operand == SyncOperand::resource);
 
-  // we are expecting the format
-  // args: {
-  //   "<id_A>.path": "a/b/c.txt",
-  //   "<id_A>.url": "example.com",
-  //   "<id_B>.path": "a/b/c.txt",
-  //   "<id_B>.url": "example.com"
-  // }
   std::set<std::string> ids;
   utils::file::AssetLayout asset_layout;
-  for (auto& arg: resp.operation_arguments) {
-    auto fragments = utils::string::split(arg.first, ".");
-    if (fragments.size() == 2) {
-      ids.insert(fragments.front());
-    } else {
-      send_error("Malformed asset sync command");
-      return;
-    }
+
+  auto state_it = resp.operation_arguments.find("globalHash");
+  if (state_it == resp.operation_arguments.end()) {
+    send_error("Malformed request, missing 'globalHash' argument");
+    return;
   }
-  for (auto& id : ids) {
-    auto path_it = resp.operation_arguments.find(id + ".path");
-    if (path_it == resp.operation_arguments.end()) {
-      send_error("Malformed path for id '" + id + "'");
+
+  rapidjson::Document state_doc;
+  rapidjson::ParseResult res = state_doc.Parse(state_it->second.to_string());
+  if (res.IsError()) {
+    send_error(fmt::format("Malformed request, 'globalHash' is not a valid json document: {} at {}", rapidjson::GetParseError_En(res.Code()), res.Offset()));
+    return;
+  }
+
+  if (!state_doc.IsObject()) {
+    send_error("Malformed request, 'globalHash' is not a json object");
+    return;
+  }
+
+  if (!state_doc.HasMember("digest")) {
+    send_error("Malformed request, 'globalHash' has no member 'digest'");
+    return;
+  }
+  if (!state_doc["digest"].IsString()) {
+    send_error("Malformed request, 'globalHash.digest' is not a string");
+    return;
+  }
+
+  asset_layout.digest = std::string{state_doc["digest"].GetString(), state_doc["digest"].GetStringLength()};
+
+  auto resource_list_it = resp.operation_arguments.find("resourceList");
+  if (resource_list_it == resp.operation_arguments.end()) {
+    send_error("Malformed request, missing 'resourceList' argument");
+    return;
+  }
+
+  rapidjson::Document resource_list;
+  res = resource_list.Parse(resource_list_it->second.to_string());
+  if (res.IsError()) {
+    send_error(fmt::format("Malformed request, 'resourceList' is not a valid json document: {} at {}", rapidjson::GetParseError_En(res.Code()), res.Offset()));
+    return;
+  }
+  if (!resource_list.IsArray()) {
+    send_error("Malformed request, 'resourceList' is not a json array");
+    return;
+  }
+
+  for (size_t resource_idx = 0; resource_idx < resource_list.Size(); ++resource_idx) {
+    auto& resource = resource_list.GetArray()[resource_idx];
+    if (!resource.IsObject()) {
+      send_error(fmt::format("Malformed request, 'resourceList[{}]' is not a json object", resource_idx));
       return;
     }
-    auto result = utils::file::validateRelativePath(path_it->second.to_string());
-    if (!result) {
-      send_error(result.error());
+    auto get_member_str = [&] (const char* key) -> nonstd::expected<std::string_view, std::string> {
+      if (!resource.HasMember(key)) {
+        return nonstd::make_unexpected(fmt::format("Malformed request, 'resourceList[{}]' has no member '{}'", resource_idx, key));
+      }
+      if (!resource[key].IsString()) {
+        return nonstd::make_unexpected(fmt::format("Malformed request, 'resourceList[{}].{}' is not a string", resource_idx, key));
+      }
+      return std::string_view{resource[key].GetString(), resource[key].GetStringLength()};
+    };
+    auto id = get_member_str("resourceId");
+    if (!id) {
+      send_error(id.error());
       return;
     }
-    auto url_it = resp.operation_arguments.find(id + ".url");
-    if (url_it == resp.operation_arguments.end()) {
-      send_error("Malformed url for id '" + id + "'");
+    auto name = get_member_str("resourceName");
+    if (!name) {
+      send_error(name.error());
       return;
     }
-    asset_layout.insert(utils::file::AssetDescription{
-      .id = id,
-      .path = path_it->second.to_string(),
-      .url = url_it->second.to_string()
+    auto type = get_member_str("resourceType");
+    if (!type) {
+      send_error(type.error());
+      return;
+    }
+    if (type.value() != "ASSET") {
+      continue;
+    }
+    auto path = get_member_str("resourcePath");
+    if (!path) {
+      send_error(path.error());
+      return;
+    }
+    auto url = get_member_str("url");
+    if (!url) {
+      send_error(url.error());
+      return;
+    }
+
+    auto full_path = std::filesystem::path{path.value()} / name.value();
+
+    auto path_valid = utils::file::validateRelativePath(full_path);
+    if (!path_valid) {
+      send_error(path_valid.error());
+      return;
+    }
+
+    asset_layout.assets.insert(utils::file::AssetDescription{
+        .id = std::string{id.value()},
+        .path = full_path,
+        .url = std::string{url.value()}
     });
   }
 

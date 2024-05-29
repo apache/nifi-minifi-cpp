@@ -27,6 +27,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <rapidjson/error/en.h>
 
 #include "core/TypedValues.h"
 #include "utils/gsl.h"
@@ -50,7 +51,7 @@ AnnotatedValue parseAnnotatedValue(const rapidjson::Value& jsonValue) {
   } else if (jsonValue.IsBool()) {
     result = jsonValue.GetBool();
   } else {
-    result = jsonValue.GetString();
+    result = std::string{jsonValue.GetString(), jsonValue.GetStringLength()};
   }
   return result;
 }
@@ -136,6 +137,8 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<co
       // we have a response for this request
       return new_payload;
       // }
+    } else {
+      logger_->log_error("Failed to parse json response: {} at {}", rapidjson::GetParseError_En(ok.Code()), ok.Offset());
     }
   } catch (...) {
   }

@@ -39,7 +39,15 @@ struct AssetDescription {
   }
 };
 
-using AssetLayout = std::set<AssetDescription>;
+struct AssetLayout {
+  std::string digest;
+  std::set<AssetDescription> assets;
+
+  void clear() {
+    digest.clear();
+    assets.clear();
+  }
+};
 
 class AssetManager {
  public:
@@ -59,7 +67,6 @@ class AssetManager {
   mutable std::recursive_mutex mtx_;
   std::filesystem::path root_;
   AssetLayout state_;
-  mutable std::optional<std::string> cached_hash_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 

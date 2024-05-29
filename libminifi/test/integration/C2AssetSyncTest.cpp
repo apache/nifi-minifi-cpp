@@ -16,17 +16,19 @@
  * limitations under the License.
  */
 
-#undef NDEBUG
 #include <vector>
 #include <string>
 #include <fstream>
 #include <iterator>
 
-#include "HTTPIntegrationBase.h"
-#include "HTTPHandlers.h"
-#include "utils/IntegrationTestUtils.h"
+#include "integration/HTTPIntegrationBase.h"
+#include "integration/HTTPHandlers.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/AssetManager.h"
+#include "unit/TestUtils.h"
+#include "unit/Catch.h"
+
+namespace org::apache::nifi::minifi::test {
 
 class FileProvider : public ServerAwareHandler {
  public:
@@ -66,13 +68,24 @@ class C2HeartbeatHandler : public HeartbeatHandler {
       agent_asset_hash_ = asset_hash;
       if (asset_hash != calculateAssetHash()) {
         std::unordered_map<std::string, std::string> args;
+        args["globalHash"] = R"({"digest": ")" + calculateAssetHash() + "\"}";
+        args["resourceList"] = "[";
+
         for (auto& asset : expected_assets_) {
-          args[asset.id + ".path"] = asset.path.string();
-          args[asset.id + ".url"] = asset.url;
+          if (args["resourceList"] != "[") args["resourceList"] += ", ";
+          args["resourceList"] += "{";
+          args["resourceList"] += "\"resourceId\": \"" + asset.id + "\", ";
+          args["resourceList"] += "\"resourceName\": \"" + asset.path.filename().string() + "\", ";
+          args["resourceList"] += "\"resourceType\": \"ASSET\", ";
+          args["resourceList"] += "\"resourcePath\": \"" + asset.path.parent_path().string() + "\", ";
+          args["resourceList"] += "\"url\": \"" + asset.url + "\"";
+          args["resourceList"] += "}";
         }
+
+        args["resourceList"] += "]";
         operations.push_back(C2Operation{
           .operation = "sync",
-          .operand = "asset",
+          .operand = "resource",
           .operation_id = std::to_string(next_op_id_++),
           .args = std::move(args)
         });
@@ -104,7 +117,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
     std::lock_guard guard{asset_mtx_};
     size_t hash_value{0};
     for (auto& asset : expected_assets_) {
-      hash_value = utils::hash_combine(hash_value, std::hash<std::string>{}(asset.id));
+      hash_value = minifi::utils::hash_combine(hash_value, std::hash<std::string>{}(asset.id));
     }
     return std::to_string(hash_value);
   }
@@ -113,11 +126,13 @@ class C2HeartbeatHandler : public HeartbeatHandler {
     std::lock_guard guard{asset_mtx_};
     rapidjson::Document doc;
     doc.SetObject();
+    doc.AddMember(rapidjson::StringRef("digest"), rapidjson::Value{calculateAssetHash(), doc.GetAllocator()}, doc.GetAllocator());
+    doc.AddMember(rapidjson::StringRef("assets"), rapidjson::Value{rapidjson::kObjectType}, doc.GetAllocator());
     for (auto& asset : expected_assets_) {
       auto path_str = asset.path.string();
-      doc.AddMember(rapidjson::StringRef(asset.id), rapidjson::kObjectType, doc.GetAllocator());
-      doc[asset.id].AddMember(rapidjson::StringRef("path"), rapidjson::Value(path_str, doc.GetAllocator()), doc.GetAllocator());
-      doc[asset.id].AddMember(rapidjson::StringRef("url"), rapidjson::StringRef(asset.url), doc.GetAllocator());
+      doc["assets"].AddMember(rapidjson::StringRef(asset.id), rapidjson::kObjectType, doc.GetAllocator());
+      doc["assets"][asset.id].AddMember(rapidjson::StringRef("path"), rapidjson::Value(path_str, doc.GetAllocator()), doc.GetAllocator());
+      doc["assets"][asset.id].AddMember(rapidjson::StringRef("url"), rapidjson::StringRef(asset.url), doc.GetAllocator());
     }
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -156,7 +171,7 @@ class VerifyC2AssetSync : public VerifyC2Base {
   std::function<void()> verify_;
 };
 
-int main() {
+TEST_CASE("C2AssetSync", "[c2test]") {
   TestController controller;
 
   // setup minifi home
@@ -193,14 +208,18 @@ int main() {
 
   auto get_asset_structure = [&] () {
     std::unordered_map<std::string, std::string> contents;
-    for (auto& [dir, file] : utils::file::list_dir_all(asset_dir.string(), controller.getLogger())) {
-      contents[(dir / file).string()] = utils::file::get_content(dir / file);
+    for (auto& [dir, file] : minifi::utils::file::list_dir_all(asset_dir.string(), controller.getLogger())) {
+      contents[(dir / file).string()] = minifi::utils::file::get_content(dir / file);
     }
     return contents;
   };
 
   harness.setVerifier([&] () {
-    assert(utils::verifyEventHappenedInPollTime(10s, [&] {return hb_handler.calculateAssetHash() == hb_handler.getAgentAssetHash();}));
+    REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&] {
+      std::cout << "calculated hash = " << hb_handler.calculateAssetHash() << std::endl;
+      std::cout << "reported hash = " << hb_handler.getAgentAssetHash().value_or("<missing>") << std::endl;
+      return hb_handler.calculateAssetHash() == hb_handler.getAgentAssetHash();
+    }));
 
     {
       std::unordered_map<std::string, std::string> expected_assets{
@@ -218,7 +237,7 @@ int main() {
         for (auto& [path, content] : actual_assets) {
           controller.getLogger()->log_error("Actual asset at {}: {}", path, content);
         }
-        assert(false);
+        REQUIRE(false);
       }
     }
 
@@ -227,7 +246,7 @@ int main() {
     hb_handler.addAsset("Av2", "A.txt", "/api/file/Av2.txt");
 
 
-    assert(utils::verifyEventHappenedInPollTime(10s, [&] {return hb_handler.calculateAssetHash() == hb_handler.getAgentAssetHash();}));
+    REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&] {return hb_handler.calculateAssetHash() == hb_handler.getAgentAssetHash();}));
 
     {
       std::unordered_map<std::string, std::string> expected_assets{
@@ -245,7 +264,7 @@ int main() {
         for (auto& [path, content] : actual_assets) {
           controller.getLogger()->log_error("Actual asset at {}: {}", path, content);
         }
-        assert(false);
+        REQUIRE(false);
       }
     }
   });
@@ -254,3 +273,5 @@ int main() {
 
   std::filesystem::current_path(minifi::utils::file::get_executable_dir());
 }
+
+}  // namespace org::apache::nifi::minifi::test
