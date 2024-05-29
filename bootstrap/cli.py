@@ -98,6 +98,7 @@ def build_type_menu(minifi_options: MinifiOptions, _package_manager: PackageMana
 
     answers = inquirer.prompt(questions)
     minifi_options.build_type.value = answers["build_type"]
+    minifi_options.save_option_state()
     return False
 
 
@@ -109,6 +110,7 @@ def build_dir_menu(minifi_options: MinifiOptions, _package_manager: PackageManag
                       ),
     ]
     minifi_options.build_dir = inquirer.prompt(questions)["build_dir"]
+    minifi_options.save_option_state()
     return False
 
 

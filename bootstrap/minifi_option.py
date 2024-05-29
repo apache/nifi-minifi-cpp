@@ -78,6 +78,8 @@ class MinifiOptions:
         for option_name in self.bool_options:
             options_dict[option_name] = self.bool_options[option_name].value
         options_dict[self.use_ninja.name] = self.use_ninja.value
+        options_dict[self.build_type.name] = self.build_type.value
+        options_dict["build_dir"] = str(self.build_dir)
 
         with open(pathlib.Path(__file__).parent / "option_state.json", "w") as f:
             json.dump(options_dict, f)
@@ -94,6 +96,10 @@ class MinifiOptions:
                 self.bool_options[option_name].value = options_dict[option_name]
             if self.use_ninja.name in options_dict:
                 self.use_ninja.value = options_dict[self.use_ninja.name]
+            if self.build_type.name in options_dict:
+                self.build_type.value = options_dict[self.build_type.name]
+            if "build_dir" in options_dict:
+                self.build_dir = pathlib.Path(options_dict["build_dir"])
 
 
 def parse_minifi_options(path: str, cmake_options: str, package_manager: PackageManager, cmake_cache_dir: str):
