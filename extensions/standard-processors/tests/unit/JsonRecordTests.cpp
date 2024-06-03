@@ -19,10 +19,10 @@
 #include <variant>
 #include <catch2/generators/catch_generators.hpp>
 
-#include "Catch.h"
-#include "RecordSetTesters.h"
-#include "TestBase.h"
-#include "TestRecord.h"
+#include "unit/Catch.h"
+#include "unit/RecordSetTesters.h"
+#include "unit/TestBase.h"
+#include "unit/TestRecord.h"
 #include "controllers/JsonRecordSetReader.h"
 #include "controllers/JsonRecordSetWriter.h"
 #include "core/Record.h"
