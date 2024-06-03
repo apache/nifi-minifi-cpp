@@ -180,10 +180,10 @@ Writes the results of a RecordSet as either a JSON Array or one JSON object per 
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                | Default Value | Allowable Values              | Description                                                                                                                                                                           |
-|---------------------|---------------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Output Grouping** | Array         | Array<br/>One Line Per Object | Specifies how the writer should output the JSON records (as an array or one object per line, e.g.) Note that if 'One Line Per Object' is selected, then Pretty Print JSON is ignored. |
-| Pretty Print JSON   | false         | true<br/>false                | Specifies whether or not the JSON should be pretty printed (only used when Array output is selected)                                                                                  |
+| Name                | Default Value | Allowable Values              | Description                                                                                                                                 |
+|---------------------|---------------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| **Output Grouping** | Array         | Array<br/>One Line Per Object | Specifies how the writer should output the JSON records. Note that if 'One Line Per Object' is selected, then Pretty Print JSON is ignored. |
+| Pretty Print JSON   | false         | true<br/>false                | Specifies whether or not the JSON should be pretty printed (only used when Array output is selected)                                        |
 
 
 ## LinuxPowerManagerService

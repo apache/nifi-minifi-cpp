@@ -64,7 +64,7 @@ class JsonRecordSetWriter final : public core::RecordSetWriter {
       "If using One Line Per Object output, the JSON objects cannot be pretty-printed.";
 
   EXTENSIONAPI static constexpr auto OutputGrouping = core::PropertyDefinitionBuilder<magic_enum::enum_count<OutputGroupingType>()>::createProperty("Output Grouping")
-    .withDescription("Specifies how the writer should output the JSON records (as an array or one object per line, e.g.) "
+    .withDescription("Specifies how the writer should output the JSON records. "
                     "Note that if 'One Line Per Object' is selected, then Pretty Print JSON is ignored.")
     .withDefaultValue(magic_enum::enum_name(OutputGroupingType::ARRAY))
     .withAllowedValues(magic_enum::enum_names<OutputGroupingType>())
