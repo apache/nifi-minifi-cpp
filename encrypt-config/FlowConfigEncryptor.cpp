@@ -77,10 +77,15 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
     }
   }
 
+  std::unordered_set<minifi::utils::Identifier> processed_controller_services;
   for (const auto* controller_service_node : process_group.getAllControllerServices()) {
     gsl_Expects(controller_service_node);
     const auto* controller_service = controller_service_node->getControllerServiceImplementation();
     gsl_Expects(controller_service);
+    if (processed_controller_services.contains(controller_service->getUUID())) {
+      continue;
+    }
+    processed_controller_services.insert(controller_service->getUUID());
     for (const auto& [_, property] : controller_service->getProperties()) {
       if (property.isSensitive()) {
         sensitive_properties.push_back(SensitiveProperty{
