@@ -56,6 +56,7 @@ namespace org::apache::nifi::minifi::processors {
 
     if (idType_ == opc::OPCNodeIDType::Int) {
       try {
+        // ensure that nodeID_ can be parsed as an int
         static_cast<void>(std::stoi(nodeID_));
       } catch(...) {
         auto error_msg = utils::string::join_pack(nodeID_, " cannot be used as an int type node ID");

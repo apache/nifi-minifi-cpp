@@ -135,12 +135,12 @@ versions of OpenSSL, cURL, or zlib are used:
 
 **NOTE:** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. On macOS and FreeBSD, make sure that the system version is overridden with the correct flex version, which may require merging your CPPFLAGS into CFLAGS and CXXFLAGS. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
 
- * extensions/expression-language/el-parser/Parser.cpp
- * extensions/expression-language/el-parser/Parser.hpp
- * extensions/expression-language/el-scanner/Scanner.cpp
- * extensions/expression-language/el-parser/location.hh
- * extensions/expression-language/el-parser/position.hh
- * extensions/expression-language/el-parser/stack.hh
+ * build/el-generated/Parser.cpp
+ * build/el-generated/Parser.hpp
+ * build/el-generated/Scanner.cpp
+ * build/el-generated/location.hh
+ * build/el-generated/position.hh
+ * build/el-generated/stack.hh
 
 and rebuild.
 

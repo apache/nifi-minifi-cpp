@@ -96,22 +96,23 @@ find_package(FLEX REQUIRED)
 bison_target(
     el-parser
     ${CMAKE_CURRENT_SOURCE_DIR}/Parser.yy
-    ${CMAKE_CURRENT_SOURCE_DIR}/el-parser/Parser.cpp
+    ${CMAKE_BINARY_DIR}/el-generated/Parser.cpp
 )
 
 flex_target(
     el-scanner
     ${CMAKE_CURRENT_SOURCE_DIR}/Scanner.ll
-    ${CMAKE_CURRENT_SOURCE_DIR}/el-scanner/Scanner.cpp
+    ${CMAKE_BINARY_DIR}/el-generated/Scanner.cpp
     COMPILE_FLAGS --c++
 )
+
+set(EL_GENERATED_INCLUDE_DIR ${CMAKE_BINARY_DIR}/el-generated)
+file(MAKE_DIRECTORY ${EL_GENERATED_INCLUDE_DIR})
 
 add_flex_bison_dependency(el-scanner el-parser)
 
 include_directories(./ ../../libminifi/include  ../../libminifi/include/core)
 include_directories(SYSTEM ../../thirdparty/)
-include_directories(SYSTEM el-parser)
-include_directories(SYSTEM el-scanner)
 include_directories(common)
 include_directories(impl)
 
@@ -136,10 +137,11 @@ endif()
 
 add_minifi_library(minifi-expression-language-extensions SHARED ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})
 
+target_include_directories(minifi-expression-language-extensions SYSTEM PRIVATE ${EL_GENERATED_INCLUDE_DIR})
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI})
 target_link_libraries(minifi-expression-language-extensions RapidJSON)
 if (BREW_FLEX_INCLUDE)
-    target_include_directories(minifi-expression-language-extensions PRIVATE ${BREW_FLEX_INCLUDE})
+    target_include_directories(minifi-expression-language-extensions SYSTEM PRIVATE ${BREW_FLEX_INCLUDE})
 endif()
 
 register_extension(minifi-expression-language-extensions "EXPRESSION LANGUAGE EXTENSIONS" EXPRESSION-LANGUAGE-EXTENSIONS "This enables NiFi expression language" "extensions/expression-language/tests")
