@@ -138,27 +138,20 @@ class PayloadParser {
   }
 
   template<typename T>
-  inline T getAs(const std::string &field) {
+  inline T getAs(const std::string &field, const std::optional<T>& fallback = std::nullopt) {
     for (const auto &cmd : ref_.getContent()) {
-      auto exists = cmd.operation_arguments.find(field);
-      if (exists != cmd.operation_arguments.end()) {
-        return convert_if<T>(exists->second.getValue())();
+      if (auto it = cmd.operation_arguments.find(field); it != cmd.operation_arguments.end()) {
+        if (auto* val_node = it->second.valueNode()) {
+          return convert_if<T>(val_node->getValue())();
+        }
       }
     }
-    std::stringstream ss;
-    ss << "Invalid Field. Could not find " << field << " in " << ref_.getLabel();
-    throw PayloadParseException(ss.str());
-  }
-
-  template<typename T>
-  inline T getAs(const std::string &field, const T &fallback) {
-    for (const auto &cmd : ref_.getContent()) {
-      auto exists = cmd.operation_arguments.find(field);
-      if (exists != cmd.operation_arguments.end()) {
-        return convert_if<T>(exists->second.getValue())();
-      }
+    if (!fallback) {
+      std::stringstream ss;
+      ss << "Invalid Field. Could not find " << field << " in " << ref_.getLabel();
+      throw PayloadParseException(ss.str());
     }
-    return fallback;
+    return fallback.value();
   }
 
   size_t getSize() const {
