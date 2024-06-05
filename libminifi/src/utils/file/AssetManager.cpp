@@ -149,7 +149,7 @@ void AssetManager::persist() const {
 
   for (auto& entry : state_.assets) {
     rapidjson::Value entry_val(rapidjson::kObjectType);
-    entry_val.AddMember(rapidjson::StringRef("path"), rapidjson::Value(entry.path.string().c_str(), doc.GetAllocator()), doc.GetAllocator());
+    entry_val.AddMember(rapidjson::StringRef("path"), rapidjson::Value(entry.path.generic_string(), doc.GetAllocator()), doc.GetAllocator());
     entry_val.AddMember(rapidjson::StringRef("url"), rapidjson::StringRef(entry.url), doc.GetAllocator());
     doc["assets"].AddMember(rapidjson::StringRef(entry.id), entry_val, doc.GetAllocator());
   }
