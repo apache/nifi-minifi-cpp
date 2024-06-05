@@ -23,9 +23,37 @@ from ..core.Funnel import Funnel
 
 
 class Minifi_flow_yaml_serializer:
-    def serialize(self, start_nodes, controllers):
-        res = None
-        visited = None
+    def serialize(self, start_nodes, controllers, parameter_context_name: str, parameter_contexts):
+        res = {
+            'Flow Controller': {
+                'name': 'MiNiFi Flow'
+            },
+            'Processors': [],
+            'Funnels': [],
+            'Connections': [],
+            'Remote Processing Groups': [],
+            'Controller Services': []
+        }
+        visited = []
+
+        if parameter_context_name:
+            res['Parameter Context Name'] = parameter_context_name
+
+        if parameter_contexts:
+            res['Parameter Contexts'] = []
+            for context_name in parameter_contexts:
+                res['Parameter Contexts'].append({
+                    'id': str(uuid.uuid4()),
+                    'name': context_name,
+                    'Parameters': []
+                })
+                for parameter in parameter_contexts[context_name]:
+                    res['Parameter Contexts'][-1]['Parameters'].append({
+                        'name': parameter.name,
+                        'description': '',
+                        'sensitive': False,
+                        'value': parameter.value
+                    })
 
         for node in start_nodes:
             res, visited = self.serialize_node(node, res, visited)
@@ -35,24 +63,7 @@ class Minifi_flow_yaml_serializer:
 
         return yaml.dump(res, default_flow_style=False)
 
-    def serialize_node(self, connectable, root=None, visited=None):
-        if visited is None:
-            visited = []
-
-        if root is None:
-            res = {
-                'Flow Controller': {
-                    'name': 'MiNiFi Flow'
-                },
-                'Processors': [],
-                'Funnels': [],
-                'Connections': [],
-                'Remote Processing Groups': [],
-                'Controller Services': []
-            }
-        else:
-            res = root
-
+    def serialize_node(self, connectable, res=None, visited=None):
         visited.append(connectable)
 
         if hasattr(connectable, 'name'):
