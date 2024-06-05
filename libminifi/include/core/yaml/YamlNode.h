@@ -53,44 +53,36 @@ class YamlNode : public flow::Node::NodeImpl {
     return flow::Node{std::make_shared<YamlNode>(YAML::Node{YAML::NodeType::Undefined})};
   }
 
-  nonstd::expected<std::string, std::exception_ptr> getString() const override {
-    try {
-      return node_.as<std::string>();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
+  std::optional<std::string> getString() const override {
+    if (std::string result; YAML::convert<std::string>::decode(node_, result)) {
+      return result;
     }
+    if (node_ && node_.IsNull()) {
+      return "null";
+    }
+    return std::nullopt;
   }
 
-  nonstd::expected<bool, std::exception_ptr> getBool() const override {
-    try {
-      return node_.as<bool>();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
+  std::optional<bool> getBool() const override {
+    if (bool result; YAML::convert<bool>::decode(node_, result)) {
+      return result;
     }
+    return std::nullopt;
   }
 
-  nonstd::expected<int64_t, std::exception_ptr> getInt64() const override {
-    try {
-      return node_.as<int64_t>();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
+  std::optional<int64_t> getInt64() const override {
+    if (int64_t result; YAML::convert<int64_t>::decode(node_, result)) {
+      return result;
     }
+    return std::nullopt;
   }
 
-  nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const override {
-    try {
-      return node_.as<std::string>();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
+  std::optional<std::string> getIntegerAsString() const override {
+    return getString();
   }
 
-  nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const override {
-    try {
-      return node_.as<std::string>();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
+  std::optional<std::string> getScalarAsString() const override {
+    return getString();
   }
 
   std::string getDebugString() const override {

@@ -16,15 +16,16 @@
  * limitations under the License.
  */
 #include "properties/Properties.h"
+
 #include <fstream>
 #include <string>
-#include <utility>
+
+#include "core/logging/LoggerConfiguration.h"
+#include "properties/Configuration.h"
+#include "properties/PropertiesFile.h"
+#include "range/v3/algorithm/all_of.hpp"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "utils/file/PathUtils.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "properties/PropertiesFile.h"
-#include "properties/Configuration.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -47,13 +48,10 @@ bool Properties::getString(const std::string &key, std::string &value) const {
 }
 
 std::optional<std::string> Properties::getString(const std::string& key) const {
-  std::string result;
-  const bool found = getString(key, result);
-  if (found) {
+  if (std::string result; getString(key, result)) {
     return result;
-  } else {
-    return std::nullopt;
   }
+  return std::nullopt;
 }
 
 int Properties::getInt(const std::string &key, int default_value) const {
@@ -75,7 +73,7 @@ const core::PropertyValidator* getValidator(const std::string& lookup_value) {
 std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
   if (validator != &core::StandardPropertyTypes::TIME_PERIOD_TYPE)
     return std::nullopt;
-  if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char c){ return ::isdigit(c); }))
+  if (value.empty() || !ranges::all_of(value, [](const auto c){ return ::isdigit(c); }))
     return std::nullopt;
 
   return value + " ms";
@@ -84,7 +82,7 @@ std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(cons
 std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
   if (validator != &core::StandardPropertyTypes::DATA_SIZE_TYPE)
     return std::nullopt;
-  if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char c){ return ::isdigit(c); }))
+  if (value.empty() || !ranges::all_of(value, [](const auto c){ return ::isdigit(c); }))
     return std::nullopt;
 
   return value + " B";
@@ -125,7 +123,11 @@ std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::P
     return std::nullopt;
   }
 
-  if (auto parsed_time = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
+  if (ranges::all_of(value, [](const auto c) { return std::isdigit(c) || std::isspace(c);})) {
+    return std::nullopt;
+  }
+
+  if (const auto parsed_time = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
     return fmt::format("{}", parsed_time->count());
   }
 

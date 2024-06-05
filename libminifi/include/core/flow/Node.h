@@ -90,11 +90,12 @@ class Node {
     virtual bool isMap() const = 0;
     virtual bool isNull() const = 0;
 
-    virtual nonstd::expected<std::string, std::exception_ptr> getString() const = 0;
-    virtual nonstd::expected<bool, std::exception_ptr> getBool() const = 0;
-    virtual nonstd::expected<int64_t, std::exception_ptr> getInt64() const = 0;
-    virtual nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const = 0;
-    virtual nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const = 0;
+    [[nodiscard]] virtual std::optional<std::string> getString() const = 0;
+    [[nodiscard]] virtual std::optional<bool> getBool() const = 0;
+    [[nodiscard]] virtual std::optional<int64_t> getInt64() const = 0;
+
+    [[nodiscard]] virtual std::optional<std::string> getIntegerAsString() const = 0;
+    [[nodiscard]] virtual std::optional<std::string> getScalarAsString() const = 0;
 
     virtual std::string getDebugString() const = 0;
 
@@ -120,11 +121,12 @@ class Node {
   bool isMap() const {return impl_->isMap();}
   bool isNull() const {return impl_->isNull();}
 
-  nonstd::expected<std::string, std::exception_ptr> getString() const {return impl_->getString();}
-  nonstd::expected<bool, std::exception_ptr> getBool() const {return impl_->getBool();}
-  nonstd::expected<int64_t, std::exception_ptr> getInt64() const {return impl_->getInt64();}
-  nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const {return impl_->getIntegerAsString();}
-  nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const {return impl_->getScalarAsString();}
+  [[nodiscard]] std::optional<std::string> getString() const {return impl_->getString(); }
+  [[nodiscard]] std::optional<bool> getBool() const { return impl_->getBool(); }
+  [[nodiscard]] std::optional<int64_t> getInt64() const { return impl_->getInt64(); }
+
+  [[nodiscard]] std::optional<std::string> getIntegerAsString() const { return impl_->getIntegerAsString(); }
+  [[nodiscard]] std::optional<std::string> getScalarAsString() const { return impl_->getScalarAsString(); }
 
   // return a string representation of the node (need not be deserializable)
   std::string getDebugString() const {return impl_->getDebugString();}

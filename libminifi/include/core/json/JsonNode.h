@@ -50,72 +50,56 @@ class JsonNode : public flow::Node::NodeImpl {
     return flow::Node{std::make_shared<JsonNode>(nullptr)};
   }
 
-  nonstd::expected<std::string, std::exception_ptr> getString() const override {
-    try {
-      if (!node_) {
-        throw std::runtime_error(fmt::format("Cannot get string of invalid json value at '{}'", path_));
-      }
-      if (!node_->IsString()) {
-        throw std::runtime_error(fmt::format("Cannot get string of non-string json value at '{}'", path_));
-      }
+  [[nodiscard]] std::optional<std::string> getString() const override {
+    if (node_ && node_->IsString()) {
       return std::string{node_->GetString(), node_->GetStringLength()};
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
     }
+    return std::nullopt;
   }
 
-  nonstd::expected<int64_t, std::exception_ptr> getInt64() const override {
-    try {
-      if (!node_) {
-        throw std::runtime_error(fmt::format("Cannot get int64 of invalid json value at '{}'", path_));
-      }
-      if (!node_->IsInt64()) {
-        throw std::runtime_error(fmt::format("Cannot get int64 of non-int64 json value at '{}'", path_));
-      }
+  [[nodiscard]] std::optional<int64_t> getInt64() const override {
+    if (node_ && node_->IsInt64()) {
       return node_->GetInt64();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
     }
+    return std::nullopt;
   }
 
-  nonstd::expected<bool, std::exception_ptr> getBool() const override {
-    try {
-      if (!node_) {
-        throw std::runtime_error(fmt::format("Cannot get bool of invalid json value at '{}'", path_));
-      }
-      if (!node_->IsBool()) {
-        throw std::runtime_error(fmt::format("Cannot get bool of non-bool json value at '{}'", path_));
-      }
+  [[nodiscard]] std::optional<bool> getBool() const override {
+    if (node_ && node_->IsBool()) {
       return node_->GetBool();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
     }
+    return std::nullopt;
   }
 
-  nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const override {
-    try {
-      if (!node_) throw std::runtime_error(fmt::format("Cannot get string from invalid json value at '{}'", path_));
-      if (node_->IsInt64()) return std::to_string(node_->GetInt64());
-      if (node_->IsUint64()) return std::to_string(node_->GetUint64());
-      if (node_->IsString()) return std::string(node_->GetString(), node_->GetStringLength());
-      throw std::runtime_error(fmt::format("Cannot get string from non-integer json value at '{}'", path_));
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
+  [[nodiscard]] std::optional<std::string> getIntegerAsString() const override {
+    if (!node_)
+      return std::nullopt;
+    if (node_->IsInt64()) {
+      return std::to_string(node_->GetInt64());
     }
+    if (node_->IsUint64()) {
+      return std::to_string(node_->GetUint64());
+    }
+    return getString();
   }
 
-  nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const override {
-    try {
-      if (!node_) throw std::runtime_error(fmt::format("Cannot get string from invalid json value at '{}'", path_));
-      if (node_->IsBool()) return node_->GetBool() ? "true" : "false";
-      if (node_->IsInt64()) return std::to_string(node_->GetInt64());
-      if (node_->IsUint64()) return std::to_string(node_->GetUint64());
-      if (node_->IsString()) return std::string(node_->GetString(), node_->GetStringLength());
-      if (node_->IsDouble()) return std::to_string(node_->GetDouble());
-      throw std::runtime_error(fmt::format("Cannot convert non-scalar json value to string at '{}'", path_));
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
+  [[nodiscard]] std::optional<std::string> getScalarAsString() const override {
+    if (!node_)
+      return std::nullopt;
+    if (node_->IsInt64()) {
+      return std::to_string(node_->GetInt64());
     }
+    if (node_->IsUint64()) {
+      return std::to_string(node_->GetUint64());
+    }
+    if (node_->IsDouble()) {
+      return std::to_string(node_->GetDouble());
+    }
+    if (node_->IsBool()) {
+      return std::to_string(node_->GetDouble());
+    }
+
+    return getString();
   }
 
   std::string getDebugString() const override {
