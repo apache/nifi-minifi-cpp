@@ -824,7 +824,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
       return;
     }
 
-    auto full_path = std::filesystem::path{path.value()} / name.value();
+    auto full_path = std::filesystem::path{path.value()} / name.value();  // NOLINT(whitespace/braces)
 
     auto path_valid = utils::file::validateRelativePath(full_path);
     if (!path_valid) {

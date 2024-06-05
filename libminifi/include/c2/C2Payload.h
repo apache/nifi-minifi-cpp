@@ -96,8 +96,8 @@ class C2Value {
   C2Value(C2Value&&) = default;
   template<typename T>
   requires(std::constructible_from<state::response::ValueNode, T>)
-  C2Value(T&& value) { value_ = state::response::ValueNode{std::forward<T>(value)}; }
-  C2Value(const rapidjson::Value& json_value) {
+  C2Value(T&& value) { value_ = state::response::ValueNode{std::forward<T>(value)}; }  // NOLINT(runtime/explicit)
+  C2Value(const rapidjson::Value& json_value) {  // NOLINT(runtime/explicit)
     value_.emplace<rapidjson::Document>();
     get<rapidjson::Document>(value_).CopyFrom(json_value, get<rapidjson::Document>(value_).GetAllocator());
   }
