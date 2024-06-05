@@ -29,6 +29,7 @@
 #include "utils/Enum.h"
 #include "utils/gsl.h"
 #include "utils/span.h"
+#include "rapidjson/document.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -84,21 +85,64 @@ enum Direction {
   RECEIVE
 };
 
-struct AnnotatedValue : state::response::ValueNode {
-  using state::response::ValueNode::ValueNode;
-  using state::response::ValueNode::operator=;
+class C2Value {
+ public:
+  friend std::ostream& operator<<(std::ostream& out, const C2Value& val);
 
-  [[nodiscard]] std::optional<std::reference_wrapper<const AnnotatedValue>> getAnnotation(const std::string& name) const {
-    auto it = annotations.find(name);
-    if (it == annotations.end()) {
-      return {};
-    }
-    return std::cref(it->second);
+  C2Value() = default;
+  C2Value(const C2Value& other) {
+    (*this) = other;
+  }
+  C2Value(C2Value&&) = default;
+  template<typename T>
+  requires(std::constructible_from<state::response::ValueNode, T>)
+  C2Value(T&& value) { value_ = state::response::ValueNode{std::forward<T>(value)}; }
+  C2Value(const rapidjson::Value& json_value) {
+    value_.emplace<rapidjson::Document>();
+    get<rapidjson::Document>(value_).CopyFrom(json_value, get<rapidjson::Document>(value_).GetAllocator());
   }
 
-  friend std::ostream& operator<<(std::ostream& out, const AnnotatedValue& val);
+  C2Value& operator=(const C2Value& other) {
+    if (auto* other_val_node = get_if<state::response::ValueNode>(&other.value_)) {
+      value_ = *other_val_node;
+    } else {
+      value_.emplace<rapidjson::Document>();
+      get<rapidjson::Document>(value_).CopyFrom(get<rapidjson::Document>(other.value_), get<rapidjson::Document>(value_).GetAllocator());
+    }
+    return *this;
+  }
 
-  std::map<std::string, AnnotatedValue> annotations;
+  C2Value& operator=(C2Value&&) = default;
+
+
+  bool empty() const {
+    if (auto* val_node = get_if<state::response::ValueNode>(&value_)) {
+      return val_node->empty();
+    }
+    return false;
+  }
+
+  std::string to_string() const {
+    if (auto* val_node = get_if<state::response::ValueNode>(&value_)) {
+      return val_node->to_string();
+    }
+    return std::string{get<rapidjson::Document>(value_).GetString(), get<rapidjson::Document>(value_).GetStringLength()};
+  }
+
+  const rapidjson::Document* json() const {
+    return get_if<rapidjson::Document>(&value_);
+  }
+
+  const state::response::ValueNode* valueNode() const {
+    return get_if<state::response::ValueNode>(&value_);
+  }
+
+  bool operator==(const C2Value&) const = default;
+
+  friend std::ostream& operator<<(std::ostream& out, const C2Value& val);
+
+ private:
+  std::variant<state::response::ValueNode, rapidjson::Document> value_;
 };
 
 struct C2ContentResponse {
@@ -120,7 +164,7 @@ struct C2ContentResponse {
 
   friend std::ostream& operator<<(std::ostream& out, const C2ContentResponse& response);
 
-  std::optional<std::string> getArgument(const std::string& arg_name) const {
+  std::optional<std::string> getStringArgument(const std::string& arg_name) const {
     if (auto it = operation_arguments.find(arg_name); it != operation_arguments.end()) {
       return it->second.to_string();
     }
@@ -139,7 +183,7 @@ struct C2ContentResponse {
   // name applied to commands
   std::string name;
   // commands that correspond with the operation.
-  std::map<std::string, AnnotatedValue> operation_arguments;
+  std::map<std::string, C2Value> operation_arguments;
 };
 
 /**

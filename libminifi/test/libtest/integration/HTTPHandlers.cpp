@@ -246,7 +246,13 @@ void HeartbeatHandler::sendHeartbeatResponse(const std::vector<C2Operation>& ope
     if (!c2_operation.args.empty()) {
       rapidjson::Value args{rapidjson::kObjectType};
       for (auto& [arg_name, arg_val] : c2_operation.args) {
-        args.AddMember(rapidjson::StringRef(arg_name), arg_val, hb_obj.GetAllocator());
+        rapidjson::Value json_arg_val;
+        if (auto* json_val = arg_val.json()) {
+          json_arg_val.CopyFrom(*json_val, hb_obj.GetAllocator());
+        } else {
+          json_arg_val.SetString(arg_val.to_string(), hb_obj.GetAllocator());
+        }
+        args.AddMember(rapidjson::StringRef(arg_name), json_arg_val, hb_obj.GetAllocator());
       }
       op.AddMember("args", args, hb_obj.GetAllocator());
     }

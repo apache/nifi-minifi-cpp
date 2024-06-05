@@ -615,12 +615,15 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
   };
 
   for (const auto& [name, value] : resp.operation_arguments) {
-    bool persist = (
-        value.getAnnotation("persist")
-        | utils::transform(&AnnotatedValue::to_string)
-        | utils::andThen(utils::string::toBool)).value_or(true);
-    PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
-    changeUpdateState(update_property(name, value.to_string(), lifetime));
+    if (auto* json_val = value.json()) {
+      if (json_val->IsObject() && json_val->HasMember("persist")) {
+        auto lifetime = (*json_val)["persist"].GetBool() ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
+        std::string property_value{(*json_val)["value"].GetString(), (*json_val)["value"].GetStringLength()};
+        changeUpdateState(update_property(name, property_value, lifetime));
+        continue;
+      }
+    }
+    changeUpdateState(update_property(name, value.to_string(), PropertyChangeLifetime::PERSISTENT));
   }
   // apply changes and persist properties requested to be persisted
   const bool propertyWasUpdated = result == state::UpdateState::FULLY_APPLIED || result == state::UpdateState::PARTIALLY_APPLIED;
@@ -739,28 +742,27 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     return;
   }
 
-  rapidjson::Document state_doc;
-  rapidjson::ParseResult res = state_doc.Parse(state_it->second.to_string());
-  if (res.IsError()) {
-    send_error(fmt::format("Malformed request, 'globalHash' is not a valid json document: {} at {}", rapidjson::GetParseError_En(res.Code()), res.Offset()));
+  const rapidjson::Document* state_doc = state_it->second.json();
+  if (!state_doc) {
+    send_error("Argument 'globalHash' is malformed");
     return;
   }
 
-  if (!state_doc.IsObject()) {
-    send_error("Malformed request, 'globalHash' is not a json object");
+  if (!state_doc->IsObject()) {
+    send_error("Malformed request, 'globalHash' is not an object");
     return;
   }
 
-  if (!state_doc.HasMember("digest")) {
+  if (!state_doc->HasMember("digest")) {
     send_error("Malformed request, 'globalHash' has no member 'digest'");
     return;
   }
-  if (!state_doc["digest"].IsString()) {
+  if (!(*state_doc)["digest"].IsString()) {
     send_error("Malformed request, 'globalHash.digest' is not a string");
     return;
   }
 
-  asset_layout.digest = std::string{state_doc["digest"].GetString(), state_doc["digest"].GetStringLength()};
+  asset_layout.digest = std::string{(*state_doc)["digest"].GetString(), (*state_doc)["digest"].GetStringLength()};
 
   auto resource_list_it = resp.operation_arguments.find("resourceList");
   if (resource_list_it == resp.operation_arguments.end()) {
@@ -768,21 +770,20 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     return;
   }
 
-  rapidjson::Document resource_list;
-  res = resource_list.Parse(resource_list_it->second.to_string());
-  if (res.IsError()) {
-    send_error(fmt::format("Malformed request, 'resourceList' is not a valid json document: {} at {}", rapidjson::GetParseError_En(res.Code()), res.Offset()));
+  const rapidjson::Document* resource_list = resource_list_it->second.json();
+  if (!resource_list) {
+    send_error("Argument 'resourceList' is malformed");
     return;
   }
-  if (!resource_list.IsArray()) {
-    send_error("Malformed request, 'resourceList' is not a json array");
+  if (!resource_list->IsArray()) {
+    send_error("Malformed request, 'resourceList' is not an array");
     return;
   }
 
-  for (size_t resource_idx = 0; resource_idx < resource_list.Size(); ++resource_idx) {
-    auto& resource = resource_list.GetArray()[resource_idx];
+  for (size_t resource_idx = 0; resource_idx < resource_list->Size(); ++resource_idx) {
+    auto& resource = resource_list->GetArray()[resource_idx];
     if (!resource.IsObject()) {
-      send_error(fmt::format("Malformed request, 'resourceList[{}]' is not a json object", resource_idx));
+      send_error(fmt::format("Malformed request, 'resourceList[{}]' is not an object", resource_idx));
       return;
     }
     auto get_member_str = [&] (const char* key) -> nonstd::expected<std::string_view, std::string> {
@@ -1063,7 +1064,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // output file
   std::filesystem::path file_path;
-  if (auto file_rel = resp.getArgument("file") | utils::transform(make_path)) {
+  if (auto file_rel = resp.getStringArgument("file") | utils::transform(make_path)) {
     auto result = utils::file::validateRelativePath(file_rel.value());
     if (!result) {
       send_error(result.error());
@@ -1077,7 +1078,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // source url
   std::string url;
-  if (auto url_str = resp.getArgument("url")) {
+  if (auto url_str = resp.getStringArgument("url")) {
     if (auto resolved_url = resolveUrl(*url_str)) {
       url = resolved_url.value();
     } else {
@@ -1091,7 +1092,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // forceDownload
   bool force_download = false;
-  if (auto force_download_str = resp.getArgument("forceDownload")) {
+  if (auto force_download_str = resp.getStringArgument("forceDownload")) {
     if (utils::string::equalsIgnoreCase(force_download_str.value(), "true")) {
       force_download = true;
     } else if (utils::string::equalsIgnoreCase(force_download_str.value(), "false")) {

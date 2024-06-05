@@ -60,9 +60,16 @@ static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& pa
   target.AddMember("identifier", rapidjson::Value(id.c_str(), alloc), alloc);
 }
 
-static void setJsonStr(const std::string& key, const state::response::ValueNode& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
+static void setJsonStr(const std::string& key, const c2::C2Value& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
   rapidjson::Value valueVal;
-  auto base_type = value.getValue();
+
+  if (auto* json_val = value.json()) {
+    valueVal.CopyFrom(*json_val, alloc);
+    parent.AddMember(rapidjson::Value(key.c_str(), alloc), valueVal, alloc);
+    return;
+  }
+
+  auto base_type = gsl::not_null(value.valueNode())->getValue();
 
   auto type_index = base_type->getTypeIndex();
   if (auto sub_type = std::dynamic_pointer_cast<core::TransformableValue>(base_type)) {
@@ -156,7 +163,7 @@ static rapidjson::Value serializeConnectionQueues(const C2Payload& payload, std:
   updatedContent.name = uuid;
   adjusted.setLabel(uuid);
   adjusted.setIdentifier(uuid);
-  c2::AnnotatedValue nd;
+  c2::C2Value nd;
   // name should be what was previously the TLN ( top level node )
   nd = name;
   updatedContent.operation_arguments.insert(std::make_pair("name", nd));

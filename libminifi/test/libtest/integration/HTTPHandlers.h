@@ -214,11 +214,11 @@ class HeartbeatHandler : public ServerAwareHandler {
     std::string operation;
     std::string operand;
     std::string operation_id;
-    std::unordered_map<std::string, std::string> args;
+    std::unordered_map<std::string, c2::C2Value> args;
   };
 
   void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operation_id, struct mg_connection* conn,
-      const std::unordered_map<std::string, std::string>& args = {}) {
+      const std::unordered_map<std::string, c2::C2Value>& args = {}) {
     sendHeartbeatResponse({{operation, operand, operation_id, args}}, conn);
   }
 

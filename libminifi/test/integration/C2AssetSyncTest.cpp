@@ -67,22 +67,23 @@ class C2HeartbeatHandler : public HeartbeatHandler {
       std::lock_guard guard(asset_mtx_);
       agent_asset_hash_ = asset_hash;
       if (asset_hash != calculateAssetHash()) {
-        std::unordered_map<std::string, std::string> args;
-        args["globalHash"] = R"({"digest": ")" + calculateAssetHash() + "\"}";
-        args["resourceList"] = "[";
+        std::unordered_map<std::string, c2::C2Value> args;
+        rapidjson::Document global_hash_doc{rapidjson::kObjectType};
+        global_hash_doc.AddMember("digest", calculateAssetHash(), global_hash_doc.GetAllocator());
+        args["globalHash"] = std::move(global_hash_doc);
+        rapidjson::Document resource_list_doc{rapidjson::kArrayType};
 
         for (auto& asset : expected_assets_) {
-          if (args["resourceList"] != "[") args["resourceList"] += ", ";
-          args["resourceList"] += "{";
-          args["resourceList"] += "\"resourceId\": \"" + asset.id + "\", ";
-          args["resourceList"] += "\"resourceName\": \"" + asset.path.filename().string() + "\", ";
-          args["resourceList"] += "\"resourceType\": \"ASSET\", ";
-          args["resourceList"] += "\"resourcePath\": \"" + asset.path.parent_path().string() + "\", ";
-          args["resourceList"] += "\"url\": \"" + asset.url + "\"";
-          args["resourceList"] += "}";
+          rapidjson::Value resource_obj{rapidjson::kObjectType};
+          resource_obj.AddMember("resourceId", asset.id, resource_list_doc.GetAllocator());
+          resource_obj.AddMember("resourceName", asset.path.filename().string(), resource_list_doc.GetAllocator());
+          resource_obj.AddMember("resourceType", "ASSET", resource_list_doc.GetAllocator());
+          resource_obj.AddMember("resourcePath", asset.path.parent_path().string(), resource_list_doc.GetAllocator());
+          resource_obj.AddMember("url", asset.url, resource_list_doc.GetAllocator());
+          resource_list_doc.PushBack(resource_obj, resource_list_doc.GetAllocator());
         }
+        args["resourceList"] = std::move(resource_list_doc);
 
-        args["resourceList"] += "]";
         operations.push_back(C2Operation{
           .operation = "sync",
           .operand = "resource",

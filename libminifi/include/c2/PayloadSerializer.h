@@ -42,7 +42,7 @@ class PayloadSerializer {
   /**
    * Static function that serializes the value nodes
    */
-  static void serializeValueNode(state::response::ValueNode &value, std::shared_ptr<io::OutputStream> stream) {
+  static void serializeValueNode(const state::response::ValueNode &value, std::shared_ptr<io::OutputStream> stream) {
     auto base_type = value.getValue();
     if (!base_type) {
       uint8_t type = 0;
@@ -95,7 +95,7 @@ class PayloadSerializer {
         stream->write(size);
         for (auto content : payload_content.operation_arguments) {
           stream->write(content.first);
-          serializeValueNode(content.second, stream);
+          serializeValueNode(*gsl::not_null(content.second.valueNode()), stream);
         }
       }
       if (nested_payload.getNestedPayloads().size() > 0) {
@@ -170,7 +170,7 @@ class PayloadSerializer {
       stream->write(size);
       for (auto content : payload_content.operation_arguments) {
         stream->write(content.first);
-        serializeValueNode(content.second, stream);
+        serializeValueNode(*gsl::not_null(content.second.valueNode()), stream);
       }
     }
     serialize(op, payload, stream);
