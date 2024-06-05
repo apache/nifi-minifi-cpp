@@ -726,4 +726,67 @@ TEST_CASE("Property value sequences can use parameters") {
   CHECK(values[1] == "value2");
 }
 
+TEST_CASE("Dynamic properties can use parameters") {
+  ConfigurationTestController test_controller;
+
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "parameterContexts": [
+    {
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "my-context",
+      "description": "my parameter context",
+      "parameters": [
+        {
+          "name": "first_value",
+          "description": "",
+          "value": "value1"
+        },
+        {
+          "name": "second_value",
+          "description": "",
+          "value": "value2"
+        }
+      ]
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {
+        "My Dynamic Property Sequence": [
+          {"value": "#{first_value}"},
+          {"value": "#{second_value}"}
+        ],
+        "My Dynamic Property": "#{first_value}"
+      }
+    }],
+    "parameterContextName": "my-context"
+  }
+})";
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  REQUIRE(proc);
+  core::Property property("My Dynamic Property Sequence", "");
+  proc->getDynamicProperty("My Dynamic Property Sequence", property);
+  auto values = property.getValues();
+  REQUIRE(values.size() == 2);
+  CHECK(values[0] == "value1");
+  CHECK(values[1] == "value2");
+  std::string value;
+  REQUIRE(proc->getDynamicProperty("My Dynamic Property", value));
+  CHECK(value == "value1");
+}
+
 }  // namespace org::apache::nifi::minifi::test

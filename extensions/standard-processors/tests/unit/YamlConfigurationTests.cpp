@@ -1600,4 +1600,56 @@ Parameter Context Name: my-context
   CHECK(values[1] == "value2");
 }
 
+TEST_CASE("Dynamic properties can use parameters", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flow
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: first_value
+      description: ''
+      value: value1
+    - name: second_value
+      description: ''
+      value: value2
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    My Dynamic Property Sequence:
+    - value: "#{first_value}"
+    - value: "#{second_value}"
+    My Dynamic Property: "#{first_value}"
+Parameter Context Name: my-context
+      )";
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("DummyProcessor");
+  REQUIRE(proc);
+  core::Property property("My Dynamic Property Sequence", "");
+  proc->getDynamicProperty("My Dynamic Property Sequence", property);
+  auto values = property.getValues();
+  REQUIRE(values.size() == 2);
+  CHECK(values[0] == "value1");
+  CHECK(values[1] == "value2");
+  std::string value;
+  REQUIRE(proc->getDynamicProperty("My Dynamic Property", value));
+  CHECK(value == "value1");
+}
+
 }  // namespace org::apache::nifi::minifi::test
