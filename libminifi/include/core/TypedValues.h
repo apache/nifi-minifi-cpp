@@ -123,6 +123,9 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
   // Convert String to Integer
   template<std::integral T>
   static bool StringToInt(const std::string &input, T &output) {
+    if (input.empty()) {
+      return false;
+    }
     int64_t value;
     std::string unit_str;
     try {
