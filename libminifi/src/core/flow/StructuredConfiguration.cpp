@@ -690,7 +690,7 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
         auto proc = dynamic_cast<core::Connectable*>(&component);
         if (proc) {
           logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
-          if (!component.setDynamicProperty(property_name, rawValueString)) {
+          if (!component.updateDynamicProperty(property_name, rawValueString)) {
             logger_->log_warn("Unable to set the dynamic property {}", property_name);
           } else {
             logger_->log_warn("Dynamic property {} has been set", property_name);
@@ -775,7 +775,7 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     throw;
   }
   if (!property_set) {
-    const auto rawValueString = property_value_node.getScalarAsString().value();
+    const auto rawValueString = coercedValue.getValue()->getStringValue();
     auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
       logger_->log_warn("Received property {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, proc->getName());

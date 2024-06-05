@@ -245,6 +245,27 @@ bool ConfigurableComponent::getDynamicProperty(const std::string& name, std::str
   }
 }
 
+bool ConfigurableComponent::getDynamicProperty(const std::string& name, core::Property &item) const {
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+
+  auto &&it = dynamic_properties_.find(name);
+  if (it != dynamic_properties_.end()) {
+    item = it->second;
+    if (item.getValue().getValue() == nullptr) {
+      // empty property value
+      if (item.getRequired()) {
+        logger_->log_error("Component {} required dynamic property {} is empty", name, item.getName());
+        throw std::runtime_error("Required dynamic property is empty: " + item.getName());
+      }
+      logger_->log_debug("Component {} dynamic property name {}, empty value", name, item.getName());
+      return false;
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
 bool ConfigurableComponent::createDynamicProperty(const std::string &name, const std::string &value) {
   if (!supportsDynamicProperties()) {
     logger_->log_debug("Attempted to create dynamic property {}, but this component does not support creation."
@@ -255,6 +276,7 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
 
   static const std::string DEFAULT_DYNAMIC_PROPERTY_DESC = "Dynamic Property";
   Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, { }, { });
+  new_property.setValue(value);
   new_property.setSupportsExpressionLanguage(true);
   logger_->log_info("Processor {} dynamic property '{}' value '{}'", name.c_str(), new_property.getName().c_str(), value.c_str());
   dynamic_properties_[new_property.getName()] = new_property;
