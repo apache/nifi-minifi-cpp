@@ -39,7 +39,7 @@ void AssetManager::refreshState() {
     std::filesystem::create_directory(root_);
   }
   if (!utils::file::FileUtils::exists(root_ / ".state")) {
-    std::ofstream{root_ / ".state", std::ios::binary} << "{\"digest\": \"\", \"assets\": {}}";
+    std::ofstream{root_ / ".state", std::ios::binary} << R"({"digest": "", "assets": {}})";
   }
   rapidjson::Document doc;
 
