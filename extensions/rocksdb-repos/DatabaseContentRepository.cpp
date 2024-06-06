@@ -81,7 +81,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
     is_valid_ = false;
   }
 
-  use_synchronous_writes_ = configuration->get(Configure::nifi_content_repository_rocksdb_use_synchronous_writes).value_or("true") == "true";
+  use_synchronous_writes_ = configuration->get(Configure::nifi_content_repository_rocksdb_use_synchronous_writes).value_or("true") != "false";
   return is_valid_;
 }
 
