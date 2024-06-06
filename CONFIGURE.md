@@ -429,6 +429,13 @@ Rocksdb has an option to run compaction at specific intervals not just when need
      nifi.flowfile.repository.rocksdb.compaction.period=2 min
      nifi.database.content.repository.rocksdb.compaction.period=2 min
 
+### Configuring synchronous or asynchronous writes for RocksDB content repository
+
+RocksDB has an option to set synchronous writes for its database, ensuring that the write operation does not return until the data being written has been pushed all the way to persistent storage. In MiNiFi C++, this is set to true by default to avoid any data loss, as according to the RocksDB documentation using non-sync writes can result in data loss in the event of a host machine crash. You can read more information about this option on the [RocksDB wiki page](https://github.com/facebook/rocksdb/wiki/Basic-Operations#synchronous-writes). If you prefer to use non-sync writes in your content repository for better write performance and can accept the possibility of the mentioned data loss, you can set this option to false.
+
+    # in minifi.properties
+    nifi.content.repository.rocksdb.use.synchronous.writes=true
+
 ### Global RocksDB options
 
 There are a few options for RocksDB that are set for all used RocksDB databases in MiNiFi:
