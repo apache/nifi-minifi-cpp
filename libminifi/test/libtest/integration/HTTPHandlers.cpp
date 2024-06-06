@@ -56,7 +56,7 @@ bool PeerResponder::handleGet(CivetServer* /*server*/, struct mg_connection *con
 #else
   std::string hostname = "localhost";
 #endif
-  std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"" + hostname + "\", \"port\": " + port + ",  \"secure\": false, \"flowFileCount\" : 0 }] }";
+  std::string site2site_rest_resp = R"({"peers" : [{ "hostname": ")" + hostname + R"(", "port": )" + port + R"(,  "secure": false, "flowFileCount" : 0 }] })";
   std::stringstream headers;
   headers << "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nConnection: close\r\n\r\n";
   mg_printf(conn, "%s", headers.str().c_str());
@@ -134,7 +134,8 @@ bool FlowFileResponder::handlePost(CivetServer* /*server*/, struct mg_connection
     const auto flow = std::make_shared<FlowObj>();
 
     for (uint32_t i = 0; i < num_attributes; i++) {
-      std::string name, value;
+      std::string name;
+      std::string value;
       {
         const auto read = stream.read(name, true);
         if (!isServerRunning()) return false;
@@ -204,7 +205,7 @@ bool FlowFileResponder::handleGet(CivetServer* /*server*/, struct mg_connection 
     minifi::io::BufferStream serializer;
     minifi::io::CRCStream <minifi::io::OutputStream> stream(gsl::make_not_null(&serializer));
     for (const auto& flow : flows) {
-      uint32_t num_attributes = gsl::narrow<uint32_t>(flow->attributes.size());
+      auto num_attributes = gsl::narrow<uint32_t>(flow->attributes.size());
       stream.write(num_attributes);
       for (const auto& entry : flow->attributes) {
         stream.write(entry.first);
@@ -474,9 +475,9 @@ bool C2UpdateHandler::handlePost(CivetServer* /*server*/, struct mg_connection *
 }
 
 void C2UpdateHandler::setC2RestResponse(const std::string& url, const std::string& name, const std::optional<std::string>& persist) {
-  std::string content = "{\"location\": \"" + url + "\"";
+  std::string content = R"({"location": ")" + url + "\"";
   if (persist) {
-    content += ", \"persist\": \"" + *persist + "\"";
+    content += R"(, "persist": ")" + *persist + "\"";
   }
   content += "}";
   response_ =
