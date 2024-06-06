@@ -180,7 +180,7 @@ class MetricsHandler: public HeartbeatHandler {
 
   [[nodiscard]] static std::string getReplacementConfig(const std::string& replacement_config_path) {
     std::ifstream is(replacement_config_path);
-    return std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+    return {(std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()};
   }
 
   std::atomic_bool& metrics_updated_successfully_;
