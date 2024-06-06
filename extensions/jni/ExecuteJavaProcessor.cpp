@@ -156,10 +156,10 @@ JNINativeMethod ExecuteJavaProcessor::registerNativeMethod(const std::string& /*
   return mthd;
 }
 
-void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void ExecuteJavaProcessor::triggerAndCommit(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
   (void)context;  // unused in release builds
   assert(context == jpc.context_);
-  auto env = java_servicer_->attach();
+  const auto env = java_servicer_->attach();
 
   if (ClassRegistrar::getRegistrar().registerClasses(env, java_servicer_, "org/apache/nifi/processor/JniFlowFile", getFlowFileSignatures())) {
     static auto ffc = java_servicer_->loadClass("org/apache/nifi/processor/JniFlowFile");
@@ -183,11 +183,11 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
     // in this function.
     jobject java_process_session_factory = nullptr;
 
-    JniSessionFactory *jniSessionFactory = getFactory(sessionFactory);
+    JniSessionFactory *jniSessionFactory = getFactory(session_factory);
 
     if (!jniSessionFactory) {
       java_process_session_factory = sessionFactoryCls.newInstance(env);
-      jniSessionFactory = setFactory(sessionFactory, java_process_session_factory);
+      jniSessionFactory = setFactory(session_factory, java_process_session_factory);
       java_servicer_->putNativeFunctionMapping<JniSessionFactory>(env, sessionFactoryCls);
       java_servicer_->setReference<JniSessionFactory>(env, java_process_session_factory, jniSessionFactory);
     } else {

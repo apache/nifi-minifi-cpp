@@ -36,13 +36,10 @@ bool hasWorkToDo(org::apache::nifi::minifi::core::Processor* processor) {
 
 namespace org::apache::nifi::minifi {
 
-nonstd::expected<void, std::exception_ptr> SchedulingAgent::onTrigger(core::Processor* processor,
-    const std::shared_ptr<core::ProcessContext> &process_context,
-    const std::shared_ptr<core::ProcessSessionFactory> &session_factory) {
-  gsl_Expects(processor);
+bool SchedulingAgent::processorYields(core::Processor* processor) const {
   if (processor->isYield()) {
     logger_->log_debug("Not running {} since it must yield", processor->getName());
-    return {};
+    return true;
   }
 
   // No need to yield, reset yield expiration to 0
@@ -52,11 +49,61 @@ nonstd::expected<void, std::exception_ptr> SchedulingAgent::onTrigger(core::Proc
 
   if (!hasWorkToDo(processor)) {
     processor->yield(bored_yield_duration);
-    return {};
+    return true;
   }
   if (processor->isThrottledByBackpressure()) {
     logger_->log_debug("backpressure applied because too much outgoing for {} {}", processor->getUUIDStr(), processor->getName());
     processor->yield(bored_yield_duration);
+    return true;
+  }
+
+  return false;
+}
+
+nonstd::expected<void, std::exception_ptr> SchedulingAgent::triggerAndCommit(core::Processor* processor,
+    const std::shared_ptr<core::ProcessContext>& process_context,
+    const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
+  gsl_Expects(processor);
+  if (processorYields(processor)) {
+    return {};
+  }
+
+  auto schedule_it = scheduled_processors_.end();
+
+  {
+    std::lock_guard<std::mutex> lock(watchdog_mtx_);
+    schedule_it = scheduled_processors_.emplace(processor).first;
+  }
+
+  const auto guard = gsl::finally([this, &schedule_it](){
+    std::lock_guard<std::mutex> lock(watchdog_mtx_);
+    scheduled_processors_.erase(schedule_it);
+  });
+
+  processor->incrementActiveTasks();
+  auto decrement_task = gsl::finally([processor]() { processor->decrementActiveTask(); });
+
+  try {
+    processor->triggerAndCommit(process_context, session_factory);
+  } catch (const std::exception& exception) {
+    logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
+        processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
+    processor->yield(admin_yield_duration_);
+    return nonstd::make_unexpected(std::current_exception());
+  } catch (...) {
+    logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}",
+        processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
+    processor->yield(admin_yield_duration_);
+    return nonstd::make_unexpected(std::current_exception());
+  }
+  return {};
+}
+
+nonstd::expected<void, std::exception_ptr> SchedulingAgent::trigger(core::Processor* processor,
+    const std::shared_ptr<core::ProcessContext>& process_context,
+    const std::shared_ptr<core::ProcessSession>& process_session) {
+  gsl_Expects(processor);
+  if (processorYields(processor)) {
     return {};
   }
 
@@ -75,7 +122,7 @@ nonstd::expected<void, std::exception_ptr> SchedulingAgent::onTrigger(core::Proc
   processor->incrementActiveTasks();
   auto decrement_task = gsl::finally([processor]() { processor->decrementActiveTask(); });
   try {
-    processor->onTrigger(process_context, session_factory);
+    processor->trigger(process_context, process_session);
   } catch (const std::exception& exception) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
         processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());

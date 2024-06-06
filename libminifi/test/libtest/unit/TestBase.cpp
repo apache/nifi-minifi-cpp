@@ -535,7 +535,7 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
       process_sessions_.push_back(current_session);
     });
     logger_->log_info("Running {}", processor->getName());
-    processor->onTrigger(context, session_factory);
+    processor->triggerAndCommit(context, session_factory);
   }
 
   return gsl::narrow<size_t>(target_location + 1) < processor_queue_.size();
