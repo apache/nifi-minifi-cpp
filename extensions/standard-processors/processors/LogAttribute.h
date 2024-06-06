@@ -33,14 +33,13 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/gsl.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 class LogAttribute : public core::Processor {
  public:
-  explicit LogAttribute(std::string_view name, const utils::Identifier& uuid = {})
+  explicit LogAttribute(const std::string_view name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
     logger_->set_max_log_size(-1);
   }
@@ -48,9 +47,9 @@ class LogAttribute : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Logs attributes of flow files in the MiNiFi application log.";
 
-  EXTENSIONAPI static constexpr auto LogLevel = core::PropertyDefinitionBuilder<5>::createProperty("Log Level")
+  EXTENSIONAPI static constexpr auto LogLevel = core::PropertyDefinitionBuilder<6>::createProperty("Log Level")
       .withDescription("The Log Level to use when logging the Attributes")
-      .withAllowedValues({"info", "trace", "error", "warn", "debug"})
+      .withAllowedValues({"trace", "debug", "info", "warn", "error", "critical"})
       .build();
   EXTENSIONAPI static constexpr auto AttributesToLog = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Log")
       .withDescription("A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.")
@@ -103,44 +102,22 @@ class LogAttribute : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  enum LogAttrLevel {
-    LogAttrLevelTrace,
-    LogAttrLevelDebug,
-    LogAttrLevelInfo,
-    LogAttrLevelWarn,
-    LogAttrLevelError
-  };
-
-  static bool logLevelStringToEnum(const std::string &logStr, LogAttrLevel &level) {
-    if (logStr == "trace") {
-      level = LogAttrLevelTrace;
-      return true;
-    } else if (logStr == "debug") {
-      level = LogAttrLevelDebug;
-      return true;
-    } else if (logStr == "info") {
-      level = LogAttrLevelInfo;
-      return true;
-    } else if (logStr == "warn") {
-      level = LogAttrLevelWarn;
-      return true;
-    } else if (logStr == "error") {
-      level = LogAttrLevelError;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
  private:
+  std::string generateLogMessage(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
+
   uint64_t flowfiles_to_log_{1};
   bool hexencode_{false};
   uint32_t max_line_length_{80};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LogAttribute>::getLogger(uuid_);
+  core::logging::LOG_LEVEL log_level_{core::logging::LOG_LEVEL::info};
+  std::string dash_line_ = "--------------------------------------------------";
+  bool log_payload_ = false;
+  std::optional<std::unordered_set<std::string>> attributes_to_log_;
+  std::optional<std::unordered_set<std::string>> attributes_to_ignore_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
