@@ -78,7 +78,7 @@ class ProcessorMetrics : public state::response::ResponseNode {
   };
 
   [[nodiscard]] std::unordered_map<std::string, std::string> getCommonLabels() const;
-  static const uint8_t STORED_ON_TRIGGER_RUNTIME_COUNT = 10;
+  static constexpr uint8_t STORED_ON_TRIGGER_RUNTIME_COUNT = 10;
 
   std::mutex transferred_relationships_mutex_;
   std::unordered_map<std::string, size_t> transferred_relationships_;

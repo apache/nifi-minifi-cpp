@@ -52,11 +52,11 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
 
   void schedule(core::Processor* processor) override;
 
-  utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
-      const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &process_context,
+      const std::shared_ptr<core::ProcessSessionFactory> &session_factory) override;
 
  private:
-  std::chrono::milliseconds time_slice_;
+  std::chrono::milliseconds time_slice_{};
 };
 
 }  // namespace org::apache::nifi::minifi

@@ -33,7 +33,6 @@ namespace org::apache::nifi::minifi::test {
 class OutputProcessor : public core::Processor {
  public:
   using core::Processor::Processor;
-  using core::Processor::onTrigger;
 
   static constexpr const char* Description = "Processor used for testing cycles";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
@@ -112,7 +111,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
   auto session_factory = std::make_shared<core::ProcessSessionFactory>(context);
 
   for (size_t i = 0; i < 200; ++i) {
-    processor->onTrigger(context, session_factory);
+    processor->triggerAndCommit(context, session_factory);
   }
 
   REQUIRE(connection->getQueueSize() == processor->flow_files_.size());
