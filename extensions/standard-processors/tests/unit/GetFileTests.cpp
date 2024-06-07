@@ -301,7 +301,7 @@ TEST_CASE("GetFile can use expression language in Directory property") {
   minifi::test::SingleProcessorTestController test_controller(get_file);
 
   std::filesystem::path base_dir = test_controller.createTempDirectory();
-  auto date_str = date::format("%Y-%m-%d", std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
+  auto date_str = date::format("%Y-%m-%d", std::chrono::system_clock::now());
   auto dir = base_dir/ date_str;
   std::filesystem::create_directories(dir);
   get_file->setProperty(GetFile::Directory, base_dir.string() + "/${now():format('%Y-%m-%d')}");
