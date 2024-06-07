@@ -77,7 +77,6 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::Attribute, TEST_ATTR);
 
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
-  plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog, TEST_ATTR);
 
   auto test_file_path = temp_dir / TEST_FILE;
 
@@ -146,7 +145,6 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
   plan->setDynamicProperty(maprocessor, "InvalidRegex", "[Invalid)A(F)");
 
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
-  plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog, TEST_ATTR);
 
   auto test_file_path = dir / TEST_FILE;
 
@@ -214,7 +212,6 @@ TEST_CASE("Test usage of ExtractText in regex mode with large regex matches", "[
   plan->setDynamicProperty(extract_text_processor, "RegexAttr", "Speed limit (.*)");
 
   auto log_attribute_processor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
-  plan->setProperty(log_attribute_processor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog, TEST_ATTR);
 
   std::string additional_long_string(100'000, '.');
   minifi::test::utils::putFileToDir(dir, TEST_FILE, "Speed limit 80" + additional_long_string);
