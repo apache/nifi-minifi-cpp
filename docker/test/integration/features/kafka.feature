@@ -46,6 +46,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the GetFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
+    And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
 
     And a kafka broker is set up in correspondence with the PublishKafka
 
@@ -93,6 +94,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
+    And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
 
     And a kafka broker is set up in correspondence with the PublishKafka
 
@@ -120,6 +122,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
+    And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
 
     And a kafka broker is set up in correspondence with the PublishKafka
 
@@ -150,6 +153,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
+    And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
 
     And a kafka broker is set up in correspondence with the PublishKafka
 
@@ -178,6 +182,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And an ssl context service is set up for PublishKafka
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
+    And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
 
     And a kafka broker is set up in correspondence with the PublishKafka
 
@@ -203,6 +208,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And an ssl context service is set up for PublishKafka
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
+    And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
 
     And a kafka broker is set up in correspondence with the PublishKafka
 
