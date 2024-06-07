@@ -435,7 +435,7 @@ nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_vie
 std::string replaceEscapedCharacters(std::string_view input);
 
 // no std::arithmetic yet
-template <typename T> concept arithmetic = integral<T> || floating_point<T>;
+template <typename T> concept arithmetic = std::integral<T> || std::floating_point<T>;
 
 template<arithmetic T>
 nonstd::expected<T, ParseError> parseNumber(std::string_view input) {

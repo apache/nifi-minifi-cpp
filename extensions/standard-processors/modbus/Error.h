@@ -24,6 +24,7 @@
 
 namespace org::apache::nifi::minifi::modbus {
 
+//  Based from https://modbus.org/docs/Modbus_Application_Protocol_V1_1b3.pdf MODBUS Exception Codes
 enum class ModbusExceptionCode : std::underlying_type_t<std::byte> {
   IllegalFunction = 0x01,
   IllegalDataAddress = 0x02,

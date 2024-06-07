@@ -146,7 +146,7 @@ std::shared_ptr<core::FlowFile> FetchModbusTcp::getFlowFile(core::ProcessSession
 std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> FetchModbusTcp::getAddressMap(core::ProcessContext& context, const core::FlowFile& flow_file) {
   std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> address_map{};
   const auto unit_id_str = context.getProperty(UnitIdentifier, &flow_file).value_or("0");
-  const uint8_t unit_id = utils::string::parse<uint8_t>(unit_id_str).value_or(1);
+  const uint8_t unit_id = utils::string::parseNumber<uint8_t>(unit_id_str).value_or(1);
   for (const auto& dynamic_property : dynamic_property_keys_) {
     if (std::string dynamic_property_value{}; context.getDynamicProperty(dynamic_property, dynamic_property_value, &flow_file)) {
       if (auto modbus_func = ReadModbusFunction::parse(++transaction_id_, unit_id, dynamic_property_value); modbus_func) {
@@ -225,7 +225,7 @@ auto FetchModbusTcp::sendRequestsAndReadResponses(utils::net::ConnectionHandlerB
 auto FetchModbusTcp::sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
     const ReadModbusFunction& read_modbus_function) -> asio::awaitable<nonstd::expected<core::RecordField, std::error_code>> {
   std::string result;
-  if (auto connection_error = co_await connection_handler.setupUsableSocket(io_context_)) {  // NOLINT
+  if (auto connection_error = co_await connection_handler.setupUsableSocket(io_context_)) {  // NOLINT (clang tidy doesnt like coroutines)
     co_return nonstd::make_unexpected(connection_error);
   }
 

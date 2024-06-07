@@ -111,11 +111,11 @@ bool ReadCoilStatus::operator==(const ReadModbusFunction& rhs) const {
 }
 
 std::unique_ptr<ReadModbusFunction> ReadCoilStatus::parse(const uint16_t transaction_id, const uint8_t unit_id, const std::string_view address_str, const std::string_view length_str) {
-  auto start_address = utils::string::parse<uint16_t>(address_str);
+  auto start_address = utils::string::parseNumber<uint16_t>(address_str);
   if (!start_address) {
     return nullptr;
   }
-  uint16_t length = length_str.empty() ? 1 : utils::string::parse<uint16_t>(length_str).value_or(1);
+  uint16_t length = length_str.empty() ? 1 : utils::string::parseNumber<uint16_t>(length_str).value_or(1);
 
   return std::make_unique<ReadCoilStatus>(transaction_id, unit_id, *start_address, length);
 }
@@ -127,11 +127,11 @@ std::unique_ptr<ReadModbusFunction> parseReadRegister(const RegisterType registe
   const std::string_view address_str,
   const std::string_view type_str,
   const std::string_view length_str) {
-  auto start_address = utils::string::parse<uint16_t>(address_str);
+  auto start_address = utils::string::parseNumber<uint16_t>(address_str);
   if (!start_address) {
     return nullptr;
   }
-  uint16_t length = length_str.empty() ? 1 : utils::string::parse<uint16_t>(length_str).value_or(1);
+  uint16_t length = length_str.empty() ? 1 : utils::string::parseNumber<uint16_t>(length_str).value_or(1);
 
   if (type_str.empty() || type_str == "UINT" || type_str == "WORD") {
     return std::make_unique<ReadRegisters<uint16_t>>(register_type, transaction_id, unit_id, *start_address, length);
