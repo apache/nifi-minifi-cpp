@@ -142,7 +142,7 @@ void PutTCP::removeExpiredConnections() {
 }
 
 std::error_code PutTCP::sendFlowFileContent(const std::shared_ptr<utils::net::ConnectionHandlerBase>& connection_handler,
-                                            const std::shared_ptr<io::InputStream>& flow_file_content_stream) {
+    const std::shared_ptr<io::InputStream>& flow_file_content_stream) {
   std::error_code operation_error;
   io_context_.restart();
   asio::co_spawn(io_context_,
@@ -156,8 +156,9 @@ std::error_code PutTCP::sendFlowFileContent(const std::shared_ptr<utils::net::Co
 
 asio::awaitable<std::error_code> PutTCP::sendStreamWithDelimiter(utils::net::ConnectionHandlerBase& connection_handler,
     const std::shared_ptr<io::InputStream>& stream_to_send, const std::vector<std::byte>& delimiter) {
-  if (auto connection_error = co_await connection_handler.setupUsableSocket(io_context_))  // NOLINT
+  if (auto connection_error = co_await connection_handler.setupUsableSocket(io_context_)) {  // NOLINT
     co_return connection_error;
+  }
 
   std::vector<std::byte> data_chunk;
   data_chunk.resize(chunk_size);

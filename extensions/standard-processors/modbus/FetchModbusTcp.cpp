@@ -38,8 +38,9 @@ namespace org::apache::nifi::minifi::modbus {
 void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   const auto record_set_writer_name = context.getProperty(RecordSetWriter);
   record_set_writer_ = std::dynamic_pointer_cast<core::RecordSetWriter>(context.getControllerService(record_set_writer_name.value_or("")));
-  if (!record_set_writer_)
+  if (!record_set_writer_) {
     throw Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Invalid or missing RecordSetWriter"};
+  }
 
     // if the required properties are missing or empty even before evaluating the EL expression, then we can throw in onSchedule, before we waste any flow files
   if (context.getProperty(Hostname).value_or(std::string{}).empty()) {
@@ -48,20 +49,23 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
   if (context.getProperty(Port).value_or(std::string{}).empty()) {
     throw Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "missing port"};
   }
-  if (const auto idle_connection_expiration = context.getProperty<core::TimePeriodValue>(IdleConnectionExpiration); idle_connection_expiration && idle_connection_expiration->getMilliseconds() > 0ms)
+  if (const auto idle_connection_expiration = context.getProperty<core::TimePeriodValue>(IdleConnectionExpiration); idle_connection_expiration && idle_connection_expiration->getMilliseconds() > 0ms) {
     idle_connection_expiration_ = idle_connection_expiration->getMilliseconds();
-  else
+  } else {
     idle_connection_expiration_.reset();
+  }
 
-  if (const auto timeout = context.getProperty<core::TimePeriodValue>(Timeout); timeout && timeout->getMilliseconds() > 0ms)
+  if (const auto timeout = context.getProperty<core::TimePeriodValue>(Timeout); timeout && timeout->getMilliseconds() > 0ms) {
     timeout_duration_ = timeout->getMilliseconds();
-  else
+  } else {
     timeout_duration_ = 15s;
+  }
 
-  if (context.getProperty<bool>(ConnectionPerFlowFile).value_or(false))
+  if (context.getProperty<bool>(ConnectionPerFlowFile).value_or(false)) {
     connections_.reset();
-  else
+  } else {
     connections_.emplace();
+  }
 
   ssl_context_.reset();
   if (const auto context_name = context.getProperty(SSLContextService); context_name && !IsNullOrEmpty(*context_name)) {
@@ -102,12 +106,14 @@ void FetchModbusTcp::onTrigger(core::ProcessContext& context, core::ProcessSessi
   auto connection_id = utils::net::ConnectionId(std::move(hostname), std::move(port));
   std::shared_ptr<utils::net::ConnectionHandlerBase> handler;
   if (!connections_ || !connections_->contains(connection_id)) {
-    if (ssl_context_)
+    if (ssl_context_) {
       handler = std::make_shared<utils::net::ConnectionHandler<utils::net::SslSocket>>(connection_id, timeout_duration_, logger_, max_size_of_socket_send_buffer_, &*ssl_context_);
-    else
+    } else {
       handler = std::make_shared<utils::net::ConnectionHandler<utils::net::TcpSocket>>(connection_id, timeout_duration_, logger_, max_size_of_socket_send_buffer_, nullptr);
-    if (connections_)
+    }
+    if (connections_) {
       (*connections_)[connection_id] = handler;
+    }
   } else {
     handler = (*connections_)[connection_id];
   }
@@ -143,8 +149,9 @@ std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> FetchModbus
   const uint8_t unit_id = utils::string::parse<uint8_t>(unit_id_str).value_or(1);
   for (const auto& dynamic_property : dynamic_property_keys_) {
     if (std::string dynamic_property_value{}; context.getDynamicProperty(dynamic_property, dynamic_property_value, &flow_file)) {
-      if (auto modbus_func = ReadModbusFunction::parse(++transaction_id_, unit_id, dynamic_property_value); modbus_func)
+      if (auto modbus_func = ReadModbusFunction::parse(++transaction_id_, unit_id, dynamic_property_value); modbus_func) {
         address_map.emplace(dynamic_property.getName(), std::move(modbus_func));
+      }
     }
   }
   return address_map;
@@ -218,36 +225,44 @@ auto FetchModbusTcp::sendRequestsAndReadResponses(utils::net::ConnectionHandlerB
 auto FetchModbusTcp::sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
     const ReadModbusFunction& read_modbus_function) -> asio::awaitable<nonstd::expected<core::RecordField, std::error_code>> {
   std::string result;
-  if (auto connection_error = co_await connection_handler.setupUsableSocket(io_context_))  // NOLINT
+  if (auto connection_error = co_await connection_handler.setupUsableSocket(io_context_)) {  // NOLINT
     co_return nonstd::make_unexpected(connection_error);
+  }
 
-  if (auto [write_error, bytes_written] = co_await connection_handler.write(asio::buffer(read_modbus_function.requestBytes())); write_error)
+  if (auto [write_error, bytes_written] = co_await connection_handler.write(asio::buffer(read_modbus_function.requestBytes())); write_error) {
     co_return nonstd::make_unexpected(write_error);
+  }
 
   std::array<std::byte, 7> apu_buffer{};
   asio::mutable_buffer response_apu(apu_buffer.data(), 7);
-  if (auto [read_error, bytes_read] = co_await connection_handler.read(response_apu); read_error)
+  if (auto [read_error, bytes_read] = co_await connection_handler.read(response_apu); read_error) {
     co_return nonstd::make_unexpected(read_error);
+  }
 
   const auto received_transaction_id = fromBytes<uint16_t>({apu_buffer[0], apu_buffer[1]});
   const auto received_protocol = fromBytes<uint16_t>({apu_buffer[2], apu_buffer[3]});
   const auto received_length = fromBytes<uint16_t>({apu_buffer[4], apu_buffer[5]});
   const auto unit_id = static_cast<uint8_t>(apu_buffer[6]);
 
-  if (received_transaction_id != read_modbus_function.getTransactionId())
+  if (received_transaction_id != read_modbus_function.getTransactionId()) {
     co_return nonstd::make_unexpected(ModbusExceptionCode::InvalidTransactionId);
-  if (received_protocol != 0)
+  }
+  if (received_protocol != 0) {
     co_return nonstd::make_unexpected(ModbusExceptionCode::IllegalProtocol);
-  if (unit_id != read_modbus_function.getUnitId())
+  }
+  if (unit_id != read_modbus_function.getUnitId()) {
     co_return nonstd::make_unexpected(ModbusExceptionCode::InvalidSlaveId);
-  if (received_length + 6 > 260 || received_length <= 1)
+  }
+  if (received_length + 6 > 260 || received_length <= 1) {
     co_return nonstd::make_unexpected(ModbusExceptionCode::InvalidResponse);
+  }
 
   std::array<std::byte, 260-7> pdu_buffer{};
   asio::mutable_buffer response_pdu(pdu_buffer.data(), received_length-1);
   auto [read_error, bytes_read] = co_await connection_handler.read(response_pdu);
-  if (read_error)
+  if (read_error) {
     co_return nonstd::make_unexpected(read_error);
+  }
 
   const auto pdu_span = std::span<std::byte>(pdu_buffer.data(), received_length-1);
   co_return read_modbus_function.responseToRecordField(pdu_span);

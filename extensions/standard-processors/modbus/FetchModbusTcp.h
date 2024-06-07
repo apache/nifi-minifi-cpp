@@ -119,12 +119,12 @@ class FetchModbusTcp final : public core::Processor {
     core::ProcessSession& session,
     const std::shared_ptr<core::FlowFile>& flow_file);
 
-  auto readModbus(const std::shared_ptr<utils::net::ConnectionHandlerBase>& connection_handler,
-      const std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>>& address_map) -> nonstd::expected<core::Record, std::error_code>;
-  auto sendRequestsAndReadResponses(utils::net::ConnectionHandlerBase& connection_handler,
-      const std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>>& address_map) -> asio::awaitable<nonstd::expected<core::Record, std::error_code>>;
-  auto sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
-      const ReadModbusFunction& read_modbus_function) -> asio::awaitable<nonstd::expected<core::RecordField, std::error_code>>;
+  nonstd::expected<core::Record, std::error_code> readModbus(const std::shared_ptr<utils::net::ConnectionHandlerBase>& connection_handler,
+      const std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>>& address_map);
+  asio::awaitable<nonstd::expected<core::Record, std::error_code>> sendRequestsAndReadResponses(utils::net::ConnectionHandlerBase& connection_handler,
+      const std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>>& address_map);
+  asio::awaitable<nonstd::expected<core::RecordField, std::error_code>> sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
+      const ReadModbusFunction& read_modbus_function);
   std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> getAddressMap(core::ProcessContext& context, const core::FlowFile& flow_file);
   std::shared_ptr<core::FlowFile> getFlowFile(core::ProcessSession& session) const;
   void removeExpiredConnections();
