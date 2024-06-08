@@ -16,10 +16,10 @@
 # under the License.
 
 function(get_curl SOURCE_DIR BINARY_DIR)
-    if(MINIFI_USE_CONAN_PACKAGER)
+    if(MINIFI_LIBCURL_SOURCE STREQUAL "CONAN")
         message("Using Conan Packager to manage installing prebuilt libcurl external lib")
         include(${CMAKE_BINARY_DIR}/CURLConfig.cmake)
-    else()
+    elseif(MINIFI_LIBCURL_SOURCE STREQUAL "BUILD")
         message("Using CMAKE's ExternalProject_Add to manage source building libcurl external lib")
         include(BundledLibcURL)
         use_bundled_curl(${SOURCE_DIR} ${BINARY_DIR})

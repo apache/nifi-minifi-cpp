@@ -221,6 +221,12 @@ else()
     message(VERBOSE "No custom malloc implementation")
 endif()
 
+# OpenSSL
+include(GetOpenSSL)
+get_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
+
+
 if (ENABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     include(BundledBZip2)
     use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
@@ -237,11 +243,6 @@ if(NOT WIN32)
     include(BundledOSSPUUID)
     use_bundled_osspuuid(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
-
-# OpenSSL
-include(GetOpenSSL)
-get_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
 
 # libsodium
 include(BundledLibSodium)
