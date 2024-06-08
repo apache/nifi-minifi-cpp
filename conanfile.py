@@ -19,7 +19,7 @@ class MiNiFiCppMain(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
-        tc.variables["USE_CONAN_PACKAGER"] = "ON"
+        tc.variables["MINIFI_USE_CONAN_PACKAGER"] = "ON"
 
         tc.variables["ENABLE_OPENWSMAN"] = "OFF"
         tc.variables["ENABLE_CIVET"] = "OFF"
