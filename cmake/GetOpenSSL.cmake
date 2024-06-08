@@ -16,10 +16,11 @@
 # under the License.
 
 function(get_openssl SOURCE_DIR BINARY_DIR)
-    if(MINIFI_USE_CONAN_PACKAGER)
+    if(MINIFI_OPENSSL_SOURCE STREQUAL "CONAN")
         message("Using Conan Packager to manage installing prebuilt OpenSSL external lib")
-        include(${CMAKE_BINARY_DIR}/OpenSSLConfig.cmake)
-    else()
+        # include(${CMAKE_BINARY_DIR}/OpenSSLConfig.cmake)
+        find_package(OpenSSL REQUIRED)
+    elseif(MINIFI_OPENSSL_SOURCE STREQUAL "BUILD")
         message("Using CMAKE's ExternalProject_Add to manage source building OpenSSL external lib")
         include(BundledOpenSSL)
         use_openssl(${SOURCE_DIR} ${BINARY_DIR})
