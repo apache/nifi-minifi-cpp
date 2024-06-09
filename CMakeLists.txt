@@ -370,7 +370,10 @@ foreach(extension-dir ${extension-directories})
 endforeach()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
-add_subdirectory(minifi_main)
+
+if(NOT MINIFI_BUILD_CONAN_PACKAGE)
+    add_subdirectory(minifi_main)
+endif()
 
 if (ENABLE_NANOFI)
     add_subdirectory(nanofi)
@@ -574,13 +577,9 @@ if (NOT WIN32)
     endif()
 endif()
 
-install(FILES LICENSE NOTICE
-    DESTINATION .
-    COMPONENT bin)
+install(FILES LICENSE NOTICE DESTINATION . COMPONENT bin)
 file(GLOB markdown_docs "*.md")
-install(FILES ${markdown_docs}
-    DESTINATION .
-    COMPONENT bin)
+install(FILES ${markdown_docs} DESTINATION . COMPONENT bin)
 
 include(CPackComponent)
 
@@ -598,9 +597,11 @@ set(CPACK_PACKAGE_VENDOR "Apache NiFi")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt" COPYONLY)
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+if(NOT MINIFI_BUILD_CONAN_PACKAGE)
+    set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt" COPYONLY)
+    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
+endif()
 if(NOT WIN32)
     set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
     set(CPACK_GENERATOR "TGZ")
@@ -691,7 +692,9 @@ if (NOT SKIP_TESTS)
         add_subdirectory("${TEST_DIR}/persistence-tests")
     endif()
 
-    add_subdirectory("minifi_main/tests")
+    if(NOT MINIFI_BUILD_CONAN_PACKAGE)
+        add_subdirectory("minifi_main/tests")
+    endif()
 
     add_subdirectory("encrypt-config/tests")
 
