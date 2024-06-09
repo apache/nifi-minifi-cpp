@@ -19,9 +19,14 @@ class MiNiFiCppMain(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+
         tc.variables["MINIFI_LIBCURL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_OPENSSL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_ZLIB_SOURCE"] = "CONAN"
+
+        tc.variables["ENABLE_LIBARCHIVE"] = "OFF"
+        tc.variables["ENABLE_AWS"] = "OFF"
+
         tc.generate()
 
     def build(self):
