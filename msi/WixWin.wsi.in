@@ -250,21 +250,6 @@ ${WIX_EXTRA_FEATURES}
           <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
           <Condition Action="enable">ENABLEC2="1"</Condition>
         </Control>
-        <!--
-        comment when available
-        <Control Id="AgentProtocolLabel" Type="Text" X="20" Y="240" Width="60" Height="20" NoPrefix="yes" Text="Agent Protocol" />
-        <Control Id="AgentProtocolComboBreaker" Type="ComboBox" X="20" Y="260" Width="300" Height="17" Property="AGENT_PROTOCOL" >
-
-
-
-         <ComboBox Property="AGENT_PROTOCOL">
-            <ListItem Value="RESTSender" />
-            <ListItem Value="COAPProtocol" />
-          </ComboBox>
-          <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
-          <Condition Action="enable">ENABLEC2="1"</Condition>
-        </Control>
--->
       </Dialog>
 
       <UIRef Id="WixUI_HK" />
@@ -273,7 +258,6 @@ ${WIX_EXTRA_FEATURES}
 
     <Property Id="AGENT_CLASS"  Value="Your Agent Class" />
     <Property Id="AGENT_IDENTIFIER"  />
-    <Property Id="AGENT_PROTOCOL"  Value="RESTSender" />
     <Property Id="AGENT_HEARTBEAT"  Value="30 sec" />
     <Property Id="SERVER_HEARTBEAT"  Value="http://localhost:8181/heartbeat" />
     <Property Id="SERVER_ACK"  Value="http://localhost:8181/acknowledge" />
@@ -322,7 +306,6 @@ ${WIX_EXTRA_FEATURES}
                 <IniFile Id="ConfigFileA" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.class" Value="[AGENT_CLASS]" />
                 <IniFile Id="ConfigFileI" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.identifier" Value="[AGENT_IDENTIFIER]" />
                 <IniFile Id="ConfigFileE" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.enable" Value="true" />
-                <IniFile Id="ConfigFileP" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.protocol.class" Value="[AGENT_PROTOCOL]" />
                 <IniFile Id="ConfigFileT" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.heartbeat.period" Value="[AGENT_HEARTBEAT]" />
                 <IniFile Id="ConfigFileH" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.url" Value="[SERVER_HEARTBEAT]" />
                 <IniFile Id="ConfigFileAck" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.url.ack" Value="[SERVER_ACK]" />

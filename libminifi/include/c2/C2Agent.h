@@ -64,10 +64,6 @@ class C2Agent : public state::UpdateController {
           std::shared_ptr<utils::file::FileSystem> filesystem,
           std::function<void()> request_restart);
 
-  ~C2Agent() noexcept override {
-    delete protocol_.load();
-  }
-
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
   void start() override;
   void stop() override;
@@ -222,7 +218,7 @@ class C2Agent : public state::UpdateController {
 
   std::vector<std::unique_ptr<C2Trigger>> triggers_;
 
-  std::atomic<C2Protocol*> protocol_{};
+  std::unique_ptr<C2Protocol> protocol_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2Agent>::getLogger();
 

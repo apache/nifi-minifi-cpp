@@ -77,7 +77,6 @@ class VerifyC2ClassRequest : public VerifyC2Base {
   explicit VerifyC2ClassRequest(std::function<bool()> verify) : verify_(std::move(verify)) {}
 
   void configureC2() override {
-    configuration->set(minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
     configuration->set(minifi::Configuration::nifi_c2_enable, "true");
     configuration->set(minifi::Configuration::nifi_c2_agent_heartbeat_period, "100");
     configuration->set(minifi::Configuration::nifi_c2_root_classes, "DeviceInfoNode,AgentInformation,FlowInformation");

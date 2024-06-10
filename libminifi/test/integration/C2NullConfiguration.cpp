@@ -54,9 +54,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
   }
 
   void runAssertions() override {
-    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
-        "C2Agent] [error] Could not instantiate null",
-        "Class is RESTSender"));
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "C2Agent] [error] Could not instantiate null"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
@@ -75,7 +73,6 @@ class VerifyC2Server : public HTTPIntegrationBase {
     minifi::utils::parse_http_components(url, port, scheme, path);
     configuration->set(Configuration::nifi_c2_enable, "true");
     configuration->set(Configuration::nifi_c2_agent_class, "test");
-    configuration->set(Configuration::nifi_c2_agent_protocol_class, "RESTSender");
     configuration->set(Configuration::nifi_c2_rest_url, "");
     configuration->set(Configuration::nifi_c2_rest_url_ack, "");
     configuration->set(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "null");

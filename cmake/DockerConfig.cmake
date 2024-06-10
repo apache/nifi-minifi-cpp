@@ -65,7 +65,6 @@ add_custom_target(
              -DENABLE_GRPC_FOR_LOKI=OFF
              -DENABLE_PROCFS=OFF
              -DENABLE_GPS=OFF
-             -DENABLE_COAP=OFF
              -DENABLE_PCAP=OFF
              -DENABLE_SENSORS=OFF
              -DENABLE_USB_CAMERA=OFF

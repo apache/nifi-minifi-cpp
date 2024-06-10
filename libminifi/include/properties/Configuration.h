@@ -107,13 +107,9 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_flow_url = "nifi.c2.flow.url";
   static constexpr const char *nifi_c2_flow_base_url = "nifi.c2.flow.base.url";
   static constexpr const char *nifi_c2_full_heartbeat = "nifi.c2.full.heartbeat";
-  static constexpr const char *nifi_c2_coap_connector_service = "nifi.c2.coap.connector.service";
   static constexpr const char *nifi_c2_agent_heartbeat_period = "nifi.c2.agent.heartbeat.period";
   static constexpr const char *nifi_c2_agent_class = "nifi.c2.agent.class";
   static constexpr const char *nifi_c2_agent_heartbeat_reporter_classes = "nifi.c2.agent.heartbeat.reporter.classes";
-  static constexpr const char *nifi_c2_agent_coap_host = "nifi.c2.agent.coap.host";
-  static constexpr const char *nifi_c2_agent_coap_port = "nifi.c2.agent.coap.port";
-  static constexpr const char *nifi_c2_agent_protocol_class = "nifi.c2.agent.protocol.class";
   static constexpr const char *nifi_c2_agent_identifier = "nifi.c2.agent.identifier";
   static constexpr const char *nifi_c2_agent_identifier_fallback = "nifi.c2.agent.identifier.fallback";
   static constexpr const char *nifi_c2_agent_trigger_classes = "nifi.c2.agent.trigger.classes";
