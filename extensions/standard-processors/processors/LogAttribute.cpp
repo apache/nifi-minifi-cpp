@@ -77,7 +77,7 @@ void LogAttribute::onSchedule(core::ProcessContext& context, core::ProcessSessio
 
 std::string LogAttribute::generateLogMessage(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const {
   std::ostringstream message;
-  message << "Logging for flow file " << "\n";
+  message << "Logging for flow file" << "\n";
   message << dash_line_;
   message << "\nStandard FlowFile Attributes";
   message << "\n" << "UUID:" << flow_file->getUUIDStr();

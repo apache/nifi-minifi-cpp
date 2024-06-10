@@ -43,7 +43,7 @@ TEST_CASE("LogAttribute logs payload", "[LogAttribute]") {
   controller.plan->scheduleProcessor(log_attribute);
   const auto result = controller.trigger("hello world", {{"eng", "apple"}, {"ger", "Apfel"}, {"fra", "pomme"}});
   CHECK(result.at(LogAttribute::Success).size() == 1);
-  CHECK(LogTestController::getInstance().contains("--------------------------------------------------", 1s));
+  CHECK(LogTestController::getInstance().contains("-------------------------------------------------", 1s));
   CHECK(LogTestController::getInstance().contains("Size:11 Offset:0", 0s));
   CHECK(LogTestController::getInstance().contains("FlowFile Attributes Map Content", 0s));
   CHECK(LogTestController::getInstance().contains("key:eng value:apple", 0s));
@@ -59,11 +59,11 @@ TEST_CASE("LogAttribute LogLevel and LogPrefix", "[LogAttribute]") {
   LogTestController::getInstance().setTrace<LogAttribute>();
 
   const auto [log_level, log_prefix, expected_dash] = GENERATE(
-    std::make_tuple("info", "", "--------------------------------------------------"),
+    std::make_tuple("info", "", "-------------------------------------------------"),
     std::make_tuple("critical", "foo", "-----------------------foo------------------------"),
     std::make_tuple("debug", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis neque sit amet dui pretium sodales.",
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis neque sit amet dui pretium sodales."),
-    std::make_tuple("error", "", "--------------------------------------------------"));
+    std::make_tuple("error", "", "-------------------------------------------------"));
 
   REQUIRE(controller.plan->setProperty(log_attribute, LogAttribute::LogLevel, log_level));
   REQUIRE(controller.plan->setProperty(log_attribute, LogAttribute::LogPrefix, log_prefix));
@@ -71,7 +71,7 @@ TEST_CASE("LogAttribute LogLevel and LogPrefix", "[LogAttribute]") {
   controller.plan->scheduleProcessor(log_attribute);
   const auto result = controller.trigger("hello world", {{"eng", "apple"}, {"ger", "Apfel"}, {"fra", "pomme"}});
   CHECK(result.at(LogAttribute::Success).size() == 1);
-  CHECK(LogTestController::getInstance().contains(fmt::format("[org::apache::nifi::minifi::processors::LogAttribute] [{}] Logging for flow file", log_level), 1s));
+  CHECK(LogTestController::getInstance().contains(fmt::format("[org::apache::nifi::minifi::processors::LogAttribute] [{}] Logging for flow file\n{}", log_level, expected_dash), 1s));
   CHECK(LogTestController::getInstance().contains("key:fra value:pomme", 0s));
   CHECK(LogTestController::getInstance().contains("Size:11 Offset:0", 0s));
   CHECK(LogTestController::getInstance().contains("FlowFile Attributes Map Content", 0s));
@@ -119,7 +119,7 @@ TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
   controller.plan->scheduleProcessor(log_attribute);
   const auto result = controller.trigger("hello world", {{"eng", "apple"}, {"ger", "Apfel"}, {"fra", "pomme"}});
   CHECK(result.at(LogAttribute::Success).size() == 1);
-  CHECK(LogTestController::getInstance().contains("--------------------------------------------------", 1s));
+  CHECK(LogTestController::getInstance().contains("-------------------------------------------------", 1s));
   CHECK(LogTestController::getInstance().contains("Size:11 Offset:0", 0s));
   CHECK(LogTestController::getInstance().contains("FlowFile Attributes Map Content", 0s));
   CHECK(LogTestController::getInstance().contains("key:eng value:apple", 0s) == expected_eng);
