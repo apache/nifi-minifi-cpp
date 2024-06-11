@@ -78,7 +78,8 @@ ProcessSession::ProcessSession(std::shared_ptr<ProcessContext> processContext)
 
 ProcessSession::~ProcessSession() {
   if (stateManager_ && stateManager_->isTransactionInProgress()) {
-    logger_->log_error("Session has ended without decision on state (commit or rollback).");
+    logger_->log_critical("Session has ended without decision on state (commit or rollback).");
+    std::terminate();
   }
   removeReferences();
 }

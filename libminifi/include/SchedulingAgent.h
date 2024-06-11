@@ -91,7 +91,7 @@ class SchedulingAgent {
   nonstd::expected<void, std::exception_ptr> triggerAndCommit(core::Processor* processor,
       const std::shared_ptr<core::ProcessContext>& process_context,
       const std::shared_ptr<core::ProcessSessionFactory>& session_factory);
-  nonstd::expected<void, std::exception_ptr> trigger(core::Processor* processor,
+  nonstd::expected<bool, std::exception_ptr> trigger(core::Processor* processor,
       const std::shared_ptr<core::ProcessContext>& process_context,
       const std::shared_ptr<core::ProcessSession>& process_session);
 

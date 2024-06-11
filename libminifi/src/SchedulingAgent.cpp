@@ -99,12 +99,12 @@ nonstd::expected<void, std::exception_ptr> SchedulingAgent::triggerAndCommit(cor
   return {};
 }
 
-nonstd::expected<void, std::exception_ptr> SchedulingAgent::trigger(core::Processor* processor,
+nonstd::expected<bool, std::exception_ptr> SchedulingAgent::trigger(core::Processor* processor,
     const std::shared_ptr<core::ProcessContext>& process_context,
     const std::shared_ptr<core::ProcessSession>& process_session) {
   gsl_Expects(processor);
   if (processorYields(processor)) {
-    return {};
+    return false;
   }
 
   auto schedule_it = scheduled_processors_.end();
@@ -134,7 +134,7 @@ nonstd::expected<void, std::exception_ptr> SchedulingAgent::trigger(core::Proces
     processor->yield(admin_yield_duration_);
     return nonstd::make_unexpected(std::current_exception());
   }
-  return {};
+  return true;
 }
 
 void SchedulingAgent::watchDogFunc() {
