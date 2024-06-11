@@ -38,38 +38,48 @@ void EventDrivenSchedulingAgent::schedule(core::Processor* processor) {
 utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* processor,
     const std::shared_ptr<core::ProcessContext>& process_context,
     const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
-  if (this->running_) {
-    const auto start_time = std::chrono::steady_clock::now();
-    // trigger processor until it has work to do, but no more than the configured nifi.flow.engine.event.driven.time.slice
-
-    const auto process_session = session_factory->createSession();
-    process_session->setMetrics(processor->getMetrics());
-
-    try {
-      while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < time_slice_)) {
-        this->trigger(processor, process_context, process_session);
-        if (processor->isYield()) {
-          process_session->commit();
-          return utils::TaskRescheduleInfo::RetryAfter(processor->getYieldExpirationTime());
-        }
-      }
-      process_session->commit();
-    } catch (const std::exception& exception) {
-      logger_->log_warn("Caught \"{}\" ({}) during Processor::onTrigger of processor: {} ({})",
-          exception.what(), typeid(exception).name(), processor->getUUIDStr(), processor->getName());
-      processor->yield(admin_yield_duration_);
-      process_session->rollback();
-      throw;
-    } catch (...) {
-      logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: {} ({})", processor->getUUIDStr(), processor->getName());
-      processor->yield(admin_yield_duration_);
-      process_session->rollback();
-      throw;
-    }
-
-    return utils::TaskRescheduleInfo::RetryImmediately();  // Let's continue work as soon as a thread is available
+  if (!this->running_) {
+    return utils::TaskRescheduleInfo::Done();
   }
-  return utils::TaskRescheduleInfo::Done();
+  if (processorYields(processor)) {
+    return utils::TaskRescheduleInfo::RetryAfter(processor->getYieldExpirationTime());
+  }
+
+  const auto start_time = std::chrono::steady_clock::now();
+  // trigger processor until it has work to do, but no more than the configured nifi.flow.engine.event.driven.time.slice
+
+  const auto process_session = session_factory->createSession();
+  process_session->setMetrics(processor->getMetrics());
+
+
+  try {
+    const auto run_commit = gsl::finally([&]() {
+        process_session->commit();
+    });
+    while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < time_slice_)) {
+      const auto trigger_result = this->trigger(processor, process_context, process_session);
+      if (!trigger_result || !*trigger_result) {
+        break;
+      }
+    }
+  } catch (const std::exception& exception) {
+    logger_->log_warn("Caught \"{}\" ({}) during Processor::onTrigger of processor: {} ({})",
+        exception.what(), typeid(exception).name(), processor->getUUIDStr(), processor->getName());
+    processor->yield(admin_yield_duration_);
+    process_session->rollback();
+    throw;
+  } catch (...) {
+    logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: {} ({})", processor->getUUIDStr(), processor->getName());
+    processor->yield(admin_yield_duration_);
+    process_session->rollback();
+    throw;
+  }
+
+  if (processor->isYield()) {
+    return utils::TaskRescheduleInfo::RetryAfter(processor->getYieldExpirationTime());
+  }
+
+  return utils::TaskRescheduleInfo::RetryImmediately();  // Let's continue work as soon as a thread is available
 }
 
 }  // namespace org::apache::nifi::minifi
