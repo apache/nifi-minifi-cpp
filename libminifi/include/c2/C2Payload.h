@@ -101,7 +101,7 @@ class C2Value {
     value_.emplace<rapidjson::Document>();
     get<rapidjson::Document>(value_).CopyFrom(json_value, get<rapidjson::Document>(value_).GetAllocator());
   }
-  C2Value(rapidjson::Document&& json_doc) {
+  C2Value(rapidjson::Document&& json_doc) {  // NOLINT(runtime/explicit)
     value_ = std::move(json_doc);
   }
 
