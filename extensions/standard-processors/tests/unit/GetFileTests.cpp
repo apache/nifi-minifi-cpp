@@ -28,6 +28,9 @@
 #include "utils/file/FileUtils.h"
 #include "unit/TestUtils.h"
 #include "unit/ProvenanceTestHelper.h"
+#ifdef WIN32
+#include "impl/expression/Expression.h"
+#endif
 
 using namespace std::literals::chrono_literals;
 
@@ -294,6 +297,9 @@ TEST_CASE("GetFile sets attributes correctly") {
 }
 
 TEST_CASE("GetFile can use expression language in Directory property") {
+#ifdef WIN32
+  minifi::expression::dateSetInstall(TZ_DATA_DIR);
+#endif
   using minifi::processors::GetFile;
   LogTestController::getInstance().setTrace<GetFile>();
 
