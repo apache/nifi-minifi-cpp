@@ -144,7 +144,7 @@ weekday parse<weekday>(const std::string& weekday_str) {
   } else {
     unsigned weekday_num = 0;
     stream >> weekday_num;
-    if (!stream.fail() && weekday_num < 7 && stream.peek() == EOF)
+    if (!stream.fail() && weekday_num < 8 && weekday_num > 0 && stream.peek() == EOF)
       return weekday(weekday_num-1);
   }
   throw BadCronExpression("Invalid weekday: " + weekday_str);
@@ -218,6 +218,14 @@ class SingleValueField : public CronField {
   [[nodiscard]] bool matches(local_seconds time_point) const override {
     return value_ == getFieldType<FieldType>(time_point);
   }
+
+  bool operator==(const CronField& rhs) const override {
+    if (auto rhs_single_value = dynamic_cast<const SingleValueField*>(&rhs)) {
+      return value_ == rhs_single_value->value_;
+    }
+    return false;
+  }
+
 
  private:
   FieldType value_;

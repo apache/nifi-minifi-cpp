@@ -127,6 +127,32 @@ TEST_CASE("Cron allowed nonnumerical inputs", "[cron]") {
   REQUIRE_NOTHROW(Cron("* * * * * Mon,tUe,WeD,Thu,Fri,SAT,Sun *"));
 }
 
+TEST_CASE("Day of the week checks", "[cron]") {
+  auto monday = Cron("* * * * * MON");
+  auto tuesday = Cron("* * * * * TUE");
+  auto wednesday = Cron("* * * * * WED");
+  auto thursday = Cron("* * * * * THU");
+  auto friday = Cron("* * * * * FRI");
+  auto saturday = Cron("* * * * * SAT");
+  auto sunday = Cron("* * * * * SUN");
+
+  auto day_one = Cron("* * * * * 1");
+  auto day_two = Cron("* * * * * 2");
+  auto day_three = Cron("* * * * * 3");
+  auto day_four = Cron("* * * * * 4");
+  auto day_five = Cron("* * * * * 5");
+  auto day_six = Cron("* * * * * 6");
+  auto day_seven = Cron("* * * * * 7");
+
+  CHECK(*sunday.day_of_week_ == *day_one.day_of_week_);
+  CHECK(*monday.day_of_week_ == *day_two.day_of_week_);
+  CHECK(*tuesday.day_of_week_ == *day_three.day_of_week_);
+  CHECK(*wednesday.day_of_week_ == *day_four.day_of_week_);
+  CHECK(*thursday.day_of_week_ == *day_five.day_of_week_);
+  CHECK(*friday.day_of_week_ == *day_six.day_of_week_);
+  CHECK(*saturday.day_of_week_ == *day_seven.day_of_week_);
+}
+
 TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
   using date::sys_days;
   using namespace date::literals;  // NOLINT(google-build-using-namespace)
