@@ -392,18 +392,28 @@ if (WIN32)
         COMMAND git log -1 --format=%h
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE BUILD_REV
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(COMMAND
-        "${CMAKE_CURRENT_SOURCE_DIR}/generateVersion.bat"
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        COMMAND_ECHO STDOUT
+        ECHO_OUTPUT_VARIABLE)
+
+    execute_process(COMMAND powershell
+        "(New-Object -ComObject Scripting.FileSystemObject).GetFolder('${CMAKE_CURRENT_SOURCE_DIR}').ShortPath"
+        OUTPUT_VARIABLE CMAKE_CURRENT_SOURCE_DIR_SHORT_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        COMMAND_ECHO STDOUT
+        ECHO_OUTPUT_VARIABLE)
+
+    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR_SHORT_PATH}/generateVersion.bat
         "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR}/libminifi
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_BINARY_DIR}/libminifi"
         "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_COMPILER_VERSION}"
         "${CMAKE_CXX_FLAGS};${MINIFI_CPP_COMPILE_OPTIONS};${MINIFI_CPP_COMPILE_DEFINITIONS}"
         \"${selected_extensions}\"
         "${BUILD_IDENTIFIER}"
-        "${BUILD_REV}")
+        "${BUILD_REV}"
+        COMMAND_ECHO STDOUT)
 else()
     execute_process(COMMAND
         "${CMAKE_CURRENT_SOURCE_DIR}/generateVersion.sh"
