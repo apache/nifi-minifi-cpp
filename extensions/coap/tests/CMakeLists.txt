@@ -42,7 +42,7 @@ FOREACH(testfile ${COAP_INTEGRATION_TESTS})
     target_link_libraries(${testfilename} minifi-coap)
     target_link_libraries(${testfilename} minifi-civet-extensions)
     target_link_libraries(${testfilename} minifi-standard-processors)
-    target_link_libraries(${testfilename} Catch2WithMain)
+    target_link_libraries(${testfilename} Catch2::Catch2WithMain)
     add_test(NAME "${testfilename}" COMMAND "${testfilename}")
 
     MATH(EXPR CURL_INT_TEST_COUNT "${CURL_INT_TEST_COUNT}+1")

@@ -271,7 +271,8 @@ get_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
 
 # spdlog
-include(Spdlog)
+include(GetSpdlog)
+get_spdlog()
 
 # yaml-cpp
 include(BundledYamlCpp)
@@ -351,13 +352,14 @@ include(Extensions)
 add_subdirectory(libminifi)
 
 if ((ENABLE_OPENWSMAN AND ENABLE_CIVET) OR ENABLE_ALL OR ENABLE_AZURE)
-    include(BundledLibXml2)
-    use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+    include(GetLibXml2)
+    get_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
 endif()
 
 if (ENABLE_ALL OR ENABLE_PROMETHEUS OR ENABLE_CIVET)
-    include(CivetWeb)
+    include(GetCivetWeb)
+    get_civetweb()
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
 endif()
 
@@ -371,9 +373,7 @@ endforeach()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
-if(NOT MINIFI_BUILD_CONAN_PACKAGE)
-    add_subdirectory(minifi_main)
-endif()
+add_subdirectory(minifi_main)
 
 if (ENABLE_NANOFI)
     add_subdirectory(nanofi)
@@ -692,9 +692,7 @@ if (NOT SKIP_TESTS)
         add_subdirectory("${TEST_DIR}/persistence-tests")
     endif()
 
-    if(NOT MINIFI_BUILD_CONAN_PACKAGE)
-        add_subdirectory("minifi_main/tests")
-    endif()
+    add_subdirectory("minifi_main/tests")
 
     add_subdirectory("encrypt-config/tests")
 

@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,20 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-include(JsonSchemaValidator)
-
-file(GLOB SCHEMA_TESTS  "*.cpp")
-SET(SCHEMA_TEST_COUNT 0)
-FOREACH(testfile ${SCHEMA_TESTS})
-  get_filename_component(testfilename "${testfile}" NAME_WE)
-  add_minifi_executable("${testfilename}" "${testfile}")
-  createTests("${testfilename}")
-  target_link_libraries(${testfilename} Catch2::Catch2WithMain)
-  target_link_libraries(${testfilename} minifi-standard-processors)
-  target_link_libraries(${testfilename} nlohmann_json_schema_validator)
-  MATH(EXPR SCHEMA_TEST_COUNT "${SCHEMA_TEST_COUNT}+1")
-  add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
-ENDFOREACH()
-message("-- Finished building ${SCHEMA_TEST_COUNT} Json Schema related test file(s)...")
+function(get_fmt)
+    if(MINIFI_FMT_SOURCE STREQUAL "CONAN")
+        message("Using Conan Packager to manage installing prebuilt Fmt external lib")
+        include(${CMAKE_BINARY_DIR}/fmt-config.cmake)
+    elseif(MINIFI_FMT_SOURCE STREQUAL "BUILD")
+        message("Using CMAKE's ExternalProject_Add to manage source building Fmt external lib")
+        include(fmt)
+    endif()
+endfunction(get_fmt)

@@ -6,13 +6,17 @@ import os
 
 required_conan_version = ">=2.1.0"
 
-shared_requires = ("openssl/3.2.1", "libcurl/8.6.0")
+shared_requires = ("openssl/3.2.1", "libcurl/8.6.0", "civetweb/1.16", "libxml2/2.12.6", "catch2/3.5.4",
+                   "fmt/10.2.1", "spdlog/1.14.0")
 shared_sources = ("CMakeLists.txt", "libminifi/*", "extensions/*", "minifi_main/*", "nanofi/*",
                   "bin/*", "bootstrap/*", "cmake/*", "conf/*", "controller/*", "encrypt-config/*",
                   "etc/*", "examples/*", "msi/*", "thirdparty/*", "docker/*", "LICENSE", "NOTICE", 
                   "README.md", "C2.md", "CONFIGURE.md", "CONTRIBUTING.md", "CONTROLLERS.md", "EXPRESSIONS.md",
                   "Extensions.md", "JNI.md", "METRICS.md", "OPS.md", "PROCESSORS.md", "ThirdParties.md", 
-                  "Windows.md")
+                  "Windows.md", "aptitude.sh", "arch.sh", "bootstrap.sh", "bstrp_functions.sh", "centos.sh",
+                  "CPPLINT.cfg", "darwin.sh", "debian.sh", "deploy.sh", "fedora.sh", "generateVersion.sh",
+                  "linux.sh", "rheldistro.sh", "run_clang_tidy.sh", "run_clang_tidy.sh", "run_flake8.sh",
+                  "run_shellcheck.sh", "suse.sh", "versioninfo.rc.in")
 
 class MiNiFiCppMain(ConanFile):
     name = "minifi-cpp"
@@ -34,18 +38,24 @@ class MiNiFiCppMain(ConanFile):
         tc.variables["MINIFI_LIBCURL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_OPENSSL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_ZLIB_SOURCE"] = "CONAN"
+        tc.variables["MINIFI_CIVETWEB_SOURCE"] = "CONAN"
+        tc.variables["MINIFI_LIBXML2_SOURCE"] = "CONAN"
+        tc.variables["MINIFI_CATCH2_SOURCE"] = "CONAN"
+        tc.variables["MINIFI_FMT_SOURCE"] = "CONAN"
+        tc.variables["MINIFI_SPDLOG_SOURCE"] = "CONAN"
+
+        tc.variables["SKIP_TESTS"] = "OFF"
+        tc.variables["ENABLE_OPENWSMAN"] = "ON"
+        tc.variables["ENABLE_CIVET"] = "ON"
+        tc.variables["ENABLE_EXPRESSION_LANGUAGE"] = "ON"
+        tc.variables["ENABLE_BZIP2"] = "ON"
+        tc.variables["ENABLE_ROCKSDB"] = "ON"
+        tc.variables["BUILD_ROCKSDB"] = "ON"
 
         tc.variables["ENABLE_LIBARCHIVE"] = "OFF"
         tc.variables["ENABLE_AWS"] = "OFF"
 
         tc.variables["ENABLE_OPC"] = "OFF"
-        tc.variables["ENABLE_OPENWSMAN"] = "OFF"
-        tc.variables["ENABLE_CIVET"] = "OFF"
-        tc.variables["SKIP_TESTS"] = "ON"
-        tc.variables["ENABLE_EXPRESSION_LANGUAGE"] = "OFF"
-        tc.variables["ENABLE_BZIP2"] = "OFF"
-        tc.variables["ENABLE_ROCKSDB"] = "OFF"
-        tc.variables["BUILD_ROCKSDB"] = "OFF"
 
         if self.settings.os == "Windows":
             tc.variables["ENABLE_WEL"] = "OFF"
@@ -90,9 +100,15 @@ class MiNiFiCppMain(ConanFile):
 
     def package(self):
         cmake = CMake(self)
+        include_dir = os.path.join(self.source_folder)
+        built_dir = os.path.join(self.source_folder, self.folders.build)
+        copy(self, pattern="*.h*", dst=os.path.join(self.package_folder, "include"), src=include_dir, keep_path=True)
+        copy(self, pattern="*.a", dst=os.path.join(self.package_folder, "lib"), src=built_dir, keep_path=False)
+        copy(self, pattern="*.so*", dst=os.path.join(self.package_folder, "lib"), src=built_dir, keep_path=False)
         cmake.install()
 
     def package_info(self):
+        self.cpp_info.libs = collect_libs(self, folder=os.path.join(self.package_folder, "lib"))
         self.cpp_info.set_property("cmake_file_name", "minifi-cpp")
         self.cpp_info.set_property("cmake_target_name", "minifi-cpp::minifi-cpp")
         self.cpp_info.set_property("pkg_config_name", "minifi-cpp")

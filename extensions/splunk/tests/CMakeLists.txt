@@ -28,7 +28,7 @@ FOREACH(testfile ${SPLUNK_TESTS})
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/civetweb/")
 
     createTests("${testfilename}")
-    target_link_libraries(${testfilename} Catch2WithMain)
+    target_link_libraries(${testfilename} Catch2::Catch2WithMain)
     target_link_libraries(${testfilename} minifi-splunk)
     target_link_libraries(${testfilename} minifi-civet-extensions)
     target_link_libraries(${testfilename} minifi-standard-processors)
