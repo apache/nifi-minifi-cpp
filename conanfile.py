@@ -103,6 +103,7 @@ class MiNiFiCppMain(ConanFile):
         include_dir = os.path.join(self.source_folder)
         built_dir = os.path.join(self.source_folder, self.folders.build)
         copy(self, pattern="*.h*", dst=os.path.join(self.package_folder, "include"), src=include_dir, keep_path=True)
+        copy(self, pattern="*.i*", dst=os.path.join(self.package_folder, "include"), src=include_dir, keep_path=True)
         copy(self, pattern="*.a", dst=os.path.join(self.package_folder, "lib"), src=built_dir, keep_path=False)
         copy(self, pattern="*.so*", dst=os.path.join(self.package_folder, "lib"), src=built_dir, keep_path=False)
         cmake.install()
