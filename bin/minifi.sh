@@ -17,6 +17,8 @@
 
 # Script structure inspired from Apache Karaf and other Apache projects with similar startup approaches
 
+set -e
+
 PROGNAME=$(basename "$0")
 SCRIPTPATH="$( cd "$(dirname "$0")" || exit 1; pwd -P )"
 MINIFI_HOME="$(dirname "${SCRIPTPATH}")"
@@ -36,24 +38,15 @@ die() {
 detectOS() {
     # OS specific support (must be 'true' or 'false').
     cygwin=false;
-    aix=false;
     darwin=false;
     case "$(uname)" in
         CYGWIN*)
             cygwin=true
             ;;
-        AIX*)
-            aix=true
-            ;;
         Darwin)
             darwin=true
             ;;
     esac
-    # For AIX, set an environment variable
-    if ${aix}; then
-         export LDR_CNTRL=MAXDATA=0xB0000000@DSA
-         echo ${LDR_CNTRL}
-    fi
 
     if [ "${cygwin}" = "true" ]; then
        echo 'Apache MiNiFi as a service is not supported on Cygwin.'
@@ -113,6 +106,10 @@ check_service_installed_linux() {
 }
 
 install() {
+    if [ "$(id -u)" -ne 0 ]; then
+        die "This script must be run as root to install or uninstall the MiNiFi service. Try 'sudo $0 $*'."
+    fi
+
     echo "Uninstalling any previous versions"
     uninstall
 
@@ -125,6 +122,10 @@ install() {
 }
 
 uninstall() {
+    if [ "$(id -u)" -ne 0 ]; then
+        die "This script must be run as root to install or uninstall the MiNiFi service. Try 'sudo $0 $*'."
+    fi
+
     detectOS
     if [ "${darwin}" = "true"  ]; then
       uninstall_macos
