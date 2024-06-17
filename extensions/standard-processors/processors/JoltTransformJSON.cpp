@@ -63,7 +63,7 @@ void JoltTransformJSON::onTrigger(core::ProcessContext& context, core::ProcessSe
     session.writeBuffer(flowfile, std::span<const char>(buffer.GetString(), buffer.GetSize()));
     session.transfer(flowfile, Success);
   } else {
-    logger_->log_info("Failed to apply transformation: %s", result.error());
+    logger_->log_info("Failed to apply transformation: {}", result.error());
     session.transfer(flowfile, Failure);
   }
 }

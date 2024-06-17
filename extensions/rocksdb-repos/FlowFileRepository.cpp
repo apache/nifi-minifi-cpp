@@ -158,7 +158,7 @@ void FlowFileRepository::initialize_repository() {
     }
     const auto container = getContainer(container_id.to_string());
     if (!container) {
-      logger_->log_warn("Could not find connection for %s, path %s ", container_id.to_string(), eventRead->getContentFullPath());
+      logger_->log_warn("Could not find connection for {}, path {}", container_id.to_string(), eventRead->getContentFullPath());
       keys_to_delete_.enqueue({.key = key, .content = eventRead->getResourceClaim()});
       continue;
     }
@@ -168,7 +168,7 @@ void FlowFileRepository::initialize_repository() {
       continue;
     }
 
-    logger_->log_debug("Found connection for %s, path %s ", container_id.to_string(), eventRead->getContentFullPath());
+    logger_->log_debug("Found connection for {}, path {}", container_id.to_string(), eventRead->getContentFullPath());
     eventRead->setStoredToRepository(true);
     // we found the connection for the persistent flowFile
     // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
