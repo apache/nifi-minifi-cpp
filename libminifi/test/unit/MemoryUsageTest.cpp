@@ -22,6 +22,7 @@
 
 #include <cstring>
 
+#include "utils/crypto/EncryptionUtils.h"
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
 #include "unit/TestBase.h"
@@ -29,21 +30,20 @@
 
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   constexpr bool cout_enabled = true;
-  std::vector<char> v(30000000);
-  // use v to prevent recent compilers from optimizing out the allocation
-  strcpy(v.data(), " bytes\n");  // NOLINT: "almost always, snprintf is better than strcpy", but formatting is unnecessary here
+  const auto large_random_vector = minifi::utils::crypto::randomBytes(30'000'000);
+
   const auto ram_usage_by_process = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
   const auto ram_usage_by_system = utils::OsUtils::getSystemPhysicalMemoryUsage();
   const auto ram_total = utils::OsUtils::getSystemTotalPhysicalMemory();
 
   if (cout_enabled) {
-    std::cout << "Physical Memory used by this process: " << ram_usage_by_process << v.data();
-    std::cout << "Physical Memory used by the system: " << ram_usage_by_system << v.data();
-    std::cout << "Total Physical Memory in the system: " << ram_total << v.data();
+    std::cout << "Physical Memory used by this process: " << ram_usage_by_process << " bytes\n";
+    std::cout << "Physical Memory used by the system: " << ram_usage_by_system << " bytes\n";
+    std::cout << "Total Physical Memory in the system: " << ram_total << " bytes\n";
   }
-  REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(v.size()));
+  REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(large_random_vector.size()));
   // In the worst case scenario, building with coverage flags, the ram usage still should be under 4 times the vector's size
-  REQUIRE(gsl::narrow<int64_t>(v.size()*4) >= ram_usage_by_process);
+  REQUIRE(gsl::narrow<int64_t>(large_random_vector.size() * 4) >= ram_usage_by_process);
   REQUIRE(ram_usage_by_system >= ram_usage_by_process);
   REQUIRE(ram_total >= ram_usage_by_system);
 }
