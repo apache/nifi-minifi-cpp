@@ -17,6 +17,8 @@
 
 # Script structure inspired from Apache Karaf and other Apache projects with similar startup approaches
 
+set -e
+
 PROGNAME=$(basename "$0")
 SCRIPTPATH="$( cd "$(dirname "$0")" || exit 1; pwd -P )"
 MINIFI_HOME="$(dirname "${SCRIPTPATH}")"
@@ -49,11 +51,6 @@ detectOS() {
             darwin=true
             ;;
     esac
-    # For AIX, set an environment variable
-    if ${aix}; then
-         export LDR_CNTRL=MAXDATA=0xB0000000@DSA
-         echo ${LDR_CNTRL}
-    fi
 
     if [ "${cygwin}" = "true" ]; then
        echo 'Apache MiNiFi as a service is not supported on Cygwin.'
