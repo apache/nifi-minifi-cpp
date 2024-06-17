@@ -30,6 +30,16 @@
 
 namespace org::apache::nifi::minifi::processors::test {
 
+TEST_CASE("Lua: hello world") {
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+  minifi::test::SingleProcessorTestController controller{execute_script};
+
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody, R"(print("Hello world!"))");
+
+  CHECK_NOTHROW(controller.trigger());
+}
+
 TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
   TestController test_controller;
   auto plan = test_controller.createPlan();

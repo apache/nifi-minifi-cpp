@@ -52,8 +52,9 @@ class LuaScriptEngine {
   void call(const std::string& fn_name, Args&& ...args) {
     sol::protected_function_result function_result{};
     try {
-      sol::protected_function fn = lua_[fn_name.c_str()];
-      function_result = fn(convert(args)...);
+      if (sol::protected_function fn = lua_[fn_name.c_str()]) {
+        function_result = fn(convert(args)...);
+      }
     } catch (const std::exception& e) {
       throw LuaScriptException(e.what());
     }
