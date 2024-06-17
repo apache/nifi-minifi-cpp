@@ -37,8 +37,13 @@
 #include "SchedulingAgent.h"
 #include "core/ProcessGroup.h"
 #include "unit/SingleProcessorTestController.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
+
+struct ListenHTTPTestAccessor {
+  METHOD_ACCESSOR(pendingRequestCount)
+};
 
 using namespace std::literals::chrono_literals;
 using HttpRequestMethod = org::apache::nifi::minifi::http::HttpRequestMethod;
@@ -105,6 +110,7 @@ class ListenHTTPTestsFixture {
 
     // Configure ListenHTTP processor
     plan->setProperty(listen_http, minifi::processors::ListenHTTP::Port, "0");
+    listen_http->setMaxConcurrentTasks(10);
 
     plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
   }
@@ -149,41 +155,25 @@ class ListenHTTPTestsFixture {
     url = protocol + "://localhost:" + portstr + "/contentListener/" + endpoint;
   }
 
-  void initialize_client() {
-    if (client != nullptr) {
-      return;
-    }
-
-    client = std::make_unique<minifi::http::HTTPClient>();
-    client->initialize(method, url, ssl_context_service);
-    client->setVerbose(false);
-    for (const auto &header : headers) {
-      client->setRequestHeader(header.first, header.second);
-    }
-    if (method == HttpRequestMethod::POST) {
-      client->setPostFields(payload);
-    }
-  }
-
-  void check_content_type() {
+  void check_content_type(minifi::http::HTTPClient& client) {
     if (endpoint == "test") {
       std::string content_type;
       if (!update_attribute->getDynamicProperty("mime.type", content_type)) {
         content_type = "application/octet-stream";
       }
-      REQUIRE(content_type == minifi::utils::string::trim(client->getResponseHeaderMap().at("Content-type")));
-      REQUIRE("19" == minifi::utils::string::trim(client->getResponseHeaderMap().at("Content-length")));
+      REQUIRE(content_type == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-type")));
+      REQUIRE("19" == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-length")));
     } else {
-      REQUIRE("0" == minifi::utils::string::trim(client->getResponseHeaderMap().at("Content-length")));
+      REQUIRE("0" == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-length")));
     }
   }
 
-  void check_response_body() {
-    if (method != HttpRequestMethod::GET && method != HttpRequestMethod::POST) {
+  void check_response_body(minifi::http::HTTPClient& client) {
+    if (client.getMethod() != HttpRequestMethod::GET && client.getMethod() != HttpRequestMethod::POST) {
       return;
     }
 
-    const auto &body_chars = client->getResponseBody();
+    const auto &body_chars = client.getResponseBody();
     std::string response_body(body_chars.data(), body_chars.size());
     if (endpoint == "test") {
       REQUIRE("Hello response body" == response_body);
@@ -192,36 +182,72 @@ class ListenHTTPTestsFixture {
     }
   }
 
-  void check_response(const bool success, const HttpResponseExpectations& expect) {
+  void check_response(const bool success, const HttpResponseExpectations& expect, minifi::http::HTTPClient& client) {
     if (!expect.should_succeed) {
       REQUIRE(!success);
-      REQUIRE(expect.response_code == client->getResponseCode());
+      REQUIRE(expect.response_code == client.getResponseCode());
       return;
     }
 
     REQUIRE(success);
-    REQUIRE(expect.response_code == client->getResponseCode());
+    REQUIRE(expect.response_code == client.getResponseCode());
     if (expect.response_code != 200) {
       return;
     }
 
-    check_content_type();
-    check_response_body();
+    check_content_type(client);
+    check_response_body(client);
   }
 
-  void test_connect(const std::vector<HttpResponseExpectations>& response_expectaitons = {HttpResponseExpectations{}}, std::size_t expected_commited_requests = 1) {
-    initialize_client();
+  void test_connect(const std::vector<HttpResponseExpectations>& response_expectations = {HttpResponseExpectations{}}, std::size_t expected_commited_requests = 1, std::unique_ptr<minifi::http::HTTPClient> client_to_use = {}) {
+    if (client_to_use) {
+      REQUIRE(response_expectations.size() == 1);
+    }
+    auto* proc = dynamic_cast<minifi::processors::ListenHTTP*>(plan->getCurrentContext()->getProcessorNode()->getProcessor());
+    REQUIRE(proc);
 
-    for (const auto& expect : response_expectaitons) {
-      check_response(client->submit(), expect);
+    std::vector<std::thread> client_threads;
+
+    for (auto& expect : response_expectations) {
+      size_t prev_req_count = ListenHTTPTestAccessor::call_pendingRequestCount(*proc);
+      auto thread_done_flag = std::make_shared<std::atomic_bool>(false);
+      client_threads.emplace_back([&, thread_done_flag] {
+        auto client = client_to_use ? std::move(client_to_use) : initialize_client();
+        std::cout << "Submitting request" << std::endl;
+        check_response(client->submit(), expect, *client);
+        thread_done_flag->store(true);
+      });
+      while (!thread_done_flag->load() && ListenHTTPTestAccessor::call_pendingRequestCount(*proc) != prev_req_count + 1) {
+        std::this_thread::sleep_for(1ms);
+      }
     }
 
     plan->runCurrentProcessor();  // ListenHTTP
     plan->runNextProcessor();  // LogAttribute
+    // shutdown processors so pending requests are correctly discarded
+    plan.reset();
+
+    for (auto& thread : client_threads) {
+      thread.join();
+    }
+
     if (expected_commited_requests > 0 && (method == HttpRequestMethod::GET || method == HttpRequestMethod::POST)) {
       REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(payload.size()) + " Offset:0"));
     }
     REQUIRE(LogTestController::getInstance().contains("Logged " + std::to_string(expected_commited_requests) + " flow files"));
+  }
+
+  std::unique_ptr<minifi::http::HTTPClient> initialize_client() {
+    auto client = std::make_unique<minifi::http::HTTPClient>();
+    client->initialize(method, url, ssl_context_service);
+    client->setVerbose(false);
+    for (const auto &header : headers) {
+      client->setRequestHeader(header.first, header.second);
+    }
+    if (method == HttpRequestMethod::POST) {
+      client->setPostFields(payload);
+    }
+    return client;
   }
 
  protected:
@@ -239,7 +265,6 @@ class ListenHTTPTestsFixture {
   std::string payload;
   std::string endpoint = "test";
   std::string url;
-  std::unique_ptr<minifi::http::HTTPClient> client;
   std::size_t batch_size_ = 0;
   std::size_t buffer_size_ = 0;
 };
@@ -398,7 +423,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
 
   SECTION("Batch size smaller than request count") {
     batch_size_ = 4;
-    create_requests(5, 0);
+    create_requests(4, 1);
     expected_processed_request_count = 4;
 
     SECTION("GET") {
@@ -659,7 +684,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
 
   run_server();
 
-  client = std::make_unique<minifi::http::HTTPClient>();
+  auto client = std::make_unique<minifi::http::HTTPClient>();
   client->setVerbose(false);
   client->initialize(method, url, ssl_context_service);
   if (method == HttpRequestMethod::POST) {
@@ -667,7 +692,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
   }
   REQUIRE(client->setSpecificSSLVersion(minifi::http::SSLVersion::TLSv1_1));
 
-  test_connect({HttpResponseExpectations{false, 0}}, 0);
+  test_connect({HttpResponseExpectations{false, 0}}, 0, std::move(client));
 }
 
 TEST_CASE("ListenHTTP bored yield", "[listenhttp][bored][yield]") {
