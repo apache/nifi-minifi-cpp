@@ -39,14 +39,22 @@
 #include "utils/gsl.h"
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
+#include "core/FlowFileStore.h"
+
+namespace org::apache::nifi::minifi::test {
+struct ListenHTTPTestAccessor;
+}  // namespace org::apache::nifi::minifi::test
 
 namespace org::apache::nifi::minifi::processors {
 
 class ListenHTTP : public core::Processor {
  private:
-  static constexpr std::string_view DEFAULT_BUFFER_SIZE_STR = "20000";
+  static constexpr std::string_view DEFAULT_BUFFER_SIZE_STR = "5";
+  static const core::Relationship Self;
 
  public:
+  friend struct ::org::apache::nifi::minifi::test::ListenHTTPTestAccessor;
+
   using FlowFileBufferPair = std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
 
   explicit ListenHTTP(std::string_view name, const utils::Identifier& uuid = {})
@@ -141,18 +149,33 @@ class ListenHTTP : public core::Processor {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   std::string getPort() const;
   bool isSecure() const;
+  void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
+
+  bool isWorkAvailable() override {
+    return handler_ ? !handler_->empty() : false;
+  }
+
+  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
 
   struct ResponseBody {
     std::string uri;
     std::string mime_type;
-    std::vector<std::byte> body;
+    std::shared_ptr<core::FlowFile> flow_file;
   };
 
   // HTTP request handler
   class Handler : public CivetHandler {
    public:
+    enum class FailureReason {
+      PROCESSOR_SHUTDOWN
+    };
+    using RequestValue = std::pair<std::reference_wrapper<core::ProcessSession>, std::promise<void>>;
+    using FailureValue = std::pair<FailureReason, std::promise<void>>;
+    using Request = std::promise<nonstd::expected<RequestValue, FailureValue>>;
+
     Handler(std::string base_uri,
-            core::ProcessContext *context,
+            std::optional<std::string> flow_id,
+            uint64_t buffer_size,
             std::string &&auth_dn_regex,
             std::optional<utils::Regex> &&headers_as_attrs_regex);
     bool handlePost(CivetServer *server, struct mg_connection *conn) override;
@@ -165,28 +188,66 @@ class ListenHTTP : public core::Processor {
      * Sets a static response body string to be used for a given URI, with a number of seconds it will be kept in memory.
      * @param response
      */
-    void setResponseBody(const ResponseBody& response);
+    bool setResponseBody(const ResponseBody& response);
 
-    bool dequeueRequest(FlowFileBufferPair &flow_file_buffer_pair);
+    bool dequeueRequest(Request& req);
+
+    size_t requestCount() const {
+      return request_buffer_.size();
+    }
+
+    bool empty() const {
+      return request_buffer_.empty();
+    }
+
+    void stop() {
+      request_buffer_.stop();
+      Request req;
+      while (dequeueRequest(req)) {
+        std::promise<void> req_done_promise;
+        auto req_done = req_done_promise.get_future();
+        req.set_value(nonstd::make_unexpected(FailureValue{Handler::FailureReason::PROCESSOR_SHUTDOWN, std::move(req_done_promise)}));
+        req_done.wait();
+      }
+    }
 
    private:
     static void sendHttp500(struct mg_connection *conn);
     static void sendHttp503(struct mg_connection *conn);
     bool authRequest(mg_connection *conn, const mg_request_info *req_info) const;
     void setHeaderAttributes(const mg_request_info *req_info, core::FlowFile& flow_file) const;
-    void writeBody(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
-    static std::unique_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
-    void enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream>);
+    void writeBody(core::ProcessSession* payload_reader, mg_connection *conn, const mg_request_info *req_info);
+    void enqueueRequest(mg_connection *conn, const mg_request_info *req_info, bool write_body);
+
+    class RequestBuffer : public utils::ConcurrentQueue<Request> {
+     public:
+      void stop() {
+        std::lock_guard lock{mtx_};
+        running_ = false;
+      }
+
+     protected:
+      void enqueueImpl(Request req) override {
+        if (!running_) {
+          req.set_value(nonstd::make_unexpected(FailureValue{FailureReason::PROCESSOR_SHUTDOWN, std::promise<void>{}}));
+        } else {
+          utils::ConcurrentQueue<Request>::enqueueImpl(std::move(req));
+        }
+      }
+
+     private:
+      bool running_{true};
+    };
 
     std::string base_uri_;
+    std::optional<std::string> flow_id_;
     utils::Regex auth_dn_regex_;
     std::optional<utils::Regex> headers_as_attrs_regex_;
-    core::ProcessContext *process_context_;
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger();
     std::map<std::string, ResponseBody> response_uri_map_;
     std::mutex uri_map_mutex_;
-    uint64_t buffer_size_ = 0;
-    utils::ConcurrentQueue<FlowFileBufferPair> request_buffer_;
+    uint64_t buffer_size_{0};
+    RequestBuffer request_buffer_;
   };
 
   static int logMessage(const struct mg_connection *conn, const char *message) {
@@ -230,7 +291,11 @@ class ListenHTTP : public core::Processor {
 
  private:
   bool processIncomingFlowFile(core::ProcessSession &session);
+  bool processFlowFile(std::shared_ptr<core::FlowFile> flow_file);
   bool processRequestBuffer(core::ProcessSession &session);
+  size_t pendingRequestCount() {
+    return handler_ ? handler_->requestCount() : 0;
+  }
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger(uuid_);
   CivetCallbacks callbacks_;
@@ -238,6 +303,7 @@ class ListenHTTP : public core::Processor {
   std::unique_ptr<Handler> handler_;
   std::string listeningPort;
   uint64_t batch_size_{0};
+  core::FlowFileStore file_store_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

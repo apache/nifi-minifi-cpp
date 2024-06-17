@@ -146,6 +146,10 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
     return response_data_.header_response.getHeaderMap();
   }
 
+  std::optional<http::HttpRequestMethod> getMethod() const {
+    return method_;
+  }
+
   void setInterface(const std::string &);
 
   void setFollowRedirects(bool follow);
