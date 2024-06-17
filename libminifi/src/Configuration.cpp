@@ -53,6 +53,7 @@ const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyVal
   {Configuration::nifi_dbcontent_repository_directory_default, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::nifi_flowfile_repository_rocksdb_compaction_period, gsl::make_not_null(&core::StandardPropertyTypes::TIME_PERIOD_TYPE)},
   {Configuration::nifi_dbcontent_repository_rocksdb_compaction_period, gsl::make_not_null(&core::StandardPropertyTypes::TIME_PERIOD_TYPE)},
+  {Configuration::nifi_content_repository_rocksdb_use_synchronous_writes, gsl::make_not_null(&core::StandardPropertyTypes::BOOLEAN_TYPE)},
   {Configuration::nifi_dbcontent_repository_purge_period, gsl::make_not_null(&core::StandardPropertyTypes::TIME_PERIOD_TYPE)},
   {Configuration::nifi_remote_input_secure, gsl::make_not_null(&core::StandardPropertyTypes::BOOLEAN_TYPE)},
   {Configuration::nifi_security_need_ClientAuth, gsl::make_not_null(&core::StandardPropertyTypes::BOOLEAN_TYPE)},

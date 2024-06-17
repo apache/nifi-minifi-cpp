@@ -44,7 +44,8 @@ class RocksDbStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable = false, minifi::internal::WriteBatch* batch = nullptr);
+  explicit RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable = false,
+    minifi::internal::WriteBatch* batch = nullptr, bool use_synchronous_writes = true);
 
   ~RocksDbStream() override {
     close();
@@ -89,6 +90,7 @@ class RocksDbStream : public io::BaseStream {
   size_t offset_;
   minifi::internal::WriteBatch* batch_;
   size_t size_;
+  bool use_synchronous_writes_;
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbStream>::getLogger();

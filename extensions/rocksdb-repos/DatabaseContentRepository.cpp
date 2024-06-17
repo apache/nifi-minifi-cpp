@@ -80,6 +80,8 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
     logger_->log_error("NiFi Content DB Repository database open {} fail", directory_);
     is_valid_ = false;
   }
+
+  use_synchronous_writes_ = configuration->get(Configure::nifi_content_repository_rocksdb_use_synchronous_writes).value_or("true") != "false";
   return is_valid_;
 }
 
@@ -137,10 +139,12 @@ void DatabaseContentRepository::stop() {
   }
 }
 
-DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository) : BufferedContentSession(std::move(repository)) {}
+DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository, bool use_synchronous_writes)
+    : BufferedContentSession(std::move(repository)),
+      use_synchronous_writes_(use_synchronous_writes) {}
 
 std::shared_ptr<ContentSession> DatabaseContentRepository::createSession() {
-  return std::make_shared<Session>(sharedFromThis());
+  return std::make_shared<Session>(sharedFromThis(), use_synchronous_writes_);
 }
 
 void DatabaseContentRepository::Session::commit() {
@@ -172,7 +176,7 @@ void DatabaseContentRepository::Session::commit() {
   }
 
   rocksdb::WriteOptions options;
-  options.sync = true;
+  options.sync = use_synchronous_writes_;
   rocksdb::Status status = opendb->Write(options, &batch);
   if (!status.ok()) {
     throw Exception(REPOSITORY_EXCEPTION, "Batch write failed: " + status.ToString());

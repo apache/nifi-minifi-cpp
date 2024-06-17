@@ -36,9 +36,11 @@ namespace org::apache::nifi::minifi::core::repository {
 class DatabaseContentRepository : public core::ContentRepository {
   class Session : public BufferedContentSession {
    public:
-    explicit Session(std::shared_ptr<ContentRepository> repository);
+    explicit Session(std::shared_ptr<ContentRepository> repository, bool use_synchronous_writes);
 
     void commit() override;
+   private:
+    bool use_synchronous_writes_;
   };
 
   static constexpr std::chrono::milliseconds DEFAULT_COMPACTION_PERIOD = std::chrono::minutes{2};
@@ -103,6 +105,7 @@ class DatabaseContentRepository : public core::ContentRepository {
   std::mutex keys_mtx_;
   std::vector<std::string> keys_to_delete_;
   std::unique_ptr<utils::StoppableThread> gc_thread_;
+  bool use_synchronous_writes_ = true;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

@@ -28,7 +28,7 @@
 
 namespace org::apache::nifi::minifi::io {
 
-RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable, minifi::internal::WriteBatch* batch)
+RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable, minifi::internal::WriteBatch* batch, bool use_synchronous_writes)
     : BaseStream(),
       path_(std::move(path)),
       write_enable_(write_enable),
@@ -39,7 +39,8 @@ RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::R
       }()),
       offset_(0),
       batch_(batch),
-      size_(value_.size()) {
+      size_(value_.size()),
+      use_synchronous_writes_(use_synchronous_writes) {
 }
 
 void RocksDbStream::close() {
@@ -67,7 +68,7 @@ size_t RocksDbStream::write(const uint8_t *value, size_t size) {
     status = batch_->Merge(path_, slice_value);
   } else {
     rocksdb::WriteOptions opts;
-    opts.sync = true;
+    opts.sync = use_synchronous_writes_;
     status = opendb->Merge(opts, path_, slice_value);
   }
   if (status.ok()) {
