@@ -18,20 +18,26 @@
 include(FetchContent)
 
 FetchContent_Declare(lua
-    URL         "https://www.lua.org/ftp/lua-5.4.6.tar.gz"
-    URL_HASH    "SHA256=7d5ea1b9cb6aa0b59ca3dde1c6adcb57ef83a1ba8e5432c0ecd06bf439b3ad88"
+    URL         "https://github.com/lua/lua/archive/refs/tags/v5.4.6.tar.gz"
+    URL_HASH    "SHA256=11c228cf9b9564d880b394f8069ad829d01e39756567f79c347a6b89fed44771"
 )
 
 FetchContent_GetProperties(lua)
 if(NOT lua_POPULATED)
     FetchContent_Populate(lua)
+    # lua.org tarball:
+    #set(lua_tarball_src_path "src/")
+    # github.com tarball:
+    set(lua_tarball_src_path "")
 
-    file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/src/*.c")
+    file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/${lua_tarball_src_path}*.c")
+    # the github tarball contains onelua.c, which is a concatenated version of all source files, we don't need it
+    list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/${lua_tarball_src_path}onelua.c")
     add_library(lua STATIC ${LUA_SOURCES})
 
     file(MAKE_DIRECTORY "${lua_BINARY_DIR}/include")
-    foreach(HEADER lua.h luaconf.h lualib.h lauxlib.h lua.hpp)
-        file(COPY "${lua_SOURCE_DIR}/src/${HEADER}" DESTINATION "${lua_BINARY_DIR}/include")
+    foreach(HEADER lua.h luaconf.h lualib.h lauxlib.h)
+        file(COPY "${lua_SOURCE_DIR}/${lua_tarball_src_path}${HEADER}" DESTINATION "${lua_BINARY_DIR}/include")
     endforeach()
     set(LUA_INCLUDE_DIR "${lua_BINARY_DIR}/include" CACHE STRING "" FORCE)
 endif()
