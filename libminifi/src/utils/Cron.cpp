@@ -144,8 +144,8 @@ weekday parse<weekday>(const std::string& weekday_str) {
   } else {
     unsigned weekday_num = 0;
     stream >> weekday_num;
-    if (!stream.fail() && weekday_num < 8 && weekday_num > 0 && stream.peek() == EOF)
-      return weekday(weekday_num-1);
+    if (!stream.fail() && weekday_num < 8 && stream.peek() == EOF)
+      return weekday(weekday_num);
   }
   throw BadCronExpression("Invalid weekday: " + weekday_str);
 }
