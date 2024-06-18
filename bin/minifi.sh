@@ -110,6 +110,10 @@ check_service_installed_linux() {
 }
 
 install() {
+    if [ "$(id -u)" -ne 0 ]; then
+        die "This script must be run as root to install or uninstall the MiNiFi service. Try 'sudo $0 $*'."
+    fi
+
     echo "Uninstalling any previous versions"
     uninstall
 
@@ -122,6 +126,10 @@ install() {
 }
 
 uninstall() {
+    if [ "$(id -u)" -ne 0 ]; then
+        die "This script must be run as root to install or uninstall the MiNiFi service. Try 'sudo $0 $*'."
+    fi
+
     detectOS
     if [ "${darwin}" = "true"  ]; then
       uninstall_macos
