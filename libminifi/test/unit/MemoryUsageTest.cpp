@@ -21,8 +21,8 @@
 #define EXTENSION_LIST ""  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include <cstring>
+#include <random>
 
-#include "utils/crypto/EncryptionUtils.h"
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
 #include "unit/TestBase.h"
@@ -30,17 +30,24 @@
 
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   constexpr bool cout_enabled = true;
-  const auto large_random_vector = minifi::utils::crypto::randomBytes(30'000'000);
+
+  // make sure the compiler is not able to optimize out the vector
+  std::mt19937 gen(std::random_device{}());
+  std::uniform_int_distribution dist(0, 255);
+  std::vector<uint8_t> large_random_vector(30'000'000);
+  std::generate(begin(large_random_vector), end(large_random_vector), [&]() { return dist(gen); });
 
   const auto ram_usage_by_process = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
   const auto ram_usage_by_system = utils::OsUtils::getSystemPhysicalMemoryUsage();
   const auto ram_total = utils::OsUtils::getSystemTotalPhysicalMemory();
-
   if (cout_enabled) {
     std::cout << "Physical Memory used by this process: " << ram_usage_by_process << " bytes\n";
     std::cout << "Physical Memory used by the system: " << ram_usage_by_system << " bytes\n";
     std::cout << "Total Physical Memory in the system: " << ram_total << " bytes\n";
   }
+
+  std::cout << "\nsum of the random numbers: " << std::accumulate(begin(large_random_vector), end(large_random_vector), uint32_t{}) << "\n";
+
   REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(large_random_vector.size()));
   // In the worst case scenario, building with coverage flags, the ram usage still should be under 4 times the vector's size
   REQUIRE(gsl::narrow<int64_t>(large_random_vector.size() * 4) >= ram_usage_by_process);
