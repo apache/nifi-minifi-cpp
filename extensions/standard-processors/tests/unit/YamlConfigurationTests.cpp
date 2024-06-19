@@ -1314,7 +1314,7 @@ Parameter Context Name: my-context
 NiFi Properties Overrides: {}
       )";
 
-  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Sensitive property 'Sensitive Property' cannot reference non-sensitive parameters");
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Non-sensitive parameter 'my_value' cannot be referenced in a sensitive property");
 }
 
 TEST_CASE("Cannot use non-sensitive parameter in sensitive property value sequence", "[YamlConfiguration]") {
@@ -1357,7 +1357,7 @@ Parameter Context Name: my-context
 NiFi Properties Overrides: {}
       )";
 
-  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Sensitive property 'Sensitive Property' cannot reference non-sensitive parameters");
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Non-sensitive parameter 'my_value' cannot be referenced in a sensitive property");
 }
 
 TEST_CASE("Parameters can be used in nested process groups", "[YamlConfiguration]") {
@@ -1524,7 +1524,7 @@ Processors:
     Simple Property: "#{my_value}"
       )";
 
-  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Property 'Simple Property' references a parameter in its value, but no parameter context was provided in the process group.");
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Property references a parameter in its value, but no parameter context was provided.");
 }
 
 TEST_CASE("Cannot use parameters in property value sequences if no parameter context is defined", "[YamlConfiguration]") {
@@ -1550,7 +1550,7 @@ Processors:
     - value: "#{second_value}"
       )";
 
-  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Property 'Simple Property' references a parameter in its value, but no parameter context was provided in the process group.");
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Property references a parameter in its value, but no parameter context was provided.");
 }
 
 TEST_CASE("Property value sequences can use parameters", "[YamlConfiguration]") {

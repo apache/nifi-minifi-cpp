@@ -673,15 +673,13 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
       if (myProp.isSensitive()) {
         rawValueString = utils::crypto::property_encryption::decrypt(rawValueString, sensitive_properties_encryptor_);
       }
-      core::ParameterTokenParser token_parser(rawValueString);
-      if (!token_parser.getTokens().empty()) {
-        if (myProp.isSensitive()) {
-          throw ParameterException("Sensitive property '" + property_name + "' cannot reference non-sensitive parameters");
-        }
-        if (!parameter_context) {
-          throw ParameterException("Property '" + property_name + "' references a parameter in its value, but no parameter context was provided in the process group.");
-        }
-        rawValueString = token_parser.replaceParameters(*parameter_context);
+
+      try {
+        core::ParameterTokenParser token_parser(rawValueString);
+        rawValueString = token_parser.replaceParameters(parameter_context, myProp.isSensitive());
+      } catch (const ParameterException& e) {
+        logger_->log_error("Error while substituting parameters in property '{}': {}", property_name, e.what());
+        throw;
       }
 
       logger_->log_debug("Found property {}", property_name);
@@ -720,23 +718,15 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
       coercedValue = gsl::narrow<int>(int64_val.value());
     } else if (defaultType == Value::BOOL_TYPE && property_value_node.getBool()) {
       coercedValue = property_value_node.getBool().value();
-    } else if (property_from_processor.isSensitive()) {
-      auto property_value_string = utils::crypto::property_encryption::decrypt(property_value_node.getScalarAsString().value(), sensitive_properties_encryptor_);
-      core::ParameterTokenParser token_parser(property_value_string);
-      if (!token_parser.getTokens().empty()) {
-        throw ParameterException("Sensitive property '" + property_from_processor.getName() + "' cannot reference non-sensitive parameters");
-      }
-      coercedValue = property_value_string;
     } else {
-      auto property_value_string = property_value_node.getScalarAsString().value();
-
-      core::ParameterTokenParser token_parser(property_value_string);
-      if (!token_parser.getTokens().empty()) {
-        if (!parameter_context) {
-          throw ParameterException("Property '" + property_from_processor.getName() + "' references a parameter in its value, but no parameter context was provided in the process group.");
-        }
-        property_value_string = token_parser.replaceParameters(*parameter_context);
+      std::string property_value_string;
+      if (property_from_processor.isSensitive()) {
+        property_value_string = utils::crypto::property_encryption::decrypt(property_value_node.getScalarAsString().value(), sensitive_properties_encryptor_);
+      } else {
+        property_value_string = property_value_node.getScalarAsString().value();
       }
+      core::ParameterTokenParser token_parser(property_value_string);
+      property_value_string = token_parser.replaceParameters(parameter_context, property_from_processor.isSensitive());
       coercedValue = property_value_string;
     }
     return coercedValue;
@@ -744,7 +734,7 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
     logger_->log_error("Fetching property failed with a decryption error: {}", e.what());
     throw;
   } catch (const ParameterException& e) {
-    logger_->log_error("{}", e.what());
+    logger_->log_error("Error while substituting parameters in property '{}': {}", property_from_processor.getName(), e.what());
     throw;
   } catch (const std::exception& e) {
     logger_->log_error("Fetching property failed with an exception of {}", e.what());
