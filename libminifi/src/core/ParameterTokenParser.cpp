@@ -26,53 +26,76 @@ void ParameterTokenParser::parse() {
   minifi::utils::Regex expr("[-a-zA-Z0-9_\\. ]+");
   ParseState state = ParseState::OutsideToken;
   uint32_t token_start = 0;
+  uint32_t hashmark_length = 0;
   for (uint32_t i = 0; i < input_.size(); ++i) {
     if (input_[i] == '#') {
       if (state == ParseState::OutsideToken) {
         state = ParseState::InHashMark;
-      } else if (state == ParseState::InHashMark) {
-        state = ParseState::OutsideToken;
+      }
+      if (state != ParseState::InToken) {
+        ++hashmark_length;
       }
     } else if (input_[i] == '{') {
       if (state == ParseState::InHashMark) {
-        token_start = i - 1;
+        token_start = i - hashmark_length;
         state = ParseState::InToken;
       }
     } else if (input_[i] == '}') {
       if (state == ParseState::InToken) {
         state = ParseState::OutsideToken;
-        auto token_name = input_.substr(token_start + 2, i - token_start - 2);
-        if (token_name.empty() || !minifi::utils::regexMatch(token_name, expr)) {
-          throw ParameterException("Invalid token name: '" + token_name + "'. "
-            "Only alpha-numeric characters (a-z, A-Z, 0-9), hyphens ( - ), underscores ( _ ), periods ( . ), and spaces are allowed in token name.");
+        gsl_Assert(hashmark_length > 0);
+        if (hashmark_length % 2 == 0) {
+          tokens_.push_back(std::make_unique<EscapedToken>(token_start, i - token_start + 1, input_.substr(token_start + (hashmark_length / 2), i - token_start + 1 - (hashmark_length / 2))));
+        } else {
+          auto token_name = input_.substr(token_start + hashmark_length + 1, i - token_start - hashmark_length - 1);
+          if (token_name.empty() || !minifi::utils::regexMatch(token_name, expr)) {
+            throw ParameterException("Invalid token name: '" + token_name + "'. "
+              "Only alpha-numeric characters (a-z, A-Z, 0-9), hyphens ( - ), underscores ( _ ), periods ( . ), and spaces are allowed in token name.");
+          }
+          tokens_.push_back(std::make_unique<ReplaceableToken>(token_name, (hashmark_length - 1) / 2, token_start, i - token_start + 1));
+          token_start = 0;
         }
-        tokens_.push_back(ParameterToken{token_name, token_start, i - token_start + 1});
-        token_start = 0;
       } else {
         state = ParseState::OutsideToken;
       }
+      hashmark_length = 0;
     } else {
       if (state != ParseState::InToken) {
         state = ParseState::OutsideToken;
+        hashmark_length = 0;
       }
     }
   }
 }
 
-std::string ParameterTokenParser::replaceParameters(const ParameterContext& parameter_context) const {
+std::string ParameterTokenParser::replaceParameters(const std::optional<ParameterContext>& parameter_context, bool is_sensitive) const {
   if (tokens_.empty()) {
     return input_;
   }
   std::string result;
   uint32_t last_end = 0;
   for (const auto& token : tokens_) {
-    result.append(input_.substr(last_end, token.getStart() - last_end));
-    auto parameter = parameter_context.getParameter(token.getName());
-    if (!parameter.has_value()) {
-      throw ParameterException("Parameter '" + token.getName() + "' not found");
+    result.append(input_.substr(last_end, token->getStart() - last_end));
+    if (token->getType() == ParameterToken::ParameterTokenType::Escaped) {
+      result.append(token->getValue().value());
+      last_end = token->getStart() + token->getSize();
+      continue;
     }
-    result.append(parameter->value);
-    last_end = token.getStart() + token.getSize();
+
+    if (!parameter_context) {
+      throw ParameterException("Property references a parameter in its value, but no parameter context was provided.");
+    }
+
+    gsl_Assert(token->getName().has_value());
+    auto parameter = parameter_context->getParameter(token->getName().value());
+    if (!parameter.has_value()) {
+      throw ParameterException("Parameter '" + token->getName().value() + "' not found");
+    }
+    if (is_sensitive) {
+      throw ParameterException("Non-sensitive parameter '" + parameter->name + "' cannot be referenced in a sensitive property");
+    }
+    result.append(std::string(token->getAdditionalHashmarks(), '#') + parameter->value);
+    last_end = token->getStart() + token->getSize();
   }
   result.append(input_.substr(last_end));
   return result;

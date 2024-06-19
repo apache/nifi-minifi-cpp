@@ -20,6 +20,8 @@
 #include <utility>
 #include <string>
 #include <unordered_map>
+#include <memory>
+#include <optional>
 
 #include "ParameterContext.h"
 #include "Exception.h"
@@ -28,8 +30,15 @@ namespace org::apache::nifi::minifi::core {
 
 class ParameterToken {
  public:
-  ParameterToken(std::string name, uint32_t start, uint32_t size) : name_(std::move(name)), start_(start), size_(size) {
+  enum class ParameterTokenType {
+    Escaped,
+    Replaceable
+  };
+
+  ParameterToken(uint32_t start, uint32_t size) : start_(start), size_(size) {
   }
+
+  virtual ~ParameterToken() = default;
 
   uint32_t getStart() const {
     return start_;
@@ -39,14 +48,62 @@ class ParameterToken {
     return size_;
   }
 
-  const std::string& getName() const {
-    return name_;
+  virtual ParameterTokenType getType() const = 0;
+  virtual std::optional<std::string> getName() const {
+    return std::nullopt;
+  }
+
+  virtual std::optional<std::string> getValue() const {
+    return std::nullopt;
+  }
+
+  virtual uint32_t getAdditionalHashmarks() const {
+    return 0;
   }
 
  private:
   std::string name_;
   uint32_t start_;
   uint32_t size_;
+};
+
+class ReplaceableToken : public ParameterToken {
+ public:
+  ReplaceableToken(std::string name, uint32_t additional_hashmarks, uint32_t start, uint32_t size) : ParameterToken(start, size), name_(std::move(name)), additional_hashmarks_(additional_hashmarks) {
+  }
+
+  std::optional<std::string> getName() const override {
+    return name_;
+  }
+
+  ParameterTokenType getType() const override {
+    return ParameterTokenType::Replaceable;
+  }
+
+  uint32_t getAdditionalHashmarks() const override {
+    return additional_hashmarks_;
+  }
+
+ private:
+  std::string name_;
+  uint32_t additional_hashmarks_;
+};
+
+class EscapedToken : public ParameterToken {
+ public:
+  EscapedToken(uint32_t start, uint32_t size, std::string replaced_value) : ParameterToken(start, size), replaced_value_(std::move(replaced_value)) {
+  };
+
+  ParameterTokenType getType() const override {
+    return ParameterTokenType::Escaped;
+  }
+
+  std::optional<std::string> getValue() const override {
+    return replaced_value_;
+  }
+
+ private:
+  std::string replaced_value_;
 };
 
 class ParameterTokenParser {
@@ -61,17 +118,17 @@ class ParameterTokenParser {
     parse();
   }
 
-  const std::vector<ParameterToken>& getTokens() const {
+  const std::vector<std::unique_ptr<ParameterToken>>& getTokens() const {
     return tokens_;
   }
 
-  std::string replaceParameters(const ParameterContext& parameter_context) const;
+  std::string replaceParameters(const std::optional<ParameterContext>& parameter_context, bool is_sensitive) const;
 
  private:
   void parse();
 
   std::string input_;
-  std::vector<ParameterToken> tokens_;
+  std::vector<std::unique_ptr<ParameterToken>> tokens_;
 };
 
 }  // namespace org::apache::nifi::minifi::core
