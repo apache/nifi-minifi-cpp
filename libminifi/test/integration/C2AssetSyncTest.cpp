@@ -58,7 +58,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
       root.Accept(writer);
       return std::string{buffer.GetString(), buffer.GetSize()};
     }();
-    auto& asset_info_node = root["assetInfo"];
+    auto& asset_info_node = root["resourceInfo"];
     auto& asset_hash_node = asset_info_node["hash"];
     std::string asset_hash{asset_hash_node.GetString(), asset_hash_node.GetStringLength()};
 
