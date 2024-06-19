@@ -952,6 +952,9 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
     return url;
   }
   std::string base;
+  if (configuration_->get(Configuration::nifi_c2_rest_path_base, "c2.rest.path.base", base)) {
+    return base + url;
+  }
   if (!configuration_->get(Configuration::nifi_c2_rest_url, "c2.rest.url", base)) {
     logger_->log_error("Missing C2 REST URL");
     return std::nullopt;

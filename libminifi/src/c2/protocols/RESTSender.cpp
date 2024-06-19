@@ -41,10 +41,23 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
   RESTProtocol::initialize(controller, configure);
   // base URL when one is not specified.
   if (nullptr != configure) {
+    std::optional<std::string> rest_base_path = configure->getWithFallback(Configuration::nifi_c2_rest_path_base, "c2.rest.path.base");
     std::string update_str;
     std::string ssl_context_service_str;
     configure->get(Configuration::nifi_c2_rest_url, "c2.rest.url", rest_uri_);
     configure->get(Configuration::nifi_c2_rest_url_ack, "c2.rest.url.ack", ack_uri_);
+    if (rest_uri_.starts_with("/")) {
+      if (!rest_base_path) {
+        throw Exception(ExceptionType::GENERAL_EXCEPTION, "Cannot use relative nifi.c2.rest.url unless the nifi.c2.rest.path.base is set");
+      }
+      rest_uri_ = rest_base_path.value() + rest_uri_;
+    }
+    if (ack_uri_.starts_with("/")) {
+      if (!rest_base_path) {
+        throw Exception(ExceptionType::GENERAL_EXCEPTION, "Cannot use relative nifi.c2.rest.url.ack unless the nifi.c2.rest.path.base is set");
+      }
+      ack_uri_ = rest_base_path.value() + ack_uri_;
+    }
     if (controller && configure->get(Configuration::nifi_c2_rest_ssl_context_service, "c2.rest.ssl.context.service", ssl_context_service_str)) {
       if (auto service = controller->getControllerService(ssl_context_service_str)) {
         ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);

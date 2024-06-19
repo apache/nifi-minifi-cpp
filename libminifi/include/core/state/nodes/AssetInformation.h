@@ -31,7 +31,7 @@ class AssetInformation : public ResponseNode {
 
   void setAssetManager(std::shared_ptr<utils::file::AssetManager> asset_manager);
 
-  std::string getName() const override { return "assetInfo"; }
+  std::string getName() const override { return "resourceInfo"; }
   std::vector<SerializedResponseNode> serialize() override;
 
  private:

@@ -111,15 +111,23 @@ nonstd::expected<void, std::string> AssetManager::sync(
     org::apache::nifi::minifi::utils::file::AssetLayout layout,
     const std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)>& fetch) {
   std::lock_guard lock(mtx_);
+  org::apache::nifi::minifi::utils::file::AssetLayout new_state{
+    .digest = state_.digest
+  };
+  std::string fetch_errors;
   std::vector<std::pair<std::filesystem::path, std::vector<std::byte>>> new_file_contents;
   for (auto& new_entry : layout.assets) {
     if (std::find_if(state_.assets.begin(), state_.assets.end(), [&] (auto& entry) {return entry.id == new_entry.id;}) == state_.assets.end()) {
       if (auto data = fetch(new_entry.url)) {
         new_file_contents.emplace_back(new_entry.path, data.value());
+        new_state.assets.insert(new_entry);
       } else {
-        return nonstd::make_unexpected(data.error());
+        fetch_errors += "Failed to fetch '" + new_entry.id + "' from '" + new_entry.url + "': " + data.error() + "\n";
       }
     }
+  }
+  if (fetch_errors.empty()) {
+    new_state.digest = layout.digest;
   }
 
   for (auto& old_entry : state_.assets) {
@@ -134,8 +142,13 @@ nonstd::expected<void, std::string> AssetManager::sync(
     std::ofstream{root_ / path, std::ios::binary}.write(reinterpret_cast<const char*>(content.data()), gsl::narrow<std::streamsize>(content.size()));
   }
 
-  state_ = std::move(layout);
+  state_ = std::move(new_state);
   persist();
+
+  if (!fetch_errors.empty()) {
+    return nonstd::make_unexpected(fetch_errors);
+  }
+
   return {};
 }
 
