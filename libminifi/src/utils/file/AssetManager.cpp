@@ -118,12 +118,17 @@ nonstd::expected<void, std::string> AssetManager::sync(
   std::vector<std::pair<std::filesystem::path, std::vector<std::byte>>> new_file_contents;
   for (auto& new_entry : layout.assets) {
     if (std::find_if(state_.assets.begin(), state_.assets.end(), [&] (auto& entry) {return entry.id == new_entry.id;}) == state_.assets.end()) {
+      logger_->log_debug("Fetching asset {} from {}", new_entry.id, new_entry.url);
       if (auto data = fetch(new_entry.url)) {
         new_file_contents.emplace_back(new_entry.path, data.value());
         new_state.assets.insert(new_entry);
       } else {
+        logger_->log_error("Failed to fetch asset {} from {}: {}", new_entry.id, new_entry.url, data.error());
         fetch_errors += "Failed to fetch '" + new_entry.id + "' from '" + new_entry.url + "': " + data.error() + "\n";
       }
+    } else {
+      logger_->log_debug("Asset {} already exists", new_entry.id);
+      new_state.assets.insert(new_entry);
     }
   }
   if (fetch_errors.empty()) {
