@@ -1106,6 +1106,11 @@ def step_impl(context):
     context.test.set_yaml_in_minifi()
 
 
+@given(u'a MiNiFi CPP server with json config')
+def step_impl(context):
+    context.test.set_json_in_minifi()
+
+
 # MiNiFi controller
 @given(u'controller socket properties are set up')
 def step_impl(context):

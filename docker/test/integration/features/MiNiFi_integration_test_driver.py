@@ -432,6 +432,9 @@ class MiNiFi_integration_test:
     def set_yaml_in_minifi(self):
         self.cluster.set_yaml_in_minifi()
 
+    def set_json_in_minifi(self):
+        self.cluster.set_json_in_minifi()
+
     def set_controller_socket_properties_in_minifi(self):
         self.cluster.set_controller_socket_properties_in_minifi()
 
