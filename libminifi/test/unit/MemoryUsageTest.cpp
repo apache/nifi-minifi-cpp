@@ -36,7 +36,9 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   std::mt19937 gen(std::random_device{}());
   std::uniform_int_distribution dist(0, 255);
   std::vector<uint8_t> large_random_vector(30'000'000);
-  std::generate(begin(large_random_vector), end(large_random_vector), [&]() { return dist(gen); });
+  for (size_t i = 0; i < 10; ++i) {
+    large_random_vector[dist(gen) * 100'000 + dist(gen) * 1000 + dist(gen)] = dist(gen);
+  }
 
   const auto ram_usage_by_process = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
   const auto ram_usage_by_system = utils::OsUtils::getSystemPhysicalMemoryUsage();
