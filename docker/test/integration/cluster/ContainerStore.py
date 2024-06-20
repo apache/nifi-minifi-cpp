@@ -364,6 +364,9 @@ class ContainerStore:
     def set_yaml_in_minifi(self):
         self.minifi_options.config_format = "yaml"
 
+    def set_json_in_minifi(self):
+        self.minifi_options.config_format = "json"
+
     def set_controller_socket_properties_in_minifi(self):
         self.minifi_options.enable_controller_socket = True
 

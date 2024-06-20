@@ -84,7 +84,7 @@ class MinifiContainer(FlowContainer):
             serializer = Minifi_flow_json_serializer()
         else:
             assert False, "Invalid flow configuration format: {}".format(self.options.config_format)
-        test_flow_yaml = serializer.serialize(self.start_nodes, self.controllers)
+        test_flow_yaml = serializer.serialize(self.start_nodes, self.controllers, self.parameter_context_name, self.parameter_contexts)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
         absolute_flow_config_path = os.path.join(self.container_specific_config_dir, "config.yml")
         with open(absolute_flow_config_path, 'wb') as config_file:
