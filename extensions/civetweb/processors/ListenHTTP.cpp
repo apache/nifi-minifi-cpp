@@ -277,7 +277,7 @@ class MgConnectionInputStream : public io::InputStream {
 
 class MgConnectionOutputStream : public io::OutputStream {
  public:
-  MgConnectionOutputStream(struct mg_connection* conn): conn_(conn) {}
+  explicit MgConnectionOutputStream(struct mg_connection* conn): conn_(conn) {}
 
   size_t write(const uint8_t *value, size_t len) override {
     const auto mg_write_return = mg_write(conn_, reinterpret_cast<const void*>(value), len);
