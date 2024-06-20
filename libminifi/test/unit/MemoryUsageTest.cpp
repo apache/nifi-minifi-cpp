@@ -20,7 +20,8 @@
 // as we measure the absolute memory usage that would fail this test
 #define EXTENSION_LIST ""  // NOLINT(cppcoreguidelines-macro-usage)
 
-#include <cstring>
+#include <iostream>
+#include <numeric>
 #include <random>
 
 #include "utils/gsl.h"
