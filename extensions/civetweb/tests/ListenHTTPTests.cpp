@@ -199,7 +199,10 @@ class ListenHTTPTestsFixture {
     check_response_body(client);
   }
 
-  void test_connect(const std::vector<HttpResponseExpectations>& response_expectations = {HttpResponseExpectations{}}, std::size_t expected_commited_requests = 1, std::unique_ptr<minifi::http::HTTPClient> client_to_use = {}) {
+  void test_connect(
+      const std::vector<HttpResponseExpectations>& response_expectations = {HttpResponseExpectations{}},
+      std::size_t expected_commited_requests = 1,
+      std::unique_ptr<minifi::http::HTTPClient> client_to_use = {}) {
     if (client_to_use) {
       REQUIRE(response_expectations.size() == 1);
     }
