@@ -22,4 +22,5 @@ class SpecialPropertyTypeChecker(Processor):
             clazz='SpecialPropertyTypeChecker',
             class_prefix='org.apache.nifi.minifi.processors.nifi_python_processors.',
             properties={},
+            schedule={'scheduling strategy': 'EVENT_DRIVEN'},
             auto_terminate=[])
