@@ -188,7 +188,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
       .configuration = config,
       .path = "",
       .filesystem = std::make_shared<utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+      .sensitive_values_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
   });
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo);
 
@@ -315,7 +315,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
       .configuration = config,
       .path = "",
       .filesystem = std::make_shared<utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+      .sensitive_values_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
   });
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo);
 

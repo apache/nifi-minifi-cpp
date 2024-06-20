@@ -35,7 +35,7 @@ FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
       configuration_(std::move(ctx.configuration)),
       service_provider_(std::make_shared<core::controller::StandardControllerServiceProvider>(std::make_unique<core::controller::ControllerServiceNodeMap>(), configuration_)),
       filesystem_(std::move(ctx.filesystem)),
-      sensitive_properties_encryptor_(std::move(ctx.sensitive_properties_encryptor.value())),
+      sensitive_values_encryptor_(std::move(ctx.sensitive_values_encryptor.value())),
       logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
   std::string flowUrl;
   std::string bucket_id = "default";

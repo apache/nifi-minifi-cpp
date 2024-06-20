@@ -82,6 +82,15 @@ Security Properties:
   Sensitive Props:
     key: ~
     algorithm: NIFI_PBKDF2_AES_GCM_256
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+      - name: secret_parameter
+        description: ""
+        sensitive: true
+        value: param_value_1
 Processors:
   - id: aabb6d26-8a8d-4338-92c9-1b8c67ec18e0
     name: GenerateFlowFile
@@ -188,17 +197,20 @@ TEST_CASE("YamlFlowSerializer can encrypt the sensitive properties") {
 
   const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
   const auto controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
+  const auto parameter_id = utils::Identifier::parse("721e10b7-8e00-3188-9a27-476cca376978").value();
 
   const auto [overrides, expected_results] = GENERATE_REF(
       std::make_tuple(OverridesMap{},
-          std::array{"very_secure_password", "very_secure_passphrase"}),
+          std::array{"very_secure_password", "very_secure_passphrase", "param_value_1"}),
       std::make_tuple(OverridesMap{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "password123")}},
-          std::array{"password123", "very_secure_passphrase"}),
+          std::array{"password123", "very_secure_passphrase", "param_value_1"}),
       std::make_tuple(OverridesMap{{controller_service_id, core::flow::Overrides{}.add("Passphrase", "speak friend and enter")}},
-          std::array{"very_secure_password", "speak friend and enter"}),
+          std::array{"very_secure_password", "speak friend and enter", "param_value_1"}),
       std::make_tuple(OverridesMap{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "password123")},
                                    {controller_service_id, core::flow::Overrides{}.add("Passphrase", "speak friend and enter")}},
-          std::array{"password123", "speak friend and enter"}));
+          std::array{"password123", "speak friend and enter", "param_value_1"}),
+      std::make_tuple(OverridesMap{{parameter_id, core::flow::Overrides{}.add("secret_parameter", "param_value_2")}},
+          std::array{"very_secure_password", "very_secure_passphrase", "param_value_2"}));
 
   std::string config_yaml_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 
@@ -220,6 +232,16 @@ TEST_CASE("YamlFlowSerializer can encrypt the sensitive properties") {
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
     CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[1]);
+  }
+
+  {
+    std::regex regex{R"_(value: (.*))_"};
+    std::smatch match_results;
+    CHECK(std::regex_search(config_yaml_encrypted, match_results, regex));
+
+    REQUIRE(match_results.size() == 2);
+    std::string encrypted_value = match_results[1];
+    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[2]);
   }
 }
 
@@ -278,7 +300,7 @@ TEST_CASE("YamlFlowSerializer with an override can add a new property to the flo
 TEST_CASE("The encrypted flow configuration can be decrypted with the correct key") {
   ConfigurationTestController test_controller;
   auto configuration_context = test_controller.getContext();
-  configuration_context.sensitive_properties_encryptor = encryption_provider;
+  configuration_context.sensitive_values_encryptor = encryption_provider;
 
   core::flow::AdaptiveConfiguration yaml_configuration_before{configuration_context};
   const auto process_group_before = yaml_configuration_before.getRootFromPayload(std::string{config_yaml});
@@ -312,12 +334,15 @@ TEST_CASE("The encrypted flow configuration can be decrypted with the correct ke
   REQUIRE(controller_service_after);
   CHECK(controller_service_before->getProperties().at("CA Certificate").getValue() == controller_service_after->getProperties().at("CA Certificate").getValue());
   CHECK(controller_service_before->getProperties().at("Passphrase").getValue() == controller_service_after->getProperties().at("Passphrase").getValue());
+
+  const auto& param_contexts = yaml_configuration_after.getParameterContexts();
+  CHECK(param_contexts.at("my-context")->getParameter("secret_parameter")->value == "param_value_1");
 }
 
 TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrect key") {
   ConfigurationTestController test_controller;
   auto configuration_context = test_controller.getContext();
-  configuration_context.sensitive_properties_encryptor = encryption_provider;
+  configuration_context.sensitive_values_encryptor = encryption_provider;
 
   core::flow::AdaptiveConfiguration yaml_configuration_before{configuration_context};
   const auto process_group_before = yaml_configuration_before.getRootFromPayload(std::string{config_yaml});
@@ -329,7 +354,7 @@ TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrec
   std::string config_yaml_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {});
 
   const utils::crypto::Bytes different_secret_key = utils::string::from_hex("ea55b7d0edc22280c9547e4d89712b3fae74f96d82f240a004fb9fbd0640eec7");
-  configuration_context.sensitive_properties_encryptor = utils::crypto::EncryptionProvider{different_secret_key};
+  configuration_context.sensitive_values_encryptor = utils::crypto::EncryptionProvider{different_secret_key};
 
   core::flow::AdaptiveConfiguration yaml_configuration_after{configuration_context};
   REQUIRE_THROWS_AS(yaml_configuration_after.getRootFromPayload(config_yaml_encrypted), utils::crypto::EncryptionError);

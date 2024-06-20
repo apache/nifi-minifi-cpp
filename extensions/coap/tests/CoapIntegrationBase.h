@@ -72,7 +72,7 @@ class CoapIntegrationBase : public minifi::test::IntegrationBase {
         .configuration = configuration,
         .path = test_file_location,
         .filesystem = std::make_shared<utils::file::FileSystem>(),
-        .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+        .sensitive_values_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
     };
     auto yaml_ptr = std::make_shared<core::YamlConfiguration>(configuration_context);
     core::YamlConfiguration yaml_config(configuration_context);

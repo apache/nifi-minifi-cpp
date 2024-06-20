@@ -134,7 +134,7 @@ TEST_CASE("C2PauseResumeTest", "[c2test]") {
       .configuration = configuration,
       .path = test_file_path,
       .filesystem = std::make_shared<minifi::utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{minifi::utils::crypto::XSalsa20Cipher::generateKey()}}
+      .sensitive_values_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{minifi::utils::crypto::XSalsa20Cipher::generateKey()}}
   });
   std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{test_repo, test_flow_repo, content_repo};
   auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, yaml_ptr);
@@ -147,7 +147,7 @@ TEST_CASE("C2PauseResumeTest", "[c2test]") {
     .configuration = configuration,
     .path = test_file_path,
     .filesystem = std::make_shared<minifi::utils::file::FileSystem>(),
-    .sensitive_properties_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{minifi::utils::crypto::XSalsa20Cipher::generateKey()}}
+    .sensitive_values_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{minifi::utils::crypto::XSalsa20Cipher::generateKey()}}
   });
   auto root = yaml_config.getRoot();
   const auto proc = root->findProcessorByName("invoke");

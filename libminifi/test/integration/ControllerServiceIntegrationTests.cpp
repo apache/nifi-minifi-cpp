@@ -73,7 +73,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
       .configuration = configuration,
       .path = test_file_path,
       .filesystem = std::make_shared<minifi::utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{encryption_key}}
+      .sensitive_values_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{encryption_key}}
   });
   const auto controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo);
 
@@ -85,7 +85,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
       .configuration = configuration,
       .path = test_file_path,
       .filesystem = std::make_shared<minifi::utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{encryption_key}}
+      .sensitive_values_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{encryption_key}}
   });
   auto pg = yaml_config.getRoot();
 

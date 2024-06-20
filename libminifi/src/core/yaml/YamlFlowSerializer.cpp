@@ -56,14 +56,37 @@ void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, c
   }
 }
 
-std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
+void YamlFlowSerializer::encryptSensitiveParameters(YAML::Node& flow_definition_yaml, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
     const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
-  gsl_Expects(schema.identifier.size() == 1 &&
-      schema.processors.size() == 1 && schema.processor_properties.size() == 1 &&
-      schema.controller_services.size() == 1 && schema.controller_service_properties.size() == 1);
+  for (auto parameter_context : flow_definition_yaml[schema.parameter_contexts[0]]) {
+    for (auto parameter : parameter_context[schema.parameters[0]]) {
+      bool is_sensitive = false;
+      std::istringstream is(parameter[schema.sensitive[0]].Scalar());
+      is >> std::boolalpha >> is_sensitive;
+      if (!is_sensitive) {
+        continue;
+      }
+      const auto parameter_context_id_str = parameter_context[schema.identifier[0]].Scalar();
+      const auto parameter_context_id = utils::Identifier::parse(parameter_context_id_str);
+      if (!parameter_context_id) {
+        logger_->log_warn("Invalid parameter context ID found in the flow definition: {}", parameter_context_id_str);
+        continue;
+      }
+      auto parameter_value = parameter[schema.value[0]].Scalar();
+      if (overrides.contains(*parameter_context_id)) {
+        const auto& override_values = overrides.at(*parameter_context_id);
+        const auto parameter_name = parameter[schema.name[0]].Scalar();
+        if (auto parameter_override_value = override_values.get(parameter_name)) {
+          parameter_value = *parameter_override_value;
+        }
+      }
+      parameter[schema.value[0]] = utils::crypto::property_encryption::encrypt(parameter_value, encryption_provider);
+    }
+  }
+}
 
-  auto flow_definition_yaml = YAML::Clone(flow_definition_yaml_);
-
+void YamlFlowSerializer::encryptSensitiveProcessorProperties(YAML::Node& flow_definition_yaml, const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema,
+    const utils::crypto::EncryptionProvider& encryption_provider, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
   for (auto processor_yaml : flow_definition_yaml[schema.processors[0]]) {
     const auto processor_id = utils::Identifier::parse(processor_yaml[schema.identifier[0]].Scalar());
     if (!processor_id) {
@@ -78,7 +101,10 @@ std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_grou
     const auto processor_overrides = overrides.contains(*processor_id) ? overrides.at(*processor_id) : core::flow::Overrides{};
     encryptSensitiveProperties(processor_yaml[schema.processor_properties[0]], processor->getProperties(), encryption_provider, processor_overrides);
   }
+}
 
+void YamlFlowSerializer::encryptSensitiveControllerServiceProperties(YAML::Node& flow_definition_yaml, const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema,
+    const utils::crypto::EncryptionProvider& encryption_provider, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
   for (auto controller_service_yaml : flow_definition_yaml[schema.controller_services[0]]) {
     const auto controller_service_id_str = controller_service_yaml[schema.identifier[0]].Scalar();
     const auto controller_service_id = utils::Identifier::parse(controller_service_id_str);
@@ -99,6 +125,19 @@ std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_grou
     const auto controller_service_overrides = overrides.contains(*controller_service_id) ? overrides.at(*controller_service_id) : core::flow::Overrides{};
     encryptSensitiveProperties(controller_service_yaml[schema.controller_service_properties[0]], controller_service->getProperties(), encryption_provider, controller_service_overrides);
   }
+}
+
+std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
+    const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
+  gsl_Expects(schema.identifier.size() == 1 &&
+      schema.processors.size() == 1 && schema.processor_properties.size() == 1 &&
+      schema.controller_services.size() == 1 && schema.controller_service_properties.size() == 1);
+
+  auto flow_definition_yaml = YAML::Clone(flow_definition_yaml_);
+
+  encryptSensitiveParameters(flow_definition_yaml, schema, encryption_provider, overrides);
+  encryptSensitiveProcessorProperties(flow_definition_yaml, process_group, schema, encryption_provider, overrides);
+  encryptSensitiveControllerServiceProperties(flow_definition_yaml, process_group, schema, encryption_provider, overrides);
 
   return YAML::Dump(flow_definition_yaml) + '\n';
 }
