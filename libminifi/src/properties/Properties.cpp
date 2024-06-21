@@ -70,20 +70,34 @@ const core::PropertyValidator* getValidator(const std::string& lookup_value) {
   return nullptr;
 }
 
-std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
-  if (validator != &core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+// isdigit requires unsigned chars as input
+bool allDigits(const std::string& value) {
+  return ranges::all_of(value, [](const unsigned char c){ return ::isdigit(c); });
+}
+
+// isdigit requires unsigned chars as input
+bool allDigitsOrSpaces(const std::string& value) {
+  return ranges::all_of(value, [](const unsigned char c) { return std::isdigit(c) || std::isspace(c);});
+}
+
+std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, const std::string& value) {
+  if (validator != &core::StandardPropertyTypes::TIME_PERIOD_TYPE) {
     return std::nullopt;
-  if (value.empty() || !ranges::all_of(value, [](const auto c){ return ::isdigit(c); }))
+  }
+  if (value.empty() || !allDigits(value)) {
     return std::nullopt;
+  }
 
   return value + " ms";
 }
 
-std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
-  if (validator != &core::StandardPropertyTypes::DATA_SIZE_TYPE)
+std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, const std::string& value) {
+  if (validator != &core::StandardPropertyTypes::DATA_SIZE_TYPE) {
     return std::nullopt;
-  if (value.empty() || !ranges::all_of(value, [](const auto c){ return ::isdigit(c); }))
+  }
+  if (value.empty() || !allDigits(value)) {
     return std::nullopt;
+  }
 
   return value + " B";
 }
@@ -95,14 +109,14 @@ bool integerValidatedProperty(const core::PropertyValidator* const validator) {
       || validator == &core::StandardPropertyTypes::UNSIGNED_LONG_TYPE;
 }
 
-std::optional<int64_t> stringToDataSize(std::string_view input) {
+std::optional<int64_t> stringToDataSize(const std::string_view input) {
   int64_t value = 0;
   std::string unit_str;
   if (!utils::string::splitToValueAndUnit(input, value, unit_str)) {
     return std::nullopt;
   }
 
-  if (auto unit_multiplier = core::DataSizeValue::getUnitMultiplier(unit_str)) {
+  if (const auto unit_multiplier = core::DataSizeValue::getUnitMultiplier(unit_str)) {
     return value * *unit_multiplier;
   }
   return std::nullopt;
@@ -118,12 +132,12 @@ std::optional<int64_t> stringToDataTransferSpeed(std::string_view input) {
   return stringToDataSize(data_size);
 }
 
-std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, std::string& value) {
+std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, const std::string& value) {
   if (!integerValidatedProperty(validator)) {
     return std::nullopt;
   }
 
-  if (ranges::all_of(value, [](const auto c) { return std::isdigit(c) || std::isspace(c);})) {
+  if (allDigitsOrSpaces(value)) {
     return std::nullopt;
   }
 
