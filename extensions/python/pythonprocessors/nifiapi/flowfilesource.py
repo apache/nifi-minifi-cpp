@@ -14,14 +14,13 @@
 # limitations under the License.
 
 import traceback
-from abc import abstractmethod
-from minifi_native import ProcessContext, ProcessSession
-from .processorbase import ProcessorBase, WriteCallback
-from .properties import FlowFile as FlowFileProxy
 from .properties import ProcessContext as ProcessContextProxy
+from abc import abstractmethod
+from minifi_native import ProcessContext, ProcessSession, FlowFile
+from .processorbase import ProcessorBase, WriteCallback
 
 
-class FlowFileTransformResult:
+class FlowFileSourceResult:
     def __init__(self, relationship: str, attributes=None, contents=None):
         self.relationship = relationship
         self.attributes = attributes
@@ -40,7 +39,7 @@ class FlowFileTransformResult:
         return self.attributes
 
 
-class FlowFileTransform(ProcessorBase):
+class FlowFileSource(ProcessorBase):
     # These will be added through the python bindings using C API
     logger = None
     REL_SUCCESS = None
@@ -48,42 +47,31 @@ class FlowFileTransform(ProcessorBase):
     REL_ORIGINAL = None
 
     def onTrigger(self, context: ProcessContext, session: ProcessSession):
-        original_flow_file = session.get()
-        if not original_flow_file:
-            return
-
-        flow_file = session.clone(original_flow_file)
-
-        flow_file_proxy = FlowFileProxy(session, flow_file)
         context_proxy = ProcessContextProxy(context, self)
         try:
-            result = self.transform(context_proxy, flow_file_proxy)
+            result = self.create(context_proxy)
         except Exception:
-            self.logger.error("Failed to transform flow file due to error:\n{}".format(traceback.format_exc()))
-            session.remove(flow_file)
-            session.transfer(original_flow_file, self.REL_FAILURE)
+            self.logger.error("Failed to create flow file due to error:\n{}".format(traceback.format_exc()))
             return
 
-        if result.getRelationship() == "failure":
-            session.remove(flow_file)
-            session.transfer(original_flow_file, self.REL_FAILURE)
-            return
-
-        result_attributes = result.getAttributes()
-        if result_attributes is not None:
-            for attribute in result_attributes:
-                flow_file.addAttribute(attribute, result_attributes[attribute])
-
-        result_content = result.getContents()
-        if result_content is not None:
-            session.write(flow_file, WriteCallback(result_content))
+        flow_file = self.createFlowFile(session, result.getAttributes(), result.getContents())
 
         if result.getRelationship() == "success":
             session.transfer(flow_file, self.REL_SUCCESS)
         else:
             session.transferToCustomRelationship(flow_file, result.getRelationship())
-        session.transfer(original_flow_file, self.REL_ORIGINAL)
+
+    def createFlowFile(self, session: ProcessSession, attributes, contents) -> FlowFile:
+        flow_file = session.create()
+        if attributes:
+            for key in attributes:
+                flow_file.addAttribute(key, attributes[key])
+
+        if contents:
+            session.write(flow_file, WriteCallback(contents))
+
+        return flow_file
 
     @abstractmethod
-    def transform(self, context: ProcessContextProxy, flowFile: FlowFileProxy) -> FlowFileTransformResult:
+    def create(self, context):
         pass

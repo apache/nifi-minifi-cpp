@@ -38,6 +38,7 @@ class PyProcessSession {
   void write(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject output_stream_callback);
   void remove(const std::shared_ptr<core::FlowFile>& flow_file);
   std::string getContentsAsString(const std::shared_ptr<core::FlowFile>& flow_file);
+  void putAttribute(const std::shared_ptr<core::FlowFile>& flow_file, std::string_view key, const std::string& value);
 
  private:
   std::vector<std::shared_ptr<core::FlowFile>> flow_files_;
@@ -63,6 +64,7 @@ struct PyProcessSessionObject {
   static PyObject* transferToCustomRelationship(PyProcessSessionObject* self, PyObject* args);
   static PyObject* remove(PyProcessSessionObject* self, PyObject* args);
   static PyObject* getContentsAsBytes(PyProcessSessionObject* self, PyObject* args);
+  static PyObject* putAttribute(PyProcessSessionObject* self, PyObject* args);
 
   static PyTypeObject* typeObject();
 };
