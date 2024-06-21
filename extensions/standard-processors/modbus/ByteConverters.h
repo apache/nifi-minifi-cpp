@@ -43,8 +43,8 @@ constexpr T fromBytes(std::array<std::byte, std::max(sizeof(T), sizeof(uint16_t)
     std::reverse(bytes.begin(), bytes.end());
   }
 
-  T* buffer = reinterpret_cast<T*>(bytes.data());
-
-  return *buffer;
+  T result;
+  std::memcpy(&result, bytes.data(), sizeof(T));
+  return result;
 }
 }  // namespace org::apache::nifi::minifi::modbus
