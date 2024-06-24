@@ -393,7 +393,6 @@ show_supported_features() {
   echo "****************************************"
   echo "1. Enable Tests ................$(print_feature_status TESTS_ENABLED)"
   echo "2. Enable all extensions"
-  echo "3. Enable JNI Support ..........$(print_feature_status JNI_ENABLED)"
   echo "4. Use Shared Dependency Links .$(print_feature_status USE_SHARED_LIBS)"
   echo "5. Build Profile ...............$(print_multi_option_status BUILD_PROFILE)"
   echo "6. Create ASAN build ...........$(print_feature_status ASAN_ENABLED)"
@@ -443,7 +442,6 @@ read_feature_options(){
     ag) ToggleFeature GRAFANA_LOKI_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
-    3) ToggleFeature JNI_ENABLED;;
     4) ToggleFeature USE_SHARED_LIBS;;
     5) ToggleMultiOption BUILD_PROFILE;;
     6) ToggleFeature ASAN_ENABLED;;

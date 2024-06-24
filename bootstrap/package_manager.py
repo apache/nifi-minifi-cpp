@@ -92,8 +92,7 @@ class BrewPackageManager(PackageManager):
     def install(self, dependencies: Dict[str, Set[str]]) -> bool:
         return self._install(dependencies=dependencies,
                              install_cmd="brew install",
-                             replace_dict={"patch": set(),
-                                           "jni": {"maven"}})
+                             replace_dict={"patch": set()})
 
     def install_compiler(self) -> str:
         self.install({"compiler": set()})
@@ -123,7 +122,6 @@ class AptPackageManager(PackageManager):
                                            "libusb": {"libusb-1.0-0-dev", "libusb-dev"},
                                            "libpng": {"libpng-dev"},
                                            "libpcap": {"libpcap-dev"},
-                                           "jni": {"openjdk-8-jdk", "openjdk-8-source", "maven"},
                                            "gpsd": {"libgps-dev"}})
 
     def _get_installed_packages(self) -> Set[str]:
@@ -153,7 +151,6 @@ class DnfPackageManager(PackageManager):
                              replace_dict={"gpsd": {"gpsd-devel"},
                                            "libpcap": {"libpcap-devel"},
                                            "python": {"python3-devel"},
-                                           "jni": {"java-1.8.0-openjdk", "java-1.8.0-openjdk-devel", "maven"},
                                            "libpng": {"libpng-devel"},
                                            "libusb": {"libusb-devel"}})
 
@@ -175,7 +172,7 @@ class PacmanPackageManager(PackageManager):
     def install(self, dependencies: Dict[str, Set[str]]) -> bool:
         return self._install(dependencies=dependencies,
                              install_cmd="sudo pacman --noconfirm -S",
-                             replace_dict={"jni": {"jdk8-openjdk", "maven"}})
+                             replace_dict={})
 
     def _get_installed_packages(self) -> Set[str]:
         result = subprocess.run(['pacman', '-Qq'], text=True, capture_output=True, check=True)
@@ -257,7 +254,6 @@ class ChocolateyPackageManager(PackageManager):
                                     "libtool": set(),
                                     "libusb": set(),
                                     "make": set(),
-                                    "jni": {"openjdk", "maven"},
                                     "perl": {"strawberryperl", "NASM"}})
         return True
 

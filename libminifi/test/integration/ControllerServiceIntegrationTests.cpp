@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define EXTENSION_LIST "*minifi-*,!*jni*"  // NOLINT(cppcoreguidelines-macro-usage)
+#define EXTENSION_LIST "*minifi-*"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include <cassert>
 #include <chrono>

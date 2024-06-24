@@ -94,10 +94,6 @@ build_deps() {
                         INSTALLED+=("flex")
                     elif [ "$FOUND_VALUE" = "automake" ]; then
                         INSTALLED+=("automake")
-                    elif [ "$FOUND_VALUE" = "jnibuild" ]; then
-                        INSTALLED+=("java-1.8.0-openjdk")
-                        INSTALLED+=("java-1.8.0-openjdk-devel")
-                        INSTALLED+=("maven")
                     elif [ "$FOUND_VALUE" = "python" ]; then
                         INSTALLED+=("python36-devel")
                     elif [ "$FOUND_VALUE" = "gpsd" ]; then

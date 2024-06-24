@@ -26,7 +26,6 @@ set skiptestrun=OFF
 set cmake_build_type=Release
 set build_platform=x64
 set enable_kafka=ON
-set enable_jni=OFF
 set enable_sql=ON
 set enable_aws=ON
 set enable_sftp=OFF
@@ -69,7 +68,6 @@ for %%x in (%*) do (
     if [%%~x] EQU [/R]                set skiptestrun=ON
     if [%%~x] EQU [/P]                set cpack=ON
     if [%%~x] EQU [/NO_KAFKA]         set enable_kafka=OFF
-    if [%%~x] EQU [/J]                set enable_jni=ON
     if [%%~x] EQU [/NO_SQL]           set enable_sql=OFF
     if [%%~x] EQU [/NO_AWS]           set enable_aws=OFF
     if [%%~x] EQU [/SFTP]             set enable_sftp=ON
@@ -118,7 +116,7 @@ if [%generator%] EQU ["Ninja"] (
 )
 echo on
 cmake -G %generator% %build_platform_cmd% -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%enable_sql% -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
-        -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%enable_kafka% -DENABLE_JNI=%enable_jni% ^
+        -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%enable_kafka% ^
         -DENABLE_AWS=%enable_aws% -DENABLE_PDH=%enable_pdh% -DENABLE_AZURE=%enable_azure% -DENABLE_SFTP=%enable_sftp% -DENABLE_SPLUNK=%enable_splunk% -DENABLE_GCP=%enable_gcp% ^
         -DENABLE_NANOFI=%enable_nanofi% -DENABLE_OPENCV=%enable_opencv% -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% -DENABLE_SMB=%enable_smb% ^

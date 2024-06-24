@@ -72,10 +72,6 @@ build_deps(){
             INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "python" ]; then
             INSTALLED+=("libpython3-dev")
-          elif [ "$FOUND_VALUE" = "jnibuild" ]; then
-            INSTALLED+=("openjdk-11-jdk")
-            INSTALLED+=("openjdk-11-source")
-            INSTALLED+=("maven")
           elif [ "$FOUND_VALUE" = "automake" ]; then
             INSTALLED+=("automake")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then

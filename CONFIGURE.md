@@ -57,7 +57,6 @@
   - [Network Prioritizer Controller Service](#network-prioritizer-controller-service)
   - [Disk space watchdog](#disk-space-watchdog)
   - [Extension configuration](#extension-configuration)
-  - [JNI Functionality](#jni-functionality)
 - [Log configuration](#log-configuration)
   - [Log appenders](#log-appenders)
   - [Log levels](#log-levels)
@@ -663,9 +662,6 @@ Stops MiNiFi FlowController activity (excluding C2), when the available disk spa
 
 ### Extension configuration
 To notify the agent which extensions it should load see [Loading extensions](Extensions.md#Loading extensions).
-
-### JNI Functionality
-Please see the [JNI Configuration Guide](JNI.md).
 
 ### Python processors
 Please see the [Python Processors Readme](extensions/python/PYTHON.md).

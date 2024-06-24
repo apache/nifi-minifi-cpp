@@ -90,9 +90,6 @@ build_deps(){
                         INSTALLED+=("flex")
                     elif [ "$FOUND_VALUE" = "python" ]; then
                         INSTALLED+=("python")
-                    elif [ "$FOUND_VALUE" = "jnibuild" ]; then
-                        brew cask install java8 > /dev/null 2>&1
-                        INSTALLED+=("maven")
                     elif [ "$FOUND_VALUE" = "libtool" ]; then
                         INSTALLED+=("libtool")
                     elif [ "$FOUND_VALUE" = "automake" ]; then

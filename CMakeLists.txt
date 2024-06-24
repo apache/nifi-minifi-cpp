@@ -227,12 +227,6 @@ if (ENABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
 endif()
 
-if(NOT WIN32)
-    if (ENABLE_JNI)
-        list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS ENABLE_JNI)
-    endif()
-endif()
-
 # Simple-Windows-Posix-Semaphore
 if (WIN32)
      add_subdirectory("thirdparty/Simple-Windows-Posix-Semaphore")

@@ -38,21 +38,8 @@ class ProcessorUtils {
    */
   static inline std::unique_ptr<core::Processor> createProcessor(const std::string &class_short_name, const std::string &canonicalName, const utils::Identifier &uuid) {
     auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(class_short_name, uuid);
-    // fallback to the canonical name if the short name does not work, then attempt JNI bindings if they exist
     if (ptr == nullptr) {
       ptr = core::ClassLoader::getDefaultClassLoader().instantiate(canonicalName, uuid);
-      if (ptr == nullptr) {
-        ptr = core::ClassLoader::getDefaultClassLoader().instantiate("ExecuteJavaClass", uuid);
-        if (ptr != nullptr) {
-          auto processor = utils::dynamic_unique_cast<core::Processor>(std::move(ptr));
-          if (processor == nullptr) {
-            throw std::runtime_error("Invalid return from the classloader");
-          }
-          processor->initialize();
-          processor->setProperty("NiFi Processor", canonicalName);
-          return processor;
-        }
-      }
     }
     if (ptr == nullptr) {
       return nullptr;

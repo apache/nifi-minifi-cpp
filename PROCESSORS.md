@@ -34,7 +34,6 @@ limitations under the License.
 - [DeleteAzureDataLakeStorage](#DeleteAzureDataLakeStorage)
 - [DeleteGCSObject](#DeleteGCSObject)
 - [DeleteS3Object](#DeleteS3Object)
-- [ExecuteJavaProcessor](#ExecuteJavaProcessor)
 - [ExecuteProcess](#ExecuteProcess)
 - [ExecutePythonProcessor](#ExecutePythonProcessor)
 - [ExecuteScript](#ExecuteScript)
@@ -682,28 +681,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 |---------|----------------------------------------------|
 | success | FlowFiles are routed to success relationship |
 | failure | FlowFiles are routed to failure relationship |
-
-
-## ExecuteJavaProcessor
-
-### Description
-
-ExecuteJavaClass runs NiFi processors given a provided system path
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                   | Default Value | Allowable Values | Description                                         |
-|------------------------|---------------|------------------|-----------------------------------------------------|
-| JVM Controller Service |               |                  | Name of controller service defined within this flow |
-| **NiFi Processor**     |               |                  | Name of NiFi processor to load and run              |
-
-### Relationships
-
-| Name    | Description                     |
-|---------|---------------------------------|
-| success | All files are routed to success |
 
 
 ## ExecuteProcess

@@ -45,7 +45,6 @@ COPY . ${MINIFI_BASE_DIR}
 # gpsd-devel and ccache are in EPEL
 RUN ulimit -n 1024000 && yum -y install epel-release && yum -y install sudo git which make libarchive ccache ca-certificates perl-IPC-Cmd && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_GPS=ON"; then yum -y install gpsd-devel; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_JNI=ON"; then yum -y install java-1.8.0-openjdk maven; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PCAP=ON"; then yum -y install libpcap-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_USB_CAMERA=ON"; then yum -y install libpng-devel libusbx-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then yum -y install python36-devel; fi && \
