@@ -910,15 +910,15 @@ void putValue(const Spec::Context& ctx, const Spec::Destination& dest, const rap
         }
         try {
           return std::stoull(*member_ptr);
-        } catch (const std::exception& ex) {
+        } catch (const std::exception&) {
           throw Exception(GENERAL_EXCEPTION, fmt::format("Could not convert '{}' to index", *member_ptr));
         }
       }();
-      target.get().Reserve(idx + 1, output.GetAllocator());
+      target.get().Reserve(gsl::narrow<rapidjson::SizeType>(idx + 1), output.GetAllocator());
       for (size_t arr_idx = target.get().Size(); arr_idx <= idx; ++arr_idx) {
         target.get().PushBack(rapidjson::Value{}, output.GetAllocator());
       }
-      target = target.get()[idx];
+      target = target.get()[gsl::narrow<rapidjson::SizeType>(idx)];
     } else {
       if (!target.get().IsObject()) {
         if (!target.get().IsNull()) {
@@ -975,7 +975,7 @@ nonstd::expected<std::reference_wrapper<const rapidjson::Value>, std::string> re
       if (result.get().Size() <= idx) {
         return nonstd::make_unexpected(fmt::format("Array of size {} does not have item at index {}  at {}", result.get().Size(), idx, full_path));
       }
-      result = result.get()[idx];
+      result = result.get()[gsl::narrow<rapidjson::SizeType>(idx)];
     }
   }
   return result;
@@ -1041,7 +1041,7 @@ void Spec::Pattern::processArray(const Context& ctx, const rapidjson::Value &inp
   Context sub_ctx = ctx;
   for (auto& [key, numeric_key, value] : literals) {
     if (numeric_key && numeric_key.value() < input.GetArray().Size()) {
-      if (processMember(sub_ctx, key, input[numeric_key.value()], output)) {
+      if (processMember(sub_ctx, key, input[gsl::narrow<rapidjson::SizeType>(numeric_key.value())], output)) {
         ++sub_ctx.match_count;
       }
     }

@@ -40,7 +40,9 @@
 #pragma comment(lib, "crypt32.lib" )
 #pragma comment(lib, "Ws2_32.lib")
 
+#ifndef CURL_STATICLIB
 #define CURL_STATICLIB
+#endif
 #endif
 #include <curl/curl.h>
 

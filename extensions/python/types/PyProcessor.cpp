@@ -20,8 +20,26 @@
 #include <optional>
 #include "Types.h"
 
-extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
+namespace {
+bool getBoolFromTuple(PyObject* tuple, Py_ssize_t location) {
+  auto object = PyTuple_GetItem(tuple, location);
+
+  if (!object) {
+    throw PyException();
+  }
+
+  if (object == Py_True)
+    return true;
+  if (object == Py_False)
+    return false;
+
+  PyErr_SetString(PyExc_AttributeError, "Expected to get boolean parameter, but got something else");
+  throw PyException();
+}
+}  // namespace
+
+extern "C" {
 
 static PyMethodDef PyProcessor_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"setSupportsDynamicProperties", (PyCFunction) PyProcessor::setSupportsDynamicProperties, METH_VARARGS, nullptr},
@@ -85,25 +103,6 @@ PyObject* PyProcessor::setDescription(PyProcessor* self, PyObject* args) {
   Py_RETURN_NONE;
 }
 
-namespace {
-bool getBoolFromTuple(PyObject* tuple, Py_ssize_t location) {
-  auto object = PyTuple_GetItem(tuple, location);
-
-  if (!object) {
-    throw PyException();
-  }
-
-  if (object == Py_True)
-    return true;
-  if (object == Py_False)
-    return false;
-
-  PyErr_SetString(PyExc_AttributeError, "Expected to get boolean parameter, but got something else");
-  throw PyException();
-}
-}  // namespace
-
-
 PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
   auto processor = self->processor_.lock();
   if (!processor) {
@@ -160,5 +159,5 @@ PyTypeObject* PyProcessor::typeObject() {
   return reinterpret_cast<PyTypeObject*>(PyProcessorType.get());
 }
 
-}  // namespace org::apache::nifi::minifi::extensions::python
 }  // extern "C"
+}  // namespace org::apache::nifi::minifi::extensions::python

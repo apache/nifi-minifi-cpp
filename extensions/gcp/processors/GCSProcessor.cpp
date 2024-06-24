@@ -39,7 +39,7 @@ std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core
 
 void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   if (auto number_of_retries = context.getProperty<uint64_t>(NumberOfRetries)) {
-    retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(*number_of_retries);
+    retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(gsl::narrow<int>(*number_of_retries));
   }
 
   gcp_credentials_ = getCredentials(context);

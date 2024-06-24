@@ -42,6 +42,8 @@ struct PropertyDefinition {
   std::optional<std::string_view> default_value;
   gsl::not_null<const PropertyType*> type{gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE)};
   bool supports_expression_language = false;
+
+  uint8_t version = 1;
 };
 
 struct PropertyReference {

@@ -23,7 +23,9 @@
 #include <stdint.h>
 
 #ifdef _WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <winsock2.h>
 #endif
 #ifndef DEPRECATED

@@ -248,7 +248,7 @@ bool SFTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {
 }
 
 void SFTPClient::setDataTimeout(std::chrono::milliseconds timeout) {
-  libssh2_session_set_timeout(ssh_session_, timeout.count());
+  libssh2_session_set_timeout(ssh_session_, gsl::narrow<long>(timeout.count()));  // NOLINT(runtime/int,google-runtime-int) long due to libssh2 API
 }
 
 void SFTPClient::setSendKeepAlive(bool send_keepalive) {
@@ -399,7 +399,7 @@ bool SFTPClient::connect() {
   /* Getting possible authentication methods */
   bool authenticated = false;
   std::set<std::string> auth_methods;
-  char* userauthlist = libssh2_userauth_list(ssh_session_, username_.c_str(), strlen(username_.c_str()));
+  char* userauthlist = libssh2_userauth_list(ssh_session_, username_.c_str(), gsl::narrow<unsigned int>(username_.size()));
   if (userauthlist == nullptr) {
     if (libssh2_userauth_authenticated(ssh_session_) == 1) {
       authenticated = true;
@@ -417,7 +417,7 @@ bool SFTPClient::connect() {
   if (!authenticated && public_key_authentication_enabled_ && auth_methods.count("publickey") == 1) {
     if (libssh2_userauth_publickey_fromfile_ex(ssh_session_,
                                                username_.c_str(),
-                                               username_.length(),
+                                               gsl::narrow<unsigned int>(username_.length()),
                                                nullptr /*publickey*/,
                                                private_key_file_path_.c_str(),
                                                private_key_passphrase_.c_str()) == 0) {
@@ -497,7 +497,7 @@ std::optional<uint64_t> SFTPClient::getFile(const std::string& path, io::OutputS
    * and "re-setting" the mode we read earlier on open.
    * An another option would be to patch libssh2 to not send permissions in attrs when opening a file for read only.
    */
-  LIBSSH2_SFTP_HANDLE *file_handle = libssh2_sftp_open(sftp_session_, path.c_str(), LIBSSH2_FXF_READ, 0 /*mode*/);
+  LIBSSH2_SFTP_HANDLE *file_handle = libssh2_sftp_open_ex(sftp_session_, path.c_str(), gsl::narrow<unsigned int>(path.size()), LIBSSH2_FXF_READ, 0 /*mode*/, LIBSSH2_SFTP_OPENFILE);
   if (file_handle == nullptr) {
     int ssh_errno = libssh2_session_last_errno(ssh_session_);
     /* We can only get the sftp error in this case if the ssh error is a protocol error */
@@ -555,7 +555,7 @@ std::optional<uint64_t> SFTPClient::getFile(const std::string& path, io::OutputS
 std::optional<uint64_t> SFTPClient::putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size /*= -1*/) {
   int flags = LIBSSH2_FXF_WRITE | LIBSSH2_FXF_CREAT | (overwrite ? LIBSSH2_FXF_TRUNC : LIBSSH2_FXF_EXCL);
   logger_->log_trace("Opening remote file \"{}\"", path.c_str());
-  LIBSSH2_SFTP_HANDLE *file_handle = libssh2_sftp_open(sftp_session_, path.c_str(), flags, 0644);
+  LIBSSH2_SFTP_HANDLE *file_handle = libssh2_sftp_open_ex(sftp_session_, path.c_str(), gsl::narrow<unsigned int>(path.size()), flags, 0644, LIBSSH2_SFTP_OPENFILE);
   if (file_handle == nullptr) {
     int ssh_errno = libssh2_session_last_errno(ssh_session_);
     /* We can only get the sftp error in this case if the ssh error is a protocol error */
@@ -626,9 +626,9 @@ bool SFTPClient::rename(const std::string& source_path, const std::string& targe
   bool tried_deleting = false;
   while (libssh2_sftp_rename_ex(sftp_session_,
                               source_path.c_str(),
-                              source_path.length(),
+                              gsl::narrow<unsigned int>(source_path.length()),
                               target_path.c_str(),
-                              target_path.length(),
+                              gsl::narrow<unsigned int>(target_path.length()),
                               flags) != 0) {
     auto err = libssh2_sftp_last_error(sftp_session_);
     if (overwrite && err == LIBSSH2_FX_FILE_ALREADY_EXISTS && !tried_deleting) {
@@ -664,7 +664,7 @@ bool SFTPClient::createDirectoryHierarchy(const std::string& path) {
   for (const auto& element : elements) {
     dir << element << "/";
     auto current_dir = dir.str();
-    int res = libssh2_sftp_mkdir_ex(sftp_session_, current_dir.c_str(), current_dir.length(), 0755);
+    int res = libssh2_sftp_mkdir_ex(sftp_session_, current_dir.c_str(), gsl::narrow<unsigned int>(current_dir.length()), 0755);
     if (res < 0) {
       auto err = libssh2_sftp_last_error(sftp_session_);
       if (err != LIBSSH2_FX_FILE_ALREADY_EXISTS &&
@@ -682,7 +682,7 @@ bool SFTPClient::createDirectoryHierarchy(const std::string& path) {
 }
 
 bool SFTPClient::removeFile(const std::string& path) {
-  if (libssh2_sftp_unlink(sftp_session_, path.c_str()) != 0) {
+  if (libssh2_sftp_unlink_ex(sftp_session_, path.c_str(), gsl::narrow<unsigned int>(path.size())) != 0) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
     logger_->log_error("Failed to remove remote file \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     return false;
@@ -691,7 +691,7 @@ bool SFTPClient::removeFile(const std::string& path) {
 }
 
 bool SFTPClient::removeDirectory(const std::string& path) {
-  if (libssh2_sftp_rmdir(sftp_session_, path.c_str()) != 0) {
+  if (libssh2_sftp_rmdir_ex(sftp_session_, path.c_str(), gsl::narrow<unsigned int>(path.size())) != 0) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
     logger_->log_error("Failed to remove remote directory \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     return false;
@@ -703,7 +703,7 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
     std::vector<std::tuple<std::string /* filename */, std::string /* longentry */, LIBSSH2_SFTP_ATTRIBUTES /* attrs */>>& children_result) {
   LIBSSH2_SFTP_HANDLE *dir_handle = libssh2_sftp_open_ex(sftp_session_,
                                                           path.c_str(),
-                                                          path.length(),
+                                                          gsl::narrow<unsigned int>(path.length()),
                                                           0 /* flags */,
                                                           0 /* mode */,
                                                           LIBSSH2_SFTP_OPENDIR);
@@ -749,7 +749,7 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
 bool SFTPClient::stat(const std::string& path, bool follow_symlinks, LIBSSH2_SFTP_ATTRIBUTES& result) {
   if (libssh2_sftp_stat_ex(sftp_session_,
                             path.c_str(),
-                            path.length(),
+                            gsl::narrow<unsigned int>(path.length()),
                             follow_symlinks ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT,
                             &result) != 0) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
@@ -776,24 +776,24 @@ bool SFTPClient::setAttributes(const std::string& path, const SFTPAttributes& in
   }
   if (input.flags & SFTP_ATTRIBUTE_UID) {
     attrs.flags |= LIBSSH2_SFTP_ATTR_UIDGID;
-    attrs.uid = input.uid;
+    attrs.uid = gsl::narrow<unsigned long>(input.uid);  // NOLINT(runtime/int,google-runtime-int) unsigned long comes from libssh2 API
   }
   if (input.flags & SFTP_ATTRIBUTE_GID) {
     attrs.flags |= LIBSSH2_SFTP_ATTR_UIDGID;
-    attrs.gid = input.gid;
+    attrs.gid = gsl::narrow<unsigned long>(input.gid);  // NOLINT(runtime/int,google-runtime-int) unsigned long comes from libssh2 API
   }
   if (input.flags & SFTP_ATTRIBUTE_MTIME) {
     attrs.flags |= LIBSSH2_SFTP_ATTR_ACMODTIME;
-    attrs.mtime = input.mtime;
+    attrs.mtime = gsl::narrow<unsigned long>(input.mtime);  // NOLINT(runtime/int,google-runtime-int) unsigned long comes from libssh2 API
   }
   if (input.flags & SFTP_ATTRIBUTE_ATIME) {
     attrs.flags |= LIBSSH2_SFTP_ATTR_ACMODTIME;
-    attrs.atime = input.atime;
+    attrs.atime = gsl::narrow<unsigned long>(input.atime);  // NOLINT(runtime/int,google-runtime-int) unsigned long comes from libssh2 API
   }
 
   if (libssh2_sftp_stat_ex(sftp_session_,
                            path.c_str(),
-                           path.length(),
+                           gsl::narrow<unsigned int>(path.length()),
                            LIBSSH2_SFTP_SETSTAT,
                            &attrs) != 0) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));

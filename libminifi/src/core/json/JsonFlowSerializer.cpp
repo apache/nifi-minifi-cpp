@@ -55,7 +55,7 @@ void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value& property_j
       const auto override_value = overrides.get(name);
       const std::string_view value_sv = override_value ? *override_value : std::string_view{value.GetString(), value.GetStringLength()};
       const std::string encrypted_value = utils::crypto::property_encryption::encrypt(value_sv, encryption_provider);
-      value.SetString(encrypted_value.c_str(), encrypted_value.size(), alloc);
+      value.SetString(encrypted_value.c_str(), gsl::narrow<rapidjson::SizeType>(encrypted_value.size()), alloc);
     }
     processed_property_names.insert(name);
   }

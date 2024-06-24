@@ -129,7 +129,7 @@ class PushGrafanaLokiRESTTestFixture {
     const auto& value_array = stream_array[0]["values"].GetArray();
     REQUIRE(value_array.Size() == expected_log_values.size());
     for (size_t i = 0; i < expected_log_values.size(); ++i) {
-      const auto& log_line_array = value_array[i].GetArray();
+      const auto& log_line_array = value_array[gsl::narrow<rapidjson::SizeType>(i)].GetArray();
       if (!expected_log_line_attribute_values.empty()) {
         REQUIRE(log_line_array.Size() == 3);
       } else {

@@ -721,7 +721,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
       }
     }
     // start to read the packet
-    uint32_t numAttributes = packet->_attributes->size;
+    uint32_t numAttributes = (uint32_t)packet->_attributes->size;
     ret = write_uint32t(transaction, numAttributes);
     if (ret != 4) {
       return -1;

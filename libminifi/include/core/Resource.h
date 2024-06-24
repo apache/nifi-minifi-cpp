@@ -67,13 +67,17 @@ class StaticClassType {
       getClassLoader().unregisterClass(construction_name);
     }
   }
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-reference"
+#endif
   static const StaticClassType& get(const std::string& name, const std::vector<std::string>& construction_names) {
     static const StaticClassType instance(name, construction_names);
     return instance;
   }
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic pop
+#endif
 
  private:
   std::string name_;

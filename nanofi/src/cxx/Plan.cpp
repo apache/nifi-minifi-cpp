@@ -343,5 +343,5 @@ bool ExecutionPlan::addCustomProcessor(custom_processor_args in) {
 }
 
 int ExecutionPlan::deleteCustomProcessor(const char * name) {
-  return custom_processors.erase(name);
+  return gsl::narrow<int>(custom_processors.erase(name));
 }

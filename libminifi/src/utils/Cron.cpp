@@ -109,7 +109,7 @@ days parse<days>(const std::string& days_str) {
 
 template <>
 day parse<day>(const std::string& day_str) {
-  if (auto day_int = fromChars<unsigned int>(day_str); day_int && day_int >= 1 && day_int <= 31)
+  if (auto day_int = fromChars<unsigned int>(day_str); day_int && day_int.value() >= 1 && day_int.value() <= 31)
     return day(*day_int);
   throw BadCronExpression("Invalid day " + day_str);
 }

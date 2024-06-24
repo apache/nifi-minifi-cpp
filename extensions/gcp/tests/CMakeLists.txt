@@ -24,7 +24,9 @@ FOREACH(testfile ${GCS_TESTS})
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/expression-language")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/gcp")
 
-    target_include_directories(${testfilename} PRIVATE BEFORE ${googletest_INCLUDE_DIRS} ${googletest_SOURCE_DIR}/googletest/include ${googletest_SOURCE_DIR}/googlemock/include)
+    target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_INCLUDE_DIRS})
+    target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_SOURCE_DIR}/googletest/include)
+    target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_SOURCE_DIR}/googlemock/include)
     createTests("${testfilename}")
 
     target_link_libraries(${testfilename} minifi-gcp)
