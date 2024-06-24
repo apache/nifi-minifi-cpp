@@ -25,9 +25,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "foobar" is present in "/tmp/input"
     And a PutSplunkHTTP processor set up to communicate with the Splunk HEC instance
-    And the Splunk token property is set for the PutSplunkHTTP processor
     And a QuerySplunkIndexingStatus processor set up to communicate with the Splunk HEC Instance
-    And the Splunk token property is set for the QuerySplunkIndexingStatus processor
     And the "Splunk Request Channel" properties of the PutSplunkHTTP and QuerySplunkIndexingStatus processors are set to the same random guid
     And the "Source" property of the PutSplunkHTTP processor is set to "my-source"
     And the "Source Type" property of the PutSplunkHTTP processor is set to "my-source-type"
@@ -50,9 +48,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "foobar" is present in "/tmp/input"
     And a PutSplunkHTTP processor set up to communicate with the Splunk HEC instance
-    And the Splunk token property is set for the PutSplunkHTTP processor
     And a QuerySplunkIndexingStatus processor set up to communicate with the Splunk HEC Instance
-    And the Splunk token property is set for the QuerySplunkIndexingStatus processor
     And the "Splunk Request Channel" properties of the PutSplunkHTTP and QuerySplunkIndexingStatus processors are set to the same random guid
     And the "Source" property of the PutSplunkHTTP processor is set to "my-source"
     And the "Source Type" property of the PutSplunkHTTP processor is set to "my-source-type"

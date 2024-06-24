@@ -24,7 +24,8 @@ class PutSplunkHTTP(Processor):
             clazz='PutSplunkHTTP',
             properties={
                 'Hostname': 'splunk',
-                'Port': '8088'
+                'Port': '8088',
+                'Token': 'Splunk 176fae97-f59d-4f08-939a-aa6a543f2485'  # Token of the default splunk_hec_token HTTP Event Collector in the Splunk container image
             },
             auto_terminate=['success', 'failure'],
             schedule=schedule)
