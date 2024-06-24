@@ -76,7 +76,7 @@ void ExecutePythonProcessor::initalizeThroughScriptEngine() {
 }
 
 void ExecutePythonProcessor::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  setAutoTerminatedRelationships(std::vector<core::Relationship>{Original});
+  addAutoTerminatedRelationship(Original);
   if (!processor_initialized_) {
     loadScript();
     python_script_engine_ = createScriptEngine();

@@ -59,6 +59,7 @@ void Connectable::setSupportedRelationships(std::span<const core::RelationshipDe
 
 std::vector<Relationship> Connectable::getSupportedRelationships() const {
   std::vector<Relationship> relationships;
+  relationships.reserve(relationships_.size());
   for (auto const &item : relationships_) {
     relationships.push_back(item.second);
   }
@@ -73,6 +74,17 @@ bool Connectable::isSupportedRelationship(const core::Relationship &relationship
   const auto conditionalLock = isConnectableRunning ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
 
   return relationships_.contains(relationship.getName());
+}
+
+void Connectable::addAutoTerminatedRelationship(const core::Relationship& relationship) {
+  if (isRunning()) {
+    logger_->log_warn("Can not add processor auto terminated relationship while the process {} is running", name_);
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock(relationship_mutex_);
+
+  auto_terminated_relationships_[relationship.getName()] = relationship;
 }
 
 void Connectable::setAutoTerminatedRelationships(std::span<const core::Relationship> relationships) {
