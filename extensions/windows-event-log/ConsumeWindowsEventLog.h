@@ -63,7 +63,7 @@ struct EventRender {
 
 enum class OutputFormat {
   XML,
-  Both,
+  Both,  // Both is DEPRECATED and removed from the documentation, but kept for backwards compatibility; it means XML + Plaintext
   Plaintext,
   JSON
 };
@@ -83,7 +83,7 @@ class ConsumeWindowsEventLog : public core::Processor {
 
   ~ConsumeWindowsEventLog() override;
 
-  EXTENSIONAPI static constexpr const char* Description = "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.";
+  EXTENSIONAPI static constexpr const char* Description = "Registers a Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows. These can be filtered via channel and XPath.";
 
   EXTENSIONAPI static constexpr auto Channel = core::PropertyDefinitionBuilder<>::createProperty("Channel")
       .isRequired(true)
@@ -142,11 +142,11 @@ class ConsumeWindowsEventLog : public core::Processor {
       .withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,"
           "EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")
       .build();
-  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::OutputFormat>()>::createProperty("Output Format")
+  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::OutputFormat>() - 1>::createProperty("Output Format")
       .isRequired(true)
-      .withDefaultValue(magic_enum::enum_name(cwel::OutputFormat::Both))
-      .withAllowedValues(magic_enum::enum_names<cwel::OutputFormat>())
-      .withDescription("Set the output format type. In case \'Both\' is selected the processor generates two flow files for every event captured in format XML and Plaintext")
+      .withDefaultValue(magic_enum::enum_name(cwel::OutputFormat::XML))
+      .withAllowedValues(std::array{magic_enum::enum_name(cwel::OutputFormat::XML), magic_enum::enum_name(cwel::OutputFormat::Plaintext), magic_enum::enum_name(cwel::OutputFormat::JSON)})
+      .withDescription("The format of the output flow files.")
       .build();
   EXTENSIONAPI static constexpr auto JsonFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::JsonFormat>()>::createProperty("JSON Format")
       .isRequired(true)
