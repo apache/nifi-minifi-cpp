@@ -28,6 +28,9 @@
 #include "utils/file/FileUtils.h"
 #include "unit/TestUtils.h"
 #include "unit/ProvenanceTestHelper.h"
+#ifdef WIN32
+#include "impl/expression/Expression.h"
+#endif
 
 using namespace std::literals::chrono_literals;
 
@@ -291,4 +294,30 @@ TEST_CASE("GetFile sets attributes correctly") {
     CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::ABSOLUTE_PATH) == (dir / "").string());
     CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "beta.txt");
   }
+}
+
+TEST_CASE("GetFile can use expression language in Directory property") {
+#ifdef WIN32
+  minifi::expression::dateSetInstall(TZ_DATA_DIR);
+#endif
+  using minifi::processors::GetFile;
+  LogTestController::getInstance().setTrace<GetFile>();
+
+  const auto get_file = std::make_shared<GetFile>("GetFile");
+  minifi::test::SingleProcessorTestController test_controller(get_file);
+
+  std::filesystem::path base_dir = test_controller.createTempDirectory();
+  auto date_str = date::format("%Y-%m-%d", std::chrono::system_clock::now());
+  auto dir = base_dir/ date_str;
+  std::filesystem::create_directories(dir);
+  get_file->setProperty(GetFile::Directory, base_dir.string() + "/${now():format('%Y-%m-%d')}");
+  minifi::test::utils::putFileToDir(dir, "testfile.txt", "The quick brown fox jumps over the lazy dog\n");
+
+  auto result = test_controller.trigger();
+
+  REQUIRE((result.contains(GetFile::Success) && result.at(GetFile::Success).size() == 1));
+  auto flow_file = result.at(GetFile::Success)[0];
+  CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::PATH) == (std::filesystem::path(".") / "").string());
+  CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::ABSOLUTE_PATH) == (dir / "").string());
+  CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "testfile.txt");
 }
