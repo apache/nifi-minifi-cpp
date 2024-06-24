@@ -62,7 +62,7 @@ rapidjson::Value toJson(const core::RecordObject& field, rapidjson::Document::Al
   auto object_json = rapidjson::Value(rapidjson::kObjectType);
   for (const auto& [record_name, record_value] : field) {
     auto json_value = (std::visit([&alloc](auto&& f)-> rapidjson::Value{ return toJson(f, alloc); }, record_value.field->value_));
-    rapidjson::Value json_name(record_name.c_str(), record_name.length(), alloc);
+    rapidjson::Value json_name(record_name.c_str(), gsl::narrow<rapidjson::SizeType>(record_name.length()), alloc);
     object_json.AddMember(json_name, json_value, alloc);
   }
   return object_json;
@@ -122,7 +122,7 @@ void JsonRecordSetWriter::write(const core::RecordSet& record_set, const std::sh
 
 void JsonRecordSetWriter::convertRecord(const core::Record& record, rapidjson::Value& record_json, rapidjson::Document::AllocatorType& alloc) {
   for (const auto& [field_name, field_val] : record) {
-    rapidjson::Value json_name(field_name.c_str(), field_name.length(), alloc);
+    rapidjson::Value json_name(field_name.c_str(), gsl::narrow<rapidjson::SizeType>(field_name.length()), alloc);
     rapidjson::Value json_value = (std::visit([&alloc](auto&& f)-> rapidjson::Value{ return toJson(f, alloc); }, field_val.value_));
     record_json.AddMember(json_name, json_value, alloc);
   }
