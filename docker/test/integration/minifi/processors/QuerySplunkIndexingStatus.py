@@ -25,7 +25,7 @@ class QuerySplunkIndexingStatus(Processor):
             properties={
                 'Hostname': 'splunk',
                 'Port': '8088',
-                'Token': 'Splunk 176fae97-f59d-4f08-939a-aa6a543f2485'
+                'Token': 'Splunk 176fae97-f59d-4f08-939a-aa6a543f2485'  # Token of the default splunk_hec_token HTTP Event Collector in the Splunk container image
             },
             auto_terminate=['acknowledged', 'unacknowledged', 'undetermined', 'failure'],
             schedule=schedule)
