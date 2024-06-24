@@ -21,6 +21,7 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 #include "PyStateManager.h"
 #include "PyScriptFlowFile.h"
+#include "core/Processor.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
@@ -29,6 +30,8 @@ static PyMethodDef PyProcessContext_methods[] = {  // NOLINT(cppcoreguidelines-a
     {"getProperty", (PyCFunction) PyProcessContext::getProperty, METH_VARARGS, nullptr},
     {"getStateManager", (PyCFunction) PyProcessContext::getStateManager, METH_VARARGS, nullptr},
     {"getControllerService", (PyCFunction) PyProcessContext::getControllerService, METH_VARARGS, nullptr},
+    {"getName", (PyCFunction) PyProcessContext::getName, METH_VARARGS, nullptr},
+    {"getProperties", (PyCFunction) PyProcessContext::getProperties, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -128,6 +131,41 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
   }
 
   Py_RETURN_NONE;
+}
+
+PyObject* PyProcessContext::getName(PyProcessContext* self, PyObject*) {
+  auto context = self->process_context_.lock();
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  return object::returnReference(context->getProcessorNode()->getName());
+}
+
+PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
+  auto context = self->process_context_.lock();
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  auto processor = dynamic_cast<core::Processor*>(context->getProcessorNode()->getProcessor());
+  if (!processor) {
+    PyErr_SetString(PyExc_AttributeError, "Processor not available in getProperties");
+    return nullptr;
+  }
+  auto properties = processor->getProperties();
+  auto py_properties = OwnedDict::create();
+  for (const auto& [property_name, property] : properties) {
+    std::string value;
+    if (!context->getProperty(property_name, value)) {
+      continue;
+    }
+    py_properties.put(property_name, value);
+  }
+
+  return object::returnReference(py_properties);
 }
 
 PyTypeObject* PyProcessContext::typeObject() {

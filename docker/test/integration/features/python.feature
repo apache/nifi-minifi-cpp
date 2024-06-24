@@ -129,3 +129,17 @@ Feature: MiNiFi can use python processors in its flows
     When all instances start up
 
     Then one flowfile with the contents "Check successful!" is placed in the monitored directory in less than 30 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: NiFi native python processor's ProcessContext interface can be used in MiNiFi C++
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a ProcessContextInterfaceChecker processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+
+    And the "success" relationship of the GenerateFlowFile processor is connected to the ProcessContextInterfaceChecker
+    And the "myrelationship" relationship of the ProcessContextInterfaceChecker processor is connected to the PutFile
+
+    When all instances start up
+
+    Then one flowfile with the contents "Check successful!" is placed in the monitored directory in less than 30 seconds

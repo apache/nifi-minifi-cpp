@@ -35,6 +35,8 @@
 #include "PythonScriptException.h"
 #include "properties/Configuration.h"
 #include "PythonInterpreter.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -56,7 +58,7 @@ class PythonScriptEngine {
   }
 
   template<typename... Args>
-  void call(const char* fn_name, Args&& ...args) {
+  OwnedReference call(const char* fn_name, Args&& ...args) {
     GlobalInterpreterLock gil_lock;
     try {
       if (auto item = bindings_[fn_name]) {
@@ -64,63 +66,76 @@ class PythonScriptEngine {
         if (!result) {
           throw PyException();
         }
+        return result;
       }
+      return OwnedReference(Py_None);
     } catch (const std::exception& e) {
       throw PythonScriptException(e.what());
     }
   }
 
   template<typename ... Args>
-  void callRequiredFunction(const std::string& fn_name, Args&& ...args) {
+  OwnedReference callRequiredFunction(const std::string& fn_name, Args&& ...args) {
     GlobalInterpreterLock gil_lock;
     if (auto item = bindings_[fn_name]) {
       auto result = BorrowedCallable(*item)(std::forward<Args>(args)...);
       if (!result) {
         throw PyException();
       }
+      return result;
     } else {
       throw std::runtime_error("Required Function '" + fn_name + "' is not found within Python bindings");
     }
   }
 
   template<typename ... Args>
-  void callProcessorObjectMethod(const std::string& fn_name, Args&& ...args) {
+  OwnedReference callProcessorObjectMethod(const std::string& fn_name, Args&& ...args) {
     GlobalInterpreterLock gil_lock;
     if (processor_instance_.get() == nullptr) {
       throw std::runtime_error("No python processor instance is set!");
     }
 
     try {
+      if (PyObject_HasAttrString(processor_instance_.get(), fn_name.c_str()) == 0) {
+        return OwnedReference(Py_None);
+      }
+
       auto callable_method = OwnedCallable(PyObject_GetAttrString(processor_instance_.get(), fn_name.c_str()));
       if (callable_method.get() == nullptr) {
-        return;
+        return OwnedReference(Py_None);
       }
 
       auto result = callable_method(std::forward<Args>(args)...);
-      if (!result) {
+      if (!result.get()) {
         throw PyException();
       }
+      return result;
     } catch (const std::exception& e) {
       throw PythonScriptException(e.what());
     }
   }
 
   template<typename ... Args>
-  void callRequiredProcessorObjectMethod(const std::string& fn_name, Args&& ...args) {
+  OwnedReference callRequiredProcessorObjectMethod(const std::string& fn_name, Args&& ...args) {
     GlobalInterpreterLock gil_lock;
     if (processor_instance_.get() == nullptr) {
       throw std::runtime_error("No python processor instance is set!");
     }
 
+    if (PyObject_HasAttrString(processor_instance_.get(), fn_name.c_str()) == 0) {
+      throw std::runtime_error("Required method '" + fn_name + "' is not found in python processor object!");
+    }
+
     auto callable_method = OwnedCallable(PyObject_GetAttrString(processor_instance_.get(), fn_name.c_str()));
     if (callable_method.get() == nullptr) {
-      throw std::runtime_error("Required method '" + fn_name + "' is not found in python processor object!");
+      throw std::runtime_error("Failed to get required method '" + fn_name + "' is in python processor object!");
     }
 
     auto result = callable_method(std::forward<Args>(args)...);
     if (!result) {
       throw PyException();
     }
+    return result;
   }
 
   template<object::convertible T>
@@ -135,6 +150,7 @@ class PythonScriptEngine {
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session);
   void initialize(const core::Relationship& success, const core::Relationship& failure, const core::Relationship& original, const std::shared_ptr<core::logging::Logger>& logger);
   void initializeProcessorObject(const std::string& python_class_name);
+  std::vector<core::Relationship> getCustomPythonRelationships();
 
  private:
   void evalInternal(std::string_view script);
@@ -144,6 +160,7 @@ class PythonScriptEngine {
   OwnedObject processor_instance_;
   std::optional<std::string> processor_class_name_;
   std::vector<std::filesystem::path> module_paths_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PythonScriptEngine>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::python

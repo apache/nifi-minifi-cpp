@@ -204,4 +204,43 @@ void PythonScriptEngine::initializeProcessorObject(const std::string& python_cla
   }
 }
 
+std::vector<core::Relationship> PythonScriptEngine::getCustomPythonRelationships() {
+  GlobalInterpreterLock gil;
+  std::vector<core::Relationship> relationships;
+  if (processor_instance_.get() != nullptr) {
+    auto python_list_of_relationships = OwnedList(callProcessorObjectMethod("getRelationships"));
+    if (python_list_of_relationships.get() == Py_None) {
+      return relationships;
+    }
+    try {
+      for (size_t i = 0; i < python_list_of_relationships.length(); ++i) {
+        if (PyObject_HasAttrString(python_list_of_relationships[i].get(), "name") == 0) {
+          logger_->log_error("Error in python processor getRelationships method: Custom relationship object has no name attribute!");
+          continue;
+        }
+        auto name = OwnedStr(PyObject_GetAttrString(python_list_of_relationships[i].get(), "name"));
+        if (name.get() == nullptr) {
+          logger_->log_error("Error in python processor getRelationships method: Custom relationship object's name attribute could not be read!");
+          continue;
+        }
+
+        if (PyObject_HasAttrString(python_list_of_relationships[i].get(), "description") == 0) {
+          logger_->log_error("Error in python processor getRelationships method: Custom relationship object has no description attribute!");
+          continue;
+        }
+        auto description = OwnedStr(PyObject_GetAttrString(python_list_of_relationships[i].get(), "description"));
+        if (description.get() == nullptr) {
+          logger_->log_error("Error in python processor getRelationships method: Custom relationship object's description attribute could not be read!");
+          continue;
+        }
+
+        relationships.push_back(core::Relationship(name.toUtf8String(), description.toUtf8String()));
+      }
+    } catch (const std::exception& e) {
+      throw PythonScriptException(e.what());
+    }
+  }
+  return relationships;
+}
+
 }  // namespace org::apache::nifi::minifi::extensions::python

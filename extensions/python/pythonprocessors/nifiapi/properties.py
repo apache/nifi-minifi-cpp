@@ -14,8 +14,10 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import List
-from minifi_native import ProcessSession, FlowFile, ProcessContext, timePeriodStringToMilliseconds, dataSizeStringToBytes
+from typing import List, Dict
+from minifi_native import ProcessSession, StateManager, timePeriodStringToMilliseconds, dataSizeStringToBytes
+from minifi_native import FlowFile as CppFlowFile
+from minifi_native import ProcessContext as CppProcessContext
 
 
 # This is a mock for NiFi's StandardValidators class methods, that return the property type equivalent in MiNiFi C++ if exists
@@ -173,26 +175,26 @@ class DataUnit(Enum):
     TB = "TB"
 
 
-class FlowFileProxy:
-    def __init__(self, session: ProcessSession, flow_file: FlowFile):
+class FlowFile:
+    def __init__(self, session: ProcessSession, cpp_flow_file: CppFlowFile):
         self.session = session
-        self.flow_file = flow_file
+        self.cpp_flow_file = cpp_flow_file
 
     def getContentsAsBytes(self):
-        return self.session.getContentsAsBytes(self.flow_file)
+        return self.session.getContentsAsBytes(self.cpp_flow_file)
 
     def getAttribute(self, name: str):
-        return self.flow_file.getAttribute(name)
+        return self.cpp_flow_file.getAttribute(name)
 
     def getSize(self):
-        return self.flow_file.getSize()
+        return self.cpp_flow_file.getSize()
 
     def getAttributes(self):
-        return self.flow_file.getAttributes()
+        return self.cpp_flow_file.getAttributes()
 
 
 class PythonPropertyValue:
-    def __init__(self, cpp_context: ProcessContext, name: str, string_value: str, el_supported: bool, controller_service_definition: str):
+    def __init__(self, cpp_context: CppProcessContext, name: str, string_value: str, el_supported: bool, controller_service_definition: str):
         self.cpp_context = cpp_context
         self.value = None
         self.name = name
@@ -258,12 +260,12 @@ class PythonPropertyValue:
             return float(bytes / 1024 / 1024 / 1024 / 1024)
         return 0
 
-    def evaluateAttributeExpressions(self, flow_file_proxy: FlowFileProxy = None):
-        if flow_file_proxy is None or not self.el_supported:
+    def evaluateAttributeExpressions(self, flow_file: FlowFile = None):
+        if flow_file is None or not self.el_supported:
             return self
         # If Expression Language is supported and present, evaluate it and return a new PropertyValue.
         # Otherwise just return self, in order to avoid the cost of making the call to cpp for getProperty
-        new_string_value = self.cpp_context.getProperty(self.name, flow_file_proxy.flow_file)
+        new_string_value = self.cpp_context.getProperty(self.name, flow_file.cpp_flow_file)
         return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported, self.controller_service_definition)
 
     def asControllerService(self):
@@ -272,9 +274,10 @@ class PythonPropertyValue:
         return self.cpp_context.getControllerService(self.value, self.controller_service_definition)
 
 
-class ProcessContextProxy:
-    def __init__(self, cpp_context: ProcessContext):
+class ProcessContext:
+    def __init__(self, cpp_context: CppProcessContext, processor):
         self.cpp_context = cpp_context
+        self.processor = processor
 
     def getProperty(self, descriptor) -> PythonPropertyValue:
         if descriptor is None:
@@ -289,3 +292,19 @@ class ProcessContextProxy:
             controller_service_definition = descriptor.controllerServiceDefinition
         property_value = self.cpp_context.getProperty(property_name)
         return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support, controller_service_definition)
+
+    def getStateManager(self) -> StateManager:
+        return self.cpp_context.getStateManager()
+
+    def getName(self) -> str:
+        return self.cpp_context.getName()
+
+    def getProperties(self) -> Dict[PropertyDescriptor, str]:
+        properties = dict()
+        cpp_properties = self.cpp_context.getProperties()
+
+        for property_descriptor in self.processor.getPropertyDescriptors():
+            if property_descriptor.name in cpp_properties:
+                properties[property_descriptor] = cpp_properties[property_descriptor.name]
+
+        return properties

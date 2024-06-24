@@ -12,15 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ..core.Processor import Processor
 
-
-class SpecialPropertyTypeChecker(Processor):
-    def __init__(self, context):
-        super(SpecialPropertyTypeChecker, self).__init__(
-            context=context,
-            clazz='SpecialPropertyTypeChecker',
-            class_prefix='org.apache.nifi.minifi.processors.nifi_python_processors.',
-            properties={},
-            schedule={'scheduling strategy': 'EVENT_DRIVEN'},
-            auto_terminate=[])
+class Relationship:
+    def __init__(self, name, description, auto_terminated=False):
+        self.name = name
+        self.description = description
+        self.auto_terminated = auto_terminated

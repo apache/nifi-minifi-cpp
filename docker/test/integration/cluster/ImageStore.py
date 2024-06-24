@@ -160,6 +160,7 @@ class ImageStore:
                 USER minificpp
                 COPY RotatingForwarder.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/RotatingForwarder.py
                 COPY SpecialPropertyTypeChecker.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/SpecialPropertyTypeChecker.py
+                COPY ProcessContextInterfaceChecker.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ProcessContextInterfaceChecker.py
                 RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     wget {chunk_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\
@@ -180,7 +181,8 @@ class ImageStore:
                            chunk_document_sed_cmd=chunk_document_sed_cmd))
 
         return self.__build_image(dockerfile, [os.path.join(self.test_dir, "resources", "python", "RotatingForwarder.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "SpecialPropertyTypeChecker.py")])
+                                               os.path.join(self.test_dir, "resources", "python", "SpecialPropertyTypeChecker.py"),
+                                               os.path.join(self.test_dir, "resources", "python", "ProcessContextInterfaceChecker.py")])
 
     def __build_http_proxy_image(self):
         dockerfile = dedent("""\

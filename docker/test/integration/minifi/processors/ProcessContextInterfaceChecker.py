@@ -15,11 +15,11 @@
 from ..core.Processor import Processor
 
 
-class SpecialPropertyTypeChecker(Processor):
+class ProcessContextInterfaceChecker(Processor):
     def __init__(self, context):
-        super(SpecialPropertyTypeChecker, self).__init__(
+        super(ProcessContextInterfaceChecker, self).__init__(
             context=context,
-            clazz='SpecialPropertyTypeChecker',
+            clazz='ProcessContextInterfaceChecker',
             class_prefix='org.apache.nifi.minifi.processors.nifi_python_processors.',
             properties={},
             schedule={'scheduling strategy': 'EVENT_DRIVEN'},

@@ -37,6 +37,8 @@ struct PyProcessContext {
   static PyObject* getProperty(PyProcessContext* self, PyObject* args);
   static PyObject* getStateManager(PyProcessContext* self, PyObject* args);
   static PyObject* getControllerService(PyProcessContext* self, PyObject* args);
+  static PyObject* getName(PyProcessContext* self, PyObject* args);
+  static PyObject* getProperties(PyProcessContext* self, PyObject* args);
 
   static PyTypeObject* typeObject();
 };

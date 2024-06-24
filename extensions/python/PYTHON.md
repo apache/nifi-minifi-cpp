@@ -166,6 +166,10 @@ Due to some differences between the NiFi and MiNiFi C++ processors and implement
 - MiNiFi C++ only supports expression language with flow file attributes, so only FLOWFILE_ATTRIBUTES expression language scope is supported, otherwise the expression language will not be evaluated.
 - MiNiFi C++ does not support property dependencies, so the property dependencies will be ignored. If a property depends on another property, the property will not be required.
 - MiNiFi C++ does not support the use of self.jvm member in Python processors that provides JVM bindings in NiFi, it is set to None in MiNiFi C++.
+- Dynamic properties are supported in all Python processors and the dynamic properties defined in the flow configuration are automatically added. There is no need to define getDynamicPropertyDescriptor method in the Python processor. The only caveat is that the description of the dynamic property cannot be custom defined.
+- In MiNiFi C++ when the processor is stopped the stop event handling is done in the `notifyStop()` method which does not have the context available. Due to this the `def onStopped(self, context)` cannot be called in NiFi Python processors, so the `onStopped` method is not supported in MiNiFi C++.
+- The interface of the `ProcessContext` class is a bit more limited in MiNiFi C++ compared to NiFi. The available methods in `ProcessContext` are `getProperty`, `getStateManager`, `getName` and `getProperties`.
+- Success relationship is always present in all Python processors even if custom relationships are defined in the Python processor with the `getRelationships` method.
 
 ## Use Python processors from virtualenv
 

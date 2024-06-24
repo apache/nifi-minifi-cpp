@@ -125,6 +125,8 @@ class ExecutePythonProcessor : public core::Processor {
 
   std::map<std::string, core::Property> getProperties() const override;
 
+  std::vector<core::Relationship> getPythonRelationships();
+
  protected:
   const core::Property* findProperty(const std::string& name) const override;
 
