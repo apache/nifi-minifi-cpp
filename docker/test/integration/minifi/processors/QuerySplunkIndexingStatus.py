@@ -24,7 +24,8 @@ class QuerySplunkIndexingStatus(Processor):
             clazz='QuerySplunkIndexingStatus',
             properties={
                 'Hostname': 'splunk',
-                'Port': '8088'
+                'Port': '8088',
+                'Token': 'Splunk 176fae97-f59d-4f08-939a-aa6a543f2485'
             },
             auto_terminate=['acknowledged', 'unacknowledged', 'undetermined', 'failure'],
             schedule=schedule)

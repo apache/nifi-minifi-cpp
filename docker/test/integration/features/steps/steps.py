@@ -527,12 +527,6 @@ def step_impl(context):
     context.test.start_splunk(context)
 
 
-@given("the Splunk token property is set for the {processor_name} processor")
-def step_impl(context, processor_name):
-    token = context.test.get_splunk_token()
-    context.execute_steps(f"given the \"Token\" property of the {processor_name} processor is set to \"{token}\"")
-
-
 # TCP client
 @given('a TCP client is set up to send a test TCP message to minifi')
 def step_impl(context):
