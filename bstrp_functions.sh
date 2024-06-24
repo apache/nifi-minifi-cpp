@@ -380,7 +380,6 @@ show_supported_features() {
   if $LINUX; then
     echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
   fi
-  echo "Z. NanoFi Support ..............$(print_feature_status NANOFI_ENABLED)"
   echo "AA. Splunk Support .............$(print_feature_status SPLUNK_ENABLED)"
   echo "AB. Kubernetes Support .........$(print_feature_status KUBERNETES_ENABLED)"
   echo "AC. Google Cloud Support .......$(print_feature_status GCP_ENABLED)"
@@ -433,7 +432,6 @@ read_feature_options(){
     w) ToggleFeature OPENWSMAN_ENABLED ;;
     x) ToggleFeature AZURE_ENABLED ;;
     y) if $LINUX; then ToggleFeature SYSTEMD_ENABLED; fi ;;
-    z) ToggleFeature NANOFI_ENABLED ;;
     aa) ToggleFeature SPLUNK_ENABLED ;;
     ab) ToggleFeature KUBERNETES_ENABLED ;;
     ac) ToggleFeature GCP_ENABLED ;;

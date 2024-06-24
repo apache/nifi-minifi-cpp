@@ -4,7 +4,7 @@ set -uo pipefail
 
 FILE=$1
 
-EXCLUDED_DIRECTORY=("extensions/pdh" "extensions/windows-event-log" "extensions/smb" "nanofi")
+EXCLUDED_DIRECTORY=("extensions/pdh" "extensions/windows-event-log" "extensions/smb")
 EXCLUDED_FILES=("WindowsCertStoreLocationTests.cpp")
 
 for excluded_file in "${EXCLUDED_FILES[@]}"; do

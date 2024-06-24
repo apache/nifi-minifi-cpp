@@ -17,9 +17,7 @@
 # under the License.
 #
 
-set(NANOFI_TEST_DIR "${CMAKE_SOURCE_DIR}/nanofi/tests/")
 GETSOURCEFILES(UNIT_TESTS "${TEST_DIR}/unit/")
-GETSOURCEFILES(NANOFI_UNIT_TESTS "${NANOFI_TEST_DIR}")
 
 if (NOT WIN32)
     list(REMOVE_ITEM UNIT_TESTS WindowsCertStoreLocationTests.cpp)
@@ -37,26 +35,3 @@ FOREACH(testfile ${UNIT_TESTS})
     add_test(NAME "${testfilename}" COMMAND "${testfilename}")
 ENDFOREACH()
 message("-- Finished building ${UNIT_TEST_COUNT} unit test file(s)...")
-
-if(NOT WIN32 AND ENABLE_NANOFI)
-    SET(UNIT_TEST_COUNT 0)
-    FOREACH(testfile ${NANOFI_UNIT_TESTS})
-        get_filename_component(testfilename "${testfile}" NAME_WE)
-        add_minifi_executable("${testfilename}" "${NANOFI_TEST_DIR}/${testfile}")
-        target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/nanofi/include")
-        target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/")
-        target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/processors/")
-        appendIncludes("${testfilename}")
-        target_link_libraries(${testfilename} Catch2WithMain Threads::Threads)
-
-        target_wholearchive_library(${testfilename} nanofi)
-
-        createTests(${testfilename})
-
-        target_link_libraries(${testfilename} minifi-standard-processors)
-
-        MATH(EXPR UNIT_TEST_COUNT "${UNIT_TEST_COUNT}+1")
-        add_test(NAME "${testfilename}" COMMAND "${testfilename}")
-    ENDFOREACH()
-    message("-- Finished building ${UNIT_TEST_COUNT} NanoFi unit test file(s)...")
-endif()
