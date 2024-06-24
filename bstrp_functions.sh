@@ -370,7 +370,6 @@ show_supported_features() {
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "L. Lua Scripting Support .......$(print_feature_status LUA_SCRIPTING_ENABLED)"
   echo "M. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
-  echo "N. COAP Support ................$(print_feature_status COAP_ENABLED)"
   echo "O. SFTP Support ................$(print_feature_status SFTP_ENABLED)"
   echo "S. AWS Support .................$(print_feature_status AWS_ENABLED)"
   echo "T. OpenCV Support ..............$(print_feature_status OPENCV_ENABLED)"
@@ -426,7 +425,6 @@ read_feature_options(){
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature LUA_SCRIPTING_ENABLED ;;
     m) ToggleFeature MQTT_ENABLED ;;
-    n) ToggleFeature COAP_ENABLED ;;
     o) ToggleFeature SFTP_ENABLED ;;
     s) ToggleFeature AWS_ENABLED ;;
     t) ToggleFeature OPENCV_ENABLED ;;

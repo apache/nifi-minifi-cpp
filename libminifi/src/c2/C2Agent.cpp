@@ -45,6 +45,7 @@
 #include "io/StreamPipe.h"
 #include "utils/Id.h"
 #include "c2/C2Utils.h"
+#include "c2/protocols/RESTSender.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -144,37 +145,14 @@ void C2Agent::checkTriggers() {
   }
 }
 void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconfigure) {
-  std::string clazz;
-  std::string heartbeat_period;
-  std::string device;
-
   if (!reconfigure) {
-    if (!configure->get(Configuration::nifi_c2_agent_protocol_class, "c2.agent.protocol.class", clazz)) {
-      clazz = "RESTSender";
-    }
-    logger_->log_info("Class is {}", clazz);
-
-    auto protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw(clazz, clazz);
-    if (protocol == nullptr) {
-      logger_->log_warn("Class {} not found", clazz);
-      protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("RESTSender", "RESTSender");
-      if (!protocol) {
-        constexpr const char* errmsg = "Attempted to load RESTSender. To enable C2, please specify an active protocol for this agent.";
-        logger_->log_error("{}", errmsg);
-        throw Exception{ GENERAL_EXCEPTION, errmsg };
-      }
-
-      logger_->log_info("Class is RESTSender");
-    }
-
-    // Since !reconfigure, the call comes from the ctor and protocol_ is null, therefore no delete is necessary
-    protocol_.exchange(dynamic_cast<C2Protocol *>(protocol));
-
-    protocol_.load()->initialize(controller_, configuration_);
+    protocol_ = std::make_unique<RESTSender>("RESTSender");
+    protocol_->initialize(controller_, configuration_);
   } else {
-    protocol_.load()->update(configure);
+    protocol_->update(configure);
   }
 
+  std::string heartbeat_period;
   if (configure->get(Configuration::nifi_c2_agent_heartbeat_period, "c2.agent.heartbeat.period", heartbeat_period)) {
     try {
       if (auto heartbeat_period_ms = utils::timeutils::StringToDuration<std::chrono::milliseconds>(heartbeat_period)) {
@@ -245,7 +223,7 @@ void C2Agent::performHeartBeat() {
     serializeMetrics(child_metric_payload, metric.name, metric.serialized_nodes, metric.is_array);
     payload.addPayload(std::move(child_metric_payload));
   }
-  C2Payload response = protocol_.load()->consumePayload(payload);
+  C2Payload response = protocol_->consumePayload(payload);
 
   enqueue_c2_server_response(std::move(response));
 
@@ -350,7 +328,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
     case Operation::restart: {
       update_sink_->stop();
       C2Payload response(Operation::acknowledge, resp.ident, true);
-      protocol_.load()->consumePayload(response);
+      protocol_->consumePayload(response);
       restart_needed_ = true;
     }
       break;
@@ -713,7 +691,7 @@ void C2Agent::handle_transfer(const C2ContentResponse &resp) {
       std::map<std::string, std::unique_ptr<io::InputStream>> files = update_sink_->getDebugInfo();
 
       auto bundle = bundleDebugInfo(files);
-      C2Payload &&response = protocol_.load()->consumePayload(url.value(), bundle, TRANSMIT, false);
+      C2Payload &&response = protocol_->consumePayload(url.value(), bundle, TRANSMIT, false);
       if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
         throw C2DebugBundleError("Error while uploading");
       }
@@ -724,7 +702,7 @@ void C2Agent::handle_transfer(const C2ContentResponse &resp) {
 
 utils::TaskRescheduleInfo C2Agent::produce() {
   // place priority on messages to send to the c2 server
-  if (protocol_.load() != nullptr) {
+  if (protocol_ != nullptr) {
     std::vector<C2Payload> payload_batch;
     payload_batch.reserve(max_c2_responses);
     auto getRequestPayload = [&payload_batch] (C2Payload&& payload) { payload_batch.emplace_back(std::move(payload)); };
@@ -738,7 +716,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
         std::make_move_iterator(payload_batch.end()),
         [&] (C2Payload&& payload) {
           try {
-            C2Payload response = protocol_.load()->consumePayload(payload);
+            C2Payload response = protocol_->consumePayload(payload);
             enqueue_c2_server_response(std::move(response));
           }
           catch(const std::exception &e) {
@@ -824,14 +802,14 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
 }
 
 std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
-  if (!utils::string::startsWith(uri, "http") || protocol_.load() == nullptr) {
+  if (!utils::string::startsWith(uri, "http") || protocol_ == nullptr) {
     // try to open the file
     auto content = filesystem_->read(uri);
     if (content) {
       return content;
     }
   }
-  if (protocol_.load() == nullptr) {
+  if (protocol_ == nullptr) {
     logger_->log_error("Couldn't open '{}' as file and we have no protocol to request the file from", uri);
     return {};
   }
@@ -841,7 +819,7 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     return std::nullopt;
   }
 
-  C2Payload response = protocol_.load()->fetch(resolved_url.value(), update_sink_->getSupportedConfigurationFormats());
+  C2Payload response = protocol_->fetch(resolved_url.value(), update_sink_->getSupportedConfigurationFormats());
 
   return response.getRawDataAsString();
 }
@@ -993,7 +971,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     return;
   }
 
-  C2Payload file_response = protocol_.load()->fetch(url);
+  C2Payload file_response = protocol_->fetch(url);
 
   if (file_response.getStatus().getState() != state::UpdateState::READ_COMPLETE) {
     send_error("Failed to fetch asset from '" + url + "'");

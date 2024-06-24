@@ -291,11 +291,6 @@ add_option KUBERNETES_ENABLED ${TRUE} "ENABLE_KUBERNETES"
 
 add_option MQTT_ENABLED ${TRUE} "ENABLE_MQTT"
 
-add_option COAP_ENABLED ${FALSE} "ENABLE_COAP"
-add_dependency COAP_ENABLED "automake"
-add_dependency COAP_ENABLED "autoconf"
-add_dependency COAP_ENABLED "libtool"
-
 add_option JNI_ENABLED ${FALSE} "ENABLE_JNI"
 add_dependency JNI_ENABLED "jnibuild"
 

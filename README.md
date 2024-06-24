@@ -355,7 +355,6 @@ This will set up a virtual environment in the bootstrap folder, and guide you th
     K. Bustache Support ............Disabled
     L. Lua Scripting Support .......Enabled
     M. MQTT Support ................Enabled
-    N. COAP Support ................Disabled
     O. SFTP Support ................Disabled
     S. AWS Support .................Enabled
     T. OpenCV Support ..............Disabled
