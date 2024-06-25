@@ -70,7 +70,6 @@ add_custom_target(
              -DENABLE_OPENCV=OFF
              -DENABLE_BUSTACHE=OFF
              -DENABLE_SFTP=OFF
-             -DENABLE_OPENWSMAN=OFF
              -DENABLE_TEST_PROCESSORS=OFF
              -DENABLE_ROCKSDB=ON
              -DENABLE_LIBARCHIVE=ON

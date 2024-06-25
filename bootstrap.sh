@@ -294,8 +294,6 @@ add_dependency SFTP_ENABLED "libssh2"
 
 add_option SQL_ENABLED ${TRUE} "ENABLE_SQL"
 
-add_option OPENWSMAN_ENABLED ${FALSE} "ENABLE_OPENWSMAN"
-
 # Since the following extensions have limitations on
 add_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
 

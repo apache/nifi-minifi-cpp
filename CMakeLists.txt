@@ -339,7 +339,7 @@ include(Extensions)
 
 add_subdirectory(libminifi)
 
-if ((ENABLE_OPENWSMAN AND ENABLE_CIVET) OR ENABLE_ALL OR ENABLE_AZURE)
+if (ENABLE_ALL OR ENABLE_AZURE)
     include(BundledLibXml2)
     use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")

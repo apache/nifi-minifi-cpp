@@ -97,7 +97,6 @@ limitations under the License.
 - [RetryFlowFile](#RetryFlowFile)
 - [RouteOnAttribute](#RouteOnAttribute)
 - [RouteText](#RouteText)
-- [SourceInitiatedSubscriptionListener](#SourceInitiatedSubscriptionListener)
 - [SplitText](#SplitText)
 - [TailEventLog](#TailEventLog)
 - [TailFile](#TailFile)
@@ -2881,46 +2880,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Attribute       | Relationship | Description                                                                                                                                              |
 |-----------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | RouteText.Group |              | The value captured by all capturing groups in the 'Grouping Regular Expression' property. If this property is not set, this attribute will not be added. |
-
-
-## SourceInitiatedSubscriptionListener
-
-### Description
-
-This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. Windows hosts can be set up to connect and forward Event Logs to this processor.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                                 | Default Value                                                                                   | Allowable Values | Description                                                                                                                                                                                                                                                                                                                     |
-|--------------------------------------|-------------------------------------------------------------------------------------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Listen Hostname**                  |                                                                                                 |                  | The hostname or IP of this machine that will be advertised to event sources to connect to. It must be contained as a Subject Alternative Name in the server certificate, otherwise source machines will refuse to connect.                                                                                                      |
-| **Listen Port**                      | 5986                                                                                            |                  | The port to listen on.                                                                                                                                                                                                                                                                                                          |
-| **Subscription Manager Path**        | /wsman/SubscriptionManager/WEC                                                                  |                  | The URI path that will be used for the WEC Subscription Manager endpoint.                                                                                                                                                                                                                                                       |
-| **Subscriptions Base Path**          | /wsman/subscriptions                                                                            |                  | The URI path that will be used as the base for endpoints serving individual subscriptions.                                                                                                                                                                                                                                      |
-| **SSL Certificate**                  |                                                                                                 |                  | File containing PEM-formatted file including TLS/SSL certificate and key. The root CA of the certificate must be the CA set in SSL Certificate Authority.                                                                                                                                                                       |
-| **SSL Certificate Authority**        |                                                                                                 |                  | File containing the PEM-formatted CA that is the root CA for both this server's certificate and the event source clients' certificates.                                                                                                                                                                                         |
-| SSL Verify Peer                      | true                                                                                            | true<br/>false   | Whether or not to verify the client's certificate                                                                                                                                                                                                                                                                               |
-| **XPath XML Query**                  | <QueryList>
-  <Query Id="0">
-    <Select Path="Application">*</Select>
-  </Query>
-</QueryList>
- |                  | An XPath Query in structured XML format conforming to the Query Schema described in https://docs.microsoft.com/en-gb/windows/win32/wes/queryschema-schema, see an example here: https://docs.microsoft.com/en-gb/windows/win32/wes/consuming-events                                                                             |
-| **Initial Existing Events Strategy** | None                                                                                            | None<br/>All     | Defines the behaviour of the Processor when a new event source connects.<br/>None: will not request existing events<br/>All: will request all existing events matching the query                                                                                                                                                |
-| **Subscription Expiration Interval** | 10 min                                                                                          |                  | The interval while a subscription is valid without renewal. Because in a source-initiated subscription, the collector can not cancel the subscription, setting this too large could cause unnecessary load on the source machine. Setting this too small causes frequent reenumeration and resubscription which is ineffective. |
-| **Heartbeat Interval**               | 30 sec                                                                                          |                  | The processor will ask the sources to send heartbeats with this interval.                                                                                                                                                                                                                                                       |
-| **Max Elements**                     | 20                                                                                              |                  | The maximum number of events a source will batch together and send at once.                                                                                                                                                                                                                                                     |
-| **Max Latency**                      | 10 sec                                                                                          |                  | The maximum time a source will wait to send new events.                                                                                                                                                                                                                                                                         |
-| Connection Retry Interval            | 10 sec                                                                                          |                  | The interval with which a source will try to reconnect to the server.                                                                                                                                                                                                                                                           |
-| Connection Retry Count               | 5                                                                                               |                  | The number of connection retries after which a source will consider the subscription expired.                                                                                                                                                                                                                                   |
-
-### Relationships
-
-| Name    | Description                      |
-|---------|----------------------------------|
-| success | All Events are routed to success |
 
 
 ## TailEventLog

@@ -374,7 +374,6 @@ show_supported_features() {
   echo "T. OpenCV Support ..............$(print_feature_status OPENCV_ENABLED)"
   echo "U. OPC-UA Support...............$(print_feature_status OPC_ENABLED)"
   echo "V. SQL Support..................$(print_feature_status SQL_ENABLED)"
-  echo "W. Openwsman Support ...........$(print_feature_status OPENWSMAN_ENABLED)"
   echo "X. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
   if $LINUX; then
     echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
@@ -426,7 +425,6 @@ read_feature_options(){
     t) ToggleFeature OPENCV_ENABLED ;;
     u) ToggleFeature OPC_ENABLED ;;
     v) ToggleFeature SQL_ENABLED ;;
-    w) ToggleFeature OPENWSMAN_ENABLED ;;
     x) ToggleFeature AZURE_ENABLED ;;
     y) if $LINUX; then ToggleFeature SYSTEMD_ENABLED; fi ;;
     aa) ToggleFeature SPLUNK_ENABLED ;;
