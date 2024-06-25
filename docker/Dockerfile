@@ -41,9 +41,6 @@ RUN apk --no-cache add gcc \
   flex \
   flex-dev \
   linux-headers \
-  maven \
-  openjdk8-jre-base \
-  openjdk8 \
   autoconf \
   automake \
   libtool \
@@ -61,8 +58,6 @@ RUN apk --no-cache add gcc \
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
-ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
 ENV MINIFI_VERSION ${MINIFI_VERSION}
 
@@ -98,8 +93,6 @@ ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
 ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
-ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
     install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME} && \

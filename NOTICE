@@ -7,15 +7,6 @@ The Apache Software Foundation (http://www.apache.org/).
 This includes derived works from the Apache NiFi (ALv2 Licensed) project (https://github.com/apache/nifi):
 Copyright 2024 The Apache Software Foundation
 The derived and original works are listed below:
-    JniUnpacker.java is based on NarUnpacker.java.
-    JniClassLoader is based, predominately, on NarClassdLoader with major variations.
-    JniComponentLogger extends ComponentLog
-    JniFlowFile extends and is based on FlowFile
-    JniInitializationContext extends and is based on ProcessorInitializationContext
-    JniProcessContext extends and is based on ProcessContext and ControllerServiceLookup
-    JniProcessSession extends and is based on ProcessSession
-    JniProcessSessionFactory extends and is based on ProcessSessionFactory
-    JniProvenanceReporter extends and is based on ProvenanceReporter
     SFTPTestServer extends and is based on SSHTestServer
 
 This includes derived works from the cURL (MIT/X-style licensed) project (https://github.com/curl/curl):

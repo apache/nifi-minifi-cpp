@@ -160,10 +160,6 @@ if ! command swig -version &> /dev/null; then
 fi
 
 pip install -r "${docker_dir}/requirements.txt"
-JAVA_HOME="/usr/lib/jvm/default-jvm"
-export JAVA_HOME
-PATH="$PATH:/usr/lib/jvm/default-jvm/bin"
-export PATH
 
 TEST_DIRECTORY="${docker_dir}/test/integration"
 export TEST_DIRECTORY
