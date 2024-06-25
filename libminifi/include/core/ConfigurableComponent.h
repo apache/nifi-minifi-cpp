@@ -136,6 +136,8 @@ class ConfigurableComponent {
    */
   bool getDynamicProperty(const std::string& name, std::string &value) const;
 
+  bool getDynamicProperty(const std::string& name, core::Property &item) const;
+
   /**
    * Sets the value of a new dynamic property.
    *
