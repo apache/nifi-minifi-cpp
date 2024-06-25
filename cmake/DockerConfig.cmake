@@ -67,7 +67,6 @@ add_custom_target(
              -DENABLE_GPS=OFF
              -DENABLE_PCAP=OFF
              -DENABLE_SENSORS=OFF
-             -DENABLE_USB_CAMERA=OFF
              -DENABLE_OPENCV=OFF
              -DENABLE_BUSTACHE=OFF
              -DENABLE_SFTP=OFF

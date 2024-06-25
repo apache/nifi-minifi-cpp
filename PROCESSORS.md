@@ -54,7 +54,6 @@ limitations under the License.
 - [GetGPS](#GetGPS)
 - [GetMovementSensors](#GetMovementSensors)
 - [GetTCP](#GetTCP)
-- [GetUSBCamera](#GetUSBCamera)
 - [HashContent](#HashContent)
 - [InvokeHTTP](#InvokeHTTP)
 - [JoltTransformJSON](#JoltTransformJSON)
@@ -1253,34 +1252,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Attribute       | Relationship     | Description                                              |
 |-----------------|------------------|----------------------------------------------------------|
 | source.endpoint | success, partial | The address of the source endpoint the message came from |
-
-
-## GetUSBCamera
-
-### Description
-
-Gets images from USB Video Class (UVC)-compatible devices. Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name           | Default Value | Allowable Values | Description                                                                                         |
-|----------------|---------------|------------------|-----------------------------------------------------------------------------------------------------|
-| FPS            | 1             |                  | Frames per second to capture from USB camera                                                        |
-| Width          |               |                  | Target width of image to capture from USB camera                                                    |
-| Height         |               |                  | Target height of image to capture from USB camera                                                   |
-| Format         | PNG           |                  | Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values) |
-| USB Vendor ID  | 0x0           |                  | USB Vendor ID of camera device, in hexadecimal format                                               |
-| USB Product ID | 0x0           |                  | USB Product ID of camera device, in hexadecimal format                                              |
-| USB Serial No. |               |                  | USB Serial No. of camera device                                                                     |
-
-### Relationships
-
-| Name    | Description                           |
-|---------|---------------------------------------|
-| success | Sucessfully captured images sent here |
-| failure | Failures sent here                    |
 
 
 ## HashContent

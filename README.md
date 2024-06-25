@@ -97,7 +97,6 @@ The next table outlines CMAKE flags that correspond with MiNiFi extensions. Exte
 | SQL                              | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)<br/>[QueryDatabaseTable](PROCESSORS.md#querydatabasetable)<br/>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | -DENABLE_SQL=ON              |
 | Splunk                           | [PutSplunkHTTP](PROCESSORS.md#putsplunkhttp)<br/>[QuerySplunkIndexingStatus](PROCESSORS.md#querysplunkindexingstatus)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | -DENABLE_SPLUNK=ON           |
 | Systemd (Linux)                  | [ConsumeJournald](PROCESSORS.md#consumejournald)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -DENABLE_SYSTEMD=ON          |
-| USB Camera                       | [GetUSBCamera](PROCESSORS.md#getusbcamera)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | -DENABLE_USB_CAMERA=ON       |
 | Windows Event Log (Windows)      | [CollectorInitiatedSubscription](PROCESSORS.md#collectorinitiatedsubscription)<br/>[ConsumeWindowsEventLog](PROCESSORS.md#consumewindowseventlog)<br/>[TailEventLog](PROCESSORS.md#taileventlog)                                                                                                                                                                                                                                                                                                                                                                                                                                                | -DENABLE_WEL=ON              |
 
  Please see our [Python guide](extensions/python/PYTHON.md) on how to write Python processors and use them within MiNiFi C++.
@@ -179,8 +178,6 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 
 #### System Libraries Required
 * Python 3 -- Required if Python support is enabled
-* libusb -- Optional, unless USB Camera support is enabled
-* libpng -- Optional, unless USB Camera support is enabled
 * libpcap -- Optional, unless ENABLE_PCAP specified
 
 The needed dependencies can be installed with the following commands for:
@@ -208,8 +205,6 @@ dnf install cmake \
   zlib-devel
 # (Optional) for building Python support
 dnf install python36-devel
-# (Optional) for building USB Camera support
-dnf install libusb-devel libpng-devel
 # (Optional) for building docker image
 dnf install docker
 # (Optional) for system integration tests
@@ -241,8 +236,6 @@ apt install cmake \
   zlib1g-dev
 # (Optional) for building Python support
 apt install libpython3-dev
-# (Optional) for building USB Camera support
-apt install libusb-1.0.0-0-dev libpng12-dev
 # (Optional) for building docker image
 apt install docker.io
 # (Optional) for system integration tests
@@ -271,8 +264,6 @@ brew install cmake \
   zlib
 brew install curl
 brew link curl --force
-# (Optional) for building USB Camera support
-brew install libusb libpng
 # (Optional) for building docker image/running system integration tests
 # Install docker using instructions at https://docs.docker.com/docker-for-mac/install/
 sudo pip install virtualenv
@@ -346,7 +337,6 @@ This will set up a virtual environment in the bootstrap folder, and guide you th
     E. Expression Language support .Enabled
     F. Kafka support ...............Enabled
     G. PCAP support ................Disabled
-    H. USB Camera support ..........Disabled
     I. GPS support .................Disabled
     K. Bustache Support ............Disabled
     L. Lua Scripting Support .......Enabled

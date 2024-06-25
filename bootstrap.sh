@@ -276,10 +276,6 @@ add_dependency EXPRESSION_LANGUAGE_ENABLED "flex"
 add_option PCAP_ENABLED ${FALSE} "ENABLE_PCAP"
 add_dependency PCAP_ENABLED "libpcap"
 
-add_option USB_ENABLED ${FALSE} "ENABLE_USB_CAMERA"
-add_dependency USB_ENABLED "libusb"
-add_dependency USB_ENABLED "libpng"
-
 add_option GPS_ENABLED ${FALSE} "ENABLE_GPS"
 add_dependency GPS_ENABLED "gpsd"
 

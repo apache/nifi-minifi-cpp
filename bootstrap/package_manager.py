@@ -119,8 +119,6 @@ class AptPackageManager(PackageManager):
                              install_cmd="sudo apt install -y",
                              replace_dict={"libarchive": {"liblzma-dev"},
                                            "python": {"libpython3-dev"},
-                                           "libusb": {"libusb-1.0-0-dev", "libusb-dev"},
-                                           "libpng": {"libpng-dev"},
                                            "libpcap": {"libpcap-dev"},
                                            "gpsd": {"libgps-dev"}})
 
@@ -150,9 +148,7 @@ class DnfPackageManager(PackageManager):
                              install_cmd="sudo dnf --enablerepo=crb install -y epel-release",
                              replace_dict={"gpsd": {"gpsd-devel"},
                                            "libpcap": {"libpcap-devel"},
-                                           "python": {"python3-devel"},
-                                           "libpng": {"libpng-devel"},
-                                           "libusb": {"libusb-devel"}})
+                                           "python": {"python3-devel"}})
 
     def _get_installed_packages(self) -> Set[str]:
         result = subprocess.run(['dnf', 'list', 'installed'], text=True, capture_output=True, check=True)
@@ -247,12 +243,10 @@ class ChocolateyPackageManager(PackageManager):
                                     "flex": set(),
                                     "libarchive": set(),
                                     "libpcap": set(),
-                                    "libpng": set(),
                                     "gpsd": set(),
                                     "automake": set(),
                                     "autoconf": set(),
                                     "libtool": set(),
-                                    "libusb": set(),
                                     "make": set(),
                                     "perl": {"strawberryperl", "NASM"}})
         return True
