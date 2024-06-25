@@ -82,9 +82,7 @@ build_deps() {
                 VALUE=${cmake_opt#*:}
                 if [ "$KEY" = "$option" ]; then
                     FOUND_VALUE="$VALUE"
-                    if [ "$FOUND_VALUE" = "libpcap" ]; then
-                        INSTALLED+=("libpcap-devel")
-                    elif [ "$FOUND_VALUE" = "libusb" ]; then
+                    if [ "$FOUND_VALUE" = "libusb" ]; then
                         install_libusb
                     elif [ "$FOUND_VALUE" = "libpng" ]; then
                         INSTALLED+=("libpng-devel")

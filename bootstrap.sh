@@ -273,9 +273,6 @@ add_option EXPRESSION_LANGUAGE_ENABLED ${TRUE} "ENABLE_EXPRESSION_LANGUAGE"
 add_dependency EXPRESSION_LANGUAGE_ENABLED "bison"
 add_dependency EXPRESSION_LANGUAGE_ENABLED "flex"
 
-add_option PCAP_ENABLED ${FALSE} "ENABLE_PCAP"
-add_dependency PCAP_ENABLED "libpcap"
-
 add_option USB_ENABLED ${FALSE} "ENABLE_USB_CAMERA"
 add_dependency USB_ENABLED "libusb"
 add_dependency USB_ENABLED "libpng"

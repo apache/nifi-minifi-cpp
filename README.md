@@ -87,11 +87,9 @@ The next table outlines CMAKE flags that correspond with MiNiFi extensions. Exte
 | OPC                              | [FetchOPCProcessor](PROCESSORS.md#fetchopcprocessor)<br/>[PutOPCProcessor](PROCESSORS.md#putopcprocessor)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | -DENABLE_OPC=ON              |
 | OpenCV                           | [CaptureRTSPFrame](PROCESSORS.md#capturertspframe)<br/>[MotionDetector](PROCESSORS.md#motiondetector)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | -DENABLE_OPENCV=ON           |
 | OpenWSMAN                        | SourceInitiatedSubscriptionListener                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -DENABLE_OPENWSMAN=ON        |
-| PCAP                             | [CapturePacket](PROCESSORS.md#capturepacket)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | -DENABLE_PCAP=ON             |
 | PDH (Windows)                    | [PerformanceDataMonitor](PROCESSORS.md#performancedatamonitor)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_PDH=ON              |
 | ProcFs (Linux)                   | [ProcFsMonitor](PROCESSORS.md#procfsmonitor)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | -DENABLE_PROCFS=ON           |
 | Python Scripting                 | [ExecuteScript](PROCESSORS.md#executescript)<br>[ExecutePythonProcessor](PROCESSORS.md#executepythonprocessor)<br/>**Custom Python Processors**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | -DENABLE_PYTHON_SCRIPTING=ON |
-| Sensors                          | GetEnvironmentalSensors<br/>GetMovementSensors                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_SENSORS=ON          |
 | SMB (Windows)                    | [FetchSmb](PROCESSORS.md#fetchsmb)<br/>[ListSmb](PROCESSORS.md#listsmb)<br/>[PutSmb](PROCESSORS.md#putsmb)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | -DENABLE_SMB=ON              |
 | SFTP                             | [FetchSFTP](PROCESSORS.md#fetchsftp)<br/>[ListSFTP](PROCESSORS.md#listsftp)<br/>[PutSFTP](PROCESSORS.md#putsftp)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | -DENABLE_SFTP=ON             |
 | SQL                              | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)<br/>[QueryDatabaseTable](PROCESSORS.md#querydatabasetable)<br/>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | -DENABLE_SQL=ON              |
@@ -181,7 +179,6 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 * Python 3 -- Required if Python support is enabled
 * libusb -- Optional, unless USB Camera support is enabled
 * libpng -- Optional, unless USB Camera support is enabled
-* libpcap -- Optional, unless ENABLE_PCAP specified
 
 The needed dependencies can be installed with the following commands for:
 
@@ -216,8 +213,6 @@ dnf install docker
 dnf install docker python-virtualenv
 # If building with GPS support
 dnf install gpsd-devel
-# (Optional) for PacketCapture Processor
-dnf install libpcap-devel
 ```
 
 ##### Aptitude based Linux Distributions
@@ -249,8 +244,6 @@ apt install docker.io
 apt install docker.io python-virtualenv
 # (Optional) If building with GPS support
 apt install libgps-dev
-# (Optional) for PacketCapture Processor
-apt install libpcap-dev
 ```
 
 ##### macOS Using Homebrew (with XCode Command Line Tools installed)
@@ -278,8 +271,6 @@ brew install libusb libpng
 sudo pip install virtualenv
 # If building with GPS support
 brew install gpsd
-# (Optional) for PacketCapture Processor
-sudo brew install libpcap
 # It is recommended that you install bison from source as HomeBrew now uses an incompatible version of Bison
 ```
 
@@ -345,7 +336,6 @@ This will set up a virtual environment in the bootstrap folder, and guide you th
     D. Python Scripting support ....Enabled
     E. Expression Language support .Enabled
     F. Kafka support ...............Enabled
-    G. PCAP support ................Disabled
     H. USB Camera support ..........Disabled
     I. GPS support .................Disabled
     K. Bustache Support ............Disabled
