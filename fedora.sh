@@ -51,9 +51,7 @@ build_deps(){
                 if [ "$KEY" = "$option" ]; then
                     FOUND_VALUE="$VALUE"
                     echo "$FOUND_VALUE"
-                    if [ "$FOUND_VALUE" = "libpcap" ]; then
-                        INSTALLED+=("libpcap-devel")
-                    elif [ "$FOUND_VALUE" = "bison" ]; then
+                    if [ "$FOUND_VALUE" = "bison" ]; then
                         INSTALLED+=("bison")
                     elif [ "$FOUND_VALUE" = "flex" ]; then
                         INSTALLED+=("flex")
