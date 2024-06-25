@@ -72,8 +72,9 @@ class JsonNode : public flow::Node::NodeImpl {
   }
 
   [[nodiscard]] std::optional<std::string> getIntegerAsString() const override {
-    if (!node_)
+    if (!node_) {
       return std::nullopt;
+    }
     if (node_->IsInt64()) {
       return std::to_string(node_->GetInt64());
     }
@@ -84,8 +85,9 @@ class JsonNode : public flow::Node::NodeImpl {
   }
 
   [[nodiscard]] std::optional<std::string> getScalarAsString() const override {
-    if (!node_)
+    if (!node_) {
       return std::nullopt;
+    }
     if (node_->IsInt64()) {
       return std::to_string(node_->GetInt64());
     }
