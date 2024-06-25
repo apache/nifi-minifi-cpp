@@ -232,9 +232,9 @@ jobs:
         with:
           name: cpack_error
           path: D:/a/nifi-minifi-cpp/nifi-minifi-cpp/build/_CPack_Packages/win64/WIX/wix.log
-  ubuntu_20_04:
-    name: "ubuntu-20.04"
-    runs-on: ubuntu-20.04
+  ubuntu_24_04:
+    name: "ubuntu-24.04"
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
       UBUNTU_GCC_MINIFI_OPTIONS: >-
@@ -293,10 +293,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ubuntu-20.04-ccache-${{github.ref}}-${{github.sha}}
+          key: ubuntu-24.04-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
-            ubuntu-20.04-ccache-${{github.ref}}-
-            ubuntu-20.04-ccache-refs/heads/main-
+            ubuntu-24.04-ccache-${{github.ref}}-
+            ubuntu-24.04-ccache-refs/heads/main-
       - id: install_deps
         run: |
           sudo apt update
@@ -314,7 +314,7 @@ jobs:
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ubuntu-20.04-ccache-${{github.ref}}-${{github.sha}}
+          key: ubuntu-24.04-ccache-${{github.ref}}-${{github.sha}}
       - name: test
         id: test
         run: |

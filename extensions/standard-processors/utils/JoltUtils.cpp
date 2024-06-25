@@ -65,7 +65,7 @@ nonstd::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Templat
 
   std::vector<std::string> fragments;
   std::vector<std::pair<size_t, size_t>> references;
-  fragments.push_back({});
+  fragments.emplace_back();
   State state = State::Plain;
   std::string target;
   // go beyond the last char on purpose
@@ -81,8 +81,8 @@ nonstd::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Templat
         if (ch == '\\') {
           state = State::Escaped;
         } else if (ch == '&') {
-          references.push_back({});
-          fragments.push_back({});
+          references.emplace_back();
+          fragments.emplace_back();
           state = State::Template;
         } else if (ch == ')' || ch == ']' || ch == '.' || ch == '[') {
           force_terminate = true;
@@ -219,7 +219,7 @@ nonstd::expected<Spec::Regex, std::string> Spec::Regex::parse(std::string_view s
     Escaped
   };
   std::vector<std::string> fragments;
-  fragments.push_back({});
+  fragments.emplace_back();
   State state = State::Plain;
   for (size_t idx = 0; idx <= str.size(); ++idx) {
     std::optional<char> ch;
@@ -231,7 +231,7 @@ nonstd::expected<Spec::Regex, std::string> Spec::Regex::parse(std::string_view s
         if (ch == '\\') {
           state = State::Escaped;
         } else if (ch == '*') {
-          fragments.push_back({});
+          fragments.emplace_back();
         } else if (ch) {
           fragments.back() += ch.value();
         }
@@ -294,7 +294,7 @@ std::optional<std::vector<std::string_view>> Spec::Regex::match(std::string_view
     if (next_it == str.end() && !frag.empty()) {
       return std::nullopt;
     }
-    matches.push_back({it, next_it});
+    matches.emplace_back(it, next_it);
     it = next_it + frag.size();
   }
   // last fragment is at the end of the string
@@ -306,7 +306,7 @@ std::optional<std::vector<std::string_view>> Spec::Regex::match(std::string_view
   if (std::string_view(next_it, str.end()) != fragments.back()) {
     return std::nullopt;
   }
-  matches.push_back({it, next_it});
+  matches.emplace_back(it, next_it);
   return matches;
 }
 
@@ -561,7 +561,7 @@ void parseMember(const Spec::Context& ctx, const std::unique_ptr<Spec::Pattern>&
         throw Exception(GENERAL_EXCEPTION, "Failed to fully parse value reference");
       }
       Spec::Context sub_ctx = ctx.extend(ctx.matches, ctx.node);
-      result->values.push_back({Spec::ValueRef{ref->first}, parseValue(sub_ctx, member)});
+      result->values.emplace_back(Spec::ValueRef{ref->first}, parseValue(sub_ctx, member));
     } else {
       throw Exception(GENERAL_EXCEPTION, fmt::format("Failed to parse value reference at '{}/{}': {}", ctx.path(), name, ref.error()));
     }
@@ -604,7 +604,7 @@ void parseMember(const Spec::Context& ctx, const std::unique_ptr<Spec::Pattern>&
       if (isAllDigits(literal_name.begin(), literal_name.end())) {
         numeric_value = std::stoull(literal_name);
       }
-      result->literals.push_back({literal_name, numeric_value, parseValue(sub_ctx, member)});
+      result->literals.emplace_back(literal_name, numeric_value, parseValue(sub_ctx, member));
     }
   }
 }
@@ -693,15 +693,15 @@ nonstd::expected<std::pair<Spec::Destination, Spec::It>, std::string> parseDesti
       if (!ctx.find(match_idx->first)) {
         return nonstd::make_unexpected(fmt::format("Invalid matching index at {} to ancestor {}", ctx.path(), match_idx->first));
       }
-      result.push_back({match_idx->first, type});
+      result.emplace_back(match_idx->first, type);
       ch_it = match_idx->second;
     } else if (auto val_ref = parseValueReference(ctx, ch_it, end, false)) {
-      result.push_back({std::move(val_ref->first), type});
+      result.emplace_back(std::move(val_ref->first), type);
       ch_it = val_ref->second;
     } else if (auto templ = Spec::Template::parse(ch_it, end)) {
       // dry eval to verify that references are valid
       (void)templ->first.eval(ctx);
-      result.push_back({std::move(templ->first), type});
+      result.emplace_back(std::move(templ->first), type);
       ch_it = templ->second;
     } else {
       return nonstd::make_unexpected(fmt::format("Could not parse neither value reference or template in {} at {}", ctx.path(), std::distance(begin, ch_it)));
@@ -865,13 +865,13 @@ void putValue(const Spec::Context& ctx, const Spec::Destination& dest, const rap
         } else {
           return;
         }
-        evaled_dest.push_back({std::to_string(idx), type});
+        evaled_dest.emplace_back(std::to_string(idx), type);
       } else {
         auto member = jsonValueToString(member_value);
         if (!member) {
           return;
         }
-        evaled_dest.push_back({std::move(member.value()), type});
+        evaled_dest.emplace_back(std::move(member.value()), type);
       }
       continue;
     }
@@ -882,7 +882,7 @@ void putValue(const Spec::Context& ctx, const Spec::Destination& dest, const rap
       if (!target) {
         throw Exception(GENERAL_EXCEPTION, fmt::format("Could not find ancestor at index {} from {}", *match_idx, ctx.path()));
       }
-      evaled_dest.push_back({std::to_string(target->match_count), type});
+      evaled_dest.emplace_back(std::to_string(target->match_count), type);
       continue;
     }
 
@@ -891,7 +891,7 @@ void putValue(const Spec::Context& ctx, const Spec::Destination& dest, const rap
       continue;
     }
 
-    evaled_dest.push_back({get<Spec::Template>(templ).eval(ctx), type});
+    evaled_dest.emplace_back(get<Spec::Template>(templ).eval(ctx), type);
   }
 
   std::reference_wrapper<rapidjson::Value> target = output;
