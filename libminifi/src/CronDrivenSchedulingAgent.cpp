@@ -19,7 +19,6 @@
  */
 #include "CronDrivenSchedulingAgent.h"
 #include <chrono>
-#include <memory>
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
@@ -36,30 +35,28 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* proces
   using std::chrono::system_clock;
 
   if (this->running_ && processor->isRunning()) {
-    auto uuid = processor->getUUID();
-    auto current_time = date::make_zoned<seconds>(date::current_zone(), time_point_cast<seconds>(system_clock::now()));
+    const auto uuid = processor->getUUID();
+    const auto current_time = date::make_zoned<seconds>(date::current_zone(), time_point_cast<seconds>(system_clock::now()));
     std::lock_guard<std::mutex> lock(mutex_);
 
     schedules_.emplace(uuid, utils::Cron(processor->getCronPeriod()));
     last_exec_.emplace(uuid, current_time.get_local_time());
 
-    auto last_trigger = last_exec_[uuid];
-    auto next_to_last_trigger = schedules_.at(uuid).calculateNextTrigger(last_trigger);
+    const auto last_trigger = last_exec_[uuid];
+    const auto next_to_last_trigger = schedules_.at(uuid).calculateNextTrigger(last_trigger);
     if (!next_to_last_trigger)
       return utils::TaskRescheduleInfo::Done();
 
     if (*next_to_last_trigger > current_time.get_local_time())
       return utils::TaskRescheduleInfo::RetryIn(*next_to_last_trigger-current_time.get_local_time());
 
-    auto on_trigger_result = this->onTrigger(processor, processContext, sessionFactory);
-
-    if (on_trigger_result)
+    if (this->triggerAndCommit(processor, processContext, sessionFactory))
       last_exec_[uuid] = current_time.get_local_time();
 
     if (processor->isYield())
       return utils::TaskRescheduleInfo::RetryAfter(processor->getYieldExpirationTime());
 
-    if (auto next_trigger = schedules_.at(uuid).calculateNextTrigger(current_time.get_local_time()))
+    if (const auto next_trigger = schedules_.at(uuid).calculateNextTrigger(current_time.get_local_time()))
       return utils::TaskRescheduleInfo::RetryIn(*next_trigger-current_time.get_local_time());
   }
   return utils::TaskRescheduleInfo::Done();

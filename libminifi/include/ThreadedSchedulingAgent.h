@@ -54,9 +54,10 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
 
   void stop() override;
 
- private:
+ protected:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger();
 
+ private:
   std::set<utils::Identifier> processors_running_;  // Set just for easy usage
 };
 
