@@ -24,8 +24,10 @@ class MiNiFiCppMain(ConanFile):
         tc.variables["MINIFI_OPENSSL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_ZLIB_SOURCE"] = "CONAN"
 
+        tc.variables["SKIP_TESTS"] = "ON"
         tc.variables["ENABLE_LIBARCHIVE"] = "OFF"
         tc.variables["ENABLE_AWS"] = "OFF"
+        tc.variables["ENABLE_EXPRESSION_LANGUAGE"] = "OFF"
 
         tc.generate()
 
