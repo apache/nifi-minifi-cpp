@@ -133,6 +133,9 @@ set(STRICT_GSL_CHECKS "DEBUG_ONLY" CACHE STRING "Contract checking and assertion
 list(APPEND STRICT_GSL_CHECKS_Values AUDIT ON DEBUG_ONLY OFF)
 set_property(CACHE STRICT_GSL_CHECKS PROPERTY STRINGS ${STRICT_GSL_CHECKS_Values})
 
+# BUILD: Fetch and build from source using CMake FetchContent or ExternalProject
+# SYSTEM: Use find_package to use the system version
+# CONAN: Use Conan packages
 add_minifi_multi_option(MINIFI_LIBCURL_SOURCE "Retrieves LibCURL from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_OPENSSL_SOURCE "Retrieves OpenSSL from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_ZLIB_SOURCE "Retrieves ZLib from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
