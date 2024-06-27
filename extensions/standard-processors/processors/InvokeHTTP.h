@@ -131,11 +131,6 @@ class InvokeHTTP : public core::Processor {
           "Content-Type defaults to")
       .withDefaultValue("application/octet-stream")
       .build();
-  EXTENSIONAPI static constexpr auto SendBody = core::PropertyDefinitionBuilder<>::createProperty("send-message-body", "Send Body")
-      .withDescription("DEPRECATED. Only kept for backwards compatibility, no functionality is included.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
-      .withDefaultValue("true")
-      .build();
   EXTENSIONAPI static constexpr auto SendMessageBody = core::PropertyDefinitionBuilder<>::createProperty("Send Message Body")
       .withDescription("If true, sends the HTTP message body on POST/PUT/PATCH requests (default). "
           "If false, suppresses the message body and content-type header for these requests.")
@@ -146,11 +141,6 @@ class InvokeHTTP : public core::Processor {
       .withDescription("When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header"
           " and instead send 'Transfer-Encoding' with a value of 'chunked'."
           " This will enable the data transfer mechanism which was introduced in HTTP 1.1 to pass data of unknown lengths in chunks.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
-      .withDefaultValue("false")
-      .build();
-  EXTENSIONAPI static constexpr auto DisablePeerVerification = core::PropertyDefinitionBuilder<>::createProperty("Disable Peer Verification")
-      .withDescription("DEPRECATED. The value is ignored, peer and host verification are always performed when using SSL/TLS.")
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
@@ -201,10 +191,8 @@ class InvokeHTTP : public core::Processor {
         ProxyUsername,
         ProxyPassword,
         ContentType,
-        SendBody,
         SendMessageBody,
         UseChunkedEncoding,
-        DisablePeerVerification,
         PutResponseBodyInAttribute,
         AlwaysOutputResponse,
         PenalizeOnNoRetry,
@@ -212,7 +200,6 @@ class InvokeHTTP : public core::Processor {
         UploadSpeedLimit,
         DownloadSpeedLimit
   });
-
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
       "The original FlowFile will be routed upon success (2xx status codes). It will have new attributes detailing the success of the request."};

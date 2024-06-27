@@ -18,6 +18,8 @@
 
 #include "core/flow/AdaptiveConfiguration.h"
 
+#include <core/flow/FlowMigrator.h>
+
 #include "core/json/JsonFlowSerializer.h"
 #include "core/json/JsonNode.h"
 #include "core/yaml/YamlFlowSerializer.h"
@@ -43,29 +45,34 @@ AdaptiveConfiguration::AdaptiveConfiguration(ConfigurationContext ctx)
       logging::LoggerFactory<AdaptiveConfiguration>::getLogger()) {}
 
 std::unique_ptr<core::ProcessGroup> AdaptiveConfiguration::getRootFromPayload(const std::string &payload) {
-  rapidjson::Document doc;
-  rapidjson::ParseResult res = doc.Parse(payload.c_str(), payload.length());
-  if (res) {
-    flow::Node root{std::make_shared<JsonNode>(&doc)};
-    const auto at_exit = gsl::finally([&] { flow_serializer_ = std::make_unique<core::json::JsonFlowSerializer>(std::move(doc)); });
+  rapidjson::Document root_json_node;
+  const rapidjson::ParseResult json_parse_result = root_json_node.Parse(payload.c_str(), payload.length());
+  if (json_parse_result) {
+    Node root{std::make_shared<JsonNode>(&root_json_node, root_json_node.GetAllocator())};
+    FlowSchema schema;
     if (root[FlowSchema::getDefault().flow_header]) {
       logger_->log_debug("Processing configuration as default json");
-      return getRootFrom(root, FlowSchema::getDefault());
+      schema = FlowSchema::getDefault();
     } else {
       logger_->log_debug("Processing configuration as nifi flow json");
-      return getRootFrom(root, FlowSchema::getNiFiFlowJson());
+      schema = FlowSchema::getNiFiFlowJson();
     }
+    migrate(root, schema);
+    const auto at_exit = gsl::finally([&] { flow_serializer_ = std::make_unique<core::json::JsonFlowSerializer>(std::move(root_json_node)); });
+    return getRootFrom(root, schema);
   }
 
   logger_->log_debug("Could not parse configuration as json, trying yaml");
 
   try {
-    YAML::Node rootYamlNode = YAML::Load(payload);
-    flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
-    flow_serializer_ = std::make_unique<core::yaml::YamlFlowSerializer>(rootYamlNode);
-    return getRootFrom(root, FlowSchema::getDefault());
+    YAML::Node root_yaml_node = YAML::Load(payload);
+    flow::Node flow_root{std::make_shared<YamlNode>(root_yaml_node)};
+    migrate(flow_root, FlowSchema::getDefault());
+
+    flow_serializer_ = std::make_unique<core::yaml::YamlFlowSerializer>(root_yaml_node);
+    return getRootFrom(flow_root, FlowSchema::getDefault());
   } catch (const YAML::ParserException& ex) {
-    logger_->log_error("Configuration file is not valid json: {} ({})", rapidjson::GetParseError_En(res.Code()), gsl::narrow<size_t>(res.Offset()));
+    logger_->log_error("Configuration file is not valid json: {} ({})", rapidjson::GetParseError_En(json_parse_result.Code()), gsl::narrow<size_t>(json_parse_result.Offset()));
     logger_->log_error("Configuration file is not valid yaml: {}", ex.what());
     throw;
   }
