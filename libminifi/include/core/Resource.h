@@ -56,7 +56,7 @@ class StaticClassType {
 
     for (const auto& construction_name : construction_names_) {
       auto factory = std::unique_ptr<ObjectFactory>(new DefaultObjectFactory<Class>(module_name));
-      getClassLoader().registerClass(construction_name, std::move(factory));
+      getClassLoader().registerClass(construction_name, std::move(factory), Type);
     }
 
     minifi::AgentDocs::createClassDescription<Class, Type>(module_name, class_name);
@@ -64,7 +64,7 @@ class StaticClassType {
 
   ~StaticClassType() {
     for (const auto& construction_name : construction_names_) {
-      getClassLoader().unregisterClass(construction_name);
+      getClassLoader().unregisterClass(construction_name, Type);
     }
   }
 #if defined(__GNUC__) || defined(__GNUG__)

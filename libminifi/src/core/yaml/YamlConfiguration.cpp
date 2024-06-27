@@ -21,6 +21,7 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "core/yaml/YamlFlowSerializer.h"
 #include "core/yaml/YamlNode.h"
+#include "core/flow/FlowMigrator.h"
 #include "Defaults.h"
 #include "utils/RegexUtils.h"
 #include "yaml-cpp/yaml.h"
@@ -38,14 +39,14 @@ YamlConfiguration::YamlConfiguration(ConfigurationContext ctx)
 
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::getRootFromPayload(const std::string &yamlConfigPayload) {
   try {
-    YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
-    flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
-    flow_serializer_ = std::make_unique<core::yaml::YamlFlowSerializer>(rootYamlNode);
-    return getRootFrom(root, flow::FlowSchema::getDefault());
+    YAML::Node root_yaml_node = YAML::Load(yamlConfigPayload);
+    flow::Node flow_root{std::make_shared<YamlNode>(root_yaml_node)};
+    migrate(flow_root, flow::FlowSchema::getDefault());
+    flow_serializer_ = std::make_unique<yaml::YamlFlowSerializer>(root_yaml_node);
+    return getRootFrom(flow_root, flow::FlowSchema::getDefault());
   } catch (const YAML::ParserException &pe) {
     logger_->log_error("Configuration is not valid yaml: {}", pe.what());
     throw;
   }
 }
-
 }  // namespace org::apache::nifi::minifi::core

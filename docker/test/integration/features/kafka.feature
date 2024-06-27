@@ -61,7 +61,6 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the Minifi logs contain the following message: "PublishKafka: client.id [client_no_42]" in less than 10 seconds
     And the Minifi logs contain the following message: "PublishKafka: Message Key [unique_message_key_123]" in less than 10 seconds
     And the Minifi logs contain the following message: "PublishKafka: DynamicProperty: [retry.backoff.ms] -> [150]" in less than 10 seconds
-    And the Minifi logs contain the following message: "The Message Key Field property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead." in less than 10 seconds
 
     Examples: Compression formats
       | compress_codec |

@@ -21,6 +21,8 @@
 #include <set>
 
 #include "core/flow/StructuredConfiguration.h"
+#include "core/flow/FlowMigrator.h"
+
 #include "core/flow/CheckRequiredField.h"
 #include "core/flow/StructuredConnectionParser.h"
 #include "core/state/Value.h"
@@ -1010,6 +1012,22 @@ void StructuredConfiguration::addNewId(const std::string& uuid) {
 std::string StructuredConfiguration::serialize(const core::ProcessGroup& process_group) {
   gsl_Expects(flow_serializer_);
   return flow_serializer_->serialize(process_group, schema_, sensitive_values_encryptor_, {});
+}
+
+void StructuredConfiguration::migrate(Node& root_node, const FlowSchema& schema) const {
+  const auto flow_migrator_classes = ClassLoader::getDefaultClassLoader().getAll(ResourceType::FlowMigrator);
+
+  for (auto& flow_migrator_class : flow_migrator_classes) {
+    if (const auto flow_migrator = ClassLoader::getDefaultClassLoader().instantiate<FlowMigrator>(flow_migrator_class, flow_migrator_class)) {
+      try {
+        flow_migrator->migrate(root_node, schema);
+      } catch (const std::exception& exception) {
+        logger_->log_error("Caught Exception during flow {}::migration, type: {}, what: {}", flow_migrator->getName(), typeid(exception).name(), exception.what());
+      }
+    } else {
+      logger_->log_error("ResourceType::FlowMigrator is not a core::flow::FlowMigrator");
+    }
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow

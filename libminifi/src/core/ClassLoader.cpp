@@ -17,21 +17,15 @@
 
 #include "core/ClassLoader.h"
 
-#include <memory>
 #include <string>
 
 #include "core/logging/LoggerConfiguration.h"
-#include "range/v3/action/sort.hpp"
-#include "range/v3/action/unique.hpp"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
 
-ClassLoader::ClassLoader(const std::string& name)
-  : logger_(logging::LoggerFactory<ClassLoader>::getLogger()), name_(name) {}
+namespace org::apache::nifi::minifi::core {
+
+ClassLoader::ClassLoader(std::string name)
+  : logger_(logging::LoggerFactory<ClassLoader>::getLogger()), name_(std::move(name)) {}
 
 ClassLoader &ClassLoader::getDefaultClassLoader() {
   static ClassLoader ret;
@@ -41,8 +35,8 @@ ClassLoader &ClassLoader::getDefaultClassLoader() {
 
 ClassLoader& ClassLoader::getClassLoader(const std::string& child_name) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
-  auto it = class_loaders_.find(child_name);
-  if (it != class_loaders_.end()) {
+
+  if (auto it = class_loaders_.find(child_name); it != class_loaders_.end()) {
     return it->second;
   }
   std::string full_name = [&] {
@@ -56,24 +50,4 @@ ClassLoader& ClassLoader::getClassLoader(const std::string& child_name) {
   return child;
 }
 
-std::vector<std::string> ClassLoader::getClasses(const std::string& group) const {
-  std::lock_guard<std::mutex> lock(internal_mutex_);
-  std::vector<std::string> class_names;
-  for (const auto& child_loader : class_loaders_) {
-    for (auto&& clazz : child_loader.second.getClasses(group)) {
-      class_names.push_back(std::move(clazz));
-    }
-  }
-  for (const auto& factory : loaded_factories_) {
-    if (factory.second->getGroupName() == group) {
-      class_names.push_back(factory.second->getClassName());
-    }
-  }
-  return std::move(class_names) | ranges::actions::sort | ranges::actions::unique;
-}
-
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

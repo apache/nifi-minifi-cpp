@@ -888,7 +888,6 @@ Processors:
     Always Output Response: 'false'
     Connection Timeout: 5 s
     Content-type: application/octet-stream
-    Disable Peer Verification: 'false'
     Follow Redirects: 'true'
     HTTP Method: POST
     Include Date Header: 'true'
@@ -1020,7 +1019,6 @@ Processors:
       Always Output Response: false
       Connection Timeout: 5 s
       Content-type: application/octet-stream
-      Disable Peer Verification: false
       Follow Redirects: true
       HTTP Method: POST
       Include Date Header: true

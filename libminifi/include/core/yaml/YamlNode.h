@@ -106,6 +106,35 @@ class YamlNode : public flow::Node::NodeImpl {
     return flow::Node{std::make_shared<YamlNode>(node_[std::string{key}])};
   }
 
+  [[nodiscard]] bool contains(const std::string_view key) const override {
+    return node_[std::string{key}].IsDefined();
+  }
+
+  [[nodiscard]] bool remove(const std::string_view key) override {
+    return node_.remove(std::string{key});
+  }
+
+  std::optional<flow::Node> pushBack() override {
+    if (!node_ || !node_.IsSequence()) {
+      return std::nullopt;
+    }
+    node_.SetStyle(YAML::EmitterStyle::Block);;
+    YAML::Node new_map{YAML::NodeType::Map};
+    node_.push_back(new_map);
+    return flow::Node{std::make_shared<YamlNode>(new_map)};
+  }
+
+  std::optional<flow::Node> addMember(const std::string_view key, const std::string_view value) override {
+    auto new_node = node_[std::string{key}];
+    new_node = std::string{value};
+    return flow::Node{std::make_shared<YamlNode>(new_node)};
+  }
+
+  std::optional<flow::Node> addObject(const std::string_view key) override {
+    auto new_object = node_[std::string{key}];
+    return flow::Node{std::make_shared<YamlNode>(new_object)};
+  }
+
   std::optional<flow::Node::Cursor> getCursor() const override {
     YAML::Mark mark = node_.Mark();
     if (mark.is_null()) {

@@ -103,6 +103,12 @@ class Node {
     virtual Iterator begin() const = 0;
     virtual Iterator end() const = 0;
     virtual Node operator[](std::string_view key) const = 0;
+    [[nodiscard]] virtual bool contains(std::string_view key) const = 0;
+    [[nodiscard]] virtual bool remove(std::string_view key) = 0;
+
+    [[nodiscard]] virtual std::optional<Node> pushBack() = 0;
+    [[nodiscard]] virtual std::optional<Node> addMember(std::string_view key, std::string_view value) = 0;
+    [[nodiscard]] virtual std::optional<Node> addObject(std::string_view key) = 0;
 
     virtual std::optional<Cursor> getCursor() const = 0;
 
@@ -177,6 +183,26 @@ class Node {
       }
     }
     return impl_->createEmpty();
+  }
+
+  [[nodiscard]] bool contains(const std::string_view key) const {
+    return impl_->contains(key);
+  }
+
+  [[nodiscard]] bool remove(const std::string_view key) {
+    return impl_->remove(key);
+  }
+
+  std::optional<Node> pushBack() {
+    return impl_->pushBack();
+  }
+
+  std::optional<Node> addMember(const std::string_view key, const std::string_view value) {
+    return impl_->addMember(key, value);
+  }
+
+  std::optional<Node> addObject(const std::string_view key) {
+    return impl_->addObject(key);
   }
 
   std::string getPath() const {return impl_->path_;}
