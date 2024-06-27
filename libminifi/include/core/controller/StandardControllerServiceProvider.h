@@ -65,7 +65,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
   void enableAllControllerServices() override {
     logger_->log_info("Enabling {} controller services", controller_map_->getAllControllerServices().size());
-    for (const auto service : controller_map_->getAllControllerServices()) {
+    for (const auto& service : controller_map_->getAllControllerServices()) {
       logger_->log_info("Enabling {}", service->getName());
       if (!service->canEnable()) {
         logger_->log_warn("Service {} cannot be enabled", service->getName());
@@ -79,7 +79,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
   void disableAllControllerServices() override {
     logger_->log_info("Disabling {} controller services", controller_map_->getAllControllerServices().size());
-    for (const auto service : controller_map_->getAllControllerServices()) {
+    for (const auto& service : controller_map_->getAllControllerServices()) {
       logger_->log_info("Disabling {}", service->getName());
       if (!service->enabled()) {
         logger_->log_warn("Service {} is not enabled", service->getName());
