@@ -148,25 +148,9 @@ class PublishKafka : public KafkaProcessorBase {
       .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
       .withDefaultValue("0 B")
       .build();
-  EXTENSIONAPI static constexpr auto SecurityCA = core::PropertyDefinitionBuilder<>::createProperty("Security CA")
-      .withDescription("DEPRECATED in favor of SSL Context Service. File or directory path to CA certificate(s) for verifying the broker's key")
-      .build();
-  EXTENSIONAPI static constexpr auto SecurityCert = core::PropertyDefinitionBuilder<>::createProperty("Security Cert")
-      .withDescription("DEPRECATED in favor of SSL Context Service.Path to client's public key (PEM) used for authentication")
-      .build();
-  EXTENSIONAPI static constexpr auto SecurityPrivateKey = core::PropertyDefinitionBuilder<>::createProperty("Security Private Key")
-      .withDescription("DEPRECATED in favor of SSL Context Service.Path to client's private key (PEM) used for authentication")
-      .build();
-  EXTENSIONAPI static constexpr auto SecurityPrivateKeyPassWord = core::PropertyDefinitionBuilder<>::createProperty("Security Pass Phrase")
-      .withDescription("DEPRECATED in favor of SSL Context Service.Private key passphrase")
-      .isSensitive(true)
-      .build();
   EXTENSIONAPI static constexpr auto KafkaKey = core::PropertyDefinitionBuilder<>::createProperty("Kafka Key")
       .withDescription("The key to use for the message. If not specified, the UUID of the flow file is used as the message key.")
       .supportsExpressionLanguage(true)
-      .build();
-  EXTENSIONAPI static constexpr auto MessageKeyField = core::PropertyDefinitionBuilder<>::createProperty("Message Key Field")
-      .withDescription("DEPRECATED, does not work -- use Kafka Key instead")
       .build();
   EXTENSIONAPI static constexpr auto DebugContexts = core::PropertyDefinitionBuilder<>::createProperty("Debug contexts")
       .withDescription("A comma-separated list of debug contexts to enable."
@@ -179,7 +163,7 @@ class PublishKafka : public KafkaProcessorBase {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(KafkaProcessorBase::Properties, std::array<core::PropertyReference, 23>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(KafkaProcessorBase::Properties, std::array<core::PropertyReference, 18>{
       SeedBrokers,
       Topic,
       DeliveryGuarantee,
@@ -195,12 +179,7 @@ class PublishKafka : public KafkaProcessorBase {
       QueueBufferMaxMessage,
       CompressCodec,
       MaxFlowSegSize,
-      SecurityCA,
-      SecurityCert,
-      SecurityPrivateKey,
-      SecurityPrivateKeyPassWord,
       KafkaKey,
-      MessageKeyField,
       DebugContexts,
       FailEmptyFlowFiles
   });

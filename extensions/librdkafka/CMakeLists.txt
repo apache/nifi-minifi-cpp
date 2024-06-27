@@ -26,7 +26,7 @@ use_bundled_librdkafka(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-file(GLOB SOURCES  "*.cpp")
+file(GLOB SOURCES  "*.cpp" "migrators/*.cpp")
 
 add_minifi_library(minifi-rdkafka-extensions SHARED ${SOURCES})
 

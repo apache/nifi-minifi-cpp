@@ -219,6 +219,8 @@ class StructuredConfiguration : public FlowConfiguration {
   std::unique_ptr<FlowSerializer> flow_serializer_;
   std::shared_ptr<logging::Logger> logger_;
 
+  void migrate(core::flow::Node& root_node, const core::flow::FlowSchema& schema) const;
+
  private:
   PropertyValue getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node, ParameterContext* parameter_context);
   void parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component, ParameterContext* parameter_context);
