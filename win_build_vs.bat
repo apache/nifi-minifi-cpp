@@ -45,7 +45,6 @@ set enable_pcap=OFF
 set enable_python_scripting=ON
 set enable_sensors=OFF
 set enable_usb_camera=OFF
-set enable_nanofi=OFF
 set enable_opencv=OFF
 set enable_prometheus=ON
 set enable_gcp=ON
@@ -80,7 +79,6 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NO_ELASTIC]       set enable_elastic=OFF
     if [%%~x] EQU [/M]                set installer_merge_modules=ON
     if [%%~x] EQU [/NO_AZURE]         set enable_azure=OFF
-    if [%%~x] EQU [/N]                set enable_nanofi=ON
     if [%%~x] EQU [/O]                set enable_opencv=ON
     if [%%~x] EQU [/NO_PROMETHEUS]    set enable_prometheus=OFF
     if [%%~x] EQU [/BUSTACHE]         set enable_bustache=ON
@@ -120,7 +118,7 @@ echo on
 cmake -G %generator% %build_platform_cmd% -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%enable_sql% -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
         -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%enable_kafka% -DENABLE_JNI=%enable_jni% ^
         -DENABLE_AWS=%enable_aws% -DENABLE_PDH=%enable_pdh% -DENABLE_AZURE=%enable_azure% -DENABLE_SFTP=%enable_sftp% -DENABLE_SPLUNK=%enable_splunk% -DENABLE_GCP=%enable_gcp% ^
-        -DENABLE_NANOFI=%enable_nanofi% -DENABLE_OPENCV=%enable_opencv% -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
+        -DENABLE_OPENCV=%enable_opencv% -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% -DENABLE_SMB=%enable_smb% ^
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
         -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_USB_CAMERA=%enable_usb_camera% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% ^

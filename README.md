@@ -363,7 +363,6 @@ This will set up a virtual environment in the bootstrap folder, and guide you th
     W. Openwsman Support ...........Disabled
     X. Azure Support ...............Enabled
     Y. Systemd Support .............Enabled
-    Z. NanoFi Support ..............Disabled
     AA. Splunk Support .............Enabled
     AB. Kubernetes Support .........Enabled
     AC. Google Cloud Support .......Enabled
