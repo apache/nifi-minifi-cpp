@@ -44,11 +44,6 @@ The project previously required OpenSSL to be installed. If you follow our build
  - [Perl](https://strawberryperl.com/)
  - [NASM](https://nasm.us)
  - (Optional) [WiX Toolset](https://wixtoolset.org/releases/) (only for building the MSI)
- - (Optional) JDK (only for JNI support)
-
-#### JNI support
-Though the project is written in C++, JNI functionality supports running Java processors stored in NiFi Archives. These can be run
-in a much smaller memory footprint and consume fewer resources. If your systems do not support Java or you do not want a JDK installed, please use non-JNI builds.
 
 ### Building with Visual Studio
 
@@ -61,8 +56,7 @@ A file named CMakeSettings.json provides the CMake configuration.
 
 CMake must generate its cache, under Cache in the CMake Menu. After that is complete go to 'Build Only' under the CMake menu. Due to limitations in Visual Studio's CMake support, it is advised
 that you build `minifi.lib` then `minifi.exe` targets.  `Build All` works, too, but it takes much longer.
-Once you have built these targets, you may use the `cpack` command to build your MSI. If you are building with JNI functionality the MSI will be
-significantly larger (about 160 MB) since it contains the base NARs to run the standard set of Apache NiFi processors.
+Once you have built these targets, you may use the `cpack` command to build your MSI.
 
 ### Building via the build script
 
@@ -76,7 +70,6 @@ After the build directory it will take optional parameters modifying the CMake c
 | /R                   | Disables automatic test running after build                                         |
 | /P                   | Enables MSI creation                                                                |
 | /NO_KAFKA            | Disables Kafka extension                                                            |
-| /J                   | Enables JNI                                                                         |
 | /NO_SQL              | Disables SQL extension                                                              |
 | /NO_AWS              | Disables AWS extension                                                              |
 | /SFTP                | Enables SFTP extension                                                              |
@@ -112,7 +105,7 @@ After the build directory it will take optional parameters modifying the CMake c
 
 Examples:
  - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build32 /T /K /P`
- - 64-bit build with JNI, with debug symbols: `win_build_vs.bat build64 /64 /J /D`
+ - 64-bit build with PDH, with debug symbols: `win_build_vs.bat build64 /64 /D /PDH`
 
 `win_build_vs.bat` requires a Visual Studio 2022 build environment to be set up. Use the `x86 Native Tools Command Prompt for VS 2022`, or the `x64 Native Tools Command Prompt for VS 2022` for 32-bit and 64-bit builds respectively.
 
@@ -133,7 +126,7 @@ A basic working CMake configuration can be inferred from the `win_build_vs.bat`.
 ```
 mkdir build
 cd build
-cmake -G "Visual Studio 17 2022" -A x64 -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODULES=OFF -DTEST_CUSTOM_WEL_PROVIDER=OFF -DENABLE_SQL=OFF -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DENABLE_AWS=OFF -DENABLE_PDH= -DENABLE_AZURE=OFF -DENABLE_SFTP=OFF -DENABLE_SPLUNK= -DENABLE_GCP= -DENABLE_OPENCV=OFF -DENABLE_PROMETHEUS=OFF -DENABLE_ELASTICSEARCH= -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=ON -DENABLE_BUSTACHE=OFF -DENABLE_ENCRYPT_CONFIG=OFF -DENABLE_GPS=OFF -DENABLE_LUA_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_OPC=OFF -DENABLE_OPENWSMAN=OFF -DENABLE_OPS=OFF -DENABLE_PCAP=OFF -DENABLE_PYTHON_SCRIPTING= -DENABLE_SENSORS=OFF -DENABLE_USB_CAMERA=OFF -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
+cmake -G "Visual Studio 17 2022" -A x64 -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODULES=OFF -DTEST_CUSTOM_WEL_PROVIDER=OFF -DENABLE_SQL=OFF -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_AWS=OFF -DENABLE_PDH= -DENABLE_AZURE=OFF -DENABLE_SFTP=OFF -DENABLE_SPLUNK= -DENABLE_GCP= -DENABLE_OPENCV=OFF -DENABLE_PROMETHEUS=OFF -DENABLE_ELASTICSEARCH= -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=ON -DENABLE_BUSTACHE=OFF -DENABLE_ENCRYPT_CONFIG=OFF -DENABLE_GPS=OFF -DENABLE_LUA_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_OPC=OFF -DENABLE_OPENWSMAN=OFF -DENABLE_OPS=OFF -DENABLE_PCAP=OFF -DENABLE_PYTHON_SCRIPTING= -DENABLE_SENSORS=OFF -DENABLE_USB_CAMERA=OFF -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
 msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release /property:Platform=x64
 copy minifi_main\Release\minifi.exe minifi_main\
 cpack

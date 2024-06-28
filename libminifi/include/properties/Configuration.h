@@ -142,12 +142,6 @@ class Configuration : public Properties {
   static constexpr const char *minifi_disk_space_watchdog_stop_threshold = "minifi.disk.space.watchdog.stop.threshold";
   static constexpr const char *minifi_disk_space_watchdog_restart_threshold = "minifi.disk.space.watchdog.restart.threshold";
 
-  // JNI options
-  static constexpr const char *nifi_framework_dir = "nifi.framework.dir";
-  static constexpr const char *nifi_jvm_options = "nifi.jvm.options";
-  static constexpr const char *nifi_nar_directory = "nifi.nar.directory";
-  static constexpr const char *nifi_nar_deploy_directory = "nifi.nar.deploy.directory";
-
   // Log options
   static constexpr const char *nifi_log_spdlog_pattern = "nifi.log.spdlog.pattern";
   static constexpr const char *nifi_log_spdlog_shorten_names = "nifi.log.spdlog.shorten_names";

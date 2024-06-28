@@ -18,9 +18,7 @@ limitations under the License.
 - [AWSCredentialsService](#AWSCredentialsService)
 - [AzureStorageCredentialsService](#AzureStorageCredentialsService)
 - [ElasticsearchCredentialsControllerService](#ElasticsearchCredentialsControllerService)
-- [ExecuteJavaControllerService](#ExecuteJavaControllerService)
 - [GCPCredentialsControllerService](#GCPCredentialsControllerService)
-- [JavaControllerService](#JavaControllerService)
 - [JsonRecordSetReader](#JsonRecordSetReader)
 - [JsonRecordSetWriter](#JsonRecordSetWriter)
 - [KubernetesControllerService](#KubernetesControllerService)
@@ -90,21 +88,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | API Key  |               |                  | The API Key to use<br/>**Sensitive Property: true**                                                               |
 
 
-## ExecuteJavaControllerService
-
-### Description
-
-ExecuteJavaClass runs NiFi Controller services given a provided system path
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                        | Default Value | Allowable Values | Description                                     |
-|-----------------------------|---------------|------------------|-------------------------------------------------|
-| **NiFi Controller Service** |               |                  | Name of NiFi Controller Service to load and run |
-
-
 ## GCPCredentialsControllerService
 
 ### Description
@@ -120,23 +103,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Credentials Location**  | Google Application Default Credentials | Google Application Default Credentials<br/>Use Compute Engine Credentials<br/>Service Account JSON File<br/>Service Account JSON<br/>Use Anonymous credentials | The location of the credentials.                                                    |
 | Service Account JSON File |                                        |                                                                                                                                                                | Path to a file containing a Service Account key file in JSON format.                |
 | Service Account JSON      |                                        |                                                                                                                                                                | The raw JSON containing a Service Account keyfile.<br/>**Sensitive Property: true** |
-
-
-## JavaControllerService
-
-### Description
-
-Allows specification of nars to be used within referenced processors.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                         | Default Value | Allowable Values | Description                                   |
-|------------------------------|---------------|------------------|-----------------------------------------------|
-| **Nar Directory**            |               |                  | Directory containing the nars to deploy       |
-| **Nar Deployment Directory** |               |                  | Directory in which nars will be deployed      |
-| **Nar Document Directory**   |               |                  | Directory in which documents will be deployed |
 
 
 ## KubernetesControllerService

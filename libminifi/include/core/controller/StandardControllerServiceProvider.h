@@ -20,11 +20,9 @@
 
 #include <string>
 #include <utility>
-#include <iostream>
-#include <memory>
+ #include <memory>
 #include <vector>
 #include "core/ProcessGroup.h"
-#include "SchedulingAgent.h"
 #include "core/ClassLoader.h"
 #include "ControllerService.h"
 #include "ControllerServiceNodeMap.h"
@@ -32,7 +30,6 @@
 #include "StandardControllerServiceNode.h"
 #include "ControllerServiceProvider.h"
 #include "core/logging/LoggerFactory.h"
-#include "SchedulingAgent.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
@@ -51,17 +48,11 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   StandardControllerServiceProvider& operator=(const StandardControllerServiceProvider &other) = delete;
   StandardControllerServiceProvider& operator=(StandardControllerServiceProvider &&other) = delete;
 
-  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool /*firstTimeAdded*/) {
+  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string& type, const std::string&, const std::string& id, bool) override {
     std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
 
-    if (nullptr == new_controller_service) {
-      new_controller_service = extension_loader_.instantiate<ControllerService>("ExecuteJavaControllerService", id);
-      if (new_controller_service != nullptr) {
-        new_controller_service->initialize();
-        new_controller_service->setProperty("NiFi Controller Service", fullType);
-      } else {
-        return nullptr;
-      }
+    if (!new_controller_service) {
+      return nullptr;
     }
 
     std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service,
@@ -72,9 +63,9 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     return new_service_node;
   }
 
-  virtual void enableAllControllerServices() {
+  void enableAllControllerServices() override {
     logger_->log_info("Enabling {} controller services", controller_map_->getAllControllerServices().size());
-    for (auto service : controller_map_->getAllControllerServices()) {
+    for (const auto& service : controller_map_->getAllControllerServices()) {
       logger_->log_info("Enabling {}", service->getName());
       if (!service->canEnable()) {
         logger_->log_warn("Service {} cannot be enabled", service->getName());
@@ -86,9 +77,9 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     }
   }
 
-  virtual void disableAllControllerServices() {
+  void disableAllControllerServices() override {
     logger_->log_info("Disabling {} controller services", controller_map_->getAllControllerServices().size());
-    for (auto service : controller_map_->getAllControllerServices()) {
+    for (const auto& service : controller_map_->getAllControllerServices()) {
       logger_->log_info("Disabling {}", service->getName());
       if (!service->enabled()) {
         logger_->log_warn("Service {} is not enabled", service->getName());
@@ -100,12 +91,12 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     }
   }
 
-  void clearControllerServices() {
+  void clearControllerServices() override {
     controller_map_->clear();
   }
 
  protected:
-  bool canEdit() {
+  bool canEdit() override {
     return false;
   }
 
