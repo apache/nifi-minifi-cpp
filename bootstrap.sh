@@ -246,6 +246,16 @@ if [ -z "${CMAKE_COMMAND}" ] ||
   get_cmake_version
 fi
 
+# RHEL8: If cmake3 is too old, try cmake
+if [ "$CMAKE_COMMAND" = "cmake3" ] &&
+   [ "$CMAKE_MAJOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" ] ||
+   [ "$CMAKE_MINOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MINOR" ] ||
+   [ "$CMAKE_REVISION" -lt "$CMAKE_GLOBAL_MIN_VERSION_REVISION" ] &&
+   [ -x "$(command -v cmake)" ]; then
+  CMAKE_COMMAND="cmake"
+  get_cmake_version
+fi
+
 if [ "$CMAKE_MAJOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" ] ||
    [ "$CMAKE_MINOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MINOR" ] ||
    [ "$CMAKE_REVISION" -lt "$CMAKE_GLOBAL_MIN_VERSION_REVISION" ]; then
