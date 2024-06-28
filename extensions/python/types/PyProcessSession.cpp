@@ -132,7 +132,6 @@ void PyProcessSession::remove(const std::shared_ptr<core::FlowFile>& flow_file) 
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
-  std::shared_ptr<core::FlowFile> result;
 
   session_->remove(flow_file);
   flow_files_.erase(ranges::remove_if(flow_files_, [&flow_file](const auto& ff)-> bool { return ff == flow_file; }), flow_files_.end());
@@ -155,6 +154,14 @@ std::string PyProcessSession::getContentsAsString(const std::shared_ptr<core::Fl
   return content;
 }
 
+void PyProcessSession::putAttribute(const std::shared_ptr<core::FlowFile>& flow_file, std::string_view key, const std::string& value) {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  session_->putAttribute(*flow_file, key, value);
+}
+
 extern "C" {
 
 static PyMethodDef PyProcessSessionObject_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
@@ -167,6 +174,7 @@ static PyMethodDef PyProcessSessionObject_methods[] = {  // NOLINT(cppcoreguidel
     {"transferToCustomRelationship", (PyCFunction) PyProcessSessionObject::transferToCustomRelationship, METH_VARARGS, nullptr},
     {"remove", (PyCFunction) PyProcessSessionObject::remove, METH_VARARGS, nullptr},
     {"getContentsAsBytes", (PyCFunction) PyProcessSessionObject::getContentsAsBytes, METH_VARARGS, nullptr},
+    {"putAttribute", (PyCFunction) PyProcessSessionObject::putAttribute, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -369,6 +377,47 @@ PyObject* PyProcessSessionObject::getContentsAsBytes(PyProcessSessionObject* sel
   auto content = session->getContentsAsString(flow_file);
 
   return PyBytes_FromStringAndSize(content.c_str(), gsl::narrow<Py_ssize_t>(content.size()));
+}
+
+PyObject* PyProcessSessionObject::putAttribute(PyProcessSessionObject* self, PyObject* args) {
+  auto session = self->process_session_.lock();
+  if (!session) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
+    return nullptr;
+  }
+  PyObject* script_flow_file = nullptr;
+  const char* attribute_key = nullptr;
+  const char* attribute_value = nullptr;
+  if (!PyArg_ParseTuple(args, "O!ss", PyScriptFlowFile::typeObject(), &script_flow_file, &attribute_key, &attribute_value)) {
+    return nullptr;
+  }
+
+  const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
+  if (!flow_file) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
+    return nullptr;
+  }
+
+  if (!attribute_key) {
+    PyErr_SetString(PyExc_AttributeError, "Attribute key is invalid!");
+    return nullptr;
+  }
+
+  std::string attribute_key_str(attribute_key);
+  if (attribute_key_str.empty()) {
+    PyErr_SetString(PyExc_AttributeError, "Attribute key is empty!");
+    return nullptr;
+  }
+
+  if (!attribute_value) {
+    PyErr_SetString(PyExc_AttributeError, "Attribute value is invalid!");
+    return nullptr;
+  }
+
+  std::string attribute_value_str(attribute_value);
+
+  session->putAttribute(flow_file, attribute_key_str, attribute_value_str);
+  Py_RETURN_NONE;
 }
 
 PyTypeObject* PyProcessSessionObject::typeObject() {

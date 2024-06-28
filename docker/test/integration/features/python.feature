@@ -95,6 +95,19 @@ Feature: MiNiFi can use python processors in its flows
       | using inline defined Python dependencies to install packages          |
 
   @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: MiNiFi C++ can use native NiFi source python processors
+    Given a CreateFlowFile processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
+    And the "space" relationship of the CreateFlowFile processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    When the MiNiFi instance starts up
+    Then a flowfile with the content "Hello World!" is placed in the monitored directory in less than 10 seconds
+    And the Minifi logs contain the following message: "key:filename value:" in less than 60 seconds
+    And the Minifi logs contain the following message: "key:type value:space" in less than 60 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: MiNiFi C++ can use custom relationships in NiFi native python processors
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with filename "test_file.log" and content "test_data_one" is present in "/tmp/input"
