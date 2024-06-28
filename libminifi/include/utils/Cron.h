@@ -36,6 +36,7 @@ class CronField {
   virtual ~CronField() = default;
 
   [[nodiscard]] virtual bool matches(date::local_seconds time_point) const = 0;
+  virtual bool operator==(const CronField&) const { throw std::runtime_error("not implemented"); }
 };
 
 class Cron {
