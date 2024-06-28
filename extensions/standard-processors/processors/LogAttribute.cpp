@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "LogAttribute.h"
-#include <ctime>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -27,11 +26,13 @@
 #include <map>
 #include <sstream>
 #include <iostream>
-#include "utils/TimeUtil.h"
-#include "utils/StringUtils.h"
+
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/TimeUtil.h"
+#include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -48,98 +49,93 @@ void LogAttribute::onSchedule(core::ProcessContext& context, core::ProcessSessio
 
   context.getProperty(MaxPayloadLineLength, max_line_length_);
   logger_->log_debug("Maximum Payload Line Length: {}", max_line_length_);
-}
-// OnTrigger method, implemented by NiFi LogAttribute
-void LogAttribute::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  logger_->log_trace("enter log attribute, attempting to retrieve {} flow files", flowfiles_to_log_);
-  std::string dashLine = "--------------------------------------------------";
-  LogAttrLevel level = LogAttrLevelInfo;
-  bool logPayload = false;
 
-  uint64_t i = 0;
-  const auto max = flowfiles_to_log_ == 0 ? UINT64_MAX : flowfiles_to_log_;
-  for (; i < max; ++i) {
+  if (auto attributes_to_log_str = context.getProperty(AttributesToLog); attributes_to_log_str && !attributes_to_log_str->empty()) {
+    if (auto attrs_to_log_vec = utils::string::split(*attributes_to_log_str, ","); !attrs_to_log_vec.empty())
+      attributes_to_log_.emplace(std::make_move_iterator(attrs_to_log_vec.begin()), std::make_move_iterator(attrs_to_log_vec.end()));
+  }
+
+  if (auto attributes_to_ignore_str = context.getProperty(AttributesToIgnore); attributes_to_ignore_str && !attributes_to_ignore_str->empty()) {
+    if (auto attrs_to_ignore_vec = utils::string::split(*attributes_to_ignore_str, ","); !attrs_to_ignore_vec.empty())
+      attributes_to_ignore_.emplace(std::make_move_iterator(attrs_to_ignore_vec.begin()), std::make_move_iterator(attrs_to_ignore_vec.end()));
+  }
+
+  if (auto log_level_str = context.getProperty(LogLevel)) {
+    if (auto result = magic_enum::enum_cast<core::logging::LOG_LEVEL>(*log_level_str)) {
+      log_level_ = *result;
+    } else if (*log_level_str == "error") {  // TODO(MINIFICPP-2294) this could be avoided if config files were properly migrated
+      log_level_ = core::logging::err;
+    }
+  }
+
+  if (auto log_prefix = context.getProperty(LogPrefix); log_prefix && !log_prefix->empty()) {
+    dash_line_ = fmt::format("{:-^50}", *log_prefix);
+  }
+
+  log_payload_ = context.getProperty<bool>(LogPayload).value_or(false);
+}
+
+std::string LogAttribute::generateLogMessage(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const {
+  std::ostringstream message;
+  message << "Logging for flow file" << "\n";
+  message << dash_line_;
+  message << "\nStandard FlowFile Attributes";
+  message << "\n" << "UUID:" << flow_file->getUUIDStr();
+  message << "\n" << "EntryDate:" << utils::timeutils::getTimeStr(flow_file->getEntryDate());
+  message << "\n" << "lineageStartDate:" << utils::timeutils::getTimeStr(flow_file->getlineageStartDate());
+  message << "\n" << "Size:" << flow_file->getSize() << " Offset:" << flow_file->getOffset();
+  message << "\nFlowFile Attributes Map Content";
+  for (const auto& [attr_key, attr_value] : flow_file->getAttributes()) {
+    if (attributes_to_ignore_ && attributes_to_ignore_->contains(attr_key))
+      continue;
+    if (attributes_to_log_ && !attributes_to_log_->contains(attr_key))
+      continue;
+    message << "\n" << "key:" << attr_key << " value:" << attr_value;
+  }
+  message << "\nFlowFile Resource Claim Content";
+  if (const auto claim = flow_file->getResourceClaim()) {
+    message << "\n" << "Content Claim:" << claim->getContentFullPath();
+  }
+  if (log_payload_ && flow_file->getSize() <= 1024 * 1024) {
+    message << "\n" << "Payload:" << "\n";
+    const auto read_result = session.readBuffer(flow_file);
+
+    std::string printable_payload;
+    if (hexencode_) {
+      printable_payload = utils::string::to_hex(read_result.buffer);
+    } else {
+      printable_payload = to_string(read_result);
+    }
+
+    if (max_line_length_ == 0U) {
+      message << printable_payload << "\n";
+    } else {
+      for (size_t j = 0; j < printable_payload.size(); j += max_line_length_) {
+        message << printable_payload.substr(j, max_line_length_) << '\n';
+      }
+    }
+  } else {
+    message << "\n";
+  }
+  message << dash_line_;
+  return message.str();
+}
+
+void LogAttribute::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  logger_->log_trace("enter log attribute, attempting to retrieve {} flow files", flowfiles_to_log_);
+  const auto max_flow_files_to_process = flowfiles_to_log_ == 0 ? UINT64_MAX : flowfiles_to_log_;
+  uint64_t flow_files_processed = 0;
+  for (; flow_files_processed < max_flow_files_to_process; ++flow_files_processed) {
     std::shared_ptr<core::FlowFile> flow = session.get();
 
     if (!flow) {
       break;
     }
 
-    std::string value;
-    if (context.getProperty(LogLevel, value)) {
-      logLevelStringToEnum(value, level);
-    }
-    if (context.getProperty(LogPrefix, value)) {
-      dashLine = "-----" + value + "-----";
-    }
-
-    context.getProperty(LogPayload, logPayload);
-
-    std::ostringstream message;
-    message << "Logging for flow file " << "\n";
-    message << dashLine;
-    message << "\nStandard FlowFile Attributes";
-    message << "\n" << "UUID:" << flow->getUUIDStr();
-    message << "\n" << "EntryDate:" << utils::timeutils::getTimeStr(flow->getEntryDate());
-    message << "\n" << "lineageStartDate:" << utils::timeutils::getTimeStr(flow->getlineageStartDate());
-    message << "\n" << "Size:" << flow->getSize() << " Offset:" << flow->getOffset();
-    message << "\nFlowFile Attributes Map Content";
-    std::map<std::string, std::string> attrs = flow->getAttributes();
-    std::map<std::string, std::string>::iterator it;
-    for (it = attrs.begin(); it != attrs.end(); it++) {
-      message << "\n" << "key:" << it->first << " value:" << it->second;
-    }
-    message << "\nFlowFile Resource Claim Content";
-    std::shared_ptr<ResourceClaim> claim = flow->getResourceClaim();
-    if (claim) {
-      message << "\n" << "Content Claim:" << claim->getContentFullPath();
-    }
-    if (logPayload && flow->getSize() <= 1024 * 1024) {
-      message << "\n" << "Payload:" << "\n";
-      const auto read_result = session.readBuffer(flow);
-
-      std::string printable_payload;
-      if (hexencode_) {
-        printable_payload = utils::string::to_hex(read_result.buffer);
-      } else {
-        printable_payload = to_string(read_result);
-      }
-
-      if (max_line_length_ == 0U) {
-        message << printable_payload << "\n";
-      } else {
-        for (size_t i = 0; i < printable_payload.size(); i += max_line_length_) {
-          message << printable_payload.substr(i, max_line_length_) << '\n';
-        }
-      }
-    } else {
-      message << "\n";
-    }
-    message << dashLine;
-    std::string output = message.str();
-
-    switch (level) {
-      case LogAttrLevelInfo:
-        logger_->log_info("{}", output);
-        break;
-      case LogAttrLevelDebug:
-        logger_->log_debug("{}", output);
-        break;
-      case LogAttrLevelError:
-        logger_->log_error("{}", output);
-        break;
-      case LogAttrLevelTrace:
-        logger_->log_trace("{}", output);
-        break;
-      case LogAttrLevelWarn:
-        logger_->log_warn("{}", output);
-        break;
-      default:
-        break;
-    }
+    logger_->log_with_level(log_level_, "{}", generateLogMessage(session, flow));
     session.transfer(flow, Success);
   }
-  logger_->log_debug("Logged {} flow files", i);
+  logger_->log_debug("Logged {} flow files", flow_files_processed);
 }
 
 REGISTER_RESOURCE(LogAttribute, Processor);
