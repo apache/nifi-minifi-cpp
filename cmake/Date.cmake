@@ -46,8 +46,8 @@ if (WIN32)
 endif()
 
 FetchContent_Declare(date_src
-    GIT_REPOSITORY  https://github.com/HowardHinnant/date.git
-    GIT_TAG         1ead6715dec030d340a316c927c877a3c4e5a00c  # master as of 2024-07-25
+    URL         https://github.com/HowardHinnant/date/archive/1ead6715dec030d340a316c927c877a3c4e5a00c.tar.gz  # master as of 2024-06-28
+    URL_HASH    SHA256=8b4096b7b49e06d756f4aa0949151863ab7b812679a1646039fab6e821d3c049
 )
 FetchContent_GetProperties(date_src)
 if (NOT date_src_POPULATED)
