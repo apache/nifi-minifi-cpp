@@ -38,14 +38,10 @@ die() {
 detectOS() {
     # OS specific support (must be 'true' or 'false').
     cygwin=false;
-    aix=false;
     darwin=false;
     case "$(uname)" in
         CYGWIN*)
             cygwin=true
-            ;;
-        AIX*)
-            aix=true
             ;;
         Darwin)
             darwin=true
