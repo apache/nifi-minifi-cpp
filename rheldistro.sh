@@ -60,10 +60,14 @@ install_bison() {
 }
 
 bootstrap_cmake(){
-  sudo yum -y install wget patch
-  wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-  sudo yum -y install epel-release-latest-7.noarch.rpm
-  sudo yum -y install cmake3
+  if [ "$OS_MAJOR" -lt 8 ]; then
+    sudo yum -y install wget patch
+    wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    sudo yum -y install epel-release-latest-7.noarch.rpm
+    sudo yum -y install cmake3
+  else
+    sudo dnf -y install cmake
+  fi
 }
 bootstrap_compiler() {
   sudo yum -y install gcc gcc-c++
@@ -71,10 +75,10 @@ bootstrap_compiler() {
 build_deps(){
 # Install epel-release so that cmake3 will be available for installation
   sudo yum -y install wget
-  wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-  sudo yum -y install epel-release-latest-7.noarch.rpm
+  wget "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OS_MAJOR}.noarch.rpm"
+  sudo yum -y install "epel-release-latest-${OS_MAJOR}.noarch.rpm"
 
-  COMMAND="sudo yum install cmake3 libuuid libuuid-devel perl bzip2-devel"
+  COMMAND="sudo yum install libuuid libuuid-devel perl bzip2-devel"
   INSTALLED=()
   for option in "${OPTIONS[@]}" ; do
     option_value="${!option}"
@@ -99,7 +103,7 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "libtool" ]; then
             INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "python" ]; then
-            INSTALLED+=("python34-devel")
+            INSTALLED+=("python3-devel")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
             INSTALLED+=("gpsd-devel")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then

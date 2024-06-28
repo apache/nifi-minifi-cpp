@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -232,9 +232,7 @@ if [ -n "${CMAKE_COMMAND}" ]; then
 fi
 
 if [ -z "${CMAKE_COMMAND}" ] ||
-   [ "$CMAKE_MAJOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" ] ||
-   [ "$CMAKE_MINOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MINOR" ] ||
-   [ "$CMAKE_REVISION" -lt "$CMAKE_GLOBAL_MIN_VERSION_REVISION" ]; then
+  version_is_less_than "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION"; then
   echo "CMake is not installed or too old, attempting to install it..."
   bootstrap_cmake
   if [ -x "$(command -v cmake3)" ]; then
@@ -246,9 +244,15 @@ if [ -z "${CMAKE_COMMAND}" ] ||
   get_cmake_version
 fi
 
-if [ "$CMAKE_MAJOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" ] ||
-   [ "$CMAKE_MINOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MINOR" ] ||
-   [ "$CMAKE_REVISION" -lt "$CMAKE_GLOBAL_MIN_VERSION_REVISION" ]; then
+# RHEL8: If cmake3 is too old, try cmake
+if [ "$CMAKE_COMMAND" = "cmake3" ] &&
+   version_is_less_than "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION" &&
+   [ -x "$(command -v cmake)" ]; then
+  CMAKE_COMMAND="cmake"
+  get_cmake_version
+fi
+
+if version_is_less_than "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION"; then
   echo "Failed to install or update CMake, exiting..."
   exit
 fi
@@ -511,3 +515,5 @@ fi
 
 
 popd || exit 2
+
+# vim: shiftwidth=2 tabstop=2 expandtab
