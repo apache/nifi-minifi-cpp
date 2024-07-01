@@ -59,11 +59,6 @@ build_deps(){
           FOUND_VALUE="$VALUE"
           if [ "$FOUND_VALUE" = "libpcap" ]; then
             INSTALLED+=("libpcap-dev")
-          elif [ "$FOUND_VALUE" = "libusb" ]; then
-            INSTALLED+=("libusb-1.0-0-dev")
-            INSTALLED+=("libusb-dev")
-          elif [ "$FOUND_VALUE" = "libpng" ]; then
-            INSTALLED+=("libpng-dev")
           elif [ "$FOUND_VALUE" = "bison" ]; then
             INSTALLED+=("bison")
           elif [ "$FOUND_VALUE" = "flex" ]; then

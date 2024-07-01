@@ -21,17 +21,11 @@ verify_enable_platform() {
   if [ "$OS_MAJOR" = "6" ]; then
     if [ "${feature}" = "GPS_ENABLED" ]; then
       echo "false"
-    elif [ "${feature}" = "USB_ENABLED" ]; then
-      echo "false"
     else
       verify_gcc_enable "${feature}"
     fi
   else
-    if [ "${feature}" = "USB_ENABLED" ]; then
-      echo "false"
-    else
-      verify_gcc_enable "${feature}"
-    fi
+    verify_gcc_enable "${feature}"
   fi
 }
 
@@ -80,10 +74,6 @@ build_deps(){
           FOUND_VALUE="$VALUE"
           if [ "$FOUND_VALUE" = "libpcap" ]; then
             INSTALLED+=("libpcap-devel")
-          elif [ "$FOUND_VALUE" = "libusb" ]; then
-            INSTALLED+=("libusb-devel")
-          elif [ "$FOUND_VALUE" = "libpng" ]; then
-            INSTALLED+=("libpng-devel")
           elif [ "$FOUND_VALUE" = "bison" ]; then
             install_bison
           elif [ "$FOUND_VALUE" = "flex" ]; then

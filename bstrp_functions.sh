@@ -365,7 +365,6 @@ show_supported_features() {
   echo "E. Expression Language support .$(print_feature_status EXPRESSION_LANGUAGE_ENABLED)"
   echo "F. Kafka support ...............$(print_feature_status KAFKA_ENABLED)"
   echo "G. PCAP support ................$(print_feature_status PCAP_ENABLED)"
-  echo "H. USB Camera support ..........$(print_feature_status USB_ENABLED)"
   echo "I. GPS support .................$(print_feature_status GPS_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "L. Lua Scripting Support .......$(print_feature_status LUA_SCRIPTING_ENABLED)"
@@ -375,7 +374,6 @@ show_supported_features() {
   echo "T. OpenCV Support ..............$(print_feature_status OPENCV_ENABLED)"
   echo "U. OPC-UA Support...............$(print_feature_status OPC_ENABLED)"
   echo "V. SQL Support..................$(print_feature_status SQL_ENABLED)"
-  echo "W. Openwsman Support ...........$(print_feature_status OPENWSMAN_ENABLED)"
   echo "X. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
   if $LINUX; then
     echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
@@ -418,7 +416,6 @@ read_feature_options(){
     e) ToggleFeature EXPRESSION_LANGUAGE_ENABLED ;;
     f) ToggleFeature KAFKA_ENABLED ;;
     g) ToggleFeature PCAP_ENABLED ;;
-    h) ToggleFeature USB_ENABLED ;;
     i) ToggleFeature GPS_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature LUA_SCRIPTING_ENABLED ;;
@@ -428,7 +425,6 @@ read_feature_options(){
     t) ToggleFeature OPENCV_ENABLED ;;
     u) ToggleFeature OPC_ENABLED ;;
     v) ToggleFeature SQL_ENABLED ;;
-    w) ToggleFeature OPENWSMAN_ENABLED ;;
     x) ToggleFeature AZURE_ENABLED ;;
     y) if $LINUX; then ToggleFeature SYSTEMD_ENABLED; fi ;;
     aa) ToggleFeature SPLUNK_ENABLED ;;

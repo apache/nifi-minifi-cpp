@@ -38,12 +38,10 @@ set enable_opc=ON
 set enable_pdh=OFF
 set enable_splunk=ON
 set enable_smb=ON
-set enable_openwsman=OFF
 set enable_ops=ON
 set enable_pcap=OFF
 set enable_python_scripting=ON
 set enable_sensors=OFF
-set enable_usb_camera=OFF
 set enable_opencv=OFF
 set enable_prometheus=ON
 set enable_gcp=ON
@@ -84,12 +82,10 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NO_LUA_SCRIPTING] set enable_lua_scripting=OFF
     if [%%~x] EQU [/NO_MQTT]          set enable_mqtt=OFF
     if [%%~x] EQU [/NO_OPC]           set enable_opc=OFF
-    if [%%~x] EQU [/OPENWSMAN]        set enable_openwsman=ON
     if [%%~x] EQU [/NO_OPS]           set enable_ops=OFF
     if [%%~x] EQU [/PCAP]             set enable_pcap=ON
     if [%%~x] EQU [/NO_PYTHON_SCRIPTING] set enable_python_scripting=OFF
     if [%%~x] EQU [/SENSORS]          set enable_sensors=ON
-    if [%%~x] EQU [/USB_CAMERA]       set enable_usb_camera=ON
     if [%%~x] EQU [/LOKI]             set enable_grafana_loki=ON
     if [%%~x] EQU [/32]               set build_platform=Win32
     if [%%~x] EQU [/D]                set cmake_build_type=RelWithDebInfo
@@ -118,8 +114,8 @@ cmake -G %generator% %build_platform_cmd% -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODUL
         -DENABLE_AWS=%enable_aws% -DENABLE_PDH=%enable_pdh% -DENABLE_AZURE=%enable_azure% -DENABLE_SFTP=%enable_sftp% -DENABLE_SPLUNK=%enable_splunk% -DENABLE_GCP=%enable_gcp% ^
         -DENABLE_OPENCV=%enable_opencv% -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% -DENABLE_SMB=%enable_smb% ^
-        -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
-        -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_USB_CAMERA=%enable_usb_camera% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% ^
+        -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
+        -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% ^
         -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% -DMINIFI_INCLUDE_VC_REDIST_DLLS=%vc_redist% ^
         %strict_gsl_checks% -DMINIFI_INCLUDE_UCRT_DLLS=%ucrt% %sccache_arg% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%

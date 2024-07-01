@@ -48,10 +48,6 @@ build_deps(){
                         INSTALLED+=("libpcap")
                     elif [ "$FOUND_VALUE" = "openssl" ]; then
                         INSTALLED+=("openssl")
-                    elif [ "$FOUND_VALUE" = "libusb" ]; then
-                        INSTALLED+=("libusb")
-                    elif [ "$FOUND_VALUE" = "libpng" ]; then
-                        INSTALLED+=("libpng")
                     elif [ "$FOUND_VALUE" = "bison" ]; then
                         INSTALLED+=("bison")
                     elif [ "$FOUND_VALUE" = "flex" ]; then
