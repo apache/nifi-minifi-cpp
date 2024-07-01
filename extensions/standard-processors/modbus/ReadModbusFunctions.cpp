@@ -18,11 +18,13 @@
 
 #include "ReadModbusFunctions.h"
 
+#include <range/v3/view/drop.hpp>
+
 namespace org::apache::nifi::minifi::modbus {
 std::vector<std::byte> ReadModbusFunction::requestBytes() const {
   constexpr std::array modbus_service_protocol_identifier = {std::byte{0}, std::byte{0}};
   const auto pdu = rawPdu();
-  const uint16_t length = pdu.size() + 1;
+  const auto length = gsl::narrow<uint16_t>(pdu.size() + 1);
 
   std::vector<std::byte> request;
   ranges::copy(toBytes(transaction_id_), std::back_inserter(request));
@@ -35,11 +37,11 @@ std::vector<std::byte> ReadModbusFunction::requestBytes() const {
 
 [[nodiscard]] auto ReadModbusFunction::getRespBytes(std::span<const std::byte> resp_pdu) const -> nonstd::expected<std::span<const std::byte>, std::error_code> {
   if (resp_pdu.size() < 2) {
-    return nonstd::make_unexpected(ModbusExceptionCode::InvalidResponse);
+    return nonstd::make_unexpected(ModbusExceptionCode::MessageTooShort);
   }
 
   if (const auto resp_function_code = resp_pdu.front(); resp_function_code != getFunctionCode()) {
-    return nonstd::make_unexpected(ModbusExceptionCode::InvalidResponse);
+    return nonstd::make_unexpected(ModbusExceptionCode::UnexpectedResponseFunctionCode);
   }
 
   const auto resp_byte_count = static_cast<uint8_t>(resp_pdu[1]);
@@ -47,7 +49,7 @@ std::vector<std::byte> ReadModbusFunction::requestBytes() const {
   constexpr uint8_t unit_id_length = 1;
   const uint8_t expected_resp_pdu_size = resp_byte_count + function_code_length + unit_id_length;
   if (resp_pdu.size() != expected_resp_pdu_size) {
-    return nonstd::make_unexpected(ModbusExceptionCode::InvalidResponse);
+    return nonstd::make_unexpected(ModbusExceptionCode::UnexpectedResponsePDUSize);
   }
 
   if (resp_byte_count != expectedByteCount()) {
@@ -57,11 +59,12 @@ std::vector<std::byte> ReadModbusFunction::requestBytes() const {
   return resp_pdu.subspan(2, resp_pdu.size()-2);
 }
 
-[[nodiscard]] std::vector<std::byte> ReadCoilStatus::rawPdu() const {
-  std::vector<std::byte> result;
-  result.push_back(getFunctionCode());
-  ranges::copy(toBytes(starting_address_), std::back_inserter(result));
-  ranges::copy(toBytes(number_of_points_), std::back_inserter(result));
+[[nodiscard]] std::array<std::byte, 5> ReadCoilStatus::rawPdu() const {
+  std::array<std::byte, 5> result{};
+  result[0] = getFunctionCode();
+
+  ranges::copy(toBytes(starting_address_), (result | ranges::views::drop(1) | ranges::views::take(2)).begin());
+  ranges::copy(toBytes(number_of_points_), (result | ranges::views::drop(3) | ranges::views::take(2)).begin());
   return result;
 }
 

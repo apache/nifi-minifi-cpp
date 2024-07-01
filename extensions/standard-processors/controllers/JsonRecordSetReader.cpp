@@ -38,7 +38,7 @@ nonstd::expected<core::RecordField, std::error_code> parse(const rapidjson::Valu
     return core::RecordField{json_value.GetInt64()};
   }
   if (json_value.IsString()) {
-    return core::RecordField{std::string{json_value.GetString()}};
+    return core::RecordField{std::string{json_value.GetString(), json_value.GetStringLength()}};
   }
   if (json_value.IsArray()) {
     core::RecordArray record_array;

@@ -27,11 +27,16 @@ std::vector<std::byte> createByteVector(Bytes... bytes) {
   return {static_cast<std::byte>(bytes)...};
 }
 
+template<size_t Size, typename... Bytes>
+std::array<std::byte, Size> createByteArray(Bytes... bytes) {
+  return {static_cast<std::byte>(bytes)...};
+}
+
 TEST_CASE("ReadCoilStatus") {
   const auto read_coil_status = ReadCoilStatus(280, 0, 19, 19);
   {
     {
-      CHECK(read_coil_status.rawPdu() == createByteVector(0x01, 0x00, 0x13, 0x00, 0x13));
+      CHECK(read_coil_status.rawPdu() == createByteArray<5>(0x01, 0x00, 0x13, 0x00, 0x13));
       CHECK(read_coil_status.requestBytes() == createByteVector(0x01, 0x18, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01, 0x00, 0x13, 0x00, 0x13));
     }
 
@@ -77,7 +82,7 @@ TEST_CASE("ReadCoilStatus") {
   {
     auto mismatching_size_resp = read_coil_status.responseToRecordField(createByteVector(0x01, 0x03, 0xCD, 0x6B, 0x05, 0x07));
     REQUIRE(!mismatching_size_resp);
-    CHECK_THAT(mismatching_size_resp.error(), minifi::test::MatchesError(modbus::ModbusExceptionCode::InvalidResponse));
+    CHECK_THAT(mismatching_size_resp.error(), minifi::test::MatchesError(modbus::ModbusExceptionCode::UnexpectedResponsePDUSize));
   }
 }
 
@@ -85,7 +90,7 @@ TEST_CASE("ReadHoldingRegisters uint16_t") {
   {
     const auto read_holding_registers = ReadRegisters<uint16_t>(RegisterType::holding, 0, 0, 5, 3);
     {
-      CHECK(read_holding_registers.rawPdu() == createByteVector(0x03, 0x00, 0x05, 0x00, 0x03));
+      CHECK(read_holding_registers.rawPdu() == createByteArray<5>(0x03, 0x00, 0x05, 0x00, 0x03));
     }
 
     auto serialized_response = read_holding_registers.responseToRecordField(createByteVector(0x03, 0x06, 0x3A, 0x98, 0x13, 0x88, 0x00, 0xC8));
@@ -102,7 +107,7 @@ TEST_CASE("ReadHoldingRegisters char") {
   {
     const auto read_holding_registers = ReadRegisters<char>(RegisterType::holding, 0, 0, 5, 3);
     {
-      CHECK(read_holding_registers.rawPdu() == createByteVector(0x03, 0x00, 0x05, 0x00, 0x03));
+      CHECK(read_holding_registers.rawPdu() == createByteArray<5>(0x03, 0x00, 0x05, 0x00, 0x03));
     }
 
     auto serialized_response = read_holding_registers.responseToRecordField(createByteVector(0x03, 0x06, 0x00, 0x66, 0x00, 0x6F, 0x00, 0x6F));
@@ -119,7 +124,7 @@ TEST_CASE("ReadInputRegisters") {
   {
     const auto read_input_registers = ReadRegisters<uint16_t>(RegisterType::input, 0, 0, 5, 3);
     {
-      CHECK(read_input_registers.rawPdu() == createByteVector(0x04, 0x00, 0x05, 0x00, 0x03));
+      CHECK(read_input_registers.rawPdu() == createByteArray<5>(0x04, 0x00, 0x05, 0x00, 0x03));
     }
     auto serialized_response = read_input_registers.responseToRecordField(createByteVector(0x04, 0x06, 0x3A, 0x98, 0x13, 0x88, 0x00, 0xC8));
     REQUIRE(serialized_response.has_value());

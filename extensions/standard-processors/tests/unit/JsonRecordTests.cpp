@@ -29,10 +29,10 @@
 
 namespace org::apache::nifi::minifi::standard::test {
 
-constexpr std::string_view record_per_line_str = R"({"baz":3.14,"qux":["a","b","c"],"is_test":true,"bar":123,"quux":{"Aprikose":"apricot","Birne":"pear","Apfel":"apple"},"foo":"asd","when":"2012-07-01T09:53:00Z"}
-{"baz":3.141592653589793,"qux":["x","y","z"],"is_test":true,"bar":98402134,"quux":{"Aprikose":"abricot","Birne":"poire","Apfel":"pomme"},"foo":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","when":"2022-11-01T19:52:11Z"}
+constexpr std::string_view record_per_line_str = R"({"baz":3.14,"qux":["a","b","c"],"corge":[true,false],"is_test":true,"bar":123,"quux":{"Aprikose":"apricot","Birne":"pear","Apfel":"apple"},"foo":"asd","when":"2012-07-01T09:53:00Z"}
+{"baz":3.141592653589793,"qux":["x","y","z"],"corge":[false,false],"is_test":true,"bar":98402134,"quux":{"Aprikose":"abricot","Birne":"poire","Apfel":"pomme"},"foo":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","when":"2022-11-01T19:52:11Z"}
 )";
-constexpr std::string_view array_compressed_str = R"([{"baz":3.14,"qux":["a","b","c"],"is_test":true,"bar":123,"quux":{"Aprikose":"apricot","Birne":"pear","Apfel":"apple"},"foo":"asd","when":"2012-07-01T09:53:00Z"},{"baz":3.141592653589793,"qux":["x","y","z"],"is_test":true,"bar":98402134,"quux":{"Aprikose":"abricot","Birne":"poire","Apfel":"pomme"},"foo":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","when":"2022-11-01T19:52:11Z"}])";
+constexpr std::string_view array_compressed_str = R"([{"baz":3.14,"qux":["a","b","c"],"corge":[true,false],"is_test":true,"bar":123,"quux":{"Aprikose":"apricot","Birne":"pear","Apfel":"apple"},"foo":"asd","when":"2012-07-01T09:53:00Z"},{"baz":3.141592653589793,"qux":["x","y","z"],"corge":[false,false],"is_test":true,"bar":98402134,"quux":{"Aprikose":"abricot","Birne":"poire","Apfel":"pomme"},"foo":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.","when":"2022-11-01T19:52:11Z"}])";
 constexpr std::string_view array_pretty_str = R"([
     {
         "baz": 3.14,
@@ -48,6 +48,10 @@ constexpr std::string_view array_pretty_str = R"([
             "Birne": "pear",
             "Apfel": "apple"
         },
+        "corge": [
+           true,
+           false
+        ],
         "foo": "asd",
         "when": "2012-07-01T09:53:00Z"
     },
@@ -65,6 +69,10 @@ constexpr std::string_view array_pretty_str = R"([
             "Birne": "poire",
             "Apfel": "pomme"
         },
+        "corge": [
+           false,
+           false
+        ],
         "foo": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "when": "2022-11-01T19:52:11Z"
     }
@@ -75,9 +83,6 @@ bool testJsonEquality(const std::string_view expected_str, const std::string_vie
   expected.Parse(expected_str.data());
   rapidjson::Document actual;
   actual.Parse(actual_str.data());
-  if (actual != expected) {
-    std::cerr << expected_str << std::endl << actual_str << std::endl;
-  }
   return actual == expected;
 }
 

@@ -40,7 +40,10 @@ enum class ModbusExceptionCode : std::underlying_type_t<std::byte> {
   MessageTooLarge,
   InvalidTransactionId,
   IllegalProtocol,
-  InvalidSlaveId
+  InvalidSlaveId,
+  MessageTooShort,
+  UnexpectedResponseFunctionCode,
+  UnexpectedResponsePDUSize
 };
 
 

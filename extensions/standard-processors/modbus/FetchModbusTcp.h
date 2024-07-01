@@ -48,7 +48,7 @@ class FetchModbusTcp final : public core::Processor {
       .isRequired(true)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto UnitIdentifier = core::PropertyDefinitionBuilder<>::createProperty("Unit identifier")
+  EXTENSIONAPI static constexpr auto UnitIdentifier = core::PropertyDefinitionBuilder<>::createProperty("Unit Identifier")
       .withDescription("The port or service on the destination.")
       .isRequired(true)
       .withDefaultValue("0")
@@ -62,18 +62,18 @@ class FetchModbusTcp final : public core::Processor {
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ConnectionPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Connection Per FlowFile")
-    .withDescription("Specifies whether to send each FlowFile's content on an individual connection.")
-    .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
-    .withDefaultValue("false")
-    .isRequired(true)
-    .supportsExpressionLanguage(false)
-    .build();
+      .withDescription("Specifies whether to send each FlowFile's content on an individual connection.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .isRequired(true)
+      .supportsExpressionLanguage(false)
+      .build();
   EXTENSIONAPI static constexpr auto Timeout = core::PropertyDefinitionBuilder<>::createProperty("Timeout")
       .withDescription("The timeout for connecting to and communicating with the destination.")
       .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .withDefaultValue("15 seconds")
       .isRequired(true)
-      .supportsExpressionLanguage(true)
+      .supportsExpressionLanguage(false)
       .build();
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.")
@@ -81,10 +81,10 @@ class FetchModbusTcp final : public core::Processor {
       .withAllowedTypes<minifi::controllers::SSLContextService>()
       .build();
   EXTENSIONAPI static constexpr auto RecordSetWriter = core::PropertyDefinitionBuilder<>::createProperty("Record Set Writer")
-    .withDescription("Specifies the Controller Service to use for writing results to a FlowFile. ")
-    .isRequired(false)
-    .withAllowedTypes<core::RecordSetWriter>()
-    .build();
+      .withDescription("Specifies the Controller Service to use for writing results to a FlowFile. ")
+      .isRequired(true)
+      .withAllowedTypes<core::RecordSetWriter>()
+      .build();
 
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
     Hostname,
@@ -126,7 +126,7 @@ class FetchModbusTcp final : public core::Processor {
   asio::awaitable<nonstd::expected<core::RecordField, std::error_code>> sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
       const ReadModbusFunction& read_modbus_function);
   std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> getAddressMap(core::ProcessContext& context, const core::FlowFile& flow_file);
-  std::shared_ptr<core::FlowFile> getFlowFile(core::ProcessSession& session) const;
+  std::shared_ptr<core::FlowFile> getOrCreateFlowFile(core::ProcessSession& session) const;
   void removeExpiredConnections();
 
   std::vector<core::Property> dynamic_property_keys_;

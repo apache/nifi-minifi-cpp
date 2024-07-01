@@ -32,6 +32,5 @@ class DiagSlave(Container):
             self.image_store.get_image(self.get_engine()),
             detach=True,
             name=self.name,
-            environment=["PROTOCOL=tcp"],
             network=self.network.name)
         logging.info('Added container \'%s\'', self.name)

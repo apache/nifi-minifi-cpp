@@ -21,14 +21,15 @@
 #include <regex>
 #include <vector>
 
+#include "core/RecordField.h"
 #include "fmt/format.h"
 #include "modbus/ByteConverters.h"
 #include "modbus/Error.h"
 #include "range/v3/algorithm/copy.hpp"
 #include "range/v3/view/chunk.hpp"
-#include "utils/expected.h"
+#include "range/v3/view/drop.hpp"
 #include "utils/StringUtils.h"
-#include "core/RecordField.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::modbus {
 enum class RegisterType {
@@ -61,7 +62,7 @@ class ReadModbusFunction {
   [[nodiscard]] auto getRespBytes(std::span<const std::byte> resp_pdu) const -> nonstd::expected<std::span<const std::byte>, std::error_code>;
 
   [[nodiscard]] virtual std::byte getFunctionCode() const = 0;
-  [[nodiscard]] virtual std::vector<std::byte> rawPdu() const = 0;
+  [[nodiscard]] virtual std::array<std::byte, 5> rawPdu() const = 0;
   [[nodiscard]] virtual uint8_t expectedByteCount() const = 0;
 
   const uint16_t transaction_id_;
@@ -79,7 +80,7 @@ class ReadCoilStatus final : public ReadModbusFunction {
   [[nodiscard]] nonstd::expected<core::RecordField, std::error_code> responseToRecordField(std::span<const std::byte> resp_pdu) const override;
 
   [[nodiscard]] std::byte getFunctionCode() const override;
-  [[nodiscard]] std::vector<std::byte> rawPdu() const override;
+  [[nodiscard]] std::array<std::byte, 5> rawPdu() const override;
   [[nodiscard]] uint8_t expectedByteCount() const override;
 
   bool operator==(const ReadCoilStatus& rhs) const = default;
@@ -102,16 +103,17 @@ class ReadRegisters final : public ReadModbusFunction {
         number_of_points_(number_of_points) {
   }
 
-  [[nodiscard]] std::vector<std::byte> rawPdu() const override {
-    std::vector<std::byte> result;
-    result.push_back(getFunctionCode());
-    ranges::copy(toBytes(starting_address_), std::back_inserter(result));
-    ranges::copy(toBytes(wordCount()), std::back_inserter(result));
+  [[nodiscard]] std::array<std::byte, 5> rawPdu() const override {
+    std::array<std::byte, 5> result;
+    result[0] = getFunctionCode();
+    ranges::copy(toBytes(starting_address_), (result | ranges::views::drop(1) | ranges::views::take(2)).begin());
+    ranges::copy(toBytes(wordCount()), (result | ranges::views::drop(3) | ranges::views::take(2)).begin());
+
     return result;
   }
 
   [[nodiscard]] uint8_t expectedByteCount() const override {
-    return number_of_points_*std::max(sizeof(T), sizeof(uint16_t));
+    return gsl::narrow<uint8_t>(number_of_points_*std::max(sizeof(T), sizeof(uint16_t)));
   }
 
   [[nodiscard]] uint16_t wordCount() const {

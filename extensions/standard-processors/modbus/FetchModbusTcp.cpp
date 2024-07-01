@@ -19,7 +19,6 @@
 
 #include <utils/net/ConnectionHandler.h>
 
-#include <asio/read.hpp>
 #include <range/v3/view/drop.hpp>
 
 #include "core/Resource.h"
@@ -68,15 +67,15 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
   }
 
   ssl_context_.reset();
-  if (const auto context_name = context.getProperty(SSLContextService); context_name && !IsNullOrEmpty(*context_name)) {
-    if (auto controller_service = context.getControllerService(*context_name)) {
-      if (const auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*context_name))) {
+  if (const auto controller_service_name = context.getProperty(SSLContextService); controller_service_name && !IsNullOrEmpty(*controller_service_name)) {
+    if (auto controller_service = context.getControllerService(*controller_service_name)) {
+      if (const auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(controller_service)) {
         ssl_context_ = utils::net::getSslContext(*ssl_context_service);
       } else {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, *context_name + " is not an SSL Context Service");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, *controller_service_name + " is not an SSL Context Service");
       }
     } else {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service: " + *context_name);
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service: " + *controller_service_name);
     }
   }
 
@@ -84,7 +83,7 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
 }
 
 void FetchModbusTcp::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  const auto flow_file = getFlowFile(session);
+  const auto flow_file = getOrCreateFlowFile(session);
   if (!flow_file) {
     logger_->log_error("No flowfile to work on");
     return;
@@ -136,7 +135,7 @@ void FetchModbusTcp::readDynamicPropertyKeys(const core::ProcessContext& context
   }
 }
 
-std::shared_ptr<core::FlowFile> FetchModbusTcp::getFlowFile(core::ProcessSession& session) const {
+std::shared_ptr<core::FlowFile> FetchModbusTcp::getOrCreateFlowFile(core::ProcessSession& session) const {
   if (hasIncomingConnections()) {
     return session.get();
   }
@@ -145,8 +144,11 @@ std::shared_ptr<core::FlowFile> FetchModbusTcp::getFlowFile(core::ProcessSession
 
 std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> FetchModbusTcp::getAddressMap(core::ProcessContext& context, const core::FlowFile& flow_file) {
   std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> address_map{};
-  const auto unit_id_str = context.getProperty(UnitIdentifier, &flow_file).value_or("0");
-  const uint8_t unit_id = utils::string::parseNumber<uint8_t>(unit_id_str).value_or(1);
+  const auto unit_id_str = context.getProperty(UnitIdentifier, &flow_file).value_or("1");
+  const uint8_t unit_id = utils::string::parseNumber<uint8_t>(unit_id_str) | utils::valueOrElse([this](const utils::string::ParseError&) {
+    logger_->log_warn("Couldnt parse UnitIdentifier");
+    return uint8_t{1};
+  });
   for (const auto& dynamic_property : dynamic_property_keys_) {
     if (std::string dynamic_property_value{}; context.getDynamicProperty(dynamic_property, dynamic_property_value, &flow_file)) {
       if (auto modbus_func = ReadModbusFunction::parse(++transaction_id_, unit_id, dynamic_property_value); modbus_func) {
@@ -212,6 +214,7 @@ auto FetchModbusTcp::sendRequestsAndReadResponses(utils::net::ConnectionHandlerB
     const std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>>& address_map) -> asio::awaitable<nonstd::expected<core::Record, std::error_code>> {
   core::Record result;
   for (const auto& [variable, read_modbus_fn] : address_map) {
+    gsl_Expects(read_modbus_fn);
     auto response = co_await sendRequestAndReadResponse(connection_handler, *read_modbus_fn);
     if (!response) {
       co_return nonstd::make_unexpected(response.error());

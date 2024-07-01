@@ -440,8 +440,13 @@ template <typename T> concept arithmetic = std::integral<T> || std::floating_poi
 template<arithmetic T>
 nonstd::expected<T, ParseError> parseNumber(std::string_view input) {
   T t{};
-  if (const auto result = std::from_chars(input.data(), input.data() + input.size(), t); result.ptr != input.data() + input.size())
+  const auto [ptr, ec] = std::from_chars(input.data(), input.data() + input.size(), t);
+  if (ec != std::errc()) {
     return nonstd::make_unexpected(ParseError{});
+  }
+  if (ptr != input.data() + input.size()) {
+    return nonstd::make_unexpected(ParseError{});
+  }
   return t;
 }
 }  // namespace string
