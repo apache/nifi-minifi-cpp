@@ -44,9 +44,7 @@ build_deps(){
                 VALUE=${cmake_opt#*:}
                 if [ "$KEY" = "$option" ]; then
                     FOUND_VALUE="$VALUE"
-                    if [ "$FOUND_VALUE" = "libpcap" ]; then
-                        INSTALLED+=("libpcap")
-                    elif [ "$FOUND_VALUE" = "openssl" ]; then
+                    if [ "$FOUND_VALUE" = "openssl" ]; then
                         INSTALLED+=("openssl")
                     elif [ "$FOUND_VALUE" = "libusb" ]; then
                         INSTALLED+=("libusb")

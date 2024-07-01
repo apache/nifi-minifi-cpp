@@ -364,7 +364,6 @@ show_supported_features() {
   echo "D. Python Scripting support ....$(print_feature_status PYTHON_SCRIPTING_ENABLED)"
   echo "E. Expression Language support .$(print_feature_status EXPRESSION_LANGUAGE_ENABLED)"
   echo "F. Kafka support ...............$(print_feature_status KAFKA_ENABLED)"
-  echo "G. PCAP support ................$(print_feature_status PCAP_ENABLED)"
   echo "H. USB Camera support ..........$(print_feature_status USB_ENABLED)"
   echo "I. GPS support .................$(print_feature_status GPS_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
@@ -417,7 +416,6 @@ read_feature_options(){
     d) ToggleFeature PYTHON_SCRIPTING_ENABLED ;;
     e) ToggleFeature EXPRESSION_LANGUAGE_ENABLED ;;
     f) ToggleFeature KAFKA_ENABLED ;;
-    g) ToggleFeature PCAP_ENABLED ;;
     h) ToggleFeature USB_ENABLED ;;
     i) ToggleFeature GPS_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;

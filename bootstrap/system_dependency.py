@@ -30,8 +30,6 @@ def _create_system_dependencies(minifi_options: MinifiOptions) -> Dict[str, Set[
         system_dependencies['m4'] = {'m4'}
     if minifi_options.is_enabled("ENABLE_LIBARCHIVE"):
         system_dependencies['libarchive'] = {'libarchive'}
-    if minifi_options.is_enabled("ENABLE_PCAP"):
-        system_dependencies['libpcap'] = {'libpcap'}
     if minifi_options.is_enabled("ENABLE_USB_CAMERA"):
         system_dependencies['libusb'] = {'libusb'}
         system_dependencies['libpng'] = {'libpng'}
