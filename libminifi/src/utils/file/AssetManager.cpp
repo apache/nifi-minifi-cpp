@@ -22,7 +22,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "utils/Hash.h"
 
-#undef GetObject
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
 namespace org::apache::nifi::minifi::utils::file {
 
