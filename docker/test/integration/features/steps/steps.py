@@ -24,6 +24,7 @@ from minifi.controllers.GCPCredentialsControllerService import GCPCredentialsCon
 from minifi.controllers.ElasticsearchCredentialsService import ElasticsearchCredentialsService
 from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
+from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -393,6 +394,16 @@ def step_impl(context, processor_name):
     processor = context.test.get_node_by_name(processor_name)
     processor.controller_services.append(ssl_context_service)
     processor.set_property('SSL Context Service', ssl_context_service.name)
+
+
+# RecordSetWriters
+@given("a JsonRecordSetWriter controller service is set up for {processor_name}")
+def step_impl(context, processor_name):
+    json_record_set_writer = JsonRecordSetWriter()
+
+    processor = context.test.get_node_by_name(processor_name)
+    processor.controller_services.append(json_record_set_writer)
+    processor.set_property('Record Set Writer', json_record_set_writer.name)
 
 
 # Kubernetes
@@ -1288,3 +1299,15 @@ def step_impl(context, install_mode):
 @given("the example MiNiFi python processors are present")
 def step_impl(context):
     context.test.enable_example_minifi_python_processors()
+
+
+# Modbus
+@given(u'there is an accessible PLC with modbus enabled')
+def step_impl(context):
+    context.test.acquire_container(context=context, name="diag-slave-tcp", engine="diag-slave-tcp")
+    context.test.start('diag-slave-tcp')
+
+
+@given(u'PLC register has been set with {modbus_cmd} command')
+def step_impl(context, modbus_cmd):
+    context.test.set_value_on_plc_with_modbus(context.test.get_container_name_with_postfix('diag-slave-tcp'), modbus_cmd)

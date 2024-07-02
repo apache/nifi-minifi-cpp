@@ -78,7 +78,7 @@ struct MatchesError : Catch::Matchers::MatcherBase<std::error_code> {
 
   bool match(const std::error_code& err) const override {
     if (expected_error_)
-      return err == *expected_error_;
+      return err.value() == expected_error_->value();
     return err.value() != 0;
   }
 

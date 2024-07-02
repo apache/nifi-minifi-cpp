@@ -476,3 +476,6 @@ class MiNiFi_integration_test:
 
     def check_lines_on_grafana_loki(self, lines: List[str], timeout_seconds: int, ssl: bool, tenant_id=None):
         assert self.cluster.wait_for_lines_on_grafana_loki(lines, timeout_seconds, ssl, tenant_id) or self.cluster.log_app_output()
+
+    def set_value_on_plc_with_modbus(self, container_name, modbus_cmd):
+        assert self.cluster.set_value_on_plc_with_modbus(container_name, modbus_cmd)

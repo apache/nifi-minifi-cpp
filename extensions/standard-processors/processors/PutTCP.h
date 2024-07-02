@@ -33,26 +33,15 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "utils/expected.h"
 #include "utils/StringUtils.h"  // for string <=> on libc++
 #include "utils/net/AsioSocketUtils.h"
+#include "utils/net/ConnectionHandler.h"
 
 #include <asio/io_context.hpp>
-#include <asio/awaitable.hpp>
 #include <asio/ssl/context.hpp>
 
 namespace org::apache::nifi::minifi::processors {
-class ConnectionHandlerBase {
- public:
-  virtual ~ConnectionHandlerBase() = default;
-  virtual void reset() = 0;
 
-  [[nodiscard]] virtual bool hasBeenUsed() const = 0;
-  [[nodiscard]] virtual bool hasBeenUsedIn(std::chrono::milliseconds dur) const = 0;
-  [[nodiscard]] virtual asio::awaitable<std::error_code> sendStreamWithDelimiter(const std::shared_ptr<io::InputStream>& stream_to_send,
-      const std::vector<std::byte>& delimiter,
-      asio::io_context& io_context) = 0;
-};
 
 class PutTCP final : public core::Processor {
  public:
@@ -138,7 +127,9 @@ class PutTCP final : public core::Processor {
 
   explicit PutTCP(const std::string& name, const utils::Identifier& uuid = {});
   PutTCP(const PutTCP&) = delete;
+  PutTCP(PutTCP&&) = delete;
   PutTCP& operator=(const PutTCP&) = delete;
+  PutTCP& operator=(PutTCP&&) = delete;
   ~PutTCP() final;
 
   void initialize() final;
@@ -148,16 +139,20 @@ class PutTCP final : public core::Processor {
 
  private:
   void removeExpiredConnections();
-  void processFlowFile(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
+  void processFlowFile(const std::shared_ptr<utils::net::ConnectionHandlerBase>& connection_handler,
       core::ProcessSession& session,
       const std::shared_ptr<core::FlowFile>& flow_file);
 
-  std::error_code sendFlowFileContent(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
+  std::error_code sendFlowFileContent(const std::shared_ptr<utils::net::ConnectionHandlerBase>& connection_handler,
       const std::shared_ptr<io::InputStream>& flow_file_content_stream);
+
+  asio::awaitable<std::error_code> sendStreamWithDelimiter(utils::net::ConnectionHandlerBase& connection_handler,
+      const std::shared_ptr<io::InputStream>& stream_to_send,
+      const std::vector<std::byte>& delimiter);
 
   std::vector<std::byte> delimiter_;
   asio::io_context io_context_;
-  std::optional<std::unordered_map<utils::net::ConnectionId, std::shared_ptr<ConnectionHandlerBase>>> connections_;
+  std::optional<std::unordered_map<utils::net::ConnectionId, std::shared_ptr<utils::net::ConnectionHandlerBase>>> connections_;
   std::optional<std::chrono::milliseconds> idle_connection_expiration_;
   std::optional<size_t> max_size_of_socket_send_buffer_;
   std::chrono::milliseconds timeout_duration_ = std::chrono::seconds(15);

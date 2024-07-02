@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <charconv>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -432,6 +433,22 @@ struct ParseError {};
 nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_view input);
 
 std::string replaceEscapedCharacters(std::string_view input);
+
+// no std::arithmetic yet
+template <typename T> concept arithmetic = std::integral<T> || std::floating_point<T>;
+
+template<arithmetic T>
+nonstd::expected<T, ParseError> parseNumber(std::string_view input) {
+  T t{};
+  const auto [ptr, ec] = std::from_chars(input.data(), input.data() + input.size(), t);
+  if (ec != std::errc()) {
+    return nonstd::make_unexpected(ParseError{});
+  }
+  if (ptr != input.data() + input.size()) {
+    return nonstd::make_unexpected(ParseError{});
+  }
+  return t;
+}
 }  // namespace string
 
 }  // namespace org::apache::nifi::minifi::utils

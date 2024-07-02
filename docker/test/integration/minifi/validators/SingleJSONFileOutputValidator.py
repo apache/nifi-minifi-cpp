@@ -40,6 +40,8 @@ class SingleJSONFileOutputValidator(FileOutputValidator):
                 continue
             with open(full_path, 'r') as out_file:
                 file_json_content = json.loads(out_file.read())
+                if file_json_content != expected_json_content:
+                    print(f"JSON doesnt match actual: {file_json_content}, expected: {expected_json_content}")
                 return file_json_content == expected_json_content
         return False
 
