@@ -742,7 +742,7 @@ There are some additional properties that can be used to shorten log messages:
     logger.include.uuid=false
 
     # You can set the maximum length of the log entries
-    max.log.entry.length=1024
+    max.log.entry.length=4096
 
 **NOTE:** All log configuration properties can be changed through C2 protocol with the property update command, using the `nifi.log.` prefix. For example to change the root log level with the `logger.root` property through C2, the C2 property update command should change the `nifi.log.logger.root` property.
 
