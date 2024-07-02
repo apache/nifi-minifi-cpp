@@ -54,7 +54,11 @@ struct ModbusErrorCategory final : std::error_category {
 
   [[nodiscard]] std::string message(int ev) const override {
     const auto modbus_exception_code = static_cast<ModbusExceptionCode>(ev);
-    return std::string{magic_enum::enum_name<ModbusExceptionCode>(modbus_exception_code)};
+    auto modbus_exception_code_str = std::string{magic_enum::enum_name<ModbusExceptionCode>(modbus_exception_code)};
+    if (modbus_exception_code_str.empty()) {
+      return "UNKNOWN ERROR";
+    }
+    return modbus_exception_code_str;
   }
 };
 
