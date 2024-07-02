@@ -60,7 +60,7 @@ static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& pa
   target.AddMember("identifier", rapidjson::Value(id.c_str(), alloc), alloc);
 }
 
-static void setJsonStr(const std::string& key, const c2::C2Value& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
+static void setJsonStr(const std::string& key, const c2::C2Value& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value valueVal;
 
   if (auto* json_val = value.json()) {

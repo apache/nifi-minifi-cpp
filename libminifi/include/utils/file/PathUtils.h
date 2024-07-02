@@ -43,7 +43,7 @@ inline std::optional<std::filesystem::path> canonicalize(const std::filesystem::
   return result;
 }
 
-inline nonstd::expected<void, std::string> validateRelativePath(const std::filesystem::path& path) {
+inline nonstd::expected<void, std::string> validateRelativeFilePath(const std::filesystem::path& path) {
   if (path.empty()) {
     return nonstd::make_unexpected("Empty file path");
   }

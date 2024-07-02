@@ -36,7 +36,7 @@ void AssetManager::refreshState() {
   std::lock_guard lock(mtx_);
   state_.clear();
   if (!utils::file::FileUtils::exists(root_)) {
-    std::filesystem::create_directory(root_);
+    std::filesystem::create_directories(root_);
   }
   if (!utils::file::FileUtils::exists(root_ / ".state")) {
     std::ofstream{root_ / ".state", std::ios::binary} << R"({"digest": "", "assets": {}})";
@@ -77,18 +77,18 @@ void AssetManager::refreshState() {
 
   for (auto& [id, entry] : doc["assets"].GetObject()) {
     if (!entry.IsObject()) {
-      logger_->log_error("Asset '.state' file is malformed");
+      logger_->log_error("Asset '.state' file is malformed, 'assets.{}' is not an object", std::string_view{id.GetString(), id.GetStringLength()});
       return;
     }
     AssetDescription description;
     description.id = std::string{id.GetString(), id.GetStringLength()};
     if (!entry.HasMember("path") || !entry["path"].IsString()) {
-      logger_->log_error("Asset '.state' file is malformed");
+      logger_->log_error("Asset '.state' file is malformed, 'assets.{}.path' does not exist or is not a string", std::string_view{id.GetString(), id.GetStringLength()});
       return;
     }
     description.path = std::string{entry["path"].GetString(), entry["path"].GetStringLength()};
     if (!entry.HasMember("url") || !entry["url"].IsString()) {
-      logger_->log_error("Asset '.state' file is malformed");
+      logger_->log_error("Asset '.state' file is malformed, 'assets.{}.url' does not exist or is not a string", std::string_view{id.GetString(), id.GetStringLength()});
       return;
     }
     description.url = std::string{entry["url"].GetString(), entry["url"].GetStringLength()};
@@ -96,7 +96,7 @@ void AssetManager::refreshState() {
     if (utils::file::FileUtils::exists(root_ / description.id)) {
       new_state.assets.insert(std::move(description));
     } else {
-      logger_->log_error("Asset '.state' file contains entry that does not exist on the filesystem");
+      logger_->log_error("Asset '.state' file contains entry '{}' that does not exist on the filesystem at '{}'", std::string_view{id.GetString(), id.GetStringLength()}, (root_ / description.id).string());
     }
   }
   state_ = std::move(new_state);
