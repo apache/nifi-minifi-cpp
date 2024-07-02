@@ -110,6 +110,10 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
       }
       break;
     }
+    case minifi::c2::Operation::sync: {
+      serializeProperty<minifi::c2::SyncOperand>(properties);
+      break;
+    }
     default:
       break;
   }

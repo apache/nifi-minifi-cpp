@@ -131,14 +131,14 @@ std::ostream& operator<<(std::ostream& out, const C2ContentResponse& response) {
     << "}";
 }
 
-std::ostream& operator<<(std::ostream& out, const AnnotatedValue& val) {
-  if (val.value_) {
-    out << '"' << val.value_->c_str() << '"';
+std::ostream& operator<<(std::ostream& out, const C2Value& val) {
+  if (auto* val_ptr = val.valueNode()) {
+    out << '"' << val_ptr->to_string() << '"';
   } else {
-    out << "<null>";
-  }
-  if (!val.annotations.empty()) {
-    out << val.annotations;
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    gsl::not_null(val.json())->Accept(writer);
+    out << std::string_view{buffer.GetString(), buffer.GetLength()};
   }
   return out;
 }

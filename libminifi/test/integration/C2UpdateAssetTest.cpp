@@ -56,7 +56,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
     return true;
   }
 
-  void addOperation(std::string id, std::unordered_map<std::string, std::string> args) {
+  void addOperation(std::string id, std::unordered_map<std::string, c2::C2Value> args) {
     std::lock_guard<std::mutex> guard(op_mtx_);
     operations_.push_back(C2Operation{
       .operation = "update",
@@ -92,7 +92,7 @@ class VerifyC2AssetUpdate : public VerifyC2Base {
 
 struct AssetUpdateOperation {
   std::string id;
-  std::unordered_map<std::string, std::string> args;
+  std::unordered_map<std::string, c2::C2Value> args;
   std::string state;
   std::optional<std::string> details;
 };
@@ -244,11 +244,12 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
       // this op failed no file made on the disk
       continue;
     }
-    expected_files[(asset_dir / op.args["file"]).string()] = minifi::utils::string::endsWith(op.args["url"], "A.txt") ? file_A : file_B;
+    expected_files[(asset_dir / op.args["file"].to_string()).string()] = minifi::utils::string::endsWith(op.args["url"].to_string(), "A.txt") ? file_A : file_B;
   }
 
   size_t file_count = minifi::utils::file::list_dir_all(asset_dir.string(), controller.getLogger()).size();
-  if (file_count != expected_files.size()) {
+  // + 1 is for the .state file from the AssetManager
+  if (file_count != expected_files.size() + 1) {
     controller.getLogger()->log_error("Expected {} files, got {}", expected_files.size(), file_count);
     REQUIRE(false);
   }
