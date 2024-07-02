@@ -209,7 +209,7 @@ TEST_CASE("C2AssetSync", "[c2test]") {
 
   auto get_asset_structure = [&] () {
     std::unordered_map<std::string, std::string> contents;
-    for (auto& [dir, file] : minifi::utils::file::list_dir_all(asset_dir.string(), controller.getLogger())) {
+    for (auto& [dir, file] : minifi::utils::file::list_dir_all(asset_dir, controller.getLogger())) {
       contents[(dir / file).string()] = minifi::utils::file::get_content(dir / file);
     }
     return contents;
