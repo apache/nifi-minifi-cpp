@@ -50,27 +50,42 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
 
   const auto process_session = session_factory->createSession();
   process_session->setMetrics(processor->getMetrics());
+  bool needs_commit = true;
 
-
-  try {
-    const auto run_commit = gsl::finally([&]() {
-        process_session->commit();
-    });
-    while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < time_slice_)) {
-      const auto trigger_result = this->trigger(processor, process_context, process_session);
-      if (!trigger_result || !*trigger_result) {
+  while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < time_slice_)) {
+    const auto trigger_result = this->trigger(processor, process_context, process_session);
+    if (!trigger_result) {
+      try {
+        std::rethrow_exception(trigger_result.error());
+      } catch (const std::exception& exception) {
+        logger_->log_warn("Caught \"{}\" ({}) during Processor::onTrigger of processor: {} ({})",
+            exception.what(), typeid(exception).name(), processor->getUUIDStr(), processor->getName());
+        needs_commit = false;
+        break;
+      } catch (...) {
+        logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: {} ({})", processor->getUUIDStr(), processor->getName());
+        needs_commit = false;
         break;
       }
     }
+    if (!*trigger_result) {
+      logger_->log_trace("Processor {} ({}) yielded", processor->getUUIDStr(), processor->getName());
+      break;
+    }
+  }
+  try {
+    if (needs_commit) {
+      process_session->commit();
+    } else {
+      process_session->rollback();
+    }
   } catch (const std::exception& exception) {
-    logger_->log_warn("Caught \"{}\" ({}) during Processor::onTrigger of processor: {} ({})",
-        exception.what(), typeid(exception).name(), processor->getUUIDStr(), processor->getName());
-    processor->yield(admin_yield_duration_);
+    logger_->log_warn("Caught \"{}\" ({}) during ProcessSession::commit after triggering processor: {} ({})",
+    exception.what(), typeid(exception).name(), processor->getUUIDStr(), processor->getName());
     process_session->rollback();
     throw;
   } catch (...) {
-    logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: {} ({})", processor->getUUIDStr(), processor->getName());
-    processor->yield(admin_yield_duration_);
+    logger_->log_warn("Caught unknown exception during ProcessSession::commit after triggering processor: {} ({})", processor->getUUIDStr(), processor->getName());
     process_session->rollback();
     throw;
   }
