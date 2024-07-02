@@ -62,7 +62,7 @@ class MetricsHandler: public HeartbeatHandler {
   explicit MetricsHandler(std::atomic_bool& metrics_updated_successfully, std::shared_ptr<minifi::Configure> configuration, const std::filesystem::path& replacement_config_path)
     : HeartbeatHandler(std::move(configuration)),
       metrics_updated_successfully_(metrics_updated_successfully),
-      replacement_config_(getReplacementConfig(replacement_config_path.string())) {
+      replacement_config_(minifi::utils::file::get_content(replacement_config_path.string())) {
   }
 
   void handleHeartbeat(const rapidjson::Document& root, struct mg_connection* conn) override {
@@ -176,11 +176,6 @@ class MetricsHandler: public HeartbeatHandler {
       processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("AverageOnTriggerRunTime") &&
       processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("LastOnTriggerRunTime") &&
       processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("TransferredBytes");
-  }
-
-  [[nodiscard]] static std::string getReplacementConfig(const std::string& replacement_config_path) {
-    std::ifstream is(replacement_config_path);
-    return {(std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()};
   }
 
   std::atomic_bool& metrics_updated_successfully_;

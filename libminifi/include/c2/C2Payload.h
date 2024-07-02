@@ -142,8 +142,6 @@ class C2Value {
 
   bool operator==(const C2Value&) const = default;
 
-  friend std::ostream& operator<<(std::ostream& out, const C2Value& val);
-
  private:
   std::variant<state::response::ValueNode, rapidjson::Document> value_;
 };

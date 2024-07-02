@@ -616,8 +616,11 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
 
   for (const auto& [name, value] : resp.operation_arguments) {
     if (auto* json_val = value.json()) {
-      if (json_val->IsObject() && json_val->HasMember("persist")) {
-        auto lifetime = (*json_val)["persist"].GetBool() ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
+      if (json_val->IsObject() && json_val->HasMember("value")) {
+        PropertyChangeLifetime lifetime = PropertyChangeLifetime::PERSISTENT;
+        if (json_val->HasMember("persist")) {
+          lifetime = (*json_val)["persist"].GetBool() ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
+        }
         std::string property_value{(*json_val)["value"].GetString(), (*json_val)["value"].GetStringLength()};
         changeUpdateState(update_property(name, property_value, lifetime));
         continue;
@@ -733,7 +736,6 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
 
   gsl_Assert(operand == SyncOperand::resource);
 
-  std::set<std::string> ids;
   utils::file::AssetLayout asset_layout;
 
   auto state_it = resp.operation_arguments.find("globalHash");
@@ -826,7 +828,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
 
     auto full_path = std::filesystem::path{path.value()} / name.value();  // NOLINT(whitespace/braces)
 
-    auto path_valid = utils::file::validateRelativePath(full_path);
+    auto path_valid = utils::file::validateRelativeFilePath(full_path);
     if (!path_valid) {
       send_error(path_valid.error());
       return;
@@ -952,7 +954,7 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
     return url;
   }
   std::string base;
-  if (configuration_->get(Configuration::nifi_c2_rest_path_base, "c2.rest.path.base", base)) {
+  if (configuration_->get(Configuration::nifi_c2_rest_path_base, base)) {
     return base + url;
   }
   if (!configuration_->get(Configuration::nifi_c2_rest_url, "c2.rest.url", base)) {
@@ -1068,7 +1070,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   // output file
   std::filesystem::path file_path;
   if (auto file_rel = resp.getStringArgument("file") | utils::transform(make_path)) {
-    auto result = utils::file::validateRelativePath(file_rel.value());
+    auto result = utils::file::validateRelativeFilePath(file_rel.value());
     if (!result) {
       send_error(result.error());
       return;
