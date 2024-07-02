@@ -146,7 +146,7 @@ std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> FetchModbus
   std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> address_map{};
   const auto unit_id_str = context.getProperty(UnitIdentifier, &flow_file).value_or("1");
   const uint8_t unit_id = utils::string::parseNumber<uint8_t>(unit_id_str) | utils::valueOrElse([this](const utils::string::ParseError&) {
-    logger_->log_warn("Couldnt parse UnitIdentifier");
+    logger_->log_error("Couldnt parse UnitIdentifier");
     return uint8_t{1};
   });
   for (const auto& dynamic_property : dynamic_property_keys_) {

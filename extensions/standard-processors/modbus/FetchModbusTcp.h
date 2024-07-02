@@ -59,7 +59,7 @@ class FetchModbusTcp final : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .withDefaultValue("15 seconds")
       .isRequired(true)
-      .supportsExpressionLanguage(true)
+      .supportsExpressionLanguage(false)
       .build();
   EXTENSIONAPI static constexpr auto ConnectionPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Connection Per FlowFile")
       .withDescription("Specifies whether to send each FlowFile's content on an individual connection.")
