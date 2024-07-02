@@ -168,7 +168,7 @@ void PythonDependencyInstaller::addVirtualenvToPath() const {
     if (!std::filesystem::exists(site_package_path)) {
       throw PythonScriptException("Could not find python site package path: " + site_package_path.string());
     }
-    evalScript("import sys\nsys.path.append(r'" + site_package_path.string() + "')");
+    evalScript("import sys\nsys.path.insert(0, r'" + site_package_path.string() + "')");
   }
 }
 
