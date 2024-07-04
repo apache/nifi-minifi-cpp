@@ -139,12 +139,17 @@ class AptPackageManager(PackageManager):
 
 
 class DnfPackageManager(PackageManager):
-    def __init__(self, no_confirm):
+    def __init__(self, no_confirm, needs_epel):
         PackageManager.__init__(self, no_confirm)
+        self.needs_epel = needs_epel
 
     def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+        if self.needs_epel:
+            install_cmd = "sudo dnf --enablerepo=crb install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+        else:
+            install_cmd = "sudo dnf install -y"
         return self._install(dependencies=dependencies,
-                             install_cmd="sudo dnf --enablerepo=crb install -y epel-release",
+                             install_cmd=install_cmd,
                              replace_dict={"gpsd": {"gpsd-devel"},
                                            "python": {"python3-devel"}})
 
@@ -174,6 +179,36 @@ class PacmanPackageManager(PackageManager):
 
     def install_compiler(self) -> str:
         self.install({"compiler": {"gcc"}})
+        return ""
+
+
+class ZypperPackageManager(PackageManager):
+    def __init__(self, no_confirm):
+        PackageManager.__init__(self, no_confirm)
+
+    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+        return self._install(dependencies=dependencies,
+                             install_cmd="sudo zypper install -y",
+                             replace_dict={"libarchive": {"libarchive-devel"},
+                                           "python": {"python3-devel"}})
+
+    def _get_installed_packages(self) -> Set[str]:
+        result = subprocess.run(['zypper', 'se', '--installed-only'], text=True, capture_output=True, check=True)
+        lines = result.stdout.splitlines()
+        packages = set()
+        for line in lines:
+            if line.startswith('S |') or line.startswith('--') or line.startswith(' ') or not line:
+                continue
+
+            parts = line.split('|')
+            if len(parts) > 2:
+                package_name = parts[1].strip()
+                packages.add(package_name)
+
+        return packages
+
+    def install_compiler(self) -> str:
+        self.install({"compiler": {"gcc-c++"}})
         return ""
 
 
@@ -293,12 +328,16 @@ def get_package_manager(no_confirm: bool) -> PackageManager:
         return BrewPackageManager(no_confirm)
     elif platform_system == "Linux":
         distro_id = distro.id()
-        if distro_id == "ubuntu":
+        if distro_id == "ubuntu" or "debian" in distro_id:
             return AptPackageManager(no_confirm)
         elif "arch" in distro_id or "manjaro" in distro_id:
             return PacmanPackageManager(no_confirm)
         elif "rocky" in distro_id:
-            return DnfPackageManager(no_confirm)
+            return DnfPackageManager(no_confirm, True)
+        elif "fedora" in distro_id:
+            return DnfPackageManager(no_confirm, False)
+        elif "opensuse" in distro_id:
+            return ZypperPackageManager(no_confirm)
         else:
             sys.exit(f"Unsupported platform {distro_id} exiting")
     elif platform_system == "Windows":
