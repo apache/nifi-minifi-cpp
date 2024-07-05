@@ -152,8 +152,8 @@ class TcpTestServer {
 };
 
 TEST_CASE("GetTCP test with delimiter", "[GetTCP]") {
-  const auto get_tcp = std::make_shared<GetTCP>("GetTCP");
-  SingleProcessorTestController controller{get_tcp};
+  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize, "2"));
 
@@ -183,8 +183,8 @@ TEST_CASE("GetTCP test with delimiter", "[GetTCP]") {
 }
 
 TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
-  const auto get_tcp = std::make_shared<GetTCP>("GetTCP");
-  SingleProcessorTestController controller{get_tcp};
+  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize, "2"));
   REQUIRE(get_tcp->setProperty(GetTCP::MaxMessageSize, "10"));
@@ -224,8 +224,8 @@ TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
 }
 
 TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
-  const auto get_tcp = std::make_shared<GetTCP>("GetTCP");
-  SingleProcessorTestController controller{get_tcp};
+  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize, "2"));
 
@@ -268,8 +268,8 @@ TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
 }
 
 TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
-  const auto get_tcp = std::make_shared<GetTCP>("GetTCP");
-  SingleProcessorTestController controller{get_tcp};
+  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize, "10"));
   REQUIRE(get_tcp->setProperty(GetTCP::MaxQueueSize, "50"));

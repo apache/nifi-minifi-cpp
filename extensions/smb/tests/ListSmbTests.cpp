@@ -31,8 +31,8 @@ namespace org::apache::nifi::minifi::extensions::smb::test {
 REGISTER_RESOURCE(MockSmbConnectionControllerService, ControllerService);
 
 TEST_CASE("ListSmb invalid network path") {
-  const auto list_smb = std::make_shared<ListSmb>("ListSmb");
-  minifi::test::SingleProcessorTestController controller{list_smb};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<ListSmb>("ListSmb")};
+  const auto list_smb = controller.getProcessor();
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
   REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Hostname, utils::OsUtils::getHostName().value_or("localhost")));
   REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Share, "some_share_that_does_not_exists"));
@@ -52,8 +52,8 @@ bool checkForFlowFileWithAttributes(const std::vector<std::shared_ptr<core::Flow
 }
 
 TEST_CASE("ListSmb tests") {
-  const auto list_smb = std::make_shared<ListSmb>("ListSmb");
-  minifi::test::SingleProcessorTestController controller{list_smb};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<ListSmb>("ListSmb")};
+  const auto list_smb = controller.getProcessor();
 
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
   auto mock_smb_connection_controller_service = std::dynamic_pointer_cast<MockSmbConnectionControllerService>(smb_connection_node->getControllerServiceImplementation());

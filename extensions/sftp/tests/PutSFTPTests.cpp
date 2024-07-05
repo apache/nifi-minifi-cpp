@@ -190,8 +190,8 @@ class PutSFTPTestsFixture {
   std::filesystem::path dst_dir = testController.createTempDirectory();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::unique_ptr<SFTPTestServer> sftp_server;
-  std::shared_ptr<core::Processor> get_file;
-  std::shared_ptr<core::Processor> put;
+  core::Processor* get_file;
+  core::Processor* put;
 };
 
 namespace {

@@ -53,7 +53,7 @@
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;
-  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("processorname");
+  auto processor = std::make_shared<minifi::processors::GetFile>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 
@@ -66,7 +66,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   auto config = std::make_shared<minifi::Configure>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(config);
-  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+  auto processor = std::make_shared<minifi::processors::GetFile>("getfileCreate2");
   processor->initialize();
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
@@ -92,7 +92,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   auto node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
-  context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  context->setProperty(minifi::processors::GetFile::Directory, dir.string());
   // replicate 10 threads
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
@@ -147,7 +147,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+  auto processor = std::make_shared<minifi::processors::GetFile>("getfileCreate2");
   processor->initialize();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -175,7 +175,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   auto node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
-  context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  context->setProperty(minifi::processors::GetFile::Directory, dir.string());
   // replicate 10 threads
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
@@ -234,7 +234,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   LogTestController::getInstance().setDebug<minifi::processors::GenerateFlowFile>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(std::make_shared<minifi::Configure>());
-  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GenerateFlowFile>("GFF");
+  auto processor = std::make_shared<minifi::processors::GenerateFlowFile>("GFF");
   processor->initialize();
   processor->setProperty(minifi::processors::GenerateFlowFile::BatchSize, "10");
   processor->setProperty(minifi::processors::GenerateFlowFile::FileSize, "0");
@@ -285,13 +285,13 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   auto dir = testController.createTempDirectory();
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(getfile, minifi::processors::GetFile::Directory, dir.string());
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -327,15 +327,15 @@ TEST_CASE("LogAttributeTestInvalid", "[TestLogAttribute]") {
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
   auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   auto dir = testController.createTempDirectory();
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize, "1");
-  REQUIRE_THROWS_AS(plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog, "-1"), utils::internal::ParseException);
+  plan->setProperty(getfile, minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(getfile, minifi::processors::GetFile::BatchSize, "1");
+  REQUIRE_THROWS_AS(plan->setProperty(loggattr, minifi::processors::LogAttribute::FlowFilesToLog, "-1"), utils::internal::ParseException);
   LogTestController::getInstance().reset();
 }
 
@@ -345,7 +345,7 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
   auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
@@ -354,9 +354,9 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   auto flowsToLogStr = std::to_string(flowsToLog);
   if (verifyStringFlowsLogged.empty())
     verifyStringFlowsLogged = std::to_string(flowsToLog);
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize, std::to_string(fileCount));
-  plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog, flowsToLogStr);
+  plan->setProperty(getfile, minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(getfile, minifi::processors::GetFile::BatchSize, std::to_string(fileCount));
+  plan->setProperty(loggattr, minifi::processors::LogAttribute::FlowFilesToLog, flowsToLogStr);
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -411,13 +411,12 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceReporter>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> processor = plan->addProcessor("GetFile", "getfileCreate2");
-  std::shared_ptr<core::Processor> processorReport = std::make_shared<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
-      std::make_shared<org::apache::nifi::minifi::Configure>());
-  plan->addProcessor(processorReport, "reporter", core::Relationship("success", "description"), false);
+  auto processor = plan->addProcessor("GetFile", "getfileCreate2");
+  auto processorReport = plan->addProcessor(std::make_unique<minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
+      std::make_shared<minifi::Configure>()), "reporter", core::Relationship("success", "description"), false);
 
   auto dir = testController.createTempDirectory();
-  plan->setProperty(processor, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(processor, minifi::processors::GetFile::Directory, dir.string());
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -464,8 +463,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
       throw std::runtime_error("Did not find record");
     }
   }
-  std::shared_ptr<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask> taskReport = std::static_pointer_cast<
-      org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(processorReport);
+  auto taskReport = static_cast<minifi::core::reporting::SiteToSiteProvenanceReportingTask*>(processorReport);
   taskReport->setBatchSize(1);
   std::vector<std::shared_ptr<core::SerializableComponent>> recordsReport;
   recordsReport.push_back(std::make_shared<minifi::provenance::ProvenanceEventRecord>());
@@ -478,7 +476,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
       [&](const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
         taskReport->getJsonReport(*context, *session, recordsReport, jsonStr);
         REQUIRE(recordsReport.size() == 1);
-        REQUIRE(taskReport->getName() == std::string(org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
+        REQUIRE(taskReport->getName() == std::string(minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
         REQUIRE(jsonStr.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
       };
 
@@ -519,7 +517,7 @@ TEST_CASE("TestEmptyContent", "[emptyContent]") {
   LogTestController::getInstance().setDebug<TestPlan>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> getfile = plan->addProcessor("TestProcessorNoContent", "TestProcessorNoContent");
+  plan->addProcessor("TestProcessorNoContent", "TestProcessorNoContent");
 
   plan->runNextProcessor();
 
@@ -541,7 +539,7 @@ void testRPGBypass(const std::string &host, const std::string &port, bool has_er
   LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
   LogTestController::getInstance().setTrace<TestPlan>();
 
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<minifi::Configure>();
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
@@ -599,7 +597,7 @@ class ProcessorWithIncomingConnectionTest {
   ~ProcessorWithIncomingConnectionTest();
 
  protected:
-  std::shared_ptr<core::Processor> processor_;
+  std::shared_ptr<minifi::processors::LogAttribute> processor_;
   std::shared_ptr<minifi::Connection> incoming_connection_;
   std::shared_ptr<core::ProcessSession> session_;
 };

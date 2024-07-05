@@ -56,8 +56,8 @@ std::vector<std::byte> createByteVector(Bytes... bytes) {
 }
 
 TEST_CASE("Invalid segmentSize tests") {
-  const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
-  minifi::test::SingleProcessorTestController controller{segment_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  const auto segment_content = controller.getProcessor();
 
   SECTION("foo") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "foo"), "General Operation: Segment Size value validation failed");
@@ -78,9 +78,10 @@ TEST_CASE("Invalid segmentSize tests") {
 }
 
 TEST_CASE("EmptyFlowFile") {
-  const auto split_content = std::make_shared<SegmentContent>("SegmentContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
-  split_content->setProperty(SegmentContent::SegmentSize, "10 B");
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  const auto segment_content = controller.getProcessor();
+
+  segment_content->setProperty(SegmentContent::SegmentSize, "10 B");
 
   auto trigger_results = controller.trigger("");
   auto original = trigger_results.at(processors::SegmentContent::Original);
@@ -93,8 +94,8 @@ TEST_CASE("EmptyFlowFile") {
 }
 
 TEST_CASE("SegmentContent with different sized text input") {
-  const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
-  minifi::test::SingleProcessorTestController controller{segment_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  const auto segment_content = controller.getProcessor();
 
   auto [original_size, segment_size] = GENERATE(
     std::make_tuple(size_t{1020}, size_t{30}),
@@ -130,8 +131,8 @@ TEST_CASE("SegmentContent with different sized text input") {
 }
 
 TEST_CASE("SegmentContent with different sized byte input") {
-  const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
-  minifi::test::SingleProcessorTestController controller{segment_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  const auto segment_content = controller.getProcessor();
 
   auto [original_size, segment_size] = GENERATE(
     std::make_tuple(size_t{1020}, size_t{30}),
@@ -168,8 +169,8 @@ TEST_CASE("SegmentContent with different sized byte input") {
 }
 
 TEST_CASE("SimpleTest", "[NiFi]") {
-  const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
-  minifi::test::SingleProcessorTestController controller{segment_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  const auto segment_content = controller.getProcessor();
 
   segment_content->setProperty(SegmentContent::SegmentSize, "4 B");
 
@@ -213,8 +214,8 @@ TEST_CASE("SimpleTest", "[NiFi]") {
 }
 
 TEST_CASE("TransferSmall", "[NiFi]") {
-  const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
-  minifi::test::SingleProcessorTestController controller{segment_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  const auto segment_content = controller.getProcessor();
 
   segment_content->setProperty(SegmentContent::SegmentSize, "4 KB");
 
@@ -234,8 +235,8 @@ TEST_CASE("TransferSmall", "[NiFi]") {
 }
 
 TEST_CASE("ExpressionLanguageSupport", "[NiFi]") {
-  const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
-  minifi::test::SingleProcessorTestController controller{segment_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  const auto segment_content = controller.getProcessor();
 
   segment_content->setProperty(SegmentContent::SegmentSize, "${segmentSize}");
 

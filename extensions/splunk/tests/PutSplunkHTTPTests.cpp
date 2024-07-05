@@ -36,10 +36,10 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
 
   TestController test_controller;
   auto plan = test_controller.createPlan();
-  auto write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  auto put_splunk_http = std::dynamic_pointer_cast<PutSplunkHTTP>(plan->addProcessor("PutSplunkHTTP", "put_splunk_http"));
-  auto read_from_success = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success"));
-  auto read_from_failure = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure"));
+  auto write_to_flow_file = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  auto put_splunk_http = dynamic_cast<PutSplunkHTTP*>(plan->addProcessor("PutSplunkHTTP", "put_splunk_http"));
+  auto read_from_success = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success"));
+  auto read_from_failure = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure"));
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, put_splunk_http);
   plan->addConnection(put_splunk_http, PutSplunkHTTP::Success, read_from_success);
@@ -128,9 +128,9 @@ TEST_CASE("PutSplunkHTTP content type tests", "[putsplunkhttpcontenttype]") {
 
   TestController test_controller;
   auto plan = test_controller.createPlan();
-  auto write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  auto update_attribute = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute"));
-  auto put_splunk_http = std::dynamic_pointer_cast<PutSplunkHTTP>(plan->addProcessor("PutSplunkHTTP", "put_splunk_http"));
+  auto write_to_flow_file = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  auto update_attribute = dynamic_cast<UpdateAttribute*>(plan->addProcessor("UpdateAttribute", "update_attribute"));
+  auto put_splunk_http = dynamic_cast<PutSplunkHTTP*>(plan->addProcessor("PutSplunkHTTP", "put_splunk_http"));
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_attribute);
   plan->addConnection(update_attribute, UpdateAttribute::Success, put_splunk_http);

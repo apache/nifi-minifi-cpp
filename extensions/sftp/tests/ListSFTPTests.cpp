@@ -91,8 +91,8 @@ class ListSFTPTestsFixture {
   void createPlan(const utils::Identifier* list_sftp_uuid = nullptr, const std::shared_ptr<minifi::Configure>& configuration = nullptr) {
     const auto state_dir = plan == nullptr ? testController.createTempDirectory() : plan->getStateDir();
 
-    log_attribute.reset();
-    list_sftp.reset();
+    log_attribute = nullptr;
+    list_sftp = nullptr;
     plan.reset();
 
     if (configuration) {
@@ -160,8 +160,8 @@ class ListSFTPTestsFixture {
   std::filesystem::path working_directory = testController.createTempDirectory();
   std::shared_ptr<TestPlan> plan;
   std::unique_ptr<SFTPTestServer> sftp_server;
-  std::shared_ptr<core::Processor> list_sftp;
-  std::shared_ptr<core::Processor> log_attribute;
+  core::Processor* list_sftp = nullptr;
+  core::Processor* log_attribute = nullptr;
 };
 
 class PersistentListSFTPTestsFixture : public ListSFTPTestsFixture {

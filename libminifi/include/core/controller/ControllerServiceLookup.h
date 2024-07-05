@@ -46,11 +46,20 @@ class ControllerServiceLookup {
   virtual ~ControllerServiceLookup() = default;
 
   /**
-   * Gets the controller service via the provided identifier.
+   * Gets the controller service via the provided identifier. This overload returns the controller service in a global scope from all
+   * available controller services in the flow.
    * @param identifier reference string for controller service.
    * @return controller service reference.
    */
   virtual std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) const = 0;
+
+  /**
+   * Gets the controller service in the scope of the processor via the provided identifier.
+   * @param identifier reference string for controller service.
+   * @param processor_uuid uuid of the processor
+   * @return controller service reference.
+   */
+  virtual std::shared_ptr<ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const = 0;
 
   /**
    * Detects if controller service is enabled.

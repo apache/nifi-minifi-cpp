@@ -37,9 +37,18 @@ using ProcessorTriggerResult = std::unordered_map<core::Relationship, std::vecto
 
 class SingleProcessorTestController : public TestController {
  public:
-  explicit SingleProcessorTestController(const std::shared_ptr<core::Processor>& processor)
-      : processor_{plan->addProcessor(processor, processor->getName())}
-  {}
+  explicit SingleProcessorTestController(std::unique_ptr<core::Processor> processor) {
+    auto name = processor->getName();
+    processor_ = plan->addProcessor(std::move(processor), name);
+    input_ = plan->addConnection(nullptr, core::Relationship{"success", "success"}, processor_);
+    outgoing_connections_ = [this] {
+      std::unordered_map<core::Relationship, Connection*> result;
+      for (const auto& relationship: processor_->getSupportedRelationships()) {
+        result.insert_or_assign(relationship, plan->addConnection(processor_, relationship, nullptr));
+      }
+      return result;
+    }();
+  }
 
   ProcessorTriggerResult trigger();
   ProcessorTriggerResult trigger(InputFlowFileData&& input_flow_file_data);
@@ -52,25 +61,17 @@ class SingleProcessorTestController : public TestController {
 
   core::Relationship addDynamicRelationship(std::string name);
 
+  template<typename T = core::Processor>
+  T* getProcessor() const { return static_cast<T*>(processor_); }
+
+  std::shared_ptr<TestPlan> plan = createPlan();
+
  private:
   std::shared_ptr<core::FlowFile> createFlowFile(const std::string_view content, std::unordered_map<std::string, std::string> attributes);
 
- public:
-  std::shared_ptr<TestPlan> plan = createPlan();
-
- protected:
-  core::Processor& getProcessor() const { return *processor_; }
-
- private:
-  std::shared_ptr<core::Processor> processor_;
-  std::unordered_map<core::Relationship, Connection*> outgoing_connections_{[this] {
-    std::unordered_map<core::Relationship, Connection*> result;
-    for (const auto& relationship: processor_->getSupportedRelationships()) {
-      result.insert_or_assign(relationship, plan->addConnection(processor_, relationship, nullptr));
-    }
-    return result;
-  }()};
-  Connection* input_ = plan->addConnection(nullptr, core::Relationship{"success", "success"}, processor_);
+  core::Processor* processor_ = nullptr;
+  std::unordered_map<core::Relationship, Connection*> outgoing_connections_;
+  Connection* input_ = nullptr;
 };
 
 }  // namespace org::apache::nifi::minifi::test

@@ -111,7 +111,7 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
   content_type_ = context.getProperty(InvokeHTTP::ContentType);
 
   if (auto ssl_context_name = context.getProperty(SSLContext)) {
-    if (auto service = context.getControllerService(*ssl_context_name)) {
+    if (auto service = context.getControllerService(*ssl_context_name, getUUID())) {
       ssl_context_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
       if (!ssl_context_service_)
         logger_->log_error("Controller service '{}' is not an SSLContextService", *ssl_context_name);

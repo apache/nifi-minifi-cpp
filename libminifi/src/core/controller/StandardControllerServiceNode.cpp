@@ -29,7 +29,7 @@ bool StandardControllerServiceNode::enable() {
   if (getProperty(property.getName(), property)) {
     active = true;
     for (const auto& linked_service : property.getValues()) {
-      ControllerServiceNode* csNode = provider->getControllerServiceNode(linked_service);
+      ControllerServiceNode* csNode = provider->getControllerServiceNode(linked_service, controller_service_->getUUID());
       if (nullptr != csNode) {
         std::lock_guard<std::mutex> lock(mutex_);
         linked_controller_services_.push_back(csNode);

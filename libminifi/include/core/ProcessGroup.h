@@ -199,7 +199,7 @@ class ProcessGroup : public CoreComponent {
    */
   void addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node);
 
-  core::controller::ControllerServiceNode* findControllerService(const std::string &nodeId) const;
+  core::controller::ControllerServiceNode* findControllerService(const std::string &nodeId, Traverse traverse = Traverse::ExcludeChildren) const;
 
   std::vector<const core::controller::ControllerServiceNode*> getAllControllerServices() const;
 
@@ -220,6 +220,10 @@ class ProcessGroup : public CoreComponent {
 
   void setParameterContext(ParameterContext* parameter_context);
   ParameterContext* getParameterContext() const;
+
+  const std::set<std::unique_ptr<ProcessGroup>>& getChildProcessGroups() const {
+    return child_process_groups_;
+  }
 
  protected:
   void startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler);

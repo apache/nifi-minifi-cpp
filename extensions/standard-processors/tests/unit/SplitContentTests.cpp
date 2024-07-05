@@ -31,8 +31,8 @@ std::vector<std::byte> createByteVector(Bytes... bytes) {
 }
 
 TEST_CASE("WithoutByteSequence") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
   split_content->setProperty(SplitContent::ByteSequenceLocationProperty, magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading));
@@ -41,8 +41,8 @@ TEST_CASE("WithoutByteSequence") {
 }
 
 TEST_CASE("EmptyFlowFile") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "ub");
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
@@ -59,8 +59,8 @@ TEST_CASE("EmptyFlowFile") {
 }
 
 TEST_CASE("TextFormatLeadingPosition", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "ub");
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
@@ -82,8 +82,8 @@ TEST_CASE("TextFormatLeadingPosition", "[NiFi]") {
 }
 
 TEST_CASE("TextFormatTrailingPosition", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "ub");
@@ -106,8 +106,8 @@ TEST_CASE("TextFormatTrailingPosition", "[NiFi]") {
 }
 
 TEST_CASE("TextFormatSplits", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "test");
@@ -144,8 +144,8 @@ TEST_CASE("TextFormatSplits", "[NiFi]") {
 }
 
 TEST_CASE("SmallSplits", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "false");
   split_content->setProperty(SplitContent::ByteSequence, "FFFF");
@@ -169,8 +169,8 @@ TEST_CASE("SmallSplits", "[NiFi]") {
 }
 
 TEST_CASE("WithSingleByteSplit", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "false");
   split_content->setProperty(SplitContent::ByteSequence, "FF");
@@ -194,8 +194,8 @@ TEST_CASE("WithSingleByteSplit", "[NiFi]") {
 }
 
 TEST_CASE("WithLargerSplit", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "false");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
@@ -219,8 +219,8 @@ TEST_CASE("WithLargerSplit", "[NiFi]") {
 }
 
 TEST_CASE("KeepingSequence", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
@@ -244,8 +244,8 @@ TEST_CASE("KeepingSequence", "[NiFi]") {
 }
 
 TEST_CASE("EndsWithSequence", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "false");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
@@ -267,8 +267,8 @@ TEST_CASE("EndsWithSequence", "[NiFi]") {
 }
 
 TEST_CASE("EndsWithSequenceAndKeepSequence", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
@@ -290,8 +290,8 @@ TEST_CASE("EndsWithSequenceAndKeepSequence", "[NiFi]") {
 }
 
 TEST_CASE("StartsWithSequence", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "false");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
@@ -313,8 +313,8 @@ TEST_CASE("StartsWithSequence", "[NiFi]") {
 }
 
 TEST_CASE("StartsWithSequenceAndKeepTrailingSequence", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
@@ -339,8 +339,8 @@ TEST_CASE("StartsWithSequenceAndKeepTrailingSequence", "[NiFi]") {
 }
 
 TEST_CASE("StartsWithSequenceAndKeepLeadingSequence") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
@@ -361,8 +361,8 @@ TEST_CASE("StartsWithSequenceAndKeepLeadingSequence") {
 }
 
 TEST_CASE("StartsWithDoubleSequenceAndKeepLeadingSequence") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
@@ -387,8 +387,8 @@ TEST_CASE("StartsWithDoubleSequenceAndKeepLeadingSequence") {
 }
 
 TEST_CASE("NoSplitterInString", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, ",");
@@ -415,8 +415,8 @@ TEST_CASE("NoSplitterInString", "[NiFi]") {
 }
 
 TEST_CASE("ByteSequenceAtBufferTargetSize") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
 
   auto x = SplitContent::BUFFER_TARGET_SIZE-10;
 
@@ -456,8 +456,8 @@ TEST_CASE("ByteSequenceAtBufferTargetSize") {
 }
 
 TEST_CASE("TrickyWithLeading", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "aab");
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
@@ -477,8 +477,8 @@ TEST_CASE("TrickyWithLeading", "[NiFi]") {
 }
 
 TEST_CASE("TrickyWithTrailing", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "aab");
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
@@ -498,8 +498,8 @@ TEST_CASE("TrickyWithTrailing", "[NiFi]") {
 }
 
 TEST_CASE("TrickierWithLeading", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "abcd");
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
@@ -519,8 +519,8 @@ TEST_CASE("TrickierWithLeading", "[NiFi]") {
 }
 
 TEST_CASE("TrickierWithTrailing", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "abcd");
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
@@ -540,8 +540,8 @@ TEST_CASE("TrickierWithTrailing", "[NiFi]") {
 }
 
 TEST_CASE("OnlyByteSequencesNoKeep", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "ab");
   split_content->setProperty(SplitContent::KeepByteSequence, "false");
@@ -556,8 +556,8 @@ TEST_CASE("OnlyByteSequencesNoKeep", "[NiFi]") {
 }
 
 TEST_CASE("OnlyByteSequencesTrailing", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "ab");
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
@@ -576,8 +576,8 @@ TEST_CASE("OnlyByteSequencesTrailing", "[NiFi]") {
 }
 
 TEST_CASE("OnlyByteSequencesLeading", "[NiFi]") {
-  const auto split_content = std::make_shared<SplitContent>("SplitContent");
-  minifi::test::SingleProcessorTestController controller{split_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
+  const auto split_content = controller.getProcessor();
   split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
   split_content->setProperty(SplitContent::ByteSequence, "ab");
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
