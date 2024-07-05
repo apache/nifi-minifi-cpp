@@ -114,7 +114,6 @@ TEST_CASE("PutSQL routes to failure on malformed content statement") {
   SQLTestController testController;
 
   auto plan = testController.createSQLPlan("PutSQL", {{"success", "d"}, {"failure", "d"}});
-  auto sql_proc = plan->getSQLProcessor();
 
   std::shared_ptr<core::FlowFile> input_file;
   SECTION("No parameters") {

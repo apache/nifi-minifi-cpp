@@ -39,12 +39,20 @@ class ForwardingControllerServiceProvider : public ControllerServiceProvider {
     return controller_service_provider_impl_->getControllerServiceNode(id);
   }
 
+  ControllerServiceNode* getControllerServiceNode(const std::string &id, const utils::Identifier &controller_uuid) const override {
+    return controller_service_provider_impl_->getControllerServiceNode(id, controller_uuid);
+  }
+
   void clearControllerServices() override {
     return controller_service_provider_impl_->clearControllerServices();
   }
 
   std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) const override {
     return controller_service_provider_impl_->getControllerService(identifier);
+  }
+
+  std::shared_ptr<ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override {
+    return controller_service_provider_impl_->getControllerService(identifier, processor_uuid);
   }
 
   std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() override {
