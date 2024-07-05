@@ -50,7 +50,7 @@ namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Test Creation of HashContent", "[HashContentCreate]") {
   TestController testController;
-  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::HashContent>("processorname");
+  auto processor = std::make_shared<org::apache::nifi::minifi::processors::HashContent>("processorname");
   REQUIRE(processor->getName() == "processorname");
   REQUIRE(processor->getUUID());
 }
@@ -68,27 +68,26 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   auto tempdir = testController.createTempDirectory();
   REQUIRE(!tempdir.empty());
 
-  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, tempdir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
-  std::shared_ptr<core::Processor> md5processor = plan->addProcessor("HashContent", "HashContentMD5",
+  auto md5processor = plan->addProcessor("HashContent", "HashContentMD5",
       core::Relationship("success", "description"), true);
   plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute, MD5_ATTR);
   plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm, "MD5");
 
-  std::shared_ptr<core::Processor> shaprocessor = plan->addProcessor("HashContent", "HashContentSHA1",
+  auto shaprocessor = plan->addProcessor("HashContent", "HashContentSHA1",
       core::Relationship("success", "description"), true);
   plan->setProperty(shaprocessor, org::apache::nifi::minifi::processors::HashContent::HashAttribute, SHA1_ATTR);
   plan->setProperty(shaprocessor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm, "sha1");
 
-  std::shared_ptr<core::Processor> sha2processor = plan->addProcessor("HashContent", "HashContentSHA256",
+  auto sha2processor = plan->addProcessor("HashContent", "HashContentSHA256",
       core::Relationship("success", "description"), true);
   plan->setProperty(sha2processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute, SHA256_ATTR);
   plan->setProperty(sha2processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm, "sha-256");
 
-  std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute",
-      core::Relationship("success", "description"), true);
+  plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
 
   auto test_file_path = tempdir / TEST_FILE;
 
@@ -135,11 +134,11 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
   auto tempdir = testController.createTempDirectory();
-  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, tempdir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
-  std::shared_ptr<core::Processor> md5processor = plan->addProcessor("HashContent", "HashContentMD5",
+  auto md5processor = plan->addProcessor("HashContent", "HashContentMD5",
                                                                      core::Relationship("success", "description"), true);
   plan->setProperty(md5processor, HashContent::HashAttribute, MD5_ATTR);
   plan->setProperty(md5processor, HashContent::HashAlgorithm, "MD5");
@@ -168,8 +167,8 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
 }
 
 TEST_CASE("Invalid hash algorithm throws in onSchedule", "[HashContent]") {
-  auto hash_content = std::make_shared<HashContent>("HashContent");
-  minifi::test::SingleProcessorTestController controller{hash_content};
+  minifi::test::SingleProcessorTestController controller{std::make_unique<HashContent>("HashContent")};
+  auto hash_content = controller.getProcessor();
   hash_content->setProperty(HashContent::HashAlgorithm, "My-Algo");
   REQUIRE_THROWS_WITH(controller.plan->scheduleProcessor(hash_content), "Process Schedule Operation: MYALGO is not supported, supported algorithms are: MD5, SHA1, SHA256");
 }

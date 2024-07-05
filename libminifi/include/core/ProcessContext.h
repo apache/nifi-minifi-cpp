@@ -52,7 +52,7 @@ template<typename T>
 concept NotAFlowFile = !std::convertible_to<T &, const FlowFile &> && !std::convertible_to<T &, const std::shared_ptr<FlowFile> &>;
 }  // namespace detail
 
-class ProcessContext : public controller::ControllerServiceLookup, public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
+class ProcessContext : public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
  public:
   /*!
    * Create a new process context associated with the processor/controller service/state manager
@@ -193,46 +193,8 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   ProcessContext(const ProcessContext &parent) = delete;
   ProcessContext &operator=(const ProcessContext &parent) = delete;
 
-  // controller services
-
-  /**
-   * @param identifier of controller service
-   * @return the ControllerService that is registered with the given
-   * identifier
-   */
-  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) const override {
-    return controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier);
-  }
-
-  /**
-   * @param identifier identifier of service to check
-   * @return <code>true</code> if the Controller Service with the given
-   * identifier is enabled, <code>false</code> otherwise. If the given
-   * identifier is not known by this ControllerServiceLookup, returns
-   * <code>false</code>
-   */
-  bool isControllerServiceEnabled(const std::string &identifier) override {
-    return controller_service_provider_->isControllerServiceEnabled(identifier);
-  }
-
-  /**
-   * @param identifier identifier of service to check
-   * @return <code>true</code> if the Controller Service with the given
-   * identifier has been enabled but is still in the transitioning state,
-   * otherwise returns <code>false</code>. If the given identifier is not
-   * known by this ControllerServiceLookup, returns <code>false</code>
-   */
-  bool isControllerServiceEnabling(const std::string &identifier) override {
-    return controller_service_provider_->isControllerServiceEnabling(identifier);
-  }
-
-  /**
-   * @param identifier identifier to look up
-   * @return the name of the Controller service with the given identifier. If
-   * no service can be found with this identifier, returns {@code null}
-   */
-  const std::string getControllerServiceName(const std::string &identifier) const override {
-    return controller_service_provider_->getControllerServiceName(identifier);
+  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const {
+    return controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier, processor_uuid);
   }
 
   void initializeContentRepository(const std::string& home) {

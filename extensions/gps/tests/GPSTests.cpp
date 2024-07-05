@@ -44,7 +44,7 @@ TEST_CASE("GPSD Create", "[gpsdtest1]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetGPS", "GetGPS");
+  auto getfile = plan->addProcessor("GetGPS", "GetGPS");
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 

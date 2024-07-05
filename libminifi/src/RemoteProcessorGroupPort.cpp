@@ -118,7 +118,7 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
   if (!context.getProperty(SSLContext, context_name) || IsNullOrEmpty(context_name)) {
     context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
   }
-  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(context_name);
+  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(context_name, getUUID());
   if (nullptr != service) {
     ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
   } else {

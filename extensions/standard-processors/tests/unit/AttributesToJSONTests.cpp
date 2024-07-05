@@ -109,11 +109,11 @@ class AttributesToJSONTestFixture {
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_;
   std::filesystem::path dir_;
-  std::shared_ptr<core::Processor> getfile_;
-  std::shared_ptr<core::Processor> update_attribute_;
-  std::shared_ptr<core::Processor> attribute_to_json_;
-  std::shared_ptr<core::Processor> logattribute_;
-  std::shared_ptr<core::Processor> putfile_;
+  core::Processor* getfile_ = nullptr;
+  core::Processor* update_attribute_ = nullptr;
+  core::Processor* attribute_to_json_ = nullptr;
+  core::Processor* logattribute_ = nullptr;
+  core::Processor* putfile_ = nullptr;
 };
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move all attributes to a flowfile attribute", "[AttributesToJSONTests]") {
