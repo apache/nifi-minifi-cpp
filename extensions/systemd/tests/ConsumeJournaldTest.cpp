@@ -160,7 +160,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
       {"systemd", "Starting Rule-based Manager for Device Events and Files...", 1},
   }});
   auto* const libwrapper_observer = libwrapper.get();
-  const auto consume_journald = plan->addProcessor(std::make_shared<ConsumeJournald>("ConsumeJournald", utils::Identifier{},
+  const auto consume_journald = plan->addProcessor(std::make_unique<ConsumeJournald>("ConsumeJournald", utils::Identifier{},
       std::move(libwrapper)), "ConsumeJournald");
   REQUIRE(consume_journald->setProperty(ConsumeJournald::TimestampFormat, "ISO8601"));
   const auto get_cursor_position = [&consume_journald]() -> std::string {

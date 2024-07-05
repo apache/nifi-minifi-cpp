@@ -31,7 +31,7 @@
 
 
 template<typename T>
-class S3TestsFixture;
+class FlowProcessorS3TestsFixture;
 
 namespace org::apache::nifi::minifi::aws::processors {
 
@@ -74,7 +74,7 @@ class DeleteS3Object : public S3Processor {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  private:
-  friend class ::S3TestsFixture<DeleteS3Object>;
+  friend class ::FlowProcessorS3TestsFixture<DeleteS3Object>;
 
   explicit DeleteS3Object(std::string_view name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
     : S3Processor(name, uuid, core::logging::LoggerFactory<DeleteS3Object>::getLogger(uuid), std::move(s3_request_sender)) {
