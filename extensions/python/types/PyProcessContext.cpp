@@ -123,7 +123,7 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
     return nullptr;
   }
 
-  if (auto controller_service = context->getControllerService(controller_service_name)) {
+  if (auto controller_service = context->getControllerService(controller_service_name, context->getProcessorNode()->getUUID())) {
     std::string controller_service_type_str = controller_service_type;
     if (controller_service_type_str == "SSLContextService") {
       auto ssl_ctx_service = std::dynamic_pointer_cast<controllers::SSLContextService>(controller_service);

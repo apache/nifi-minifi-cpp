@@ -40,6 +40,7 @@
 #include "core/repository/VolatileContentRepository.h"
 #include "utils/file/FileUtils.h"
 #include "properties/Configuration.h"
+#include "core/Processor.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace utils = minifi::utils;
@@ -208,25 +209,25 @@ class TestPlan {
 
   virtual ~TestPlan();
 
-  std::shared_ptr<minifi::core::Processor> addProcessor(const std::shared_ptr<minifi::core::Processor> &processor, const std::string &name,
+  minifi::core::Processor* addProcessor(std::unique_ptr<minifi::core::Processor> processor, const std::string &name,
       const minifi::core::Relationship& relationship = minifi::core::Relationship("success", "description"), bool linkToPrevious = false) {
-    return addProcessor(processor, name, { relationship }, linkToPrevious);
+    return addProcessor(std::move(processor), name, { relationship }, linkToPrevious);
   }
-  std::shared_ptr<minifi::core::Processor> addProcessor(const std::string &processor_name, const std::string &name,
+  minifi::core::Processor* addProcessor(const std::string &processor_name, const std::string &name,
       const minifi::core::Relationship& relationship = minifi::core::Relationship("success", "description"), bool linkToPrevious = false) {
     return addProcessor(processor_name, name, { relationship }, linkToPrevious);
   }
-  std::shared_ptr<minifi::core::Processor> addProcessor(const std::shared_ptr<minifi::core::Processor> &processor, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
-  std::shared_ptr<minifi::core::Processor> addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
-  std::shared_ptr<minifi::core::Processor> addProcessor(const std::string &processor_name, const minifi::utils::Identifier& uuid, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
+  minifi::core::Processor* addProcessor(std::unique_ptr<minifi::core::Processor> processor, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
+  minifi::core::Processor* addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
+  minifi::core::Processor* addProcessor(const std::string &processor_name, const minifi::utils::Identifier& uuid, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
 
-  minifi::Connection* addConnection(const std::shared_ptr<minifi::core::Processor>& source_proc, const minifi::core::Relationship& source_relationship, const std::shared_ptr<minifi::core::Processor>& destination_proc); // NOLINT
+  minifi::Connection* addConnection(minifi::core::Processor* source_proc, const minifi::core::Relationship& source_relationship, minifi::core::Processor* destination_proc); // NOLINT
 
   std::shared_ptr<minifi::core::controller::ControllerServiceNode> addController(const std::string &controller_name, const std::string &name);
 
-  bool setProperty(const std::shared_ptr<minifi::core::Processor>& processor, const core::PropertyReference& property, std::string_view value);
-  bool setProperty(const std::shared_ptr<minifi::core::Processor>& processor, std::string_view property, std::string_view value);
-  bool setDynamicProperty(const std::shared_ptr<minifi::core::Processor>& processor, std::string_view property, std::string_view value);
+  bool setProperty(minifi::core::Processor* processor, const core::PropertyReference& property, std::string_view value);
+  bool setProperty(minifi::core::Processor* processor, std::string_view property, std::string_view value);
+  bool setDynamicProperty(minifi::core::Processor* processor, std::string_view property, std::string_view value);
 
   static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const core::PropertyReference& property, std::string_view value);
   static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value);
@@ -238,14 +239,14 @@ class TestPlan {
 
   using PreTriggerVerifier = std::function<void(const std::shared_ptr<minifi::core::ProcessContext>, const std::shared_ptr<minifi::core::ProcessSession>)>;
 
-  std::vector<std::shared_ptr<minifi::core::Processor>>::iterator getProcessorItByUuid(const std::string& uuid);
-  std::shared_ptr<minifi::core::ProcessContext> getProcessContextForProcessor(const std::shared_ptr<minifi::core::Processor>& processor);
+  std::vector<minifi::core::Processor*>::iterator getProcessorItByUuid(const std::string& uuid);
+  std::shared_ptr<minifi::core::ProcessContext> getProcessContextForProcessor(minifi::core::Processor* processor);
 
-  void scheduleProcessor(const std::shared_ptr<minifi::core::Processor>& processor, const std::shared_ptr<minifi::core::ProcessContext>& context);
-  void scheduleProcessor(const std::shared_ptr<minifi::core::Processor>& processor);
+  void scheduleProcessor(minifi::core::Processor* processor, const std::shared_ptr<minifi::core::ProcessContext>& context);
+  void scheduleProcessor(minifi::core::Processor* processor);
   void scheduleProcessors();
 
-  bool runProcessor(const std::shared_ptr<minifi::core::Processor>& processor, const PreTriggerVerifier& verify = nullptr);
+  bool runProcessor(minifi::core::Processor* processor, const PreTriggerVerifier& verify = nullptr);
   bool runProcessor(size_t target_location, const PreTriggerVerifier& verify = nullptr);
   bool runNextProcessor(const PreTriggerVerifier& verify = nullptr);
   bool runCurrentProcessor();
@@ -254,8 +255,8 @@ class TestPlan {
   std::set<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> getProvenanceRecords();
 
   std::shared_ptr<minifi::core::FlowFile> getCurrentFlowFile();
-  std::vector<minifi::Connection*> getProcessorOutboundConnections(const std::shared_ptr<minifi::core::Processor>& processor);
-  std::size_t getNumFlowFileProducedByProcessor(const std::shared_ptr<minifi::core::Processor>& processor);
+  std::vector<minifi::Connection*> getProcessorOutboundConnections(minifi::core::Processor* processor);
+  std::size_t getNumFlowFileProducedByProcessor(minifi::core::Processor* processor);
   std::size_t getNumFlowFileProducedByCurrentProcessor();
   std::shared_ptr<minifi::core::FlowFile> getFlowFileProducedByCurrentProcessor();
 
@@ -296,7 +297,7 @@ class TestPlan {
  protected:
   std::unique_ptr<TempDirectory> state_dir_;
 
-  std::unique_ptr<minifi::Connection> buildFinalConnection(const std::shared_ptr<minifi::core::Processor>& processor, bool setDest = false);
+  std::unique_ptr<minifi::Connection> buildFinalConnection(minifi::core::Processor* processor, bool setDest = false);
 
   std::shared_ptr<minifi::Configure> configuration_;
 
@@ -319,18 +320,19 @@ class TestPlan {
 
   std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
   std::vector<std::shared_ptr<minifi::core::controller::ControllerServiceNode>> controller_service_nodes_;
-  std::map<minifi::utils::Identifier, std::shared_ptr<minifi::core::Processor>> processor_mapping_;
-  std::vector<std::shared_ptr<minifi::core::Processor>> processor_queue_;
-  std::vector<std::shared_ptr<minifi::core::Processor>> configured_processors_;  // Do not assume ordering
+  std::map<minifi::utils::Identifier, minifi::core::Processor*> processor_mapping_;
+  std::vector<minifi::core::Processor*> processor_queue_;
+  std::vector<minifi::core::Processor*> configured_processors_;  // Do not assume ordering
   std::vector<std::shared_ptr<minifi::core::ProcessorNode>> processor_nodes_;
   std::vector<std::shared_ptr<minifi::core::ProcessContext>> processor_contexts_;
   std::vector<std::shared_ptr<minifi::core::ProcessSession>> process_sessions_;
   std::vector<std::shared_ptr<minifi::core::ProcessSessionFactory>> factories_;  // Do not assume ordering
   std::vector<std::unique_ptr<minifi::Connection>> relationships_;
   std::optional<minifi::core::Relationship> termination_;
+  std::unique_ptr<minifi::core::ProcessGroup> root_process_group_;
 
  private:
-  bool setProperty(const std::shared_ptr<minifi::core::Processor>& processor, const std::string& property, const std::string& value, bool dynamic);
+  bool setProperty(minifi::core::Processor* processor, const std::string& property, const std::string& value, bool dynamic);
   static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string& property, const std::string& value, bool dynamic);
 
   std::shared_ptr<logging::Logger> logger_;

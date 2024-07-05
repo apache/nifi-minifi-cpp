@@ -58,9 +58,6 @@ class S3TestsFixture {
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
-    mock_s3_request_sender_ptr = new MockS3RequestSender();
-    std::unique_ptr<minifi::aws::s3::S3RequestSender> mock_s3_request_sender(mock_s3_request_sender_ptr);
-    s3_processor = std::shared_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_request_sender)));
     aws_credentials_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
   }
 
@@ -121,8 +118,8 @@ class S3TestsFixture {
   TestController test_controller;
   std::shared_ptr<TestPlan> plan;
   MockS3RequestSender* mock_s3_request_sender_ptr;
-  std::shared_ptr<core::Processor> s3_processor;
-  std::shared_ptr<core::Processor> update_attribute;
+  core::Processor* s3_processor;
+  core::Processor* update_attribute;
   std::shared_ptr<core::controller::ControllerServiceNode> aws_credentials_service;
 };
 
@@ -135,6 +132,11 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
   FlowProcessorS3TestsFixture() {
     LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
     LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
+
+    this->mock_s3_request_sender_ptr = new MockS3RequestSender();
+    std::unique_ptr<minifi::aws::s3::S3RequestSender> mock_s3_request_sender(this->mock_s3_request_sender_ptr);
+    auto s3_processor_unique_ptr = std::unique_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_request_sender)));
+    this->s3_processor = s3_processor_unique_ptr.get();
 
     auto input_dir = this->test_controller.createTempDirectory();
     std::ofstream input_file_stream(input_dir / INPUT_FILENAME);
@@ -149,7 +151,7 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
       core::Relationship("success", "d"),
       true);
     this->plan->addProcessor(
-      this->s3_processor,
+      std::move(s3_processor_unique_ptr),
       "S3Processor",
       core::Relationship("success", "d"),
       true);
@@ -186,15 +188,20 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
   }
 
  protected:
-  std::shared_ptr<core::Processor> update_attribute;
+  core::Processor* update_attribute;
 };
 
 template<typename T>
 class FlowProducerS3TestsFixture : public S3TestsFixture<T> {
  public:
   FlowProducerS3TestsFixture() {
+    this->mock_s3_request_sender_ptr = new MockS3RequestSender();
+    std::unique_ptr<minifi::aws::s3::S3RequestSender> mock_s3_request_sender(this->mock_s3_request_sender_ptr);
+    auto s3_processor_unique_ptr = std::unique_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_request_sender)));
+    this->s3_processor = s3_processor_unique_ptr.get();
+
     this->plan->addProcessor(
-      this->s3_processor,
+      std::move(s3_processor_unique_ptr),
       "S3Processor");
     auto log_attribute = this->plan->addProcessor(
       "LogAttribute",

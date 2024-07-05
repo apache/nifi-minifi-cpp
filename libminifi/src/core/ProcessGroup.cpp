@@ -115,11 +115,18 @@ void ProcessGroup::addProcessGroup(std::unique_ptr<ProcessGroup> child) {
 
 void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler,
     EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler) {
-  std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+  std::set<Processor*> processors_to_schedule;
+  {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    for (const auto& processor : failed_processors_) {
+      processors_to_schedule.insert(processor);
+    }
+  }
 
   std::set<Processor*> failed_processors;
 
-  for (const auto processor : failed_processors_) {
+  for (const auto processor : processors_to_schedule) {
     try {
       logger_->log_debug("Starting {}", processor->getName());
       processor->setScheduledState(core::ScheduledState::RUNNING);
@@ -146,9 +153,8 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
       failed_processors.insert(processor);
     }
   }
-  failed_processors_ = std::move(failed_processors);
 
-  for (const auto processor : failed_processors_) {
+  for (const auto processor : failed_processors) {
     try {
       processor->onUnSchedule();
     } catch (const std::exception& ex) {
@@ -160,26 +166,32 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
 
   // The admin yield duration comes from the configuration, should be equal in all three schedulers
   std::chrono::milliseconds admin_yield_duration = timeScheduler.getAdminYieldDuration();
-  if (!onScheduleTimer_ && !failed_processors_.empty() && admin_yield_duration > 0ms) {
+  if (!onScheduleTimer_ && !failed_processors.empty() && admin_yield_duration > 0ms) {
     logger_->log_info("Retrying failed processors in {}", admin_yield_duration);
     auto func = [this, eventScheduler = &eventScheduler, cronScheduler = &cronScheduler, timeScheduler = &timeScheduler]() {
       this->startProcessingProcessors(*timeScheduler, *eventScheduler, *cronScheduler);
     };
     onScheduleTimer_ = std::make_unique<utils::CallBackTimer>(admin_yield_duration, func);
     onScheduleTimer_->start();
-  } else if (failed_processors_.empty() && onScheduleTimer_) {
+  } else if (failed_processors.empty() && onScheduleTimer_) {
     onScheduleTimer_->stop();
+  }
+
+  {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    failed_processors_ = std::move(failed_processors);
   }
 }
 
 void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler,
                                    CronDrivenSchedulingAgent& cronScheduler) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
   try {
     // All processors are marked as failed.
-    for (auto& processor : processors_) {
-      failed_processors_.insert(processor.get());
+    {
+      std::lock_guard<std::recursive_mutex> lock(mutex_);
+      for (auto& processor : processors_) {
+        failed_processors_.insert(processor.get());
+      }
     }
 
     // Start all the processor node, input and output ports
@@ -200,7 +212,13 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent& timeScheduler, Ev
 
 void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler,
                                   CronDrivenSchedulingAgent& cronScheduler, const std::function<bool(const Processor*)>& filter) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::set<Processor*> processors;
+  {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    for (const auto &processor : processors_) {
+      processors.insert(processor.get());
+    }
+  }
 
   if (onScheduleTimer_) {
     onScheduleTimer_->stop();
@@ -210,20 +228,20 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent& timeScheduler, Eve
 
   try {
     // Stop all the processor node, input and output ports
-    for (const auto &processor : processors_) {
-      if (filter && !filter(processor.get())) {
+    for (const auto &processor : processors) {
+      if (filter && !filter(processor)) {
         continue;
       }
       logger_->log_debug("Stopping {}", processor->getName());
       switch (processor->getSchedulingStrategy()) {
         case TIMER_DRIVEN:
-          timeScheduler.unschedule(processor.get());
+          timeScheduler.unschedule(processor);
           break;
         case EVENT_DRIVEN:
-          eventScheduler.unschedule(processor.get());
+          eventScheduler.unschedule(processor);
           break;
         case CRON_DRIVEN:
-          cronScheduler.unschedule(processor.get());
+          cronScheduler.unschedule(processor);
           break;
       }
     }
@@ -261,8 +279,18 @@ void ProcessGroup::addControllerService(const std::string &nodeId, const std::sh
   controller_service_map_.put(nodeId, node);
 }
 
-core::controller::ControllerServiceNode* ProcessGroup::findControllerService(const std::string &nodeId) const {
-  return controller_service_map_.get(nodeId);
+core::controller::ControllerServiceNode* ProcessGroup::findControllerService(const std::string &nodeId, Traverse traverse) const {
+  if (auto result = controller_service_map_.get(nodeId)) {
+    return result;
+  }
+  if (traverse == Traverse::IncludeChildren) {
+    for (const auto& processGroup : child_process_groups_) {
+      if (auto controllerService = processGroup->findControllerService(nodeId, traverse)) {
+        return controllerService;
+      }
+    }
+  }
+  return nullptr;
 }
 
 std::vector<const core::controller::ControllerServiceNode*> ProcessGroup::getAllControllerServices() const {

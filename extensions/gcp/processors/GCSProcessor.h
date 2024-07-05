@@ -67,6 +67,7 @@ class GCSProcessor : public core::Processor {
 
  protected:
   virtual google::cloud::storage::Client getClient() const;
+  std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) const;
 
   std::optional<std::string> endpoint_url_;
   std::shared_ptr<google::cloud::storage::oauth2::Credentials> gcp_credentials_;
