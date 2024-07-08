@@ -20,7 +20,9 @@
 // as we measure the absolute memory usage that would fail this test
 #define EXTENSION_LIST ""  // NOLINT(cppcoreguidelines-macro-usage)
 
-#include <cstring>
+#include <iostream>
+#include <numeric>
+#include <random>
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
@@ -29,21 +31,29 @@
 
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   constexpr bool cout_enabled = true;
-  std::vector<char> v(30000000);
-  // use v to prevent recent compilers from optimizing out the allocation
-  strcpy(v.data(), " bytes\n");  // NOLINT: "almost always, snprintf is better than strcpy", but formatting is unnecessary here
+
+  // make sure the compiler is not able to optimize out the vector
+  std::mt19937 gen(std::random_device{}());
+  std::uniform_int_distribution dist(0, 255);
+  std::vector<uint8_t> large_random_vector(30'000'000);
+  for (size_t i = 0; i < 10; ++i) {
+    large_random_vector[dist(gen) * 100'000 + dist(gen) * 1000 + dist(gen)] = dist(gen);
+  }
+
   const auto ram_usage_by_process = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
   const auto ram_usage_by_system = utils::OsUtils::getSystemPhysicalMemoryUsage();
   const auto ram_total = utils::OsUtils::getSystemTotalPhysicalMemory();
-
   if (cout_enabled) {
-    std::cout << "Physical Memory used by this process: " << ram_usage_by_process << v.data();
-    std::cout << "Physical Memory used by the system: " << ram_usage_by_system << v.data();
-    std::cout << "Total Physical Memory in the system: " << ram_total << v.data();
+    std::cout << "Physical Memory used by this process: " << ram_usage_by_process << " bytes\n";
+    std::cout << "Physical Memory used by the system: " << ram_usage_by_system << " bytes\n";
+    std::cout << "Total Physical Memory in the system: " << ram_total << " bytes\n";
   }
-  REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(v.size()));
+
+  std::cout << "\nsum of the random numbers: " << std::accumulate(begin(large_random_vector), end(large_random_vector), uint32_t{}) << "\n";
+
+  REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(large_random_vector.size()));
   // In the worst case scenario, building with coverage flags, the ram usage still should be under 4 times the vector's size
-  REQUIRE(gsl::narrow<int64_t>(v.size()*4) >= ram_usage_by_process);
+  REQUIRE(gsl::narrow<int64_t>(large_random_vector.size() * 4) >= ram_usage_by_process);
   REQUIRE(ram_usage_by_system >= ram_usage_by_process);
   REQUIRE(ram_total >= ram_usage_by_system);
 }
