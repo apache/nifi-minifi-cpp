@@ -240,7 +240,7 @@ TEST_CASE("Parameters from different parameter contexts should not be replaced")
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter 'batch_size' not found");
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Parameter 'batch_size' not found");
 }
 
 TEST_CASE("Cannot use the same parameter context name twice") {
@@ -321,7 +321,7 @@ TEST_CASE("Cannot use the same parameter name within a parameter context twice")
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter name 'file_size' already exists, parameter names must be unique within a parameter context!");
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Parameter name 'file_size' already exists, parameter names must be unique within a parameter context!");
 }
 
 class DummyFlowJsonProcessor : public core::Processor {
@@ -388,7 +388,7 @@ TEST_CASE("Cannot use non-sensitive parameter in sensitive property") {
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Non-sensitive parameter 'my_value' cannot be referenced in a sensitive property");
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Non-sensitive parameter 'my_value' cannot be referenced in a sensitive property");
 }
 
 TEST_CASE("Cannot use non-sensitive parameter in sensitive property value sequence") {
@@ -433,7 +433,7 @@ TEST_CASE("Cannot use non-sensitive parameter in sensitive property value sequen
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Non-sensitive parameter 'my_value' cannot be referenced in a sensitive property");
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Non-sensitive parameter 'my_value' cannot be referenced in a sensitive property");
 }
 
 TEST_CASE("Parameters can be used in nested process groups") {
@@ -609,7 +609,7 @@ TEST_CASE("Subprocessgroups cannot inherit parameters from parent processgroup")
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter 'batch_size' not found");
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Parameter 'batch_size' not found");
 }
 
 TEST_CASE("Cannot use parameters if no parameter context is defined") {
@@ -635,7 +635,7 @@ TEST_CASE("Cannot use parameters if no parameter context is defined") {
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Property references a parameter in its value, but no parameter context was provided.");
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Property references a parameter in its value, but no parameter context was provided.");
 }
 
 TEST_CASE("Cannot use parameters in property value sequences if no parameter context is defined") {
@@ -664,7 +664,7 @@ TEST_CASE("Cannot use parameters in property value sequences if no parameter con
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Property references a parameter in its value, but no parameter context was provided.");
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Property references a parameter in its value, but no parameter context was provided.");
 }
 
 TEST_CASE("Property value sequences can use parameters") {

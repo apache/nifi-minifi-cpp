@@ -448,12 +448,12 @@ void ProcessGroup::verify() const {
   }
 }
 
-void ProcessGroup::setParameterContextName(const std::string &name) {
-  parameter_context_name_ = name;
+void ProcessGroup::setParameterContext(ParameterContext* parameter_context) {
+  parameter_context_ = parameter_context;
 }
 
-std::string ProcessGroup::getParameterContextName() const {
-  return parameter_context_name_;
+ParameterContext* ProcessGroup::getParameterContext() const {
+  return parameter_context_;
 }
 
 }  // namespace org::apache::nifi::minifi::core

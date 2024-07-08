@@ -98,7 +98,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
   Node childProcessGroupNodeSeq = node[schema_.process_groups];
   Node parameterContextNameNode = node[schema_.parameter_context_name];
 
-  parseParameterContextName(parameterContextNameNode, group.get());
+  parseParameterContext(parameterContextNameNode, *group);
   parseProcessorNode(processorsNode, group.get());
   parseRemoteProcessGroup(remoteProcessingGroupsNode, group.get());
   parseFunnels(funnelsNode, group.get());
@@ -265,12 +265,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
 
     // handle processor properties
     if (Node propertiesNode = procNode[schema_.processor_properties]) {
-      std::optional<ParameterContext> parameter_context;
-      if (parameter_contexts_.find(parentGroup->getParameterContextName()) != parameter_contexts_.end()) {
-        parameter_context = *parameter_contexts_.at(parentGroup->getParameterContextName());
-      }
-
-      parsePropertiesNode(propertiesNode, *processor, procCfg.name, parameter_context);
+      parsePropertiesNode(propertiesNode, *processor, procCfg.name, parentGroup->getParameterContext());
     }
 
     // Take care of scheduling
@@ -545,9 +540,9 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
       controller_service_node->initialize();
       if (Node propertiesNode = service_node[schema_.controller_service_properties]) {
         // we should propagate properties to the node and to the implementation
-        parsePropertiesNode(propertiesNode, *controller_service_node, name, std::nullopt);
+        parsePropertiesNode(propertiesNode, *controller_service_node, name, nullptr);
         if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
-          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, std::nullopt);
+          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, nullptr);
         }
       }
     } else {
@@ -639,9 +634,9 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 
   // handle port properties
   if (Node propertiesNode = port_node[schema_.rpg_port_properties]) {
-    parsePropertiesNode(propertiesNode, *port, nameStr, std::nullopt);
+    parsePropertiesNode(propertiesNode, *port, nameStr, nullptr);
   } else {
-    parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port, std::nullopt);
+    parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port, nullptr);
     validateComponentProperties(*port, nameStr, port_node.getPath());
   }
 
@@ -662,7 +657,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 }
 
 void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component,
-    const std::optional<ParameterContext>& parameter_context) {
+    ParameterContext* parameter_context) {
   core::Property myProp(property_name, "", "");
   component.getProperty(property_name, myProp);
 
@@ -700,7 +695,7 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
 }
 
 PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node,
-    const std::optional<ParameterContext>& parameter_context) {
+    ParameterContext* parameter_context) {
   using state::response::Value;
   PropertyValue defaultValue;
   defaultValue = property_from_processor.getDefaultValue();
@@ -746,7 +741,7 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
 }
 
 void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor,
-    const std::optional<ParameterContext>& parameter_context) {
+    ParameterContext* parameter_context) {
   core::Property myProp(property_name, "", "");
   processor.getProperty(property_name, myProp);
 
@@ -781,7 +776,7 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
 }
 
 void StructuredConfiguration::parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor,
-    const std::optional<ParameterContext>& parameter_context) {
+    ParameterContext* parameter_context) {
   logger_->log_trace("Encountered {}", property_name);
   if (!property_value_node || property_value_node.isNull()) {
     return;
@@ -794,7 +789,7 @@ void StructuredConfiguration::parsePropertyNodeElement(const std::string& proper
 }
 
 void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name,
-    const std::optional<ParameterContext>& parameter_context) {
+    ParameterContext* parameter_context) {
   // Treat generically as a node so we can perform inspection on entries to ensure they are populated
   logger_->log_trace("Entered {}", component_name);
   for (const auto& property_node : properties_node) {
@@ -862,17 +857,19 @@ void StructuredConfiguration::parsePorts(const flow::Node& node, core::ProcessGr
   }
 }
 
-void StructuredConfiguration::parseParameterContextName(const flow::Node& node, core::ProcessGroup* parent) {
-  if (!parent) {
-    logger_->log_error("parseParameterContextName: no parent group was provided");
-    return;
-  }
-
+void StructuredConfiguration::parseParameterContext(const flow::Node& node, core::ProcessGroup& parent) {
   if (!node) {
     return;
   }
 
-  parent->setParameterContextName(node.getString().value());
+  auto parameter_context_name = node.getString().value();
+  if (parameter_context_name.empty()) {
+    return;
+  }
+
+  if (parameter_contexts_.find(parameter_context_name) != parameter_contexts_.end()) {
+    parent.setParameterContext(parameter_contexts_.at(parameter_context_name).get());
+  }
 }
 
 

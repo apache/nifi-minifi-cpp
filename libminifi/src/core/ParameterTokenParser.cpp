@@ -68,7 +68,7 @@ void ParameterTokenParser::parse() {
   }
 }
 
-std::string ParameterTokenParser::replaceParameters(const std::optional<ParameterContext>& parameter_context, bool is_sensitive) const {
+std::string ParameterTokenParser::replaceParameters(ParameterContext* parameter_context, bool is_sensitive) const {
   if (tokens_.empty()) {
     return input_;
   }

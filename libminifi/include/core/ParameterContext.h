@@ -22,13 +22,14 @@
 #include <optional>
 
 #include "Core.h"
+#include "Exception.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class ParameterException : public std::runtime_error {
+class ParameterException : public Exception {
  public:
-  explicit ParameterException(const std::string& message) : std::runtime_error(message) {
-  }
+  explicit ParameterException(const std::string& message) : Exception(ExceptionType::PARAMETER_EXCEPTION, message) {}
+  explicit ParameterException(const char* message) : Exception(ExceptionType::PARAMETER_EXCEPTION, message) {}
 };
 
 struct Parameter {

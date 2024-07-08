@@ -122,7 +122,7 @@ class ParameterTokenParser {
     return tokens_;
   }
 
-  std::string replaceParameters(const std::optional<ParameterContext>& parameter_context, bool is_sensitive) const;
+  std::string replaceParameters(ParameterContext* parameter_context, bool is_sensitive) const;
 
  private:
   void parse();
