@@ -127,6 +127,34 @@ TEST_CASE("Cron allowed nonnumerical inputs", "[cron]") {
   REQUIRE_NOTHROW(Cron("* * * * * Mon,tUe,WeD,Thu,Fri,SAT,Sun *"));
 }
 
+TEST_CASE("Day of the week checks", "[cron]") {
+  auto monday = Cron("* * * * * MON");
+  auto tuesday = Cron("* * * * * TUE");
+  auto wednesday = Cron("* * * * * WED");
+  auto thursday = Cron("* * * * * THU");
+  auto friday = Cron("* * * * * FRI");
+  auto saturday = Cron("* * * * * SAT");
+  auto sunday = Cron("* * * * * SUN");
+
+  auto day_zero = Cron("* * * * * 0");
+  auto day_one = Cron("* * * * * 1");
+  auto day_two = Cron("* * * * * 2");
+  auto day_three = Cron("* * * * * 3");
+  auto day_four = Cron("* * * * * 4");
+  auto day_five = Cron("* * * * * 5");
+  auto day_six = Cron("* * * * * 6");
+  auto day_seven = Cron("* * * * * 7");
+
+  CHECK(*sunday.day_of_week_ == *day_zero.day_of_week_);
+  CHECK(*monday.day_of_week_ == *day_one.day_of_week_);
+  CHECK(*tuesday.day_of_week_ == *day_two.day_of_week_);
+  CHECK(*wednesday.day_of_week_ == *day_three.day_of_week_);
+  CHECK(*thursday.day_of_week_ == *day_four.day_of_week_);
+  CHECK(*friday.day_of_week_ == *day_five.day_of_week_);
+  CHECK(*saturday.day_of_week_ == *day_six.day_of_week_);
+  CHECK(*sunday.day_of_week_ == *day_seven.day_of_week_);
+}
+
 TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
   using date::sys_days;
   using namespace date::literals;  // NOLINT(google-build-using-namespace)
@@ -252,13 +280,13 @@ TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
   checkNext("0 0 0 1 * ?",
             sys_days(2011_y / 10 / 30) + 15h + 12min + 42s,
             sys_days(2011_y / 11 / 01) + 00h + 00min + 00s);
-  checkNext("* * * ? * 2",
+  checkNext("* * * ? * 1",
             sys_days(2010_y / 10 / 25) + 15h + 12min + 42s,
             sys_days(2010_y / 10 / 25) + 15h + 12min + 43s);
-  checkNext("* * * ? * 2",
+  checkNext("* * * ? * 1",
             sys_days(2010_y / 10 / 20) + 15h + 12min + 42s,
             sys_days(2010_y / 10 / 25) + 00h + 00min + 00s);
-  checkNext("* * * ? * 2",
+  checkNext("* * * ? * 1",
             sys_days(2010_y / 10 / 27) + 15h + 12min + 42s,
             sys_days(2010_y / 11 / 01) + 00h + 00min + 00s);
   checkNext("55 5 * * * ?",
@@ -325,19 +353,19 @@ TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
   checkNext("0 0 0 LW * ? *",
             sys_days(2027_y / 02 / 27) + 02h + 00min + 00s,
             sys_days(2027_y / 03 / 31) + 00h + 00min + 00s);
-  checkNext("0 0 0 ? * 3#1 *",
+  checkNext("0 0 0 ? * 2#1 *",
             sys_days(2022_y / 05 / 04) + 00h + 00min + 00s,
             sys_days(2022_y / 06 / 07) + 00h + 00min + 00s);
-  checkNext("0 0 0 ? * 3#2 *",
+  checkNext("0 0 0 ? * 2#2 *",
             sys_days(2022_y / 05 / 04) + 00h + 00min + 00s,
             sys_days(2022_y / 05 / 10) + 00h + 00min + 00s);
-  checkNext("0 0 0 ? * 3#3 *",
+  checkNext("0 0 0 ? * 2#3 *",
             sys_days(2022_y / 05 / 04) + 00h + 00min + 00s,
             sys_days(2022_y / 05 / 17) + 00h + 00min + 00s);
-  checkNext("0 0 0 ? * 3#4 *",
+  checkNext("0 0 0 ? * 2#4 *",
             sys_days(2022_y / 05 / 04) + 00h + 00min + 00s,
             sys_days(2022_y / 05 / 24) + 00h + 00min + 00s);
-  checkNext("0 0 0 ? * 3#5 *",
+  checkNext("0 0 0 ? * 2#5 *",
             sys_days(2022_y / 05 / 04) + 00h + 00min + 00s,
             sys_days(2022_y / 05 / 31) + 00h + 00min + 00s);
   checkNext("0 0 0 L * ? *",
@@ -398,7 +426,7 @@ TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
             sys_days(2022_y / 07 / 15) + 00h + 00min + 00s,
             sys_days(2022_y / 07 / 29) + 00h + 00min + 00s);
 
-  checkNext("0 15 10 ? * 6L",
+  checkNext("0 15 10 ? * 5L",
             sys_days(2022_y / 07 / 15) + 00h + 00min + 00s,
             sys_days(2022_y / 07 / 29) + 10h + 15min + 00s);
 
@@ -541,13 +569,13 @@ TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
     checkNext("0 0 0 1 * ?",
               make_zoned(locate_zone(time_zone), local_days(2011_y / 10 / 30) + 15h + 12min + 42s),
               make_zoned(locate_zone(time_zone), local_days(2011_y / 11 / 01) + 00h + 00min + 00s));
-    checkNext("* * * ? * 2",
+    checkNext("* * * ? * 1",
               make_zoned(locate_zone(time_zone), local_days(2010_y / 10 / 25) + 15h + 12min + 42s),
               make_zoned(locate_zone(time_zone), local_days(2010_y / 10 / 25) + 15h + 12min + 43s));
-    checkNext("* * * ? * 2",
+    checkNext("* * * ? * 1",
               make_zoned(locate_zone(time_zone), local_days(2010_y / 10 / 20) + 15h + 12min + 42s),
               make_zoned(locate_zone(time_zone), local_days(2010_y / 10 / 25) + 00h + 00min + 00s));
-    checkNext("* * * ? * 2",
+    checkNext("* * * ? * 1",
               make_zoned(locate_zone(time_zone), local_days(2010_y / 10 / 27) + 15h + 12min + 42s),
               make_zoned(locate_zone(time_zone), local_days(2010_y / 11 / 01) + 00h + 00min + 00s));
     checkNext("55 5 * * * ?",
@@ -614,19 +642,19 @@ TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
     checkNext("0 0 0 LW * ? *",
               make_zoned(locate_zone(time_zone), local_days(2027_y / 02 / 27) + 02h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2027_y / 03 / 31) + 00h + 00min + 00s));
-    checkNext("0 0 0 ? * 3#1 *",
+    checkNext("0 0 0 ? * 2#1 *",
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 04) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 06 / 07) + 00h + 00min + 00s));
-    checkNext("0 0 0 ? * 3#2 *",
+    checkNext("0 0 0 ? * 2#2 *",
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 04) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 10) + 00h + 00min + 00s));
-    checkNext("0 0 0 ? * 3#3 *",
+    checkNext("0 0 0 ? * 2#3 *",
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 04) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 17) + 00h + 00min + 00s));
-    checkNext("0 0 0 ? * 3#4 *",
+    checkNext("0 0 0 ? * 2#4 *",
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 04) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 24) + 00h + 00min + 00s));
-    checkNext("0 0 0 ? * 3#5 *",
+    checkNext("0 0 0 ? * 2#5 *",
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 04) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 05 / 31) + 00h + 00min + 00s));
     checkNext("0 0 0 L * ? *",
@@ -687,7 +715,7 @@ TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
               make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 15) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 29) + 00h + 00min + 00s));
 
-    checkNext("0 15 10 ? * 6L",
+    checkNext("0 15 10 ? * 5L",
               make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 15) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 29) + 10h + 15min + 00s));
 
