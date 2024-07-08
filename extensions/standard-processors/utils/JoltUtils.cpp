@@ -693,7 +693,8 @@ nonstd::expected<std::pair<Spec::Destination, Spec::It>, std::string> parseDesti
       if (!ctx.find(match_idx->first)) {
         return nonstd::make_unexpected(fmt::format("Invalid matching index at {} to ancestor {}", ctx.path(), match_idx->first));
       }
-      result.push_back({match_idx->first, type});
+      Spec::Destination::value_type result_element{match_idx->first, type};
+      result.push_back(result_element);
       ch_it = match_idx->second;
     } else if (auto val_ref = parseValueReference(ctx, ch_it, end, false)) {
       result.push_back({std::move(val_ref->first), type});

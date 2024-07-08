@@ -45,15 +45,9 @@ if (WIN32)
         COMPONENT bin)
 endif()
 
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/date/826_libcpp_17_build_fix.patch")
-set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
-
-
 FetchContent_Declare(date_src
-    URL             https://github.com/HowardHinnant/date/archive/refs/tags/v3.0.1.tar.gz
-    URL_HASH        SHA256=7a390f200f0ccd207e8cff6757e04817c1a0aec3e327b006b7eb451c57ee3538
-    PATCH_COMMAND "${PC}"
+    URL         https://github.com/HowardHinnant/date/archive/1ead6715dec030d340a316c927c877a3c4e5a00c.tar.gz  # master as of 2024-06-28
+    URL_HASH    SHA256=8b4096b7b49e06d756f4aa0949151863ab7b812679a1646039fab6e821d3c049
 )
 FetchContent_GetProperties(date_src)
 if (NOT date_src_POPULATED)
