@@ -170,7 +170,8 @@ void StructuredConfiguration::parseParameterContexts(const Node& parameter_conte
       auto parameter_description = getOptionalField(parameter_node, schema_.description, "");
       parameter_context->addParameter(Parameter{parameter_name, parameter_description, parameter_value});
     }
-    parameter_contexts_[name] = std::move(parameter_context);
+
+    parameter_contexts_.emplace(name, gsl::make_not_null(std::move(parameter_context)));
   }
 }
 

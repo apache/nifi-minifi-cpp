@@ -135,7 +135,7 @@ class FlowConfiguration : public CoreComponent {
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
  protected:
-  std::unordered_map<std::string, std::unique_ptr<ParameterContext>> parameter_contexts_;
+  std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>> parameter_contexts_;
   std::optional<std::filesystem::path> config_path_;
   std::shared_ptr<core::Repository> flow_file_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;

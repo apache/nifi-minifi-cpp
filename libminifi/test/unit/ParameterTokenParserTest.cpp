@@ -88,7 +88,8 @@ TEST_CASE("Unfinished token is not a token") {
 
 TEST_CASE("Test invalid token names") {
   auto create_error_message = [](const std::string& invalid_name){
-    return "Parameter Operation: Invalid token name: '" + invalid_name + "'. Only alpha-numeric characters (a-z, A-Z, 0-9), hyphens ( - ), underscores ( _ ), periods ( . ), and spaces are allowed in token name.";
+    return "Parameter Operation: Invalid token name: '" + invalid_name +
+      "'. Only alpha-numeric characters (a-z, A-Z, 0-9), hyphens ( - ), underscores ( _ ), periods ( . ), and spaces are allowed in token name.";
   };
   CHECK_THROWS_WITH(core::ParameterTokenParser("#{}"), create_error_message(""));
   CHECK_THROWS_WITH(core::ParameterTokenParser("#{#}"), create_error_message("#"));
