@@ -846,7 +846,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     if (!resolved_url) {
       return nonstd::make_unexpected("Couldn't resolve url");
     }
-    C2Payload file_response = protocol_.load()->fetch(resolved_url.value());
+    C2Payload file_response = protocol_->fetch(resolved_url.value());
 
     if (file_response.getStatus().getState() != state::UpdateState::READ_COMPLETE) {
       return nonstd::make_unexpected("Failed to fetch file from " + resolved_url.value());

@@ -103,7 +103,11 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   // setup minifi home
   const std::filesystem::path home_dir = controller.createTempDirectory();
   const auto asset_dir = home_dir / "asset";
+
   std::filesystem::current_path(home_dir);
+  auto wd_guard = gsl::finally([] {
+    std::filesystem::current_path(minifi::utils::file::get_executable_dir());
+  });
 
   C2AcknowledgeHandler ack_handler;
   std::string file_A = "hello from file A";
@@ -259,8 +263,6 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
       REQUIRE(false);
     }
   }
-
-  std::filesystem::current_path(minifi::utils::file::get_executable_dir());
 }
 
 }  // namespace org::apache::nifi::minifi::test
