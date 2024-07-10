@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -24,6 +24,24 @@ get_cmake_version(){
   CMAKE_MAJOR=$(echo "$CMAKE_VERSION" | cut -d. -f1)
   CMAKE_MINOR=$(echo "$CMAKE_VERSION" | cut -d. -f2)
   CMAKE_REVISION=$(echo "$CMAKE_VERSION" | cut -d. -f3)
+}
+
+# Checks if a version is smaller than another
+compare_version() {
+  # Parameters:
+  local lhs_major=$1
+  local lhs_minor=$2
+  local lhs_patch=$3
+  local rhs_major=$4
+  local rhs_minor=$5
+  local rhs_patch=$6
+  # Return: true (0) if left hand side (lhs) is smaller than right hand side (rhs), otherwise return false
+  if [ "$lhs_major" -lt "$rhs_major" ]; then return 0; fi
+  if [ "$lhs_minor" -lt "$rhs_minor" ]; then return 0; fi
+  if [ "$lhs_patch" -lt "$rhs_patch" ]; then return 0; fi
+
+  # otherwise return
+  false
 }
 
 add_cmake_option(){
@@ -457,3 +475,5 @@ read_feature_options(){
     *) echo -e "${RED}Please enter an option A-Z or AA-AF or 1-7...${NO_COLOR}" && sleep 2
   esac
 }
+
+# vim: shiftwidth=2 tabstop=2 expandtab
