@@ -22,7 +22,6 @@
 
 #include <iostream>
 #include <numeric>
-#include <random>
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
@@ -32,13 +31,9 @@
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   constexpr bool cout_enabled = true;
 
-  // make sure the compiler is not able to optimize out the vector
-  std::mt19937 gen(std::random_device{}());
-  std::uniform_int_distribution dist(0, 255);
-  std::vector<uint8_t> large_random_vector(30'000'000);
-  for (size_t i = 0; i < 10; ++i) {
-    large_random_vector[dist(gen) * 100'000 + dist(gen) * 1000 + dist(gen)] = dist(gen);
-  }
+  std::vector<uint8_t> large_vector(30'000'000);
+  // fill the vector with mostly non-zero numbers to defeat memory compression
+  std::iota(begin(large_vector), end(large_vector), 1);
 
   const auto ram_usage_by_process = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
   const auto ram_usage_by_system = utils::OsUtils::getSystemPhysicalMemoryUsage();
@@ -49,11 +44,11 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
     std::cout << "Total Physical Memory in the system: " << ram_total << " bytes\n";
   }
 
-  std::cout << "\nsum of the random numbers: " << std::accumulate(begin(large_random_vector), end(large_random_vector), uint32_t{}) << "\n";
+  std::cout << "\nsum of the numbers in the large vector: " << std::accumulate(begin(large_vector), end(large_vector), uint32_t{}) << "\n";
 
-  REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(large_random_vector.size()));
+  REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(large_vector.size()));
   // In the worst case scenario, building with coverage flags, the ram usage still should be under 4 times the vector's size
-  REQUIRE(gsl::narrow<int64_t>(large_random_vector.size() * 4) >= ram_usage_by_process);
+  REQUIRE(gsl::narrow<int64_t>(large_vector.size() * 4) >= ram_usage_by_process);
   REQUIRE(ram_usage_by_system >= ram_usage_by_process);
   REQUIRE(ram_total >= ram_usage_by_system);
 }
