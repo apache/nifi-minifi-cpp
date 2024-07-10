@@ -39,7 +39,7 @@ namespace org::apache::nifi::minifi::test {
 
 class TestHTTPServer {
  public:
-  TestHTTPServer(TestController& test_controller) {
+  explicit TestHTTPServer(TestController& test_controller) {
     LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
     LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::LogAttribute>();
 
