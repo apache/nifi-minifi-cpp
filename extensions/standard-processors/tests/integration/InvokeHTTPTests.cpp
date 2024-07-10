@@ -63,6 +63,11 @@ class TestHTTPServer {
       }
     }};
   }
+  TestHTTPServer(const TestHTTPServer&) = delete;
+  TestHTTPServer(TestHTTPServer&&) = delete;
+  TestHTTPServer& operator=(const TestHTTPServer&) = delete;
+  TestHTTPServer& operator=(TestHTTPServer&&) = delete;
+
   static constexpr const char* PROCESSOR_NAME = "my_http_server";
   static constexpr const char* URL = "http://localhost:8681/testytesttest";
 

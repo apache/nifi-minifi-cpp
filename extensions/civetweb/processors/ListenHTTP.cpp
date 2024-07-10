@@ -219,7 +219,7 @@ bool ListenHTTP::processIncomingFlowFile(core::ProcessSession &session) {
   return true;
 }
 
-bool ListenHTTP::processFlowFile(std::shared_ptr<core::FlowFile> flow_file) {
+bool ListenHTTP::processFlowFile(const std::shared_ptr<core::FlowFile>& flow_file) {
   ResponseBody response;
   flow_file->getAttribute("filename", response.uri);
   flow_file->getAttribute("mime.type", response.mime_type);
