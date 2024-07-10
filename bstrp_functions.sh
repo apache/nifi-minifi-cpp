@@ -27,7 +27,7 @@ get_cmake_version(){
 }
 
 # Checks if a version is smaller than another
-compare_version() {
+version_is_less_than() {
   # Parameters:
   local lhs_major=$1
   local lhs_minor=$2

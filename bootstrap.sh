@@ -232,7 +232,7 @@ if [ -n "${CMAKE_COMMAND}" ]; then
 fi
 
 if [ -z "${CMAKE_COMMAND}" ] ||
-  compare_version "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION"; then
+  version_is_less_than "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION"; then
   echo "CMake is not installed or too old, attempting to install it..."
   bootstrap_cmake
   if [ -x "$(command -v cmake3)" ]; then
@@ -246,13 +246,13 @@ fi
 
 # RHEL8: If cmake3 is too old, try cmake
 if [ "$CMAKE_COMMAND" = "cmake3" ] &&
-   compare_version "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION" &&
+   version_is_less_than "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION" &&
    [ -x "$(command -v cmake)" ]; then
   CMAKE_COMMAND="cmake"
   get_cmake_version
 fi
 
-if compare_version "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION"; then
+if version_is_less_than "$CMAKE_MAJOR" "$CMAKE_MINOR" "$CMAKE_REVISION" "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" "$CMAKE_GLOBAL_MIN_VERSION_MINOR" "$CMAKE_GLOBAL_MIN_VERSION_REVISION"; then
   echo "Failed to install or update CMake, exiting..."
   exit
 fi
