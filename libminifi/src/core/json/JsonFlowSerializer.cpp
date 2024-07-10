@@ -97,7 +97,7 @@ void JsonFlowSerializer::encryptSensitiveParameters(rapidjson::Value& flow_defin
         }
       }
       parameter_value = utils::crypto::property_encryption::encrypt(parameter_value, encryption_provider);
-      getMember(parameter, schema.value[0]).SetString(parameter_value.c_str(), parameter_value.size(), alloc);
+      getMember(parameter, schema.value[0]).SetString(parameter_value.c_str(), gsl::narrow<rapidjson::SizeType>(parameter_value.size()), alloc);
     }
   }
 }
