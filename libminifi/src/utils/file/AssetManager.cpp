@@ -96,7 +96,8 @@ void AssetManager::refreshState() {
     if (utils::file::FileUtils::exists(root_ / description.id)) {
       new_state.assets.insert(std::move(description));
     } else {
-      logger_->log_error("Asset '.state' file contains entry '{}' that does not exist on the filesystem at '{}'", std::string_view{id.GetString(), id.GetStringLength()}, (root_ / description.id).string());
+      logger_->log_error("Asset '.state' file contains entry '{}' that does not exist on the filesystem at '{}'",
+                         std::string_view{id.GetString(), id.GetStringLength()}, (root_ / description.id).string());
     }
   }
   state_ = std::move(new_state);
