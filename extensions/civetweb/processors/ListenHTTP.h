@@ -291,7 +291,7 @@ class ListenHTTP : public core::Processor {
 
  private:
   bool processIncomingFlowFile(core::ProcessSession &session);
-  bool processFlowFile(std::shared_ptr<core::FlowFile> flow_file);
+  bool processFlowFile(const std::shared_ptr<core::FlowFile>& flow_file);
   bool processRequestBuffer(core::ProcessSession &session);
   size_t pendingRequestCount() {
     return handler_ ? handler_->requestCount() : 0;
