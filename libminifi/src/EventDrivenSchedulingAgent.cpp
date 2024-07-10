@@ -73,21 +73,19 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
       break;
     }
   }
-  try {
-    if (needs_commit) {
+  if (needs_commit) {
+    try {
       process_session->commit();
-    } else {
-      process_session->rollback();
+    } catch (const std::exception& exception) {
+      logger_->log_warn("Caught \"{}\" ({}) during ProcessSession::commit after triggering processor: {} ({})",
+      exception.what(), typeid(exception).name(), processor->getUUIDStr(), processor->getName());
+      process_session->rollbackNoThrow();
+    } catch (...) {
+      logger_->log_warn("Caught unknown exception during ProcessSession::commit after triggering processor: {} ({})", processor->getUUIDStr(), processor->getName());
+      process_session->rollbackNoThrow();
     }
-  } catch (const std::exception& exception) {
-    logger_->log_warn("Caught \"{}\" ({}) during ProcessSession::commit after triggering processor: {} ({})",
-    exception.what(), typeid(exception).name(), processor->getUUIDStr(), processor->getName());
-    process_session->rollback();
-    throw;
-  } catch (...) {
-    logger_->log_warn("Caught unknown exception during ProcessSession::commit after triggering processor: {} ({})", processor->getUUIDStr(), processor->getName());
-    process_session->rollback();
-    throw;
+  } else {
+    process_session->rollbackNoThrow();
   }
 
   if (processor->isYield()) {

@@ -985,6 +985,15 @@ void ProcessSession::rollback() {
   }
 }
 
+nonstd::expected<void, std::exception_ptr> ProcessSession::rollbackNoThrow() noexcept {
+  try {
+    rollback();
+    return {};
+  } catch(...) {
+    return nonstd::make_unexpected(std::current_exception());
+  }
+}
+
 void ProcessSession::persistFlowFilesBeforeTransfer(
     std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile> > >& transactionMap,
     const std::map<utils::Identifier, FlowFileUpdate>& modifiedFlowFiles) {
