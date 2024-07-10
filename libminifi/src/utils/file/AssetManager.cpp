@@ -113,7 +113,8 @@ nonstd::expected<void, std::string> AssetManager::sync(
     const std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)>& fetch) {
   std::lock_guard lock(mtx_);
   org::apache::nifi::minifi::utils::file::AssetLayout new_state{
-    .digest = state_.digest
+    .digest = state_.digest,
+    .assets = {}
   };
   std::string fetch_errors;
   std::vector<std::pair<std::filesystem::path, std::vector<std::byte>>> new_file_contents;
