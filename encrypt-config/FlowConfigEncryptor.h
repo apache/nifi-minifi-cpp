@@ -32,12 +32,12 @@ enum class EncryptionType {
 
 struct EncryptionRequest {
   explicit EncryptionRequest(EncryptionType type);
-  EncryptionRequest(std::string_view component_id, std::string_view property_name, std::string_view property_value);
+  EncryptionRequest(std::string_view component_id, std::string_view item_name, std::string_view item_value);
 
   EncryptionType type;
   std::string component_id;
-  std::string property_name;
-  std::string property_value;
+  std::string item_name;
+  std::string item_value;
 };
 
 void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::filesystem::path& minifi_home, const std::filesystem::path& flow_config_path, const EncryptionRequest& request);

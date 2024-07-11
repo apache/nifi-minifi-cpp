@@ -165,11 +165,11 @@ EncryptionRequest::EncryptionRequest(EncryptionType type) : type{type} {
   gsl_Expects(type == EncryptionType::Interactive || type == EncryptionType::ReEncrypt);
 }
 
-EncryptionRequest::EncryptionRequest(std::string_view component_id, std::string_view property_name, std::string_view property_value)
+EncryptionRequest::EncryptionRequest(std::string_view component_id, std::string_view item_name, std::string_view item_value)
     : type{EncryptionType::SingleProperty},
       component_id{component_id},
-      property_name{property_name},
-      property_value{property_value} {}
+      item_name{item_name},
+      item_value{item_value} {}
 
 void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::filesystem::path& minifi_home, const std::filesystem::path& flow_config_path, const EncryptionRequest& request) {
   const bool is_re_encrypting = keys.old_key.has_value();
@@ -215,7 +215,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
   const auto overrides = [&]() -> std::unordered_map<utils::Identifier, core::flow::Overrides> {
     switch (request.type) {
       case EncryptionType::Interactive: return createOverridesInteractively(sensitive_items);
-      case EncryptionType::SingleProperty: return createOverridesForSingleItem(sensitive_items, request.component_id, request.property_name, request.property_value);
+      case EncryptionType::SingleProperty: return createOverridesForSingleItem(sensitive_items, request.component_id, request.item_name, request.item_value);
       case EncryptionType::ReEncrypt: return createOverridesForReEncryption(sensitive_items);
     }
     return {};
