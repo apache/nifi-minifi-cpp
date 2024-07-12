@@ -91,7 +91,7 @@ void JsonFlowSerializer::encryptSensitiveParameters(rapidjson::Value& flow_defin
       std::string parameter_value{getMember(parameter, schema.value[0]).GetString(), getMember(parameter, schema.value[0]).GetStringLength()};
       if (overrides.contains(*parameter_context_id)) {
         const auto& override_values = overrides.at(*parameter_context_id);
-        const auto parameter_name = getMember(parameter, schema.name[0]).GetString();
+        std::string parameter_name{getMember(parameter, schema.name[0]).GetString(), getMember(parameter, schema.name[0]).GetStringLength()};
         if (auto parameter_override_value = override_values.get(parameter_name)) {
           parameter_value = *parameter_override_value;
         }

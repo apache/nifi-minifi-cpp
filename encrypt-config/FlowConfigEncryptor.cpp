@@ -100,12 +100,11 @@ std::vector<SensitiveItem> listSensitiveItems(const minifi::core::ProcessGroup &
     gsl_Expects(controller_service_node);
     const auto* controller_service = controller_service_node->getControllerServiceImplementation();
     gsl_Expects(controller_service);
-    auto props = controller_service->getProperties();
     if (processed_controller_services.contains(controller_service->getUUID())) {
       continue;
     }
     processed_controller_services.insert(controller_service->getUUID());
-    for (const auto& [_, property] : props) {
+    for (const auto& [_, property] : controller_service->getProperties()) {
       if (property.isSensitive()) {
         sensitive_items.push_back(SensitiveItem{
             .component_type = ComponentType::ControllerService,
@@ -126,7 +125,7 @@ std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> cre
   std::cout << '\n';
   for (const auto& sensitive_item : sensitive_items) {
     std::cout << magic_enum::enum_name(sensitive_item.component_type) << " " << sensitive_item.component_name << " (" << sensitive_item.component_id.to_string() << ") "
-              << "has sensitive item " << sensitive_item.item_display_name << "\n    enter a new value or press Enter to keep the current value unchanged: ";
+              << "has sensitive property or parameter " << sensitive_item.item_display_name << "\n    enter a new value or press Enter to keep the current value unchanged: ";
     std::cout.flush();
     std::string new_value;
     std::getline(std::cin, new_value);
@@ -143,7 +142,7 @@ std::unordered_map<minifi::utils::Identifier, minifi::core::flow::Overrides> cre
     return sensitive_item.component_id.to_string().view() == component_id && (sensitive_item.item_name == item_name || sensitive_item.item_display_name == item_name);
   });
   if (sensitive_item_it == sensitive_items.end()) {
-    std::cout << "No sensitive item found with this component ID and item name.\n";
+    std::cout << "No sensitive property or parameter found with this component ID and name.\n";
     return {};
   }
   return {{sensitive_item_it->component_id, minifi::core::flow::Overrides{}.add(sensitive_item_it->item_name, item_value)}};

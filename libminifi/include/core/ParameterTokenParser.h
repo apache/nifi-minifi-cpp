@@ -148,7 +148,7 @@ class NonSensitiveParameterTokenParser : public ParameterTokenParser {
 
 class SensitiveParameterTokenParser : public ParameterTokenParser {
  public:
-  SensitiveParameterTokenParser(std::string input, utils::crypto::EncryptionProvider& sensitive_values_encryptor)
+  SensitiveParameterTokenParser(std::string input, const utils::crypto::EncryptionProvider& sensitive_values_encryptor)
       : ParameterTokenParser(std::move(input)),
         sensitive_values_encryptor_(sensitive_values_encryptor) {
   }
@@ -157,7 +157,7 @@ class SensitiveParameterTokenParser : public ParameterTokenParser {
   std::string getRawParameterValue(const Parameter& parameter) const override;
 
  private:
-  utils::crypto::EncryptionProvider& sensitive_values_encryptor_;
+  const utils::crypto::EncryptionProvider& sensitive_values_encryptor_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

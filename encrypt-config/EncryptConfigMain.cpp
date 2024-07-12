@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) try {
       .metavar("VALUE")
       .help(minifi::utils::string::join_pack("The new value of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
   argument_parser.add_argument("--parameter-context-id")
-      .metavar("PARAMETER_CONTEXT_ID")
+      .metavar("ID")
       .help(minifi::utils::string::join_pack("Parameter context id (", OPERATION_FLOW_CONFIG, " only)"));
   argument_parser.add_argument("--parameter-name")
       .metavar("NAME")
