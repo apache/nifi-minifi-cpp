@@ -165,10 +165,15 @@ void StructuredConfiguration::parseParameterContexts(const Node& parameter_conte
     for (const auto& parameter_node : parameter_context_node[schema_.parameters]) {
       checkRequiredField(parameter_node, schema_.name);
       checkRequiredField(parameter_node, schema_.value);
+      checkRequiredField(parameter_node, schema_.sensitive);
       auto parameter_name = parameter_node[schema_.name].getString().value();
       auto parameter_value = parameter_node[schema_.value].getString().value();
+      auto sensitive = parameter_node[schema_.sensitive].getBool().value();
       auto parameter_description = getOptionalField(parameter_node, schema_.description, "");
-      parameter_context->addParameter(Parameter{parameter_name, parameter_description, parameter_value});
+      if (sensitive) {
+        parameter_value = utils::crypto::property_encryption::decrypt(parameter_value, sensitive_values_encryptor_);
+      }
+      parameter_context->addParameter(Parameter{parameter_name, parameter_description, sensitive, parameter_value});
     }
 
     parameter_contexts_.emplace(name, gsl::make_not_null(std::move(parameter_context)));
@@ -666,13 +671,16 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
     if (nodeVal) {
       Node propertiesNode = nodeVal["value"];
       auto rawValueString = propertiesNode.getString().value();
+      std::unique_ptr<core::ParameterTokenParser> token_parser;
       if (myProp.isSensitive()) {
-        rawValueString = utils::crypto::property_encryption::decrypt(rawValueString, sensitive_properties_encryptor_);
+        rawValueString = utils::crypto::property_encryption::decrypt(rawValueString, sensitive_values_encryptor_);
+        token_parser = std::make_unique<core::SensitiveParameterTokenParser>(rawValueString, sensitive_values_encryptor_);
+      } else {
+        token_parser = std::make_unique<core::NonSensitiveParameterTokenParser>(rawValueString);
       }
 
       try {
-        core::ParameterTokenParser token_parser(rawValueString);
-        rawValueString = token_parser.replaceParameters(parameter_context, myProp.isSensitive());
+        rawValueString = token_parser->replaceParameters(parameter_context);
       } catch (const ParameterException& e) {
         logger_->log_error("Error while substituting parameters in property '{}': {}", property_name, e.what());
         throw;
@@ -716,13 +724,15 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
       coercedValue = property_value_node.getBool().value();
     } else {
       std::string property_value_string;
+      std::unique_ptr<core::ParameterTokenParser> token_parser;
       if (property_from_processor.isSensitive()) {
-        property_value_string = utils::crypto::property_encryption::decrypt(property_value_node.getScalarAsString().value(), sensitive_properties_encryptor_);
+        property_value_string = utils::crypto::property_encryption::decrypt(property_value_node.getScalarAsString().value(), sensitive_values_encryptor_);
+        token_parser = std::make_unique<core::SensitiveParameterTokenParser>(property_value_string, sensitive_values_encryptor_);
       } else {
         property_value_string = property_value_node.getScalarAsString().value();
+        token_parser = std::make_unique<core::NonSensitiveParameterTokenParser>(property_value_string);
       }
-      core::ParameterTokenParser token_parser(property_value_string);
-      property_value_string = token_parser.replaceParameters(parameter_context, property_from_processor.isSensitive());
+      property_value_string = token_parser->replaceParameters(parameter_context);
       coercedValue = property_value_string;
     }
     return coercedValue;
@@ -991,7 +1001,7 @@ void StructuredConfiguration::addNewId(const std::string& uuid) {
 
 std::string StructuredConfiguration::serialize(const core::ProcessGroup& process_group) {
   gsl_Expects(flow_serializer_);
-  return flow_serializer_->serialize(process_group, schema_, sensitive_properties_encryptor_, {});
+  return flow_serializer_->serialize(process_group, schema_, sensitive_values_encryptor_, {});
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow

@@ -78,7 +78,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       filesystem = std::make_shared<minifi::utils::file::FileSystem>();
     }
 
-    std::optional<minifi::utils::crypto::EncryptionProvider> sensitive_properties_encryptor = [&]() {
+    std::optional<minifi::utils::crypto::EncryptionProvider> sensitive_values_encryptor = [&]() {
       if (home_path) {
         return minifi::utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(*home_path);
       } else {
@@ -97,7 +97,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
             .configuration = configuration,
             .path = test_file_location,
             .filesystem = filesystem,
-            .sensitive_properties_encryptor = sensitive_properties_encryptor
+            .sensitive_values_encryptor = sensitive_values_encryptor
         }, nifi_configuration_class_name);
 
     auto controller_service_provider = flow_config->getControllerServiceProvider();

@@ -48,6 +48,15 @@ int main(int argc, char* argv[]) try {
   argument_parser.add_argument("--property-value")
       .metavar("VALUE")
       .help(minifi::utils::string::join_pack("The new value of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--parameter-context-id")
+      .metavar("ID")
+      .help(minifi::utils::string::join_pack("Parameter context id (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--parameter-name")
+      .metavar("NAME")
+      .help(minifi::utils::string::join_pack("The name of the sensitive parameter (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--parameter-value")
+      .metavar("VALUE")
+      .help(minifi::utils::string::join_pack("The new value of the sensitive parameter (", OPERATION_FLOW_CONFIG, " only)"));
   argument_parser.add_argument("--re-encrypt")
       .flag()
       .help(minifi::utils::string::join_pack("Decrypt all properties with the old key and re-encrypt them with a new key (", OPERATION_FLOW_CONFIG, " only)"));
@@ -66,16 +75,28 @@ int main(int argc, char* argv[]) try {
   const auto component_id = argument_parser.present("--component-id");
   const auto property_name = argument_parser.present("--property-name");
   const auto property_value = argument_parser.present("--property-value");
+  const auto parameter_context_id = argument_parser.present("--parameter-context-id");
+  const auto parameter_name = argument_parser.present("--parameter-name");
+  const auto parameter_value = argument_parser.present("--parameter-value");
 
-  if (operation != OPERATION_FLOW_CONFIG && (re_encrypt || component_id || property_name || property_value)) {
+  if (operation != OPERATION_FLOW_CONFIG && (re_encrypt || component_id || property_name || property_value || parameter_context_id || parameter_name || parameter_value)) {
     std::cerr << "Unsupported option for operation '" << operation << "'\n\n" << argument_parser;
     return 5;
+  }
+
+  if ((component_id || property_name || property_value) && (parameter_context_id || parameter_name || parameter_value)) {
+    std::cerr << "Property and parameter options cannot be used together\n\n" << argument_parser;
+    return 6;
   }
 
   if (operation == OPERATION_MINIFI_PROPERTIES) {
     encrypt_config.encryptSensitiveValuesInMinifiProperties();
   } else if (operation == OPERATION_FLOW_CONFIG) {
-    encrypt_config.encryptSensitiveValuesInFlowConfig(re_encrypt, component_id, property_name, property_value);
+    if (property_name) {
+      encrypt_config.encryptSensitiveValuesInFlowConfig(re_encrypt, component_id, property_name, property_value);
+    } else {
+      encrypt_config.encryptSensitiveValuesInFlowConfig(re_encrypt, parameter_context_id, parameter_name, parameter_value);
+    }
   } else if (operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) {
     encrypt_config.encryptWholeFlowConfigFile();
   } else {

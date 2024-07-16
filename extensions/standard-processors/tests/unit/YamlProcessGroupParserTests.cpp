@@ -27,7 +27,7 @@ static core::YamlConfiguration config{core::ConfigurationContext{
     .configuration = std::make_shared<minifi::Configure>(),
     .path = "",
     .filesystem = std::make_shared<utils::file::FileSystem>(),
-    .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+    .sensitive_values_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
 }};
 
 TEST_CASE("Root process group is correctly parsed", "[YamlProcessGroupParser]") {

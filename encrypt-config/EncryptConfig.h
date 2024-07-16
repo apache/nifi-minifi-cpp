@@ -29,7 +29,7 @@ class EncryptConfig {
 
   void encryptSensitiveValuesInMinifiProperties() const;
   void encryptSensitiveValuesInFlowConfig(
-      bool re_encrypt, const std::optional<std::string>& component_id, const std::optional<std::string>& property_name, const std::optional<std::string>& property_value) const;
+      bool re_encrypt, const std::optional<std::string>& component_id, const std::optional<std::string>& item_name, const std::optional<std::string>& item_value) const;
   void encryptWholeFlowConfigFile() const;
 
   [[nodiscard]] bool isReEncrypting() const;

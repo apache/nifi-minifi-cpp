@@ -35,6 +35,21 @@ constexpr std::string_view config_json_with_default_schema = R"({
   "Flow Controller": {
     "name": "MiNiFi Flow"
   },
+  "Parameter Contexts": [
+    {
+        "id": "721e10b7-8e00-3188-9a27-476cca376978",
+        "name": "my-context",
+        "description": "my parameter context",
+        "Parameters": [
+            {
+                "name": "secret_parameter",
+                "description": "",
+                "sensitive": true,
+                "value": "param_value_1"
+            }
+        ]
+    }
+],
   "Processors": [
     {
       "name": "Generate random data",
@@ -113,7 +128,21 @@ constexpr std::string_view config_json_with_nifi_schema_part_1 = R"({
     },
     "maxTimerDrivenThreadCount": 1,
     "maxEventDrivenThreadCount": 1,
-    "parameterContexts": [],
+    "parameterContexts": [
+        {
+            "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+            "name": "my-context",
+            "description": "my parameter context",
+            "parameters": [
+                {
+                    "name": "secret_parameter",
+                    "description": "",
+                    "sensitive": true,
+                    "value": "param_value_1"
+                }
+            ]
+        }
+    ],
     "rootGroup": {
         "identifier": "8b4d66dc-9085-4722-b35b-3492f363baa3",
         "instanceIdentifier": "0fab8422-3fbe-45e0-bd3a-324f5cb0592b",
@@ -547,17 +576,20 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
 
   const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
   const auto controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
+  const auto parameter_id = utils::Identifier::parse("721e10b7-8e00-3188-9a27-476cca376978").value();
 
   const auto [overrides, expected_results] = GENERATE_REF(
       std::make_tuple(OverridesMap{},
-          std::array{"very_secure_password", "very_secure_passphrase"}),
+          std::array{"very_secure_password", "very_secure_passphrase", "param_value_1"}),
       std::make_tuple(OverridesMap{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "password123")}},
-          std::array{"password123", "very_secure_passphrase"}),
+          std::array{"password123", "very_secure_passphrase", "param_value_1"}),
       std::make_tuple(OverridesMap{{controller_service_id, core::flow::Overrides{}.add("Passphrase", "speak friend and enter")}},
-          std::array{"very_secure_password", "speak friend and enter"}),
+          std::array{"very_secure_password", "speak friend and enter", "param_value_1"}),
       std::make_tuple(OverridesMap{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "password123")},
                                    {controller_service_id, core::flow::Overrides{}.add("Passphrase", "speak friend and enter")}},
-          std::array{"password123", "speak friend and enter"}));
+          std::array{"password123", "speak friend and enter", "param_value_1"}),
+      std::make_tuple(OverridesMap{{parameter_id, core::flow::Overrides{}.add("secret_parameter", "param_value_2")}},
+          std::array{"very_secure_password", "very_secure_passphrase", "param_value_2"}));
 
   std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 
@@ -579,6 +611,16 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
     CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[1]);
+  }
+
+  {
+    std::regex regex{R"_("value": "(.*)")_"};
+    std::smatch match_results;
+    CHECK(std::regex_search(config_json_encrypted, match_results, regex));
+
+    REQUIRE(match_results.size() == 2);
+    std::string encrypted_value = match_results[1];
+    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[2]);
   }
 }
 
@@ -640,7 +682,7 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
 TEST_CASE("The encrypted flow configuration can be decrypted with the correct key") {
   ConfigurationTestController test_controller;
   auto configuration_context = test_controller.getContext();
-  configuration_context.sensitive_properties_encryptor = encryption_provider;
+  configuration_context.sensitive_values_encryptor = encryption_provider;
   core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
 
   const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
@@ -677,12 +719,15 @@ TEST_CASE("The encrypted flow configuration can be decrypted with the correct ke
   REQUIRE(controller_service_after);
   CHECK(controller_service_before->getProperties().at("CA Certificate").getValue() == controller_service_after->getProperties().at("CA Certificate").getValue());
   CHECK(controller_service_before->getProperties().at("Passphrase").getValue() == controller_service_after->getProperties().at("Passphrase").getValue());
+
+  const auto& param_contexts = json_configuration_after.getParameterContexts();
+  CHECK(param_contexts.at("my-context")->getParameter("secret_parameter")->value == "param_value_1");
 }
 
 TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrect key") {
   ConfigurationTestController test_controller;
   auto configuration_context = test_controller.getContext();
-  configuration_context.sensitive_properties_encryptor = encryption_provider;
+  configuration_context.sensitive_values_encryptor = encryption_provider;
   core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
 
   const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
@@ -697,7 +742,7 @@ TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrec
   std::string config_json_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {});
 
   const utils::crypto::Bytes different_secret_key = utils::string::from_hex("ea55b7d0edc22280c9547e4d89712b3fae74f96d82f240a004fb9fbd0640eec7");
-  configuration_context.sensitive_properties_encryptor = utils::crypto::EncryptionProvider{different_secret_key};
+  configuration_context.sensitive_values_encryptor = utils::crypto::EncryptionProvider{different_secret_key};
 
   core::flow::AdaptiveConfiguration json_configuration_after{configuration_context};
   REQUIRE_THROWS_AS(json_configuration_after.getRootFromPayload(config_json_encrypted), utils::crypto::EncryptionError);

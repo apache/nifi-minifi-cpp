@@ -59,7 +59,7 @@ struct ConfigurationContext {
   std::shared_ptr<Configure> configuration;
   std::optional<std::filesystem::path> path{std::nullopt};
   std::shared_ptr<utils::file::FileSystem> filesystem{std::make_shared<utils::file::FileSystem>()};
-  std::optional<utils::crypto::EncryptionProvider> sensitive_properties_encryptor{std::nullopt};
+  std::optional<utils::crypto::EncryptionProvider> sensitive_values_encryptor{std::nullopt};
 };
 
 enum class FlowSerializationType { Json, NifiJson, Yaml };
@@ -134,6 +134,10 @@ class FlowConfiguration : public CoreComponent {
 
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
+  const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& getParameterContexts() const {
+    return parameter_contexts_;
+  }
+
  protected:
   std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>> parameter_contexts_;
   std::optional<std::filesystem::path> config_path_;
@@ -143,7 +147,7 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<core::controller::StandardControllerServiceProvider> service_provider_;
   std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::shared_ptr<utils::file::FileSystem> filesystem_;
-  utils::crypto::EncryptionProvider sensitive_properties_encryptor_;
+  utils::crypto::EncryptionProvider sensitive_values_encryptor_;
   utils::ChecksumCalculator checksum_calculator_;
 
  private:

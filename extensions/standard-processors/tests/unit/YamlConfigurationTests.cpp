@@ -30,6 +30,7 @@
 #include "unit/ConfigurationTestController.h"
 #include "unit/TestUtils.h"
 #include "core/Resource.h"
+#include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -1092,9 +1093,11 @@ Parameter Contexts:
     Parameters:
     - name: lookup.frequency
       description: ''
+      sensitive: false
       value: 12 min
     - name: batch_size
       description: ''
+      sensitive: false
       value: 12
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
@@ -1144,6 +1147,7 @@ Parameter Contexts:
     Parameters:
     - name: lookup.frequency
       description: ''
+      sensitive: false
       value: 12 min
   - id: 123e10b7-8e00-3188-9a27-476cca376978
     name: other-context
@@ -1151,6 +1155,7 @@ Parameter Contexts:
     Parameters:
     - name: batch_size
       description: ''
+      sensitive: false
       value: 1
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
@@ -1195,6 +1200,7 @@ Parameter Contexts:
     Parameters:
     - name: lookup.frequency
       description: ''
+      sensitive: false
       value: 12 min
   - id: 123e10b7-8e00-3188-9a27-476cca376978
     name: my-context
@@ -1202,6 +1208,7 @@ Parameter Contexts:
     Parameters:
     - name: batch_size
       description: ''
+      sensitive: false
       value: 1
 Processors: []
 Controller Services: []
@@ -1233,9 +1240,11 @@ Parameter Contexts:
     Parameters:
     - name: lookup.frequency
       description: ''
+      sensitive: false
       value: 12 min
     - name: lookup.frequency
       description: ''
+      sensitive: false
       value: 1 min
 Processors: []
 Controller Services: []
@@ -1293,6 +1302,7 @@ Parameter Contexts:
     Parameters:
     - name: my_value
       description: ''
+      sensitive: false
       value: value1
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
@@ -1334,6 +1344,7 @@ Parameter Contexts:
     Parameters:
     - name: my_value
       description: ''
+      sensitive: false
       value: value1
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
@@ -1377,6 +1388,7 @@ Parameter Contexts:
     Parameters:
     - name: lookup.frequency
       description: ''
+      sensitive: false
       value: 12 min
   - id: 123e10b7-8e00-3188-9a27-476cca376456
     name: sub-context
@@ -1384,6 +1396,7 @@ Parameter Contexts:
     Parameters:
     - name: batch_size
       description: ''
+      sensitive: false
       value: 12
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
@@ -1453,6 +1466,7 @@ Parameter Contexts:
     Parameters:
     - name: lookup.frequency
       description: ''
+      sensitive: false
       value: 12 min
   - id: 123e10b7-8e00-3188-9a27-476cca376456
     name: sub-context
@@ -1460,6 +1474,7 @@ Parameter Contexts:
     Parameters:
     - name: batch_size
       description: ''
+      sensitive: false
       value: 12
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
@@ -1570,9 +1585,11 @@ Parameter Contexts:
     Parameters:
     - name: first_value
       description: ''
+      sensitive: false
       value: value1
     - name: second_value
       description: ''
+      sensitive: false
       value: value2
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
@@ -1617,9 +1634,11 @@ Parameter Contexts:
     Parameters:
     - name: first_value
       description: ''
+      sensitive: false
       value: value1
     - name: second_value
       description: ''
+      sensitive: false
       value: value2
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
@@ -1651,6 +1670,103 @@ Parameter Context Name: my-context
   std::string value;
   REQUIRE(proc->getDynamicProperty("My Dynamic Property", value));
   CHECK(value == "value1");
+}
+
+TEST_CASE("Test sensitive parameters in sensitive properties", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_parameter_value = minifi::utils::crypto::property_encryption::encrypt("value1", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{my_value}", *context.sensitive_values_encryptor);
+  core::YamlConfiguration yaml_config(context);
+
+  static const std::string TEST_CONFIG_YAML =
+      fmt::format(R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: my_value
+      description: ''
+      sensitive: true
+      value: {}
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: simple
+    Sensitive Property: {}
+Parameter Context Name: my-context
+      )", encrypted_parameter_value, encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Simple Property") == "simple");
+  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+}
+
+TEST_CASE("Test sensitive parameters in sensitive property value sequence", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_parameter_value_1 = minifi::utils::crypto::property_encryption::encrypt("value1", *context.sensitive_values_encryptor);
+  auto encrypted_parameter_value_2 = minifi::utils::crypto::property_encryption::encrypt("value2", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value_1 = minifi::utils::crypto::property_encryption::encrypt("#{my_value_1}", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value_2 = minifi::utils::crypto::property_encryption::encrypt("#{my_value_2}", *context.sensitive_values_encryptor);
+  core::YamlConfiguration yaml_config(context);
+
+  static const std::string TEST_CONFIG_YAML =
+      fmt::format(R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: my_value_1
+      description: ''
+      sensitive: true
+      value: {}
+    - name: my_value_2
+      description: ''
+      sensitive: true
+      value: {}
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: simple
+    Sensitive Property:
+    - value: {}
+    - value: {}
+Parameter Context Name: my-context
+      )", encrypted_parameter_value_1, encrypted_parameter_value_2, encrypted_sensitive_property_value_1, encrypted_sensitive_property_value_2);
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
+  core::Property property("Sensitive Property", "");
+  proc->getProperty("Sensitive Property", property);
+  auto values = property.getValues();
+  REQUIRE(values.size() == 2);
+  CHECK(values[0] == "value1");
+  CHECK(values[1] == "value2");
 }
 
 }  // namespace org::apache::nifi::minifi::test

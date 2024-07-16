@@ -137,7 +137,7 @@ Processor properties in flow configurations can be parameterized using parameter
  - The parameters can be used in the flow configuration by using the `#{parameterName}` syntax for processor properties.
  - Only alpha-numeric characters (a-z, A-Z, 0-9), hyphens ( - ), underscores ( _ ), periods ( . ), and spaces are allowed in parameter name.
  - `#` character can be used to escape the parameter syntax. E.g. if the `parameterName` parameter's value is `xxx` then `#{parameterName}` will be replaced with `xxx`, `##{parameterName}` will be replaced with `#{parameterName}`, and `#####{parameterName}` will be replaced with `##xxx`.
- - Parameters can only be used in values of non-sensitive processor properties.
+ - Sensitive parameters can only be assigned to sensitive properties and non-sensitive parameters can only be assigned to non-sensitive properties.
 
 An example for using parameters in a JSON configuration file:
 
@@ -152,6 +152,7 @@ An example for using parameters in a JSON configuration file:
                 {
                     "name": "tail_base_dir",
                     "description": "Base dir of tailed files",
+                    "sensitive": false,
                     "value": "/tmp/tail/file/path"
                 }
             ]
@@ -199,6 +200,7 @@ An example for using parameters in a YAML configuration file:
         Parameters:
         - name: tail_base_dir
           description: 'Base dir of tailed files'
+          sensitive: false
           value: /tmp/tail/file/path
     Processors:
     - name: Tail test_file1.log

@@ -63,7 +63,7 @@ void TestControllerWithFlow::setupFlow() {
       .configuration = configuration_,
       .path = yaml_path_.string(),
       .filesystem = std::make_shared<utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+      .sensitive_values_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
   });
   auto root = flow->getRoot();
   root_ = root.get();

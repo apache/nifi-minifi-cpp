@@ -200,15 +200,15 @@ void EncryptConfig::encryptSensitiveValuesInMinifiProperties() const {
 }
 
 void EncryptConfig::encryptSensitiveValuesInFlowConfig(
-    bool re_encrypt, const std::optional<std::string>& component_id, const std::optional<std::string>& property_name, const std::optional<std::string>& property_value) const {
+    bool re_encrypt, const std::optional<std::string>& component_id, const std::optional<std::string>& item_name, const std::optional<std::string>& item_value) const {
   EncryptionKeys keys = getEncryptionKeys(SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME);
   flow_config_encryptor::EncryptionRequest request_type = [&] {
     if (re_encrypt) {
       return flow_config_encryptor::EncryptionRequest{flow_config_encryptor::EncryptionType::ReEncrypt};
-    } else if (!component_id && !property_name && !property_value) {
+    } else if (!component_id && !item_name && !item_value) {
       return flow_config_encryptor::EncryptionRequest{flow_config_encryptor::EncryptionType::Interactive};
-    } else if (component_id && property_name && property_value) {
-      return flow_config_encryptor::EncryptionRequest{*component_id, *property_name, *property_value};
+    } else if (component_id && item_name && item_value) {
+      return flow_config_encryptor::EncryptionRequest{*component_id, *item_name, *item_value};
     } else {
       throw std::runtime_error("either all of --component-id, --property-name and --property-value should be given (for batch mode) or none of them (for interactive mode)");
     }

@@ -45,12 +45,14 @@ class ConfigurationTestController : public TestController {
         .content_repo = content_repo_,
         .configuration = configuration_,
         .path = "",
-        .filesystem = std::make_shared<utils::file::FileSystem>(),
-        .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+        .filesystem = filesystem_,
+        .sensitive_values_encryptor = sensitive_values_encryptor_
     };
   }
 
   std::shared_ptr<core::Repository> flow_file_repo_;
   std::shared_ptr<minifi::Configure> configuration_;
   std::shared_ptr<core::ContentRepository> content_repo_;
+  std::shared_ptr<utils::file::FileSystem> filesystem_{std::make_shared<utils::file::FileSystem>()};
+  utils::crypto::EncryptionProvider sensitive_values_encryptor_ = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}};
 };

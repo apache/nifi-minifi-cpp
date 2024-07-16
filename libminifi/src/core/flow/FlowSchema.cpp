@@ -81,7 +81,8 @@ FlowSchema FlowSchema::getDefault() {
       .parameters = {"Parameters"},
       .description = {"description"},
       .value = {"value"},
-      .parameter_context_name = {"Parameter Context Name"}
+      .parameter_context_name = {"Parameter Context Name"},
+      .sensitive = {"sensitive"}
   };
 }
 
@@ -147,7 +148,8 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .parameters = {"parameters"},
       .description = {"description"},
       .value = {"value"},
-      .parameter_context_name = {"parameterContextName"}
+      .parameter_context_name = {"parameterContextName"},
+      .sensitive = {"sensitive"}
   };
 }
 
