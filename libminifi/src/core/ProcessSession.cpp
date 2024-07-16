@@ -78,7 +78,8 @@ ProcessSession::ProcessSession(std::shared_ptr<ProcessContext> processContext)
 
 ProcessSession::~ProcessSession() {
   if (stateManager_ && stateManager_->isTransactionInProgress()) {
-    logger_->log_error("Session has ended without decision on state (commit or rollback).");
+    logger_->log_critical("Session has ended without decision on state (commit or rollback).");
+    std::terminate();
   }
   removeReferences();
 }
@@ -803,6 +804,7 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
 }
 
 void ProcessSession::commit() {
+  const auto commit_start_time = std::chrono::steady_clock::now();
   try {
     std::unordered_map<std::string, TransferMetrics> transfers;
       auto increaseTransferMetrics = [&](const FlowFile& record, const Relationship& relationship) {
@@ -916,6 +918,8 @@ void ProcessSession::commit() {
     // persistent the provenance report
     this->provenance_report_->commit();
     logger_->log_debug("ProcessSession committed for {}", process_context_->getProcessorNode()->getName());
+    if (metrics_)
+      metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - commit_start_time));
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception during process session commit, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
@@ -978,6 +982,15 @@ void ProcessSession::rollback() {
   } catch (...) {
     logger_->log_warn("Caught Exception during process session rollback, type: {}", getCurrentExceptionTypeName());
     throw;
+  }
+}
+
+nonstd::expected<void, std::exception_ptr> ProcessSession::rollbackNoThrow() noexcept {
+  try {
+    rollback();
+    return {};
+  } catch(...) {
+    return nonstd::make_unexpected(std::current_exception());
   }
 }
 

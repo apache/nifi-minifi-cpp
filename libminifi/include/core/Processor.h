@@ -153,12 +153,12 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   }
 
   void incrementActiveTasks() {
-    active_tasks_++;
+    ++active_tasks_;
   }
 
   void decrementActiveTask() {
     if (active_tasks_ > 0)
-      active_tasks_--;
+      --active_tasks_;
   }
 
   void clearActiveTask() {
@@ -187,7 +187,8 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   void initialize() override {
   }
 
-  virtual void onTrigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory);
+  virtual void triggerAndCommit(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory);
+  void trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session);
 
   virtual void onTriggerSharedPtr(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& session) {
     onTrigger(*context, *session);
@@ -216,6 +217,10 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   virtual annotation::Input getInputRequirement() const = 0;
 
   state::response::SharedResponseNode getResponseNode() override {
+    return metrics_;
+  }
+
+  auto getMetrics() const {
     return metrics_;
   }
 

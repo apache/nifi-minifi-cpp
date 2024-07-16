@@ -67,6 +67,8 @@ class ProcessSession : public ReferenceContainer {
   void commit();
   // Roll Back the session
   void rollback();
+
+  nonstd::expected<void, std::exception_ptr> rollbackNoThrow() noexcept;
   // Get Provenance Report
   std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() {
     return provenance_report_;

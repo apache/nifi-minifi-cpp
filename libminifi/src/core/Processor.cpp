@@ -126,7 +126,7 @@ bool Processor::addConnection(Connectable* conn) {
 
   if (uuid_ == destUUID) {
     // Connection is destination to the current processor
-    if (incoming_connections_.find(connection) == incoming_connections_.end()) {
+    if (!incoming_connections_.contains(connection)) {
       incoming_connections_.insert(connection);
       connection->setDestination(this);
       logger_->log_debug("Add connection {} into Processor {} incoming connection", connection->getName(), name_);
@@ -142,7 +142,7 @@ bool Processor::addConnection(Connectable* conn) {
       if (it != outgoing_connections_.end()) {
         // We already has connection for this relationship
         std::set<Connectable*> existedConnection = it->second;
-        if (existedConnection.find(connection) == existedConnection.end()) {
+        if (!existedConnection.contains(connection)) {
           // We do not have the same connection for this relationship yet
           existedConnection.insert(connection);
           connection->setSource(this);
@@ -167,42 +167,41 @@ bool Processor::addConnection(Connectable* conn) {
 bool Processor::flowFilesOutGoingFull() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  for (const auto& connection_pair : outgoing_connections_) {
-    // We already has connection for this relationship
-    std::set<Connectable*> existedConnection = connection_pair.second;
-    const bool has_full_connection = std::any_of(begin(existedConnection), end(existedConnection), [](const Connectable* conn) {
-      auto connection = dynamic_cast<const Connection*>(conn);
+  for (const auto& [_name, existed_connection] : outgoing_connections_) {
+    if (ranges::any_of(existed_connection, [](const Connectable* conn) {
+      const auto connection = dynamic_cast<const Connection*>(conn);
       return connection && connection->backpressureThresholdReached();
-    });
-    if (has_full_connection) { return true; }
+    })) {
+      return true;
+    }
   }
 
   return false;
 }
 
-void Processor::onTrigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory) {
-  ++metrics_->iterations;
-  auto session = session_factory->createSession();
-  session->setMetrics(metrics_);
-
+void Processor::triggerAndCommit(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory) {
+  const auto process_session = session_factory->createSession();
+  process_session->setMetrics(metrics_);
   try {
-    // Call the virtual trigger function
-    auto start = std::chrono::steady_clock::now();
-    onTriggerSharedPtr(context, session);
-    metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
-    start = std::chrono::steady_clock::now();
-    session->commit();
-    metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
+    trigger(context, process_session);
+    process_session->commit();
   } catch (const std::exception& exception) {
     logger_->log_warn("Caught \"{}\" ({}) during Processor::onTrigger of processor: {} ({})",
         exception.what(), typeid(exception).name(), getUUIDStr(), getName());
-    session->rollback();
+    process_session->rollback();
     throw;
   } catch (...) {
     logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: {} ({})", getUUIDStr(), getName());
-    session->rollback();
+    process_session->rollback();
     throw;
   }
+}
+
+void Processor::trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session) {
+  ++metrics_->iterations;
+  const auto start = std::chrono::steady_clock::now();
+  onTriggerSharedPtr(context, process_session);
+  metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
 }
 
 bool Processor::isWorkAvailable() {
@@ -280,7 +279,7 @@ bool Processor::partOfCycle(Connection* conn) {
   if (it == source->reachable_processors_.end()) {
     return false;
   }
-  return it->second.find(source) != it->second.end();
+  return it->second.contains(source);
 }
 
 bool Processor::isThrottledByBackpressure() const {
