@@ -19,8 +19,6 @@
 
 #include <utils/net/ConnectionHandler.h>
 
-#include <range/v3/view/drop.hpp>
-
 #include "core/Resource.h"
 
 #include "core/ProcessSession.h"
