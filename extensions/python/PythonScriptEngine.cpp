@@ -135,9 +135,9 @@ void PythonScriptEngine::evaluateModuleImports() {
 
   for (const auto& module_path : module_paths_) {
     if (std::filesystem::is_regular_file(module_path)) {
-      evalInternal("sys.path.append(r'" + module_path.parent_path().string() + "')");
+      evalInternal("sys.path.insert(0, r'" + module_path.parent_path().string() + "')");
     } else {
-      evalInternal("sys.path.append(r'" + module_path.string() + "')");
+      evalInternal("sys.path.insert(0, r'" + module_path.string() + "')");
     }
   }
 }
