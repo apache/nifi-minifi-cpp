@@ -17,6 +17,12 @@
 from .Container import Container
 
 
+class Parameter:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+
 class FlowContainer(Container):
     def __init__(self, feature_context, config_dir, name, engine, vols, network, image_store, command):
         super().__init__(feature_context=feature_context,
@@ -29,6 +35,8 @@ class FlowContainer(Container):
         self.start_nodes = []
         self.config_dir = config_dir
         self.controllers = []
+        self.parameter_contexts = dict()
+        self.parameter_context_name = None
 
     def get_start_nodes(self):
         return self.start_nodes
@@ -38,3 +46,12 @@ class FlowContainer(Container):
 
     def add_controller(self, controller):
         self.controllers.append(controller)
+
+    def add_parameter_to_flow_config(self, parameter_context_name, parameter_name, parameter_value):
+        if parameter_context_name in self.parameter_contexts:
+            self.parameter_contexts[parameter_context_name].append(Parameter(parameter_name, parameter_value))
+        else:
+            self.parameter_contexts[parameter_context_name] = [Parameter(parameter_name, parameter_value)]
+
+    def set_parameter_context_name(self, parameter_context_name):
+        self.parameter_context_name = parameter_context_name

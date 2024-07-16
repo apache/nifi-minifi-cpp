@@ -23,8 +23,9 @@ from ..core.Funnel import Funnel
 
 
 class Minifi_flow_json_serializer:
-    def serialize(self, start_nodes, controllers):
+    def serialize(self, start_nodes, controllers, parameter_context_name: str, parameter_contexts):
         res = {
+            'parameterContexts': [],
             'rootGroup': {
                 'name': 'MiNiFi Flow',
                 'processors': [],
@@ -35,6 +36,24 @@ class Minifi_flow_json_serializer:
             }
         }
         visited = []
+
+        if parameter_context_name:
+            res['rootGroup']['parameterContextName'] = parameter_context_name
+
+        if parameter_contexts:
+            for context_name in parameter_contexts:
+                res['parameterContexts'].append({
+                    'identifier': str(uuid.uuid4()),
+                    'name': context_name,
+                    'parameters': []
+                })
+                for parameter in parameter_contexts[context_name]:
+                    res['parameterContexts'][-1]['parameters'].append({
+                        'name': parameter.name,
+                        'description': '',
+                        'sensitive': False,
+                        'value': parameter.value
+                    })
 
         for node in start_nodes:
             self.serialize_node(node, res['rootGroup'], visited)

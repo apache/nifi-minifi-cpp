@@ -122,6 +122,9 @@ class DockerTestCluster:
     def set_yaml_in_minifi(self):
         self.container_store.set_yaml_in_minifi()
 
+    def set_json_in_minifi(self):
+        self.container_store.set_json_in_minifi()
+
     def set_controller_socket_properties_in_minifi(self):
         self.container_store.set_controller_socket_properties_in_minifi()
 

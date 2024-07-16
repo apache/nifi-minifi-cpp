@@ -71,6 +71,7 @@ Feature: Core flow functionalities
     Then the peak memory usage of the agent is more than 130 MB in less than 20 seconds
     And the memory usage of the agent decreases to 70% peak usage in less than 20 seconds
 
+  @CORE
   Scenario: Metrics can be logged
     Given a GenerateFlowFile processor
     And log metrics publisher is enabled in MiNiFi
@@ -84,3 +85,33 @@ Feature: Core flow functionalities
     And the Minifi logs contain the following message: '                "size": "0"' in less than 2 seconds
     And the Minifi logs contain the following message: '            },' in less than 2 seconds
     And the Minifi logs contain the following message: '            "provenance": {' in less than 2 seconds
+
+  @CORE
+  Scenario Outline: DefragmentText correctly merges split messages from TailFile multiple file tail-mode
+    Given a MiNiFi CPP server with <config_format> config
+    And parameter context name is set to 'my-context'
+    And a non-sensitive parameter in the flow config called 'FILENAME' with the value '${filename}' in the parameter context 'my-context'
+    And a non-sensitive parameter in the flow config called 'FILENAME_IN_EXPRESSION' with the value 'filename' in the parameter context 'my-context'
+    And a non-sensitive parameter in the flow config called 'FILE_INPUT_PATH' with the value '/tmp/input' in the parameter context 'my-context'
+    And a non-sensitive parameter in the flow config called 'FILE_OUTPUT_UPPER_PATH_ATTR' with the value 'upper_out_path_attr' in the parameter context 'my-context'
+    And a GetFile processor with the "Input Directory" property set to "#{FILE_INPUT_PATH}"
+    And a file with filename "test_file_name" and content "test content" is present in "/tmp/input"
+    And a UpdateAttribute processor with the "expr-lang-filename" property set to "#{FILENAME}"
+    And the "is-upper-correct" property of the UpdateAttribute processor is set to "${#{FILENAME_IN_EXPRESSION}:toUpper():equals('TEST_FILE_NAME')}"
+    And the "upper_out_path_attr" property of the UpdateAttribute processor is set to "/TMP/OUTPUT"
+    And a PutFile processor with the "Directory" property set to "${#{FILE_OUTPUT_UPPER_PATH_ATTR}:toLower()}"
+    And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
+
+    And the "success" relationship of the GetFile processor is connected to the UpdateAttribute
+    And the "success" relationship of the UpdateAttribute processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is connected to the LogAttribute
+
+    When all instances start up
+
+    Then the Minifi logs contain the following message: "key:expr-lang-filename value:test_file_name" in less than 60 seconds
+    And the Minifi logs contain the following message: "key:is-upper-correct value:true" in less than 60 seconds
+
+    Examples:
+      | config_format |
+      | yaml          |
+      | json          |

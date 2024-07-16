@@ -1106,6 +1106,11 @@ def step_impl(context):
     context.test.set_yaml_in_minifi()
 
 
+@given(u'a MiNiFi CPP server with json config')
+def step_impl(context):
+    context.test.set_json_in_minifi()
+
+
 # MiNiFi controller
 @given(u'controller socket properties are set up')
 def step_impl(context):
@@ -1288,3 +1293,15 @@ def step_impl(context, install_mode):
 @given("the example MiNiFi python processors are present")
 def step_impl(context):
     context.test.enable_example_minifi_python_processors()
+
+
+@given("a non-sensitive parameter in the flow config called '{parameter_name}' with the value '{parameter_value}' in the parameter context '{parameter_context_name}'")
+def step_impl(context, parameter_context_name, parameter_name, parameter_value):
+    container = context.test.acquire_container(context=context, name='minifi-cpp-flow', engine='minifi-cpp')
+    container.add_parameter_to_flow_config(parameter_context_name, parameter_name, parameter_value)
+
+
+@given("parameter context name is set to '{parameter_context_name}'")
+def step_impl(context, parameter_context_name):
+    container = context.test.acquire_container(context=context, name='minifi-cpp-flow', engine='minifi-cpp')
+    container.set_parameter_context_name(parameter_context_name)
