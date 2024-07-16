@@ -944,16 +944,16 @@ Processor able to read data from industrial PLCs using Modbus TCP/IP
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                           | Default Value | Allowable Values | Description                                                                                                                                                                                      |
-|--------------------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Hostname**                   |               |                  | The ip address or hostname of the destination.<br/>**Supports Expression Language: true**                                                                                                        |
-| **Port**                       | 502           |                  | The port or service on the destination.<br/>**Supports Expression Language: true**                                                                                                               |
-| **Unit Identifier**            | 0             |                  | The port or service on the destination.<br/>**Supports Expression Language: true**                                                                                                               |
-| **Idle Connection Expiration** | 15 seconds    |                  | The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature.<br/>**Supports Expression Language: true** |
-| **Connection Per FlowFile**    | false         | true<br/>false   | Specifies whether to send each FlowFile's content on an individual connection.                                                                                                                   |
-| **Timeout**                    | 15 seconds    |                  | The timeout for connecting to and communicating with the destination.                                                                                                                            |
-| SSL Context Service            |               |                  | The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.                                                        |
-| **Record Set Writer**          |               |                  | Specifies the Controller Service to use for writing results to a FlowFile.                                                                                                                       |
+| Name                           | Default Value | Allowable Values | Description                                                                                                                                           |
+|--------------------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Hostname**                   |               |                  | The ip address or hostname of the destination.<br/>**Supports Expression Language: true**                                                             |
+| **Port**                       | 502           |                  | The port or service on the destination.<br/>**Supports Expression Language: true**                                                                    |
+| **Unit Identifier**            | 0             |                  | The port or service on the destination.<br/>**Supports Expression Language: true**                                                                    |
+| **Idle Connection Expiration** | 15 seconds    |                  | The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature. |
+| **Connection Per FlowFile**    | false         | true<br/>false   | Specifies whether to send each FlowFile's content on an individual connection.                                                                        |
+| **Timeout**                    | 15 seconds    |                  | The timeout for connecting to and communicating with the destination.                                                                                 |
+| SSL Context Service            |               |                  | The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.             |
+| **Record Set Writer**          |               |                  | Specifies the Controller Service to use for writing results to a FlowFile.                                                                            |
 
 ### Relationships
 
