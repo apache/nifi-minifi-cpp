@@ -46,7 +46,7 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
   }
 
   const auto start_time = std::chrono::steady_clock::now();
-  // trigger processor until it has work to do, but no more than the configured nifi.flow.engine.event.driven.time.slice
+  // trigger processor while it has work to do, but no more than the configured nifi.flow.engine.event.driven.time.slice
 
   const auto process_session = session_factory->createSession();
   process_session->setMetrics(processor->getMetrics());
