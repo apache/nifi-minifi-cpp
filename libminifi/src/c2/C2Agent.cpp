@@ -782,7 +782,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     return;
   }
 
-  for (size_t resource_idx = 0; resource_idx < resource_list->Size(); ++resource_idx) {
+  for (rapidjson::SizeType resource_idx = 0; resource_idx < resource_list->Size(); ++resource_idx) {
     auto& resource = resource_list->GetArray()[resource_idx];
     if (!resource.IsObject()) {
       send_error(fmt::format("Malformed request, 'resourceList[{}]' is not an object", resource_idx));
