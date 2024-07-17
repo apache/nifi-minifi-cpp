@@ -130,7 +130,7 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .input_ports = {"inputPorts"},
       .output_ports = {"outputPorts"},
 
-      .rpg_url = {"targetUri"},
+      .rpg_url = {"targetUris", "targetUri"},
       .rpg_yield_period = {"yieldDuration"},
       .rpg_timeout = {"communicationsTimeout"},
       .rpg_local_network_interface = {"localNetworkInterface"},

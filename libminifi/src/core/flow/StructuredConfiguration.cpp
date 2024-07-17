@@ -973,8 +973,7 @@ std::string StructuredConfiguration::getRequiredIdField(const Node& node, std::s
 
 std::string StructuredConfiguration::getOptionalField(const Node& node, const std::vector<std::string>& field_name, const std::string& default_value, const std::string& info_message) {
   std::string infoMessage = info_message;
-  auto result = node[field_name];
-  if (!result) {
+  auto logInfoMessage = [&]() {
     if (infoMessage.empty()) {
       // Build a helpful info message for the user to inform them that a default is being used
       infoMessage = "Using default value for optional field '" + utils::string::join(",", field_name) + "'";
@@ -986,9 +985,20 @@ std::string StructuredConfiguration::getOptionalField(const Node& node, const st
       infoMessage += default_value;
     }
     logger_->log_info("{}", infoMessage);
+  };
+  auto result = node[field_name];
+  if (!result) {
+    logInfoMessage();
     return default_value;
   }
 
+  if (result.isSequence()) {
+    if (result.empty()) {
+      logInfoMessage();
+      return default_value;
+    }
+    return (*result.begin()).getString().value();
+  }
   return result.getString().value();
 }
 
