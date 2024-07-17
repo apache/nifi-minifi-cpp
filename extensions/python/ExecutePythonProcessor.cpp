@@ -75,7 +75,7 @@ void ExecutePythonProcessor::initalizeThroughScriptEngine() {
   }
 }
 
-void ExecutePythonProcessor::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void ExecutePythonProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*sessionFactory*/) {
   addAutoTerminatedRelationship(Original);
   if (!processor_initialized_) {
     loadScript();
@@ -90,18 +90,18 @@ void ExecutePythonProcessor::onScheduleSharedPtr(const std::shared_ptr<core::Pro
 
   gsl_Expects(python_script_engine_);
   python_script_engine_->eval(script_to_exec_);
-  python_script_engine_->onSchedule(context);
+  python_script_engine_->onSchedule(&context);
 
   getProperty(ReloadOnScriptChange, reload_on_script_change_);
 }
 
-void ExecutePythonProcessor::onTriggerSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void ExecutePythonProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   reloadScriptIfUsingScriptFileProperty();
   if (script_to_exec_.empty()) {
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
 
-  python_script_engine_->onTrigger(context, session);
+  python_script_engine_->onTrigger(&context, &session);
 }
 
 void ExecutePythonProcessor::appendPathForImportModules() {

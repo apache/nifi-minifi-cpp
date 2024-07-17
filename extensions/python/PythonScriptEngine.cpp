@@ -90,20 +90,20 @@ void PythonScriptEngine::describe(core::Processor* proc) {
   }
 }
 
-void PythonScriptEngine::onSchedule(const std::shared_ptr<core::ProcessContext> &context) {
+void PythonScriptEngine::onSchedule(core::ProcessContext* context) {
   if (processor_instance_.get() != nullptr) {
-    callProcessorObjectMethod("onSchedule", std::weak_ptr(context));
+    callProcessorObjectMethod("onSchedule", context);
   } else {
-    call("onSchedule", std::weak_ptr(context));
+    call("onSchedule", context);
   }
 }
 
-void PythonScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  auto py_session = std::make_shared<python::PyProcessSession>(session);
+void PythonScriptEngine::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
+  auto py_session = std::make_shared<python::PyProcessSession>(gsl::make_not_null(session));
   if (processor_instance_.get() != nullptr) {
-    callProcessorObjectMethod("onTrigger", std::weak_ptr(context), std::weak_ptr(py_session));
+    callProcessorObjectMethod("onTrigger", context, std::weak_ptr(py_session));
   } else {
-    call("onTrigger", std::weak_ptr(context), std::weak_ptr(py_session));
+    call("onTrigger", context, std::weak_ptr(py_session));
   }
 }
 
