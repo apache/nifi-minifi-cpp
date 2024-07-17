@@ -149,8 +149,8 @@ class PythonScriptEngine {
 
   void onInitialize(core::Processor* proc);
   void describe(core::Processor* proc);
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context);
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session);
+  void onSchedule(core::ProcessContext* context);
+  void onTrigger(core::ProcessContext* context, core::ProcessSession* session);
   void initialize(const core::Relationship& success, const core::Relationship& failure, const core::Relationship& original, const std::shared_ptr<core::logging::Logger>& logger);
   void initializeProcessorObject(const std::string& python_class_name);
   std::vector<core::Relationship> getCustomPythonRelationships();

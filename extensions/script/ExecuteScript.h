@@ -93,7 +93,7 @@ class ExecuteScript : public core::Processor {
 
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
-  void onTriggerSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteScript>::getLogger(uuid_);

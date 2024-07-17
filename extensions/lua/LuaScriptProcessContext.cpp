@@ -24,22 +24,19 @@
 
 namespace org::apache::nifi::minifi::extensions::lua {
 
-LuaScriptProcessContext::LuaScriptProcessContext(std::shared_ptr<core::ProcessContext> context, sol::state& sol_state)
-    : context_(std::move(context)), sol_state_(sol_state) {
+LuaScriptProcessContext::LuaScriptProcessContext(core::ProcessContext& context, sol::state& sol_state)
+    : context_(context), sol_state_(sol_state) {
 }
 
 std::string LuaScriptProcessContext::getProperty(const std::string &name) {
   std::string value;
-  context_->getProperty(name, value);
+  context_.getProperty(name, value);
   return value;
 }
 
-void LuaScriptProcessContext::releaseProcessContext() {
-  context_.reset();
-}
 
 LuaScriptStateManager LuaScriptProcessContext::getStateManager() {
-  return LuaScriptStateManager(context_->getStateManager(), sol_state_);
+  return LuaScriptStateManager(context_.getStateManager(), sol_state_);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::lua

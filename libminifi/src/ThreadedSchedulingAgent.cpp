@@ -86,7 +86,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
 
   auto session_factory = std::make_shared<core::ProcessSessionFactory>(process_context);
 
-  processor->onScheduleSharedPtr(process_context, session_factory);
+  processor->onSchedule(*process_context, *session_factory);
 
   std::vector<std::thread *> threads;
 

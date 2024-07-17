@@ -29,15 +29,11 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 namespace core = org::apache::nifi::minifi::core;
 
-PyProcessSession::PyProcessSession(std::shared_ptr<core::ProcessSession> session)
-    : session_(std::move(session)) {
+PyProcessSession::PyProcessSession(gsl::not_null<core::ProcessSession*> session)
+    : session_(session) {
 }
 
 std::shared_ptr<core::FlowFile> PyProcessSession::get() {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   auto flow_file = session_->get();
 
   if (flow_file == nullptr) {
@@ -51,10 +47,6 @@ std::shared_ptr<core::FlowFile> PyProcessSession::get() {
 
 void PyProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow_file,
                                 const core::Relationship& relationship) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   if (!flow_file) {
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
@@ -63,10 +55,6 @@ void PyProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow_file
 }
 
 void PyProcessSession::transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& relationship_name) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   if (!flow_file) {
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
@@ -75,10 +63,6 @@ void PyProcessSession::transferToCustomRelationship(const std::shared_ptr<core::
 }
 
 void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   if (!flow_file) {
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
@@ -89,10 +73,6 @@ void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, Bo
 }
 
 void PyProcessSession::write(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject output_stream_callback) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   if (!flow_file) {
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
@@ -103,10 +83,6 @@ void PyProcessSession::write(const std::shared_ptr<core::FlowFile>& flow_file, B
 }
 
 std::shared_ptr<core::FlowFile> PyProcessSession::create(const std::shared_ptr<core::FlowFile>& flow_file) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   auto result = session_->create(flow_file.get());
 
   flow_files_.push_back(result);
@@ -114,10 +90,6 @@ std::shared_ptr<core::FlowFile> PyProcessSession::create(const std::shared_ptr<c
 }
 
 std::shared_ptr<core::FlowFile> PyProcessSession::clone(const std::shared_ptr<core::FlowFile>& flow_file) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   if (!flow_file) {
     throw std::runtime_error("Flow file to clone is nullptr");
   }
@@ -129,19 +101,11 @@ std::shared_ptr<core::FlowFile> PyProcessSession::clone(const std::shared_ptr<co
 }
 
 void PyProcessSession::remove(const std::shared_ptr<core::FlowFile>& flow_file) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   session_->remove(flow_file);
   flow_files_.erase(ranges::remove_if(flow_files_, [&flow_file](const auto& ff)-> bool { return ff == flow_file; }), flow_files_.end());
 }
 
 std::string PyProcessSession::getContentsAsString(const std::shared_ptr<core::FlowFile>& flow_file) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   if (!flow_file) {
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
@@ -155,10 +119,6 @@ std::string PyProcessSession::getContentsAsString(const std::shared_ptr<core::Fl
 }
 
 void PyProcessSession::putAttribute(const std::shared_ptr<core::FlowFile>& flow_file, std::string_view key, const std::string& value) {
-  if (!session_) {
-    throw std::runtime_error("Access of ProcessSession after it has been released");
-  }
-
   session_->putAttribute(*flow_file, key, value);
 }
 

@@ -26,8 +26,8 @@ namespace org::apache::nifi::minifi::extensions::lua {
 
 LuaScriptExecutor::LuaScriptExecutor(std::string_view name, const utils::Identifier& uuid) : script::ScriptExecutor(name, uuid) {}
 
-void LuaScriptExecutor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  auto lua_script_engine = lua_script_engine_queue_->getResource();
+void LuaScriptExecutor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  const auto lua_script_engine = lua_script_engine_queue_->getResource();
   gsl_Expects(std::holds_alternative<std::filesystem::path>(script_to_run_) || std::holds_alternative<std::string>(script_to_run_));
 
   if (module_directory_) {
