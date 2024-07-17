@@ -184,6 +184,36 @@ class PacmanPackageManager(PackageManager):
         return ""
 
 
+class ZypperPackageManager(PackageManager):
+    def __init__(self, no_confirm):
+        PackageManager.__init__(self, no_confirm)
+
+    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+        return self._install(dependencies=dependencies,
+                             install_cmd="sudo zypper install -y",
+                             replace_dict={"libarchive": {"libarchive-devel"},
+                                           "python": {"python3-devel"}})
+
+    def _get_installed_packages(self) -> Set[str]:
+        result = subprocess.run(['zypper', 'se', '--installed-only'], text=True, capture_output=True, check=True)
+        lines = result.stdout.splitlines()
+        packages = set()
+        for line in lines:
+            if line.startswith('S |') or line.startswith('--') or line.startswith(' ') or not line:
+                continue
+
+            parts = line.split('|')
+            if len(parts) > 2:
+                package_name = parts[1].strip()
+                packages.add(package_name)
+
+        return packages
+
+    def install_compiler(self) -> str:
+        self.install({"compiler": {"gcc-c++"}})
+        return ""
+
+
 def _get_vs_dev_cmd_path(vs_where_location: VsWhereLocation):
     if vs_where_location == VsWhereLocation.CHOCO:
         vs_where_path = "vswhere"
@@ -309,6 +339,8 @@ def get_package_manager(no_confirm: bool) -> PackageManager:
             return DnfPackageManager(no_confirm, True)
         elif "fedora" in distro_id:
             return DnfPackageManager(no_confirm, False)
+        elif "opensuse" in distro_id:
+            return ZypperPackageManager(no_confirm)
         else:
             sys.exit(f"Unsupported platform {distro_id} exiting")
     elif platform_system == "Windows":
