@@ -989,6 +989,9 @@ std::string StructuredConfiguration::getOptionalField(const Node& node, const st
     return default_value;
   }
 
+  if (result.isSequence()) {
+    return (*result.begin()).getString().value();
+  }
   return result.getString().value();
 }
 
