@@ -20,7 +20,6 @@ limitations under the License.
 - [AttributeRollingWindow](#AttributeRollingWindow)
 - [AttributesToJSON](#AttributesToJSON)
 - [BinFiles](#BinFiles)
-- [CapturePacket](#CapturePacket)
 - [CaptureRTSPFrame](#CaptureRTSPFrame)
 - [CollectKubernetesPodMetrics](#CollectKubernetesPodMetrics)
 - [CollectorInitiatedSubscription](#CollectorInitiatedSubscription)
@@ -49,10 +48,8 @@ limitations under the License.
 - [FetchSmb](#FetchSmb)
 - [FocusArchiveEntry](#FocusArchiveEntry)
 - [GenerateFlowFile](#GenerateFlowFile)
-- [GetEnvironmentalSensors](#GetEnvironmentalSensors)
 - [GetFile](#GetFile)
 - [GetGPS](#GetGPS)
-- [GetMovementSensors](#GetMovementSensors)
 - [GetTCP](#GetTCP)
 - [HashContent](#HashContent)
 - [InvokeHTTP](#InvokeHTTP)
@@ -238,30 +235,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 |----------|------------------------------------------------------------------------------------------------------------------------------|
 | failure  | If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure |
 | original | The FlowFiles that were used to create the bundle                                                                            |
-
-
-## CapturePacket
-
-### Description
-
-CapturePacket captures and writes one or more packets into a PCAP file that will be used as the content of a flow file. Configuration options exist to adjust the batching of PCAP files. PCAP batching will place a single PCAP into a flow file. A regular expression selects network interfaces. Bluetooth network interfaces can be selected through a separate option.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                | Default Value | Allowable Values | Description                                                             |
-|---------------------|---------------|------------------|-------------------------------------------------------------------------|
-| Batch Size          | 50            |                  | The number of packets to combine within a given PCAP                    |
-| Network Controllers | .*            |                  | Regular expression of the network controller(s) to which we will attach |
-| Base Directory      | /tmp/         |                  | Scratch directory for PCAP files                                        |
-| Capture Bluetooth   | false         | true<br/>false   | True indicates that we support bluetooth interfaces                     |
-
-### Relationships
-
-| Name    | Description                     |
-|---------|---------------------------------|
-| success | All files are routed to success |
 
 
 ## CaptureRTSPFrame
@@ -1124,26 +1097,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | success operational on the flow record |
 
 
-## GetEnvironmentalSensors
-
-### Description
-
-Provides sensor information from known sensors to include humidity and pressure data
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description |
-|------|---------------|------------------|-------------|
-
-### Relationships
-
-| Name    | Description                     |
-|---------|---------------------------------|
-| success | All files are routed to success |
-
-
 ## GetFile
 
 ### Description
@@ -1190,26 +1143,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | GPSD Host      | localhost     |                  | The host running the GPSD daemon                          |
 | GPSD Port      | 2947          |                  | The GPSD daemon port                                      |
 | GPSD Wait Time | 50000000      |                  | Timeout value for waiting for data from the GPSD instance |
-
-### Relationships
-
-| Name    | Description                     |
-|---------|---------------------------------|
-| success | All files are routed to success |
-
-
-## GetMovementSensors
-
-### Description
-
-Defines a processor that is able to retrieve sensor information from a class of known servo sensors
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description |
-|------|---------------|------------------|-------------|
 
 ### Relationships
 

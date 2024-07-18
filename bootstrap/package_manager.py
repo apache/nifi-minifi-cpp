@@ -119,7 +119,6 @@ class AptPackageManager(PackageManager):
                              install_cmd="sudo apt install -y",
                              replace_dict={"libarchive": {"liblzma-dev"},
                                            "python": {"libpython3-dev"},
-                                           "libpcap": {"libpcap-dev"},
                                            "gpsd": {"libgps-dev"}})
 
     def _get_installed_packages(self) -> Set[str]:
@@ -147,7 +146,6 @@ class DnfPackageManager(PackageManager):
         return self._install(dependencies=dependencies,
                              install_cmd="sudo dnf --enablerepo=crb install -y epel-release",
                              replace_dict={"gpsd": {"gpsd-devel"},
-                                           "libpcap": {"libpcap-devel"},
                                            "python": {"python3-devel"}})
 
     def _get_installed_packages(self) -> Set[str]:
@@ -242,7 +240,6 @@ class ChocolateyPackageManager(PackageManager):
                                     "bison": set(),
                                     "flex": set(),
                                     "libarchive": set(),
-                                    "libpcap": set(),
                                     "gpsd": set(),
                                     "automake": set(),
                                     "autoconf": set(),

@@ -277,9 +277,6 @@ add_option EXPRESSION_LANGUAGE_ENABLED ${TRUE} "ENABLE_EXPRESSION_LANGUAGE"
 add_dependency EXPRESSION_LANGUAGE_ENABLED "bison"
 add_dependency EXPRESSION_LANGUAGE_ENABLED "flex"
 
-add_option PCAP_ENABLED ${FALSE} "ENABLE_PCAP"
-add_dependency PCAP_ENABLED "libpcap"
-
 add_option GPS_ENABLED ${FALSE} "ENABLE_GPS"
 add_dependency GPS_ENABLED "gpsd"
 

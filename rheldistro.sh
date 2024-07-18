@@ -90,9 +90,7 @@ build_deps(){
         VALUE=${cmake_opt#*:}
         if [ "$KEY" = "$option" ]; then
           FOUND_VALUE="$VALUE"
-          if [ "$FOUND_VALUE" = "libpcap" ]; then
-            INSTALLED+=("libpcap-devel")
-          elif [ "$FOUND_VALUE" = "bison" ]; then
+          if [ "$FOUND_VALUE" = "bison" ]; then
             install_bison
           elif [ "$FOUND_VALUE" = "flex" ]; then
             INSTALLED+=("flex")
