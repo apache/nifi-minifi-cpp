@@ -165,7 +165,7 @@ static rapidjson::Value serializeConnectionQueues(const C2Payload& payload, std:
   adjusted.setIdentifier(uuid);
   c2::C2Value nd;
   // name should be what was previously the TLN ( top level node )
-  nd = name;
+  nd = C2Value{name};
   updatedContent.operation_arguments.insert(std::make_pair("name", nd));
   // the rvalue reference is an unfortunate side effect of the underlying API decision.
   adjusted.addContent(std::move(updatedContent), true);

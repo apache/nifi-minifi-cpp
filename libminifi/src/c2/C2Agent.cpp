@@ -255,7 +255,7 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
     } else {
       C2ContentResponse response(metric_payload.getOperation());
       response.name = name;
-      response.operation_arguments[metric.name] = metric.value;
+      response.operation_arguments[metric.name] = C2Value{metric.value};
       metric_payload.addContent(std::move(response), is_collapsible);
     }
   }
@@ -408,7 +408,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
       if (configuration_->get(key, value)) {
         C2ContentResponse option(Operation::acknowledge);
         option.name = key;
-        option.operation_arguments[key] = value;
+        option.operation_arguments[key] = C2Value{value};
         options.addContent(std::move(option));
       }
     }
@@ -537,7 +537,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
           for (const auto &line : trace.getTraces()) {
             C2ContentResponse option(Operation::acknowledge);
             option.name = line;
-            option.operation_arguments[line] = line;
+            option.operation_arguments[line] = C2Value{line};
             options.addContent(std::move(option));
           }
           response.addPayload(std::move(options));
@@ -560,7 +560,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
           for (const auto& kv : core_component_state.second) {
             C2ContentResponse entry(Operation::acknowledge);
             entry.name = kv.first;
-            entry.operation_arguments[kv.first] = kv.second;
+            entry.operation_arguments[kv.first] = C2Value{kv.second};
             state.addContent(std::move(entry));
           }
           states.addPayload(std::move(state));

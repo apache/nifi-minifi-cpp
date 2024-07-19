@@ -37,7 +37,7 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<const std::byte> response) {
+C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<const std::byte> response) const {
   rapidjson::Document root;
 
   try {
@@ -105,7 +105,7 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<co
         for (auto key : {"content", "args"}) {
           if (request.HasMember(key) && request[key].IsObject()) {
             for (const auto &member : request[key].GetObject()) {
-              new_command.operation_arguments[member.name.GetString()] = member.value;
+              new_command.operation_arguments[member.name.GetString()] = C2Value{member.value};
             }
             break;
           }
