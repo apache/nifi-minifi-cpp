@@ -30,7 +30,7 @@ TEST_CASE("Test Valid Payload", "[tv1]") {
   minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
-  response.operation_arguments["type"] = "munster";
+  response.operation_arguments["type"] = minifi::c2::C2Value{"munster"};
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
@@ -44,7 +44,7 @@ TEST_CASE("Test Invalid not found", "[tv2]") {
   minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
-  response.operation_arguments["typeS"] = "munster";
+  response.operation_arguments["typeS"] = minifi::c2::C2Value{"munster"};
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
@@ -59,7 +59,7 @@ TEST_CASE("Test Invalid coercion", "[tv3]") {
   minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
-  response.operation_arguments["type"] = "munster";
+  response.operation_arguments["type"] = minifi::c2::C2Value{"munster"};
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
@@ -73,7 +73,7 @@ TEST_CASE("Test Invalid not there", "[tv4]") {
   minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
-  response.operation_arguments["type"] = "munster";
+  response.operation_arguments["type"] = minifi::c2::C2Value{"munster"};
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
@@ -89,9 +89,9 @@ TEST_CASE("Test typed conversions", "[tv5]") {
   minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
-  response.operation_arguments["type"] = "munster";
-  response.operation_arguments["isvalid"] = isvalid;
-  response.operation_arguments["size"] = size;
+  response.operation_arguments["type"] = minifi::c2::C2Value{"munster"};
+  response.operation_arguments["isvalid"] = minifi::c2::C2Value{isvalid};
+  response.operation_arguments["size"] = minifi::c2::C2Value{size};
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
@@ -108,7 +108,7 @@ TEST_CASE("Test Invalid not there deep", "[tv6]") {
   minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
-  response.operation_arguments["type"] = "munster";
+  response.operation_arguments["type"] = minifi::c2::C2Value{"munster"};
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
