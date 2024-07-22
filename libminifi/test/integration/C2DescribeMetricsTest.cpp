@@ -64,11 +64,11 @@ class MetricsHandler: public HeartbeatHandler {
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection* conn) override {
     switch (state_) {
       case TestState::DESCRIBE_SPECIFIC_PROCESSOR_METRIC: {
-        sendHeartbeatResponse("DESCRIBE", "metrics", "889347", conn, {{"metricsClass", "GetFileMetrics"}});
+        sendHeartbeatResponse("DESCRIBE", "metrics", "889347", conn, {{"metricsClass", minifi::c2::C2Value{"GetFileMetrics"}}});
         break;
       }
       case TestState::DESCRIBE_SPECIFIC_SYSTEM_METRIC: {
-        sendHeartbeatResponse("DESCRIBE", "metrics", "889347", conn, {{"metricsClass", "QueueMetrics"}});
+        sendHeartbeatResponse("DESCRIBE", "metrics", "889347", conn, {{"metricsClass", minifi::c2::C2Value{"QueueMetrics"}}});
         break;
       }
       case TestState::DESCRIBE_ALL_METRICS: {

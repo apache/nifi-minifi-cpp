@@ -70,7 +70,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
         std::unordered_map<std::string, c2::C2Value> args;
         rapidjson::Document global_hash_doc{rapidjson::kObjectType};
         global_hash_doc.AddMember("digest", calculateAssetHash(), global_hash_doc.GetAllocator());
-        args["globalHash"] = std::move(global_hash_doc);
+        args["globalHash"] = minifi::c2::C2Value{std::move(global_hash_doc)};
         rapidjson::Document resource_list_doc{rapidjson::kArrayType};
 
         for (auto& asset : expected_assets_) {
@@ -82,7 +82,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
           resource_obj.AddMember("url", asset.url, resource_list_doc.GetAllocator());
           resource_list_doc.PushBack(resource_obj, resource_list_doc.GetAllocator());
         }
-        args["resourceList"] = std::move(resource_list_doc);
+        args["resourceList"] = minifi::c2::C2Value{std::move(resource_list_doc)};
 
         operations.push_back(C2Operation{
           .operation = "sync",

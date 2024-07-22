@@ -134,7 +134,7 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "2",
     .args = {
-        {"file", "my_file.txt"}
+        {"file", minifi::c2::C2Value{"my_file.txt"}}
     },
     .state = "NOT_APPLIED",
     .details = "Couldn't find 'url' argument"
@@ -143,8 +143,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "3",
     .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"}
+        {"file", minifi::c2::C2Value{"my_file.txt"}},
+        {"url", minifi::c2::C2Value{"/api/file/A.txt"}}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -153,8 +153,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "4",
     .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"}
+        {"file", minifi::c2::C2Value{"my_file.txt"}},
+        {"url", minifi::c2::C2Value{"/api/file/A.txt"}}
     },
     .state = "NO_OPERATION",
     .details = std::nullopt
@@ -163,9 +163,9 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "5",
     .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/B.txt"},
-        {"forceDownload", "true"}
+        {"file", minifi::c2::C2Value{"my_file.txt"}},
+        {"url", minifi::c2::C2Value{"/api/file/B.txt"}},
+        {"forceDownload", minifi::c2::C2Value{"true"}}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -174,8 +174,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "6",
     .args = {
-        {"file", "new_dir/inner/my_file.txt"},
-        {"url", "/api/file/A.txt"}
+        {"file", minifi::c2::C2Value{"new_dir/inner/my_file.txt"}},
+        {"url", minifi::c2::C2Value{"/api/file/A.txt"}}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -184,8 +184,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "7",
     .args = {
-        {"file", "dummy.txt"},
-        {"url", "/not_existing_api/file.txt"}
+        {"file", minifi::c2::C2Value{"dummy.txt"}},
+        {"url", minifi::c2::C2Value{"/not_existing_api/file.txt"}}
     },
     .state = "NOT_APPLIED",
     .details = "Failed to fetch asset"
@@ -194,8 +194,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "8",
     .args = {
-        {"file", "../../system_lib.dll"},
-        {"url", "/not_existing_api/file.txt"}
+        {"file", minifi::c2::C2Value{"../../system_lib.dll"}},
+        {"url", minifi::c2::C2Value{"/not_existing_api/file.txt"}}
     },
     .state = "NOT_APPLIED",
     .details = "Accessing parent directory is forbidden in file path"
@@ -204,8 +204,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "9",
     .args = {
-        {"file", "other_dir/A.txt"},
-        {"url", absolute_file_A_url}
+        {"file", minifi::c2::C2Value{"other_dir/A.txt"}},
+        {"url", minifi::c2::C2Value{absolute_file_A_url}}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt

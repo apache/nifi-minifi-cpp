@@ -73,7 +73,7 @@ class MetricsHandler: public HeartbeatHandler {
         break;
       }
       case TestState::SEND_NEW_CONFIG: {
-        sendHeartbeatResponse("UPDATE", "configuration", "889348", conn, {{"configuration_data", replacement_config_}});
+        sendHeartbeatResponse("UPDATE", "configuration", "889348", conn, {{"configuration_data", minifi::c2::C2Value{replacement_config_}}});
         test_state_ = TestState::VERIFY_UPDATED_METRICS;
         break;
       }
