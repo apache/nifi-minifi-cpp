@@ -93,11 +93,11 @@ void AssetManager::refreshState() {
     }
     description.url = std::string{entry["url"].GetString(), entry["url"].GetStringLength()};
 
-    if (FileUtils::exists(root_ / description.id)) {
+    if (FileUtils::exists(root_ / description.path)) {
       new_state.assets.insert(std::move(description));
     } else {
       logger_->log_error("Asset '.state' file contains entry '{}' that does not exist on the filesystem at '{}'",
-                         std::string_view{id.GetString(), id.GetStringLength()}, (root_ / description.id).string());
+                         std::string_view{id.GetString(), id.GetStringLength()}, (root_ / description.path).string());
     }
   }
   state_ = std::move(new_state);
