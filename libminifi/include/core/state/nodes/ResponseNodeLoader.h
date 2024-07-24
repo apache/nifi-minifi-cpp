@@ -75,7 +75,7 @@ class ResponseNodeLoader {
   std::shared_ptr<Configure> configuration_;
   std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources_;
   std::shared_ptr<core::FlowConfiguration> flow_configuration_;
-  utils::file::AssetManager* asset_manager_;
+  utils::file::AssetManager* asset_manager_{};
   core::controller::ControllerServiceProvider* controller_{};
   state::StateMonitor* update_sink_{};
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ResponseNodeLoader>::getLogger()};
