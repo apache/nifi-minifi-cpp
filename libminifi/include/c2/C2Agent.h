@@ -64,7 +64,7 @@ class C2Agent : public state::UpdateController {
           std::weak_ptr<state::response::NodeReporter> node_reporter,
           std::shared_ptr<utils::file::FileSystem> filesystem,
           std::function<void()> request_restart,
-          std::shared_ptr<utils::file::AssetManager> asset_manager);
+          utils::file::AssetManager* asset_manager);
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
   void start() override;
@@ -240,7 +240,7 @@ class C2Agent : public state::UpdateController {
   // time point the last time we performed a heartbeat.
   std::chrono::steady_clock::time_point last_run_;
 
-  std::shared_ptr<utils::file::AssetManager> asset_manager_;
+  utils::file::AssetManager* asset_manager_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

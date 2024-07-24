@@ -34,7 +34,7 @@
 namespace org::apache::nifi::minifi::state::response {
 
 ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
-  std::shared_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::AssetManager> asset_manager)
+  std::shared_ptr<core::FlowConfiguration> flow_configuration, utils::file::AssetManager* asset_manager)
     : configuration_(std::move(configuration)),
       repository_metric_sources_(std::move(repository_metric_sources)),
       flow_configuration_(std::move(flow_configuration)),

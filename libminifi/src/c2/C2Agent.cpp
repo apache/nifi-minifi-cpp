@@ -57,7 +57,7 @@ C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
                  std::weak_ptr<state::response::NodeReporter> node_reporter,
                  std::shared_ptr<utils::file::FileSystem> filesystem,
                  std::function<void()> request_restart,
-                 std::shared_ptr<utils::file::AssetManager> asset_manager)
+                 utils::file::AssetManager* asset_manager)
     : heart_beat_period_(3s),
       max_c2_responses(5),
       configuration_(std::move(configuration)),

@@ -24,7 +24,7 @@ namespace org::apache::nifi::minifi::state::response {
 AssetInformation::AssetInformation()
   : logger_(core::logging::LoggerFactory<AssetInformation>().getLogger()) {}
 
-void AssetInformation::setAssetManager(std::shared_ptr<utils::file::AssetManager> asset_manager) {
+void AssetInformation::setAssetManager(utils::file::AssetManager* asset_manager) {
   asset_manager_ = std::move(asset_manager);
   if (!asset_manager_) {
     logger_->log_error("No asset manager is provided, asset information will not be available");

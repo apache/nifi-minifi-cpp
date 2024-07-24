@@ -74,7 +74,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
                  std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
                  std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store = nullptr,
                  std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(), std::function<void()> request_restart = []{},
-                 std::shared_ptr<utils::file::AssetManager> asset_manager = {});
+                 utils::file::AssetManager* asset_manager = {});
 
   ~FlowController() override;
 

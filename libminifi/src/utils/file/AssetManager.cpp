@@ -35,15 +35,15 @@ AssetManager::AssetManager(const Configure& configuration)
 void AssetManager::refreshState() {
   std::lock_guard lock(mtx_);
   state_.clear();
-  if (!utils::file::FileUtils::exists(root_)) {
+  if (!FileUtils::exists(root_)) {
     std::filesystem::create_directories(root_);
   }
-  if (!utils::file::FileUtils::exists(root_ / ".state")) {
+  if (!FileUtils::exists(root_ / ".state")) {
     std::ofstream{root_ / ".state", std::ios::binary} << R"({"digest": "", "assets": {}})";
   }
   rapidjson::Document doc;
 
-  std::string file_content = utils::file::get_content(root_ / ".state");
+  std::string file_content = get_content(root_ / ".state");
 
   rapidjson::ParseResult res = doc.Parse(file_content.c_str(), file_content.size());
   if (!res) {
@@ -93,7 +93,7 @@ void AssetManager::refreshState() {
     }
     description.url = std::string{entry["url"].GetString(), entry["url"].GetStringLength()};
 
-    if (utils::file::FileUtils::exists(root_ / description.id)) {
+    if (FileUtils::exists(root_ / description.id)) {
       new_state.assets.insert(std::move(description));
     } else {
       logger_->log_error("Asset '.state' file contains entry '{}' that does not exist on the filesystem at '{}'",
@@ -109,10 +109,10 @@ std::string AssetManager::hash() const {
 }
 
 nonstd::expected<void, std::string> AssetManager::sync(
-    const org::apache::nifi::minifi::utils::file::AssetLayout& layout,
+    const AssetLayout& layout,
     const std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)>& fetch) {
   std::lock_guard lock(mtx_);
-  org::apache::nifi::minifi::utils::file::AssetLayout new_state{
+  AssetLayout new_state{
     .digest = state_.digest,
     .assets = {}
   };
@@ -145,7 +145,7 @@ nonstd::expected<void, std::string> AssetManager::sync(
   }
 
   for (auto& [path, content] : new_file_contents) {
-    utils::file::create_dir((root_ / path).parent_path());
+    create_dir((root_ / path).parent_path());
     std::ofstream{root_ / path, std::ios::binary}.write(reinterpret_cast<const char*>(content.data()), gsl::narrow<std::streamsize>(content.size()));
   }
 

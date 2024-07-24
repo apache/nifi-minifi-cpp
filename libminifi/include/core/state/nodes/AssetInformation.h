@@ -29,13 +29,13 @@ class AssetInformation : public ResponseNode {
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines hash for all asset identifiers";
 
-  void setAssetManager(std::shared_ptr<utils::file::AssetManager> asset_manager);
+  void setAssetManager(utils::file::AssetManager* asset_manager);
 
   std::string getName() const override { return "resourceInfo"; }
   std::vector<SerializedResponseNode> serialize() override;
 
  private:
-  std::shared_ptr<utils::file::AssetManager> asset_manager_;
+  utils::file::AssetManager* asset_manager_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
