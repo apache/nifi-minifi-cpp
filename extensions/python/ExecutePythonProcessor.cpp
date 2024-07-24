@@ -90,7 +90,7 @@ void ExecutePythonProcessor::onSchedule(core::ProcessContext& context, core::Pro
 
   gsl_Expects(python_script_engine_);
   python_script_engine_->eval(script_to_exec_);
-  python_script_engine_->onSchedule(&context);
+  python_script_engine_->onSchedule(context);
 
   getProperty(ReloadOnScriptChange, reload_on_script_change_);
 }
@@ -101,7 +101,7 @@ void ExecutePythonProcessor::onTrigger(core::ProcessContext& context, core::Proc
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
 
-  python_script_engine_->onTrigger(&context, &session);
+  python_script_engine_->onTrigger(context, session);
 }
 
 void ExecutePythonProcessor::appendPathForImportModules() {

@@ -79,7 +79,7 @@ void LuaProcessSession::write(const std::shared_ptr<LuaScriptFlowFile> &script_f
 }
 
 std::shared_ptr<LuaScriptFlowFile> LuaProcessSession::create() {
-auto result = std::make_shared<LuaScriptFlowFile>(session_.create());
+  auto result = std::make_shared<LuaScriptFlowFile>(session_.create());
   flow_files_.push_back(result);
   return result;
 }

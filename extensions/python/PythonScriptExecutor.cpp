@@ -43,7 +43,7 @@ void PythonScriptExecutor::onTrigger(core::ProcessContext& context, core::Proces
   else
     python_script_engine_->eval(std::get<std::string>(script_to_run_));
 
-  python_script_engine_->onTrigger(&context, &session);
+  python_script_engine_->onTrigger(context, session);
 }
 
 void PythonScriptExecutor::initialize(std::filesystem::path script_file,
