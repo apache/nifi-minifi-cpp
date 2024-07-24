@@ -714,6 +714,7 @@ void C2Agent::handle_transfer(const C2ContentResponse &resp) {
 }
 
 void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse &resp) {
+  logger_->log_info("Requested resource synchronization");
   auto send_error = [&] (std::string_view error) {
     logger_->log_error("{}", error);
     C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
@@ -813,6 +814,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
       return;
     }
     if (type.value() != "ASSET") {
+      logger_->log_info("Resource (id = '{}', name = '{}') with type '{}' is not yet supported", id.value(), name.value(), type.value());
       continue;
     }
     auto path = get_member_str("resourcePath");

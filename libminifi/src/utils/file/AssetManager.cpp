@@ -111,6 +111,7 @@ std::string AssetManager::hash() const {
 nonstd::expected<void, std::string> AssetManager::sync(
     const AssetLayout& layout,
     const std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)>& fetch) {
+  logger_->log_info("Synchronizing assets");
   std::lock_guard lock(mtx_);
   AssetLayout new_state{
     .digest = state_.digest,
@@ -120,16 +121,16 @@ nonstd::expected<void, std::string> AssetManager::sync(
   std::vector<std::pair<std::filesystem::path, std::vector<std::byte>>> new_file_contents;
   for (auto& new_entry : layout.assets) {
     if (std::find_if(state_.assets.begin(), state_.assets.end(), [&] (auto& entry) {return entry.id == new_entry.id;}) == state_.assets.end()) {
-      logger_->log_debug("Fetching asset {} from {}", new_entry.id, new_entry.url);
+      logger_->log_info("Fetching asset (id = '{}', path = '{}') from {}", new_entry.id, new_entry.path.string(), new_entry.url);
       if (auto data = fetch(new_entry.url)) {
         new_file_contents.emplace_back(new_entry.path, data.value());
         new_state.assets.insert(new_entry);
       } else {
-        logger_->log_error("Failed to fetch asset {} from {}: {}", new_entry.id, new_entry.url, data.error());
+        logger_->log_error("Failed to fetch asset (id = '{}', path = '{}') from {}: {}", new_entry.id, new_entry.path.string(), new_entry.url, data.error());
         fetch_errors += "Failed to fetch '" + new_entry.id + "' from '" + new_entry.url + "': " + data.error() + "\n";
       }
     } else {
-      logger_->log_debug("Asset {} already exists", new_entry.id);
+      logger_->log_info("Asset (id = '{}', path = '{}') already exists", new_entry.id, new_entry.path.string());
       new_state.assets.insert(new_entry);
     }
   }
@@ -139,7 +140,7 @@ nonstd::expected<void, std::string> AssetManager::sync(
 
   for (auto& old_entry : state_.assets) {
     if (std::find_if(layout.assets.begin(), layout.assets.end(), [&] (auto& entry) {return entry.id == old_entry.id;}) == layout.assets.end()) {
-      // we no longer need this asset
+      logger_->log_info("We no longer need asset (id = '{}', path = '{}')", old_entry.id, old_entry.path.string());
       std::filesystem::remove(root_ / old_entry.path);
     }
   }
