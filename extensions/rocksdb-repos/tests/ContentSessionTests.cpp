@@ -124,9 +124,10 @@ void test_template() {
 
   auto claim1 = session->create();
   session->write(claim1) << "hello content!";
-  // TODO(adebreceni): MINIFICPP-1954
-  if (is_buffered_session) {
-    REQUIRE_THROWS(session->read(claim1));
+  {
+    std::string content;
+    session->read(claim1) >> content;
+    REQUIRE(content == "hello content!");
   }
 
   auto claim2 = session->create();
