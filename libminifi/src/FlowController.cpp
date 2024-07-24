@@ -83,7 +83,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     if (auto publisher = metrics_publisher_store_->getMetricsPublisher(c2::C2_METRICS_PUBLISHER).lock()) {
       c2_metrics_publisher = std::dynamic_pointer_cast<c2::C2MetricsPublisher>(publisher);
     }
-    c2_agent_ = std::make_unique<c2::C2Agent>(configuration_, c2_metrics_publisher, std::move(filesystem), std::move(request_restart), std::move(asset_manager));
+    c2_agent_ = std::make_unique<c2::C2Agent>(configuration_, c2_metrics_publisher, std::move(filesystem), std::move(request_restart), asset_manager);
   }
 
   if (c2::isControllerSocketEnabled(configuration_)) {

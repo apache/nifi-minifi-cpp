@@ -66,7 +66,7 @@ C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
       thread_pool_(2, nullptr, "C2 threadpool"),
       request_restart_(std::move(request_restart)),
       last_run_(std::chrono::steady_clock::now()),
-      asset_manager_(std::move(asset_manager)) {
+      asset_manager_(asset_manager) {
   if (!configuration_->getAgentClass()) {
     logger_->log_info("Agent class is not predefined");
   }

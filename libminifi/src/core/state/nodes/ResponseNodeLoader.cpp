@@ -38,7 +38,7 @@ ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration,
     : configuration_(std::move(configuration)),
       repository_metric_sources_(std::move(repository_metric_sources)),
       flow_configuration_(std::move(flow_configuration)),
-      asset_manager_(std::move(asset_manager)) {
+      asset_manager_(asset_manager) {
 }
 
 void ResponseNodeLoader::clearConfigRoot() {
