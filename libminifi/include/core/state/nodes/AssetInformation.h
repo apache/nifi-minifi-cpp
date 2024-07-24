@@ -35,7 +35,7 @@ class AssetInformation : public ResponseNode {
   std::vector<SerializedResponseNode> serialize() override;
 
  private:
-  utils::file::AssetManager* asset_manager_;
+  utils::file::AssetManager* asset_manager_{nullptr};
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
