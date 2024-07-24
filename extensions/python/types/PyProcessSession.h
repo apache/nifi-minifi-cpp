@@ -27,7 +27,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 class PyProcessSession {
  public:
-  explicit PyProcessSession(gsl::not_null<core::ProcessSession*> session);
+  explicit PyProcessSession(core::ProcessSession& session);
 
   std::shared_ptr<core::FlowFile> get();
   std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile>& flow_file = nullptr);

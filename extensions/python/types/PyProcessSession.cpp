@@ -29,8 +29,8 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 namespace core = org::apache::nifi::minifi::core;
 
-PyProcessSession::PyProcessSession(gsl::not_null<core::ProcessSession*> session)
-    : session_(session) {
+PyProcessSession::PyProcessSession(core::ProcessSession& session)
+    : session_(gsl::make_not_null(&session)) {
 }
 
 std::shared_ptr<core::FlowFile> PyProcessSession::get() {
