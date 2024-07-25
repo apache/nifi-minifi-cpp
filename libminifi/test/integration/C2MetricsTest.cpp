@@ -62,7 +62,7 @@ class MetricsHandler: public HeartbeatHandler {
   explicit MetricsHandler(std::atomic_bool& metrics_updated_successfully, std::shared_ptr<minifi::Configure> configuration, const std::filesystem::path& replacement_config_path)
     : HeartbeatHandler(std::move(configuration)),
       metrics_updated_successfully_(metrics_updated_successfully),
-      replacement_config_(getReplacementConfigAsJsonValue(replacement_config_path.string())) {
+      replacement_config_(minifi::utils::file::get_content(replacement_config_path.string())) {
   }
 
   void handleHeartbeat(const rapidjson::Document& root, struct mg_connection* conn) override {
@@ -73,7 +73,7 @@ class MetricsHandler: public HeartbeatHandler {
         break;
       }
       case TestState::SEND_NEW_CONFIG: {
-        sendHeartbeatResponse("UPDATE", "configuration", "889348", conn, {{"configuration_data", replacement_config_}});
+        sendHeartbeatResponse("UPDATE", "configuration", "889348", conn, {{"configuration_data", minifi::c2::C2Value{replacement_config_}}});
         test_state_ = TestState::VERIFY_UPDATED_METRICS;
         break;
       }
@@ -176,14 +176,6 @@ class MetricsHandler: public HeartbeatHandler {
       processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("AverageOnTriggerRunTime") &&
       processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("LastOnTriggerRunTime") &&
       processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("TransferredBytes");
-  }
-
-  [[nodiscard]] static std::string getReplacementConfigAsJsonValue(const std::string& replacement_config_path) {
-    std::ifstream is(replacement_config_path);
-    auto content = std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-    content = minifi::utils::string::replaceAll(content, "\n", "\\n");
-    content = minifi::utils::string::replaceAll(content, "\"", "\\\"");
-    return content;
   }
 
   std::atomic_bool& metrics_updated_successfully_;

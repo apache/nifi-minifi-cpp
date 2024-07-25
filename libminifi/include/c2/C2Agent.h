@@ -43,6 +43,7 @@
 #include "utils/ThreadPool.h"
 #include "utils/file/FileSystem.h"
 #include "C2Utils.h"
+#include "utils/file/AssetManager.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -62,7 +63,8 @@ class C2Agent : public state::UpdateController {
   C2Agent(std::shared_ptr<Configure> configuration,
           std::weak_ptr<state::response::NodeReporter> node_reporter,
           std::shared_ptr<utils::file::FileSystem> filesystem,
-          std::function<void()> request_restart);
+          std::function<void()> request_restart,
+          utils::file::AssetManager* asset_manager);
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
   void start() override;
@@ -130,6 +132,8 @@ class C2Agent : public state::UpdateController {
    * Handles a description request
    */
   void handle_describe(const C2ContentResponse &resp);
+
+  void handle_sync(const C2ContentResponse &resp);
 
 
   enum class UpdateResult {
@@ -235,6 +239,8 @@ class C2Agent : public state::UpdateController {
 
   // time point the last time we performed a heartbeat.
   std::chrono::steady_clock::time_point last_run_;
+
+  utils::file::AssetManager* asset_manager_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

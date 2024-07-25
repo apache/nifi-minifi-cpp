@@ -56,7 +56,7 @@ bool PeerResponder::handleGet(CivetServer* /*server*/, struct mg_connection *con
 #else
   std::string hostname = "localhost";
 #endif
-  std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"" + hostname + "\", \"port\": " + port + ",  \"secure\": false, \"flowFileCount\" : 0 }] }";
+  std::string site2site_rest_resp = R"({"peers" : [{ "hostname": ")" + hostname + R"(", "port": )" + port + R"(,  "secure": false, "flowFileCount" : 0 }] })";
   std::stringstream headers;
   headers << "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nConnection: close\r\n\r\n";
   mg_printf(conn, "%s", headers.str().c_str());
@@ -134,7 +134,8 @@ bool FlowFileResponder::handlePost(CivetServer* /*server*/, struct mg_connection
     const auto flow = std::make_shared<FlowObj>();
 
     for (uint32_t i = 0; i < num_attributes; i++) {
-      std::string name, value;
+      std::string name;
+      std::string value;
       {
         const auto read = stream.read(name, true);
         if (!isServerRunning()) return false;
@@ -204,7 +205,7 @@ bool FlowFileResponder::handleGet(CivetServer* /*server*/, struct mg_connection 
     minifi::io::BufferStream serializer;
     minifi::io::CRCStream <minifi::io::OutputStream> stream(gsl::make_not_null(&serializer));
     for (const auto& flow : flows) {
-      uint32_t num_attributes = gsl::narrow<uint32_t>(flow->attributes.size());
+      auto num_attributes = gsl::narrow<uint32_t>(flow->attributes.size());
       stream.write(num_attributes);
       for (const auto& entry : flow->attributes) {
         stream.write(entry.first);
@@ -235,41 +236,38 @@ bool DeleteTransactionResponder::handleDelete(CivetServer* /*server*/, struct mg
 }
 
 void HeartbeatHandler::sendHeartbeatResponse(const std::vector<C2Operation>& operations, struct mg_connection * conn) {
-  std::string operation_jsons;
+  rapidjson::Document hb_obj{rapidjson::kObjectType};
+  hb_obj.AddMember("operation", "heartbeat", hb_obj.GetAllocator());
+  hb_obj.AddMember("requested_operations", rapidjson::kArrayType, hb_obj.GetAllocator());
   for (const auto& c2_operation : operations) {
-    std::string resp_args;
+    rapidjson::Value op{rapidjson::kObjectType};
+    op.AddMember("operation", c2_operation.operation, hb_obj.GetAllocator());
+    op.AddMember("operationid", c2_operation.operation_id, hb_obj.GetAllocator());
+    op.AddMember("operand", c2_operation.operand, hb_obj.GetAllocator());
     if (!c2_operation.args.empty()) {
-      resp_args = ", \"args\": {";
-      auto it = c2_operation.args.begin();
-      while (it != c2_operation.args.end()) {
-        resp_args += "\"" + it->first + "\": \"" + it->second + "\"";
-        ++it;
-        if (it != c2_operation.args.end()) {
-          resp_args += ", ";
+      rapidjson::Value args{rapidjson::kObjectType};
+      for (auto& [arg_name, arg_val] : c2_operation.args) {
+        rapidjson::Value json_arg_val;
+        if (auto* json_val = arg_val.json()) {
+          json_arg_val.CopyFrom(*json_val, hb_obj.GetAllocator());
+        } else {
+          json_arg_val.SetString(arg_val.to_string(), hb_obj.GetAllocator());
         }
+        args.AddMember(rapidjson::StringRef(arg_name), json_arg_val, hb_obj.GetAllocator());
       }
-      resp_args += "}";
+      op.AddMember("args", args, hb_obj.GetAllocator());
     }
-
-    std::string operation_json = "{"
-      "\"operation\" : \"" + c2_operation.operation + "\","
-      "\"operationid\" : \"" + c2_operation.operation_id + "\","
-      "\"operand\": \"" + c2_operation.operand + "\"" +
-      resp_args + "}";
-
-    if (operation_jsons.empty()) {
-      operation_jsons += operation_json;
-    } else {
-      operation_jsons += ", " + operation_json;
-    }
+    hb_obj["requested_operations"].PushBack(op, hb_obj.GetAllocator());
   }
 
-  std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [ " + operation_jsons + " ]}";
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  hb_obj.Accept(writer);
 
   mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
             "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-            heartbeat_response.length());
-  mg_printf(conn, "%s", heartbeat_response.c_str());
+            buffer.GetLength());
+  mg_printf(conn, "%s", buffer.GetString());
 }
 
 void HeartbeatHandler::verifyJsonHasAgentManifest(const rapidjson::Document& root, const std::vector<std::string>& verify_components, const std::vector<std::string>& disallowed_properties) {
@@ -477,9 +475,9 @@ bool C2UpdateHandler::handlePost(CivetServer* /*server*/, struct mg_connection *
 }
 
 void C2UpdateHandler::setC2RestResponse(const std::string& url, const std::string& name, const std::optional<std::string>& persist) {
-  std::string content = "{\"location\": \"" + url + "\"";
+  std::string content = R"({"location": ")" + url + "\"";
   if (persist) {
-    content += ", \"persist\": \"" + *persist + "\"";
+    content += R"(, "persist": ")" + *persist + "\"";
   }
   content += "}";
   response_ =

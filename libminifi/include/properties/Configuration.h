@@ -118,6 +118,7 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_root_class_definitions = "nifi.c2.root.class.definitions";
   static constexpr const char *nifi_c2_rest_listener_port = "nifi.c2.rest.listener.port";
   static constexpr const char *nifi_c2_rest_listener_cacert = "nifi.c2.rest.listener.cacert";
+  static constexpr const char *nifi_c2_rest_path_base = "nifi.c2.rest.path.base";
   static constexpr const char *nifi_c2_rest_url = "nifi.c2.rest.url";
   static constexpr const char *nifi_c2_rest_url_ack = "nifi.c2.rest.url.ack";
   static constexpr const char *nifi_c2_rest_ssl_context_service = "nifi.c2.rest.ssl.context.service";

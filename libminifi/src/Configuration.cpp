@@ -88,6 +88,7 @@ const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyVal
   {Configuration::nifi_c2_root_class_definitions, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::nifi_c2_rest_listener_port, gsl::make_not_null(&core::StandardPropertyTypes::LISTEN_PORT_TYPE)},
   {Configuration::nifi_c2_rest_listener_cacert, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
+  {Configuration::nifi_c2_rest_path_base, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::nifi_c2_rest_url, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::nifi_c2_rest_url_ack, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::nifi_c2_rest_ssl_context_service, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},

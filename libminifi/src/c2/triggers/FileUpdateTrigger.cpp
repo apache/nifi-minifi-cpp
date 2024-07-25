@@ -29,8 +29,8 @@ C2Payload FileUpdateTrigger::getAction() {
     C2ContentResponse resp(Operation::update);
     resp.ident = "triggered";
     resp.name = "configuration";
-    resp.operation_arguments["location"] = file_;
-    resp.operation_arguments["persist"] = "true";
+    resp.operation_arguments["location"] = C2Value{file_};
+    resp.operation_arguments["persist"] = C2Value{"true"};
     response_payload.addContent(std::move(resp));
     update_ = false;
     return response_payload;

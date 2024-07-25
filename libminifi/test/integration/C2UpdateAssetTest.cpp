@@ -56,7 +56,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
     return true;
   }
 
-  void addOperation(std::string id, std::unordered_map<std::string, std::string> args) {
+  void addOperation(std::string id, std::unordered_map<std::string, c2::C2Value> args) {
     std::lock_guard<std::mutex> guard(op_mtx_);
     operations_.push_back(C2Operation{
       .operation = "update",
@@ -92,7 +92,7 @@ class VerifyC2AssetUpdate : public VerifyC2Base {
 
 struct AssetUpdateOperation {
   std::string id;
-  std::unordered_map<std::string, std::string> args;
+  std::unordered_map<std::string, c2::C2Value> args;
   std::string state;
   std::optional<std::string> details;
 };
@@ -103,7 +103,11 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   // setup minifi home
   const std::filesystem::path home_dir = controller.createTempDirectory();
   const auto asset_dir = home_dir / "asset";
+
   std::filesystem::current_path(home_dir);
+  auto wd_guard = gsl::finally([] {
+    std::filesystem::current_path(minifi::utils::file::get_executable_dir());
+  });
 
   C2AcknowledgeHandler ack_handler;
   std::string file_A = "hello from file A";
@@ -130,7 +134,7 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "2",
     .args = {
-        {"file", "my_file.txt"}
+        {"file", minifi::c2::C2Value{"my_file.txt"}}
     },
     .state = "NOT_APPLIED",
     .details = "Couldn't find 'url' argument"
@@ -139,8 +143,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "3",
     .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"}
+        {"file", minifi::c2::C2Value{"my_file.txt"}},
+        {"url", minifi::c2::C2Value{"/api/file/A.txt"}}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -149,8 +153,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "4",
     .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"}
+        {"file", minifi::c2::C2Value{"my_file.txt"}},
+        {"url", minifi::c2::C2Value{"/api/file/A.txt"}}
     },
     .state = "NO_OPERATION",
     .details = std::nullopt
@@ -159,9 +163,9 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "5",
     .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/B.txt"},
-        {"forceDownload", "true"}
+        {"file", minifi::c2::C2Value{"my_file.txt"}},
+        {"url", minifi::c2::C2Value{"/api/file/B.txt"}},
+        {"forceDownload", minifi::c2::C2Value{"true"}}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -170,8 +174,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "6",
     .args = {
-        {"file", "new_dir/inner/my_file.txt"},
-        {"url", "/api/file/A.txt"}
+        {"file", minifi::c2::C2Value{"new_dir/inner/my_file.txt"}},
+        {"url", minifi::c2::C2Value{"/api/file/A.txt"}}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -180,8 +184,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "7",
     .args = {
-        {"file", "dummy.txt"},
-        {"url", "/not_existing_api/file.txt"}
+        {"file", minifi::c2::C2Value{"dummy.txt"}},
+        {"url", minifi::c2::C2Value{"/not_existing_api/file.txt"}}
     },
     .state = "NOT_APPLIED",
     .details = "Failed to fetch asset"
@@ -190,8 +194,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "8",
     .args = {
-        {"file", "../../system_lib.dll"},
-        {"url", "/not_existing_api/file.txt"}
+        {"file", minifi::c2::C2Value{"../../system_lib.dll"}},
+        {"url", minifi::c2::C2Value{"/not_existing_api/file.txt"}}
     },
     .state = "NOT_APPLIED",
     .details = "Accessing parent directory is forbidden in file path"
@@ -200,8 +204,8 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   operations.push_back({
     .id = "9",
     .args = {
-        {"file", "other_dir/A.txt"},
-        {"url", absolute_file_A_url}
+        {"file", minifi::c2::C2Value{"other_dir/A.txt"}},
+        {"url", minifi::c2::C2Value{absolute_file_A_url}}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -244,11 +248,12 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
       // this op failed no file made on the disk
       continue;
     }
-    expected_files[(asset_dir / op.args["file"]).string()] = minifi::utils::string::endsWith(op.args["url"], "A.txt") ? file_A : file_B;
+    expected_files[(asset_dir / op.args["file"].to_string()).string()] = minifi::utils::string::endsWith(op.args["url"].to_string(), "A.txt") ? file_A : file_B;
   }
 
   size_t file_count = minifi::utils::file::list_dir_all(asset_dir.string(), controller.getLogger()).size();
-  if (file_count != expected_files.size()) {
+  // + 1 is for the .state file from the AssetManager
+  if (file_count != expected_files.size() + 1) {
     controller.getLogger()->log_error("Expected {} files, got {}", expected_files.size(), file_count);
     REQUIRE(false);
   }
@@ -258,8 +263,6 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
       REQUIRE(false);
     }
   }
-
-  std::filesystem::current_path(minifi::utils::file::get_executable_dir());
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -50,7 +50,8 @@ namespace org::apache::nifi::minifi {
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                                std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
                                std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store,
-                               std::shared_ptr<utils::file::FileSystem> filesystem, std::function<void()> request_restart)
+                               std::shared_ptr<utils::file::FileSystem> filesystem, std::function<void()> request_restart,
+                               utils::file::AssetManager* asset_manager)
     : core::controller::ForwardingControllerServiceProvider(core::className<FlowController>()),
       running_(false),
       initialized_(false),
@@ -82,7 +83,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     if (auto publisher = metrics_publisher_store_->getMetricsPublisher(c2::C2_METRICS_PUBLISHER).lock()) {
       c2_metrics_publisher = std::dynamic_pointer_cast<c2::C2MetricsPublisher>(publisher);
     }
-    c2_agent_ = std::make_unique<c2::C2Agent>(configuration_, c2_metrics_publisher, std::move(filesystem), std::move(request_restart));
+    c2_agent_ = std::make_unique<c2::C2Agent>(configuration_, c2_metrics_publisher, std::move(filesystem), std::move(request_restart), asset_manager);
   }
 
   if (c2::isControllerSocketEnabled(configuration_)) {

@@ -55,6 +55,7 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "utils/Id.h"
 #include "utils/file/FileSystem.h"
+#include "utils/file/AssetManager.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "core/state/MetricsPublisher.h"
 #include "core/state/MetricsPublisherStore.h"
@@ -72,7 +73,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
                  std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store = nullptr,
-                 std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(), std::function<void()> request_restart = []{});
+                 std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(), std::function<void()> request_restart = []{},
+                 utils::file::AssetManager* asset_manager = {});
 
   ~FlowController() override;
 

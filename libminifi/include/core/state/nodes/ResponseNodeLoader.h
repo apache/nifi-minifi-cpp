@@ -34,13 +34,14 @@
 #include "utils/Id.h"
 #include "utils/expected.h"
 #include "core/RepositoryMetricsSource.h"
+#include "utils/file/AssetManager.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
 class ResponseNodeLoader {
  public:
   ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
-    std::shared_ptr<core::FlowConfiguration> flow_configuration);
+    std::shared_ptr<core::FlowConfiguration> flow_configuration, utils::file::AssetManager* asset_manager = nullptr);
 
   void setNewConfigRoot(core::ProcessGroup* root);
   void clearConfigRoot();
@@ -62,6 +63,7 @@ class ResponseNodeLoader {
   void initializeAgentStatus(const SharedResponseNode& response_node) const;
   void initializeConfigurationChecksums(const SharedResponseNode& response_node) const;
   void initializeFlowMonitor(const SharedResponseNode& response_node) const;
+  void initializeAssetInformation(const SharedResponseNode& response_node) const;
   std::vector<SharedResponseNode> getMatchingComponentMetricsNodes(const std::string& regex_str) const;
 
   mutable std::mutex root_mutex_;
@@ -73,6 +75,7 @@ class ResponseNodeLoader {
   std::shared_ptr<Configure> configuration_;
   std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources_;
   std::shared_ptr<core::FlowConfiguration> flow_configuration_;
+  utils::file::AssetManager* asset_manager_{};
   core::controller::ControllerServiceProvider* controller_{};
   state::StateMonitor* update_sink_{};
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ResponseNodeLoader>::getLogger()};

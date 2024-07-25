@@ -38,6 +38,7 @@
 #include "utils/file/FileManager.h"
 #include "utils/file/FileSystem.h"
 #include "http/BaseHTTPClient.h"
+#include "utils/file/PathUtils.h"
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
 #include "utils/StringUtils.h"
@@ -46,6 +47,7 @@
 #include "utils/Id.h"
 #include "c2/C2Utils.h"
 #include "c2/protocols/RESTSender.h"
+#include "rapidjson/error/en.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -54,7 +56,8 @@ namespace org::apache::nifi::minifi::c2 {
 C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
                  std::weak_ptr<state::response::NodeReporter> node_reporter,
                  std::shared_ptr<utils::file::FileSystem> filesystem,
-                 std::function<void()> request_restart)
+                 std::function<void()> request_restart,
+                 utils::file::AssetManager* asset_manager)
     : heart_beat_period_(3s),
       max_c2_responses(5),
       configuration_(std::move(configuration)),
@@ -62,7 +65,8 @@ C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
       filesystem_(std::move(filesystem)),
       thread_pool_(2, nullptr, "C2 threadpool"),
       request_restart_(std::move(request_restart)),
-      last_run_(std::chrono::steady_clock::now()) {
+      last_run_(std::chrono::steady_clock::now()),
+      asset_manager_(asset_manager) {
   if (!configuration_->getAgentClass()) {
     logger_->log_info("Agent class is not predefined");
   }
@@ -251,7 +255,7 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
     } else {
       C2ContentResponse response(metric_payload.getOperation());
       response.name = name;
-      response.operation_arguments[metric.name] = metric.value;
+      response.operation_arguments[metric.name] = C2Value{metric.value};
       metric_payload.addContent(std::move(response), is_collapsible);
     }
   }
@@ -381,6 +385,9 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
       break;
     }
+    case Operation::sync:
+      handle_sync(resp);
+      break;
     default:
       break;
       // do nothing
@@ -401,7 +408,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
       if (configuration_->get(key, value)) {
         C2ContentResponse option(Operation::acknowledge);
         option.name = key;
-        option.operation_arguments[key] = value;
+        option.operation_arguments[key] = C2Value{value};
         options.addContent(std::move(option));
       }
     }
@@ -530,7 +537,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
           for (const auto &line : trace.getTraces()) {
             C2ContentResponse option(Operation::acknowledge);
             option.name = line;
-            option.operation_arguments[line] = line;
+            option.operation_arguments[line] = C2Value{line};
             options.addContent(std::move(option));
           }
           response.addPayload(std::move(options));
@@ -553,7 +560,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
           for (const auto& kv : core_component_state.second) {
             C2ContentResponse entry(Operation::acknowledge);
             entry.name = kv.first;
-            entry.operation_arguments[kv.first] = kv.second;
+            entry.operation_arguments[kv.first] = C2Value{kv.second};
             state.addContent(std::move(entry));
           }
           states.addPayload(std::move(state));
@@ -608,12 +615,18 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
   };
 
   for (const auto& [name, value] : resp.operation_arguments) {
-    bool persist = (
-        value.getAnnotation("persist")
-        | utils::transform(&AnnotatedValue::to_string)
-        | utils::andThen(utils::string::toBool)).value_or(true);
-    PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
-    changeUpdateState(update_property(name, value.to_string(), lifetime));
+    if (auto* json_val = value.json()) {
+      if (json_val->IsObject() && json_val->HasMember("value")) {
+        PropertyChangeLifetime lifetime = PropertyChangeLifetime::PERSISTENT;
+        if (json_val->HasMember("persist")) {
+          lifetime = (*json_val)["persist"].GetBool() ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
+        }
+        std::string property_value{(*json_val)["value"].GetString(), (*json_val)["value"].GetStringLength()};
+        changeUpdateState(update_property(name, property_value, lifetime));
+        continue;
+      }
+    }
+    changeUpdateState(update_property(name, value.to_string(), PropertyChangeLifetime::PERSISTENT));
   }
   // apply changes and persist properties requested to be persisted
   const bool propertyWasUpdated = result == state::UpdateState::FULLY_APPLIED || result == state::UpdateState::PARTIALLY_APPLIED;
@@ -698,6 +711,160 @@ void C2Agent::handle_transfer(const C2ContentResponse &resp) {
       break;
     }
   }
+}
+
+void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse &resp) {
+  logger_->log_info("Requested resource synchronization");
+  auto send_error = [&] (std::string_view error) {
+    logger_->log_error("{}", error);
+    C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
+    response.setRawData(as_bytes(std::span(error.begin(), error.end())));
+    enqueue_c2_response(std::move(response));
+  };
+
+  if (!asset_manager_) {
+    send_error("Internal error: no asset manager");
+    return;
+  }
+
+  SyncOperand operand = SyncOperand::resource;
+  try {
+    operand = utils::enumCast<SyncOperand>(resp.name, true);
+  } catch(const std::runtime_error&) {
+    send_error("Unknown operand '" + resp.name + "'");
+    return;
+  }
+
+  gsl_Assert(operand == SyncOperand::resource);
+
+  utils::file::AssetLayout asset_layout;
+
+  auto state_it = resp.operation_arguments.find("globalHash");
+  if (state_it == resp.operation_arguments.end()) {
+    send_error("Malformed request, missing 'globalHash' argument");
+    return;
+  }
+
+  const rapidjson::Document* state_doc = state_it->second.json();
+  if (!state_doc) {
+    send_error("Argument 'globalHash' is malformed");
+    return;
+  }
+
+  if (!state_doc->IsObject()) {
+    send_error("Malformed request, 'globalHash' is not an object");
+    return;
+  }
+
+  if (!state_doc->HasMember("digest")) {
+    send_error("Malformed request, 'globalHash' has no member 'digest'");
+    return;
+  }
+  if (!(*state_doc)["digest"].IsString()) {
+    send_error("Malformed request, 'globalHash.digest' is not a string");
+    return;
+  }
+
+  asset_layout.digest = std::string{(*state_doc)["digest"].GetString(), (*state_doc)["digest"].GetStringLength()};
+
+  auto resource_list_it = resp.operation_arguments.find("resourceList");
+  if (resource_list_it == resp.operation_arguments.end()) {
+    send_error("Malformed request, missing 'resourceList' argument");
+    return;
+  }
+
+  const rapidjson::Document* resource_list = resource_list_it->second.json();
+  if (!resource_list) {
+    send_error("Argument 'resourceList' is malformed");
+    return;
+  }
+  if (!resource_list->IsArray()) {
+    send_error("Malformed request, 'resourceList' is not an array");
+    return;
+  }
+
+  for (rapidjson::SizeType resource_idx = 0; resource_idx < resource_list->Size(); ++resource_idx) {
+    auto& resource = resource_list->GetArray()[resource_idx];
+    if (!resource.IsObject()) {
+      send_error(fmt::format("Malformed request, 'resourceList[{}]' is not an object", resource_idx));
+      return;
+    }
+    auto get_member_str = [&] (const char* key) -> nonstd::expected<std::string_view, std::string> {
+      if (!resource.HasMember(key)) {
+        return nonstd::make_unexpected(fmt::format("Malformed request, 'resourceList[{}]' has no member '{}'", resource_idx, key));
+      }
+      if (!resource[key].IsString()) {
+        return nonstd::make_unexpected(fmt::format("Malformed request, 'resourceList[{}].{}' is not a string", resource_idx, key));
+      }
+      return std::string_view{resource[key].GetString(), resource[key].GetStringLength()};
+    };
+    auto id = get_member_str("resourceId");
+    if (!id) {
+      send_error(id.error());
+      return;
+    }
+    auto name = get_member_str("resourceName");
+    if (!name) {
+      send_error(name.error());
+      return;
+    }
+    auto type = get_member_str("resourceType");
+    if (!type) {
+      send_error(type.error());
+      return;
+    }
+    if (type.value() != "ASSET") {
+      logger_->log_info("Resource (id = '{}', name = '{}') with type '{}' is not yet supported", id.value(), name.value(), type.value());
+      continue;
+    }
+    auto path = get_member_str("resourcePath");
+    if (!path) {
+      send_error(path.error());
+      return;
+    }
+    auto url = get_member_str("url");
+    if (!url) {
+      send_error(url.error());
+      return;
+    }
+
+    auto full_path = std::filesystem::path{path.value()} / name.value();  // NOLINT(whitespace/braces)
+
+    auto path_valid = utils::file::validateRelativeFilePath(full_path);
+    if (!path_valid) {
+      send_error(path_valid.error());
+      return;
+    }
+
+    asset_layout.assets.insert(utils::file::AssetDescription{
+        .id = std::string{id.value()},
+        .path = full_path,
+        .url = std::string{url.value()}
+    });
+  }
+
+  auto fetch = [&] (std::string_view url) -> nonstd::expected<std::vector<std::byte>, std::string> {
+    auto resolved_url = resolveUrl(std::string{url});
+    if (!resolved_url) {
+      return nonstd::make_unexpected("Couldn't resolve url");
+    }
+    C2Payload file_response = protocol_->fetch(resolved_url.value());
+
+    if (file_response.getStatus().getState() != state::UpdateState::READ_COMPLETE) {
+      return nonstd::make_unexpected("Failed to fetch file from " + resolved_url.value());
+    }
+
+    return std::move(file_response).moveRawData();
+  };
+
+  auto result = asset_manager_->sync(asset_layout, fetch);
+  if (!result) {
+    send_error(result.error());
+    return;
+  }
+
+  C2Payload response(Operation::acknowledge, state::UpdateState::FULLY_APPLIED, resp.ident, true);
+  enqueue_c2_response(std::move(response));
 }
 
 utils::TaskRescheduleInfo C2Agent::produce() {
@@ -789,6 +956,9 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
     return url;
   }
   std::string base;
+  if (configuration_->get(Configuration::nifi_c2_rest_path_base, base)) {
+    return base + url;
+  }
   if (!configuration_->get(Configuration::nifi_c2_rest_url, "c2.rest.url", base)) {
     logger_->log_error("Missing C2 REST URL");
     return std::nullopt;
@@ -891,27 +1061,6 @@ static auto make_path(const std::string& str) {
   return std::filesystem::path(str);
 }
 
-static std::optional<std::string> validateFilePath(const std::filesystem::path& path) {
-  if (path.empty()) {
-    return "Empty file path";
-  }
-  if (!path.is_relative()) {
-    return "File path must be a relative path '" + path.string() + "'";
-  }
-  if (!path.has_filename()) {
-    return "Filename missing in output path '" + path.string() + "'";
-  }
-  if (path.filename() == "." || path.filename() == "..") {
-    return "Invalid filename '" + path.filename().string() + "'";
-  }
-  for (const auto& segment : path) {
-    if (segment == "..") {
-      return "Accessing parent directory is forbidden in file path '" + path.string() + "'";
-    }
-  }
-  return std::nullopt;
-}
-
 void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   auto send_error = [&] (std::string_view error) {
     logger_->log_error("{}", error);
@@ -919,19 +1068,16 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     response.setRawData(as_bytes(std::span(error.begin(), error.end())));
     enqueue_c2_response(std::move(response));
   };
-  std::filesystem::path asset_dir = configuration_->getHome() / "asset";
-  if (auto asset_dir_str = configuration_->get(Configuration::nifi_asset_directory)) {
-    asset_dir = asset_dir_str.value();
-  }
 
   // output file
   std::filesystem::path file_path;
-  if (auto file_rel = resp.getArgument("file") | utils::transform(make_path)) {
-    if (auto error = validateFilePath(file_rel.value())) {
-      send_error(error.value());
+  if (auto file_rel = resp.getStringArgument("file") | utils::transform(make_path)) {
+    auto result = utils::file::validateRelativeFilePath(file_rel.value());
+    if (!result) {
+      send_error(result.error());
       return;
     }
-    file_path = asset_dir / file_rel.value();
+    file_path = asset_manager_->getRoot() / file_rel.value();
   } else {
     send_error("Couldn't find 'file' argument");
     return;
@@ -939,7 +1085,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // source url
   std::string url;
-  if (auto url_str = resp.getArgument("url")) {
+  if (auto url_str = resp.getStringArgument("url")) {
     if (auto resolved_url = resolveUrl(*url_str)) {
       url = resolved_url.value();
     } else {
@@ -953,7 +1099,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // forceDownload
   bool force_download = false;
-  if (auto force_download_str = resp.getArgument("forceDownload")) {
+  if (auto force_download_str = resp.getStringArgument("forceDownload")) {
     if (utils::string::equalsIgnoreCase(force_download_str.value(), "true")) {
       force_download = true;
     } else if (utils::string::equalsIgnoreCase(force_download_str.value(), "false")) {

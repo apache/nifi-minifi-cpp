@@ -28,6 +28,7 @@
 #include <string>
 #include <utility>
 
+#include "rapidjson/error/en.h"
 #include "core/TypedValues.h"
 #include "utils/gsl.h"
 #include "properties/Configuration.h"
@@ -36,26 +37,7 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-
-AnnotatedValue parseAnnotatedValue(const rapidjson::Value& jsonValue) {
-  AnnotatedValue result;
-  if (jsonValue.IsObject() && jsonValue.HasMember("value")) {
-    result = jsonValue["value"].GetString();
-    for (const auto& annotation : jsonValue.GetObject()) {
-      if (annotation.name.GetString() == std::string("value")) {
-        continue;
-      }
-      result.annotations[annotation.name.GetString()] = parseAnnotatedValue(annotation.value);
-    }
-  } else if (jsonValue.IsBool()) {
-    result = jsonValue.GetBool();
-  } else {
-    result = jsonValue.GetString();
-  }
-  return result;
-}
-
-C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<const std::byte> response) {
+C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<const std::byte> response) const {
   rapidjson::Document root;
 
   try {
@@ -123,7 +105,7 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<co
         for (auto key : {"content", "args"}) {
           if (request.HasMember(key) && request[key].IsObject()) {
             for (const auto &member : request[key].GetObject()) {
-              new_command.operation_arguments[member.name.GetString()] = parseAnnotatedValue(member.value);
+              new_command.operation_arguments[member.name.GetString()] = C2Value{member.value};
             }
             break;
           }
@@ -136,6 +118,8 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<co
       // we have a response for this request
       return new_payload;
       // }
+    } else {
+      logger_->log_error("Failed to parse json response: {} at {}", rapidjson::GetParseError_En(ok.Code()), ok.Offset());
     }
   } catch (...) {
   }

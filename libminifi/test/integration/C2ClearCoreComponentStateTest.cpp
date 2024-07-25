@@ -97,7 +97,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
         break;
       case FlowState::FIRST_DESCRIBE_ACK:
       case FlowState::CLEAR_SENT: {
-        sendHeartbeatResponse("CLEAR", "corecomponentstate", "889346", conn, { {"corecomponent1", "TailFile1"} });
+        sendHeartbeatResponse("CLEAR", "corecomponentstate", "889346", conn, { {"corecomponent1", minifi::c2::C2Value{"TailFile1"}} });
         flow_state_ = FlowState::CLEAR_SENT;
         break;
       }

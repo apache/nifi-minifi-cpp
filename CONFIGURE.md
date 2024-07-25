@@ -665,8 +665,13 @@ Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned 
 
 ### Asset directory
 
-It is possible to make agents download an asset (triggered through the c2 protocol). The target directory can be specified
-using the `nifi.asset.directory` agent property, which defaults to `${MINIFI_HOME}/asset`.
+There is an asset directory specified using the `nifi.asset.directory` agent property, which defaults to `${MINIFI_HOME}/asset`.
+The files referenced in the `.state` file in this directory are managed by the agent. They are deleted, updated, downloaded
+using the asset sync c2 command. For the asset sync command to work, the c2 server must be made aware of the current state of the
+managed assets by adding the `AssetInformation` entry to the `nifi.c2.root.classes` property.
+
+Files and directories not referenced in the `.state` file are not directly controlled by the agent, although
+it is possible to download an asset (triggered through the c2 protocol) into the asset directory instead.
 
 ### Controller Services
  If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1
