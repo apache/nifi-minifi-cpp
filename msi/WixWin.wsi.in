@@ -393,23 +393,6 @@ ${WIX_EXTRA_COMPONENTS}
 
 <?ifdef INCLUDE_PYTHON_PROCESSORS?>
             <Directory Id="INSTALLPYTHONDIR" Name="minifi-python">
-              <Directory Id="INSTALLGOOGLEDIR" Name="google">
-                <Component Id="PythonProcessorGoogleFiles" Guid="90b898a9-76fb-4888-a4aa-adcd22097863">
-                  <File Id="Google_SentimentAnalyzer" Name="SentimentAnalyzer.py" KeyPath="yes" Source="pythonprocessors\google\SentimentAnalyzer.py"/>
-                </Component>
-              </Directory>
-              <Directory Id="INSTALLH2ODIR" Name="h2o">
-                <Component Id="PythonProcessorH2oFiles" Guid="b290aeb3-c67a-4cd1-a0a4-1ba049a2e44e">
-                  <File Id="H2o_ConvertDsToCsv" Name="ConvertDsToCsv.py" KeyPath="yes" Source="pythonprocessors\h2o\ConvertDsToCsv.py"/>
-                </Component>
-                <Directory Id="INSTALLH2O3DIR" Name="h2o3">
-                  <Directory Id="INSTALLMOJODIR" Name="mojo">
-                    <Component Id="PythonProcessorMojoFiles" Guid="d2b803da-1cd1-4925-802b-19f3e09fc0f7">
-                      <File Id="H2o_ExecuteH2oMojoScoring" Name="ExecuteH2oMojoScoring.py" KeyPath="yes" Source="pythonprocessors\h2o\h2o3\mojo\ExecuteH2oMojoScoring.py"/>
-                    </Component>
-                  </Directory>
-                </Directory>
-              </Directory>
               <Directory Id="INSTALLNIFIAPIDIR" Name="nifiapi">
                 <Component Id="PythonProcessorNifiApiFiles" Guid="a9cb7b7b-e66d-4e32-9115-eab4aa980124">
                   <File Id="NifiApi_flowfiletransform" Name="flowfiletransform.py" KeyPath="no" Source="pythonprocessors\nifiapi\flowfiletransform.py"/>
@@ -440,10 +423,28 @@ ${WIX_EXTRA_COMPONENTS}
                 <File Id="Examples_RemoveFlowFile" Name="RemoveFlowFile.py" KeyPath="no" Source="pythonprocessor-examples\RemoveFlowFile.py"/>
                 <File Id="Examples_SentimentAnalysis" Name="SentimentAnalysis.py" KeyPath="no" Source="pythonprocessor-examples\SentimentAnalysis.py"/>
               </Component>
+              <Directory Id="INSTALLGOOGLEDIR" Name="google">
+                <Component Id="PythonProcessorGoogleFiles" Guid="90b898a9-76fb-4888-a4aa-adcd22097863">
+                  <File Id="Google_SentimentAnalyzer" Name="SentimentAnalyzer.py" KeyPath="yes" Source="pythonprocessor-examples\google\SentimentAnalyzer.py"/>
+                </Component>
+              </Directory>
+              <Directory Id="INSTALLH2ODIR" Name="h2o">
+                <Component Id="PythonProcessorH2oFiles" Guid="b290aeb3-c67a-4cd1-a0a4-1ba049a2e44e">
+                  <File Id="H2o_ConvertDsToCsv" Name="ConvertDsToCsv.py" KeyPath="yes" Source="pythonprocessor-examples\h2o\ConvertDsToCsv.py"/>
+                </Component>
+                <Directory Id="INSTALLH2O3DIR" Name="h2o3">
+                  <Directory Id="INSTALLMOJODIR" Name="mojo">
+                    <Component Id="PythonProcessorMojoFiles" Guid="d2b803da-1cd1-4925-802b-19f3e09fc0f7">
+                      <File Id="H2o_ExecuteH2oMojoScoring" Name="ExecuteH2oMojoScoring.py" KeyPath="yes" Source="pythonprocessor-examples\h2o\h2o3\mojo\ExecuteH2oMojoScoring.py"/>
+                    </Component>
+                  </Directory>
+                </Directory>
+              </Directory>
             </Directory>
 <?endif?>
 
           </Directory>
+
     </DirectoryRef>
   </Fragment>
 

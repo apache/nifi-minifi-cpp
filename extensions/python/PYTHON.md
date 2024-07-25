@@ -141,15 +141,17 @@ to the reference class name.
     nifi.python.processor.dir=XXXX
 
 
-## Processors
-The python directory (extensions/pythonprocessors) contains implementations that will be available for flows if the required dependencies
-exist.
+## Sample processors
+The examples directory (pythonprocessor-examples in the source, or minifi-python-examples in the MiNiFi installation)
+contains sample python processors. Copy them to the minifi-python directory to make them available for flows. You may
+need to install the required dependencies, either on the system or in the virtual environment.
 
 ### Sentiment Analysis
 
 The SentimentAnalysis processor will perform a Vader Sentiment Analysis. This requires that you install nltk and VaderSentiment
     pip install nltk
     pip install VaderSentiment
+
 
 ## Using NiFi Python Processors
 
