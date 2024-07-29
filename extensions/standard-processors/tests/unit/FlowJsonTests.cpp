@@ -926,6 +926,7 @@ TEST_CASE("NiFi flow json can use alternative targetUris field") {
   ConfigurationTestController test_controller;
 
   core::flow::AdaptiveConfiguration config(test_controller.getContext());
+  bool target_uri_valid = true;
 
   std::string CONFIG_JSON;
   SECTION("Use targetUris as a single value") {
@@ -980,6 +981,33 @@ TEST_CASE("NiFi flow json can use alternative targetUris field") {
 })";
   }
 
+  SECTION("Use targetUris as an empty array") {
+    target_uri_valid = false;
+    CONFIG_JSON =
+      R"(
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [],
+    "funnels": [],
+    "connections": [],
+    "remoteProcessGroups": [{
+      "name": "NiFi Flow",
+      "targetUris": [],
+      "yieldDuration": "6 sec",
+      "communicationsTimeout": "19 sec",
+      "inputPorts": [{
+        "identifier": "00000000-0000-0000-0000-000000000003",
+        "name": "AmazingInputPort",
+        "targetId": "00000000-0000-0000-0000-000000000005",
+        "concurrentlySchedulableTaskCount": 7
+      }]
+    }],
+    "parameterContextName": "my-context"
+  }
+})";
+  }
+
 
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
@@ -989,10 +1017,14 @@ TEST_CASE("NiFi flow json can use alternative targetUris field") {
   REQUIRE(port);
   REQUIRE(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
   REQUIRE(port->getMaxConcurrentTasks() == 7);
-  REQUIRE(port->getInstances().size() == 1);
-  REQUIRE(port->getInstances().front().host_ == "localhost");
-  REQUIRE(port->getInstances().front().port_ == 8090);
-  REQUIRE(port->getInstances().front().protocol_ == "https://");
+  if (target_uri_valid) {
+    REQUIRE(port->getInstances().size() == 1);
+    REQUIRE(port->getInstances().front().host_ == "localhost");
+    REQUIRE(port->getInstances().front().port_ == 8090);
+    REQUIRE(port->getInstances().front().protocol_ == "https://");
+  } else {
+    REQUIRE(port->getInstances().empty());
+  }
   REQUIRE(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 }
 
