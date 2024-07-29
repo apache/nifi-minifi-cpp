@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include <memory>
-#include <utility>
 #include <string>
 #include <variant>
 
@@ -30,9 +28,9 @@ namespace org::apache::nifi::minifi::extensions::script {
 
 class ScriptExecutor : public minifi::core::CoreComponent {
  public:
-  ScriptExecutor(std::string_view name, const utils::Identifier& uuid) : core::CoreComponent(name, uuid) {}
+  ScriptExecutor(const std::string_view name, const utils::Identifier& uuid) : core::CoreComponent(name, uuid) {}
 
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) = 0;
+  virtual void onTrigger(core::ProcessContext& context, core::ProcessSession& session) = 0;
   virtual void initialize(std::filesystem::path script_file,
       std::string script_body,
       std::optional<std::string> module_directory,
