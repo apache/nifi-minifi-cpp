@@ -187,10 +187,10 @@ ${WIX_EXTRA_FEATURES}
       </Dialog>
 
 
-      <Dialog Id="PropertiesDialog" Width="370" Height="340" Title="Agent Properties">
-        <Control Id="Next" Type="PushButton" X="236" Y="310" Width="56" Height="17" Default="yes" Text="Next" />
-        <Control Id="Back" Type="PushButton" X="180" Y="310" Width="56" Height="17" Text="Back" />
-        <Control Id="Cancel" Type="PushButton" X="304" Y="310" Width="56" Height="17" Cancel="yes" Text="Cancel">
+      <Dialog Id="PropertiesDialog" Width="370" Height="380" Title="Agent Properties">
+        <Control Id="Next" Type="PushButton" X="236" Y="350" Width="56" Height="17" Default="yes" Text="Next" />
+        <Control Id="Back" Type="PushButton" X="180" Y="350" Width="56" Height="17" Text="Back" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="350" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
         </Control>
 
@@ -198,7 +198,7 @@ ${WIX_EXTRA_FEATURES}
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="Apache NiFi MiNiFi Properties" />
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" />
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
-        <Control Id="BottomLine" Type="Line" X="0" Y="303" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="343" Width="370" Height="0" />
 
         <Control Id="AutoStartMiNiFi" Type="CheckBox" X="20" Y="55"
                          Width="200" Height="17" Property="AUTOSTART"
@@ -222,20 +222,26 @@ ${WIX_EXTRA_FEATURES}
           <Condition Action="enable">ENABLEC2="1"</Condition>
         </Control>
 
-        <Control Id="ServertHeartbeatIdentifierLabel" Type="Text" X="20" Y="180" Width="80" Height="20" NoPrefix="yes" Text="Server Heartbeat URL" />
-        <Control Id="ServerHeartbeatIdentifier" Type="Edit" X="20" Y="200" Width="320" Height="18" Property="SERVER_HEARTBEAT" Indirect="no"  >
+        <Control Id="ServerPathBaseIdentifierLabel" Type="Text" X="20" Y="180" Width="80" Height="20" NoPrefix="yes" Text="Server Base URL" />
+        <Control Id="ServerPathBaseIdentifier" Type="Edit" X="20" Y="200" Width="320" Height="18" Property="SERVER_PATH_BASE" Indirect="no"  >
           <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
           <Condition Action="enable">ENABLEC2="1"</Condition>
         </Control>
 
-        <Control Id="ServerAckIdentifierLabel" Type="Text" X="20" Y="220" Width="60" Height="20" NoPrefix="yes" Text="Server Ack URL" />
-        <Control Id="ServeAckrIdentifier" Type="Edit" X="20" Y="240" Width="320" Height="18" Property="SERVER_ACK" Indirect="no"  >
+        <Control Id="ServertHeartbeatIdentifierLabel" Type="Text" X="20" Y="220" Width="80" Height="20" NoPrefix="yes" Text="Server Heartbeat URL" />
+        <Control Id="ServerHeartbeatIdentifier" Type="Edit" X="20" Y="240" Width="320" Height="18" Property="SERVER_HEARTBEAT" Indirect="no"  >
           <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
           <Condition Action="enable">ENABLEC2="1"</Condition>
         </Control>
 
-        <Control Id="AgentHeartbeatLabel" Type="Text" X="20" Y="260" Width="80" Height="20" NoPrefix="yes" Text="Agent Heartbeat" />
-        <Control Id="AgentHeartbeat" Type="ComboBox" X="20" Y="280" Width="300" Height="17" Property="AGENT_HEARTBEAT" Sorted="yes" >
+        <Control Id="ServerAckIdentifierLabel" Type="Text" X="20" Y="260" Width="60" Height="20" NoPrefix="yes" Text="Server Ack URL" />
+        <Control Id="ServeAckrIdentifier" Type="Edit" X="20" Y="280" Width="320" Height="18" Property="SERVER_ACK" Indirect="no"  >
+          <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
+          <Condition Action="enable">ENABLEC2="1"</Condition>
+        </Control>
+
+        <Control Id="AgentHeartbeatLabel" Type="Text" X="20" Y="300" Width="80" Height="20" NoPrefix="yes" Text="Agent Heartbeat" />
+        <Control Id="AgentHeartbeat" Type="ComboBox" X="20" Y="320" Width="300" Height="17" Property="AGENT_HEARTBEAT" Sorted="yes" >
           <ComboBox Property="AGENT_HEARTBEAT">
             <ListItem Value="250 msec" />
             <ListItem Value="1 sec" />
@@ -259,8 +265,9 @@ ${WIX_EXTRA_FEATURES}
     <Property Id="AGENT_CLASS"  Value="Your Agent Class" />
     <Property Id="AGENT_IDENTIFIER"  />
     <Property Id="AGENT_HEARTBEAT"  Value="30 sec" />
-    <Property Id="SERVER_HEARTBEAT"  Value="http://localhost:8181/heartbeat" />
-    <Property Id="SERVER_ACK"  Value="http://localhost:8181/acknowledge" />
+    <Property Id="SERVER_PATH_BASE"  Value="http://localhost:8181/api" />
+    <Property Id="SERVER_HEARTBEAT"  Value="/c2-protocol/heartbeat" />
+    <Property Id="SERVER_ACK"  Value="/c2-protocol/acknowledge" />
     <Property Id="ENABLEC2" />
     <Property Id="AUTOSTART" Value="1" />
     <Property Id="SERVICEACCOUNT" Value="LocalSystem" />
@@ -307,6 +314,7 @@ ${WIX_EXTRA_FEATURES}
                 <IniFile Id="ConfigFileI" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.identifier" Value="[AGENT_IDENTIFIER]" />
                 <IniFile Id="ConfigFileE" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.enable" Value="true" />
                 <IniFile Id="ConfigFileT" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.heartbeat.period" Value="[AGENT_HEARTBEAT]" />
+                <IniFile Id="ConfigFileS" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.path.base" Value="[SERVER_PATH_BASE]" />
                 <IniFile Id="ConfigFileH" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.url" Value="[SERVER_HEARTBEAT]" />
                 <IniFile Id="ConfigFileAck" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.url.ack" Value="[SERVER_ACK]" />
                 <Condition><![CDATA[ENABLEC2="1"]]></Condition>
