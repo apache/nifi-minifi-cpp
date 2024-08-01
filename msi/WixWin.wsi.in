@@ -395,7 +395,9 @@ ${WIX_EXTRA_COMPONENTS}
             <Directory Id="INSTALLPYTHONDIR" Name="minifi-python">
               <Directory Id="INSTALLNIFIAPIDIR" Name="nifiapi">
                 <Component Id="PythonProcessorNifiApiFiles" Guid="a9cb7b7b-e66d-4e32-9115-eab4aa980124">
+                  <File Id="NifiApi_processorbase" Name="processorbase.py" KeyPath="no" Source="pythonprocessors\nifiapi\processorbase.py"/>
                   <File Id="NifiApi_flowfiletransform" Name="flowfiletransform.py" KeyPath="no" Source="pythonprocessors\nifiapi\flowfiletransform.py"/>
+                  <File Id="NifiApi_flowfilesource" Name="flowfilesource.py" KeyPath="no" Source="pythonprocessors\nifiapi\flowfilesource.py"/>
                   <File Id="NifiApi_properties" Name="properties.py" KeyPath="no" Source="pythonprocessors\nifiapi\properties.py"/>
                   <File Id="NifiApi_relationship" Name="relationship.py" KeyPath="no" Source="pythonprocessors\nifiapi\relationship.py"/>
                   <File Id="NifiApi_documentation" Name="documentation.py" KeyPath="no" Source="pythonprocessors\nifiapi\documentation.py"/>
