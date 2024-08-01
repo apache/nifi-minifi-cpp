@@ -38,9 +38,12 @@
 namespace org::apache::nifi::minifi::c2 {
 
 C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<const std::byte> response) const {
-  rapidjson::Document root;
+  if (payload.getOperation() == Operation::acknowledge) {
+    return {payload.getOperation(), state::UpdateState::READ_COMPLETE};
+  }
 
   try {
+    rapidjson::Document root;
     rapidjson::ParseResult ok = root.Parse(reinterpret_cast<const char*>(response.data()), response.size());
     if (ok) {
       std::string identifier;
