@@ -156,3 +156,17 @@ Feature: MiNiFi can use python processors in its flows
     When all instances start up
 
     Then one flowfile with the contents "Check successful!" is placed in the monitored directory in less than 30 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: A MiNiFi instance can update attributes through native python processor
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a FailureWithAttributes processor
+    And a LogAttribute processor
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+
+    And the "success" relationship of the GenerateFlowFile processor is connected to the FailureWithAttributes
+    And the "failure" relationship of the FailureWithAttributes processor is connected to the LogAttribute
+
+    When all instances start up
+
+    Then the Minifi logs contain the following message: "key:error.message value:Error" in less than 60 seconds
