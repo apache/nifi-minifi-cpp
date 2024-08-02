@@ -198,3 +198,27 @@ Feature: MiNiFi can use python processors in its flows
     When the MiNiFi instance starts up
     Then no files are placed in the monitored directory in 10 seconds of running time
     And the Minifi logs do not contain the following message: "Caught Exception during SchedulingAgent::onTrigger of processor CreateNothing" after 1 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: NiFi native python processor cannot specify content of failure result
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a FailureWithContent processor
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+
+    And the "success" relationship of the GenerateFlowFile processor is connected to the FailureWithContent
+
+    When all instances start up
+
+    Then the Minifi logs contain the following message: "'failure' relationship should not have content, the original flow file will be transferred automatically in this case." in less than 60 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: NiFi native python processor cannot transfer to original relationship
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a TransferToOriginal processor
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+
+    And the "success" relationship of the GenerateFlowFile processor is connected to the TransferToOriginal
+
+    When all instances start up
+
+    Then the Minifi logs contain the following message: "Result relationship cannot be 'original', it is reserved for the original flow file, and transferred automatically in non-failure cases." in less than 60 seconds
