@@ -63,30 +63,30 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
     def transform(self, context, flowFile):
         properties = context.getProperties()
         if len(properties) != 3:
-            return FlowFileTransformResult("failure", contents="Property count is invalid")
+            return FlowFileTransformResult("failure")
 
         property_names = [property.name for property in properties]
         if "Secret Password" not in property_names or "Request Timeout" not in property_names or "Wish Count" not in property_names:
-            return FlowFileTransformResult("failure", contents="Missing properties")
+            return FlowFileTransformResult("failure")
 
         for property in properties:
             if property.name == "Secret Password" and properties[property] != "mysecret":
-                return FlowFileTransformResult("failure", contents="Secret Password value is invalid")
+                return FlowFileTransformResult("failure")
             elif property.name == "Request Timeout" and properties[property] != "60 sec":
-                return FlowFileTransformResult("failure", contents="Request Timeout value is invalid")
+                return FlowFileTransformResult("failure")
             elif property.name == "Wish Count" and properties[property] != "3":
-                return FlowFileTransformResult("failure", contents="Wish Count value is invalid")
+                return FlowFileTransformResult("failure")
 
         secret_password = context.getProperty(self.SECRET_PASSWORD).getValue()
         if secret_password != "mysecret":
-            return FlowFileTransformResult("failure", contents="Secret password is invalid")
+            return FlowFileTransformResult("failure")
 
         timeout = context.getProperty(self.REQUEST_TIMEOUT).getValue()
         if timeout != "60 sec":
-            return FlowFileTransformResult("failure", contents="Request timeout is invalid")
+            return FlowFileTransformResult("failure")
 
         wish_count = context.getProperty(self.WISH_COUNT).getValue()
         if wish_count != "3":
-            return FlowFileTransformResult("failure", contents="Wish count is invalid")
+            return FlowFileTransformResult("failure")
 
         return FlowFileTransformResult("myrelationship", contents="Check successful!")
