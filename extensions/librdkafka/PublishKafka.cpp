@@ -388,11 +388,6 @@ void PublishKafka::onSchedule(core::ProcessContext& context, core::ProcessSessio
   conn_ = std::make_unique<KafkaConnection>(key_);
   configureNewConnection(context);
 
-  std::string message_key_field;
-  if (context.getProperty(MessageKeyField, message_key_field) && !message_key_field.empty()) {
-    logger_->log_error("The {} property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", MessageKeyField.name);
-  }
-
   logger_->log_debug("Successfully configured PublishKafka");
 }
 
@@ -641,14 +636,6 @@ std::optional<utils::net::SslData> PublishKafka::getSslData(core::ProcessContext
   }
 
   utils::net::SslData ssl_data;
-  if (auto security_ca = context.getProperty(SecurityCA))
-    ssl_data.ca_loc = *security_ca;
-  if (auto security_cert = context.getProperty(SecurityCert))
-    ssl_data.cert_loc = *security_cert;
-  if (auto security_private_key = context.getProperty(SecurityPrivateKey))
-    ssl_data.key_loc = *security_private_key;
-  if (auto security_private_key_pass = context.getProperty(SecurityPrivateKeyPassWord))
-    ssl_data.key_pw = *security_private_key_pass;
   return ssl_data;
 }
 
