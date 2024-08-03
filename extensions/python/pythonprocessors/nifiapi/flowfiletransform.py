@@ -64,15 +64,18 @@ class FlowFileTransform(ProcessorBase):
             session.transfer(original_flow_file, self.REL_FAILURE)
             return
 
+        result_attributes = result.getAttributes()
         if result.getRelationship() == "failure":
             session.remove(flow_file)
+            if result_attributes is not None:
+                for name, value in result_attributes.items():
+                    original_flow_file.setAttribute(name, value)
             session.transfer(original_flow_file, self.REL_FAILURE)
             return
 
-        result_attributes = result.getAttributes()
         if result_attributes is not None:
-            for attribute in result_attributes:
-                flow_file.addAttribute(attribute, result_attributes[attribute])
+            for name, value in result_attributes.items():
+                flow_file.setAttribute(name, value)
 
         result_content = result.getContents()
         if result_content is not None:
