@@ -89,7 +89,7 @@ class Fixture {
   TestController test_controller_;
 
   std::shared_ptr<TestPlan> test_plan_;
-  std::shared_ptr<core::Processor> dummy_processor_;
+  core::Processor* dummy_processor_;
   std::shared_ptr<core::ProcessContext> context_;
   std::unique_ptr<core::ProcessSession> process_session_;
 };

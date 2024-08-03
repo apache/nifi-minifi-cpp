@@ -60,7 +60,7 @@ REGISTER_RESOURCE(DummyProcessor, Processor);
 TEST_CASE("ProcessContextExpr can update existing processor properties", "[setProperty][getProperty]") {
   TestController test_controller;
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
-  std::shared_ptr<minifi::core::Processor> dummy_processor = test_plan->addProcessor("DummyProcessor", "dummy_processor");
+  [[maybe_unused]] minifi::core::Processor* dummy_processor = test_plan->addProcessor("DummyProcessor", "dummy_processor");
   std::shared_ptr<minifi::core::ProcessContext> context = [test_plan] { test_plan->runNextProcessor(); return test_plan->getCurrentContext(); }();
   REQUIRE(dynamic_pointer_cast<minifi::core::ProcessContextExpr>(context) != nullptr);
 

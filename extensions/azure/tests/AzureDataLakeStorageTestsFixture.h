@@ -60,8 +60,9 @@ class AzureDataLakeStorageTestsFixture {
     plan_ = test_controller_.createPlan();
     auto mock_data_lake_storage_client = std::make_unique<MockDataLakeStorageClient>();
     mock_data_lake_storage_client_ptr_ = mock_data_lake_storage_client.get();
-    azure_data_lake_storage_ = std::shared_ptr<AzureDataLakeStorageProcessor>(
+    auto azure_data_lake_storage_unique_ptr = std::unique_ptr<AzureDataLakeStorageProcessor>(
       new AzureDataLakeStorageProcessor("AzureDataLakeStorageProcessor", utils::Identifier(), std::move(mock_data_lake_storage_client)));
+    azure_data_lake_storage_ = azure_data_lake_storage_unique_ptr.get();
     auto input_dir = test_controller_.createTempDirectory();
     minifi::test::utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);
 
@@ -70,7 +71,7 @@ class AzureDataLakeStorageTestsFixture {
     plan_->setProperty(get_file_, minifi::processors::GetFile::KeepSourceFile, "false");
 
     update_attribute_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
-    plan_->addProcessor(azure_data_lake_storage_, "AzureDataLakeStorageProcessor", { {"success", "d"}, {"failure", "d"} }, true);
+    plan_->addProcessor(std::move(azure_data_lake_storage_unique_ptr), "AzureDataLakeStorageProcessor", { {"success", "d"}, {"failure", "d"} }, true);
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
 
     success_putfile_ = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
@@ -127,11 +128,11 @@ class AzureDataLakeStorageTestsFixture {
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_;
   MockDataLakeStorageClient* mock_data_lake_storage_client_ptr_;
-  std::shared_ptr<core::Processor> azure_data_lake_storage_;
-  std::shared_ptr<core::Processor> get_file_;
-  std::shared_ptr<core::Processor> update_attribute_;
-  std::shared_ptr<core::Processor> success_putfile_;
-  std::shared_ptr<core::Processor> failure_putfile_;
+  core::Processor* azure_data_lake_storage_;
+  core::Processor* get_file_;
+  core::Processor* update_attribute_;
+  core::Processor* success_putfile_;
+  core::Processor* failure_putfile_;
   std::shared_ptr<core::controller::ControllerServiceNode> azure_storage_cred_service_;
   std::filesystem::path failure_output_dir_;
   std::filesystem::path success_output_dir_;
