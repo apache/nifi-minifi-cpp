@@ -243,4 +243,24 @@ std::vector<core::Relationship> PythonScriptEngine::getCustomPythonRelationships
   return relationships;
 }
 
+void PythonScriptEngine::setModuleAttributes(const std::string& qualified_module_name) {
+  GlobalInterpreterLock gil;
+  size_t last_dot = qualified_module_name.find_last_of('.');
+
+  std::string qualified_package_name;
+  if (last_dot != std::string::npos) {
+    qualified_package_name = qualified_module_name.substr(0, last_dot);
+  }
+
+  if (!qualified_package_name.empty()) {
+    auto package_name_object = OwnedObject(PyUnicode_FromStringAndSize(qualified_package_name.data(), gsl::narrow<Py_ssize_t>(qualified_package_name.length())));
+    PyDict_SetItemString(bindings_.get(), "__package__", package_name_object.get());
+  }
+
+  if (!qualified_module_name.empty()) {
+    auto module_name_object = OwnedObject(PyUnicode_FromStringAndSize(qualified_module_name.data(), gsl::narrow<Py_ssize_t>(qualified_module_name.length())));
+    PyDict_SetItemString(bindings_.get(), "__name__", module_name_object.get());
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::extensions::python
