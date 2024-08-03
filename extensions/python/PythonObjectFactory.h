@@ -35,11 +35,13 @@ enum class PythonProcessorType {
 
 class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjectFactory<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor> {
  public:
-  explicit PythonObjectFactory(std::string file, std::string class_name, PythonProcessorType python_processor_type, const std::vector<std::filesystem::path>& python_paths)
+  explicit PythonObjectFactory(std::string file, std::string class_name, PythonProcessorType python_processor_type,
+    const std::vector<std::filesystem::path>& python_paths, std::string qualified_module_name)
       : file_(std::move(file)),
         class_name_(std::move(class_name)),
         python_paths_(python_paths),
-        python_processor_type_(python_processor_type) {
+        python_processor_type_(python_processor_type),
+        qualified_module_name_(std::move(qualified_module_name)) {
   }
 
   std::unique_ptr<org::apache::nifi::minifi::core::CoreComponent> create(const std::string &name) override {
@@ -52,6 +54,7 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
       ptr->setPythonClassName(class_name_);
       ptr->setPythonPaths(python_paths_);
     }
+    ptr->setQualifiedModuleName(qualified_module_name_);
     ptr->initialize();
     ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, file_);
     return ptr;
@@ -67,6 +70,7 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
       ptr->setPythonClassName(class_name_);
       ptr->setPythonPaths(python_paths_);
     }
+    ptr->setQualifiedModuleName(qualified_module_name_);
     ptr->initialize();
     ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, file_);
     return ptr;
@@ -74,6 +78,11 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
 
   org::apache::nifi::minifi::core::CoreComponent* createRaw(const std::string &name) override {
     auto ptr = dynamic_cast<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor*>(DefaultObjectFactory::createRaw(name));
+    if (python_processor_type_ == PythonProcessorType::NIFI_TYPE) {
+      ptr->setPythonClassName(class_name_);
+      ptr->setPythonPaths(python_paths_);
+    }
+    ptr->setQualifiedModuleName(qualified_module_name_);
     ptr->initialize();
     ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, file_);
     return dynamic_cast<org::apache::nifi::minifi::core::CoreComponent*>(ptr);
@@ -85,6 +94,7 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
       ptr->setPythonClassName(class_name_);
       ptr->setPythonPaths(python_paths_);
     }
+    ptr->setQualifiedModuleName(qualified_module_name_);
     ptr->initialize();
     ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, file_);
     return dynamic_cast<org::apache::nifi::minifi::core::CoreComponent*>(ptr);
@@ -95,4 +105,5 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
   std::string class_name_;
   std::vector<std::filesystem::path> python_paths_;
   PythonProcessorType python_processor_type_;
+  std::string qualified_module_name_;
 };

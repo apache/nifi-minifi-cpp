@@ -154,6 +154,7 @@ class PythonScriptEngine {
   void initialize(const core::Relationship& success, const core::Relationship& failure, const core::Relationship& original, const std::shared_ptr<core::logging::Logger>& logger);
   void initializeProcessorObject(const std::string& python_class_name);
   std::vector<core::Relationship> getCustomPythonRelationships();
+  void setModuleAttributes(const std::string& qualified_module_name);
 
  private:
   void evalInternal(std::string_view script);

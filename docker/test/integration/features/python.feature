@@ -174,3 +174,17 @@ Feature: MiNiFi can use python processors in its flows
 
     Then the Minifi logs contain the following message: "key:error.message value:Error" in less than 60 seconds
     And the Minifi logs contain the following message: "key:my.attribute value:my.value" in less than 10 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: NiFi native python processors support relative imports
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a RelativeImporterProcessor processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+
+    And the "success" relationship of the GenerateFlowFile processor is connected to the RelativeImporterProcessor
+    And the "success" relationship of the RelativeImporterProcessor processor is connected to the PutFile
+
+    When all instances start up
+
+    Then one flowfile with the contents "The final result is 1990" is placed in the monitored directory in less than 30 seconds
