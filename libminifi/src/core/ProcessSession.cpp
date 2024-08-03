@@ -32,6 +32,7 @@
 
 #include "core/ProcessSessionReadCallback.h"
 #include "io/StreamSlice.h"
+#include "io/StreamPipe.h"
 #include "utils/gsl.h"
 
 /* This implementation is only for native Windows systems.  */
@@ -184,10 +185,12 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const FlowFile& parent, in
   if (record) {
     logger_->log_debug("Cloned parent flow files {} to {}, with {}:{}", parent.getUUIDStr(), record->getUUIDStr(), offset, size);
     if (parent.getResourceClaim()) {
-      record->setOffset(parent.getOffset() + offset);
-      record->setSize(size);
-      // Copy Resource Claim
-      record->setResourceClaim(parent.getResourceClaim());
+      write(record, [&] (const std::shared_ptr<io::OutputStream>& output) -> int64_t {
+        return read(parent, [&] (const std::shared_ptr<io::InputStream>& input) -> int64_t {
+          io::StreamSlice slice(input, offset, size);
+          return minifi::internal::pipe(slice, *output);
+        });
+      });
     }
     provenance_report_->clone(parent, *record);
   }
@@ -236,9 +239,13 @@ void ProcessSession::transferToCustomRelationship(const std::shared_ptr<core::Fl
 }
 
 void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) {
-  gsl_ExpectsAudit(updated_flowfiles_.contains(flow->getUUID())
-      || added_flowfiles_.contains(flow->getUUID())
-      || std::any_of(cloned_flowfiles_.begin(), cloned_flowfiles_.end(), [&flow](const auto& flow_file) { return flow == flow_file; }));
+  return write(*flow, callback);
+}
+
+void ProcessSession::write(core::FlowFile &flow, const io::OutputStreamCallback& callback) {
+  gsl_ExpectsAudit(updated_flowfiles_.contains(flow.getUUID())
+      || added_flowfiles_.contains(flow.getUUID())
+      || std::any_of(cloned_flowfiles_.begin(), cloned_flowfiles_.end(), [&flow](const auto& flow_file) { return &flow == flow_file.get(); }));
 
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
 
@@ -253,14 +260,14 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, const io
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 
-    flow->setSize(stream->size());
-    flow->setOffset(0);
-    flow->setResourceClaim(claim);
+    flow.setSize(stream->size());
+    flow.setOffset(0);
+    flow.setResourceClaim(claim);
 
     stream->close();
-    std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow->getUUIDStr();
+    std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow.getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
-    provenance_report_->modifyContent(*flow, details, duration);
+    provenance_report_->modifyContent(flow, details, duration);
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception during process session write, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
@@ -351,8 +358,12 @@ std::shared_ptr<io::InputStream> ProcessSession::getFlowFileContentStream(const 
 }
 
 int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, const io::InputStreamCallback& callback) {
+  return read(*flow_file, callback);
+}
+
+int64_t ProcessSession::read(const core::FlowFile& flow_file, const io::InputStreamCallback& callback) {
   try {
-    auto flow_file_stream = getFlowFileContentStream(*flow_file);
+    auto flow_file_stream = getFlowFileContentStream(flow_file);
     if (!flow_file_stream) {
       return 0;
     }
