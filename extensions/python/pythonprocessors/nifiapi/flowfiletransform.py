@@ -64,8 +64,16 @@ class FlowFileTransform(ProcessorBase):
             session.transfer(original_flow_file, self.REL_FAILURE)
             return
 
+        if result.getRelationship() == "original":
+            session.remove(flow_file)
+            self.logger.error("Result relationship cannot be 'original', it is reserved for the original flow file, and transferred automatically in non-failure cases.")
+            session.transfer(original_flow_file, self.REL_FAILURE)
+            return
+
         if result.getRelationship() == "failure":
             session.remove(flow_file)
+            if result.getContents() is not None:
+                self.logger.error("'failure' relationship should not have content, the original flow file will be transferred automatically in this case.")
             session.transfer(original_flow_file, self.REL_FAILURE)
             return
 
