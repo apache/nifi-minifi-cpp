@@ -114,19 +114,6 @@ void PythonDependencyInstaller::runInstallCommandInVirtualenv(const std::string&
   }
 }
 
-void PythonDependencyInstaller::installDependenciesFromRequirementsFiles() const {
-  if (!isPackageInstallationNeeded()) {
-    return;
-  }
-  auto requirement_file_paths = getRequirementsFilePaths();
-  for (const auto& requirements_file_path : requirement_file_paths) {
-    logger_->log_info("Installing python packages from the following requirements.txt file: {}", requirements_file_path.string());
-    // --no-cache-dir is used to be in line with NiFi's dependency install behavior
-    auto install_command = std::string("\"").append(python_binary_).append("\" -m pip install --no-cache-dir -r \"").append(requirements_file_path.string()).append("\"");
-    runInstallCommandInVirtualenv(install_command);
-  }
-}
-
 void PythonDependencyInstaller::evalScript(std::string_view script) {
   GlobalInterpreterLock gil;
   const auto script_file = minifi::utils::string::join_pack("# -*- coding: utf-8 -*-\n", script);
@@ -172,17 +159,29 @@ void PythonDependencyInstaller::addVirtualenvToPath() const {
   }
 }
 
-void PythonDependencyInstaller::installInlinePythonDependencies(const std::filesystem::path& script_file_path) const {
+void PythonDependencyInstaller::installDependencies(const std::vector<std::filesystem::path>& classpaths) const {
   if (!isPackageInstallationNeeded()) {
     return;
   }
-  auto dependency_installer_path = python_processor_dir_ / "nifi_python_processors" / "utils" / "inline_dependency_installer.py";
-  if (python_processor_dir_.empty() || !std::filesystem::exists(dependency_installer_path) || !std::filesystem::exists(script_file_path)) {
+  auto requirement_file_paths = getRequirementsFilePaths();
+  if (requirement_file_paths.empty() && classpaths.empty()) {
     return;
   }
-  logger_->log_info("Checking and installing inline defined Python dependencies of {}", script_file_path.string());
+
+  logger_->log_info("Checking and installing Python dependencies...");
+  auto dependency_installer_path = python_processor_dir_ / "nifi_python_processors" / "utils" / "dependency_installer.py";
+  if (python_processor_dir_.empty() || !std::filesystem::exists(dependency_installer_path)) {
+    logger_->log_error("Python dependency installer was not found at: {}", dependency_installer_path.string());
+    return;
+  }
   auto install_command = std::string("\"").append(python_binary_).append("\" \"").append(dependency_installer_path.string())
-    .append("\" \"").append(script_file_path.string()).append("\"");
+    .append("\"");
+  for (const auto& requirements_file_path : requirement_file_paths) {
+    install_command.append(" \"").append(requirements_file_path.string()).append("\"");
+  }
+  for (const auto& class_path : classpaths) {
+    install_command.append(" \"").append(class_path.string()).append("\"");
+  }
   runInstallCommandInVirtualenv(install_command);
 }
 

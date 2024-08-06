@@ -29,8 +29,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 class PythonDependencyInstaller {
  public:
   explicit PythonDependencyInstaller(const std::shared_ptr<Configure> &configuration);
-  void installDependenciesFromRequirementsFiles() const;
-  void installInlinePythonDependencies(const std::filesystem::path& script_file_path) const;
+  void installDependencies(const std::vector<std::filesystem::path>& classpaths) const;
 
  private:
   std::vector<std::filesystem::path> getRequirementsFilePaths() const;
