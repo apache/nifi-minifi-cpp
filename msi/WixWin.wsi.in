@@ -410,7 +410,7 @@ ${WIX_EXTRA_COMPONENTS}
                 </Component>
                 <Directory Id="INSTALLNIFIPYTHONPROCESSORSUTILSDIR" Name="utils">
                   <Component Id="NifiPythonProcessorUtilsFiles" Guid="6bb11f67-007f-4467-970a-c42c2bae0891">
-                    <File Id="NifiPythonProcessorUtils_dependency_installer" Name="inline_dependency_installer.py" KeyPath="yes" Source="pythonprocessors\nifi_python_processors\utils\inline_dependency_installer.py"/>
+                    <File Id="NifiPythonProcessorUtils_dependency_installer" Name="dependency_installer.py" KeyPath="yes" Source="pythonprocessors\nifi_python_processors\utils\dependency_installer.py"/>
                   </Component>
                 </Directory>
               </Directory>

@@ -172,10 +172,11 @@ Due to some differences between the NiFi and MiNiFi C++ processors and implement
 - In MiNiFi C++ when the processor is stopped the stop event handling is done in the `notifyStop()` method which does not have the context available. Due to this the `def onStopped(self, context)` cannot be called in NiFi Python processors, so the `onStopped` method is not supported in MiNiFi C++.
 - The interface of the `ProcessContext` class is a bit more limited in MiNiFi C++ compared to NiFi. The available methods in `ProcessContext` are `getProperty`, `getStateManager`, `getName` and `getProperties`.
 - Success relationship is always present in all Python processors even if custom relationships are defined in the Python processor with the `getRelationships` method.
+- MiNiFi C++ uses a single embedded Python interpreter for all Python processors, so the Python processors share the same Python interpreter. This means that the Python processors cannot have different Python versions or use different Python packages. The Python packages are installed on the system or in a single virtualenv that is shared by all Python processors.
 
 ## Use Python processors from virtualenv
 
-It is possible to set a virtualenv to be used by the Python processors in Apache MiNiFi C++. If the virtualenv directory is set, the Python processors will be executed using the packages installed in the virtualenv. If the virtualenv directory is not set, the Python processors will be executed using the packages installed on the system.
+It is possible to set a virtualenv to be used by the Python processors in Apache MiNiFi C++. This is the default behavior. If the virtualenv directory is set, the Python processors will be executed using the packages installed in the virtualenv or if dependencies are not found there MiNiFi C++ will try to find the required packages installed on the system. If the virtualenv directory is not set, the Python processors will be executed using only the packages installed on the system.
 
     # in minifi.properties
     nifi.python.virtualenv.directory=${MINIFI_HOME}/minifi-python-env

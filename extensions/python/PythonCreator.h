@@ -59,17 +59,16 @@ class PythonCreator : public minifi::core::CoreComponent {
   }
 
   void configure(const std::shared_ptr<Configure> &configuration) override {
-    PythonDependencyInstaller dependency_installer(configuration);
-    dependency_installer.installDependenciesFromRequirementsFiles();
-    auto engine = std::make_shared<python::PythonScriptEngine>();
     std::optional<std::string> pathListings = configuration ? configuration->get(minifi::Configuration::nifi_python_processor_dir) : std::nullopt;
     if (!pathListings) {
       return;
     }
     configure({pathListings.value()});
 
-    auto python_lib_path = getPythonLibPath(configuration);
+    PythonDependencyInstaller dependency_installer(configuration);
+    dependency_installer.installDependencies(classpaths_);
 
+    auto python_lib_path = getPythonLibPath(configuration);
     for (const auto &path : classpaths_) {
       const auto script_name = path.stem();
       const auto package = getPackage(pathListings.value(), path.string());
@@ -84,7 +83,6 @@ class PythonCreator : public minifi::core::CoreComponent {
         if (path.string().find(utils_path) != std::string::npos) {
           continue;
         }
-        dependency_installer.installInlinePythonDependencies(path);
         logger_->log_info("Registering NiFi python processor: {}", class_name);
         core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
           PythonProcessorType::NIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}, path.parent_path()}));

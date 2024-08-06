@@ -45,7 +45,22 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         sys.exit(1)
 
-    dependencies = extract_dependencies(sys.argv[1])
-    if dependencies:
-        # --no-cache-dir is used to be in line with NiFi's dependency install behavior
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir"] + dependencies)
+    print("Installing dependencies for MiNiFi python processors...")
+
+    # --no-cache-dir is used to be in line with NiFi's dependency install behavior
+    command = [sys.executable, "-m", "pip", "install", "--no-cache-dir"]
+    dependencies_found = False
+    for i in range(1, len(sys.argv)):
+        if "requirements.txt" in sys.argv[i]:
+            command += ["-r", sys.argv[i]]
+            print("Installing dependencies from requirements file: {}".format(sys.argv[i]))
+            dependencies_found = True
+        else:
+            dependencies = extract_dependencies(sys.argv[i])
+            if dependencies:
+                dependencies_found = True
+                print("Installing dependencies for processor {}: {}".format(sys.argv[i], str(dependencies)))
+                command += dependencies
+
+    if dependencies_found:
+        subprocess.check_call(command)
