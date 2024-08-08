@@ -61,6 +61,7 @@ void ExecutePythonProcessor::initalizeThroughScriptEngine() {
   try {
     appendPathForImportModules();
     python_script_engine_->appendModulePaths(python_paths_);
+    python_script_engine_->setModuleAttributes(qualified_module_name_);
     python_script_engine_->eval(script_to_exec_);
     if (python_class_name_) {
       python_script_engine_->initializeProcessorObject(*python_class_name_);
