@@ -136,10 +136,15 @@ set_property(CACHE STRICT_GSL_CHECKS PROPERTY STRINGS ${STRICT_GSL_CHECKS_Values
 # BUILD: Fetch and build from source using CMake FetchContent or ExternalProject
 # SYSTEM: Use find_package to use the system version
 # CONAN: Use Conan packages
+add_minifi_option(MINIFI_BUILD_CONAN_PACKAGE "Instructs MiNiFi to install external libs, build & create MiNiFi conan package" OFF)
 add_minifi_multi_option(MINIFI_LIBCURL_SOURCE "Retrieves LibCURL from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_OPENSSL_SOURCE "Retrieves OpenSSL from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_ZLIB_SOURCE "Retrieves ZLib from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
-
+add_minifi_multi_option(MINIFI_CIVETWEB_SOURCE "Retrieves CivetWeb from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_LIBXML2_SOURCE "Retrieves LibXml2 from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_CATCH2_SOURCE "Retrieves Catch2 from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_FMT_SOURCE "Retrieves Fmt from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_SPDLOG_SOURCE "Retrieves Spdlog from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 
 
 # Docker options
