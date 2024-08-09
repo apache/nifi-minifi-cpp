@@ -4,7 +4,7 @@ from conan.tools.cmake import CMake, CMakeToolchain
 from conan.tools.files import collect_libs, copy
 import os
 
-required_conan_version = ">=2.1.0"
+required_conan_version = ">=2.0"
 
 shared_requires = ("openssl/3.2.1", "libcurl/8.6.0", "civetweb/1.16", "libxml2/2.12.6",
                    "catch2/3.5.4", "fmt/10.2.1", "spdlog/1.14.0")
