@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,16 +14,16 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-add_minifi_executable(EchoParameters resource_apps/EchoParameters.cpp)
-set_target_properties(EchoParameters PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+function(get_spdlog)
+    include(GetFmt)
+    get_fmt()
 
-add_minifi_executable(ExecuteProcessTests ExecuteProcessTests.cpp)
-
-target_link_libraries(ExecuteProcessTests minifi-execute-process minifi-standard-processors Catch2::Catch2WithMain)
-target_include_directories(ExecuteProcessTests PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test")
-add_test(NAME ExecuteProcessTests COMMAND ExecuteProcessTests WORKING_DIRECTORY ${TEST_DIR})
-createTests(ExecuteProcessTests)
-
-add_dependencies(ExecuteProcessTests EchoParameters)
+    if(MINIFI_SPDLOG_SOURCE STREQUAL "CONAN")
+        message("Using Conan Packager to manage installing prebuilt Spdlog external lib")
+        include(${CMAKE_BINARY_DIR}/spdlog-config.cmake)
+    elseif(MINIFI_SPDLOG_SOURCE STREQUAL "BUILD")
+        message("Using CMAKE's ExternalProject_Add to manage source building Spdlog external lib")
+        include(Spdlog)
+    endif()
+endfunction(get_spdlog)
