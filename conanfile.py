@@ -45,7 +45,6 @@ class MiNiFiCppMain(ConanFile):
         tc.variables["MINIFI_SPDLOG_SOURCE"] = "CONAN"
 
         tc.variables["SKIP_TESTS"] = "OFF"
-        tc.variables["ENABLE_OPENWSMAN"] = "ON"
         tc.variables["ENABLE_CIVET"] = "ON"
         tc.variables["ENABLE_EXPRESSION_LANGUAGE"] = "ON"
         tc.variables["ENABLE_BZIP2"] = "ON"
