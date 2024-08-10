@@ -18,7 +18,7 @@
 function(get_fmt)
     if(MINIFI_FMT_SOURCE STREQUAL "CONAN")
         message("Using Conan Packager to manage installing prebuilt Fmt external lib")
-        include(${CMAKE_BINARY_DIR}/fmt-config.cmake)
+        find_package(fmt REQUIRED)
     elseif(MINIFI_FMT_SOURCE STREQUAL "BUILD")
         message("Using CMAKE's ExternalProject_Add to manage source building Fmt external lib")
         include(fmt)

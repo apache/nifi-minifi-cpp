@@ -18,7 +18,7 @@
 function(get_catch2)
     if(MINIFI_CATCH2_SOURCE STREQUAL "CONAN")
         message("Using Conan Packager to manage installing prebuilt Catch2 external lib")
-        include(${CMAKE_BINARY_DIR}/Catch2Config.cmake)
+        find_package(Catch2 REQUIRED)
         message("Catch2_INCLUDE_DIRS = ${Catch2_INCLUDE_DIRS}")
         set(CATCH2_INCLUDE_DIRS "${Catch2_INCLUDE_DIRS}" CACHE STRING "" FORCE)
     elseif(MINIFI_CATCH2_SOURCE STREQUAL "BUILD")
