@@ -35,7 +35,6 @@ class MiNiFiCppMain(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
 
-        tc.variables["MINIFI_BUILD_CONAN_PACKAGE"] = "ON"
         tc.variables["MINIFI_LIBCURL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_OPENSSL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_ZLIB_SOURCE"] = "CONAN"
