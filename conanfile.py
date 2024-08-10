@@ -1,34 +1,25 @@
 from conan import ConanFile
-from conan.tools.env import VirtualRunEnv
 from conan.tools.cmake import CMake, CMakeToolchain
 from conan.tools.files import collect_libs, copy
 import os
 
 required_conan_version = ">=2.0"
 
-shared_requires = ("openssl/3.2.1", "libcurl/8.6.0", "civetweb/1.16", "libxml2/2.12.6",
-                   "catch2/3.5.4", "fmt/10.2.1", "spdlog/1.14.0")
+shared_requires = ("openssl/3.2.1", "libcurl/8.6.0", "civetweb/1.16", "libxml2/2.12.6", "catch2/3.5.4", "fmt/10.2.1", "spdlog/1.14.0")
 
-shared_sources = ("CMakeLists.txt", "libminifi/*", "extensions/*", "minifi_main/*", "nanofi/*",
-                  "bin/*", "bootstrap/*", "cmake/*", "conf/*", "controller/*", "encrypt-config/*",
-                  "etc/*", "examples/*", "msi/*", "thirdparty/*", "docker/*", "LICENSE", "NOTICE", 
-                  "README.md", "C2.md", "CONFIGURE.md", "CONTRIBUTING.md", "CONTROLLERS.md", "EXPRESSIONS.md",
-                  "Extensions.md", "JNI.md", "METRICS.md", "OPS.md", "PROCESSORS.md", "ThirdParties.md", 
-                  "Windows.md", "aptitude.sh", "arch.sh", "bootstrap.sh", "bstrp_functions.sh", "centos.sh",
-                  "CPPLINT.cfg", "darwin.sh", "debian.sh", "deploy.sh", "fedora.sh", "generateVersion.sh",
-                  "linux.sh", "rheldistro.sh", "run_clang_tidy.sh", "run_clang_tidy.sh", "run_flake8.sh",
-                  "run_shellcheck.sh", "suse.sh", "versioninfo.rc.in")
+shared_sources = ("CMakeLists.txt", "libminifi/*", "extensions/*", "minifi_main/*", "nanofi/*", "bin/*", "bootstrap/*", "cmake/*", "conf/*", "controller/*", "encrypt-config/*", "etc/*", "examples/*", "msi/*", "thirdparty/*", "docker/*", "LICENSE", "NOTICE", "README.md", "C2.md", "CONFIGURE.md", "CONTRIBUTING.md", "CONTROLLERS.md", "EXPRESSIONS.md", "Extensions.md", "JNI.md", "METRICS.md", "OPS.md", "PROCESSORS.md", "ThirdParties.md", "Windows.md", "aptitude.sh", "arch.sh", "bootstrap.sh", "bstrp_functions.sh", "centos.sh", "CPPLINT.cfg", "darwin.sh", "debian.sh", "deploy.sh", "fedora.sh", "generateVersion.sh", "linux.sh", "rheldistro.sh", "run_clang_tidy.sh", "run_clang_tidy.sh", "run_flake8.sh", "run_shellcheck.sh", "suse.sh", "versioninfo.rc.in")
+
 
 class MiNiFiCppMain(ConanFile):
     name = "minifi-cpp"
     version = "0.99.1"
     license = "Apache-2.0"
     requires = shared_requires
-    settings = "os", "compiler", "build_type", "arch"
+    settings = ("os", "compiler", "build_type", "arch")
     generators = "CMakeDeps"
     options = {"shared": [True, False], "fPIC": [True, False]}
 
-    default_options = {"shared": False, "fPIC": True,}
+    default_options = {"shared": False, "fPIC": True}
 
     exports_sources = shared_sources
 
