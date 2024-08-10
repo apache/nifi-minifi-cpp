@@ -21,7 +21,7 @@ function(get_spdlog)
 
     if(MINIFI_SPDLOG_SOURCE STREQUAL "CONAN")
         message("Using Conan Packager to manage installing prebuilt Spdlog external lib")
-        include(${CMAKE_BINARY_DIR}/spdlog-config.cmake)
+        find_package(spdlog REQUIRED)
     elseif(MINIFI_SPDLOG_SOURCE STREQUAL "BUILD")
         message("Using CMAKE's ExternalProject_Add to manage source building Spdlog external lib")
         include(Spdlog)

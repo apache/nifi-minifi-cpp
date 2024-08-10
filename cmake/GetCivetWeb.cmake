@@ -18,7 +18,7 @@
 function(get_civetweb)
     if(MINIFI_CIVETWEB_SOURCE STREQUAL "CONAN")
         message("Using Conan Packager to manage installing prebuilt CivetWeb external lib")
-        include(${CMAKE_BINARY_DIR}/civetweb-config.cmake)
+        find_package(civetweb REQUIRED)
     elseif(MINIFI_CIVETWEB_SOURCE STREQUAL "BUILD")
         message("Using CMAKE's ExternalProject_Add to manage source building CivetWeb external lib")
         include(CivetWeb)
