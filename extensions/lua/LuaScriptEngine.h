@@ -41,7 +41,7 @@ class LuaScriptEngine {
 
   void eval(const std::string& script);
   void evalFile(const std::filesystem::path& file_name);
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session);
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session);
   void initialize(const core::Relationship& success, const core::Relationship& failure, const std::shared_ptr<core::logging::Logger>& logger);
 
   void setModulePaths(std::vector<std::filesystem::path> module_paths) {

@@ -22,7 +22,6 @@ limitations under the License.
 - [BinFiles](#BinFiles)
 - [CaptureRTSPFrame](#CaptureRTSPFrame)
 - [CollectKubernetesPodMetrics](#CollectKubernetesPodMetrics)
-- [CollectorInitiatedSubscription](#CollectorInitiatedSubscription)
 - [CompressContent](#CompressContent)
 - [ConsumeJournald](#ConsumeJournald)
 - [ConsumeKafka](#ConsumeKafka)
@@ -284,39 +283,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                    |
 |---------|------------------------------------------------|
 | success | All flow files produced are routed to Success. |
-
-
-## CollectorInitiatedSubscription
-
-### Description
-
-Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                               | Default Value   | Allowable Values | Description                                                                                                                                                                                                                                                                                                                                                          |
-|------------------------------------|-----------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Subscription Name**              |                 |                  | The name of the subscription. The value provided for this parameter should be unique within the computer's scope.<br/>**Supports Expression Language: true**                                                                                                                                                                                                         |
-| **Subscription Description**       |                 |                  | A description of the subscription.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                                                        |
-| **Source Address**                 |                 |                  | The IP address or fully qualified domain name (FQDN) of the local or remote computer (event source) from which the events are collected.<br/>**Supports Expression Language: true**                                                                                                                                                                                  |
-| **Source User Name**               |                 |                  | The user name, which is used by the remote computer (event source) to authenticate the user.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                              |
-| **Source Password**                |                 |                  | The password, which is used by the remote computer (event source) to authenticate the user.<br/>**Sensitive Property: true**<br/>**Supports Expression Language: true**                                                                                                                                                                                                                               |
-| **Source Channels**                |                 |                  | The Windows Event Log Channels (on domain computer(s)) from which events are transferred.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                 |
-| **Max Delivery Items**             | 1000            |                  | Determines the maximum number of items that will forwarded from an event source for each request.                                                                                                                                                                                                                                                                    |
-| **Delivery MaxLatency Time**       | 10 min          |                  | How long, in milliseconds, the event source should wait before sending events.                                                                                                                                                                                                                                                                                       |
-| **Heartbeat Interval**             | 10 min          |                  | Time interval, in milliseconds, which is observed between the sent heartbeat messages. The event collector uses this property to determine the interval between queries to the event source.                                                                                                                                                                         |
-| **Channel**                        | ForwardedEvents |                  | The Windows Event Log Channel (on local machine) to which events are transferred.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                         |
-| **Query**                          | *               |                  | XPath Query to filter events. (See https://msdn.microsoft.com/en-us/library/windows/desktop/dd996910(v=vs.85).aspx for examples.)<br/>**Supports Expression Language: true**                                                                                                                                                                                         |
-| **Max Buffer Size**                | 1 MB            |                  | The individual Event Log XMLs are rendered to a buffer. This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)                                                                                                                                                                 |
-| **Inactive Duration To Reconnect** | 10 min          |                  | If no new event logs are processed for the specified time period, this processor will try reconnecting to recover from a state where any further messages cannot be consumed. Such situation can happen if Windows Event Log service is restarted, or ERROR_EVT_QUERY_RESULT_STALE (15011) is returned. Setting no duration, e.g. '0 ms' disables auto-reconnection. |
-
-### Relationships
-
-| Name    | Description                                    |
-|---------|------------------------------------------------|
-| success | Relationship for successfully consumed events. |
 
 
 ## CompressContent

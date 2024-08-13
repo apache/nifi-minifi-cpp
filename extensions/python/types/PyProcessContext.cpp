@@ -65,7 +65,7 @@ int PyProcessContext::init(PyProcessContext* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) {
-  auto context = self->process_context_.lock();
+  auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
     return nullptr;
@@ -100,7 +100,7 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
 }
 
 PyObject* PyProcessContext::getStateManager(PyProcessContext* self, PyObject*) {
-  auto context = self->process_context_.lock();
+  auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
     return nullptr;
@@ -110,7 +110,7 @@ PyObject* PyProcessContext::getStateManager(PyProcessContext* self, PyObject*) {
 }
 
 PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObject* args) {
-  auto context = self->process_context_.lock();
+  auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
     return nullptr;
@@ -134,7 +134,7 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
 }
 
 PyObject* PyProcessContext::getName(PyProcessContext* self, PyObject*) {
-  auto context = self->process_context_.lock();
+  auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
     return nullptr;
@@ -144,7 +144,7 @@ PyObject* PyProcessContext::getName(PyProcessContext* self, PyObject*) {
 }
 
 PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
-  auto context = self->process_context_.lock();
+  auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
     return nullptr;

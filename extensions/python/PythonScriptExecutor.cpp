@@ -27,10 +27,10 @@
 
 namespace org::apache::nifi::minifi::extensions::python {
 
-PythonScriptExecutor::PythonScriptExecutor(std::string_view name, const utils::Identifier& uuid) : script::ScriptExecutor(name, uuid) {}
+PythonScriptExecutor::PythonScriptExecutor(const std::string_view name, const utils::Identifier& uuid) : script::ScriptExecutor(name, uuid) {}
 
 
-void PythonScriptExecutor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+void PythonScriptExecutor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   gsl_Expects(python_script_engine_);
   gsl_Expects(std::holds_alternative<std::filesystem::path>(script_to_run_) || std::holds_alternative<std::string>(script_to_run_));
 

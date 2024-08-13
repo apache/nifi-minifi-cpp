@@ -74,7 +74,7 @@ void ExecuteScript::onSchedule(core::ProcessContext& context, core::ProcessSessi
   script_executor_->initialize(std::move(script_file), std::move(script_body), std::move(module_directory), getMaxConcurrentTasks(), Success, Failure, Original, logger_);
 }
 
-void ExecuteScript::onTriggerSharedPtr(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+void ExecuteScript::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   gsl_Expects(script_executor_);
   script_executor_->onTrigger(context, session);
 }

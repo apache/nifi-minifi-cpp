@@ -474,7 +474,7 @@ void TestPlan::scheduleProcessor(const std::shared_ptr<minifi::core::Processor>&
     // Ordering on factories and list of configured processors do not matter
     const auto factory = std::make_shared<minifi::core::ProcessSessionFactory>(context);
     factories_.push_back(factory);
-    processor->onScheduleSharedPtr(context, factory);
+    processor->onSchedule(*context, *factory);
     configured_processors_.push_back(processor);
   }
 }
