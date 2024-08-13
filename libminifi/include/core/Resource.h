@@ -55,7 +55,7 @@ class StaticClassType {
 #endif
 
     for (const auto& construction_name : construction_names_) {
-      auto factory = std::unique_ptr<ObjectFactory>(new DefautObjectFactory<Class>(module_name));
+      auto factory = std::unique_ptr<ObjectFactory>(new DefaultObjectFactory<Class>(module_name));
       getClassLoader().registerClass(construction_name, std::move(factory));
     }
 

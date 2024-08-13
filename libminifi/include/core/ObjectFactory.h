@@ -87,13 +87,13 @@ class ObjectFactory {
  * creating processors from shared objects.
  */
 template<class T>
-class DefautObjectFactory : public ObjectFactory {
+class DefaultObjectFactory : public ObjectFactory {
  public:
-  DefautObjectFactory()
+  DefaultObjectFactory()
       : className(core::className<T>()) {
   }
 
-  explicit DefautObjectFactory(std::string group_name)
+  explicit DefaultObjectFactory(std::string group_name)
       : ObjectFactory(std::move(group_name)),
       className(core::className<T>()) {
   }
