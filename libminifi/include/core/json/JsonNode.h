@@ -98,7 +98,7 @@ class JsonNode : public flow::Node::NodeImpl {
       return std::to_string(node_->GetDouble());
     }
     if (node_->IsBool()) {
-      return std::to_string(node_->GetDouble());
+      return node_->GetBool() ? "true" : "false";
     }
 
     return getString();

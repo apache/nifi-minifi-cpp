@@ -167,7 +167,13 @@ void ResponseNodeLoader::initializeAgentMonitor(const SharedResponseNode& respon
 void ResponseNodeLoader::initializeAgentNode(const SharedResponseNode& response_node) const {
   auto agent_node = dynamic_cast<state::response::AgentNode*>(response_node.get());
   if (agent_node != nullptr && controller_ != nullptr) {
-    agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(c2::UPDATE_NAME)).get());
+    if (auto service = controller_->getControllerService(c2::UPDATE_NAME)) {
+      if (auto update_service = std::dynamic_pointer_cast<controllers::UpdatePolicyControllerService>(service)) {
+        agent_node->setUpdatePolicyController(update_service.get());
+      } else {
+        logger_->log_warn("Found controller service with name '{}', but it is not an UpdatePolicyControllerService", c2::UPDATE_NAME);
+      }
+    }
   }
   if (agent_node != nullptr) {
     agent_node->setConfigurationReader([this](const std::string& key){
@@ -285,7 +291,13 @@ void ResponseNodeLoader::setStateMonitor(state::StateMonitor* update_sink) {
 state::response::NodeReporter::ReportedNode ResponseNodeLoader::getAgentManifest() const {
   state::response::AgentInformation agentInfo("agentInfo");
   if (controller_) {
-    agentInfo.setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(c2::UPDATE_NAME)).get());
+    if (auto service = controller_->getControllerService(c2::UPDATE_NAME)) {
+      if (auto update_service = std::dynamic_pointer_cast<controllers::UpdatePolicyControllerService>(service)) {
+        agentInfo.setUpdatePolicyController(update_service.get());
+      } else {
+        logger_->log_warn("Found controller service with name '{}', but it is not an UpdatePolicyControllerService", c2::UPDATE_NAME);
+      }
+    }
   }
   agentInfo.setAgentIdentificationProvider(configuration_);
   agentInfo.setConfigurationReader([this](const std::string& key){
