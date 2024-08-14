@@ -165,9 +165,7 @@ class ImageStore:
                 COPY ProcessContextInterfaceChecker.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ProcessContextInterfaceChecker.py
                 COPY CreateFlowFile.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/CreateFlowFile.py
                 COPY FailureWithAttributes.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/FailureWithAttributes.py
-                RUN mkdir -p /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/
                 COPY subtractutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/subtractutils.py
-                RUN mkdir -p /opt/minifi/minifi-current/minifi-python/nifi_python_processors/processors/
                 COPY RelativeImporterProcessor.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/RelativeImporterProcessor.py
                 COPY multiplierutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/multiplierutils.py
                 RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
