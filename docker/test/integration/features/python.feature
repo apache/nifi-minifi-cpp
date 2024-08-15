@@ -174,3 +174,13 @@ Feature: MiNiFi can use python processors in its flows
 
     Then the Minifi logs contain the following message: "key:error.message value:Error" in less than 60 seconds
     And the Minifi logs contain the following message: "key:my.attribute value:my.value" in less than 10 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: MiNiFi C++ can use native NiFi source python processors
+    Given a CreateNothing processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the CreateNothing processor is connected to the PutFile
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    When the MiNiFi instance starts up
+    Then no files are placed in the monitored directory in 10 seconds of running time
+    And the Minifi logs do not contain the following message: "Caught Exception during SchedulingAgent::onTrigger of processor CreateNothing" after 1 seconds
