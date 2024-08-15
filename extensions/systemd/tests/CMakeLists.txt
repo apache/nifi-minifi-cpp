@@ -26,7 +26,7 @@ function(add_systemd_test testfile)
     target_link_libraries(${TEST_TARGET} minifi-standard-processors)
     createTests("${TEST_TARGET}")
     add_test(NAME ${TEST_TARGET} COMMAND "${TEST_TARGET}" WORKING_DIRECTORY "${TEST_DIR}")
-    target_link_libraries(${TEST_TARGET} Catch2::Catch2WithMain)
+    target_link_libraries(${TEST_TARGET} Catch2WithMain)
 endfunction()
 
 add_systemd_test("ConsumeJournaldTest.cpp")

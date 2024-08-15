@@ -141,10 +141,9 @@ add_minifi_multi_option(MINIFI_OPENSSL_SOURCE "Retrieves OpenSSL from provided s
 add_minifi_multi_option(MINIFI_ZLIB_SOURCE "Retrieves ZLib from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_CIVETWEB_SOURCE "Retrieves CivetWeb from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_LIBXML2_SOURCE "Retrieves LibXml2 from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
-add_minifi_multi_option(MINIFI_CATCH2_SOURCE "Retrieves Catch2 from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_FMT_SOURCE "Retrieves Fmt from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_SPDLOG_SOURCE "Retrieves Spdlog from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
-
+add_minifi_multi_option(MINIFI_CATCH2_SOURCE "Retrieves Catch2 from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 
 # Docker options
 
