@@ -131,4 +131,8 @@ Property::Property(const PropertyReference& compile_time_property)
   }
 }
 
+void Property::setAllowedValues(gsl::span<const std::string_view> allowed_values, const core::PropertyParser& property_parser) {
+  allowed_values_ = createPropertyValues(allowed_values, property_parser);
+}
+
 }  // namespace org::apache::nifi::minifi::core

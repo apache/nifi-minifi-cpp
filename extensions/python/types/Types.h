@@ -254,8 +254,14 @@ class List : public ReferenceHolder<reference_type> {
     }
     return BorrowedReference(item);
   }
-};
 
+  static BorrowedList fromTuple(PyObject* tuple, Py_ssize_t location) requires(reference_type == ReferenceType::BORROWED) {
+    BorrowedList list_from_tuple{PyTuple_GetItem(tuple, location)};
+    if (list_from_tuple.get() == nullptr)
+      throw PyException();
+    return list_from_tuple;
+  }
+};
 
 template<ReferenceType reference_type>
 class Dict : public ReferenceHolder<reference_type> {

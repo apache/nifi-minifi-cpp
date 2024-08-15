@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
-#include <string>
+#include "PythonProcessor.h"
 
 #include "ExecutePythonProcessor.h"
-#include "PythonProcessor.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -38,9 +37,9 @@ void PythonProcessor::setDescription(const std::string& desc) {
   processor_->setDescription(desc);
 }
 
-void PythonProcessor::addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue,
-    bool required, bool el, bool sensitive, const std::optional<int64_t>& property_type_code, const std::optional<std::string>& controller_service_type_name) {
-  processor_->addProperty(name, description, defaultvalue, required, el, sensitive, property_type_code, controller_service_type_name);
+void PythonProcessor::addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue, bool required, bool el, bool sensitive,
+    const std::optional<int64_t>& property_type_code, gsl::span<const std::string_view> allowable_values, const std::optional<std::string>& controller_service_type_name) {
+  processor_->addProperty(name, description, defaultvalue, required, el, sensitive, property_type_code, allowable_values, controller_service_type_name);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::python
