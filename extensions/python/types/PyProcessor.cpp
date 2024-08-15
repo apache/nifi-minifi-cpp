@@ -110,6 +110,13 @@ PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
     return nullptr;
   }
 
+  static constexpr Py_ssize_t ExpectedNumArgs = 9;
+  auto arg_size = PyTuple_Size(args);
+  if (arg_size < ExpectedNumArgs) {
+    PyErr_SetString(PyExc_AttributeError, fmt::format("addProperty was called with too few arguments: need {}, got {}", ExpectedNumArgs, arg_size).c_str());
+    return nullptr;
+  }
+
   BorrowedStr name = BorrowedStr::fromTuple(args, 0);
   BorrowedStr description = BorrowedStr::fromTuple(args, 1);
   std::optional<std::string> default_value;
@@ -121,36 +128,40 @@ PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
   bool is_required = false;
   bool supports_expression_language = false;
   bool sensitive = false;
-  auto arg_size = PyTuple_Size(args);
 
   try {
     is_required = getBoolFromTuple(args, 3);
     supports_expression_language = getBoolFromTuple(args, 4);
 
-    if (arg_size > 5) {
-      sensitive = getBoolFromTuple(args, 5);
-    }
+    sensitive = getBoolFromTuple(args, 5);
   } catch (const PyException&) {
     return nullptr;
   }
 
   std::optional<int64_t> validator_value;
-  if (arg_size > 6) {
-    auto validator_value_pyint = BorrowedLong::fromTuple(args, 6);
-    if (validator_value_pyint.get() && validator_value_pyint.get() != Py_None) {
-      validator_value = validator_value_pyint.asInt64();
+  auto validator_value_pyint = BorrowedLong::fromTuple(args, 6);
+  if (validator_value_pyint.get() && validator_value_pyint.get() != Py_None) {
+    validator_value = validator_value_pyint.asInt64();
+  }
+
+  std::vector<std::string> allowable_values_str;
+  auto allowable_values_pylist = BorrowedList::fromTuple(args, 7);
+  if (allowable_values_pylist.get() && allowable_values_pylist.get() != Py_None) {
+    for (size_t i = 0; i < allowable_values_pylist.length(); ++i) {
+      auto value = BorrowedStr{allowable_values_pylist[i]};
+      allowable_values_str.push_back(value.toUtf8String());
     }
   }
+  std::vector<std::string_view> allowable_values(begin(allowable_values_str), end(allowable_values_str));
 
   std::optional<std::string> controller_service_type_name;
-  if (arg_size > 7) {
-    auto controller_service_type_name_pystr = BorrowedStr::fromTuple(args, 7);
-    if (controller_service_type_name_pystr.get() && controller_service_type_name_pystr.get() != Py_None) {
-      controller_service_type_name = controller_service_type_name_pystr.toUtf8String();
-    }
+  auto controller_service_type_name_pystr = BorrowedStr::fromTuple(args, 8);
+  if (controller_service_type_name_pystr.get() && controller_service_type_name_pystr.get() != Py_None) {
+    controller_service_type_name = controller_service_type_name_pystr.toUtf8String();
   }
 
-  processor->addProperty(name.toUtf8String(), description.toUtf8String(), default_value, is_required, supports_expression_language, sensitive, validator_value, controller_service_type_name);
+  processor->addProperty(name.toUtf8String(), description.toUtf8String(), default_value, is_required, supports_expression_language, sensitive,
+      validator_value, allowable_values, controller_service_type_name);
   Py_RETURN_NONE;
 }
 

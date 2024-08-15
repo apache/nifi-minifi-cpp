@@ -27,6 +27,7 @@
 #include "utils/gsl.h"
 
 using minifi::state::response::SerializedResponseNode;
+using minifi::state::response::ValueNode;
 
 template<typename F>
 const SerializedResponseNode* findNode(const std::vector<SerializedResponseNode>& nodes, F&& filter) {
@@ -43,6 +44,10 @@ const SerializedResponseNode& getNode(const std::vector<SerializedResponseNode>&
   gsl_FailFast();
 }
 
+ValueNode getNthAllowableValue(const SerializedResponseNode& node, size_t n) {
+  return getNode(node.children[n].children, "value").value;
+}
+
 TEST_CASE("Python processor's description is part of the manifest") {
   TestControllerWithFlow controller(empty_flow, false /* DEFER FLOW SETUP */);
 
@@ -56,7 +61,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
     "def describe(proc):\n"
     "  proc.setDescription('Another amazing processor')\n"
     "  proc.setSupportsDynamicProperties()\n"
-    "  proc.addProperty('Prop1', 'A great property', 'banana', True, False)\n";
+    "  proc.addProperty('Prop1', 'A great property', 'banana', True, False, False, None, ['apple', 'orange', 'banana', 'durian'], None)\n";
 
   controller.configuration_->set(minifi::Configuration::nifi_python_processor_dir, python_dir.string());
   controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*");
@@ -130,6 +135,12 @@ TEST_CASE("Python processor's description is part of the manifest") {
     REQUIRE(getNode(properties[0].children, "required").value == true);
     REQUIRE(getNode(properties[0].children, "expressionLanguageScope").value == "NONE");
     REQUIRE(getNode(properties[0].children, "defaultValue").value == "banana");
+    auto& allowable_values = getNode(properties[0].children, "allowableValues");
+    REQUIRE(allowable_values.children.size() == 4);
+    CHECK(getNthAllowableValue(allowable_values, 0) == "apple");
+    CHECK(getNthAllowableValue(allowable_values, 1) == "orange");
+    CHECK(getNthAllowableValue(allowable_values, 2) == "banana");
+    CHECK(getNthAllowableValue(allowable_values, 3) == "durian");
 
     auto& rels = getNode(MyPyProc2->children, "supportedRelationships").children;
     REQUIRE(rels.size() == 3);

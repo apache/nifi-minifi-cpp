@@ -19,10 +19,12 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <memory>
 #include <optional>
 
 #include "core/Processor.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -38,8 +40,8 @@ class PythonProcessor {
 
   void setDescription(const std::string& desc);
 
-  void addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue,
-    bool required, bool el, bool sensitive, const std::optional<int64_t>& property_type_code, const std::optional<std::string>& controller_service_type_name);
+  void addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue, bool required, bool el, bool sensitive,
+      const std::optional<int64_t>& property_type_code, gsl::span<const std::string_view> allowable_values, const std::optional<std::string>& controller_service_type_name);
 
  private:
   python::processors::ExecutePythonProcessor* processor_;

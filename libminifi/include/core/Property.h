@@ -145,18 +145,10 @@ class Property {
     return allowed_values_;
   }
 
-  void addAllowedValue(const PropertyValue &value) {
-    allowed_values_.push_back(value);
-  }
+  void setAllowedValues(gsl::span<const std::string_view> allowed_values, const core::PropertyParser& property_parser);
 
-  void clearAllowedValues() {
-    allowed_values_.clear();
-  }
-
-  /**
-   * Add value to the collection of values.
-   */
   void addValue(const std::string &value);
+
   Property &operator=(const Property &other) = default;
   Property &operator=(Property &&other) = default;
 // Compare

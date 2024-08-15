@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 #include <filesystem>
@@ -33,7 +34,7 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "PythonScriptEngine.h"
-#include "PythonScriptEngine.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::python::processors {
 
@@ -95,8 +96,8 @@ class ExecutePythonProcessor : public core::Processor {
     python_dynamic_ = true;
   }
 
-  void addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el,
-      bool sensitive, const std::optional<int64_t>& property_type_code, const std::optional<std::string>& controller_service_type_name);
+  void addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el, bool sensitive,
+      const std::optional<int64_t>& property_type_code, gsl::span<const std::string_view> allowable_values, const std::optional<std::string>& controller_service_type_name);
 
   std::vector<core::Property> getPythonProperties() const {
     std::lock_guard<std::mutex> lock(python_properties_mutex_);
