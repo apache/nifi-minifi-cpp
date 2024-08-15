@@ -40,7 +40,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND ENABLE_EXPRESSION_LANGUAGE
         target_include_directories(${testfilename} BEFORE PRIVATE ./tools)
 
         createTests("${testfilename}")
-        target_link_libraries(${testfilename} Catch2::Catch2WithMain core-minifi sftp-test-tools)
+        target_link_libraries(${testfilename} Catch2WithMain core-minifi sftp-test-tools)
         target_link_libraries(${testfilename} minifi-sftp)
         target_link_libraries(${testfilename} minifi-expression-language-extensions)
         target_link_libraries(${testfilename} minifi-standard-processors)

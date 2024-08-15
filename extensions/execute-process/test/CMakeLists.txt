@@ -22,7 +22,7 @@ set_target_properties(EchoParameters PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAK
 
 add_minifi_executable(ExecuteProcessTests ExecuteProcessTests.cpp)
 
-target_link_libraries(ExecuteProcessTests minifi-execute-process minifi-standard-processors Catch2::Catch2WithMain)
+target_link_libraries(ExecuteProcessTests minifi-execute-process minifi-standard-processors Catch2WithMain)
 target_include_directories(ExecuteProcessTests PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test")
 add_test(NAME ExecuteProcessTests COMMAND ExecuteProcessTests WORKING_DIRECTORY ${TEST_DIR})
 createTests(ExecuteProcessTests)

@@ -30,7 +30,7 @@ FOREACH(testfile ${BUSTACHE_INTEGRATION_TESTS})
     target_link_libraries(${testfilename} minifi-standard-processors)
 
     createTests("${testfilename}")
-    target_link_libraries(${testfilename} Catch2::Catch2WithMain)
+    target_link_libraries(${testfilename} Catch2WithMain)
     MATH(EXPR BUSTACHE-EXTENSIONS_TEST_COUNT "${BUSTACHE-EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
