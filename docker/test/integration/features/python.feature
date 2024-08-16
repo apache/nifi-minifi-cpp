@@ -188,3 +188,13 @@ Feature: MiNiFi can use python processors in its flows
     When all instances start up
 
     Then one flowfile with the contents "The final result is 1990" is placed in the monitored directory in less than 30 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: NiFi native python processor is allowed to be triggered without creating any flow files
+    Given a CreateNothing processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the CreateNothing processor is connected to the PutFile
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    When the MiNiFi instance starts up
+    Then no files are placed in the monitored directory in 10 seconds of running time
+    And the Minifi logs do not contain the following message: "Caught Exception during SchedulingAgent::onTrigger of processor CreateNothing" after 1 seconds

@@ -50,6 +50,8 @@ class FlowFileSource(ProcessorBase):
         context_proxy = ProcessContextProxy(context, self)
         try:
             result = self.create(context_proxy)
+            if not result:
+                return
         except Exception:
             self.logger.error("Failed to create flow file due to error:\n{}".format(traceback.format_exc()))
             return
