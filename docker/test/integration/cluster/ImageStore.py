@@ -165,6 +165,9 @@ class ImageStore:
                 COPY ProcessContextInterfaceChecker.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ProcessContextInterfaceChecker.py
                 COPY CreateFlowFile.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/CreateFlowFile.py
                 COPY FailureWithAttributes.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/FailureWithAttributes.py
+                COPY subtractutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/subtractutils.py
+                COPY RelativeImporterProcessor.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/RelativeImporterProcessor.py
+                COPY multiplierutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/multiplierutils.py
                 RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     wget {chunk_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\
@@ -188,7 +191,10 @@ class ImageStore:
                                                os.path.join(self.test_dir, "resources", "python", "SpecialPropertyTypeChecker.py"),
                                                os.path.join(self.test_dir, "resources", "python", "ProcessContextInterfaceChecker.py"),
                                                os.path.join(self.test_dir, "resources", "python", "CreateFlowFile.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "FailureWithAttributes.py")])
+                                               os.path.join(self.test_dir, "resources", "python", "FailureWithAttributes.py"),
+                                               os.path.join(self.test_dir, "resources", "python", "RelativeImporterProcessor.py"),
+                                               os.path.join(self.test_dir, "resources", "python", "subtractutils.py"),
+                                               os.path.join(self.test_dir, "resources", "python", "multiplierutils.py")])
 
     def __build_http_proxy_image(self):
         dockerfile = dedent("""\

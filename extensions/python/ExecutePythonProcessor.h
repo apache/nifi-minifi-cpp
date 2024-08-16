@@ -123,6 +123,10 @@ class ExecutePythonProcessor : public core::Processor {
     python_paths_ = python_paths;
   }
 
+  void setQualifiedModuleName(const std::string& qualified_module_name) {
+    qualified_module_name_ = qualified_module_name;
+  }
+
   std::map<std::string, core::Property> getProperties() const override;
 
   std::vector<core::Relationship> getPythonRelationships();
@@ -149,6 +153,7 @@ class ExecutePythonProcessor : public core::Processor {
   std::unique_ptr<PythonScriptEngine> python_script_engine_;
   std::optional<std::string> python_class_name_;
   std::vector<std::filesystem::path> python_paths_;
+  std::string qualified_module_name_;
 
   void appendPathForImportModules();
   void loadScriptFromFile();

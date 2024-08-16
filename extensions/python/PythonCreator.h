@@ -78,6 +78,9 @@ class PythonCreator : public minifi::core::CoreComponent {
         full_name = utils::string::join_pack("org.apache.nifi.minifi.processors.", package, ".", script_name.string());
         class_name = full_name;
       }
+
+      const std::string qualified_module_name_prefix = "org.apache.nifi.minifi.processors.";
+      std::string qualified_module_name = full_name.substr(qualified_module_name_prefix.length());
       if (path.string().find("nifi_python_processors") != std::string::npos) {
         auto utils_path = (std::filesystem::path("nifi_python_processors") / "utils").string();
         if (path.string().find(utils_path) != std::string::npos) {
@@ -85,11 +88,11 @@ class PythonCreator : public minifi::core::CoreComponent {
         }
         logger_->log_info("Registering NiFi python processor: {}", class_name);
         core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
-          PythonProcessorType::NIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}, path.parent_path()}));
+          PythonProcessorType::NIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}, path.parent_path()}, qualified_module_name));
       } else {
         logger_->log_info("Registering MiNiFi python processor: {}", class_name);
         core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
-          PythonProcessorType::MINIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}}));
+          PythonProcessorType::MINIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}}, qualified_module_name));
       }
       registered_classes_.push_back(class_name);
       try {
