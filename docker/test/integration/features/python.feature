@@ -176,7 +176,7 @@ Feature: MiNiFi can use python processors in its flows
     And the Minifi logs contain the following message: "key:my.attribute value:my.value" in less than 10 seconds
 
   @USE_NIFI_PYTHON_PROCESSORS
-  Scenario: MiNiFi C++ can use native NiFi source python processors
+  Scenario: NiFi native python processor is allowed to be triggered without creating any flow files
     Given a CreateNothing processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the CreateNothing processor is connected to the PutFile
