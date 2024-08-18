@@ -126,10 +126,12 @@ class PutFile : public core::Processor {
 #ifndef WIN32
   class FilePermissions {
     static const uint32_t MINIMUM_INVALID_PERMISSIONS_VALUE = 1 << 9;
+
    public:
     [[nodiscard]] bool valid() const { return permissions_ < MINIMUM_INVALID_PERMISSIONS_VALUE; }
     [[nodiscard]] uint32_t getValue() const { return permissions_; }
     void setValue(uint32_t perms) { permissions_ = perms; }
+    
    private:
     uint32_t permissions_ = MINIMUM_INVALID_PERMISSIONS_VALUE;
   };
