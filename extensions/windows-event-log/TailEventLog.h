@@ -56,10 +56,10 @@ class TailEventLog : public core::Processor {
       .withDescription("Events per flow file")
       .withDefaultValue("1")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       LogSourceFileName,
       MaxEventsPerFlowFile
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files, containing log events, are routed to success"};

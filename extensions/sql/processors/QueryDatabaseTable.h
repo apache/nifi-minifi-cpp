@@ -82,12 +82,12 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
       .isRequired(false)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, FlowFileSource::Properties, std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, FlowFileSource::Properties, std::to_array<core::PropertyReference>({
       TableName,
       ColumnNames,
       MaxValueColumnNames,
       WhereClause
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully created FlowFile from SQL query result set."};

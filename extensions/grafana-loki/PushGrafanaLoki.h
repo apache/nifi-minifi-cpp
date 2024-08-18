@@ -80,7 +80,7 @@ class PushGrafanaLoki : public core::Processor {
     .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
     .withAllowedTypes<minifi::controllers::SSLContextService>()
     .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(std::array<core::PropertyReference, 9>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(std::to_array<core::PropertyReference>({
       Url,
       StreamLabels,
       LogLineMetadataAttributes,
@@ -90,7 +90,7 @@ class PushGrafanaLoki : public core::Processor {
       LogLineBatchSize,
       ConnectTimeout,
       SSLContextService
-  });
+  }));
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All flowfiles that succeed in being transferred into Grafana Loki go here."};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "If a submitted request fails all flow files in the batch are transferred to this relationship."};

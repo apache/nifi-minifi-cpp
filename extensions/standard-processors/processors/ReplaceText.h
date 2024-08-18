@@ -156,13 +156,13 @@ class ReplaceText : public core::Processor {
       .isRequired(true)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       EvaluationMode,
       LineByLineEvaluationMode,
       ReplacementStrategy,
       SearchValue,
       ReplacementValue
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",

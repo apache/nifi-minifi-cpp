@@ -47,10 +47,10 @@ class DeleteS3Object : public S3Processor {
     .withDescription("The Version of the Object to delete")
     .supportsExpressionLanguage(true)
     .build();
-  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::to_array<core::PropertyReference>({
       ObjectKey,
       Version
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};

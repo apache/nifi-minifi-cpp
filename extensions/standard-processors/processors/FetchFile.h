@@ -128,14 +128,14 @@ class FetchFile : public core::Processor {
       .withAllowedValues(magic_enum::enum_names<utils::LogUtils::LogLevelOption>())
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       FileToFetch,
       CompletionStrategy,
       MoveDestinationDirectory,
       MoveConflictStrategy,
       LogLevelWhenFileNotFound,
       LogLevelWhenPermissionDenied
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",

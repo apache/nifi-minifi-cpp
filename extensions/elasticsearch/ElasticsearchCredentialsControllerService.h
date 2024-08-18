@@ -47,11 +47,11 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
       .withDescription("The API Key to use")
       .isSensitive(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
         Username,
         Password,
         ApiKey
-  };
+  });
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

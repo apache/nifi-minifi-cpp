@@ -56,11 +56,11 @@ class FetchS3Object : public S3Processor {
       .withDescription("If true, indicates that the requester consents to pay any charges associated with retrieving "
           "objects from the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'.")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::to_array<core::PropertyReference>({
       ObjectKey,
       Version,
       RequesterPays
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};

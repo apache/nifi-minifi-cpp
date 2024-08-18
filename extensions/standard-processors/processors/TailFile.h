@@ -189,7 +189,7 @@ class TailFile : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
       .withDefaultValue("0")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 11>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       FileName,
       StateFile,
       Delimiter,
@@ -201,7 +201,7 @@ class TailFile : public core::Processor {
       InitialStartPosition,
       AttributeProviderService,
       BatchSize
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};

@@ -112,7 +112,7 @@ class ListenHTTP : public core::Processor {
         .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
         .withDefaultValue(ListenHTTP::DEFAULT_BUFFER_SIZE_STR)
         .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 10>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       BasePath,
       Port,
       AuthorizedDNPattern,
@@ -123,7 +123,7 @@ class ListenHTTP : public core::Processor {
       HeadersAsAttributesRegex,
       BatchSize,
       BufferSize
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};

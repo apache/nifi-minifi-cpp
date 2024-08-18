@@ -166,12 +166,12 @@ class AbstractMQTTProcessor : public core::Processor {
       .withDescription("Private key passphrase")
       .isSensitive(true)
       .build();
-  EXTENSIONAPI static constexpr auto BasicProperties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto BasicProperties = std::to_array<core::PropertyReference>({
       BrokerURI,
       ClientID,
       MqttVersion
-  };
-  EXTENSIONAPI static constexpr auto AdvancedProperties = std::array<core::PropertyReference, 15>{
+  });
+  EXTENSIONAPI static constexpr auto AdvancedProperties = std::to_array<core::PropertyReference>({
       QoS,
       ConnectionTimeout,
       KeepAliveInterval,
@@ -187,7 +187,7 @@ class AbstractMQTTProcessor : public core::Processor {
       SecurityCert,
       SecurityPrivateKey,
       SecurityPrivateKeyPassword
-  };
+  });
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;

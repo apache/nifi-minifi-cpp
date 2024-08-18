@@ -72,12 +72,12 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
       .withDescription("Properties for which we will not allow updates")
       .isRequired(false)
       .build();
-  MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
+  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       AllowAllProperties,
       PersistUpdates,
       AllowedProperties,
       DisallowedProperties
-  };
+  });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

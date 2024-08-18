@@ -83,7 +83,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
       .withDefaultValue(MQTT_MAX_RECEIVE_MAXIMUM_STR)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::array<core::PropertyReference, 8>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::to_array<core::PropertyReference>({
       Topic,
       CleanSession,
       CleanStart,
@@ -92,7 +92,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       AttributeFromContentType,
       TopicAliasMaximum,
       ReceiveMaximum
-  }, AbstractMQTTProcessor::AdvancedProperties);
+  }), AbstractMQTTProcessor::AdvancedProperties);
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are transferred to this relationship"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

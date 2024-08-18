@@ -58,7 +58,7 @@ class BaseOPCProcessor : public core::Processor {
   EXTENSIONAPI static constexpr auto TrustedPath = core::PropertyDefinitionBuilder<>::createProperty("Trusted server certificate path")
       .withDescription("Path to the DER-encoded trusted server certificate")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       OPCServerEndPoint,
       ApplicationURI,
       Username,
@@ -66,7 +66,7 @@ class BaseOPCProcessor : public core::Processor {
       CertificatePath,
       KeyPath,
       TrustedPath
-  };
+  });
 
 
   explicit BaseOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})

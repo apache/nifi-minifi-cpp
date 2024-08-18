@@ -78,9 +78,9 @@ class JsonRecordSetWriter final : public core::RecordSetWriter {
     .withDefaultValue("false")
     .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
     OutputGrouping, PrettyPrint
-  };
+  });
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

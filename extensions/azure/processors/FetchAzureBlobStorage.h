@@ -51,10 +51,10 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
                         "An empty value or a value that extends beyond the end of the blob will read to the end of the blob.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::to_array<core::PropertyReference>({
       RangeStart,
       RangeLength
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All successfully processed FlowFiles are routed to this relationship"};

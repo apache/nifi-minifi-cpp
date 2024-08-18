@@ -190,7 +190,7 @@ class ConsumeKafka : public KafkaProcessorBase {
       .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .withDefaultValue("60 seconds")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(KafkaProcessorBase::Properties, std::array<core::PropertyReference, 14>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(KafkaProcessorBase::Properties, std::to_array<core::PropertyReference>({
       KafkaBrokers,
       TopicNames,
       TopicNameFormat,
@@ -205,7 +205,7 @@ class ConsumeKafka : public KafkaProcessorBase {
       MaxPollRecords,
       MaxPollTime,
       SessionTimeout
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",

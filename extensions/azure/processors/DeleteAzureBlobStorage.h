@@ -49,7 +49,7 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorB
       .withDefaultValue(magic_enum::enum_name(storage::OptionalDeletion::NONE))
       .withAllowedValues(magic_enum::enum_names<storage::OptionalDeletion>())
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::array<core::PropertyReference, 1>{DeleteSnapshotsOption});
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::to_array<core::PropertyReference>({DeleteSnapshotsOption}));
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All successfully processed FlowFiles are routed to this relationship"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Unsuccessful operations will be transferred to the failure relationship"};

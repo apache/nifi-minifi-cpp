@@ -98,13 +98,13 @@ class RetryFlowFile : public core::Processor {
       .withDefaultValue(FAIL_ON_REUSE)
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       RetryAttribute,
       MaximumRetries,
       PenalizeRetries,
       FailOnNonNumericalOverwrite,
       ReuseMode
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Retry = core::RelationshipDefinition{"retry",

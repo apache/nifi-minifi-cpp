@@ -345,7 +345,7 @@ class DummyFlowJsonProcessor : public core::Processor {
       .withDescription("Sensitive property")
       .isSensitive(true)
       .build();
-  static constexpr auto Properties = std::array<core::PropertyReference, 2>{SimpleProperty, SensitiveProperty};
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({SimpleProperty, SensitiveProperty});
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = true;
   static constexpr bool SupportsDynamicRelationships = true;

@@ -78,13 +78,13 @@ class GenerateFlowFile : public core::Processor {
           "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       FileSize,
       BatchSize,
       DataFormat,
       UniqueFlowFiles,
       CustomText
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

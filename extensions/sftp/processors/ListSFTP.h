@@ -156,7 +156,7 @@ class ListSFTP : public SFTPProcessorBase {
       .withDescription("The maximum size that a file must be in order to be pulled")
       .isRequired(false)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SFTPProcessorBase::Properties, std::array<core::PropertyReference, 14>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SFTPProcessorBase::Properties, std::to_array<core::PropertyReference>({
       ListingStrategy,
       RemotePath,
       SearchRecursively,
@@ -171,7 +171,7 @@ class ListSFTP : public SFTPProcessorBase {
       MaximumFileAge,
       MinimumFileSize,
       MaximumFileSize
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};

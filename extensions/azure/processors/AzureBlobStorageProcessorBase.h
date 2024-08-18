@@ -73,7 +73,7 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureStorageProcessorBase::Properties, std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureStorageProcessorBase::Properties, std::to_array<core::PropertyReference>({
       ContainerName,
       StorageAccountName,
       StorageAccountKey,
@@ -81,7 +81,7 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
       CommonStorageAccountEndpointSuffix,
       ConnectionString,
       UseManagedIdentityCredentials
-  });
+  }));
 
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;

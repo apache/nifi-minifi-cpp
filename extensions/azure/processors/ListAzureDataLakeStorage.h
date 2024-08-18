@@ -56,12 +56,12 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
       .withDefaultValue(magic_enum::enum_name(azure::EntityTracking::timestamps))
       .withAllowedValues(magic_enum::enum_names<azure::EntityTracking>())
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageProcessorBase::Properties, std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageProcessorBase::Properties, std::to_array<core::PropertyReference>({
       RecurseSubdirectories,
       FileFilter,
       PathFilter,
       ListingStrategy
-  });
+  }));
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

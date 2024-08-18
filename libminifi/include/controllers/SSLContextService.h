@@ -215,21 +215,21 @@ class SSLContextService : public core::controller::ControllerService {
       .build();
   MINIFIAPI static constexpr auto Properties =
 #ifdef WIN32
-      std::array<core::PropertyReference, 10>{
+      std::to_array<core::PropertyReference>({
           CertStoreLocation,
           ServerCertStore,
           ClientCertStore,
           ClientCertCN,
           ClientCertKeyUsage,
 #else
-      std::array<core::PropertyReference, 5>{
+      std::to_array<core::PropertyReference>({
 #endif  // WIN32
           ClientCertificate,
           PrivateKey,
           Passphrase,
           CACertificate,
           UseSystemCertStore
-      };
+      });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

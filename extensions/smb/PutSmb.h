@@ -66,7 +66,7 @@ class PutSmb : public core::Processor {
       .withDependentProperties({Directory.name})
       .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{ ConnectionControllerService, Directory, ConflictResolution, CreateMissingDirectories};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({ ConnectionControllerService, Directory, ConflictResolution, CreateMissingDirectories});
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failed files (conflict, write failure, etc.) are transferred to failure"};

@@ -65,12 +65,12 @@ class AppendHostInfo : public core::Processor {
       .withAllowedValues({ REFRESH_POLICY_ON_SCHEDULE, REFRESH_POLICY_ON_TRIGGER })
       .withDefaultValue(REFRESH_POLICY_ON_SCHEDULE)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       InterfaceNameFilter,
       HostAttribute,
       IPAttribute,
       RefreshPolicy
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};

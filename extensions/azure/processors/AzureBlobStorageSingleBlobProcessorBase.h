@@ -37,7 +37,7 @@ class AzureBlobStorageSingleBlobProcessorBase : public AzureBlobStorageProcessor
       .withDescription("The filename of the blob. If left empty the filename attribute will be used by default.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageProcessorBase::Properties, std::array<core::PropertyReference, 1>{Blob});
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageProcessorBase::Properties, std::to_array<core::PropertyReference>({Blob}));
 
  protected:
   explicit AzureBlobStorageSingleBlobProcessorBase(

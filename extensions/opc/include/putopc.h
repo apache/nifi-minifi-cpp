@@ -76,7 +76,7 @@ class PutOPCProcessor : public BaseOPCProcessor {
       .withDescription("The index of the namespace. Used only if node ID type is not path.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::array<core::PropertyReference, 8>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::to_array<core::PropertyReference>({
       ParentNodeIDType,
       ParentNodeID,
       ParentNameSpaceIndex,
@@ -85,7 +85,7 @@ class PutOPCProcessor : public BaseOPCProcessor {
       TargetNodeID,
       TargetNodeBrowseName,
       TargetNodeNameSpaceIndex
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully put OPC-UA node"};

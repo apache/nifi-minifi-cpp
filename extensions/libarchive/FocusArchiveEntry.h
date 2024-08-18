@@ -50,7 +50,7 @@ class FocusArchiveEntry : public core::Processor {
   EXTENSIONAPI static constexpr auto Path = core::PropertyDefinitionBuilder<>::createProperty("Path")
       .withDescription("The path within the archive to focus (\"/\" to focus the total archive)")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{Path};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({Path});
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

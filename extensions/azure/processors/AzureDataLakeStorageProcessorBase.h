@@ -47,10 +47,10 @@ class AzureDataLakeStorageProcessorBase : public AzureStorageProcessorBase {
           "If left empty it designates the root directory. The directory will be created if not already existing.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureStorageProcessorBase::Properties, std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureStorageProcessorBase::Properties, std::to_array<core::PropertyReference>({
       FilesystemName,
       DirectoryName
-  });
+  }));
 
 
   explicit AzureDataLakeStorageProcessorBase(std::string_view name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)

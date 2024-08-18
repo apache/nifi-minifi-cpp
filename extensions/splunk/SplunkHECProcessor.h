@@ -61,13 +61,13 @@ class SplunkHECProcessor : public core::Processor {
       .withExclusiveOfProperties({{{"Hostname", "^http:.*$"}}})
       .withAllowedTypes<minifi::controllers::SSLContextService>()
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Hostname,
       Port,
       Token,
       SplunkRequestChannel,
       SSLContext
-  };
+  });
 
 
   explicit SplunkHECProcessor(std::string_view name, const utils::Identifier& uuid = {})

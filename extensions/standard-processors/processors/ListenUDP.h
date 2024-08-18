@@ -55,11 +55,11 @@ class ListenUDP : public NetworkListenerProcessor {
       .withDefaultValue("10000")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Port,
       MaxBatchSize,
       MaxQueueSize,
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Messages received successfully will be sent out this relationship."};

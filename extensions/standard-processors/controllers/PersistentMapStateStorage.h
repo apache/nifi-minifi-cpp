@@ -60,11 +60,11 @@ class PersistentMapStateStorage : public KeyValueStateStorage {
       .withDescription("Path to a file to store state")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       AlwaysPersist,
       AutoPersistenceInterval,
       File
-  };
+  });
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

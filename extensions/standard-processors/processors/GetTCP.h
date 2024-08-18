@@ -106,7 +106,7 @@ class GetTCP : public core::Processor {
       .isRequired(true)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       EndpointList,
       SSLContextService,
       MessageDelimiter,
@@ -115,7 +115,7 @@ class GetTCP : public core::Processor {
       MaxBatchSize,
       Timeout,
       ReconnectInterval
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
   EXTENSIONAPI static constexpr auto Partial = core::RelationshipDefinition{"partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger"};

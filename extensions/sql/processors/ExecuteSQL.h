@@ -51,7 +51,7 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
         "Note that Expression Language is not evaluated for flow file contents.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, FlowFileSource::Properties, std::array<core::PropertyReference, 1>{SQLSelectQuery});
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, FlowFileSource::Properties, std::to_array<core::PropertyReference>({SQLSelectQuery}));
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully created FlowFile from SQL query result set."};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Flow files containing malformed sql statements"};

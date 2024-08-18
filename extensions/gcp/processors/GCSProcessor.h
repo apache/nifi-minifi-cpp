@@ -56,11 +56,11 @@ class GCSProcessor : public core::Processor {
       .isRequired(false)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       GCPCredentials,
       NumberOfRetries,
       EndpointOverrideURL
-  };
+  });
 
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;

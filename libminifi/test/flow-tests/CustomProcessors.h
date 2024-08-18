@@ -63,7 +63,7 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
   explicit TestProcessor(const std::string& name) : Processor(name) {}
 
   static constexpr const char* Description = "Processor used for testing cycles";
-  static constexpr auto Properties = std::array<core::PropertyReference, 2>{AppleProbability, BananaProbability};
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({AppleProbability, BananaProbability});
   static constexpr auto Relationships = std::array{Apple, Banana};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;

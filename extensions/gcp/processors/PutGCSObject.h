@@ -122,7 +122,7 @@ class PutGCSObject : public GCSProcessor {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(GCSProcessor::Properties, std::array<core::PropertyReference, 8>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(GCSProcessor::Properties, std::to_array<core::PropertyReference>({
       Bucket,
       Key,
       ContentType,
@@ -131,7 +131,7 @@ class PutGCSObject : public GCSProcessor {
       EncryptionKey,
       ObjectACL,
       OverwriteObject
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Files that have been successfully written to Google Cloud Storage are transferred to this relationship"};

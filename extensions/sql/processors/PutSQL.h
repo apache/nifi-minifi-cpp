@@ -48,7 +48,7 @@ class PutSQL : public SQLProcessor {
       .isRequired(false)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, std::array<core::PropertyReference, 1>{SQLStatement});
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, std::to_array<core::PropertyReference>({SQLStatement}));
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "After a successful SQL update operation, the incoming FlowFile sent here"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Flow files that contain malformed sql statements"};

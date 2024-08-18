@@ -147,7 +147,7 @@ class GetFile : public core::Processor {
       .withDescription("Only files whose names match the given regular expression will be picked up")
       .withDefaultValue(".*")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 11>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Directory,
       Recurse,
       KeepSourceFile,
@@ -159,7 +159,7 @@ class GetFile : public core::Processor {
       PollInterval,
       BatchSize,
       FileFilter
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};

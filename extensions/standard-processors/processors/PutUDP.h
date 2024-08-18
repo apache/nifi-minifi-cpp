@@ -47,7 +47,7 @@ class PutUDP final : public core::Processor {
     .isRequired(true)
     .supportsExpressionLanguage(true)
     .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{Hostname, Port};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({Hostname, Port});
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles that encountered IO errors are sent out this relationship."};

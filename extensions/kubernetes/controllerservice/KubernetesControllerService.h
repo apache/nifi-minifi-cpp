@@ -48,11 +48,11 @@ class KubernetesControllerService : public AttributeProviderService {
   EXTENSIONAPI static constexpr auto ContainerNameFilter = core::PropertyDefinitionBuilder<>::createProperty("Container Name Filter")
       .withDescription("If present, limit the output to containers the name of which matches this regular expression")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       NamespaceFilter,
       PodNameFilter,
       ContainerNameFilter
-  };
+  });
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

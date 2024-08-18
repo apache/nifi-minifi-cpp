@@ -66,7 +66,7 @@ class ExampleProcessor : public core::Processor {
       .isRequired(false)
       .withAllowedTypes<ExampleService>()
       .build();
-  static constexpr auto Properties = std::array<core::PropertyReference, 1>{ExampleProperty};
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({ExampleProperty});
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;

@@ -63,14 +63,14 @@ class CaptureRTSPFrame : public core::Processor {
     .withDescription("The encoding that should be applied the the frame images captured from the RTSP stream")
     .withDefaultValue(".jpg")
     .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       RTSPUsername,
       RTSPPassword,
       RTSPHostname,
       RTSPURI,
       RTSPPort,
       ImageEncoding
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successful capture of RTSP frame"};

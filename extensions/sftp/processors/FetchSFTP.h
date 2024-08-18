@@ -92,14 +92,14 @@ class FetchSFTP : public SFTPProcessorBase {
       .withDefaultValue("false")
       .build();
 
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SFTPProcessorBase::Properties, std::array<core::PropertyReference, 6>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SFTPProcessorBase::Properties, std::to_array<core::PropertyReference>({
       RemoteFile,
       CompletionStrategy,
       MoveDestinationDirectory,
       CreateDirectory,
       DisableDirectoryListing,
       UseCompression
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",

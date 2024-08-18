@@ -38,7 +38,7 @@ class SQLProcessor: public core::Processor {
       .isRequired(true)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{DBControllerService};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({DBControllerService});
 
  protected:
   SQLProcessor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)

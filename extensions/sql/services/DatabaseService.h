@@ -57,7 +57,7 @@ class DatabaseService : public core::controller::ControllerService {
       .isRequired(true)
       .isSensitive(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{ConnectionString};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({ConnectionString});
 
   void initialize() override;
 

@@ -39,7 +39,7 @@ class CollectKubernetesPodMetrics : public core::Processor {
     .withDescription("Controller service which provides Kubernetes functionality")
     .isRequired(true)
     .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{KubernetesControllerService};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({KubernetesControllerService});
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All flow files produced are routed to Success."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

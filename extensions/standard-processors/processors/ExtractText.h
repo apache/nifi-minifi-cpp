@@ -85,7 +85,7 @@ class ExtractText : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Attribute,
       SizeLimit,
       RegexMode,
@@ -93,7 +93,7 @@ class ExtractText : public core::Processor {
       InsensitiveMatch,
       MaxCaptureGroupLen,
       EnableRepeatingCaptureGroup
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};

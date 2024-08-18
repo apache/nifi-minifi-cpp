@@ -56,7 +56,7 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
       .withDefaultValue(magic_enum::enum_name(azure::FileExistsResolutionStrategy::fail))
       .withAllowedValues(magic_enum::enum_names<azure::FileExistsResolutionStrategy>())
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageFileProcessorBase::Properties, std::array<core::PropertyReference, 1>{ConflictResolutionStrategy});
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageFileProcessorBase::Properties, std::to_array<core::PropertyReference>({ConflictResolutionStrategy}));
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Files that have been successfully written to Azure storage are transferred to this relationship"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Files that could not be written to Azure storage for some reason are transferred to this relationship"};

@@ -83,10 +83,10 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
       .withDefaultValue("1000")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SplunkHECProcessor::Properties, std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SplunkHECProcessor::Properties, std::to_array<core::PropertyReference>({
       MaximumWaitingTime,
       MaxQuerySize
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Acknowledged = core::RelationshipDefinition{"acknowledged",

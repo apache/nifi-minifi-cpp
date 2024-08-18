@@ -56,10 +56,10 @@ class FetchSmb : public core::Processor {
       .isRequired(false)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       ConnectionControllerService,
       RemoteFile
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "A flowfile will be routed here for each successfully fetched file."};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "A flowfile will be routed here when failed to fetch its content."};
