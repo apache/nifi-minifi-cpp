@@ -131,7 +131,7 @@ class PutFile : public core::Processor {
     [[nodiscard]] bool valid() const { return permissions_ < MINIMUM_INVALID_PERMISSIONS_VALUE; }
     [[nodiscard]] uint32_t getValue() const { return permissions_; }
     void setValue(uint32_t perms) { permissions_ = perms; }
-    
+
    private:
     uint32_t permissions_ = MINIMUM_INVALID_PERMISSIONS_VALUE;
   };
