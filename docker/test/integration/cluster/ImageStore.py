@@ -190,17 +190,22 @@ class ImageStore:
                            parse_document_sed_cmd=parse_document_sed_cmd,
                            chunk_document_sed_cmd=chunk_document_sed_cmd))
 
-        return self.__build_image(dockerfile, [os.path.join(self.test_dir, "resources", "python", "RotatingForwarder.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "SpecialPropertyTypeChecker.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "ProcessContextInterfaceChecker.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "CreateFlowFile.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "FailureWithAttributes.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "RelativeImporterProcessor.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "subtractutils.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "multiplierutils.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "CreateNothing.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "FailureWithContent.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "TransferToOriginal.py")])
+        def build_full_python_resource_path(resource):
+            return os.path.join(self.test_dir, "resources", "python", resource)
+
+        return self.__build_image(dockerfile, [
+            build_full_python_resource_path("RotatingForwarder.py"),
+            build_full_python_resource_path("SpecialPropertyTypeChecker.py"),
+            build_full_python_resource_path("ProcessContextInterfaceChecker.py"),
+            build_full_python_resource_path("CreateFlowFile.py"),
+            build_full_python_resource_path("FailureWithAttributes.py"),
+            build_full_python_resource_path("RelativeImporterProcessor.py"),
+            build_full_python_resource_path("subtractutils.py"),
+            build_full_python_resource_path("multiplierutils.py"),
+            build_full_python_resource_path("CreateNothing.py"),
+            build_full_python_resource_path("FailureWithContent.py"),
+            build_full_python_resource_path("TransferToOriginal.py"),
+        ])
 
     def __build_http_proxy_image(self):
         dockerfile = dedent("""\
