@@ -222,3 +222,27 @@ Feature: MiNiFi can use python processors in its flows
     When all instances start up
 
     Then the Minifi logs contain the following message: "Result relationship cannot be 'original', it is reserved for the original flow file, and transferred automatically in non-failure cases." in less than 60 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: MiNiFi C++ supports RecordTransform native python processors
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content '{"group": "group1", "name": "John"}\n{"group": "group1", "name": "Jane"}\n{"group": "group2", "name": "Kyle"}\n{"name": "Zoe"}' is present in '/tmp/input'
+    And a file with the content '{"group": "group1", "name": "Steve"}\n{}' is present in '/tmp/input'
+    And a SetRecordField processor with the "Record Reader" property set to "JsonRecordSetReader"
+    And the "Record Writer" property of the SetRecordField processor is set to "JsonRecordSetWriter"
+    And a JsonRecordSetReader controller service is set up
+    And a JsonRecordSetWriter controller service is set up with "Array" output grouping
+    And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
+    And the "Log Payload" property of the LogAttribute processor is set to "true"
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
+
+    And the "success" relationship of the GetFile processor is connected to the SetRecordField
+    And the "success" relationship of the SetRecordField processor is connected to the LogAttribute
+
+    When all instances start up
+
+    Then the Minifi logs contain the following message: '[{"group":"group1","name":"John"},{"group":"group1","name":"Jane"}]' in less than 60 seconds
+    And the Minifi logs contain the following message: '[{"group":"group2","name":"Kyle"}]' in less than 5 seconds
+    And the Minifi logs contain the following message: '[{"name":"Zoe"}]' in less than 5 seconds
+    And the Minifi logs contain the following message: '[{"group":"group1","name":"Steve"}]' in less than 5 seconds
+    And the Minifi logs contain the following message: '[{}]' in less than 5 seconds

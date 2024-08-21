@@ -30,11 +30,11 @@ namespace org::apache::nifi::minifi::extensions::python {
 namespace core = org::apache::nifi::minifi::core;
 
 PyProcessSession::PyProcessSession(core::ProcessSession& session)
-    : session_(gsl::make_not_null(&session)) {
+    : session_(session) {
 }
 
 std::shared_ptr<core::FlowFile> PyProcessSession::get() {
-  auto flow_file = session_->get();
+  auto flow_file = session_.get();
 
   if (flow_file == nullptr) {
     return nullptr;
@@ -51,7 +51,7 @@ void PyProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow_file
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->transfer(flow_file, relationship);
+  session_.transfer(flow_file, relationship);
 }
 
 void PyProcessSession::transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& relationship_name) {
@@ -59,7 +59,7 @@ void PyProcessSession::transferToCustomRelationship(const std::shared_ptr<core::
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->transferToCustomRelationship(flow_file, relationship_name);
+  session_.transferToCustomRelationship(flow_file, relationship_name);
 }
 
 void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback) {
@@ -67,7 +67,7 @@ void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, Bo
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->read(flow_file, [&input_stream_callback](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+  session_.read(flow_file, [&input_stream_callback](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
     return Long(Callable(input_stream_callback.getAttribute("process"))(std::weak_ptr(input_stream))).asInt64();
   });
 }
@@ -77,13 +77,13 @@ void PyProcessSession::write(const std::shared_ptr<core::FlowFile>& flow_file, B
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->write(flow_file, [&output_stream_callback](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
+  session_.write(flow_file, [&output_stream_callback](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
     return Long(Callable(output_stream_callback.getAttribute("process"))(std::weak_ptr(output_stream))).asInt64();
   });
 }
 
 std::shared_ptr<core::FlowFile> PyProcessSession::create(const std::shared_ptr<core::FlowFile>& flow_file) {
-  auto result = session_->create(flow_file.get());
+  auto result = session_.create(flow_file.get());
 
   flow_files_.push_back(result);
   return result;
@@ -94,14 +94,14 @@ std::shared_ptr<core::FlowFile> PyProcessSession::clone(const std::shared_ptr<co
     throw std::runtime_error("Flow file to clone is nullptr");
   }
 
-  auto result = session_->clone(*flow_file);
+  auto result = session_.clone(*flow_file);
 
   flow_files_.push_back(result);
   return result;
 }
 
 void PyProcessSession::remove(const std::shared_ptr<core::FlowFile>& flow_file) {
-  session_->remove(flow_file);
+  session_.remove(flow_file);
   flow_files_.erase(ranges::remove_if(flow_files_, [&flow_file](const auto& ff)-> bool { return ff == flow_file; }), flow_files_.end());
 }
 
@@ -111,7 +111,7 @@ std::string PyProcessSession::getContentsAsString(const std::shared_ptr<core::Fl
   }
 
   std::string content;
-  session_->read(flow_file, [&content](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+  session_.read(flow_file, [&content](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
     content.resize(input_stream->size());
     return gsl::narrow<int64_t>(input_stream->read(as_writable_bytes(std::span(content))));
   });
@@ -119,7 +119,7 @@ std::string PyProcessSession::getContentsAsString(const std::shared_ptr<core::Fl
 }
 
 void PyProcessSession::putAttribute(const std::shared_ptr<core::FlowFile>& flow_file, std::string_view key, const std::string& value) {
-  session_->putAttribute(*flow_file, key, value);
+  session_.putAttribute(*flow_file, key, value);
 }
 
 extern "C" {
@@ -178,14 +178,24 @@ PyObject* PyProcessSessionObject::get(PyProcessSessionObject* self, PyObject*) {
   return object::returnReference(nullptr);
 }
 
-PyObject* PyProcessSessionObject::create(PyProcessSessionObject* self, PyObject*) {
+PyObject* PyProcessSessionObject::create(PyProcessSessionObject* self, PyObject* args) {
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
     return nullptr;
   }
 
-  if (auto flow_file = session->create(nullptr))
+  std::shared_ptr<core::FlowFile> parent_flow_file;
+  auto arg_size = PyTuple_Size(args);
+  if (arg_size > 0) {
+    PyObject* script_flow_file = nullptr;
+    if (!PyArg_ParseTuple(args, "O!", PyScriptFlowFile::typeObject(), &script_flow_file)) {
+      return nullptr;
+    }
+    parent_flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
+  }
+
+  if (auto flow_file = session->create(parent_flow_file))
     return object::returnReference(std::weak_ptr(flow_file));
   return object::returnReference(nullptr);
 }

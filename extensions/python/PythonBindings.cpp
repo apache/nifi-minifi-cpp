@@ -28,6 +28,8 @@
 #include "types/PyStateManager.h"
 #include "types/PyDataConverter.h"
 #include "types/PySSLContextService.h"
+#include "types/PyRecordSetReader.h"
+#include "types/PyRecordSetWriter.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 extern "C" {
@@ -62,7 +64,9 @@ PyInit_minifi_native(void) {
       std::make_pair(PyInputStream::typeObject(), "InputStream"),
       std::make_pair(PyOutputStream::typeObject(), "OutputStream"),
       std::make_pair(PyStateManager::typeObject(), "StateManager"),
-      std::make_pair(PySSLContextService::typeObject(), "SSLContextService")
+      std::make_pair(PySSLContextService::typeObject(), "SSLContextService"),
+      std::make_pair(PyRecordSetReader::typeObject(), "RecordSetReader"),
+      std::make_pair(PyRecordSetWriter::typeObject(), "RecordSetWriter")
   });
 
   for (const auto& type : types) {

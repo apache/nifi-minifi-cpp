@@ -40,12 +40,6 @@ class FlowFileSourceResult:
 
 
 class FlowFileSource(ProcessorBase):
-    # These will be added through the python bindings using C API
-    logger = None
-    REL_SUCCESS = None
-    REL_FAILURE = None
-    REL_ORIGINAL = None
-
     def onTrigger(self, context: ProcessContext, session: ProcessSession):
         context_proxy = ProcessContextProxy(context, self)
         try:

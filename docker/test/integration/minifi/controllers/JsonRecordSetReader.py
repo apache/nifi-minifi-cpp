@@ -17,8 +17,7 @@
 from ..core.ControllerService import ControllerService
 
 
-class JsonRecordSetWriter(ControllerService):
-    def __init__(self, name=None, output_grouping='One Line Per Object'):
-        super(JsonRecordSetWriter, self).__init__(name=name)
-        self.service_class = 'JsonRecordSetWriter'
-        self.properties['Output Grouping'] = output_grouping
+class JsonRecordSetReader(ControllerService):
+    def __init__(self, name=None):
+        super(JsonRecordSetReader, self).__init__(name=name)
+        self.service_class = 'JsonRecordSetReader'
