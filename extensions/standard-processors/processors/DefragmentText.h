@@ -86,12 +86,12 @@ class DefragmentText : public core::Processor {
       .withDescription("The maximum buffer size, if the buffer exceeds this, it will be transferred to failure. Expected format is <size> <data unit>")
       .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Pattern,
       PatternLoc,
       MaxBufferAge,
       MaxBufferSize
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Flowfiles that have been successfully defragmented"};

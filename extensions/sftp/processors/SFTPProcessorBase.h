@@ -135,7 +135,7 @@ class SFTPProcessorBase : public core::Processor {
       .supportsExpressionLanguage(true)
       .isSensitive(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 16>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Hostname,
       Port,
       Username,
@@ -152,7 +152,7 @@ class SFTPProcessorBase : public core::Processor {
       ProxyPort,
       HttpProxyUsername,
       HttpProxyPassword
-  };
+  });
 
 
   void notifyStop() override;

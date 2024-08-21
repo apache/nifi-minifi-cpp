@@ -86,7 +86,7 @@ class ListFile : public core::Processor {
       .withDefaultValue("true")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 9>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       InputDirectory,
       RecurseSubdirectories,
       FileFilter,
@@ -96,7 +96,7 @@ class ListFile : public core::Processor {
       MinimumFileSize,
       MaximumFileSize,
       IgnoreHiddenFiles
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};

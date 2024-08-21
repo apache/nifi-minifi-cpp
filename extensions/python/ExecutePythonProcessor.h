@@ -68,12 +68,12 @@ class ExecutePythonProcessor : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       ScriptFile,
       ScriptBody,
       ModuleDirectory,
       ReloadOnScriptChange
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Script succeeds"};

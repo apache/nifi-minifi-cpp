@@ -80,7 +80,7 @@ class PostElasticsearch : public core::Processor {
                       "For all other Actions, the attribute must evaluate to a non-empty value.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Action,
       MaxBatchSize,
       ElasticCredentials,
@@ -88,7 +88,7 @@ class PostElasticsearch : public core::Processor {
       Hosts,
       Index,
       Identifier
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All flowfiles that succeed in being transferred into Elasticsearch go here."};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "All flowfiles that fail for reasons unrelated to server availability go to this relationship."};

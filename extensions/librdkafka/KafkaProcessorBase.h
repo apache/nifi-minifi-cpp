@@ -79,7 +79,7 @@ class KafkaProcessorBase : public core::Processor {
       .withDescription("The password for the given username when the SASL Mechanism is sasl_plaintext")
       .isSensitive(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       SSLContextService,
       SecurityProtocol,
       KerberosServiceName,
@@ -88,7 +88,7 @@ class KafkaProcessorBase : public core::Processor {
       SASLMechanism,
       Username,
       Password
-  };
+  });
 
 
   KafkaProcessorBase(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)

@@ -49,11 +49,11 @@ class PushGrafanaLokiGrpc : public PushGrafanaLoki {
                      "if we run over the limit. Setting it to 0 allows sending pings without such a restriction. If not set, then the default value 2 is used.")
     .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
     .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(PushGrafanaLoki::Properties, std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(PushGrafanaLoki::Properties, std::to_array<core::PropertyReference>({
       KeepAliveTime,
       KeepAliveTimeout,
       MaxPingsWithoutData,
-  });
+  }));
 
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;

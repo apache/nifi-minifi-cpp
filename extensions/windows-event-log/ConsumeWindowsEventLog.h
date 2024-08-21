@@ -177,7 +177,7 @@ class ConsumeWindowsEventLog : public core::Processor {
       .withDefaultValue("true")
       .withDescription("Determines whether SID to name lookups are cached in memory")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 15>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
         Channel,
         Query,
         MaxBufferSize,
@@ -193,7 +193,7 @@ class ConsumeWindowsEventLog : public core::Processor {
         BookmarkRootDirectory,
         ProcessOldEvents,
         CacheSidLookups
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Relationship for successfully consumed events."};

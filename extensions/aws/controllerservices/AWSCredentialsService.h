@@ -67,12 +67,12 @@ class AWSCredentialsService : public core::controller::ControllerService {
   EXTENSIONAPI static constexpr auto CredentialsFile = core::PropertyDefinitionBuilder<>::createProperty("Credentials File")
       .withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       UseDefaultCredentials,
       AccessKey,
       SecretKey,
       CredentialsFile
-  };
+  });
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

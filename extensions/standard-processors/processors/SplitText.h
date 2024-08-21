@@ -131,13 +131,13 @@ class SplitText : public core::Processor {
       .isRequired(true)
       .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       LineSplitCount,
       MaximumFragmentSize,
       HeaderLineCount,
       HeaderLineMarkerCharacters,
       RemoveTrailingNewlines
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Failure =
     core::RelationshipDefinition{"failure", "If a file cannot be split for some reason, the original file will be routed to this destination and nothing will be routed elsewhere"};

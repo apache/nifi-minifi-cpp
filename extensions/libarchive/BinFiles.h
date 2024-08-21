@@ -219,7 +219,7 @@ class BinFiles : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
       .withDefaultValue("1")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       MinSize,
       MaxSize,
       MinEntries,
@@ -227,7 +227,7 @@ class BinFiles : public core::Processor {
       MaxBinCount,
       MaxBinAge,
       BatchSize
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure",

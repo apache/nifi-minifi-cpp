@@ -82,13 +82,13 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
           "In case of neither of them is specified, this information will not be sent to the server.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SplunkHECProcessor::Properties, std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SplunkHECProcessor::Properties, std::to_array<core::PropertyReference>({
       Source,
       SourceType,
       Host,
       Index,
       ContentType
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are sent to this relationship."};

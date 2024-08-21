@@ -94,14 +94,14 @@ class ConsumeJournald final : public core::Processor {
     .withDefaultValue("%x %X %Z")
     .isRequired(true)
     .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       BatchSize,
       PayloadFormat,
       IncludeTimestamp,
       JournalType,
       ProcessOldMessages,
       TimestampFormat
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully consumed journal messages."};

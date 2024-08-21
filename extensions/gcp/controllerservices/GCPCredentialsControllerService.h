@@ -16,6 +16,7 @@
  */
 
 #pragma once
+
 #include <filesystem>
 #include <string>
 #include <memory>
@@ -82,11 +83,11 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
       .isRequired(false)
       .isSensitive(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       CredentialsLoc,
       JsonFilePath,
       JsonContents
-  };
+  });
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

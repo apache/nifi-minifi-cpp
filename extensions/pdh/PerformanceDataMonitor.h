@@ -82,13 +82,13 @@ class PerformanceDataMonitor : public core::Processor {
       .withDescription("The number of decimal places to round the values to (blank for no rounding)")
       .withDefaultValue("")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       PredefinedGroups,
       CustomPDHCounters,
       OutputFormatProperty,
       OutputCompactness,
       DecimalPlaces
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};

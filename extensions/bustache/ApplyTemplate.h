@@ -45,7 +45,7 @@ class ApplyTemplate : public core::Processor {
   EXTENSIONAPI static constexpr core::PropertyDefinition Template = core::PropertyDefinitionBuilder<>::createProperty("Template")
       .withDescription("Path to the input mustache template file")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{Template};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({Template});
 
   EXTENSIONAPI static constexpr core::RelationshipDefinition Success{"success", "success operational on the flow record"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

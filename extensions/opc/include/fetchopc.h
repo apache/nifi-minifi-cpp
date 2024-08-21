@@ -73,13 +73,13 @@ class FetchOPCProcessor : public BaseOPCProcessor {
       .isRequired(true)
       .withAllowedValues({"On", "Off"})
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::to_array<core::PropertyReference>({
       NodeIDType,
       NodeID,
       NameSpaceIndex,
       MaxDepth,
       Lazy
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully retrieved OPC-UA nodes"};

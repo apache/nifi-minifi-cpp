@@ -47,7 +47,7 @@ TEST_CASE("Parse enum property") {
       .withAllowedValues(magic_enum::enum_names<TestEnum>())
       .build();
   auto proc = std::make_shared<TestProcessor>("test-proc");
-  proc->setSupportedProperties(std::array<core::PropertyReference, 1>{prop});
+  proc->setSupportedProperties(std::to_array<core::PropertyReference>({prop}));
   ProcessContext context(std::make_shared<ProcessorNode>(proc.get()), nullptr, nullptr, nullptr, nullptr, nullptr);
   SECTION("Valid") {
     proc->setProperty(prop, "B");

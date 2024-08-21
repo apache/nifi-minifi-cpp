@@ -69,13 +69,13 @@ class MotionDetector : public core::Processor {
       .withDescription("If not provided then the processor will take the first input frame as background")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       ImageEncoding,
       MinInterestArea,
       Threshold,
       DilateIter,
       BackgroundFrame
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successful to detect motion"};

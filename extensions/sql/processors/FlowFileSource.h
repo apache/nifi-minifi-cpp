@@ -75,7 +75,7 @@ class FlowFileSource {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
       .withDefaultValue("0")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{OutputFormat, MaxRowsPerFlowFile};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({OutputFormat, MaxRowsPerFlowFile});
 
  protected:
   class FlowFileGenerator : public sql::SQLRowSubscriber {

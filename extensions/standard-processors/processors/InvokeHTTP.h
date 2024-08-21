@@ -187,7 +187,7 @@ class InvokeHTTP : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::DATA_TRANSFER_SPEED_TYPE)
       .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 23>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
         Method,
         URL,
         ConnectTimeout,
@@ -211,7 +211,7 @@ class InvokeHTTP : public core::Processor {
         InvalidHTTPHeaderFieldHandlingStrategy,
         UploadSpeedLimit,
         DownloadSpeedLimit
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",

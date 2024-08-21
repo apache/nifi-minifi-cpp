@@ -156,11 +156,11 @@ class HashContent : public core::Processor {
       .withDescription("Route to failure relationship in case of empty content")
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       HashAttribute,
       HashAlgorithm,
       FailOnEmpty
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};

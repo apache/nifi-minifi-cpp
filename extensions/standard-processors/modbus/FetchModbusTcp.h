@@ -86,7 +86,7 @@ class FetchModbusTcp final : public core::Processor {
       .withAllowedTypes<core::RecordSetWriter>()
       .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
     Hostname,
     Port,
     UnitIdentifier,
@@ -95,7 +95,7 @@ class FetchModbusTcp final : public core::Processor {
     Timeout,
     SSLContextService,
     RecordSetWriter
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully processed"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "An error occurred processing"};

@@ -83,12 +83,12 @@ class ProcFsMonitor : public core::Processor {
       .withDefaultValue(magic_enum::enum_name(ResultRelativeness::Absolute))
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       OutputFormatProperty,
       OutputCompactnessProperty,
       DecimalPlaces,
       ResultRelativenessProperty
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};

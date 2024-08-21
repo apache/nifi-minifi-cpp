@@ -112,13 +112,13 @@ class RemoteProcessorGroupPort : public core::Processor {
     .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
     .withDefaultValue("15 s")
     .build();
-  MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       hostName,
       SSLContext,
       port,
       portUUID,
       idleTimeout
-  };
+  });
 
 
   MINIFIAPI static constexpr auto relation = core::RelationshipDefinition{"", ""};

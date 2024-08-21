@@ -179,7 +179,7 @@ class PublishKafka : public KafkaProcessorBase {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(KafkaProcessorBase::Properties, std::array<core::PropertyReference, 23>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(KafkaProcessorBase::Properties, std::to_array<core::PropertyReference>({
       SeedBrokers,
       Topic,
       DeliveryGuarantee,
@@ -203,7 +203,7 @@ class PublishKafka : public KafkaProcessorBase {
       MessageKeyField,
       DebugContexts,
       FailEmptyFlowFiles
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Any FlowFile that is successfully sent to Kafka will be routed to this Relationship"};

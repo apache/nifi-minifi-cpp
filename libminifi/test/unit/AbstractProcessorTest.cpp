@@ -38,7 +38,7 @@ struct AbstractProcessorTestCase1 : core::AbstractProcessor<AbstractProcessorTes
       .supportsExpressionLanguage(false)
       .isRequired(false)
       .build();
-  static constexpr auto Properties = std::array<core::PropertyReference, 2>{Property1, Property2};
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({Property1, Property2});
   static constexpr core::RelationshipDefinition Rel1{"rel1", "rel1 description"};
   static constexpr auto Relationships = std::array{Rel1};
   AbstractProcessorTestCase1() :core::AbstractProcessor<AbstractProcessorTestCase1>{"TestCase1"} {}
@@ -82,7 +82,7 @@ struct AbstractProcessorTestCase2 : core::AbstractProcessor<AbstractProcessorTes
       .supportsExpressionLanguage(false)
       .isRequired(false)
       .build();
-  static constexpr auto Properties = std::array<core::PropertyReference, 2>{Property1, Property2};
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({Property1, Property2});
   static constexpr core::RelationshipDefinition Rel1{"Relationship1", "rel1 description"};
   static constexpr auto Relationships = std::array{Rel1};
   AbstractProcessorTestCase2() :core::AbstractProcessor<AbstractProcessorTestCase2>{"TestCase2"} {}

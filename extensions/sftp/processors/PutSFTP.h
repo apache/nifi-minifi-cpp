@@ -153,7 +153,7 @@ class PutSFTP : public SFTPProcessorBase {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SFTPProcessorBase::Properties, std::array<core::PropertyReference, 13>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SFTPProcessorBase::Properties, std::to_array<core::PropertyReference>({
       RemotePath,
       CreateDirectory,
       DisableDirectoryListing,
@@ -167,7 +167,7 @@ class PutSFTP : public SFTPProcessorBase {
       RemoteOwner,
       RemoteGroup,
       UseCompression
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are successfully sent will be routed to success"};

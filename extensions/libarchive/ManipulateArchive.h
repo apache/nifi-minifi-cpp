@@ -60,13 +60,13 @@ class ManipulateArchive : public core::Processor {
   EXTENSIONAPI static constexpr auto After = core::PropertyDefinitionBuilder<>::createProperty("After")
       .withDescription("For operations which result in new entries, places the new entry after the entry specified by this property.")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Operation,
       Target,
       Destination,
       Before,
       After
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles will be transferred to the success relationship if the operation succeeds."};

@@ -61,11 +61,11 @@ class RocksDbStateStorage : public KeyValueStateStorage {
       .withDescription("Path to a directory for the database")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       AlwaysPersist,
       AutoPersistenceInterval,
       Directory
-  };
+  });
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

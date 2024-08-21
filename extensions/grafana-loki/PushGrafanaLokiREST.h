@@ -48,12 +48,12 @@ class PushGrafanaLokiREST : public PushGrafanaLoki {
   EXTENSIONAPI static constexpr auto BearerTokenFile = core::PropertyDefinitionBuilder<>::createProperty("Bearer Token File")
     .withDescription("Path of file containing bearer token for bearer token authentication.")
     .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(PushGrafanaLoki::Properties, std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(PushGrafanaLoki::Properties, std::to_array<core::PropertyReference>({
       ReadTimeout,
       Username,
       Password,
       BearerTokenFile
-  });
+  }));
 
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;

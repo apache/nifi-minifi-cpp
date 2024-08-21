@@ -138,7 +138,7 @@ class PutS3Object : public S3Processor {
       .withDefaultValue("7 days")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 14>{
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::to_array<core::PropertyReference>({
       ObjectKey,
       ContentType,
       StorageClass,
@@ -153,7 +153,7 @@ class PutS3Object : public S3Processor {
       MultipartPartSize,
       MultipartUploadAgeOffInterval,
       MultipartUploadMaxAgeThreshold
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};

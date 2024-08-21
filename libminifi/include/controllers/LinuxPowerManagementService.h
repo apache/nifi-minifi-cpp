@@ -91,14 +91,14 @@ class LinuxPowerManagerService : public ThreadManagementService {
       .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .withDefaultValue("100 ms")
       .build();
-  MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
+  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       BatteryCapacityPath,
       BatteryStatusPath,
       BatteryStatusDischargeKeyword,
       TriggerThreshold,
       LowBatteryThreshold,
       WaitPeriod
-  };
+  });
 
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;

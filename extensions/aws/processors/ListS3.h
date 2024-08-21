@@ -73,7 +73,7 @@ class ListS3 : public S3Processor {
       .withDescription("If true, indicates that the requester consents to pay any charges associated with listing the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'. "
           "Note that this setting is only used if Write User Metadata is true.")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::to_array<core::PropertyReference>({
       Delimiter,
       Prefix,
       UseVersions,
@@ -81,7 +81,7 @@ class ListS3 : public S3Processor {
       WriteObjectTags,
       WriteUserMetadata,
       RequesterPays
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};

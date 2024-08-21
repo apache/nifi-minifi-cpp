@@ -51,11 +51,11 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessor
       .withDefaultValue("0")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageFileProcessorBase::Properties, std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageFileProcessorBase::Properties, std::to_array<core::PropertyReference>({
       RangeStart,
       RangeLength,
       NumberOfRetries
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Files that have been successfully fetched from Azure storage are transferred to this relationship"};

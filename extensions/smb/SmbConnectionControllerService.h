@@ -59,13 +59,13 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
       .isSensitive(true)
       .build();
 
-  static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Hostname,
       Share,
       Domain,
       Username,
       Password
-  };
+  });
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

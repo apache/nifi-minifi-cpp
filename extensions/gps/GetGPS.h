@@ -59,11 +59,11 @@ class GetGPS : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
       .withDefaultValue("50000000")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       GPSDHost,
       GPSDPort,
       GPSDWaitTime
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};

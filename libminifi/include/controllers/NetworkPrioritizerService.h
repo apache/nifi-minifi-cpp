@@ -93,13 +93,13 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
-  MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       NetworkControllers,
       MaxThroughput,
       MaxPayload,
       VerifyInterfaces,
       DefaultPrioritizer
-  };
+  });
 
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;

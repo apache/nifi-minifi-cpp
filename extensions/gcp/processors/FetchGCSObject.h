@@ -61,12 +61,12 @@ class FetchGCSObject : public GCSProcessor {
       .withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(GCSProcessor::Properties, std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(GCSProcessor::Properties, std::to_array<core::PropertyReference>({
       Bucket,
       Key,
       EncryptionKey,
       ObjectGeneration
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to this relationship after a successful Google Cloud Storage operation."};

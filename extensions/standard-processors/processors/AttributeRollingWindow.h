@@ -66,12 +66,12 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
       .isRequired(true)
       .withDefaultValue("rolling.window.")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
     ValueToTrack,
     TimeWindow,
     WindowLength,
     AttributeNamePrefix
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are "
       "successfully processed are routed to this relationship."};

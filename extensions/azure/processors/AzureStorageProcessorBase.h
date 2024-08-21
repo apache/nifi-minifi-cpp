@@ -40,7 +40,7 @@ class AzureStorageProcessorBase : public core::Processor {
   EXTENSIONAPI static constexpr auto AzureStorageCredentialsService = core::PropertyDefinitionBuilder<>::createProperty("Azure Storage Credentials Service")
       .withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{AzureStorageCredentialsService};
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({AzureStorageCredentialsService});
 
   AzureStorageProcessorBase(std::string_view name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
     : core::Processor(name, uuid),

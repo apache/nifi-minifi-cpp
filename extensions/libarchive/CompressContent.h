@@ -131,14 +131,14 @@ class CompressContent : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
       .withDefaultValue("1")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       CompressMode,
       CompressLevel,
       CompressFormat,
       UpdateFileName,
       EncapsulateInTar,
       BatchSize
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed"};

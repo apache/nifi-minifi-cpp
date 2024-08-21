@@ -57,10 +57,10 @@ class KamikazeProcessor : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       ThrowInOnSchedule,
       ThrowInOnTrigger
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};

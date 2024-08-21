@@ -80,7 +80,7 @@ class LogAttribute : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
       .withDefaultValue("1")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       LogLevel,
       AttributesToLog,
       AttributesToIgnore,
@@ -89,7 +89,7 @@ class LogAttribute : public core::Processor {
       MaxPayloadLineLength,
       LogPrefix,
       FlowFilesToLog
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};

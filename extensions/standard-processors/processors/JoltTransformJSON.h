@@ -59,10 +59,10 @@ class JoltTransformJSON : public core::Processor {
       .isRequired(true)
       .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       JoltTransform,
       JoltSpecification
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
       "The FlowFile with transformed content will be routed to this relationship"};

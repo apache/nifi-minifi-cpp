@@ -72,12 +72,12 @@ class ExecuteScript : public core::Processor {
   EXTENSIONAPI static constexpr auto ModuleDirectory = core::PropertyDefinitionBuilder<>::createProperty("Module Directory")
       .withDescription(R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       ScriptEngine,
       ScriptFile,
       ScriptBody,
       ModuleDirectory
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Script successes"};

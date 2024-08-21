@@ -358,7 +358,7 @@ class MergeContent : public processors::BinFiles {
       .withAllowedValues({merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON, merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
       .withDefaultValue(merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BinFiles::Properties, std::array<core::PropertyReference, 9>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BinFiles::Properties, std::to_array<core::PropertyReference>({
       MergeStrategy,
       MergeFormat,
       CorrelationAttributeName,
@@ -368,7 +368,7 @@ class MergeContent : public processors::BinFiles {
       Footer,
       Demarcator,
       AttributeStrategy
-  });
+  }));
 
 
   EXTENSIONAPI static constexpr auto Merge = core::RelationshipDefinition{"merged", "The FlowFile containing the merged content"};

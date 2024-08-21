@@ -42,7 +42,7 @@ class DummyProcessor : public core::Processor {
       .withDescription("A property which supports expression language")
       .supportsExpressionLanguage(true)
       .build();
-  static constexpr auto Properties = std::array<core::PropertyReference, 2>{SimpleProperty, ExpressionLanguageProperty};
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({SimpleProperty, ExpressionLanguageProperty});
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = true;
   static constexpr bool SupportsDynamicRelationships = true;

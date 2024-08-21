@@ -82,13 +82,13 @@ class ExecuteProcess : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Command,
       CommandArguments,
       WorkingDir,
       BatchDuration,
       RedirectErrorStream
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All created FlowFiles are routed to this relationship."};

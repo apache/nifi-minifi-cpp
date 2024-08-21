@@ -168,7 +168,7 @@ class RouteText : public core::Processor {
       .withDefaultValue(magic_enum::enum_name(route_text::Segmentation::PER_LINE))
       .withAllowedValues(magic_enum::enum_names<route_text::Segmentation>())
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       RoutingStrategy,
       MatchingStrategy,
       TrimWhitespace,
@@ -176,7 +176,7 @@ class RouteText : public core::Processor {
       GroupingRegex,
       GroupingFallbackValue,
       SegmentationStrategy
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Original = core::RelationshipDefinition{"original", "The original input file will be routed to this destination"};

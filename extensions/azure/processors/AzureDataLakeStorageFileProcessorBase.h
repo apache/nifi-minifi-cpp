@@ -34,7 +34,7 @@ class AzureDataLakeStorageFileProcessorBase : public AzureDataLakeStorageProcess
       .withDescription("The filename in Azure Storage. If left empty the filename attribute will be used by default.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageProcessorBase::Properties, std::array<core::PropertyReference, 1>{FileName});
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageProcessorBase::Properties, std::to_array<core::PropertyReference>({FileName}));
 
   explicit AzureDataLakeStorageFileProcessorBase(std::string_view name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
     : AzureDataLakeStorageProcessorBase(name, uuid, logger) {

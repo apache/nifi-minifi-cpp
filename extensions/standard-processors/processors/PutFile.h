@@ -84,17 +84,17 @@ class PutFile : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto Properties =
 #ifndef WIN32
-      std::array<core::PropertyReference, 6>{
+      std::to_array<core::PropertyReference>({
           Permissions,
           DirectoryPermissions,
 #else
-      std::array<core::PropertyReference, 4>{
+      std::to_array<core::PropertyReference>({
 #endif
           Directory,
           ConflictResolution,
           CreateDirs,
           MaxDestFiles
-      };
+      });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failed files (conflict, write failure, etc.) are transferred to failure"};
@@ -126,10 +126,12 @@ class PutFile : public core::Processor {
 #ifndef WIN32
   class FilePermissions {
     static const uint32_t MINIMUM_INVALID_PERMISSIONS_VALUE = 1 << 9;
+
    public:
     [[nodiscard]] bool valid() const { return permissions_ < MINIMUM_INVALID_PERMISSIONS_VALUE; }
     [[nodiscard]] uint32_t getValue() const { return permissions_; }
     void setValue(uint32_t perms) { permissions_ = perms; }
+
    private:
     uint32_t permissions_ = MINIMUM_INVALID_PERMISSIONS_VALUE;
   };

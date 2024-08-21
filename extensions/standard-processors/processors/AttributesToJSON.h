@@ -97,13 +97,13 @@ class AttributesToJSON : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       AttributesList,
       AttributesRegularExpression,
       Destination,
       IncludeCoreAttributes,
       NullValue
-  };
+  });
 
 
   EXTENSIONAPI static constexpr core::RelationshipDefinition Success{"success", "All FlowFiles received are routed to success"};

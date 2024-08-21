@@ -85,7 +85,7 @@ class ListenSyslog : public NetworkListenerProcessor {
       .withDefaultValue(magic_enum::enum_name(utils::net::ClientAuthOption::NONE))
       .withAllowedValues(magic_enum::enum_names<utils::net::ClientAuthOption>())
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Port,
       ProtocolProperty,
       MaxBatchSize,
@@ -93,7 +93,7 @@ class ListenSyslog : public NetworkListenerProcessor {
       MaxQueueSize,
       SSLContextService,
       ClientAuth
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",

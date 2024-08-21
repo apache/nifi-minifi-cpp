@@ -62,14 +62,14 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       StorageAccountName,
       StorageAccountKey,
       SASToken,
       CommonStorageAccountEndpointSuffix,
       ConnectionString,
       UseManagedIdentityCredentials
-  };
+  });
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

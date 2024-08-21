@@ -158,7 +158,7 @@ class S3Processor : public core::Processor {
       .withDefaultValue("false")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 13>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Bucket,
       AccessKey,
       SecretKey,
@@ -172,7 +172,7 @@ class S3Processor : public core::Processor {
       ProxyUsername,
       ProxyPassword,
       UseDefaultCredentials
-  };
+  });
 
 
   explicit S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger);

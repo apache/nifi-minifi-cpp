@@ -49,10 +49,10 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
       .withDescription("Search prefix for listing")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageProcessorBase::Properties, std::array<core::PropertyReference, 2>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageProcessorBase::Properties, std::to_array<core::PropertyReference>({
       ListingStrategy,
       Prefix
-  });
+  }));
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

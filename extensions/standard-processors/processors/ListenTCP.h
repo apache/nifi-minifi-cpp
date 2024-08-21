@@ -82,7 +82,7 @@ class ListenTCP : public NetworkListenerProcessor {
       .isRequired(true)
       .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Port,
       MaxBatchSize,
       MaxQueueSize,
@@ -90,7 +90,7 @@ class ListenTCP : public NetworkListenerProcessor {
       ClientAuth,
       MessageDelimiter,
       ConsumeDelimiter
-  };
+  });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Messages received successfully will be sent out this relationship."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};

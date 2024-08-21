@@ -102,7 +102,7 @@ class PutTCP final : public core::Processor {
       .isRequired(false)
       .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Hostname,
       Port,
       IdleConnectionExpiration,
@@ -111,7 +111,7 @@ class PutTCP final : public core::Processor {
       OutgoingMessageDelimiter,
       SSLContextService,
       MaxSizeOfSocketSendBuffer
-  };
+  });
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent to the destination are sent out this relationship."};

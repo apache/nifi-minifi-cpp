@@ -64,12 +64,12 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
       .withDescription("Content type of the message. MQTT 5.x only.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::array<core::PropertyReference, 4>{
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::to_array<core::PropertyReference>({
       Topic,
       Retain,
       MessageExpiryInterval,
       ContentType
-  }, AbstractMQTTProcessor::AdvancedProperties);
+  }), AbstractMQTTProcessor::AdvancedProperties);
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are transferred to this relationship"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles that failed to be sent to the destination are transferred to this relationship"};
