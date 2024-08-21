@@ -18,35 +18,28 @@
 
 #include <memory>
 
-#include "core/ProcessContext.h"
-#include "PySSLContextService.h"
-#include "PyRecordSetReader.h"
-#include "PyRecordSetWriter.h"
+#include "controllers/RecordSetReader.h"
 #include "../PythonBindings.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
-struct PyProcessContext {
-  PyProcessContext() {}
-  using HeldType = core::ProcessContext*;
-  static constexpr const char* HeldTypeName = "PyProcessContext::HeldType";
+struct PyRecordSetReader {
+  PyRecordSetReader() {}
+  using HeldType = std::weak_ptr<core::RecordSetReader>;
+  static constexpr const char* HeldTypeName = "PyRecordSetReader::HeldType";
 
   PyObject_HEAD
-  HeldType process_context_;
+  HeldType record_set_reader_;
 
-  static int init(PyProcessContext* self, PyObject* args, PyObject* kwds);
+  static int init(PyRecordSetReader* self, PyObject* args, PyObject* kwds);
 
-  static PyObject* getProperty(PyProcessContext* self, PyObject* args);
-  static PyObject* getStateManager(PyProcessContext* self, PyObject* args);
-  static PyObject* getControllerService(PyProcessContext* self, PyObject* args);
-  static PyObject* getName(PyProcessContext* self, PyObject* args);
-  static PyObject* getProperties(PyProcessContext* self, PyObject* args);
+  static PyObject* read(PyRecordSetReader* self, PyObject* args);
 
   static PyTypeObject* typeObject();
 };
 
 namespace object {
 template<>
-struct Converter<PyProcessContext::HeldType> : public HolderTypeConverter<PyProcessContext> {};
+struct Converter<PyRecordSetReader::HeldType> : public HolderTypeConverter<PyRecordSetReader> {};
 }  // namespace object
 }  // namespace org::apache::nifi::minifi::extensions::python

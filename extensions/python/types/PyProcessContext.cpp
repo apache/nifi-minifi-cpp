@@ -22,6 +22,8 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #include "PyStateManager.h"
 #include "PyScriptFlowFile.h"
 #include "core/Processor.h"
+#include "controllers/RecordSetReader.h"
+#include "controllers/RecordSetWriter.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
@@ -127,6 +129,12 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
     if (controller_service_type_str == "SSLContextService") {
       auto ssl_ctx_service = std::dynamic_pointer_cast<controllers::SSLContextService>(controller_service);
       return object::returnReference(std::weak_ptr(ssl_ctx_service));
+    } else if (controller_service_type_str == "RecordSetReader") {
+      auto record_set_reader = std::dynamic_pointer_cast<core::RecordSetReader>(controller_service);
+      return object::returnReference(std::weak_ptr(record_set_reader));
+    } else if (controller_service_type_str == "RecordSetWriter") {
+      auto record_set_writer = std::dynamic_pointer_cast<core::RecordSetWriter>(controller_service);
+      return object::returnReference(std::weak_ptr(record_set_writer));
     }
   }
 
