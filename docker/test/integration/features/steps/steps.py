@@ -25,6 +25,7 @@ from minifi.controllers.ElasticsearchCredentialsService import ElasticsearchCred
 from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
+from minifi.controllers.JsonRecordSetReader import JsonRecordSetReader
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -271,6 +272,7 @@ def step_impl(context):
 
 
 @given("a file with the content \"{content}\" is present in \"{path}\"")
+@given("a file with the content '{content}' is present in '{path}'")
 @then("a file with the content \"{content}\" is placed in \"{path}\"")
 def step_impl(context, content, path):
     context.test.add_test_data(path, content)
@@ -401,7 +403,7 @@ def step_impl(context, processor_name):
     processor.set_property('SSL Context Service', ssl_context_service.name)
 
 
-# RecordSetWriters
+# Record set reader and writer
 @given("a JsonRecordSetWriter controller service is set up for {processor_name}")
 def step_impl(context, processor_name):
     json_record_set_writer = JsonRecordSetWriter()
@@ -409,6 +411,21 @@ def step_impl(context, processor_name):
     processor = context.test.get_node_by_name(processor_name)
     processor.controller_services.append(json_record_set_writer)
     processor.set_property('Record Set Writer', json_record_set_writer.name)
+    processor.set_property('Record Writer', json_record_set_writer.name)
+
+
+@given("a JsonRecordSetWriter controller service is set up")
+def step_impl(context):
+    json_record_set_writer = JsonRecordSetWriter(name="JsonRecordSetWriter", output_grouping="Array")
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(json_record_set_writer)
+
+
+@given("a JsonRecordSetReader controller service is set up")
+def step_impl(context):
+    json_record_set_reader = JsonRecordSetReader("JsonRecordSetReader")
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(json_record_set_reader)
 
 
 # Kubernetes

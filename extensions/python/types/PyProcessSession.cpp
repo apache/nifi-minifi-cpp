@@ -178,14 +178,24 @@ PyObject* PyProcessSessionObject::get(PyProcessSessionObject* self, PyObject*) {
   return object::returnReference(nullptr);
 }
 
-PyObject* PyProcessSessionObject::create(PyProcessSessionObject* self, PyObject*) {
+PyObject* PyProcessSessionObject::create(PyProcessSessionObject* self, PyObject* args) {
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
     return nullptr;
   }
 
-  if (auto flow_file = session->create(nullptr))
+  std::shared_ptr<core::FlowFile> parent_flow_file;
+  auto arg_size = PyTuple_Size(args);
+  if (arg_size > 0) {
+    PyObject* script_flow_file = nullptr;
+    if (!PyArg_ParseTuple(args, "O!", PyScriptFlowFile::typeObject(), &script_flow_file)) {
+      return nullptr;
+    }
+    parent_flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
+  }
+
+  if (auto flow_file = session->create(parent_flow_file))
     return object::returnReference(std::weak_ptr(flow_file));
   return object::returnReference(nullptr);
 }

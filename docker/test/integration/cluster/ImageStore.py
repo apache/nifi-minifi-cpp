@@ -171,6 +171,7 @@ class ImageStore:
                 COPY CreateNothing.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/CreateNothing.py
                 COPY FailureWithContent.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/FailureWithContent.py
                 COPY TransferToOriginal.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/TransferToOriginal.py
+                COPY SetRecordField.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/SetRecordField.py
                 RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     wget {chunk_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\
@@ -205,6 +206,7 @@ class ImageStore:
             build_full_python_resource_path("CreateNothing.py"),
             build_full_python_resource_path("FailureWithContent.py"),
             build_full_python_resource_path("TransferToOriginal.py"),
+            build_full_python_resource_path("SetRecordField.py"),
         ])
 
     def __build_http_proxy_image(self):
