@@ -169,6 +169,8 @@ class ImageStore:
                 COPY RelativeImporterProcessor.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/RelativeImporterProcessor.py
                 COPY multiplierutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/multiplierutils.py
                 COPY CreateNothing.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/CreateNothing.py
+                COPY FailureWithContent.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/FailureWithContent.py
+                COPY TransferToOriginal.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/TransferToOriginal.py
                 RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     wget {chunk_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\
@@ -195,8 +197,10 @@ class ImageStore:
                                                os.path.join(self.test_dir, "resources", "python", "FailureWithAttributes.py"),
                                                os.path.join(self.test_dir, "resources", "python", "RelativeImporterProcessor.py"),
                                                os.path.join(self.test_dir, "resources", "python", "subtractutils.py"),
-                                               os.path.join(self.test_dir, "resources", "python", "multiplierutils.py")])
-                                               os.path.join(self.test_dir, "resources", "python", "CreateNothing.py")])
+                                               os.path.join(self.test_dir, "resources", "python", "multiplierutils.py"),
+                                               os.path.join(self.test_dir, "resources", "python", "CreateNothing.py"),
+                                               os.path.join(self.test_dir, "resources", "python", "FailureWithContent.py"),
+                                               os.path.join(self.test_dir, "resources", "python", "TransferToOriginal.py")])
 
     def __build_http_proxy_image(self):
         dockerfile = dedent("""\
