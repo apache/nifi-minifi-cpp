@@ -367,6 +367,8 @@ advanced features.
 
 ### Building
 
+#### Build MiNiFi using Standalone CMake
+
 - From your source checkout, create a directory to perform the build (e.g. build) and cd into that directory.
   ```
   # ~/Development/code/apache/nifi-minifi-cpp on git:master
@@ -412,6 +414,8 @@ advanced features.
   [100%] Built target run-tests
   ```
 
+#### Create MiNiFi Package using Standalone CMake
+
 - Create a binary assembly located in your build directory with suffix .tar.gz
   ```
   ~/Development/code/apache/nifi-minifi-cpp/build
@@ -435,6 +439,11 @@ advanced features.
   CPack: Create package
   CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.99.0-source.tar.gz generated.
   ```
+
+#### Build MiNiFi & Create MiNiFi Package using Conan v2
+
+Building MiNiFi and creating MiNiFi package supporting a portion of the extensions has been tested with Conan version 2 using VS code as an alternative to standalone CMake. By building MiNiFi using prebuilt conan packages for the external libraries as an alternative to CMake building the sources of those external libraries, we maybe able to speed up MiNiFi builds. Additionally, by creating a MiNiFi package as a conan package, it should be easier to integrate MiNiFi library and its executables into other C++
+project infrastructure to build out data pipelines on the edge. For instance, once we create the MiNiFi conan package, we can upload it to jfrog, conancenter or some other supported conan cloud repository and then download the prebuilt MiNiFi conan package to our new C++ project by adding it to our conanfile. For more details on the conan commands to build MiNiFi and create a MiNiFi conan package, see [CONAN.md](CONAN.md).
 
 ### Building a docker image
 
