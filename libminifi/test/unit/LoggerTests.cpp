@@ -380,7 +380,9 @@ TEST_CASE("Setting max log entry length to unlimited results in unlimited log en
 TEST_CASE("fmt formatting works with the logger") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
-  logger->log_critical("{} equals to {}", 1min, 60s);
+  std::chrono::minutes duration{1};
+  std::string formatted_min_duration = fmt::format("{0}m", duration.count());
+  logger->log_critical("{} equals to {}", formatted_min_duration, 60s);
   logger->log_critical("{} in hex is {:#x}", 13, 13);
   logger->log_critical("Unix epoch: {}", std::chrono::system_clock::time_point());
   logger->log_critical("{:%Q %q} equals to {:%Q %q}", 2h, std::chrono::duration_cast<std::chrono::seconds>(2h));
