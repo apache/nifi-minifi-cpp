@@ -33,6 +33,7 @@ struct PyProcessor {
 
   static PyObject* setSupportsDynamicProperties(PyProcessor* self, PyObject* args);
   static PyObject* setDescription(PyProcessor* self, PyObject* args);
+  static PyObject* setVersion(PyProcessor* self, PyObject* args);
   static PyObject* addProperty(PyProcessor* self, PyObject* args);
 
   static PyTypeObject* typeObject();

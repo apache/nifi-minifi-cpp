@@ -51,5 +51,6 @@ FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
     add_test(NAME "${testfilename}" COMMAND "${testfilename}"  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 ENDFOREACH()
 
+copyTestResources(${CMAKE_SOURCE_DIR}/extensions/python/pythonprocessors/nifiapi ${CMAKE_BINARY_DIR}/bin/resources/minifi-python/nifiapi)
 copyTestResources(${CMAKE_CURRENT_SOURCE_DIR}/test_python_scripts/ ${CMAKE_BINARY_DIR}/bin/resources/test_python_scripts/)
 message("-- Finished building ${EXTENSIONS_TEST_COUNT} tests for minifi-python-script-extension...")

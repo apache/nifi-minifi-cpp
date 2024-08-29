@@ -41,6 +41,7 @@ const SerializedResponseNode& getNode(const std::vector<SerializedResponseNode>&
   for (auto& node : nodes) {
     if (node.name == name) return node;
   }
+  FAIL(fmt::format("Node {} was not found", name));
   gsl_FailFast();
 }
 
@@ -63,6 +64,57 @@ TEST_CASE("Python processor's description is part of the manifest") {
     "  proc.setSupportsDynamicProperties()\n"
     "  proc.addProperty('Prop1', 'A great property', 'banana', True, False, False, None, ['apple', 'orange', 'banana', 'durian'], None)\n";
 
+  const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
+#ifdef WIN32
+  std::filesystem::create_symlink(executable_dir / "minifi-python-script-extension.dll", python_dir / "minifi_native.pyd");
+#endif
+  std::filesystem::copy(executable_dir / "resources" / "minifi-python" / "nifiapi", python_dir / "nifiapi", std::filesystem::copy_options::recursive);
+  utils::file::create_dir(python_dir / "nifi_python_processors");
+  std::ofstream{python_dir / "nifi_python_processors" / "MyPyProc3.py"} << R"(
+from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
+from nifiapi.properties import ExpressionLanguageScope, PropertyDescriptor, StandardValidators
+
+class MyPyProc3(FlowFileTransform):
+
+    class Java:
+        implements = ['org.apache.nifi.python.processor.FlowFileTransform']
+
+    class ProcessorDetails:
+        version = '1.2.3'
+        description = "Test processor number three."
+        dependencies = []
+
+    COLOR = PropertyDescriptor(
+        name="Color",
+        description="Symbolic name for the combination of frequencies of electromagnetic radiation reflected by the processor.",
+        allowable_values=['red', 'blue', 'green', 'purple'],
+        default_value='red',
+        required=True,
+        expression_language_scope=ExpressionLanguageScope.NONE
+    )
+
+    MOOD = PropertyDescriptor(
+        name="Mood",
+        description="The mental or emotional state of the processor.",
+        required=False,
+        validators=[StandardValidators.NON_EMPTY_VALIDATOR],
+        expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES
+    )
+
+    def __init__(self, **kwargs):
+        pass
+
+    def getPropertyDescriptors(self):
+        return [self.COLOR, self.MOOD]
+
+    def transform(self, context, flow_file):
+        color = context.getProperty(self.COLOR).getValue()
+        mood = context.getProperty(self.MOOD).evaluateAttributeExpressions(flowfile).getValue() or "OK"
+        user = flow_file.getContentsAsBytes().decode('utf-8')
+        response = f"Hello {user}! I am a {color} processor. I am feeling {mood}."
+        return FlowFileTransformResult('success', contents=response.encode('utf-8'))
+)";
+
   controller.configuration_->set(minifi::Configuration::nifi_python_processor_dir, python_dir.string());
   controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*");
 
@@ -76,65 +128,65 @@ TEST_CASE("Python processor's description is part of the manifest") {
 
   auto& manifest = getNode(agent_info.serialized_nodes, "agentManifest");
 
-  auto findPythonProcessor = [&] (const std::string& name) {
+  auto findPythonBundle = [&](const std::string& name) {
     // each python file gets its own bundle
-    auto* python_bundle = findNode(manifest.children, [&] (auto& child) {
-      return child.name == "bundles" && findNode(child.children, [&] (auto& bundle_child) {
+    auto* python_bundle = findNode(manifest.children, [&](const auto& child) {
+      return child.name == "bundles" && findNode(child.children, [&](const auto& bundle_child) {
         return bundle_child.name == "artifact" && bundle_child.value == name + ".py";
       });
     });
     REQUIRE(python_bundle);
+    return gsl::make_not_null(python_bundle);
+  };
 
-    auto& py_processors = getNode(getNode(python_bundle->children, "componentManifest").children, "processors");
-
-    // single processor in each bundle
-    REQUIRE(py_processors.children.size() == 1);
-
-    return findNode(py_processors.children, [&] (auto& child) {return utils::string::endsWith(child.name, name);});
+  auto getProcessorNode = [&] (gsl::not_null<const SerializedResponseNode*> bundle) {
+    auto& processors = getNode(getNode(bundle->children, "componentManifest").children, "processors");
+    REQUIRE(processors.children.size() == 1);
+    auto& only_child = processors.children[0];
+    return gsl::make_not_null(&only_child);
   };
 
   {
-    auto* MyPyProc = findPythonProcessor("MyPyProc");
-    REQUIRE(MyPyProc);
+    auto python_bundle = findPythonBundle("MyPyProc");
+    auto MyPyProc = getProcessorNode(python_bundle);
 
-    REQUIRE(getNode(MyPyProc->children, "inputRequirement").value == "INPUT_ALLOWED");
-    REQUIRE(getNode(MyPyProc->children, "isSingleThreaded").value == true);
-    REQUIRE(getNode(MyPyProc->children, "typeDescription").value == "An amazing processor");
-    REQUIRE(getNode(MyPyProc->children, "supportsDynamicRelationships").value == false);
-    REQUIRE(getNode(MyPyProc->children, "supportsDynamicProperties").value == false);
-    REQUIRE(getNode(MyPyProc->children, "type").value == "org.apache.nifi.minifi.processors.MyPyProc");
+    CHECK(getNode(MyPyProc->children, "inputRequirement").value == "INPUT_ALLOWED");
+    CHECK(getNode(MyPyProc->children, "isSingleThreaded").value == true);
+    CHECK(getNode(MyPyProc->children, "typeDescription").value == "An amazing processor");
+    CHECK(getNode(MyPyProc->children, "supportsDynamicRelationships").value == false);
+    CHECK(getNode(MyPyProc->children, "supportsDynamicProperties").value == false);
+    CHECK(getNode(MyPyProc->children, "type").value == "org.apache.nifi.minifi.processors.MyPyProc");
 
     auto& rels = getNode(MyPyProc->children, "supportedRelationships").children;
     REQUIRE(rels.size() == 3);
 
     auto* success = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "success";});
     REQUIRE(success);
-    REQUIRE(getNode(success->children, "description").value == "Script succeeds");
+    CHECK(getNode(success->children, "description").value == "Script succeeds");
 
     auto* failure = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "failure";});
     REQUIRE(failure);
     REQUIRE(getNode(failure->children, "description").value == "Script fails");
   }
 
-
   {
-    auto* MyPyProc2 = findPythonProcessor("MyPyProc2");
-    REQUIRE(MyPyProc2);
+    auto python_bundle = findPythonBundle("MyPyProc2");
+    auto MyPyProc2 = getProcessorNode(python_bundle);
 
-    REQUIRE(getNode(MyPyProc2->children, "inputRequirement").value == "INPUT_ALLOWED");
-    REQUIRE(getNode(MyPyProc2->children, "isSingleThreaded").value == true);
-    REQUIRE(getNode(MyPyProc2->children, "typeDescription").value == "Another amazing processor");
-    REQUIRE(getNode(MyPyProc2->children, "supportsDynamicRelationships").value == false);
-    REQUIRE(getNode(MyPyProc2->children, "supportsDynamicProperties").value == true);
-    REQUIRE(getNode(MyPyProc2->children, "type").value == "org.apache.nifi.minifi.processors.MyPyProc2");
+    CHECK(getNode(MyPyProc2->children, "inputRequirement").value == "INPUT_ALLOWED");
+    CHECK(getNode(MyPyProc2->children, "isSingleThreaded").value == true);
+    CHECK(getNode(MyPyProc2->children, "typeDescription").value == "Another amazing processor");
+    CHECK(getNode(MyPyProc2->children, "supportsDynamicRelationships").value == false);
+    CHECK(getNode(MyPyProc2->children, "supportsDynamicProperties").value == true);
+    CHECK(getNode(MyPyProc2->children, "type").value == "org.apache.nifi.minifi.processors.MyPyProc2");
 
     auto& properties = getNode(MyPyProc2->children, "propertyDescriptors").children;
     REQUIRE(properties.size() == 1);
-    REQUIRE(properties[0].name == "Prop1");
-    REQUIRE(getNode(properties[0].children, "name").value == "Prop1");
-    REQUIRE(getNode(properties[0].children, "required").value == true);
-    REQUIRE(getNode(properties[0].children, "expressionLanguageScope").value == "NONE");
-    REQUIRE(getNode(properties[0].children, "defaultValue").value == "banana");
+    CHECK(properties[0].name == "Prop1");
+    CHECK(getNode(properties[0].children, "name").value == "Prop1");
+    CHECK(getNode(properties[0].children, "required").value == true);
+    CHECK(getNode(properties[0].children, "expressionLanguageScope").value == "NONE");
+    CHECK(getNode(properties[0].children, "defaultValue").value == "banana");
     auto& allowable_values = getNode(properties[0].children, "allowableValues");
     REQUIRE(allowable_values.children.size() == 4);
     CHECK(getNthAllowableValue(allowable_values, 0) == "apple");
@@ -147,10 +199,51 @@ TEST_CASE("Python processor's description is part of the manifest") {
 
     auto* success = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "success";});
     REQUIRE(success);
-    REQUIRE(getNode(success->children, "description").value == "Script succeeds");
+    CHECK(getNode(success->children, "description").value == "Script succeeds");
 
     auto* failure = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "failure";});
     REQUIRE(failure);
-    REQUIRE(getNode(failure->children, "description").value == "Script fails");
+    CHECK(getNode(failure->children, "description").value == "Script fails");
+  }
+
+  {
+    auto python_bundle = findPythonBundle("MyPyProc3");
+    auto MyPyProc3 = getProcessorNode(python_bundle);
+
+    CHECK(getNode(python_bundle->children, "version").value == "1.2.3");
+
+    CHECK(getNode(MyPyProc3->children, "inputRequirement").value == "INPUT_ALLOWED");
+    CHECK(getNode(MyPyProc3->children, "isSingleThreaded").value == true);
+    CHECK(getNode(MyPyProc3->children, "typeDescription").value == "Test processor number three.");
+    CHECK(getNode(MyPyProc3->children, "supportsDynamicRelationships").value == false);
+    CHECK(getNode(MyPyProc3->children, "supportsDynamicProperties").value == true);
+    CHECK(getNode(MyPyProc3->children, "type").value == "org.apache.nifi.minifi.processors.nifi_python_processors.MyPyProc3");
+
+    auto& properties = getNode(MyPyProc3->children, "propertyDescriptors").children;
+    REQUIRE(properties.size() == 2);
+    CHECK(properties[0].name == "Color");
+    CHECK(getNode(properties[0].children, "name").value == "Color");
+    CHECK(getNode(properties[0].children, "required").value == true);
+    CHECK(getNode(properties[0].children, "expressionLanguageScope").value == "NONE");
+    CHECK(getNode(properties[0].children, "defaultValue").value == "red");
+    CHECK(properties[1].name == "Mood");
+    CHECK(getNode(properties[1].children, "name").value == "Mood");
+    CHECK(getNode(properties[1].children, "required").value == false);
+    CHECK(getNode(properties[1].children, "expressionLanguageScope").value == "FLOWFILE_ATTRIBUTES");
+
+    auto& rels = getNode(MyPyProc3->children, "supportedRelationships").children;
+    REQUIRE(rels.size() == 3);
+
+    auto* success = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "success";});
+    REQUIRE(success);
+    CHECK(getNode(success->children, "description").value == "Script succeeds");
+
+    auto* failure = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "failure";});
+    REQUIRE(failure);
+    CHECK(getNode(failure->children, "description").value == "Script fails");
+
+    auto* original = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "original";});
+    REQUIRE(original);
+    CHECK(getNode(original->children, "description").value == "Original flow file");
   }
 }
