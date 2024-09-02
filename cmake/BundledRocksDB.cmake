@@ -19,7 +19,8 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     message("Using bundled RocksDB")
 
     if (NOT WIN32)
-        include(Zstd)
+        include(GetZstd)
+        get_zstd()
         list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zstd/dummy")
 
         include(LZ4)
@@ -63,10 +64,17 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
                 -DROCKSDB_INSTALL_ON_WINDOWS=ON
                 -DWITH_XPRESS=ON)
     else()
+    if(MINIFI_ZSTD_SOURCE STREQUAL "CONAN" AND MINIFI_ZLIB_SOURCE STREQUAL "CONAN")
         list(APPEND ROCKSDB_CMAKE_ARGS
-                -DWITH_ZLIB=ON
+            -DWITH_ZLIB=OFF
+            -DWITH_ZSTD=OFF)
+    else()
+        list(APPEND ROCKSDB_CMAKE_ARGS
+            -DWITH_ZLIB=ON
+            -DWITH_ZSTD=ON)
+    endif()
+        list(APPEND ROCKSDB_CMAKE_ARGS
                 -DWITH_BZ2=ON
-                -DWITH_ZSTD=ON
                 -DWITH_LZ4=ON)
     endif()
 
@@ -95,7 +103,11 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     add_library(RocksDB::RocksDB STATIC IMPORTED)
     set_target_properties(RocksDB::RocksDB PROPERTIES IMPORTED_LOCATION "${ROCKSDB_LIBRARY}")
     if (NOT WIN32)
-        add_dependencies(rocksdb-external ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
+        if(MINIFI_ZSTD_SOURCE STREQUAL "CONAN" AND MINIFI_ZLIB_SOURCE STREQUAL "CONAN")
+            add_dependencies(rocksdb-external BZip2::BZip2 lz4::lz4)
+        else()
+            add_dependencies(rocksdb-external ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
+        endif()
     endif()
     add_dependencies(RocksDB::RocksDB rocksdb-external)
     file(MAKE_DIRECTORY ${ROCKSDB_INCLUDE_DIR})
