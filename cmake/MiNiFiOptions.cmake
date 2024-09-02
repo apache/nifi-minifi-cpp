@@ -139,6 +139,7 @@ set_property(CACHE STRICT_GSL_CHECKS PROPERTY STRINGS ${STRICT_GSL_CHECKS_Values
 add_minifi_multi_option(MINIFI_LIBCURL_SOURCE "Retrieves LibCURL from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_OPENSSL_SOURCE "Retrieves OpenSSL from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_ZLIB_SOURCE "Retrieves ZLib from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_ZSTD_SOURCE "Retrieves Zstd from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_CIVETWEB_SOURCE "Retrieves CivetWeb from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_LIBXML2_SOURCE "Retrieves LibXml2 from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_FMT_SOURCE "Retrieves Fmt from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
