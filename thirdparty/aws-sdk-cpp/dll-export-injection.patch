@@ -36,7 +36,7 @@ diff -rupN a/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h b/generate
 diff -rupN a/src/aws-cpp-sdk-core/CMakeLists.txt b/src/aws-cpp-sdk-core/CMakeLists.txt
 --- a/src/aws-cpp-sdk-core/CMakeLists.txt	2023-12-11 13:15:52.061754319 +0100
 +++ b/src/aws-cpp-sdk-core/CMakeLists.txt	2023-12-14 14:01:42.666518935 +0100
-@@ -608,6 +608,11 @@ elseif (BUILD_SHARED_LIBS)
+@@ -682,6 +682,11 @@ elseif (BUILD_SHARED_LIBS)
      target_compile_definitions(${PROJECT_NAME} PRIVATE "SMITHY_EXPORTS=1")
  endif()
  

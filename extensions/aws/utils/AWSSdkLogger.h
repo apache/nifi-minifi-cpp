@@ -25,27 +25,19 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace utils {
+namespace org::apache::nifi::minifi::aws::utils {
 
 class AWSSdkLogger : public Aws::Utils::Logging::LogSystemInterface {
  public:
   [[nodiscard]] Aws::Utils::Logging::LogLevel GetLogLevel() const override;
   void Log(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, ...) override;
+  void vaLog(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, va_list args) override;
   void LogStream(Aws::Utils::Logging::LogLevel log_level, const char* tag, const Aws::OStringStream &message_stream) override;
   void Flush() override;
 
  private:
+  void log(Aws::Utils::Logging::LogLevel log_level, const char* tag, std::string_view message) const;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AWSSdkLogger>::getLogger()};
 };
 
-} /* namespace utils */
-} /* namespace aws */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::aws::utils
