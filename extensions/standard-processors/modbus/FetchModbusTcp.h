@@ -49,9 +49,9 @@ class FetchModbusTcp final : public core::Processor {
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto UnitIdentifier = core::PropertyDefinitionBuilder<>::createProperty("Unit Identifier")
-      .withDescription("The port or service on the destination.")
+      .withDescription("Unit identifier")
       .isRequired(true)
-      .withDefaultValue("0")
+      .withDefaultValue("1")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto IdleConnectionExpiration = core::PropertyDefinitionBuilder<>::createProperty("Idle Connection Expiration")

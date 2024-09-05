@@ -21,4 +21,4 @@ class JsonRecordSetWriter(ControllerService):
     def __init__(self, name=None, cert=None, key=None, ca_cert=None, passphrase=None, use_system_cert_store=None):
         super(JsonRecordSetWriter, self).__init__(name=name)
         self.service_class = 'JsonRecordSetWriter'
-        self.properties['Output Grouping'] = 'OneLinePerObject'
+        self.properties['Output Grouping'] = 'One Line Per Object'

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@ENABLE_OPCUA
+@ENABLE_OPC
 Feature: Putting and fetching data to OPC UA server
   In order to send and fetch data from an OPC UA server
   As a user of MiNiFi

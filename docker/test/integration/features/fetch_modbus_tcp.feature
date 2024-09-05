@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@MODBUS
+@CORE
 Feature: Minifi C++ can act as a modbus tcp master
 
   Background:
@@ -23,7 +23,7 @@ Feature: Minifi C++ can act as a modbus tcp master
     Given a FetchModbusTcp processor
     And a JsonRecordSetWriter controller service is set up for FetchModbusTcp
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And the "Unit identifier" property of the FetchModbusTcp processor is set to "255"
+    And the "Unit Identifier" property of the FetchModbusTcp processor is set to "255"
     And there is an accessible PLC with modbus enabled
     And PLC register has been set with h@52=123 command
     And PLC register has been set with h@5678/f=1.75 command
