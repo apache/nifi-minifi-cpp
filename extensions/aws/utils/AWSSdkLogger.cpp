@@ -22,6 +22,7 @@
 #include <cstdio>
 
 #include "aws/core/utils/logging/LogLevel.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::aws::utils {
 
@@ -81,7 +82,7 @@ void AWSSdkLogger::vaLog(Aws::Utils::Logging::LogLevel log_level, const char* ta
     logger_->log_error("A log line from aws-sdk-cpp could not be processed: [{}] {}", tag, format_str);
     return;
   }
-  gsl_Expects(length <= buffer_size);
+  gsl_Assert(length <= buffer_size);
 
   log(log_level, tag, std::string_view(buffer.data(), length));
 }
