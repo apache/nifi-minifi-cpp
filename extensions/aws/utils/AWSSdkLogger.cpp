@@ -19,7 +19,10 @@
  */
 #include "AWSSdkLogger.h"
 
+#include <cstdio>
+
 #include "aws/core/utils/logging/LogLevel.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::aws::utils {
 
@@ -60,11 +63,36 @@ Aws::Utils::Logging::LogLevel AWSSdkLogger::GetLogLevel() const {
 }
 
 void AWSSdkLogger::Log(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, ...) {  // NOLINT(cert-dcl50-cpp)
-  logger_->log_with_level(mapFromAwsLevels(log_level), "[{}] {}", tag, format_str);
+  va_list args;
+  va_start(args, format_str);
+  vaLog(log_level, tag, format_str, args);
+  va_end(args);
 }
 
-void AWSSdkLogger::LogStream(Aws::Utils::Logging::LogLevel log_level, const char* tag, const Aws::OStringStream &message_stream) {
-  Log(log_level, tag, message_stream.str().c_str());
+void AWSSdkLogger::vaLog(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, va_list args) {
+  va_list args_copy;
+  va_copy(args_copy, args);
+  const int buffer_size = std::vsnprintf(nullptr, 0, format_str, args_copy) + 1;  // +1 for the terminating \0 character
+  va_end(args_copy);
+
+  std::vector<char> buffer(buffer_size);
+
+  const int length = std::vsnprintf(buffer.data(), buffer_size, format_str, args);
+  if (length < 0) {
+    logger_->log_error("A log line from aws-sdk-cpp could not be processed: [{}] {}", tag, format_str);
+    return;
+  }
+  gsl_Assert(length <= buffer_size);
+
+  log(log_level, tag, std::string_view(buffer.data(), length));
+}
+
+void AWSSdkLogger::LogStream(Aws::Utils::Logging::LogLevel log_level, const char* tag, const Aws::OStringStream& message_stream) {
+  log(log_level, tag, message_stream.str());
+}
+
+void AWSSdkLogger::log(Aws::Utils::Logging::LogLevel log_level, const char* tag, std::string_view message) const {
+  logger_->log_with_level(mapFromAwsLevels(log_level), "[{}] {}", tag, message);
 }
 
 void AWSSdkLogger::Flush() {

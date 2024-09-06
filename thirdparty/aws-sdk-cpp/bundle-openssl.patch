@@ -1,27 +1,7 @@
-diff -rupN a/cmake/external_dependencies.cmake b/cmake/external_dependencies.cmake
---- a/cmake/external_dependencies.cmake 2023-12-11 13:15:43.194940468 +0100
-+++ b/cmake/external_dependencies.cmake 2023-12-11 13:30:56.553108740 +0100
-@@ -40,14 +40,14 @@ elseif(ENABLE_OPENSSL_ENCRYPTION)
-     add_definitions(-DENABLE_OPENSSL_ENCRYPTION)
-     message(STATUS "Encryption: LibCrypto")
-
--    set(CRYPTO_TARGET_NAME "AWS::crypto")
-+    set(CRYPTO_TARGET_NAME "OpenSSL::Crypto")
-     if(PLATFORM_ANDROID AND ANDROID_BUILD_OPENSSL)
-         set(BUILD_OPENSSL 1)
-         set(CRYPTO_TARGET_NAME "crypto")
-         set(USE_OPENSSL ON)
-         message(STATUS "  Building Openssl as part of AWS SDK")
-     else()
--        find_package(crypto REQUIRED)
-+        find_package(OpenSSL REQUIRED)
-     endif()
-     set(CRYPTO_LIBS ${CRYPTO_TARGET_NAME} ${ZLIB_LIBRARIES})
-     # ssl depends on libcrypto
 diff -rupN a/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt b/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt
 --- a/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt    2023-12-11 13:15:44.264958227 +0100
 +++ b/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt    2023-12-11 13:34:38.190054072 +0100
-@@ -262,9 +262,9 @@ if (TARGET crypto)
+@@ -240,9 +240,9 @@ if (TARGET crypto)
      message(STATUS "S2N found target: crypto")
      set(LINK_LIB "crypto")
  else()
@@ -33,7 +13,7 @@ diff -rupN a/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt b/crt/aws-crt-cpp/crt/s2n/CM
  endif()
 
  if (S2N_INTERN_LIBCRYPTO)
-@@ -395,11 +395,11 @@ feature_probe_result(S2N_KYBER512R3_AVX2
+@@ -347,11 +347,11 @@ feature_probe_result(S2N_KYBER512R3_AVX2
 
  if (S2N_INTERN_LIBCRYPTO)
 
@@ -49,7 +29,7 @@ diff -rupN a/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt b/crt/aws-crt-cpp/crt/s2n/CM
 
          # If we didn't find the a target with static library type, fallback to
          # existing crypto_STATIC_LIBRARY and crypto_INCLUDE_DIR
-@@ -408,8 +408,8 @@ if (S2N_INTERN_LIBCRYPTO)
+@@ -360,8 +360,8 @@ if (S2N_INTERN_LIBCRYPTO)
              # The finder module defines these appropriately, but if we go through
              # the target config we need to query this information from the target
              # first.

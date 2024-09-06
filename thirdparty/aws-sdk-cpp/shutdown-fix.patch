@@ -2,7 +2,7 @@ diff --git a/crt/aws-crt-cpp/crt/aws-c-io/source/event_loop.c b/crt/aws-crt-cpp/
 index c37aaf6..2a45c21 100644
 --- a/crt/aws-crt-cpp/crt/aws-c-io/source/event_loop.c
 +++ b/crt/aws-crt-cpp/crt/aws-c-io/source/event_loop.c
-@@ -114,7 +114,7 @@ static struct aws_event_loop_group *s_event_loop_group_new(
+@@ -110,7 +110,7 @@ static struct aws_event_loop_group *s_event_loop_group_new(
  
      el_group->allocator = alloc;
      aws_ref_count_init(
