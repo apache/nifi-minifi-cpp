@@ -308,3 +308,6 @@ class ProcessContext:
                 properties[property_descriptor] = cpp_properties[property_descriptor.name]
 
         return properties
+
+    def yield_resources(self):
+        self.cpp_context.yieldResources()
