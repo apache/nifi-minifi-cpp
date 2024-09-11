@@ -53,7 +53,8 @@ class SegmentContent final : public core::Processor {
   EXTENSIONAPI static constexpr auto Relationships = std::array{Original, Segments};
 
   EXTENSIONAPI static constexpr auto FragmentIdentifierOutputAttribute =
-      core::OutputAttributeDefinition<0>{"fragment.identifier", {}, "All segments produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute"};
+      core::OutputAttributeDefinition<0>{"fragment.identifier", {},
+            "All segments produced from the same parent FlowFile will have this attribute set to the same UUID (which is the UUID of the parent FlowFile, if available)"};
   EXTENSIONAPI static constexpr auto FragmentIndexOutputAttribute =
       core::OutputAttributeDefinition<0>{"fragment.index", {}, "A sequence number starting with 1 that indicates the ordering of the segments that were created from a single parent FlowFile"};
   EXTENSIONAPI static constexpr auto FragmentCountOutputAttribute = core::OutputAttributeDefinition<0>{"fragment.count", {}, "The number of segments generated from the parent FlowFile"};
