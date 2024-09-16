@@ -25,7 +25,6 @@
 #include <utility>
 
 #include "core/state/nodes/MetricsBase.h"
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -33,8 +32,9 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
+#include "core/ProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -52,10 +52,10 @@ struct GetFileRequest {
   std::filesystem::path inputDirectory;
 };
 
-class GetFileMetrics : public core::ProcessorMetrics {
+class GetFileMetrics : public core::ProcessorMetricsImpl {
  public:
   explicit GetFileMetrics(const core::Processor& source_processor)
-    : core::ProcessorMetrics(source_processor) {
+    : core::ProcessorMetricsImpl(source_processor) {
   }
 
   std::vector<state::response::SerializedResponseNode> serialize() override {
@@ -82,10 +82,10 @@ class GetFileMetrics : public core::ProcessorMetrics {
   std::atomic<uint64_t> input_bytes{0};
 };
 
-class GetFile : public core::Processor {
+class GetFile : public core::ProcessorImpl {
  public:
   explicit GetFile(std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid, std::make_shared<GetFileMetrics>(*this)) {
+      : ProcessorImpl(name, uuid, std::make_shared<GetFileMetrics>(*this)) {
   }
   ~GetFile() override = default;
 

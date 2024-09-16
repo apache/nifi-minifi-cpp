@@ -24,20 +24,19 @@
 #include <utility>
 #include <vector>
 
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class UpdateAttribute : public core::Processor {
+class UpdateAttribute : public core::ProcessorImpl {
  public:
   UpdateAttribute(std::string_view name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(name, uuid) {
+      : core::ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This processor updates the attributes of a FlowFile using properties that are added by the user. "

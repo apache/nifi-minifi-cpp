@@ -57,7 +57,7 @@ std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes) 
   return utils::string::to_hex(digest, true /*uppercase*/);
 }
 
-rapidjson::Value SerializedResponseNode::nodeToJson(const SerializedResponseNode& node, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& alloc) {
+rapidjson::Value nodeToJson(const SerializedResponseNode& node, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& alloc) {
   if (node.value.empty()) {
     if (node.array) {
       rapidjson::Value result(rapidjson::kArrayType);
@@ -77,8 +77,23 @@ rapidjson::Value SerializedResponseNode::nodeToJson(const SerializedResponseNode
   }
 }
 
+template<typename Writer>
+[[nodiscard]] std::string to_string(const SerializedResponseNode& node) {
+  rapidjson::Document doc;
+  doc.SetObject();
+  doc.AddMember(rapidjson::Value(node.name.c_str(), doc.GetAllocator()), nodeToJson(node, doc.GetAllocator()), doc.GetAllocator());
+  rapidjson::StringBuffer buf;
+  Writer writer{buf};
+  doc.Accept(writer);
+  return buf.GetString();
+}
+
+std::string SerializedResponseNode::to_string() const {
+  return to_string<rapidjson::Writer<rapidjson::StringBuffer>>(*this);
+}
+
 std::string SerializedResponseNode::to_pretty_string() const {
-  return to_string<rapidjson::PrettyWriter<rapidjson::StringBuffer>>();
+  return to_string<rapidjson::PrettyWriter<rapidjson::StringBuffer>>(*this);
 }
 }  // namespace org::apache::nifi::minifi::state::response
 

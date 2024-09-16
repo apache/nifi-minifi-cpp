@@ -25,7 +25,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "io/StreamPipe.h"
-#include "logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "range/v3/view/transform.hpp"
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/tail.hpp"
@@ -37,7 +37,7 @@
 namespace org::apache::nifi::minifi::processors {
 
 RouteText::RouteText(std::string_view name, const utils::Identifier& uuid)
-    : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger(uuid)) {}
+    : core::ProcessorImpl(name, uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger(uuid)) {}
 
 void RouteText::initialize() {
   setSupportedProperties(Properties);

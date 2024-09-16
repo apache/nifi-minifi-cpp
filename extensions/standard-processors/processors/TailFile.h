@@ -29,7 +29,6 @@
 #include <optional>
 
 #include "controllers/AttributeProviderService.h"
-#include "FlowFileRecord.h"
 #include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -37,7 +36,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
@@ -103,10 +102,10 @@ enum class Mode {
   SINGLE, MULTIPLE, UNDEFINED
 };
 
-class TailFile : public core::Processor {
+class TailFile : public core::ProcessorImpl {
  public:
   explicit TailFile(std::string_view name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+      : core::ProcessorImpl(name, uuid) {
   }
 
   ~TailFile() override = default;

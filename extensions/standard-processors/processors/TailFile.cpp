@@ -30,7 +30,6 @@
 
 #include "range/v3/action/sort.hpp"
 
-#include "FlowFileRecord.h"
 #include "io/CRCStream.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
@@ -805,7 +804,7 @@ void TailFile::checkForNewFiles(core::ProcessContext& context) {
 }
 
 std::string TailFile::baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context) {
-  auto flow_file = std::make_shared<FlowFileRecord>();
+  auto flow_file = core::FlowFile::create();
   for (const auto& [key, value] : attribute_map) {
     flow_file->setAttribute(key, value);
   }
