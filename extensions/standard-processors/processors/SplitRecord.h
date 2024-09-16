@@ -17,7 +17,6 @@
 #pragma once
 
 #include "core/Annotation.h"
-#include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
@@ -27,11 +26,14 @@
 #include "core/logging/Logger.h"
 #include "controllers/RecordSetReader.h"
 #include "controllers/RecordSetWriter.h"
+#include "core/AbstractProcessor.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class SplitRecord : public core::Processor {
+class SplitRecord final : public core::AbstractProcessor<SplitRecord> {
  public:
+  using core::AbstractProcessor<SplitRecord>::AbstractProcessor;
+
   EXTENSIONAPI static constexpr const char* Description = "Splits up an input FlowFile that is in a record-oriented data format into multiple smaller FlowFiles";
 
   EXTENSIONAPI static constexpr auto RecordReader = core::PropertyDefinitionBuilder<>::createProperty("Record Reader")
@@ -69,15 +71,11 @@ class SplitRecord : public core::Processor {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  explicit SplitRecord(std::string_view name, const utils::Identifier& uuid = {});
-  void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  private:
-  static nonstd::expected<std::size_t, std::string> readRecordsPerSplit(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& original_flow_file);
+  static nonstd::expected<std::size_t, std::string> readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file);
 
   std::shared_ptr<core::RecordSetReader> record_set_reader_;
   std::shared_ptr<core::RecordSetWriter> record_set_writer_;
