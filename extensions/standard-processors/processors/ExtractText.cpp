@@ -17,21 +17,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "ExtractText.h"
+
 #include <algorithm>
 #include <iterator>
-#include <string>
-#include <memory>
 #include <map>
+#include <memory>
 #include <sstream>
+#include <string>
 #include <utility>
 
-#include "ExtractText.h"
+#include "core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "core/FlowFile.h"
-#include "utils/gsl.h"
 #include "utils/RegexUtils.h"
+#include "utils/gsl.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -55,16 +57,13 @@ void ExtractText::onTrigger(core::ProcessContext& context, core::ProcessSession&
 
 int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
   size_t read_size = 0;
-  bool regex_mode;
   size_t size_limit = flowFile_->getSize();
   std::vector<std::byte> buffer;
   buffer.resize(std::min(gsl::narrow<size_t>(flowFile_->getSize()), MAX_BUFFER_SIZE));
 
-  std::string attrKey;
-  std::string sizeLimitStr;
-  ctx_->getProperty(Attribute, attrKey);
-  ctx_->getProperty(SizeLimit, sizeLimitStr);
-  ctx_->getProperty(RegexMode, regex_mode);
+  std::string attrKey = ctx_->getProperty(Attribute).value_or("");
+  std::string sizeLimitStr = ctx_->getProperty(SizeLimit).value_or("");
+  bool regex_mode = ctx_->getProperty(RegexMode) | utils::andThen(parsing::parseBool) | utils::expect("Missing ExtractText::RegexMode despite default value");
 
   if (sizeLimitStr.empty())
     sizeLimitStr = DEFAULT_SIZE_LIMIT_STR;
@@ -93,57 +92,46 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
   }
 
   if (regex_mode) {
-    bool insensitive;
+    const bool insensitive = utils::parseBoolProperty(*ctx_, InsensitiveMatch);
+    const bool include_capture_group_zero = utils::parseBoolProperty(*ctx_, IncludeCaptureGroupZero);
+    const bool repeating_capture = utils::parseBoolProperty(*ctx_, EnableRepeatingCaptureGroup);
+    const auto max_capture_size = gsl::narrow<size_t>(utils::parseU64Property(*ctx_, MaxCaptureGroupLen));
     std::vector<utils::Regex::Mode> regex_flags;
-    if (ctx_->getProperty(InsensitiveMatch, insensitive) && insensitive) {
+    if (insensitive) {
       regex_flags.push_back(utils::Regex::Mode::ICASE);
     }
-
-    const bool include_capture_group_zero = ctx_->getProperty<bool>(IncludeCaptureGroupZero).value_or(true);
-
-    bool repeatingcapture;
-    ctx_->getProperty(EnableRepeatingCaptureGroup, repeatingcapture);
-
-    const size_t maxCaptureSize = [this] {
-      uint64_t val = 0;
-      ctx_->getProperty(MaxCaptureGroupLen, val);
-      return gsl::narrow<size_t>(val);
-    }();
 
     std::string contentStr = contentStream.str();
 
     std::map<std::string, std::string> regexAttributes;
 
-    for (const auto& k : ctx_->getDynamicPropertyKeys()) {
-      std::string value;
-      ctx_->getDynamicProperty(k, value);
-
+    for (const auto& [dynamic_property_key, dynamic_property_value] : ctx_->getDynamicProperties()) {
       std::string workStr = contentStr;
 
       int matchcount = 0;
 
       try {
-        utils::Regex rgx(value, regex_flags);
+        utils::Regex rgx(dynamic_property_value, regex_flags);
         utils::SMatch matches;
         while (utils::regexSearch(workStr, matches, rgx)) {
           for (std::size_t i = (include_capture_group_zero ? 0 : 1); i < matches.size(); ++i, ++matchcount) {
             std::string attributeValue = matches[i];
-            if (attributeValue.length() > maxCaptureSize) {
-              attributeValue = attributeValue.substr(0, maxCaptureSize);
+            if (attributeValue.length() > max_capture_size) {
+              attributeValue = attributeValue.substr(0, max_capture_size);
             }
             if (matchcount == 0) {
-              regexAttributes[k] = attributeValue;
+              regexAttributes[dynamic_property_key] = attributeValue;
             }
-            regexAttributes[k + '.' + std::to_string(matchcount)] = attributeValue;
+            regexAttributes[dynamic_property_key + '.' + std::to_string(matchcount)] = attributeValue;
           }
-          if (!repeatingcapture) {
+          if (!repeating_capture) {
             break;
           }
           workStr = matches.suffix();
         }
       } catch (const Exception &e) {
         logger_->log_error("{} error encountered when trying to construct regular expression from property (key: {}) value: {}",
-                           e.what(), k, value);
+                           e.what(), dynamic_property_key, dynamic_property_value);
         continue;
       }
     }

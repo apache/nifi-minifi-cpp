@@ -106,6 +106,7 @@ class S3Processor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Bucket = core::PropertyDefinitionBuilder<>::createProperty("Bucket")
       .withDescription("The S3 bucket")
       .isRequired(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto AccessKey = core::PropertyDefinitionBuilder<>::createProperty("Access Key")
@@ -131,7 +132,7 @@ class S3Processor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto CommunicationsTimeout = core::PropertyDefinitionBuilder<>::createProperty("Communications Timeout")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("30 sec")
       .withDescription("Sets the timeout of the communication between the AWS server and the client")
       .build();
@@ -161,7 +162,7 @@ class S3Processor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
       .withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .isRequired(true)
       .build();

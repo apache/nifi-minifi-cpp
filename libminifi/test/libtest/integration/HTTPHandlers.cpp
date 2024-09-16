@@ -383,7 +383,9 @@ void HeartbeatHandler::verifyProperties(const rapidjson::Value& operation_node, 
         if (auto value = configuration_->getRawValue(std::string(property_name))) {
           config_property.emplace("propertyValue", *value);
         }
-        config_property.emplace("validator", property_validator->getValidatorName());
+        if (const auto nifi_standard_validator = property_validator->getEquivalentNifiStandardValidatorName()) {
+          config_property.emplace("validator", *nifi_standard_validator);
+        }
         config_properties.push_back(config_property);
       }
       Metadata metadata;

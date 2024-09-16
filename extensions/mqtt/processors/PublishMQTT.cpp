@@ -23,9 +23,11 @@
 #include <vector>
 
 #include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "core/state/Value.h"
 
 namespace {
 class RetriableError : public std::runtime_error {
@@ -46,16 +48,8 @@ void PublishMQTT::readProperties(core::ProcessContext& context) {
   if (!context.getProperty(Topic).has_value()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "PublishMQTT: Topic is required");
   }
-
-  if (const auto retain_opt = context.getProperty(Retain) | utils::andThen(&utils::string::toBool)) {
-    retain_ = *retain_opt;
-  }
-  logger_->log_debug("PublishMQTT: Retain [{}]", retain_);
-
-  if (const auto message_expiry_interval = context.getProperty(MessageExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
-    message_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(message_expiry_interval->getMilliseconds());
-    logger_->log_debug("PublishMQTT: MessageExpiryInterval [{}] s", int64_t{message_expiry_interval_->count()});
-  }
+  retain_ = utils::parseBoolProperty(context, Retain);
+  message_expiry_interval_ = utils::parseOptionalMsProperty(context, MessageExpiryInterval) | utils::transform([](const auto&& ms) { return std::chrono::duration_cast<std::chrono::seconds>(ms); });
 
   in_flight_message_counter_.setEnabled(mqtt_version_ == mqtt::MqttVersions::V_5_0 && qos_ != mqtt::MqttQoS::LEVEL_0);
 }
@@ -138,11 +132,15 @@ bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::s
 }
 
 void PublishMQTT::checkProperties() {
+  auto is_property_explicitly_set = [this](const std::string_view property_name) -> bool {
+    const auto property_values = getAllPropertyValues(property_name) | utils::expect("It should only be called on valid property");
+    return !property_values.empty();
+  };
   if ((mqtt_version_ == mqtt::MqttVersions::V_3_1_0 || mqtt_version_ == mqtt::MqttVersions::V_3_1_1 || mqtt_version_ == mqtt::MqttVersions::V_3X_AUTO)) {
-    if (isPropertyExplicitlySet(MessageExpiryInterval)) {
+    if (is_property_explicitly_set(MessageExpiryInterval.name)) {
       logger_->log_warn("MQTT 3.x specification does not support Message Expiry Intervals. Property is not used.");
     }
-    if (isPropertyExplicitlySet(ContentType)) {
+    if (is_property_explicitly_set(ContentType.name)) {
       logger_->log_warn("MQTT 3.x specification does not support Content Types. Property is not used.");
     }
   }

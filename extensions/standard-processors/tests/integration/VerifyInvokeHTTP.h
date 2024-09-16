@@ -66,7 +66,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
 
   void setProperties(const std::shared_ptr<core::Processor>& proc) {
     std::string url = scheme + "://localhost:" + getWebPort() + *path_;
-    proc->setProperty(minifi::processors::InvokeHTTP::URL, url);
+    proc->setProperty(minifi::processors::InvokeHTTP::URL.name, url);
   }
 
   void setProperty(const core::PropertyReference& property, const std::string& value) {
@@ -75,7 +75,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
       const auto processorController = dynamic_cast<minifi::state::ProcessorController*>(&component);
       assert(processorController);
       auto& proc = processorController->getProcessor();
-      proc.setProperty(property, std::string_view{value});
+      proc.setProperty(property.name, value);
       executed = true;
     });
 

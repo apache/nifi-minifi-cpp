@@ -43,24 +43,20 @@ void AppendHostInfo::initialize() {
 
 void AppendHostInfo::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::unique_lock unique_lock(shared_mutex_);
-  context.getProperty(HostAttribute, hostname_attribute_name_);
-  context.getProperty(IPAttribute, ipaddress_attribute_name_);
-  std::string interface_name_filter_str;
-  if (context.getProperty(InterfaceNameFilter, interface_name_filter_str) && !interface_name_filter_str.empty())
-    interface_name_filter_.emplace(interface_name_filter_str);
-  else
-    interface_name_filter_ = std::nullopt;
+  hostname_attribute_name_ = context.getProperty(HostAttribute) | utils::expect("HostAttribute has default value");
+  ipaddress_attribute_name_ = context.getProperty(IPAttribute) | utils::expect("IPAttribute has default value");
+  interface_name_filter_ = context.getProperty(InterfaceNameFilter)
+      | utils::toOptional()
+      | utils::filter([](const std::string& inf) { return !inf.empty(); });
 
-  std::string refresh_policy;
-  context.getProperty(RefreshPolicy, refresh_policy);
-  if (refresh_policy == REFRESH_POLICY_ON_TRIGGER)
+  if (auto refresh_policy = context.getProperty(RefreshPolicy); refresh_policy && *refresh_policy == REFRESH_POLICY_ON_TRIGGER)
     refresh_on_trigger_ = true;
   else
     refreshHostInfo();
 }
 
 void AppendHostInfo::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
-  std::shared_ptr<core::FlowFile> flow = session.get();
+  const std::shared_ptr<core::FlowFile> flow = session.get();
   if (!flow)
     return;
 

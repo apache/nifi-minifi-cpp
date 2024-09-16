@@ -78,7 +78,6 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
   CHECK("required" == prop_0.children[3].name);
   CHECK("sensitive" == prop_0.children[4].name);
   CHECK("expressionLanguageScope" == prop_0.children[5].name);
-  CHECK("defaultValue" == prop_0.children[6].name);
 }
 
 TEST_CASE("Test Relationships", "[rel1]") {
@@ -143,7 +142,6 @@ TEST_CASE("Test Dependent", "[dependent]") {
   CHECK("required" == prop_0.children[3].name);
   CHECK("sensitive" == prop_0.children[4].name);
   CHECK("expressionLanguageScope" == prop_0.children[5].name);
-  CHECK("defaultValue" == prop_0.children[6].name);
   CHECK("Directory" == prop_descriptors.children[2].name);
 #endif
 }

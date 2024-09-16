@@ -28,19 +28,13 @@ void SmbConnectionControllerService::initialize() {
 }
 
 void SmbConnectionControllerService::onEnable()  {
-  std::string hostname;
-  std::string share;
-
-  if (!getProperty(Hostname, hostname))
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing hostname");
-
-  if (!getProperty(Share, share))
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing share");
+  std::string hostname = getProperty(Hostname.name) | utils::expect("Required property");
+  std::string share = getProperty(Share.name) | utils::expect("Required property");
 
   server_path_ = "\\\\" + hostname + "\\" + share;
 
-  auto password = getProperty(Password);
-  auto username = getProperty(Username);
+  auto password = getProperty(Password.name);
+  auto username = getProperty(Username.name);
 
   if (password.has_value() != username.has_value())
     throw Exception(PROCESS_SCHEDULE_EXCEPTION,  "Either both a username and a password, or neither of them should be provided.");
@@ -67,7 +61,7 @@ void SmbConnectionControllerService::notifyStop() {
 gsl::not_null<std::shared_ptr<SmbConnectionControllerService>> SmbConnectionControllerService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
   std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service;
   if (auto connection_controller_name = context.getProperty(property)) {
-    smb_connection_controller_service = std::dynamic_pointer_cast<SmbConnectionControllerService>(context.getControllerService(*connection_controller_name, context.getProcessorNode()->getUUID()));
+    smb_connection_controller_service = std::dynamic_pointer_cast<SmbConnectionControllerService>(context.getControllerService(*connection_controller_name, context.getProcessor().getUUID()));
   }
   if (!smb_connection_controller_service) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing SMB Connection Controller Service");

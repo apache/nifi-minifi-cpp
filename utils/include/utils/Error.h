@@ -23,4 +23,6 @@ namespace org::apache::nifi::minifi::utils {
 
 std::error_code getLastError();
 
+[[nodiscard]] bool compareErrors(std::error_code lhs, std::error_code rhs);
+
 }  // namespace org::apache::nifi::minifi::utils

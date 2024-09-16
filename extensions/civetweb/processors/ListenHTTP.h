@@ -78,7 +78,7 @@ class ListenHTTP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")
       .withDescription("The Port to listen on for incoming connections. 0 means port is going to be selected randomly.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::LISTEN_PORT_TYPE)
+      .withValidator(core::StandardPropertyTypes::PORT_VALIDATOR)
       .withDefaultValue("80")
       .build();
   EXTENSIONAPI static constexpr auto AuthorizedDNPattern = core::PropertyDefinitionBuilder<>::createProperty("Authorized DN Pattern")
@@ -109,13 +109,13 @@ class ListenHTTP : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
         .withDescription("Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.")
-        .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+        .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
         .withDefaultValue(ListenHTTP::DEFAULT_BUFFER_SIZE_STR)
         .build();
   EXTENSIONAPI static constexpr auto BufferSize = core::PropertyDefinitionBuilder<>::createProperty("Buffer Size")
         .withDescription("Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. "
             "If the buffer full, the request is refused. If set to zero the buffer is unlimited.")
-        .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+        .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
         .withDefaultValue(ListenHTTP::DEFAULT_BUFFER_SIZE_STR)
         .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

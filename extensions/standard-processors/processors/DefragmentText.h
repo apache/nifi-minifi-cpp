@@ -69,6 +69,7 @@ class DefragmentText : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Pattern = core::PropertyDefinitionBuilder<>::createProperty("Pattern")
       .withDescription("A regular expression to match at the start or end of messages.")
       .isRequired(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto PatternLoc = core::PropertyDefinitionBuilder<magic_enum::enum_count<defragment_text::PatternLocation>()>::createProperty("Pattern Location")
       .withDescription("Whether the pattern is located at the start or at the end of the messages.")
@@ -79,12 +80,12 @@ class DefragmentText : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto MaxBufferAge = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Age")
       .withDescription("The maximum age of the buffer after which it will be transferred to success when matching Start of Message patterns or to failure when matching End of Message patterns. "
           "Expected format is <duration> <time unit>")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("10 min")
       .build();
   EXTENSIONAPI static constexpr auto MaxBufferSize = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Size")
       .withDescription("The maximum buffer size, if the buffer exceeds this, it will be transferred to failure. Expected format is <size> <data unit>")
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Pattern,

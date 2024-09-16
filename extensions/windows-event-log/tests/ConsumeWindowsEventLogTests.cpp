@@ -17,7 +17,7 @@
 
 #include "ConsumeWindowsEventLog.h"
 
-#include "core/ConfigurableComponent.h"
+#include "core/ConfigurableComponentImpl.h"
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "unit/TestBase.h"
@@ -106,37 +106,6 @@ TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create
 
   auto processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   TestController::runSession(test_plan);
-
-  auto properties_required_or_with_default_value = std::to_array<core::PropertyReference>({
-    ConsumeWindowsEventLog::Channel,
-    ConsumeWindowsEventLog::Query,
-    // ConsumeWindowsEventLog::RenderFormatXML,  // FIXME(fgerlits): not defined, does not exist in NiFi either; should be removed
-    ConsumeWindowsEventLog::MaxBufferSize,
-    // ConsumeWindowsEventLog::InactiveDurationToReconnect,  // FIXME(fgerlits): obsolete, see definition; should be removed
-    ConsumeWindowsEventLog::IdentifierMatcher,
-    ConsumeWindowsEventLog::IdentifierFunction,
-    ConsumeWindowsEventLog::ResolveAsAttributes,
-    ConsumeWindowsEventLog::EventHeader,
-    ConsumeWindowsEventLog::OutputFormatProperty,
-    ConsumeWindowsEventLog::BatchCommitSize,
-    ConsumeWindowsEventLog::BookmarkRootDirectory,  // TODO(fgerlits): obsolete, see definition; remove in a later release
-    ConsumeWindowsEventLog::ProcessOldEvents,
-    ConsumeWindowsEventLog::CacheSidLookups
-  });
-  for (const auto& property : properties_required_or_with_default_value) {
-    if (!LogTestController::getInstance().contains("property name " + std::string(property.name) + " value ")) {
-      FAIL("Property did not get queried: " << property.name);
-    }
-  }
-
-  auto properties_optional_without_default_value = std::to_array<core::PropertyReference>({
-    ConsumeWindowsEventLog::EventHeaderDelimiter
-  });
-  for (const auto& property : properties_optional_without_default_value) {
-    if (!LogTestController::getInstance().contains("property name " + std::string(property.name) + ", empty value")) {
-      FAIL("Optional property did not get queried: " << property.name);
-    }
-  }
 
   CHECK(LogTestController::getInstance().contains("Successfully configured CWEL"));
 }
@@ -348,7 +317,6 @@ TEST_CASE("ConsumeWindowsEventLog output format can be set", "[create][output_fo
   outputFormatSetterTestHelper("XML", 1);
   outputFormatSetterTestHelper("Plaintext", 1);
   outputFormatSetterTestHelper("Both", 2);
-  REQUIRE_THROWS(outputFormatSetterTestHelper("InvalidValue", 0));
 }
 
 TEST_CASE("ConsumeWindowsEventLog prints events in plain text correctly", "[onTrigger]") {

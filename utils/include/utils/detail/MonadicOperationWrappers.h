@@ -49,6 +49,17 @@ template<typename T>
 struct transform_error_wrapper {
   T function;
 };
+
+struct to_optional_wrapper{};
+
+template<typename E>
+struct to_expected_wrapper {
+  E error;
+};
+
+struct expect_wrapper {
+  std::string reason;
+};
 }  // namespace detail
 
 /**
@@ -86,6 +97,27 @@ detail::or_else_wrapper<T&&> orElse(T&& func) noexcept { return {std::forward<T>
  */
 template<typename T>
 detail::value_or_else_wrapper<T&&> valueOrElse(T&& func) noexcept { return {std::forward<T>(func)}; }
+
+
+/**
+ * Converts from std::optional<T> to nonstd::expected<T, E>
+ * Consuming the expected and discarding the error, if any.
+ */
+template<typename E>
+detail::to_expected_wrapper<E> toExpected(E&& e) noexcept { return {std::forward<E>(e)}; }
+
+
+/**
+ * Converts from nonstd::expected<T, E> to std::optional<T>
+ * Consuming the expected and discarding the error, if any.
+ */
+inline detail::to_optional_wrapper toOptional() noexcept { return {}; }
+
+/**
+ * For optional-like types, returns the present value or throws with the provided message
+ * It is recommended that expect messages are used to describe the reason you expect the optional-like to have value.
+ */
+inline detail::expect_wrapper expect(std::string&& exception_message) noexcept { return {std::forward<std::string>(std::move(exception_message))}; }
 
 /**
  * For optional-like types, only keep the present value if it satisfies the predicate

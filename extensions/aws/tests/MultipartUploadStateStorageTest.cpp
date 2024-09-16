@@ -116,8 +116,8 @@ TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Remove aged off state"
   state2.uploaded_etags = {"etag4", "etag5"};
   upload_storage_->storeState("test_bucket", "key2", state2);
   upload_storage_->removeAgedStates(10min);
-  REQUIRE(upload_storage_->getState("test_bucket", "key1") == std::nullopt);
-  REQUIRE(upload_storage_->getState("test_bucket", "key2") == state2);
+  CHECK(upload_storage_->getState("test_bucket", "key1") == std::nullopt);
+  CHECK(upload_storage_->getState("test_bucket", "key2") == state2);
 }
 
 }  // namespace org::apache::nifi::minifi::test

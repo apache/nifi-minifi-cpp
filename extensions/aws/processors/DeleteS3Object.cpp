@@ -37,14 +37,18 @@ std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDelet
     const CommonProperties &common_properties) const {
   gsl_Expects(client_config_);
   aws::s3::DeleteObjectRequestParameters params(common_properties.credentials, *client_config_);
-  context.getProperty(ObjectKey, params.object_key, &flow_file);
+  if (const auto object_key = context.getProperty(ObjectKey, &flow_file)) {
+    params.object_key = *object_key;
+  }
   if (params.object_key.empty() && (!flow_file.getAttribute("filename", params.object_key) || params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return std::nullopt;
   }
   logger_->log_debug("DeleteS3Object: Object Key [{}]", params.object_key);
 
-  context.getProperty(Version, params.version, &flow_file);
+  if (const auto version = context.getProperty(Version, &flow_file)) {
+    params.version = *version;
+  }
   logger_->log_debug("DeleteS3Object: Version [{}]", params.version);
 
   params.bucket = common_properties.bucket;

@@ -59,9 +59,11 @@ TEST_CASE("test string::split3", "[test split multiple delimiter]") {
   REQUIRE(expected == string::split("hello world I'm a unit test", " "));
 }
 
+class Foo {};
+
 TEST_CASE("test string::split4", "[test split classname]") {
-  std::vector<std::string> expected = {"org", "apache", "nifi", "minifi", "utils", "string", "ParseError"};
-  REQUIRE(expected == string::split(org::apache::nifi::minifi::core::className<string::ParseError>(), "::"));
+  std::vector<std::string> expected = {"org", "apache", "nifi", "minifi", "utils", "Foo"};
+  REQUIRE(expected == string::split(org::apache::nifi::minifi::core::className<Foo>(), "::"));
 }
 
 TEST_CASE("test string::split5", "[test split with delimiter set to empty string]") {

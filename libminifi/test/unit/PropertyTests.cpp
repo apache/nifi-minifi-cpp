@@ -87,43 +87,4 @@ TEST_CASE("Test Trimmer Left", "[testTrims]") {
   REQUIRE(test.c_str()[0] == 'a');
   REQUIRE(test.c_str()[1] == ' ');
 }
-
-TEST_CASE("Test Permissions Conversion", "[testPermissions]") {
-  uint32_t permissions = 0U;
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("0777", permissions));
-  REQUIRE(0777 == permissions);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("0000", permissions));
-  REQUIRE(0000 == permissions);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("0644", permissions));
-  REQUIRE(0644 == permissions);
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("0999", permissions));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("999", permissions));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("0644a", permissions));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("07777", permissions));
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("rwxrwxrwx", permissions));
-  REQUIRE(0777 == permissions);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("---------", permissions));
-  REQUIRE(0000 == permissions);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("rwxrw-r--", permissions));
-  REQUIRE(0764 == permissions);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("r--r--r--", permissions));
-  REQUIRE(0444 == permissions);
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("wxrwxrwxr", permissions));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("foobarfoo", permissions));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("foobar", permissions));
-}
 }   // namespace

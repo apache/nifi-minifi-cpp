@@ -56,7 +56,7 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
     }
     ptr->setQualifiedModuleName(qualified_module_name_);
     ptr->initialize();
-    ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, file_);
+    ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile.name, file_);
     return ptr;
   }
 
@@ -72,7 +72,7 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
     }
     ptr->setQualifiedModuleName(qualified_module_name_);
     ptr->initialize();
-    ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, file_);
+    ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile.name, file_);
     return ptr;
   }
 
@@ -84,7 +84,7 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
     }
     ptr->setQualifiedModuleName(qualified_module_name_);
     ptr->initialize();
-    ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, file_);
+    ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile.name, file_);
     return dynamic_cast<org::apache::nifi::minifi::core::CoreComponent*>(ptr);
   }
 
@@ -96,7 +96,7 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
     }
     ptr->setQualifiedModuleName(qualified_module_name_);
     ptr->initialize();
-    ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, file_);
+    ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile.name, file_);
     return dynamic_cast<org::apache::nifi::minifi::core::CoreComponent*>(ptr);
   }
 

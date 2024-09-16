@@ -17,6 +17,8 @@
 #pragma once
 
 #include "yaml-cpp/yaml.h"
+#include "rapidjson/rapidjson.h"
+#include "rapidjson/document.h"
 #include "core/flow/FlowSerializer.h"
 
 namespace org::apache::nifi::minifi::core::json {

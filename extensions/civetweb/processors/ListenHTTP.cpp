@@ -28,6 +28,7 @@
 
 #include "core/Resource.h"
 #include "utils/gsl.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -39,71 +40,26 @@ void ListenHTTP::initialize() {
 }
 
 void ListenHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string basePath;
+  std::string base_path = context.getProperty(BasePath) | utils::expect("ListenHTTP::BasePath has default value");
 
-  if (!context.getProperty(BasePath, basePath)) {
-    static_assert(BasePath.default_value);
-    logger_->log_info("{} attribute is missing, so default value of {} will be used", BasePath.name, *BasePath.default_value);
-    basePath = *BasePath.default_value;
-  }
+  base_path.insert(0, "/");
 
-  basePath.insert(0, "/");
-
-  if (!context.getProperty(Port, listeningPort)) {
-    logger_->log_error("{} attribute is missing or invalid", Port.name);
-    return;
-  }
+  listeningPort = utils::parseProperty(context, Port);
 
   bool randomPort = listeningPort == "0";
 
-  std::string authDNPattern;
-  if (context.getProperty(AuthorizedDNPattern, authDNPattern) && !authDNPattern.empty()) {
-    logger_->log_debug("ListenHTTP using {}: {}", AuthorizedDNPattern.name, authDNPattern);
-  } else {
-    authDNPattern = ".*";
-    logger_->log_debug("Authorized DN Pattern not set or invalid, using default '{}' pattern", authDNPattern);
-  }
+  auto authDNPattern = context.getProperty(AuthorizedDNPattern).value_or(".*");
+  const auto sslCertFile = context.getProperty(SSLCertificate).value_or("");
+  const auto sslCertAuthorityFile = context.getProperty(SSLCertificateAuthority).value_or("");
+  const auto sslVerifyPeer = context.getProperty(SSLVerifyPeer).value_or("");
+  const auto sslMinVer = context.getProperty(SSLMinimumVersion).value_or("");
 
-  std::string sslCertFile;
-
-  if (context.getProperty(SSLCertificate, sslCertFile) && !sslCertFile.empty()) {
-    logger_->log_debug("ListenHTTP using {}: {}", SSLCertificate.name, sslCertFile);
-  }
-
-  // Read further TLS/SSL options only if TLS/SSL usage is implied by virtue of certificate value being set
-  std::string sslCertAuthorityFile;
-  std::string sslVerifyPeer;
-  std::string sslMinVer;
-
-  if (!sslCertFile.empty()) {
-    if (context.getProperty(SSLCertificateAuthority, sslCertAuthorityFile) && !sslCertAuthorityFile.empty()) {
-      logger_->log_debug("ListenHTTP using {}: {}", SSLCertificateAuthority.name, sslCertAuthorityFile);
-    }
-
-    if (context.getProperty(SSLVerifyPeer, sslVerifyPeer)) {
-      if (sslVerifyPeer.empty() || sslVerifyPeer == "no") {
-        logger_->log_debug("ListenHTTP will not verify peers");
-      } else {
-        logger_->log_debug("ListenHTTP will verify peers");
-      }
-    } else {
-      logger_->log_debug("ListenHTTP will not verify peers");
-    }
-
-    if (context.getProperty(SSLMinimumVersion, sslMinVer)) {
-      logger_->log_debug("ListenHTTP using {}: {}", SSLMinimumVersion.name, sslMinVer);
-    }
-  }
-
-  std::string headersAsAttributesPattern;
-
-  if (context.getProperty(HeadersAsAttributesRegex, headersAsAttributesPattern) && !headersAsAttributesPattern.empty()) {
-    logger_->log_debug("ListenHTTP using {}: {}", HeadersAsAttributesRegex.name, headersAsAttributesPattern);
-  }
+  std::string headersAsAttributesPattern = context.getProperty(HeadersAsAttributesRegex).value_or("");
+  logger_->log_debug("ListenHTTP using {}: {}", HeadersAsAttributesRegex.name, headersAsAttributesPattern);
 
   auto numThreads = getMaxConcurrentTasks();
 
-  logger_->log_info("ListenHTTP starting HTTP server on port {} and path {} with {} threads", randomPort ? "random" : listeningPort, basePath, numThreads);
+  logger_->log_info("ListenHTTP starting HTTP server on port {} and path {} with {} threads", randomPort ? "random" : listeningPort, base_path, numThreads);
 
   // Initialize web server
   std::vector<std::string> options;
@@ -148,17 +104,18 @@ void ListenHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionF
 
   server_ = std::make_unique<CivetServer>(options, &callbacks_, &logger_);
 
-  context.getProperty(BatchSize, batch_size_);
+  batch_size_ = utils::parseU64Property(context, BatchSize);
   logger_->log_debug("ListenHTTP using {}: {}", BatchSize.name, batch_size_);
 
   std::optional<std::string> flow_id;
-  if (auto flow_version = context.getProcessorNode()->getFlowIdentifier()) {
+  if (auto flow_version = context.getProcessor().getFlowIdentifier()) {
     flow_id = flow_version->getFlowId();
   }
 
-  handler_ = std::make_unique<Handler>(basePath, flow_id, context.getProperty<uint64_t>(BufferSize).value_or(0), std::move(authDNPattern),
+  const auto buffer_size = utils::parseU64Property(context, BufferSize);
+  handler_ = std::make_unique<Handler>(base_path, flow_id, buffer_size, std::move(authDNPattern),
     headersAsAttributesPattern.empty() ? std::nullopt : std::make_optional<utils::Regex>(headersAsAttributesPattern));
-  server_->addHandler(basePath, handler_.get());
+  server_->addHandler(base_path, handler_.get());
 
   if (randomPort) {
     const auto& vec = server_->getListeningPorts();

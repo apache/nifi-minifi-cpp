@@ -35,12 +35,12 @@ void PushGrafanaLokiREST::initialize() {
 }
 
 void PushGrafanaLokiREST::setupClientTimeouts(const core::ProcessContext& context) {
-  if (auto connection_timeout = context.getProperty<core::TimePeriodValue>(PushGrafanaLokiREST::ConnectTimeout)) {
-    client_.setConnectionTimeout(connection_timeout->getMilliseconds());
+  if (auto connection_timeout = utils::parseOptionalMsProperty(context, PushGrafanaLokiREST::ConnectTimeout)) {
+    client_.setConnectionTimeout(*connection_timeout);
   }
 
-  if (auto read_timeout = context.getProperty<core::TimePeriodValue>(PushGrafanaLokiREST::ReadTimeout)) {
-    client_.setReadTimeout(read_timeout->getMilliseconds());
+  if (auto read_timeout = utils::parseOptionalMsProperty(context, PushGrafanaLokiREST::ReadTimeout)) {
+    client_.setReadTimeout(*read_timeout);
   }
 }
 
@@ -72,7 +72,7 @@ void PushGrafanaLokiREST::setAuthorization(const core::ProcessContext& context) 
 }
 
 void PushGrafanaLokiREST::initializeHttpClient(core::ProcessContext& context) {
-  auto url = utils::getRequiredPropertyOrThrow<std::string>(context, Url.name);
+  auto url = utils::parseProperty(context, Url);
   if (url.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Url property cannot be empty!");
   }
@@ -90,13 +90,7 @@ void PushGrafanaLokiREST::onSchedule(core::ProcessContext& context, core::Proces
   initializeHttpClient(context);
   client_.setContentType("application/json");
   client_.setFollowRedirects(true);
-
-  auto tenant_id = context.getProperty(TenantID);
-  if (tenant_id && !tenant_id->empty()) {
-    client_.setRequestHeader("X-Scope-OrgID", tenant_id);
-  } else {
-    client_.setRequestHeader("X-Scope-OrgID", std::nullopt);
-  }
+  client_.setRequestHeader("X-Scope-OrgID", context.getProperty(TenantID) | utils::toOptional());
 
   setupClientTimeouts(context);
   setAuthorization(context);

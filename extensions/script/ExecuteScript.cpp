@@ -53,11 +53,10 @@ void ExecuteScript::onSchedule(core::ProcessContext& context, core::ProcessSessi
   }
 
 
-  std::string script_file;
-  std::string script_body;
-  context.getProperty(ScriptFile, script_file);
-  context.getProperty(ScriptBody, script_body);
-  auto module_directory = context.getProperty(ModuleDirectory);
+  std::string script_file = context.getProperty(ScriptFile).value_or("");
+  std::string script_body = context.getProperty(ScriptBody).value_or("");
+
+  auto module_directory = context.getProperty(ModuleDirectory) | utils::toOptional();
 
   if (script_file.empty() && script_body.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either Script Body or Script File must be defined");

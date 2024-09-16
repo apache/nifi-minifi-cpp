@@ -15,18 +15,20 @@
  * limitations under the License.
  */
 
+#include "fetchopc.h"
+
+#include <list>
 #include <memory>
 #include <string>
-#include <list>
 
-#include "opc.h"
-#include "fetchopc.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "core/Resource.h"
-#include "utils/StringUtils.h"
-#include "utils/Enum.h"
 #include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "core/Processor.h"
+#include "core/Resource.h"
+#include "opc.h"
+#include "utils/Enum.h"
+#include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -42,12 +44,10 @@ namespace org::apache::nifi::minifi::processors {
 
     BaseOPCProcessor::onSchedule(context, factory);
 
-    std::string value;
-    context.getProperty(NodeID, nodeID_);
-    context.getProperty(NodeIDType, value);
+    nodeID_ = context.getProperty(NodeID).value_or("");
+    std::string value = context.getProperty(NodeIDType).value_or("");
 
-    maxDepth_ = 0;
-    context.getProperty(MaxDepth, maxDepth_);
+    maxDepth_ = utils::parseU64Property(context, MaxDepth);
 
     if (value == "String") {
       idType_ = opc::OPCNodeIDType::String;
@@ -71,13 +71,10 @@ namespace org::apache::nifi::minifi::processors {
       }
     }
     if (idType_ != opc::OPCNodeIDType::Path) {
-      if (!context.getProperty(NameSpaceIndex, nameSpaceIdx_)) {
-        auto error_msg = utils::string::join_pack(NameSpaceIndex.name, " is mandatory in case ", NodeIDType.name, " is not Path");
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-      }
+      nameSpaceIdx_ = gsl::narrow<int32_t>(utils::parseI64Property(context, NameSpaceIndex));
     }
 
-    context.getProperty(Lazy, value);
+    value = context.getProperty(Lazy).value_or("");
     lazy_mode_ = value == "On";
   }
 

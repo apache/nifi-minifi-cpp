@@ -50,24 +50,25 @@ class MotionDetector final : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto MinInterestArea = core::PropertyDefinitionBuilder<>::createProperty("Minimum Area")
       .withDescription("We only consider the movement regions with area greater than this.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("100")
       .build();
   EXTENSIONAPI static constexpr auto Threshold = core::PropertyDefinitionBuilder<>::createProperty("Threshold for segmentation")
       .withDescription("Pixel greater than this will be white, otherwise black.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("42")
       .build();
   EXTENSIONAPI static constexpr auto DilateIter = core::PropertyDefinitionBuilder<>::createProperty("Dilate iteration")
       .withDescription("For image processing, if an object is detected as 2 separate objects, increase this value")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("10")
       .build();
   EXTENSIONAPI static constexpr auto BackgroundFrame = core::PropertyDefinitionBuilder<>::createProperty("Path to background frame")
       .withDescription("If not provided then the processor will take the first input frame as background")
       .isRequired(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       ImageEncoding,
@@ -103,9 +104,9 @@ class MotionDetector final : public core::ProcessorImpl {
   cv::Mat background_;
   cv::Mat bg_img_;
   std::string image_encoding_;
-  int min_area_{};
-  int threshold_{};
-  int dil_iter_{};
+  uint64_t min_area_{};
+  uint64_t threshold_{};
+  uint64_t dil_iter_{};
 
   // hardcoded width to 500
   const double IMG_WIDTH = 500.0;

@@ -42,20 +42,20 @@ void LogAttribute::initialize() {
 }
 
 void LogAttribute::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  context.getProperty(FlowFilesToLog, flowfiles_to_log_);
+  flowfiles_to_log_ = utils::parseU64Property(context, FlowFilesToLog);
   logger_->log_debug("FlowFiles To Log: {}", flowfiles_to_log_);
 
-  context.getProperty(HexencodePayload, hexencode_);
+  hexencode_ = utils::parseBoolProperty(context, HexencodePayload);
 
-  context.getProperty(MaxPayloadLineLength, max_line_length_);
+  max_line_length_ = utils::parseU64Property(context, MaxPayloadLineLength);
   logger_->log_debug("Maximum Payload Line Length: {}", max_line_length_);
 
-  if (auto attributes_to_log_str = context.getProperty(AttributesToLog); attributes_to_log_str && !attributes_to_log_str->empty()) {
+  if (auto attributes_to_log_str = context.getProperty(AttributesToLog)) {
     if (auto attrs_to_log_vec = utils::string::split(*attributes_to_log_str, ","); !attrs_to_log_vec.empty())
       attributes_to_log_.emplace(std::make_move_iterator(attrs_to_log_vec.begin()), std::make_move_iterator(attrs_to_log_vec.end()));
   }
 
-  if (auto attributes_to_ignore_str = context.getProperty(AttributesToIgnore); attributes_to_ignore_str && !attributes_to_ignore_str->empty()) {
+  if (auto attributes_to_ignore_str = context.getProperty(AttributesToIgnore)) {
     if (auto attrs_to_ignore_vec = utils::string::split(*attributes_to_ignore_str, ","); !attrs_to_ignore_vec.empty())
       attributes_to_ignore_.emplace(std::make_move_iterator(attrs_to_ignore_vec.begin()), std::make_move_iterator(attrs_to_ignore_vec.end()));
   }
@@ -68,11 +68,11 @@ void LogAttribute::onSchedule(core::ProcessContext& context, core::ProcessSessio
     }
   }
 
-  if (auto log_prefix = context.getProperty(LogPrefix); log_prefix && !log_prefix->empty()) {
+  if (auto log_prefix = context.getProperty(LogPrefix)) {
     dash_line_ = fmt::format("{:-^50}", *log_prefix);
   }
 
-  log_payload_ = context.getProperty<bool>(LogPayload).value_or(false);
+  log_payload_ = utils::parseBoolProperty(context, LogPayload);
 }
 
 std::string LogAttribute::generateLogMessage(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const {

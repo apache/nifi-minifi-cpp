@@ -20,7 +20,7 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "core/Core.h"
-#include "core/ConfigurableComponent.h"
+#include "core/ConfigurableComponentImpl.h"
 #include "core/controller/ControllerService.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"

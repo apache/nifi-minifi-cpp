@@ -16,11 +16,15 @@
  * limitations under the License.
  */
 
+#include "KamikazeProcessor.h"
+
+
 #include <string>
 
-#include "KamikazeProcessor.h"
 #include "Exception.h"
+#include "core/ProcessContext.h"
 #include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -35,15 +39,12 @@ void KamikazeProcessor::initialize() {
 }
 
 void KamikazeProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string value;
-  context.getProperty(ThrowInOnTrigger, value);
-  _throwInOnTrigger = utils::string::toBool(value).value_or(false);
+  _throwInOnTrigger = utils::parseBoolProperty(context, ThrowInOnTrigger);
 
-  context.getProperty(ThrowInOnSchedule, value);
-
-  if (utils::string::toBool(value).value_or(false)) {
+  if (utils::parseBoolProperty(context, ThrowInOnSchedule)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, OnScheduleExceptionStr);
   }
+
   logger_->log_error("{}", OnScheduleLogStr);
 }
 

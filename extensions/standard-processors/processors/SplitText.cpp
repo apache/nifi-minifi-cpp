@@ -390,11 +390,10 @@ void SplitText::initialize() {
 }
 
 void SplitText::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*sessionFactory*/) {
-  split_text_config_.line_split_count = utils::getRequiredPropertyOrThrow<uint64_t>(context, LineSplitCount.name);
+  split_text_config_.line_split_count = utils::parseU64Property(context, LineSplitCount);
   logger_->log_debug("SplitText line split count: {}", split_text_config_.line_split_count);
-  auto max_fragment_data_size_value = context.getProperty<core::DataSizeValue>(MaximumFragmentSize);
-  if (max_fragment_data_size_value) {
-    split_text_config_.maximum_fragment_size = max_fragment_data_size_value->getValue();
+  if (const auto max_fragment_data_size_value = utils::parseOptionalDataSizeProperty(context, MaximumFragmentSize)) {
+    split_text_config_.maximum_fragment_size = *max_fragment_data_size_value;
     logger_->log_debug("SplitText maximum fragment size: {}", split_text_config_.maximum_fragment_size.value());
   }
   if (split_text_config_.maximum_fragment_size && split_text_config_.maximum_fragment_size.value() == 0) {
@@ -403,9 +402,9 @@ void SplitText::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   if (split_text_config_.line_split_count == 0 && !split_text_config_.maximum_fragment_size) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Line Split Count is set to 0, but Maximum Fragment Size is not set!");
   }
-  split_text_config_.header_line_count = utils::getRequiredPropertyOrThrow<uint64_t>(context, HeaderLineCount.name);
+  split_text_config_.header_line_count = utils::parseU64Property(context, HeaderLineCount);
   logger_->log_debug("SplitText header line count: {}", split_text_config_.header_line_count);
-  split_text_config_.header_line_marker_characters = context.getProperty(HeaderLineMarkerCharacters);
+  split_text_config_.header_line_marker_characters = context.getProperty(HeaderLineMarkerCharacters) | utils::toOptional();
   if (split_text_config_.header_line_marker_characters && split_text_config_.header_line_marker_characters->size() >= detail::SPLIT_TEXT_BUFFER_SIZE) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("SplitText header line marker characters length is larger than the maximum allowed: {} > {}",
       split_text_config_.header_line_marker_characters->size(), detail::SPLIT_TEXT_BUFFER_SIZE - 1));
@@ -413,7 +412,7 @@ void SplitText::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   if (split_text_config_.header_line_marker_characters) {
     logger_->log_debug("SplitText header line marker characters were set: {}", *split_text_config_.header_line_marker_characters);
   }
-  split_text_config_.remove_trailing_new_lines = utils::getRequiredPropertyOrThrow<bool>(context, RemoveTrailingNewlines.name);
+  split_text_config_.remove_trailing_new_lines = utils::parseBoolProperty(context, RemoveTrailingNewlines);
   logger_->log_debug("SplitText should remove trailing new lines: {}", split_text_config_.remove_trailing_new_lines);
 }
 

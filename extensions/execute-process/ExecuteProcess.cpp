@@ -33,6 +33,7 @@
 #include "utils/Environment.h"
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"
+#include "utils/ProcessorConfigUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -44,22 +45,20 @@ void ExecuteProcess::initialize() {
 }
 
 void ExecuteProcess::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string value;
-  if (context.getProperty(Command, value)) {
-    command_ = value;
+  if (auto command = context.getProperty(Command)) {
+    command_ = *command;
   }
-  if (context.getProperty(CommandArguments, value)) {
-    command_argument_ = value;
+  if (auto const command_argument = context.getProperty(CommandArguments)) {
+    command_argument_ = *command_argument;
   }
   if (auto working_dir_str = context.getProperty(WorkingDir)) {
     working_dir_ = *working_dir_str;
   }
-  if (auto batch_duration = context.getProperty<core::TimePeriodValue>(BatchDuration)) {
-    batch_duration_ = batch_duration->getMilliseconds();
-    logger_->log_debug("Setting batch duration to {}", batch_duration_);
-  }
-  if (context.getProperty(RedirectErrorStream, value)) {
-    redirect_error_stream_ = org::apache::nifi::minifi::utils::string::toBool(value).value_or(false);
+  batch_duration_ = utils::parseMsProperty(context, BatchDuration);
+  logger_->log_debug("Setting batch duration to {}", batch_duration_);
+
+  if (const auto redirect_error_stream = utils::parseOptionalBoolProperty(context, RedirectErrorStream)) {
+    redirect_error_stream_ = *redirect_error_stream;
   }
   full_command_ = command_ + " " + command_argument_;
 }

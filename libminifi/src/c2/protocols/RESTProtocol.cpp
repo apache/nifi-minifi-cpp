@@ -29,7 +29,6 @@
 #include <utility>
 
 #include "rapidjson/error/en.h"
-#include "core/TypedValues.h"
 #include "utils/gsl.h"
 #include "properties/Configuration.h"
 

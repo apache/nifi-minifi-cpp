@@ -72,14 +72,14 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
   EXTENSIONAPI static constexpr auto MaximumWaitingTime = core::PropertyDefinitionBuilder<>::createProperty("Maximum Waiting Time")
       .withDescription("The maximum time the processor tries to acquire acknowledgement confirmation for an index, from the point of registration. "
           "After the given amount of time, the processor considers the index as not acknowledged and transfers the FlowFile to the \"unacknowledged\" relationship.")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("1 hour")
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaxQuerySize = core::PropertyDefinitionBuilder<>::createProperty("Maximum Query Size")
       .withDescription("The maximum number of acknowledgement identifiers the outgoing query contains in one batch. "
           "It is recommended not to set it too low in order to reduce network communication.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("1000")
       .isRequired(true)
       .build();
@@ -121,7 +121,7 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
-  uint32_t batch_size_ = 1000;
+  uint64_t batch_size_ = 1000;
   std::chrono::milliseconds max_age_ = std::chrono::hours(1);
   http::HTTPClient client_;
 };

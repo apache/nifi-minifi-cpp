@@ -99,37 +99,4 @@ TEST_CASE("ProcessContextExpr can update existing processor properties", "[setPr
       CHECK(context->getProperty(minifi::DummyProcessor::ExpressionLanguageProperty, nullptr) == "bar");
     }
   }
-
-  SECTION("Set and get simple dynamic property") {
-    static constexpr auto simple_property_definition = minifi::core::PropertyDefinitionBuilder<>::createProperty("Simple Dynamic Property")
-        .withDescription("A simple dynamic string property")
-        .build();
-    core::Property simple_property{simple_property_definition};
-    std::string property_value;
-
-    context->setDynamicProperty(simple_property.getName(), "foo");
-    CHECK(context->getDynamicProperty(simple_property, property_value, nullptr));
-    CHECK(property_value == "foo");
-
-    context->setDynamicProperty(simple_property.getName(), "bar");
-    CHECK(context->getDynamicProperty(simple_property, property_value, nullptr));
-    CHECK(property_value == "bar");
-  }
-
-  SECTION("Set and get expression language dynamic property") {
-    static constexpr auto expression_language_property_definition = minifi::core::PropertyDefinitionBuilder<>::createProperty("Expression Language Dynamic Property")
-        .withDescription("A dynamic property which supports expression language")
-        .supportsExpressionLanguage(true)
-        .build();
-    core::Property expression_language_property{expression_language_property_definition};
-    std::string property_value;
-
-    context->setDynamicProperty(expression_language_property.getName(), "foo");
-    CHECK(context->getDynamicProperty(expression_language_property, property_value, nullptr));
-    CHECK(property_value == "foo");
-
-    context->setDynamicProperty(expression_language_property.getName(), "bar");
-    CHECK(context->getDynamicProperty(expression_language_property, property_value, nullptr));
-    CHECK(property_value == "bar");
-  }
 }

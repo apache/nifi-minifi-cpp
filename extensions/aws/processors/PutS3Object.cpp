@@ -41,15 +41,14 @@ void PutS3Object::fillUserMetadata(core::ProcessContext& context) {
   const auto &dynamic_prop_keys = context.getDynamicPropertyKeys();
   bool first_property = true;
   for (const auto &prop_key : dynamic_prop_keys) {
-    std::string prop_value;
-    if (context.getDynamicProperty(prop_key, prop_value) && !prop_value.empty()) {
-      logger_->log_debug("PutS3Object: DynamicProperty: [{}] -> [{}]", prop_key, prop_value);
-      user_metadata_map_.emplace(prop_key, prop_value);
+    if (const auto prop_value = context.getDynamicProperty(prop_key); prop_value && !prop_value->empty()) {
+      logger_->log_debug("PutS3Object: DynamicProperty: [{}] -> [{}]", prop_key, *prop_value);
+      user_metadata_map_.emplace(prop_key, *prop_value);
       if (first_property) {
-        user_metadata_ = minifi::utils::string::join_pack(prop_key, "=", prop_value);
+        user_metadata_ = minifi::utils::string::join_pack(prop_key, "=", *prop_value);
         first_property = false;
       } else {
-        user_metadata_ += minifi::utils::string::join_pack(",", prop_key, "=", prop_value);
+        user_metadata_ += minifi::utils::string::join_pack(",", prop_key, "=", *prop_value);
       }
     }
   }
@@ -59,38 +58,34 @@ void PutS3Object::fillUserMetadata(core::ProcessContext& context) {
 void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   S3Processor::onSchedule(context, session_factory);
 
-  if (!context.getProperty(StorageClass, storage_class_)
-      || storage_class_.empty()
-      || !ranges::contains(STORAGE_CLASSES, storage_class_)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
-  }
+  storage_class_ = minifi::utils::parseProperty(context, StorageClass);
   logger_->log_debug("PutS3Object: Storage Class [{}]", storage_class_);
 
-  if (!context.getProperty(ServerSideEncryption, server_side_encryption_)
-      || server_side_encryption_.empty()
-      || !ranges::contains(SERVER_SIDE_ENCRYPTIONS, server_side_encryption_)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Server Side Encryption property missing or invalid");
-  }
+  server_side_encryption_ = minifi::utils::parseProperty(context, ServerSideEncryption);
   logger_->log_debug("PutS3Object: Server Side Encryption [{}]", server_side_encryption_);
 
-  if (auto use_path_style_access = context.getProperty<bool>(UsePathStyleAccess)) {
+  if (const auto use_path_style_access = minifi::utils::parseOptionalBoolProperty(context, UsePathStyleAccess)) {
     use_virtual_addressing_ = !*use_path_style_access;
   }
 
-  if (!context.getProperty(MultipartThreshold, multipart_threshold_) || multipart_threshold_ > getMaxUploadSize() || multipart_threshold_ < getMinPartSize()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multipart Threshold is not between the valid 5MB and 5GB range!");
-  }
+  multipart_threshold_ = context.getProperty(MultipartThreshold)
+      | minifi::utils::andThen([&](const auto str) { return parsing::parseDataSizeMinMax(str, getMinPartSize(), getMaxUploadSize()); })
+      | minifi::utils::expect("Multipart Part Size is not between the valid 5MB and 5GB range!");
+
   logger_->log_debug("PutS3Object: Multipart Threshold {}", multipart_threshold_);
-  if (!context.getProperty(MultipartPartSize, multipart_size_) || multipart_size_ > getMaxUploadSize() || multipart_size_ < getMinPartSize()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multipart Part Size is not between the valid 5MB and 5GB range!");
-  }
+
+  multipart_size_ = context.getProperty(MultipartPartSize)
+    | minifi::utils::andThen([&](const auto str) { return parsing::parseDataSizeMinMax(str, getMinPartSize(), getMaxUploadSize()); })
+    | minifi::utils::expect("Multipart Part Size is not between the valid 5MB and 5GB range!");
+
+
   logger_->log_debug("PutS3Object: Multipart Size {}", multipart_size_);
 
 
-  multipart_upload_ageoff_interval_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(context, MultipartUploadAgeOffInterval.name).getMilliseconds();
+  multipart_upload_ageoff_interval_ = minifi::utils::parseMsProperty(context, MultipartUploadAgeOffInterval);
   logger_->log_debug("PutS3Object: Multipart Upload Ageoff Interval {}", multipart_upload_ageoff_interval_);
 
-  multipart_upload_max_age_threshold_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(context, MultipartUploadMaxAgeThreshold.name).getMilliseconds();
+  multipart_upload_max_age_threshold_ = minifi::utils::parseMsProperty(context, MultipartUploadMaxAgeThreshold);
   logger_->log_debug("PutS3Object: Multipart Upload Max Age Threshold {}", multipart_upload_max_age_threshold_);
 
   std::string value;
@@ -129,7 +124,10 @@ bool PutS3Object::setCannedAcl(
     core::ProcessContext& context,
     const core::FlowFile& flow_file,
     aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
-  context.getProperty(CannedACL, put_s3_request_params.canned_acl, &flow_file);
+  if (const auto canned_acl = context.getProperty(CannedACL, &flow_file)) {
+    put_s3_request_params.canned_acl = *canned_acl;
+  }
+
   if (!put_s3_request_params.canned_acl.empty() && !ranges::contains(CANNED_ACLS, put_s3_request_params.canned_acl)) {
     logger_->log_error("Canned ACL is invalid!");
     return false;
@@ -142,22 +140,21 @@ bool PutS3Object::setAccessControl(
       core::ProcessContext& context,
       const core::FlowFile& flow_file,
       aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
-  std::string value;
-  if (context.getProperty(FullControlUserList, value, &flow_file) && !value.empty()) {
-    put_s3_request_params.fullcontrol_user_list = parseAccessControlList(value);
-    logger_->log_debug("PutS3Object: Full Control User List [{}]", value);
+  if (const auto full_control_user_list = context.getProperty(FullControlUserList, &flow_file)) {
+    put_s3_request_params.fullcontrol_user_list = parseAccessControlList(*full_control_user_list);
+    logger_->log_debug("PutS3Object: Full Control User List [{}]", *full_control_user_list);
   }
-  if (context.getProperty(ReadPermissionUserList, value, &flow_file) && !value.empty()) {
-    put_s3_request_params.read_permission_user_list = parseAccessControlList(value);
-    logger_->log_debug("PutS3Object: Read Permission User List [{}]", value);
+  if (const auto read_permission_user_list = context.getProperty(ReadPermissionUserList, &flow_file)) {
+    put_s3_request_params.read_permission_user_list = parseAccessControlList(*read_permission_user_list);
+    logger_->log_debug("PutS3Object: Read Permission User List [{}]", *read_permission_user_list);
   }
-  if (context.getProperty(ReadACLUserList, value, &flow_file) && !value.empty()) {
-    put_s3_request_params.read_acl_user_list = parseAccessControlList(value);
-    logger_->log_debug("PutS3Object: Read ACL User List [{}]", value);
+  if (const auto read_acl_user_list = context.getProperty(ReadACLUserList, &flow_file)) {
+    put_s3_request_params.read_acl_user_list = parseAccessControlList(*read_acl_user_list);
+    logger_->log_debug("PutS3Object: Read ACL User List [{}]", *read_acl_user_list);
   }
-  if (context.getProperty(WriteACLUserList, value, &flow_file) && !value.empty()) {
-    put_s3_request_params.write_acl_user_list = parseAccessControlList(value);
-    logger_->log_debug("PutS3Object: Write ACL User List [{}]", value);
+  if (const auto write_acl_user_list = context.getProperty(WriteACLUserList, &flow_file)) {
+    put_s3_request_params.write_acl_user_list = parseAccessControlList(*write_acl_user_list);
+    logger_->log_debug("PutS3Object: Write ACL User List [{}]", *write_acl_user_list);
   }
 
   return setCannedAcl(context, flow_file, put_s3_request_params);
@@ -175,14 +172,14 @@ std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3Reques
   params.server_side_encryption = server_side_encryption_;
   params.storage_class = storage_class_;
 
-  context.getProperty(ObjectKey, params.object_key, &flow_file);
+  params.object_key = context.getProperty(ObjectKey, &flow_file).value_or("");
   if (params.object_key.empty() && (!flow_file.getAttribute("filename", params.object_key) || params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return std::nullopt;
   }
   logger_->log_debug("PutS3Object: Object Key [{}]", params.object_key);
 
-  context.getProperty(ContentType, params.content_type, &flow_file);
+  params.content_type = context.getProperty(ContentType, &flow_file).value_or("");
   logger_->log_debug("PutS3Object: Content Type [{}]", params.content_type);
 
   if (!setAccessControl(context, flow_file, params)) {

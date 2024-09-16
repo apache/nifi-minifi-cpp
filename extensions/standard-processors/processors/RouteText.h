@@ -140,14 +140,14 @@ class RouteText : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto TrimWhitespace = core::PropertyDefinitionBuilder<>::createProperty("Ignore Leading/Trailing Whitespace")
       .withDescription("Indicates whether or not the whitespace at the beginning and end should be ignored when evaluating a segment.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto IgnoreCase = core::PropertyDefinitionBuilder<>::createProperty("Ignore Case")
       .withDescription("If true, capitalization will not be taken into account when comparing values. E.g., matching against 'HELLO' or 'hello' will have the same result. "
           "This property is ignored if the 'Matching Strategy' is set to 'Satisfies Expression'.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto GroupingRegex = core::PropertyDefinitionBuilder<>::createProperty("Grouping Regular Expression")
@@ -211,8 +211,6 @@ class RouteText : public core::ProcessorImpl {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
-  void onDynamicPropertyModified(const core::Property& orig_property, const core::Property& new_property) override;
-
  private:
   static constexpr const char* GROUP_ATTRIBUTE_NAME = "RouteText.Group";
 
@@ -226,7 +224,7 @@ class RouteText : public core::ProcessorImpl {
   };
 
   std::string_view preprocess(std::string_view str) const;
-  bool matchSegment(MatchingContext& context, const Segment& segment, const core::Property& prop) const;
+  bool matchSegment(MatchingContext& context, const Segment& segment, const std::string& property_name) const;
   std::optional<std::string> getGroup(const std::string_view& segment) const;
 
   route_text::Routing routing_ = route_text::Routing::DYNAMIC;
@@ -237,7 +235,6 @@ class RouteText : public core::ProcessorImpl {
   std::optional<utils::Regex> group_regex_;
   std::string group_fallback_;
 
-  std::map<std::string, core::Property> dynamic_properties_;
   std::map<std::string, core::Relationship> dynamic_relationships_;
 
   std::shared_ptr<core::logging::Logger> logger_;

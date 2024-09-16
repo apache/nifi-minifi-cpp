@@ -24,7 +24,7 @@
 #include "FlowController.h"
 #include "CivetServer.h"
 #include "RemoteProcessorGroupPort.h"
-#include "core/ConfigurableComponent.h"
+#include "core/ConfigurableComponentImpl.h"
 #include "controllers/SSLContextService.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "unit/TestUtils.h"

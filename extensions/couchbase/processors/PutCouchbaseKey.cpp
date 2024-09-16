@@ -40,24 +40,19 @@ void PutCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
   }
 
   CouchbaseCollection collection;
-  if (!context.getProperty(BucketName, collection.bucket_name, flow_file.get()) || collection.bucket_name.empty()) {
+  if (const auto bucket_name = utils::parseOptionalProperty(context, BucketName, flow_file.get())) {
+    collection.bucket_name = *bucket_name;
+  } else {
     logger_->log_error("Bucket '{}' is invalid or empty!", collection.bucket_name);
     session.transfer(flow_file, Failure);
     return;
   }
 
-  if (!context.getProperty(ScopeName, collection.scope_name, flow_file.get()) || collection.scope_name.empty()) {
-    collection.scope_name = ::couchbase::scope::default_name;
-  }
-
-  if (!context.getProperty(CollectionName, collection.collection_name, flow_file.get()) || collection.collection_name.empty()) {
-    collection.collection_name = ::couchbase::collection::default_name;
-  }
-
-  std::string document_id;
-  if (!context.getProperty(DocumentId, document_id, flow_file.get()) || document_id.empty()) {
-    document_id = flow_file->getAttribute(core::SpecialFlowAttribute::UUID).value_or(utils::IdGenerator::getIdGenerator()->generate().to_string());
-  }
+  collection.scope_name = utils::parseOptionalProperty(context, ScopeName, flow_file.get()).value_or(::couchbase::scope::default_name);
+  collection.collection_name = utils::parseOptionalProperty(context, CollectionName, flow_file.get()).value_or(::couchbase::collection::default_name);
+  std::string document_id = utils::parseOptionalProperty(context, DocumentId, flow_file.get())
+      | utils::orElse([&flow_file] { return flow_file->getAttribute(core::SpecialFlowAttribute::UUID); })
+      | utils::valueOrElse([] { return utils::IdGenerator::getIdGenerator()->generate().to_string(); });
 
   ::couchbase::upsert_options options;
   options.durability(persist_to_, replicate_to_);

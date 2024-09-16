@@ -58,7 +58,7 @@ class ListGCSBucket : public GCSProcessor {
       .build();
   EXTENSIONAPI static constexpr auto ListAllVersions = core::PropertyDefinitionBuilder<>::createProperty("List all versions")
       .withDescription("Set this option to `true` to get all the previous versions separately.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(GCSProcessor::Properties, std::to_array<core::PropertyReference>({

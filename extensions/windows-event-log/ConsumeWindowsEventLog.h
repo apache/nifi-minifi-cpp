@@ -41,6 +41,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
+#include "core/StateManager.h"
 #include "utils/OsUtils.h"
 #include "wel/WindowsEventLog.h"
 #include "wel/EventPath.h"
@@ -99,7 +100,7 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto MaxBufferSize = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Size")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .withDefaultValue("1 MB")
       .withDescription("The individual Event Log XMLs are rendered to a buffer."
           " This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)")
@@ -107,7 +108,7 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
   // !!! This property is obsolete since now subscription is not used, but leave since it might be is used already in config.yml.
   EXTENSIONAPI static constexpr auto InactiveDurationToReconnect = core::PropertyDefinitionBuilder<>::createProperty("Inactive Duration To Reconnect")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("10 min")
       .withDescription("If no new event logs are processed for the specified time period, "
           " this processor will try reconnecting to recover from a state where any further messages cannot be consumed."
@@ -121,13 +122,13 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto IdentifierFunction = core::PropertyDefinitionBuilder<>::createProperty("Apply Identifier Function")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\\USERNAME associated with that ID")
       .build();
   EXTENSIONAPI static constexpr auto ResolveAsAttributes = core::PropertyDefinitionBuilder<>::createProperty("Resolve Metadata in Attributes")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .withDescription("If true, any metadata that is resolved ( such as IDs or keyword metadata ) will be placed into attributes, otherwise it will be replaced in the XML or text output")
       .build();
@@ -142,10 +143,10 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
       .withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,"
           "EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")
       .build();
-  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::OutputFormat>() - 1>::createProperty("Output Format")
+  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::OutputFormat>()>::createProperty("Output Format")
       .isRequired(true)
       .withDefaultValue(magic_enum::enum_name(cwel::OutputFormat::XML))
-      .withAllowedValues(std::array{magic_enum::enum_name(cwel::OutputFormat::XML), magic_enum::enum_name(cwel::OutputFormat::Plaintext), magic_enum::enum_name(cwel::OutputFormat::JSON)})
+      .withAllowedValues(magic_enum::enum_names<cwel::OutputFormat>())
       .withDescription("The format of the output flow files.")
       .build();
   EXTENSIONAPI static constexpr auto JsonFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::JsonFormat>()>::createProperty("JSON Format")
@@ -156,7 +157,7 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto BatchCommitSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Commit Size")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("1000")
       .withDescription("Maximum number of Events to consume and create to Flow Files from before committing.")
       .build();
@@ -167,13 +168,13 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto ProcessOldEvents = core::PropertyDefinitionBuilder<>::createProperty("Process Old Events")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .withDescription("This property defines if old events (which are created before first time server is started) should be processed.")
       .build();
   EXTENSIONAPI static constexpr auto CacheSidLookups = core::PropertyDefinitionBuilder<>::createProperty("Cache SID Lookups")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .withDescription("Determines whether SID to name lookups are cached in memory")
       .build();

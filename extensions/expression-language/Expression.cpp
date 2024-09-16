@@ -97,7 +97,7 @@ Expression make_dynamic_attr(const std::string &attribute_id) {
     if (cur_flow_file && cur_flow_file->getAttribute(attribute_id, result)) {
       return Value(result);
     } else {
-      auto registry = params.registry_.lock();
+      auto registry = params.registry_;
       if (registry && registry->getConfigurationProperty(attribute_id , result)) {
         return Value(result);
       }

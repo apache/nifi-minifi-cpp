@@ -23,6 +23,7 @@
 #include "utils/StringUtils.h"
 #include "utils/OsUtils.h"
 #include "utils/Id.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 

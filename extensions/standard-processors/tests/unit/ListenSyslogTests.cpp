@@ -252,16 +252,16 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
   SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "2"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize.name, "2"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages.name, "false"));
   std::string protocol;
   uint16_t port = 0;
 
   SECTION("UDP") {
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "UDP"));
     protocol = "UDP";
 
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -278,10 +278,10 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
   }
 
   SECTION("TCP") {
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
     protocol = "TCP";
 
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -308,16 +308,16 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
   SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "100"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "true"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize.name, "100"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages.name, "true"));
 
   std::string protocol;
   uint16_t port = 0;
   SECTION("UDP") {
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "UDP"));
     protocol = "UDP";
 
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -344,10 +344,10 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
   }
 
   SECTION("TCP") {
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
     protocol = "TCP";
 
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -413,18 +413,18 @@ TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog][NetworkListenerProc
   SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, "0"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "100"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "true"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port.name, "0"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize.name, "100"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages.name, "true"));
   SECTION("UDP") {
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "UDP"));
     REQUIRE_NOTHROW(controller.plan->scheduleProcessor(listen_syslog));
     REQUIRE_NOTHROW(controller.plan->reset(true));
     REQUIRE_NOTHROW(controller.plan->scheduleProcessor(listen_syslog));
   }
 
   SECTION("TCP") {
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
     REQUIRE_NOTHROW(controller.plan->scheduleProcessor(listen_syslog));
     REQUIRE_NOTHROW(controller.plan->reset(true));
     REQUIRE_NOTHROW(controller.plan->scheduleProcessor(listen_syslog));
@@ -434,17 +434,17 @@ TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog][NetworkListenerProc
 TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][NetworkListenerProcessor]") {
   SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "10"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxQueueSize, "50"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize.name, "10"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages.name, "false"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxQueueSize.name, "50"));
 
   LogTestController::getInstance().setWarn<ListenSyslog>();
 
   uint16_t port = 0;
 
   SECTION("UDP") {
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "UDP"));
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -462,8 +462,8 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
   }
 
   SECTION("TCP") {
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -501,12 +501,12 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
   ssl_context_service->enable();
 
   LogTestController::getInstance().setTrace<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "2"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::SSLContextService, "SSLContextService"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize.name, "2"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages.name, "false"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::SSLContextService.name, "SSLContextService"));
 
-  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
 
   asio::ip::tcp::endpoint endpoint;
   SECTION("sending through IPv6", "[IPv6]") {

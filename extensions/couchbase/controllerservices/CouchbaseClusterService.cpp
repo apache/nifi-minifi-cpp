@@ -216,12 +216,10 @@ void CouchbaseClusterService::initialize() {
 }
 
 void CouchbaseClusterService::onEnable() {
-  std::string connection_string;
-  getProperty(ConnectionString, connection_string);
-  std::string username;
-  getProperty(UserName, username);
-  std::string password;
-  getProperty(UserPassword, password);
+  std::string connection_string = getProperty(ConnectionString.name) | utils::expect("required property");
+  std::string username = getProperty(UserName.name).value_or("");
+  std::string password = getProperty(UserPassword.name).value_or("");
+
   if (connection_string.empty()) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing connection string");
   }
@@ -252,7 +250,7 @@ void CouchbaseClusterService::onEnable() {
 gsl::not_null<std::shared_ptr<CouchbaseClusterService>> CouchbaseClusterService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
   std::shared_ptr<CouchbaseClusterService> couchbase_cluster_service;
   if (auto connection_controller_name = context.getProperty(property)) {
-    couchbase_cluster_service = std::dynamic_pointer_cast<CouchbaseClusterService>(context.getControllerService(*connection_controller_name, context.getProcessorNode()->getUUID()));
+    couchbase_cluster_service = std::dynamic_pointer_cast<CouchbaseClusterService>(context.getControllerService(*connection_controller_name, context.getProcessor().getUUID()));
   }
   if (!couchbase_cluster_service) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing Couchbase Cluster Service");

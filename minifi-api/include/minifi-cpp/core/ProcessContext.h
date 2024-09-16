@@ -23,8 +23,8 @@
 
 #include "minifi-cpp/core/Core.h"
 #include "minifi-cpp/core/ContentRepository.h"
-#include "minifi-cpp/core/controller/ControllerService.h"
-#include "minifi-cpp/core/ProcessorNode.h"
+#include "minifi-cpp/core/controller/ControllerServiceLookup.h"
+#include "minifi-cpp/core/Processor.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Repository.h"
 #include "minifi-cpp/core/FlowFile.h"
@@ -40,18 +40,24 @@ concept NotAFlowFile = !std::convertible_to<T &, const FlowFile &> && !std::conv
 
 class ProcessContext : public virtual core::VariableRegistry, public virtual utils::EnableSharedFromThis {
  public:
-  virtual std::shared_ptr<ProcessorNode> getProcessorNode() const = 0;
-  virtual std::optional<std::string> getProperty(const Property&, const FlowFile* const) = 0;
-  virtual std::optional<std::string> getProperty(const PropertyReference&, const FlowFile* const) = 0;
-  virtual bool getProperty(const Property &property, std::string &value, const FlowFile* const) = 0;
-  virtual bool getProperty(const PropertyReference& property, std::string &value, const FlowFile* const) = 0;
-  virtual bool getDynamicProperty(const std::string &name, std::string &value) const = 0;
-  virtual bool getDynamicProperty(const Property &property, std::string &value, const FlowFile* const) = 0;
+  virtual Processor& getProcessor() const = 0;
+
+  virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
+  nonstd::expected<std::string, std::error_code> getProperty(const Property& property, const FlowFile* flow_file = nullptr) const { return getProperty(property.getName(), flow_file); }
+  nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const { return getProperty(property_reference.name, flow_file); }
+
+  virtual nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) = 0;
+  nonstd::expected<void, std::error_code> setProperty(const Property& property, std::string value) { return setProperty(property.getName(), std::move(value)); };
+  nonstd::expected<void, std::error_code> setProperty(const PropertyReference& property_reference, std::string value) { return setProperty(property_reference.name, std::move(value)); };
+
+  virtual nonstd::expected<void, std::error_code> clearProperty(std::string_view name) = 0;
+
+  virtual nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
+  virtual nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) = 0;
+
   virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
-  virtual bool setProperty(const std::string &name, std::string value) = 0;
-  virtual bool setDynamicProperty(const std::string &name, std::string value) = 0;
-  virtual bool setProperty(const Property& property, std::string value) = 0;
-  virtual bool setProperty(const PropertyReference& property, std::string_view value) = 0;
+  virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file = nullptr) const = 0;
+
   virtual bool isAutoTerminated(Relationship relationship) const = 0;
   virtual uint8_t getMaxConcurrentTasks() const = 0;
   virtual void yield() = 0;
@@ -67,18 +73,6 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual StateManager* getStateManager() = 0;
   virtual bool hasStateManager() const = 0;
   virtual std::shared_ptr<Configure> getConfiguration() const = 0;
-
-
-
-  template<std::default_initializable T = std::string>
-  std::optional<T> getProperty(const Property& property) const;
-
-  template<std::default_initializable T = std::string>
-  std::optional<T> getProperty(const PropertyReference& property) const;
-
-  bool getProperty(std::string_view name, detail::NotAFlowFile auto& value) const;
-
-  bool getProperty(const PropertyReference& property, detail::NotAFlowFile auto& value) const;
 };
 
 }  // namespace org::apache::nifi::minifi::core

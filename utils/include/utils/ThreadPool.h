@@ -39,6 +39,7 @@
 #include "core/expect.h"
 #include "minifi-cpp/controllers/ThreadManagementService.h"
 #include "minifi-cpp/core/controller/ControllerServiceLookup.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::utils {
 

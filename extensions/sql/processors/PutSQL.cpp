@@ -51,8 +51,8 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
     return;
   }
 
-  std::string sql_statement;
-  if (!context.getProperty(SQLStatement, sql_statement, flow_file.get())) {
+  std::string sql_statement = context.getProperty(SQLStatement).value_or("");
+  if (sql_statement.empty()) {
     logger_->log_debug("Using the contents of the flow file as the SQL statement");
     sql_statement = to_string(session.readBuffer(flow_file));
   }

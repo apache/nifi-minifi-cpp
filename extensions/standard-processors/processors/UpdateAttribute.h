@@ -61,7 +61,6 @@ class UpdateAttribute : public core::ProcessorImpl {
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdateAttribute>::getLogger(uuid_);
-  std::vector<core::Property> attributes_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -15,10 +15,13 @@
  * limitations under the License.
  */
 
+#include "ElasticsearchCredentialsControllerService.h"
+
+
 #include <utility>
 
-#include "ElasticsearchCredentialsControllerService.h"
 #include "core/Resource.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
 
@@ -27,11 +30,10 @@ void ElasticsearchCredentialsControllerService::initialize() {
 }
 
 void ElasticsearchCredentialsControllerService::onEnable() {
-  getProperty(ApiKey, api_key_);
-  std::string username;
-  std::string password;
-  getProperty(Username, username);
-  getProperty(Password, password);
+  api_key_ = getProperty(ApiKey.name) | utils::toOptional();
+  std::string username = getProperty(Username.name).value_or("");
+  std::string password = getProperty(Password.name).value_or("");
+
   if (!username.empty() && !password.empty())
     username_password_.emplace(std::move(username), std::move(password));
   if (api_key_.has_value() == username_password_.has_value())

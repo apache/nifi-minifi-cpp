@@ -34,8 +34,7 @@ void FetchFile::initialize() {
 
 void FetchFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory &) {
   completion_strategy_ = utils::parseEnumProperty<fetch_file::CompletionStrategyOption>(context, CompletionStrategy);
-  std::string move_destination_dir;
-  context.getProperty(MoveDestinationDirectory, move_destination_dir);
+  const std::string move_destination_dir = context.getProperty(MoveDestinationDirectory).value_or("");
   if (completion_strategy_ == fetch_file::CompletionStrategyOption::MOVE_FILE && move_destination_dir.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Move Destination Directory is required when Completion Strategy is set to Move File");
   }
@@ -45,8 +44,7 @@ void FetchFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
 }
 
 std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
-  std::string file_to_fetch_path;
-  context.getProperty(FileToFetch, file_to_fetch_path, flow_file.get());
+  std::string file_to_fetch_path = context.getProperty(FileToFetch, flow_file.get()).value_or("");
   if (!file_to_fetch_path.empty()) {
     return file_to_fetch_path;
   }
@@ -132,8 +130,7 @@ void FetchFile::onTrigger(core::ProcessContext& context, core::ProcessSession& s
 
   auto file_name = file_to_fetch_path.filename();
 
-  std::string move_destination_directory_str;
-  context.getProperty(MoveDestinationDirectory, move_destination_directory_str, flow_file.get());
+  std::string move_destination_directory_str = context.getProperty(MoveDestinationDirectory, flow_file.get()).value_or("");
   std::filesystem::path move_destination_directory = move_destination_directory_str;
   if (moveWouldFailWithDestinationConflict(move_destination_directory, file_name)) {
     logger_->log_error("Move destination ({}) conflicts with an already existing file!", move_destination_directory);

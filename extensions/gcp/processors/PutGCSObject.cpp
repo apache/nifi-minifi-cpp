@@ -49,7 +49,7 @@ class UploadToGCSCallback {
     writer << content;
     writer.Close();
     result_ = writer.metadata();
-    return read_ret;
+    return gsl::narrow<int64_t>(read_ret);
   }
 
   [[nodiscard]] const google::cloud::StatusOr<gcs::ObjectMetadata>& getResult() const noexcept {
@@ -158,7 +158,7 @@ void PutGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSession
 
   if (auto predefined_acl = utils::parseOptionalEnumProperty<put_gcs_object::PredefinedAcl>(context, ObjectACL))
     callback.setPredefinedAcl(*predefined_acl);
-  callback.setIfGenerationMatch(context.getProperty<bool>(OverwriteObject));
+  callback.setIfGenerationMatch(utils::parseOptionalBoolProperty(context, OverwriteObject));
 
   callback.setEncryptionKey(encryption_key_);
 

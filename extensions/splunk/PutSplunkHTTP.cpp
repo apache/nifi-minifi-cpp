@@ -17,21 +17,20 @@
 
 #include "PutSplunkHTTP.h"
 
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "SplunkAttributes.h"
-
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "utils/StringUtils.h"
-#include "http/HTTPClient.h"
 #include "http/BaseHTTPClient.h"
-#include "utils/OptionalUtils.h"
-#include "utils/ByteArrayCallback.h"
-
+#include "http/HTTPClient.h"
 #include "rapidjson/document.h"
+#include "utils/ByteArrayCallback.h"
+#include "utils/OptionalUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
 
@@ -64,7 +63,7 @@ std::string PutSplunkHTTP::getEndpoint(http::HTTPClient& client) {
 
 namespace {
 std::optional<std::string> getContentType(core::ProcessContext& context, const core::FlowFile& flow_file) {
-  return context.getProperty(PutSplunkHTTP::ContentType) | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
+  return context.getProperty(PutSplunkHTTP::ContentType) | utils::toOptional() | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
 }
 
 bool setAttributesFromClientResponse(core::FlowFile& flow_file, http::HTTPClient& client) {
@@ -122,10 +121,10 @@ void PutSplunkHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessi
   };
 
   client_queue_ = utils::ResourceQueue<http::HTTPClient>::create(create_client, getMaxConcurrentTasks(), std::nullopt, logger_);
-  source_type_ = context.getProperty(PutSplunkHTTP::SourceType);
-  source_ = context.getProperty(PutSplunkHTTP::Source);
-  host_ = context.getProperty(PutSplunkHTTP::Host);
-  index_ = context.getProperty(PutSplunkHTTP::Index);
+  source_type_ = utils::parseOptionalProperty(context, PutSplunkHTTP::SourceType);
+  source_ = utils::parseOptionalProperty(context, PutSplunkHTTP::Source);
+  host_ = utils::parseOptionalProperty(context, PutSplunkHTTP::Host);
+  index_ = utils::parseOptionalProperty(context, PutSplunkHTTP::Index);
 }
 
 void PutSplunkHTTP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {

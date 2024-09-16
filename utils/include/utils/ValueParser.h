@@ -27,7 +27,7 @@
 #include <limits>
 #include <algorithm>
 
-#include "PropertyErrors.h"
+#include "PropertyExceptions.h"
 
 namespace org::apache::nifi::minifi::utils {
 namespace internal {
