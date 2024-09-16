@@ -23,8 +23,9 @@
 #include <memory>
 #include <regex>
 
+#include "controllers/SSLContextService.h"
 #include "NetworkListenerProcessor.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/OutputAttributeDefinition.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"

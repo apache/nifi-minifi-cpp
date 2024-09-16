@@ -114,7 +114,7 @@ constexpr customize_t enum_name<Segmentation>(Segmentation value) noexcept {
 
 namespace org::apache::nifi::minifi::processors {
 
-class RouteText : public core::Processor {
+class RouteText : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Routes textual data based on a set of user-defined rules. Each segment in an incoming FlowFile is "
       "compared against the values specified by user-defined Properties. The mechanism by which the text is compared "

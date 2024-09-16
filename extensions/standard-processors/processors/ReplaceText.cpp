@@ -22,14 +22,14 @@
 
 #include "core/Resource.h"
 #include "core/TypedValues.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/LineByLineInputOutputStreamCallback.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 ReplaceText::ReplaceText(std::string_view name, const utils::Identifier& uuid)
-  : core::Processor(name, uuid),
+  : core::ProcessorImpl(name, uuid),
     logger_(core::logging::LoggerFactory<ReplaceText>::getLogger(uuid)) {
 }
 

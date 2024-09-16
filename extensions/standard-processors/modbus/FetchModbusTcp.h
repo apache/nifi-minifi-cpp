@@ -20,7 +20,7 @@
 #include "controllers/RecordSetWriter.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "logging/LoggerFactory.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/net/AsioCoro.h"
 #include "utils/net/AsioSocketUtils.h"
 #include "utils/net/ConnectionHandlerBase.h"
@@ -29,10 +29,10 @@ namespace org::apache::nifi::minifi::modbus {
 
 class ReadModbusFunction;
 
-class FetchModbusTcp final : public core::Processor {
+class FetchModbusTcp final : public core::ProcessorImpl {
  public:
   explicit FetchModbusTcp(const std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr auto Description = "Processor able to read data from industrial PLCs using Modbus TCP/IP";

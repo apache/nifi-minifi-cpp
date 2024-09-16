@@ -28,7 +28,7 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Enum.h"
 #include "utils/ListingStateManager.h"
 #include "utils/file/ListedFile.h"
@@ -36,10 +36,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class ListFile : public core::Processor {
+class ListFile : public core::ProcessorImpl {
  public:
   explicit ListFile(std::string_view name, const utils::Identifier& uuid = {})
-    : core::Processor(name, uuid) {
+    : core::ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from the local filesystem. For each file that is listed, "

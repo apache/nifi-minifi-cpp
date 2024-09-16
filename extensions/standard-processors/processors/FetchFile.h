@@ -27,7 +27,7 @@
 #include "core/RelationshipDefinition.h"
 #include "core/Property.h"
 #include "utils/Enum.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/LogUtils.h"
 
 namespace org::apache::nifi::minifi::processors::fetch_file {
@@ -83,10 +83,10 @@ constexpr customize_t enum_name<MoveConflictStrategyOption>(MoveConflictStrategy
 
 namespace org::apache::nifi::minifi::processors {
 
-class FetchFile : public core::Processor {
+class FetchFile : public core::ProcessorImpl {
  public:
   explicit FetchFile(std::string_view name, const utils::Identifier& uuid = {})
-    : core::Processor(name, uuid) {
+    : core::ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Reads the contents of a file from disk and streams it into the contents of an incoming FlowFile. "

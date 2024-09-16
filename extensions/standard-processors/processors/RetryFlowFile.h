@@ -26,7 +26,6 @@
 #include <vector>
 
 #include "core/state/nodes/MetricsBase.h"
-#include "FlowFileRecord.h"
 #include "core/Core.h"
 #include "core/OutputAttributeDefinition.h"
 #include "core/Processor.h"
@@ -35,16 +34,16 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/OptionalUtils.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class RetryFlowFile : public core::Processor {
+class RetryFlowFile : public core::ProcessorImpl {
  public:
   explicit RetryFlowFile(std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {}
+      : ProcessorImpl(name, uuid) {}
   ~RetryFlowFile() override = default;
 
   // ReuseMode allowed values

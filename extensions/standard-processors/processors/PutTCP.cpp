@@ -38,7 +38,7 @@ namespace org::apache::nifi::minifi::processors {
 constexpr size_t chunk_size = 1024;
 
 PutTCP::PutTCP(const std::string& name, const utils::Identifier& uuid)
-    : Processor(name, uuid) {}
+    : ProcessorImpl(name, uuid) {}
 
 PutTCP::~PutTCP() = default;
 

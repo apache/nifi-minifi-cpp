@@ -97,32 +97,6 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return processor_node_;
   }
 
-  template<std::default_initializable T = std::string>
-  std::optional<T> getProperty(const Property& property) const {
-    T value;
-    if (getProperty(property.getName(), value)) {
-      return value;
-    }
-    return std::nullopt;
-  }
-
-  template<std::default_initializable T = std::string>
-  std::optional<T> getProperty(const PropertyReference& property) const {
-    T value;
-    if (getProperty(property.name, value)) {
-      return value;
-    }
-    return std::nullopt;
-  }
-
-  bool getProperty(std::string_view name, detail::NotAFlowFile auto& value) const {
-    return getPropertyImp(std::string{name}, value);
-  }
-
-  bool getProperty(const PropertyReference& property, detail::NotAFlowFile auto& value) const {
-    return getPropertyImp(std::string{property.name}, value);
-  }
-
   std::optional<std::string> getProperty(const Property&, const FlowFile* const);
 
   std::optional<std::string> getProperty(const PropertyReference&, const FlowFile* const);

@@ -182,9 +182,6 @@ class CoreComponent {
   virtual void configure(const std::shared_ptr<Configure>& /*configuration*/) {
   }
 
-  void loadComponent() {
-  }
-
  protected:
   // A global unique identifier
   utils::Identifier uuid_;

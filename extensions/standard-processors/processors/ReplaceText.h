@@ -25,7 +25,6 @@
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessSessionFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
@@ -114,7 +113,7 @@ constexpr customize_t enum_name<ReplacementStrategyType>(ReplacementStrategyType
 
 namespace org::apache::nifi::minifi::processors {
 
-class ReplaceText : public core::Processor {
+class ReplaceText : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Updates the content of a FlowFile by replacing parts of it using various replacement strategies.";
 
