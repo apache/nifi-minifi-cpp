@@ -29,15 +29,11 @@
 #include "core/logging/Logger.h"
 #include "utils/ChecksumCalculator.h"
 #include "utils/StringUtils.h"
+#include "minifi-cpp/properties/Properties.h"
 
 namespace org::apache::nifi::minifi {
 
-enum class PropertyChangeLifetime {
-  TRANSIENT,  // the changed value will not be committed to disk
-  PERSISTENT  // the changed value will be written to the source file
-};
-
-class Properties {
+class PropertiesImpl : public virtual Properties {
   struct PropertyValue {
     std::string persisted_value;
     std::string active_value;
@@ -45,24 +41,24 @@ class Properties {
   };
 
  public:
-  explicit Properties(std::string name = "");
+  explicit PropertiesImpl(std::string name = "");
 
-  virtual ~Properties() = default;
+  ~PropertiesImpl() override = default;
 
-  virtual const std::string& getName() const {
+  const std::string& getName() const override {
     return name_;
   }
 
   // Clear the load config
-  void clear() {
+  void clear() override {
     std::lock_guard<std::mutex> lock(mutex_);
     properties_.clear();
   }
-  void set(const std::string& key, const std::string& value) {
+  void set(const std::string& key, const std::string& value) override {
     set(key, value, PropertyChangeLifetime::PERSISTENT);
   }
   // Set the config value
-  virtual void set(const std::string &key, const std::string &value, PropertyChangeLifetime lifetime) {
+  void set(const std::string &key, const std::string &value, PropertyChangeLifetime lifetime) override {
     auto active_value = utils::string::replaceEnvironmentVariables(value);
     std::lock_guard<std::mutex> lock(mutex_);
     bool should_persist = lifetime == PropertyChangeLifetime::PERSISTENT;
@@ -83,7 +79,7 @@ class Properties {
     }
   }
   // Check whether the config value existed
-  bool has(const std::string& key) const {
+  bool has(const std::string& key) const override {
     std::lock_guard<std::mutex> lock(mutex_);
     return properties_.count(key) > 0;
   }
@@ -93,13 +89,13 @@ class Properties {
    * @param value value in which to place the map's stored property value
    * @returns true if found, false otherwise.
    */
-  bool getString(const std::string &key, std::string &value) const;
+  bool getString(const std::string &key, std::string &value) const override;
 
   /**
    * Returns the configuration value or an empty string.
    * @return value corresponding to key or empty value.
    */
-  int getInt(const std::string &key, int default_value) const;
+  int getInt(const std::string &key, int default_value) const override;
 
   /**
    * Returns the config value.
@@ -107,20 +103,20 @@ class Properties {
    * @param key key to look up
    * @returns the value if found, nullopt otherwise.
    */
-  std::optional<std::string> getString(const std::string& key) const;
+  std::optional<std::string> getString(const std::string& key) const override;
 
   /**
    * Load configure file
    * @param fileName path of the configuration file RELATIVE to MINIFI_HOME set by setHome()
    */
-  void loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix = "");
+  void loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix = "") override;
 
   // Set the determined MINIFI_HOME
-  void setHome(std::filesystem::path minifiHome) {
+  void setHome(std::filesystem::path minifiHome) override {
     minifi_home_ = std::move(minifiHome);
   }
 
-  std::vector<std::string> getConfiguredKeys() const {
+  std::vector<std::string> getConfiguredKeys() const override {
     std::vector<std::string> keys;
     for (auto &property : properties_) {
       keys.push_back(property.first);
@@ -129,17 +125,17 @@ class Properties {
   }
 
   // Get the determined MINIFI_HOME
-  std::filesystem::path getHome() const {
+  std::filesystem::path getHome() const override {
     return minifi_home_;
   }
 
-  virtual bool commitChanges();
+  bool commitChanges() override;
 
-  utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
+  utils::ChecksumCalculator& getChecksumCalculator() override { return checksum_calculator_; }
 
-  std::filesystem::path getFilePath() const;
+  std::filesystem::path getFilePath() const override;
 
-  std::map<std::string, std::string> getProperties() const;
+  std::map<std::string, std::string> getProperties() const override;
 
  private:
   std::map<std::string, PropertyValue> properties_;

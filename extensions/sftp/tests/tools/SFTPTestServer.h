@@ -27,7 +27,7 @@
 #endif
 
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 std::filesystem::path get_sftp_test_dir();
 

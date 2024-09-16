@@ -20,10 +20,12 @@
 #include "utils/Cron.h"
 #include "date/date.h"
 #include "date/tz.h"
+#include "utils/TimeUtil.h"
 
 using std::chrono::system_clock;
 using std::chrono::seconds;
 using org::apache::nifi::minifi::utils::Cron;
+namespace timeutils = org::apache::nifi::minifi::utils::timeutils;
 
 
 void checkNext(const std::string& expr, const date::zoned_time<seconds>& from, const date::zoned_time<seconds>& next) {
@@ -160,7 +162,7 @@ TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
   using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
 #ifdef WIN32
-  date::set_install(TZ_DATA_DIR);
+  timeutils::dateSetInstall(TZ_DATA_DIR);
 #endif
 
   checkNext("0/15 * 1-4 * * ?",
@@ -446,7 +448,7 @@ TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
   using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
 #ifdef WIN32
-  date::set_install(TZ_DATA_DIR);
+  timeutils::dateSetInstall(TZ_DATA_DIR);
 #endif
 
   const std::vector<std::string> time_zones{ "Europe/Berlin", "Asia/Seoul", "America/Los_Angeles", "Asia/Singapore", "UTC" };

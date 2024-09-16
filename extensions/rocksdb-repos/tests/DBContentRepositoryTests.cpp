@@ -43,13 +43,13 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
 
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+  auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   auto stream = content_repo->write(*claim);
 
   const std::string content = "well hello there";
@@ -66,7 +66,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
@@ -91,13 +91,13 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
   auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
 
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+  auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   auto stream = content_repo->write(*claim);
 
   stream->write("well hello there");
@@ -111,7 +111,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
 
@@ -150,7 +150,7 @@ TEST_CASE("Append Claim", "[TestDBCR1]") {
   auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
@@ -158,7 +158,7 @@ TEST_CASE("Append Claim", "[TestDBCR1]") {
 
   const std::string content = "well hello there";
 
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+  auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   content_repo->write(*claim)->write(as_bytes(std::span(content)));
 
   // requesting append before content end fails
@@ -192,12 +192,12 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+  auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   auto stream = content_repo->write(*claim);
 
   // we're writing nothing to the stream.
@@ -211,7 +211,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
 
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
@@ -229,13 +229,13 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
   auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo);
+  auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
+  auto claim2 = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   auto stream = content_repo->write(*claim);
 
   stream->write("well hello there");
@@ -249,7 +249,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
 
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
@@ -271,13 +271,13 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
   auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
-  auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo);
+  auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
+  auto claim2 = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   auto stream = content_repo->write(*claim);
 
   stream->write("well hello there");
@@ -291,7 +291,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
-  configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
@@ -344,14 +344,14 @@ size_t getDbSize(const std::filesystem::path& dir) {
 TEST_CASE("DBContentRepository can clear orphan entries") {
   TestController testController;
   auto dir = testController.createTempDirectory();
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   {
     auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
     REQUIRE(content_repo->initialize(configuration));
 
-    minifi::ResourceClaim claim(content_repo);
+    minifi::ResourceClaimImpl claim(content_repo);
     content_repo->write(claim)->write("hi");
     // ensure that the content is not deleted during resource claim destruction
     content_repo->incrementStreamCount(claim);

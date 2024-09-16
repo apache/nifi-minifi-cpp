@@ -28,7 +28,7 @@
 
 #include "core/StateManager.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "aws/core/utils/DateTime.h"
 #include "utils/file/FileUtils.h"
 #include "properties/Configure.h"

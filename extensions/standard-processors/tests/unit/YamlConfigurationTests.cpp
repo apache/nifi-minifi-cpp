@@ -566,7 +566,7 @@ Processors:
   REQUIRE(!rootFlowConfig->findProcessorByName("XYZ")->getUUIDStr().empty());
 }
 
-class DummyComponent : public core::ConfigurableComponent {
+class DummyComponent : public core::ConfigurableComponentImpl {
  public:
   bool supportsDynamicProperties() const override {
     return false;
@@ -1261,9 +1261,9 @@ NiFi Properties Overrides: {}
     "Parameter Operation: Parameter name 'lookup.frequency' already exists, parameter names must be unique within a parameter context!");
 }
 
-class DummyFlowYamlProcessor : public core::Processor {
+class DummyFlowYamlProcessor : public core::ProcessorImpl {
  public:
-  using core::Processor::Processor;
+  using core::ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "A processor that does nothing.";
   static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")

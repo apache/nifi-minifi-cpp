@@ -167,7 +167,7 @@ class ListSFTPTestsFixture {
 class PersistentListSFTPTestsFixture : public ListSFTPTestsFixture {
  public:
   PersistentListSFTPTestsFixture() :
-    ListSFTPTestsFixture(std::make_shared<minifi::Configure>()) {
+    ListSFTPTestsFixture(std::make_shared<minifi::ConfigureImpl>()) {
   }
 };
 
@@ -555,7 +555,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Timestamps r
 
   utils::Identifier list_sftp_uuid = list_sftp->getUUID();
   REQUIRE(list_sftp_uuid);
-  createPlan(&list_sftp_uuid, std::make_shared<minifi::Configure>());
+  createPlan(&list_sftp_uuid, std::make_shared<minifi::ConfigureImpl>());
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Timestamps");
   LogTestController::getInstance().clear();
 
@@ -597,7 +597,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Timestamps r
 
   utils::Identifier list_sftp_uuid = list_sftp->getUUID();
   REQUIRE(list_sftp_uuid);
-  createPlan(&list_sftp_uuid, std::make_shared<minifi::Configure>());
+  createPlan(&list_sftp_uuid, std::make_shared<minifi::ConfigureImpl>());
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Timestamps");
   plan->setProperty(list_sftp, "Remote Path", "/nifi_test");
   LogTestController::getInstance().clear();
@@ -836,7 +836,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Entities res
 
   utils::Identifier list_sftp_uuid = list_sftp->getUUID();
   REQUIRE(list_sftp_uuid);
-  createPlan(&list_sftp_uuid, std::make_shared<minifi::Configure>());
+  createPlan(&list_sftp_uuid, std::make_shared<minifi::ConfigureImpl>());
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
   LogTestController::getInstance().clear();
 
@@ -896,7 +896,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Entities res
 
   utils::Identifier list_sftp_uuid = list_sftp->getUUID();
   REQUIRE(list_sftp_uuid);
-  createPlan(&list_sftp_uuid, std::make_shared<minifi::Configure>());
+  createPlan(&list_sftp_uuid, std::make_shared<minifi::ConfigureImpl>());
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
   plan->setProperty(list_sftp, "Remote Path", "/nifi_test");
   LogTestController::getInstance().clear();

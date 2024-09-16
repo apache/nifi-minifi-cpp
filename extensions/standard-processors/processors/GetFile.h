@@ -24,8 +24,6 @@
 #include <atomic>
 #include <utility>
 
-#include "core/state/nodes/MetricsBase.h"
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -33,8 +31,9 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
+#include "core/ProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -52,14 +51,14 @@ struct GetFileRequest {
   std::filesystem::path inputDirectory;
 };
 
-class GetFileMetrics : public core::ProcessorMetrics {
+class GetFileMetrics : public core::ProcessorMetricsImpl {
  public:
   explicit GetFileMetrics(const core::Processor& source_processor)
-    : core::ProcessorMetrics(source_processor) {
+    : core::ProcessorMetricsImpl(source_processor) {
   }
 
   std::vector<state::response::SerializedResponseNode> serialize() override {
-    auto resp = core::ProcessorMetrics::serialize();
+    auto resp = core::ProcessorMetricsImpl::serialize();
     auto& root_node = resp[0];
 
     state::response::SerializedResponseNode accepted_files_node{"AcceptedFiles", accepted_files.load()};
@@ -72,7 +71,7 @@ class GetFileMetrics : public core::ProcessorMetrics {
   }
 
   std::vector<state::PublishedMetric> calculateMetrics() override {
-    auto metrics = core::ProcessorMetrics::calculateMetrics();
+    auto metrics = core::ProcessorMetricsImpl::calculateMetrics();
     metrics.push_back({"accepted_files", static_cast<double>(accepted_files.load()), getCommonLabels()});
     metrics.push_back({"input_bytes", static_cast<double>(input_bytes.load()), getCommonLabels()});
     return metrics;
@@ -82,10 +81,11 @@ class GetFileMetrics : public core::ProcessorMetrics {
   std::atomic<uint64_t> input_bytes{0};
 };
 
-class GetFile : public core::Processor {
+class GetFile : public core::ProcessorImpl {
  public:
   explicit GetFile(std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid, std::make_shared<GetFileMetrics>(*this)) {
+      : ProcessorImpl(name, uuid) {
+    metrics_ = gsl::make_not_null(std::make_shared<GetFileMetrics>(*this));
   }
   ~GetFile() override = default;
 

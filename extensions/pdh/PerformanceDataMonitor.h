@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -42,15 +42,15 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class PerformanceDataMonitor : public core::Processor {
+class PerformanceDataMonitor final : public core::ProcessorImpl {
  public:
   static constexpr const char* JSON_FORMAT_STR = "JSON";
   static constexpr const char* OPEN_TELEMETRY_FORMAT_STR = "OpenTelemetry";
   static constexpr const char* PRETTY_FORMAT_STR = "Pretty";
   static constexpr const char* COMPACT_FORMAT_STR = "Compact";
 
-  explicit PerformanceDataMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
-      : Processor(name, uuid), output_format_(OutputFormat::JSON), pretty_output_(false),
+  explicit PerformanceDataMonitor(const std::string_view name, utils::Identifier uuid = utils::Identifier())
+      : ProcessorImpl(name, uuid), output_format_(OutputFormat::JSON), pretty_output_(false),
         decimal_places_(std::nullopt), logger_(core::logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
         pdh_query_(nullptr), resource_consumption_counters_() {}
 

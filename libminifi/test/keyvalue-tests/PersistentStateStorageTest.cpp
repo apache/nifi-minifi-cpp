@@ -89,7 +89,7 @@ class PersistentStateStorageTestsFixture {
     test_repo.reset();
     configuration.reset();
 
-    configuration = std::make_shared<minifi::Configure>();
+    configuration = std::make_shared<minifi::ConfigureImpl>();
     test_repo = std::make_shared<TestRepository>();
     test_flow_repo = std::make_shared<TestFlowRepository>();
 

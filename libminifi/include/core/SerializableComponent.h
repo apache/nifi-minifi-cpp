@@ -24,19 +24,15 @@
 #include "utils/gsl.h"
 #include "io/InputStream.h"
 #include "io/OutputStream.h"
+#include "minifi-cpp/core/SerializableComponent.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class SerializableComponent : public core::CoreComponent {
+class SerializableComponentImpl : public core::CoreComponentImpl, public virtual SerializableComponent {
  public:
-  explicit SerializableComponent(std::string_view name)
-    : core::CoreComponent(name) {
+  explicit SerializableComponentImpl(std::string_view name)
+    : core::CoreComponentImpl(name) {
   }
-
-  ~SerializableComponent() override = default;
-
-  virtual bool serialize(io::OutputStream& output_stream) = 0;
-  virtual bool deserialize(io::InputStream &input_stream) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

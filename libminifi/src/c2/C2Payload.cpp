@@ -21,6 +21,7 @@
 #include <vector>
 #include <string>
 #include "utils/StringUtils.h"
+#include "rapidjson/writer.h"
 
 namespace org::apache::nifi::minifi::c2 {
 

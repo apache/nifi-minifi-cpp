@@ -19,7 +19,7 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 #include "PyScriptFlowFile.h"
 #include "PyProcessSession.h"
-#include "core/Record.h"
+#include "minifi-cpp/core/Record.h"
 #include "rapidjson/document.h"
 
 extern "C" {

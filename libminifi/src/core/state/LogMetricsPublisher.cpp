@@ -30,7 +30,7 @@ LogMetricsPublisher::~LogMetricsPublisher() {
 }
 
 void LogMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
-  state::MetricsPublisher::initialize(configuration, response_node_loader);
+  state::MetricsPublisherImpl::initialize(configuration, response_node_loader);
   readLoggingInterval();
   readLogLevel();
 }

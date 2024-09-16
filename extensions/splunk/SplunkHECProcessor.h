@@ -34,7 +34,7 @@ class HTTPClient;
 
 namespace org::apache::nifi::minifi::extensions::splunk {
 
-class SplunkHECProcessor : public core::Processor {
+class SplunkHECProcessor : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr auto Hostname = core::PropertyDefinitionBuilder<>::createProperty("Hostname")
       .withDescription("The ip address or hostname of the Splunk server.")
@@ -71,7 +71,7 @@ class SplunkHECProcessor : public core::Processor {
 
 
   explicit SplunkHECProcessor(std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
   ~SplunkHECProcessor() override = default;
 

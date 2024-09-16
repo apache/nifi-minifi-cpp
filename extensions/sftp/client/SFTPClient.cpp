@@ -29,6 +29,8 @@
 
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"
+#include "minifi-cpp/io/OutputStream.h"
+#include "minifi-cpp/io/InputStream.h"
 
 namespace org::apache::nifi::minifi::utils {
 

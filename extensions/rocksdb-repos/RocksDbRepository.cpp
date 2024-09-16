@@ -16,6 +16,7 @@
  */
 #include "RocksDbRepository.h"
 #include "utils/span.h"
+#include "utils/OptionalUtils.h"
 
 using namespace std::literals::chrono_literals;
 

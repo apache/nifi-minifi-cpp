@@ -24,7 +24,7 @@
 
 #include "AtomicRepoEntries.h"
 #include "io/AtomicEntryStream.h"
-#include "../ContentRepository.h"
+#include "core/ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/Connectable.h"
 #include "core/logging/LoggerFactory.h"
@@ -37,12 +37,12 @@ namespace org::apache::nifi::minifi::core::repository {
  * Purpose: Stages content into a volatile area of memory. Note that when the maximum number
  * of entries is consumed we will rollback a session to wait for others to be freed.
  */
-class VolatileContentRepository : public core::ContentRepository {
+class VolatileContentRepository : public core::ContentRepositoryImpl {
  public:
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string_view name = className<VolatileContentRepository>())
-    : core::ContentRepository(name),
+    : core::ContentRepositoryImpl(name),
       repo_data_(15000, static_cast<size_t>(10_MiB * 0.75)),
       minimize_locking_(true),
       logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()) {

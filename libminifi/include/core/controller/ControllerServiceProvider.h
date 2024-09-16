@@ -25,6 +25,7 @@
 #include <future>
 #include <vector>
 
+#include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "core/Core.h"
 #include "ControllerServiceLookup.h"
 #include "core/ConfigurableComponent.h"
@@ -35,51 +36,49 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ControllerServiceProvider : public CoreComponent, public ConfigurableComponent, public ControllerServiceLookup {
+class ControllerServiceProviderImpl : public CoreComponentImpl, public ConfigurableComponentImpl, public virtual ControllerServiceLookup, public virtual ControllerServiceProvider {
  public:
-  explicit ControllerServiceProvider(std::string_view name)
-      : CoreComponent(name),
+  explicit ControllerServiceProviderImpl(std::string_view name)
+      : CoreComponentImpl(name),
         controller_map_{std::make_unique<ControllerServiceNodeMap>()} {
   }
 
-  explicit ControllerServiceProvider(std::unique_ptr<ControllerServiceNodeMap> services)
-      : CoreComponent(core::className<ControllerServiceProvider>()),
+  explicit ControllerServiceProviderImpl(std::unique_ptr<ControllerServiceNodeMap> services)
+      : CoreComponentImpl(core::className<ControllerServiceProvider>()),
         controller_map_(std::move(services)) {
   }
 
-  explicit ControllerServiceProvider(std::string_view name, std::unique_ptr<ControllerServiceNodeMap> services)
-      : CoreComponent(name),
+  explicit ControllerServiceProviderImpl(std::string_view name, std::unique_ptr<ControllerServiceNodeMap> services)
+      : CoreComponentImpl(name),
         controller_map_(std::move(services)) {
   }
 
-  ControllerServiceProvider(const ControllerServiceProvider &other) = delete;
-  ControllerServiceProvider(ControllerServiceProvider &&other) = delete;
+  ControllerServiceProviderImpl(const ControllerServiceProviderImpl &other) = delete;
+  ControllerServiceProviderImpl(ControllerServiceProviderImpl &&other) = delete;
 
-  ControllerServiceProvider& operator=(const ControllerServiceProvider &other) = delete;
-  ControllerServiceProvider& operator=(ControllerServiceProvider &&other) = delete;
+  ControllerServiceProviderImpl& operator=(const ControllerServiceProviderImpl &other) = delete;
+  ControllerServiceProviderImpl& operator=(ControllerServiceProviderImpl &&other) = delete;
 
-  ~ControllerServiceProvider() override = default;
+  ~ControllerServiceProviderImpl() override = default;
 
-  virtual std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &longType, const std::string &id, bool firstTimeAdded) = 0;
-
-  virtual ControllerServiceNode* getControllerServiceNode(const std::string &id) const {
+  ControllerServiceNode* getControllerServiceNode(const std::string &id) const override {
     return controller_map_->get(id);
   }
 
-  virtual ControllerServiceNode* getControllerServiceNode(const std::string &id, const utils::Identifier &processor_or_controller_uuid) const {
+  ControllerServiceNode* getControllerServiceNode(const std::string &id, const utils::Identifier &processor_or_controller_uuid) const override {
     return controller_map_->get(id, processor_or_controller_uuid);
   }
 
-  virtual void clearControllerServices() = 0;
+  void clearControllerServices() override = 0;
 
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() {
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() override {
     return controller_map_->getAllControllerServices();
   }
 
   std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) const override;
   std::shared_ptr<ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override;
 
-  void putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node, ProcessGroup* process_group);
+  void putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node, ProcessGroup* process_group) override;
 
   bool isControllerServiceEnabled(const std::string &identifier) override {
     const ControllerServiceNode* const node = getControllerServiceNode(identifier);
@@ -107,10 +106,6 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
       return "";
     }
   }
-
-  virtual void enableAllControllerServices() = 0;
-
-  virtual void disableAllControllerServices() = 0;
 
   bool supportsDynamicProperties() const final {
     return false;

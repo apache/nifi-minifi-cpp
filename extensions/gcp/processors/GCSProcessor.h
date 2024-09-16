@@ -32,10 +32,10 @@
 #include "google/cloud/storage/retry_policy.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-class GCSProcessor : public core::Processor {
+class GCSProcessor : public core::ProcessorImpl {
  public:
   GCSProcessor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-      : core::Processor(name, uuid),
+      : core::ProcessorImpl(name, uuid),
    logger_(std::move(logger)) {
   }
 

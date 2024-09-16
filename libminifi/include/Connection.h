@@ -35,6 +35,7 @@
 #include "core/FlowFile.h"
 #include "core/Repository.h"
 #include "utils/FlowFileQueue.h"
+#include "minifi-cpp/Connection.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -42,123 +43,123 @@ namespace test::utils {
 struct ConnectionTestAccessor;
 }  // namespace test::utils
 
-class Connection : public core::Connectable {
+class ConnectionImpl : public core::ConnectableImpl, public virtual Connection {
   friend struct test::utils::ConnectionTestAccessor;
  public:
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name);
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid);
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
+  explicit ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name);
+  explicit ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid);
+  explicit ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
                       const utils::Identifier &srcUUID);
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
+  explicit ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
                       const utils::Identifier &srcUUID, const utils::Identifier &destUUID);
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
+  explicit ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
                       std::string_view name, const utils::Identifier& uuid);
-  ~Connection() override = default;
+  ~ConnectionImpl() override = default;
 
-  Connection(const Connection &parent) = delete;
-  Connection &operator=(const Connection &parent) = delete;
+  ConnectionImpl(const ConnectionImpl &parent) = delete;
+  ConnectionImpl &operator=(const ConnectionImpl &parent) = delete;
 
   static constexpr uint64_t DEFAULT_BACKPRESSURE_THRESHOLD_COUNT = 2000;
   static constexpr uint64_t DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE = 100_MB;
 
-  void setSourceUUID(const utils::Identifier &uuid) {
+  void setSourceUUID(const utils::Identifier &uuid) override {
     src_uuid_ = uuid;
   }
 
-  void setDestinationUUID(const utils::Identifier &uuid) {
+  void setDestinationUUID(const utils::Identifier &uuid) override {
     dest_uuid_ = uuid;
   }
 
-  utils::Identifier getSourceUUID() const {
+  utils::Identifier getSourceUUID() const override {
     return src_uuid_;
   }
 
-  utils::Identifier getDestinationUUID() const {
+  utils::Identifier getDestinationUUID() const override {
     return dest_uuid_;
   }
 
-  void setSource(core::Connectable* source) {
+  void setSource(core::Connectable* source) override {
     source_connectable_ = source;
   }
 
-  core::Connectable* getSource() const {
+  core::Connectable* getSource() const override {
     return source_connectable_;
   }
 
-  void setDestination(core::Connectable* dest) {
+  void setDestination(core::Connectable* dest) override {
     dest_connectable_ = dest;
   }
 
-  core::Connectable* getDestination() const {
+  core::Connectable* getDestination() const override {
     return dest_connectable_;
   }
 
-  void addRelationship(core::Relationship relationship) {
+  void addRelationship(core::Relationship relationship) override {
     relationships_.insert(std::move(relationship));
   }
 
-  const std::set<core::Relationship> &getRelationships() const {
+  const std::set<core::Relationship> &getRelationships() const override {
     return relationships_;
   }
 
-  void setBackpressureThresholdCount(uint64_t size) {
+  void setBackpressureThresholdCount(uint64_t size) override {
     backpressure_threshold_count_ = size;
   }
 
-  uint64_t getBackpressureThresholdCount() const {
+  uint64_t getBackpressureThresholdCount() const override {
     return backpressure_threshold_count_;
   }
 
-  void setBackpressureThresholdDataSize(uint64_t size) {
+  void setBackpressureThresholdDataSize(uint64_t size) override {
     backpressure_threshold_data_size_ = size;
   }
 
-  uint64_t getBackpressureThresholdDataSize() const {
+  uint64_t getBackpressureThresholdDataSize() const override {
     return backpressure_threshold_data_size_;
   }
 
-  void setSwapThreshold(uint64_t size) {
+  void setSwapThreshold(uint64_t size) override {
     queue_.setTargetSize(size);
     queue_.setMinSize(size / 2);
     queue_.setMaxSize(size * 3 / 2);
   }
 
-  void setFlowExpirationDuration(std::chrono::milliseconds duration) {
+  void setFlowExpirationDuration(std::chrono::milliseconds duration) override {
     expired_duration_ = duration;
   }
 
-  std::chrono::milliseconds getFlowExpirationDuration() const {
+  std::chrono::milliseconds getFlowExpirationDuration() const override {
     return expired_duration_;
   }
 
-  void setDropEmptyFlowFiles(bool drop) {
+  void setDropEmptyFlowFiles(bool drop) override {
     drop_empty_ = drop;
   }
 
-  bool getDropEmptyFlowFiles() const {
+  bool getDropEmptyFlowFiles() const override {
     return drop_empty_;
   }
 
-  bool isEmpty() const;
+  bool isEmpty() const override;
 
-  bool backpressureThresholdReached() const;
+  bool backpressureThresholdReached() const override;
 
-  uint64_t getQueueSize() const {
+  uint64_t getQueueSize() const override {
     std::lock_guard<std::mutex> lock(mutex_);
     return queue_.size();
   }
 
-  uint64_t getQueueDataSize() {
+  uint64_t getQueueDataSize() override {
     return queued_data_size_;
   }
 
   void put(const std::shared_ptr<core::FlowFile>& flow) override;
 
-  void multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows);
+  void multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) override;
 
-  std::shared_ptr<core::FlowFile> poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords);
+  std::shared_ptr<core::FlowFile> poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) override;
 
-  void drain(bool delete_permanently);
+  void drain(bool delete_permanently) override;
 
   void yield() override {}
 

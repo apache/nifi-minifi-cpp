@@ -20,7 +20,6 @@
 #include <string>
 #include <utility>
 
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -28,17 +27,17 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Id.h"
 #include "utils/Export.h"
 #include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class PutFile : public core::Processor {
+class PutFile : public core::ProcessorImpl {
  public:
   explicit PutFile(std::string_view name,  const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+      : core::ProcessorImpl(name, uuid) {
   }
 
   ~PutFile() override = default;

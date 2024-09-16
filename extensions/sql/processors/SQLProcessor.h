@@ -31,7 +31,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class SQLProcessor: public core::Processor {
+class SQLProcessor: public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr auto DBControllerService = core::PropertyDefinitionBuilder<>::createProperty("DB Controller Service")
       .withDescription("Database Controller Service.")
@@ -42,7 +42,7 @@ class SQLProcessor: public core::Processor {
 
  protected:
   SQLProcessor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-    : core::Processor(name, uuid), logger_(std::move(logger)) {
+    : core::ProcessorImpl(name, uuid), logger_(std::move(logger)) {
   }
 
   static std::vector<std::string> collectArguments(const std::shared_ptr<core::FlowFile>& flow_file);

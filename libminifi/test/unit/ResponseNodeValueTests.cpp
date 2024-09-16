@@ -17,7 +17,7 @@
  */
 #include <memory>
 
-#include "../../include/core/state/Value.h"
+#include "core/state/Value.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 
@@ -27,13 +27,13 @@ using Value = org::apache::nifi::minifi::state::response::Value;
 template <class T>
 bool canConvertToType(ValueNode value_node) {
   T conversion_target;
-  return value_node.getValue()->convertValue(conversion_target);
+  return value_node.getValue()->getValue(conversion_target);
 }
 
 template <class T>
 bool canConvertToType(ValueNode value_node, const T& expected_result) {
   T conversion_target;
-  bool canConvert = value_node.getValue()->convertValue(conversion_target);
+  bool canConvert = value_node.getValue()->getValue(conversion_target);
   return canConvert && (expected_result == conversion_target);
 }
 

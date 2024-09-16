@@ -33,7 +33,7 @@
 #include "ScriptExecutor.h"
 #include "utils/Enum.h"
 #include "utils/ResourceQueue.h"
-#include "logging/LoggerFactory.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -44,10 +44,10 @@ enum class ScriptEngineOption {
 };
 }  // namespace execute_script
 
-class ExecuteScript : public core::Processor {
+class ExecuteScript : public core::ProcessorImpl {
  public:
   explicit ExecuteScript(std::string_view name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "

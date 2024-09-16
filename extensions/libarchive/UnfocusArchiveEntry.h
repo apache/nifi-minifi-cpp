@@ -32,16 +32,16 @@
 #include "core/ProcessSession.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 using core::logging::Logger;
 
-class UnfocusArchiveEntry : public core::Processor {
+class UnfocusArchiveEntry : public core::ProcessorImpl {
  public:
   explicit UnfocusArchiveEntry(std::string_view name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+      : core::ProcessorImpl(name, uuid) {
   }
   ~UnfocusArchiveEntry() override = default;
 

@@ -77,7 +77,7 @@ enum class JsonFormat {
 
 class Bookmark;
 
-class ConsumeWindowsEventLog : public core::Processor {
+class ConsumeWindowsEventLog : public core::ProcessorImpl {
  public:
   explicit ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid = {});
 

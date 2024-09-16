@@ -21,7 +21,7 @@
 #include <array>
 #include <cassert>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::utils::tls {

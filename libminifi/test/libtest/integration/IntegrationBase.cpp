@@ -29,7 +29,7 @@
 namespace org::apache::nifi::minifi::test {
 
 IntegrationBase::IntegrationBase(std::chrono::milliseconds waitTime)
-    : configuration(std::make_shared<minifi::Configure>()),
+    : configuration(std::make_shared<minifi::ConfigureImpl>()),
       wait_time_(waitTime) {
 }
 
@@ -107,7 +107,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
     if (!configuration->get(minifi::Configure::nifi_state_storage_local_path)) {
       configuration->set(minifi::Configure::nifi_state_storage_local_path, state_dir.string());
     }
-    core::ProcessContext::getOrCreateDefaultStateStorage(controller_service_provider.get(), configuration);
+    core::ProcessContextImpl::getOrCreateDefaultStateStorage(controller_service_provider.get(), configuration);
 
     std::shared_ptr<core::ProcessGroup> pg(flow_config->getRoot());
     queryRootProcessGroup(pg);

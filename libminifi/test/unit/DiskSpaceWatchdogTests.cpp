@@ -32,14 +32,14 @@ TEST_CASE("disk_space_watchdog::read_config", "[dsg::read_config]") {
   const auto mebibytes = 1024 * 1024;
 
   SECTION("defaults are present") {
-    const minifi::Configure configure;
+    const minifi::ConfigureImpl configure;
     const auto conf = dsg::read_config(configure);
     REQUIRE(conf.interval >= chr::nanoseconds{0});
     REQUIRE(conf.restart_threshold_bytes > conf.stop_threshold_bytes);
   }
 
   SECTION("basic") {
-    minifi::Configure configure;
+    minifi::ConfigureImpl configure;
     configure.set(minifi::Configure::minifi_disk_space_watchdog_stop_threshold, std::to_string(10 * mebibytes));
     configure.set(minifi::Configure::minifi_disk_space_watchdog_restart_threshold, std::to_string(25 * mebibytes));
     configure.set(minifi::Configure::minifi_disk_space_watchdog_interval, "2000 millis");
@@ -50,7 +50,7 @@ TEST_CASE("disk_space_watchdog::read_config", "[dsg::read_config]") {
   }
 
   SECTION("units") {
-    minifi::Configure configure;
+    minifi::ConfigureImpl configure;
     configure.set(minifi::Configure::minifi_disk_space_watchdog_stop_threshold, "100 MB");
     configure.set(minifi::Configure::minifi_disk_space_watchdog_restart_threshold, "250 MB");
     configure.set(minifi::Configure::minifi_disk_space_watchdog_interval, "7 sec");

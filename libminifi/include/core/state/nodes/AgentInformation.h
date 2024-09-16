@@ -27,7 +27,7 @@
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/nodes/StateMonitor.h"
 #include "utils/ProcessCpuUsageTracker.h"
-#include "core/AgentIdentificationProvider.h"
+#include "minifi-cpp/core/AgentIdentificationProvider.h"
 #include "utils/Export.h"
 #include "core/RepositoryMetricsSource.h"
 #include "controllers/UpdatePolicyControllerService.h"
@@ -48,7 +48,7 @@ class ComponentManifest : public DeviceInformation {
   }
 
   std::string getName() const override {
-    return CoreComponent::getName();
+    return CoreComponentImpl::getName();
   }
 
   std::vector<SerializedResponseNode> serialize() override;
