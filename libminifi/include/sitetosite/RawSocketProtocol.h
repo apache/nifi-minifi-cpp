@@ -169,8 +169,6 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   // commsIdentifier
   utils::Identifier _commsIdentifier;
 
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
   RawSiteToSiteClient(const RawSiteToSiteClient &parent);
   RawSiteToSiteClient &operator=(const RawSiteToSiteClient &parent);
   static std::shared_ptr<utils::IdGenerator> id_generator_;

@@ -45,7 +45,7 @@
 #include "core/Resource.h"
 #include "Bookmark.h"
 #include "utils/Deleters.h"
-#include "logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
@@ -62,7 +62,7 @@ namespace org::apache::nifi::minifi::processors {
 const int EVT_NEXT_TIMEOUT_MS = 500;
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid)
-  : core::Processor(name, uuid),
+  : core::ProcessorImpl(name, uuid),
     logger_(core::logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger(uuid_)) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);

@@ -29,6 +29,7 @@
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "utils/file/AssetManager.h"
+#include "utils/file/FileUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;

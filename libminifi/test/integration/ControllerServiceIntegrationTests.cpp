@@ -50,7 +50,7 @@ void waitToVerifyProcessor() {
 
 TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
   using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
@@ -115,7 +115,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
     REQUIRE(ssl_client_node != nullptr);
     ssl_client_node->enable();
     REQUIRE(ssl_client_node->getControllerServiceImplementation() != nullptr);
-    ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_node->getControllerServiceImplementation());
+    ssl_client = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_node->getControllerServiceImplementation());
   }
   REQUIRE(!ssl_client->getCACertificate().empty());
   // now let's disable one of the controller services.

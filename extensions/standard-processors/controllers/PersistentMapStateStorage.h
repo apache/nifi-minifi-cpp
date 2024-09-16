@@ -22,13 +22,13 @@
 #include <memory>
 #include <utility>
 
-#include "controllers/keyvalue/AutoPersistor.h"
+#include "utils/AutoPersistor.h"
 #include "core/Core.h"
 #include "properties/Configure.h"
 #include "InMemoryKeyValueStorage.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"

@@ -38,10 +38,10 @@ namespace org::apache::nifi::minifi::controllers {
  * Purpose: UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates.
  * Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.
  */
-class UpdatePolicyControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<UpdatePolicyControllerService> {
+class UpdatePolicyControllerService : public core::controller::ControllerServiceImpl {
  public:
   explicit UpdatePolicyControllerService(std::string_view name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid) {
+      : ControllerServiceImpl(name, uuid) {
   }
 
   explicit UpdatePolicyControllerService(std::string_view name, const std::shared_ptr<Configure> &configuration)
@@ -51,7 +51,7 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   }
 
   MINIFIAPI static constexpr const char* Description = "UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates. "
-      "Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.";
+                                                       "Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.";
 
   MINIFIAPI static constexpr auto AllowAllProperties = core::PropertyDefinitionBuilder<>::createProperty("Allow All Properties")
       .withDescription("Allows all properties, which are also not disallowed, to be updated")
@@ -73,11 +73,11 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
       .isRequired(false)
       .build();
   MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
-      AllowAllProperties,
-      PersistUpdates,
-      AllowedProperties,
-      DisallowedProperties
-  });
+                                                                                          AllowAllProperties,
+                                                                                          PersistUpdates,
+                                                                                          AllowedProperties,
+                                                                                          DisallowedProperties
+                                                                                      });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

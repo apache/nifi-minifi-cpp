@@ -31,18 +31,18 @@ namespace org::apache::nifi::minifi::state::response {
  * C2 server.
  *
  */
-class QueueMetrics : public ResponseNode {
+class QueueMetrics : public ResponseNodeImpl {
  public:
   QueueMetrics(const std::string &name, const utils::Identifier &uuid)
-     : ResponseNode(name, uuid) {
+     : ResponseNodeImpl(name, uuid) {
   }
 
   QueueMetrics(const std::string &name) // NOLINT
-      : ResponseNode(name) {
+      : ResponseNodeImpl(name) {
   }
 
   QueueMetrics()
-     : ResponseNode("QueueMetrics") {
+     : ResponseNodeImpl("QueueMetrics") {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines queue metric information";

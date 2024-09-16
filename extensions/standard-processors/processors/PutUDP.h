@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include "Processor.h"
+#include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
@@ -30,7 +30,7 @@
 namespace org::apache::nifi::minifi::core::logging { class Logger; }
 
 namespace org::apache::nifi::minifi::processors {
-class PutUDP final : public core::Processor {
+class PutUDP final : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "The PutUDP processor receives a FlowFile and packages the FlowFile content into a single UDP datagram packet "
       "which is then transmitted to the configured UDP server. "

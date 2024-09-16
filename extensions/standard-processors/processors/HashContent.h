@@ -32,7 +32,6 @@
 #include <sstream>
 #include <utility>
 
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -135,10 +134,10 @@ namespace org::apache::nifi::minifi::processors {
 static const std::map<std::string, const std::function<HashReturnType(const std::shared_ptr<io::InputStream>&)>> HashAlgos =
   { {"MD5",  MD5Hash}, {"SHA1", SHA1Hash}, {"SHA256", SHA256Hash} };
 
-class HashContent : public core::Processor {
+class HashContent : public core::ProcessorImpl {
  public:
   explicit HashContent(std::string_view name,  const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. "

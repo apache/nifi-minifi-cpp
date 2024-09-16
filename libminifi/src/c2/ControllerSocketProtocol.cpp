@@ -143,13 +143,13 @@ void ControllerSocketProtocol::initialize() {
   if (configuration_->get(Configure::controller_ssl_context_service, context_name)) {
     std::shared_ptr<core::controller::ControllerService> service = controller_.getControllerService(context_name);
     if (nullptr != service) {
-      secure_context = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+      secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
     }
   }
   if (nullptr == secure_context) {
     std::string secure_str;
     if (configuration_->get(Configure::nifi_remote_input_secure, secure_str) && org::apache::nifi::minifi::utils::string::toBool(secure_str).value_or(false)) {
-      secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration_);
+      secure_context = std::make_shared<minifi::controllers::SSLContextServiceImpl>("ControllerSocketProtocolSSL", configuration_);
       secure_context->onEnable();
     }
   }

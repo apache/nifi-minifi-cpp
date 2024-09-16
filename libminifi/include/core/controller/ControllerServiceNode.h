@@ -25,25 +25,20 @@
 #include "core/Core.h"
 #include "core/ConfigurableComponent.h"
 #include "core/logging/Logger.h"
+#include "minifi-cpp/core/controller/ControllerServiceNode.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "properties/Configure.h"
-#include "ControllerService.h"
+#include "minifi-cpp/core/controller/ControllerService.h"
 #include "io/validation.h"
 #include "Exception.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ControllerServiceNode : public CoreComponent, public ConfigurableComponent {
+class ControllerServiceNodeImpl : public CoreComponentImpl, public ConfigurableComponentImpl, public virtual ControllerServiceNode {
  public:
-  /**
-   * Constructor for the controller service node.
-   * @param service controller service reference
-   * @param id identifier for this node.
-   * @param configuration shared pointer configuration.
-   */
-  explicit ControllerServiceNode(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
-      : CoreComponent(std::move(id)),
+  explicit ControllerServiceNodeImpl(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
+      : CoreComponentImpl(std::move(id)),
         active(false),
         configuration_(std::move(configuration)),
         controller_service_(std::move(service)) {
@@ -65,11 +60,11 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
 
   void setName(std::string name) override {
     controller_service_->setName(name);
-    CoreComponent::setName(std::move(name));
+    CoreComponentImpl::setName(std::move(name));
   }
 
   void setUUID(const utils::Identifier& uuid) override {
-    CoreComponent::setUUID(uuid);
+    CoreComponentImpl::setUUID(uuid);
     controller_service_->setUUID(uuid);
   }
 
@@ -78,29 +73,13 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    * maintains
    * @return the implementation of the Controller Service
    */
-  std::shared_ptr<ControllerService> getControllerServiceImplementation();
-  const ControllerService* getControllerServiceImplementation() const;
-  const std::vector<ControllerServiceNode*>& getLinkedControllerServices() const;
+  std::shared_ptr<ControllerService> getControllerServiceImplementation() override;
+  const ControllerService* getControllerServiceImplementation() const override;
+  const std::vector<ControllerServiceNode*>& getLinkedControllerServices() const override;
 
-  /**
-   * Returns true if we can be enabled.
-   * Returns false if this ControllerServiceNode cannot be enabled.
-   */
-  virtual bool canEnable() = 0;
-
-  virtual bool enabled() {
+  bool enabled() override {
     return active.load();
   }
-
-  /**
-   * Function to enable the controller service node.
-   */
-  virtual bool enable() = 0;
-
-  /**
-   * Function to disable the controller service node.
-   */
-  virtual bool disable() = 0;
 
   bool supportsDynamicProperties() const override {
     return false;
@@ -110,8 +89,8 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
     return false;
   }
 
-  ControllerServiceNode(const ControllerServiceNode &other) = delete;
-  ControllerServiceNode &operator=(const ControllerServiceNode &parent) = delete;
+  ControllerServiceNodeImpl(const ControllerServiceNodeImpl &other) = delete;
+  ControllerServiceNodeImpl &operator=(const ControllerServiceNodeImpl &parent) = delete;
 
  protected:
   bool canEdit() override {
@@ -120,9 +99,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
 
   std::atomic<bool> active;
   std::shared_ptr<Configure> configuration_;
-  // controller service.
   std::shared_ptr<ControllerService> controller_service_;
-  // linked controller services.
   std::vector<ControllerServiceNode*> linked_controller_services_;
 };
 

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/controller/ControllerService.h"
 #include <string>
 #include <memory>
@@ -33,7 +33,7 @@ void DatabaseService::initialize() {
     return;
   }
 
-  ControllerService::initialize();
+  ControllerServiceImpl::initialize();
 
   initializeProperties();
 

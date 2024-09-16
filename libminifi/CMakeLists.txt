@@ -42,7 +42,14 @@ endif()
 
 set(TLS_SOURCES "src/utils/tls/*.cpp" "src/io/tls/*.cpp")
 
-file(GLOB SOURCES "src/agent/*.cpp" "src/properties/*.cpp" "src/utils/file/*.cpp" "src/sitetosite/*.cpp"  "src/core/logging/*.cpp" "src/core/logging/internal/*.cpp" "src/core/logging/alert/*.cpp" "src/core/state/*.cpp" "src/core/state/nodes/*.cpp" "src/c2/protocols/*.cpp" "src/c2/triggers/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" ${SOCKET_SOURCES} ${TLS_SOURCES} "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/controllers/keyvalue/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/flow/*.cpp" "src/core/json/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp" "src/core/extension/*.cpp" "src/serialization/*.cpp" "src/provenance/*.cpp" "src/utils/*.cpp" "src/utils/crypto/*.cpp" "src/utils/crypto/ciphers/*.cpp" "src/utils/crypto/property_encryption/*.cpp" "src/*.cpp" "src/utils/net/*.cpp" "src/http/*.cpp")
+file(GLOB SOURCES
+    "src/agent/*.cpp" "src/properties/*.cpp" "src/utils/file/*.cpp" "src/sitetosite/*.cpp"
+    "src/core/logging/*.cpp" "src/core/logging/internal/*.cpp" "src/core/logging/alert/*.cpp"
+    "src/core/state/*.cpp" "src/core/state/nodes/*.cpp" "src/c2/protocols/*.cpp" "src/c2/triggers/*.cpp"
+    "src/c2/*.cpp" "src/io/*.cpp" ${SOCKET_SOURCES} ${TLS_SOURCES} "src/core/controller/*.cpp"
+    "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/flow/*.cpp"
+    "src/core/json/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp" "src/core/extension/*.cpp"
+    "src/serialization/*.cpp" "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp" "src/http/*.cpp")
 # manually add this as it might not yet be present when this executes
 list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/agent_version.cpp")
 
@@ -76,7 +83,7 @@ endif()
 include(RangeV3)
 include(Asio)
 include(MagicEnum)
-list(APPEND LIBMINIFI_LIBRARIES yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog::spdlog Threads::Threads gsl-lite libsodium range-v3 expected-lite date::date date::tz asio magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON fmt::fmt)
+list(APPEND LIBMINIFI_LIBRARIES minifi-utils yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog::spdlog Threads::Threads gsl-lite libsodium range-v3 expected-lite asio magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON fmt::fmt)
 if(NOT WIN32)
     list(APPEND LIBMINIFI_LIBRARIES OSSP::libuuid++)
 endif()
@@ -91,7 +98,7 @@ if (UNIX AND (CMAKE_SYSTEM_PROCESSOR MATCHES "armv7"))
     target_link_libraries(core-minifi "-latomic")
 endif()
 
-SET (LIBMINIFI core-minifi PARENT_SCOPE)
+SET(LIBMINIFI minifi-api minifi-extension-utils $<LINK_ONLY:core-minifi> PARENT_SCOPE)
 
 if (WIN32)
     install(TARGETS core-minifi ARCHIVE DESTINATION bin COMPONENT bin)

@@ -32,9 +32,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class SegmentContent final : public core::Processor {
+class SegmentContent final : public core::ProcessorImpl {
  public:
-  explicit SegmentContent(const std::string_view name, const utils::Identifier& uuid = {}) : Processor(name, uuid) {}
+  explicit SegmentContent(const std::string_view name, const utils::Identifier& uuid = {}) : ProcessorImpl(name, uuid) {}
 
   EXTENSIONAPI static constexpr auto Description = "Segments a FlowFile into multiple smaller segments on byte boundaries.";
 

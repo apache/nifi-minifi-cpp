@@ -17,49 +17,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONFACTORY_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONFACTORY_H_
+#pragma once
 
 #include <memory>
 
-#include "ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "ProcessSession.h"
+#include "minifi-cpp/core/ProcessSessionFactory.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-// ProcessSessionFactory Class
-class ProcessSessionFactory {
+class ProcessSessionFactoryImpl : public virtual ProcessSessionFactory {
  public:
-  // Constructor
-  /*!
-   * Create a new process session factory
-   */
-  explicit ProcessSessionFactory(std::shared_ptr<ProcessContext> processContext)
+  explicit ProcessSessionFactoryImpl(std::shared_ptr<ProcessContext> processContext)
       : process_context_(processContext) {
   }
 
-  // Create the session
-  virtual std::shared_ptr<ProcessSession> createSession();
+  std::shared_ptr<ProcessSession> createSession() override;
 
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-  ProcessSessionFactory(const ProcessSessionFactory &parent) = delete;
-  ProcessSessionFactory &operator=(const ProcessSessionFactory &parent) = delete;
+  ProcessSessionFactoryImpl(const ProcessSessionFactoryImpl &parent) = delete;
+  ProcessSessionFactoryImpl &operator=(const ProcessSessionFactoryImpl &parent) = delete;
 
-  virtual ~ProcessSessionFactory() = default;
+  ~ProcessSessionFactoryImpl() override = default;
 
  private:
-  // ProcessContext
   std::shared_ptr<ProcessContext> process_context_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONFACTORY_H_
+}  // namespace org::apache::nifi::minifi::core

@@ -32,32 +32,32 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi {
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name)
-    : core::Connectable(name),
+ConnectionImpl::ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name)
+    : core::ConnectableImpl(name),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
   logger_->log_debug("Connection {} created", name_);
 }
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid)
-    : core::Connectable(name, uuid),
+ConnectionImpl::ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid)
+    : core::ConnectableImpl(name, uuid),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
   logger_->log_debug("Connection {} created", name_);
 }
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
+ConnectionImpl::ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
                        const utils::Identifier& srcUUID)
-    : core::Connectable(name, uuid),
+    : core::ConnectableImpl(name, uuid),
       src_uuid_(srcUUID),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
   logger_->log_debug("Connection {} created", name_);
 }
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
+ConnectionImpl::ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
                        const utils::Identifier& srcUUID, const utils::Identifier& destUUID)
-    : core::Connectable(name, uuid),
+    : core::ConnectableImpl(name, uuid),
       src_uuid_(srcUUID),
       dest_uuid_(destUUID),
       flow_repository_(std::move(flow_repository)),
@@ -65,22 +65,22 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::s
   logger_->log_debug("Connection {} created", name_);
 }
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
+ConnectionImpl::ConnectionImpl(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
                        std::string_view name, const utils::Identifier& uuid)
-    : core::Connectable(name, uuid),
+    : core::ConnectableImpl(name, uuid),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)),
       queue_(std::move(swap_manager)) {
   logger_->log_debug("Connection {} created", name_);
 }
 
-bool Connection::isEmpty() const {
+bool ConnectionImpl::isEmpty() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
   return queue_.empty();
 }
 
-bool Connection::backpressureThresholdReached() const {
+bool ConnectionImpl::backpressureThresholdReached() const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto backpressure_threshold_count = backpressure_threshold_count_.load();
   auto backpressure_threshold_data_size = backpressure_threshold_data_size_.load();
@@ -94,7 +94,7 @@ bool Connection::backpressureThresholdReached() const {
   return false;
 }
 
-void Connection::put(const std::shared_ptr<core::FlowFile>& flow) {
+void ConnectionImpl::put(const std::shared_ptr<core::FlowFile>& flow) {
   if (drop_empty_ && flow->getSize() == 0) {
     logger_->log_info("Dropping empty flow file: {}", flow->getUUIDStr());
     return;
@@ -116,7 +116,7 @@ void Connection::put(const std::shared_ptr<core::FlowFile>& flow) {
   }
 }
 
-void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
+void ConnectionImpl::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
   {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -139,7 +139,7 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
   }
 }
 
-std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) {
+std::shared_ptr<core::FlowFile> ConnectionImpl::poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) {
   std::lock_guard<std::mutex> lock(mutex_);
 
   while (queue_.isWorkAvailable()) {
@@ -171,7 +171,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
   return nullptr;
 }
 
-void Connection::drain(bool delete_permanently) {
+void ConnectionImpl::drain(bool delete_permanently) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!delete_permanently) {
     // simply discard in-memory flow files

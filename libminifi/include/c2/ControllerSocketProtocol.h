@@ -24,7 +24,7 @@
 #include <atomic>
 
 #include "io/BaseStream.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/state/nodes/StateMonitor.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "ControllerSocketReporter.h"
@@ -32,6 +32,7 @@
 #include "asio/ip/tcp.hpp"
 #include "asio/ssl/context.hpp"
 #include "utils/net/AsioCoro.h"
+#include "controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::c2 {
 

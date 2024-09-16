@@ -26,19 +26,18 @@
 #include <optional>
 #include <list>
 
-#include "Core.h"
-#include "FlowFileRecord.h"
+#include "core/Core.h"
 #include "core/OutputAttributeDefinition.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "PropertyType.h"
+#include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "controllers/SSLContextService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Id.h"
 #include "utils/ResourceQueue.h"
-#include "../http/HTTPClient.h"
+#include "http/HTTPClient.h"
 #include "utils/Export.h"
 #include "utils/Enum.h"
 #include "utils/RegexUtils.h"
@@ -106,7 +105,7 @@ enum class InvalidHTTPHeaderFieldHandlingOption {
 };
 }  // namespace invoke_http
 
-class InvokeHTTP : public core::Processor {
+class InvokeHTTP : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr std::string_view STATUS_CODE = "invokehttp.status.code";
   EXTENSIONAPI static constexpr std::string_view STATUS_MESSAGE = "invokehttp.status.message";
@@ -114,7 +113,7 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static constexpr std::string_view TRANSACTION_ID = "invokehttp.tx.id";
 
   explicit InvokeHTTP(std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
     setTriggerWhenEmpty(true);
   }
 

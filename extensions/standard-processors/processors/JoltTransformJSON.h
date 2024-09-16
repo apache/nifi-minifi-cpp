@@ -35,10 +35,10 @@ enum class JoltTransform {
 
 namespace org::apache::nifi::minifi::processors {
 
-class JoltTransformJSON : public core::Processor {
+class JoltTransformJSON : public core::ProcessorImpl {
  public:
   explicit JoltTransformJSON(std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {}
+      : ProcessorImpl(name, uuid) {}
 
 
   EXTENSIONAPI static constexpr const char* Description = "Applies a list of Jolt specifications to the flowfile JSON payload. A new FlowFile is created "

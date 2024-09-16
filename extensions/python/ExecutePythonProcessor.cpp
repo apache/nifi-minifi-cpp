@@ -189,7 +189,7 @@ void ExecutePythonProcessor::addProperty(const std::string &name, const std::str
 }
 
 const core::Property* ExecutePythonProcessor::findProperty(const std::string& name) const {
-  if (auto prop_ptr = core::ConfigurableComponent::findProperty(name)) {
+  if (auto prop_ptr = core::ConfigurableComponentImpl::findProperty(name)) {
     return prop_ptr;
   }
 
@@ -206,7 +206,7 @@ const core::Property* ExecutePythonProcessor::findProperty(const std::string& na
 }
 
 std::map<std::string, core::Property> ExecutePythonProcessor::getProperties() const {
-  auto result = ConfigurableComponent::getProperties();
+  auto result = ConfigurableComponentImpl::getProperties();
 
   std::lock_guard<std::mutex> lock(python_properties_mutex_);
 

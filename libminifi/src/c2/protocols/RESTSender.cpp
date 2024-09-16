@@ -27,6 +27,8 @@
 #include "core/Resource.h"
 #include "properties/Configuration.h"
 #include "io/ZlibStream.h"
+#include "controllers/SSLContextService.h"
+#include "io/BufferStream.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -60,13 +62,13 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
     }
     if (controller && configure->get(Configuration::nifi_c2_rest_ssl_context_service, "c2.rest.ssl.context.service", ssl_context_service_str)) {
       if (auto service = controller->getControllerService(ssl_context_service_str)) {
-        ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+        ssl_context_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
       }
     }
     if (nullptr == ssl_context_service_) {
       std::string ssl_context_str;
       if (configure->get(Configure::nifi_remote_input_secure, ssl_context_str) && org::apache::nifi::minifi::utils::string::toBool(ssl_context_str).value_or(false)) {
-        ssl_context_service_ = std::make_shared<minifi::controllers::SSLContextService>("RESTSenderSSL", configure);
+        ssl_context_service_ = std::make_shared<minifi::controllers::SSLContextServiceImpl>("RESTSenderSSL", configure);
         ssl_context_service_->onEnable();
       }
     }
@@ -108,7 +110,7 @@ void RESTSender::update(const std::shared_ptr<Configure> &) {
 
 void RESTSender::setSecurityContext(http::HTTPClient &client, http::HttpRequestMethod type, const std::string &url) {
   // only use the SSL Context if we have a secure URL.
-  auto generatedService = std::make_shared<minifi::controllers::SSLContextService>("Service", configuration_);
+  auto generatedService = std::make_shared<minifi::controllers::SSLContextServiceImpl>("Service", configuration_);
   generatedService->onEnable();
   client.initialize(type, url, generatedService);
 }

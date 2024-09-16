@@ -21,7 +21,7 @@
 #include <string>
 #include <array>
 #include "utils/StringUtils.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/extension/Extension.h"
 
 #if defined(WIN32) || defined(__APPLE__)

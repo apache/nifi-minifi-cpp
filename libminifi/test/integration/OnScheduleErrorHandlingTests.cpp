@@ -17,7 +17,7 @@
  */
 #include "integration/IntegrationBase.h"
 #include "core/logging/Logger.h"
-#include "core/Scheduling.h"
+#include "minifi-cpp/core/Scheduling.h"
 #include "core/state/ProcessorController.h"
 #include "unit/TestBase.h"
 #include "../../../extensions/test-processors/KamikazeProcessor.h"

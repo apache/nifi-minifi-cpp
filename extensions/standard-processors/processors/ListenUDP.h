@@ -20,8 +20,8 @@
 #include <string>
 
 #include "NetworkListenerProcessor.h"
-#include "OutputAttributeDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/OutputAttributeDefinition.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"

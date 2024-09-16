@@ -33,10 +33,10 @@ namespace org::apache::nifi::minifi::test {
 class LogPublisherTestFixture {
  public:
   LogPublisherTestFixture()
-    : configuration_(std::make_shared<Configure>()),
+    : configuration_(std::make_shared<ConfigureImpl>()),
       provenance_repo_(core::createRepository("provenancerepository", "provenancerepository")),
       flow_file_repo_(core::createRepository("flowfilerepository", "flowfilerepository")),
-      response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_,
+      response_node_loader_(std::make_shared<state::response::ResponseNodeLoaderImpl>(configuration_,
         std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_}, nullptr)),
       publisher_("LogMetricsPublisher") {
     configuration_->setHome(temp_directory_.getPath());

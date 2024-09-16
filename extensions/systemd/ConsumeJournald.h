@@ -35,7 +35,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
@@ -45,7 +45,7 @@ namespace org::apache::nifi::minifi::extensions::systemd {
 
 enum class PayloadFormat { Raw, Syslog };
 
-class ConsumeJournald final : public core::Processor {
+class ConsumeJournald final : public core::ProcessorImpl {
  public:
   static constexpr const char* CURSOR_KEY = "cursor";
   static constexpr const char* PAYLOAD_FORMAT_RAW = "Raw";

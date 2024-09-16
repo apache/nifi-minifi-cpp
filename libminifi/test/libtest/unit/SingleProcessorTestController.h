@@ -62,7 +62,7 @@ class SingleProcessorTestController : public TestController {
   core::Relationship addDynamicRelationship(std::string name);
 
   template<typename T = core::Processor>
-  T* getProcessor() const { return static_cast<T*>(processor_); }
+  T* getProcessor() const { return dynamic_cast<T*>(processor_); }
 
   std::shared_ptr<TestPlan> plan = createPlan();
 

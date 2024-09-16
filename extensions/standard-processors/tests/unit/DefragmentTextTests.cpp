@@ -311,7 +311,7 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
   }
 }
 
-class FragmentGenerator : public core::Processor {
+class FragmentGenerator : public core::ProcessorImpl {
  public:
   static constexpr const char* Description = "FragmentGenerator (only for testing purposes)";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
@@ -324,7 +324,7 @@ class FragmentGenerator : public core::Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit FragmentGenerator(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   void onTrigger(core::ProcessContext&, core::ProcessSession& session) override {

@@ -23,9 +23,9 @@
 
 namespace org::apache::nifi::minifi::io {
 
-class ArchiveStreamProviderImpl : public ArchiveStreamProvider {
+class ArchiveStreamProviderImpl : public core::CoreComponentImpl, public virtual ArchiveStreamProvider {
  public:
-  using ArchiveStreamProvider::ArchiveStreamProvider;
+  using CoreComponentImpl::CoreComponentImpl;
 
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
@@ -48,6 +48,6 @@ class ArchiveStreamProviderImpl : public ArchiveStreamProvider {
   }
 };
 
-REGISTER_RESOURCE_AS(ArchiveStreamProviderImpl, InternalResource, ("ArchiveStreamProvider"));
+REGISTER_RESOURCE_IMPLEMENTATION(ArchiveStreamProviderImpl, "ArchiveStreamProvider", InternalResource);
 
 }  // namespace org::apache::nifi::minifi::io

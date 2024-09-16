@@ -27,11 +27,11 @@
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
 PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid, std::unique_ptr<MetricsExposer> exposer)
-  : state::MetricsPublisher(name, uuid),
+  : state::MetricsPublisherImpl(name, uuid),
     exposer_(std::move(exposer)) {}
 
 void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
-  state::MetricsPublisher::initialize(configuration, response_node_loader);
+  state::MetricsPublisherImpl::initialize(configuration, response_node_loader);
   if (!exposer_) {
     exposer_ = std::make_unique<PrometheusExposerWrapper>(readExposerConfig());
   }

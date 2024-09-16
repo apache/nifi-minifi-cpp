@@ -20,11 +20,10 @@
 #include <vector>
 #include <string>
 
-#include "state/PublishedMetricProvider.h"
+#include "core/state/PublishedMetricProvider.h"
 #include "prometheus/collectable.h"
 #include "prometheus/metric_family.h"
 #include "utils/gsl.h"
-#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 

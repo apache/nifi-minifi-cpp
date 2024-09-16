@@ -26,7 +26,7 @@ endif()
 add_minifi_executable(encrypt-config "${ENCRYPT_CONFIG_FILES}")
 target_include_directories(encrypt-config PRIVATE ../libminifi/include)
 include(ArgParse)
-target_link_libraries(encrypt-config libsodium argparse ${LIBMINIFI})
+target_link_libraries(encrypt-config libsodium argparse core-minifi)
 set_target_properties(encrypt-config PROPERTIES OUTPUT_NAME encrypt-config)
 set_target_properties(encrypt-config PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 

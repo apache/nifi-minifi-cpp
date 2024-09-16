@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/RecordField.h"
+#include "minifi-cpp/core/RecordField.h"
 
 #include "utils/GeneralUtils.h"
 #include "utils/TimeUtil.h"

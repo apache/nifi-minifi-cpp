@@ -20,19 +20,21 @@
 #include "core/repository/VolatileContentRepository.h"
 #include "FlowFileRepository.h"
 #include "unit/TestBase.h"
-#include "StreamPipe.h"
+#include "io/StreamPipe.h"
 #include "unit/TestUtils.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/RelationshipDefinition.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "core/ProcessorNode.h"
+#include "core/repository/FileSystemRepository.h"
 
 namespace org::apache::nifi::minifi::test {
 
-class OutputProcessor : public core::Processor {
+class OutputProcessor : public core::ProcessorImpl {
  public:
-  using core::Processor::Processor;
+  using core::ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "Processor used for testing cycles";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
@@ -82,7 +84,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
 
   auto dir = testController.createTempDirectory();
 
-  auto config = std::make_shared<minifi::Configure>();
+  auto config = std::make_shared<minifi::ConfigureImpl>();
   config->setHome(dir);
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
@@ -100,15 +102,15 @@ TEST_CASE("Connection will on-demand swap flow files") {
 
   auto processor = std::make_shared<OutputProcessor>("proc");
 
-  auto connection = std::make_shared<minifi::Connection>(ff_repo, content_repo, swap_manager, "conn", minifi::utils::IdGenerator::getIdGenerator()->generate());
+  auto connection = std::make_shared<minifi::ConnectionImpl>(ff_repo, content_repo, swap_manager, "conn", minifi::utils::IdGenerator::getIdGenerator()->generate());
   connection->setSwapThreshold(50);
   connection->addRelationship(OutputProcessor::Success);
   connection->setSourceUUID(processor->getUUID());
   processor->addConnection(connection.get());
 
-  auto processor_node = std::make_shared<core::ProcessorNode>(processor.get());
-  auto context = std::make_shared<core::ProcessContext>(processor_node, nullptr, prov_repo, ff_repo, content_repo);
-  auto session_factory = std::make_shared<core::ProcessSessionFactory>(context);
+  auto processor_node = std::make_shared<core::ProcessorNodeImpl>(processor.get());
+  auto context = std::make_shared<core::ProcessContextImpl>(processor_node, nullptr, prov_repo, ff_repo, content_repo);
+  auto session_factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
 
   for (size_t i = 0; i < 200; ++i) {
     processor->triggerAndCommit(context, session_factory);

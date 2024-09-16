@@ -21,7 +21,7 @@
 #include <regex>
 #include <vector>
 
-#include "core/RecordField.h"
+#include "minifi-cpp/core/RecordField.h"
 #include "fmt/format.h"
 #include "modbus/ByteConverters.h"
 #include "modbus/Error.h"

@@ -24,7 +24,6 @@
 #include <utility>
 #include <vector>
 
-#include "FlowFileRecord.h"
 #include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -32,15 +31,15 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class LogAttribute : public core::Processor {
+class LogAttribute : public core::ProcessorImpl {
  public:
   explicit LogAttribute(const std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
     logger_->set_max_log_size(-1);
   }
   ~LogAttribute() override = default;

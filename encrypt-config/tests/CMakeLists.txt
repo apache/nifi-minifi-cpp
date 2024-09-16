@@ -31,7 +31,7 @@ foreach(testfile ${ENCRYPT_CONFIG_TESTS})
 
     createTests(${testfilename})
 
-    target_link_libraries(${testfilename} Catch2WithMain ${LIBMINIFI} libminifi-unittest)
+    target_link_libraries(${testfilename} Catch2WithMain core-minifi libminifi-unittest)
     add_test(NAME ${testfilename} COMMAND ${testfilename} WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
     math(EXPR ENCRYPT_CONFIG_TEST_COUNT "${ENCRYPT_CONFIG_TEST_COUNT}+1")

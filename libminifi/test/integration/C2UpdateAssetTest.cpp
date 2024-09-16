@@ -114,7 +114,7 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   FileProvider file_A_provider{file_A};
   std::string file_B = "hello from file B";
   FileProvider file_B_provider{file_B};
-  C2HeartbeatHandler hb_handler{std::make_shared<minifi::Configure>()};
+  C2HeartbeatHandler hb_handler{std::make_shared<minifi::ConfigureImpl>()};
 
   VerifyC2AssetUpdate harness;
   harness.setUrl("http://localhost:0/api/file/A.txt", &file_A_provider);

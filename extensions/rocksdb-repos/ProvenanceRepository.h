@@ -27,8 +27,8 @@
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "provenance/Provenance.h"
+#include "core/logging/LoggerFactory.h"
+#include "minifi-cpp/provenance/Provenance.h"
 #include "utils/Literals.h"
 #include "RocksDbRepository.h"
 
@@ -76,8 +76,6 @@ class ProvenanceRepository : public core::repository::RocksDbRepository {
 
   void destroy();
 
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
   ProvenanceRepository(const ProvenanceRepository &parent) = delete;
 
   ProvenanceRepository &operator=(const ProvenanceRepository &parent) = delete;

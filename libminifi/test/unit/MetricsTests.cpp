@@ -28,6 +28,7 @@
 #include "unit/DummyProcessor.h"
 #include "range/v3/algorithm/find_if.hpp"
 #include "unit/SingleProcessorTestController.h"
+#include "core/ProcessorMetrics.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -51,14 +52,14 @@ TEST_CASE("QueueMetricsTestConnections", "[c2m3]") {
 
   REQUIRE("QueueMetrics" == metrics.getName());
 
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   content_repo->initialize(configuration);
 
   std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
 
-  auto connection = std::make_unique<minifi::Connection>(repo, content_repo, "testconnection");
+  auto connection = std::make_unique<minifi::ConnectionImpl>(repo, content_repo, "testconnection");
 
   connection->setBackpressureThresholdDataSize(1024);
   connection->setBackpressureThresholdCount(1024);
@@ -210,7 +211,7 @@ TEST_CASE("VolatileRepositorymetricsCanBeFull", "[c2m4]") {
 
 TEST_CASE("Test on trigger runtime processor metrics", "[ProcessorMetrics]") {
   DummyProcessor dummy_processor("dummy");
-  minifi::core::ProcessorMetrics metrics(dummy_processor);
+  minifi::core::ProcessorMetricsImpl metrics(dummy_processor);
 
   REQUIRE("DummyProcessorMetrics" == metrics.getName());
 
@@ -249,7 +250,7 @@ TEST_CASE("Test on trigger runtime processor metrics", "[ProcessorMetrics]") {
 
 TEST_CASE("Test commit runtime processor metrics", "[ProcessorMetrics]") {
   DummyProcessor dummy_processor("dummy");
-  minifi::core::ProcessorMetrics metrics(dummy_processor);
+  minifi::core::ProcessorMetricsImpl metrics(dummy_processor);
 
   REQUIRE("DummyProcessorMetrics" == metrics.getName());
 
@@ -286,12 +287,12 @@ TEST_CASE("Test commit runtime processor metrics", "[ProcessorMetrics]") {
   REQUIRE(metrics.getAverageSessionCommitRuntime() == 37ms);
 }
 
-class DuplicateContentProcessor : public minifi::core::Processor {
-  using minifi::core::Processor::Processor;
+class DuplicateContentProcessor : public minifi::core::ProcessorImpl {
+  using minifi::core::ProcessorImpl::ProcessorImpl;
 
  public:
-  DuplicateContentProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : Processor(name, uuid) {}
-  explicit DuplicateContentProcessor(std::string_view name) : Processor(name) {}
+  DuplicateContentProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : ProcessorImpl(name, uuid) {}
+  explicit DuplicateContentProcessor(std::string_view name) : ProcessorImpl(name) {}
   static constexpr const char* Description = "A processor that creates two more of the same flow file.";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr auto Success = core::RelationshipDefinition{"success", "Newly created FlowFiles"};
@@ -332,29 +333,29 @@ TEST_CASE("Test processor metrics change after trigger", "[ProcessorMetrics]") {
   minifi::test::SingleProcessorTestController test_controller(std::make_unique<DuplicateContentProcessor>("DuplicateContentProcessor"));
   test_controller.trigger({minifi::test::InputFlowFileData{"log line 1", {}}});
   auto metrics = test_controller.getProcessor()->getMetrics();
-  CHECK(metrics->invocations == 1);
-  CHECK(metrics->incoming_flow_files == 1);
-  CHECK(metrics->transferred_flow_files == 2);
+  CHECK(metrics->invocations() == 1);
+  CHECK(metrics->incomingFlowFiles() == 1);
+  CHECK(metrics->transferredFlowFiles() == 2);
   CHECK(metrics->getTransferredFlowFilesToRelationshipCount("success") == 1);
   CHECK(metrics->getTransferredFlowFilesToRelationshipCount("original") == 1);
-  CHECK(metrics->incoming_bytes == 10);
-  CHECK(metrics->transferred_bytes == 30);
-  CHECK(metrics->bytes_read == 10);
-  CHECK(metrics->bytes_written == 20);
-  auto old_nanos = metrics->processing_nanos.load();
-  CHECK(metrics->processing_nanos > 0);
+  CHECK(metrics->incomingBytes() == 10);
+  CHECK(metrics->transferredBytes() == 30);
+  CHECK(metrics->bytesRead() == 10);
+  CHECK(metrics->bytesWritten() == 20);
+  auto old_nanos = metrics->processingNanos().load();
+  CHECK(metrics->processingNanos() > 0);
 
   test_controller.trigger({minifi::test::InputFlowFileData{"new log line 2", {}}});
-  CHECK(metrics->invocations == 2);
-  CHECK(metrics->incoming_flow_files == 2);
-  CHECK(metrics->transferred_flow_files == 4);
+  CHECK(metrics->invocations() == 2);
+  CHECK(metrics->incomingFlowFiles() == 2);
+  CHECK(metrics->transferredFlowFiles() == 4);
   CHECK(metrics->getTransferredFlowFilesToRelationshipCount("success") == 2);
   CHECK(metrics->getTransferredFlowFilesToRelationshipCount("original") == 2);
-  CHECK(metrics->incoming_bytes == 24);
-  CHECK(metrics->transferred_bytes == 72);
-  CHECK(metrics->bytes_read == 24);
-  CHECK(metrics->bytes_written == 48);
-  CHECK(metrics->processing_nanos > old_nanos);
+  CHECK(metrics->incomingBytes() == 24);
+  CHECK(metrics->transferredBytes() == 72);
+  CHECK(metrics->bytesRead() == 24);
+  CHECK(metrics->bytesWritten() == 48);
+  CHECK(metrics->processingNanos() > old_nanos);
 }
 
 

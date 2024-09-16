@@ -23,7 +23,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class TestConfigurableComponentSupportsDynamic : public ConfigurableComponent {
+class TestConfigurableComponentSupportsDynamic : public ConfigurableComponentImpl {
  public:
   bool supportsDynamicProperties() const override {
     return true;
@@ -38,7 +38,7 @@ class TestConfigurableComponentSupportsDynamic : public ConfigurableComponent {
   }
 };
 
-class TestConfigurableComponentNotSupportsDynamic : public ConfigurableComponent {
+class TestConfigurableComponentNotSupportsDynamic : public ConfigurableComponentImpl {
  public:
   bool supportsDynamicProperties() const override {
     return false;

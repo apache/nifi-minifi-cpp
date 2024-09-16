@@ -26,7 +26,7 @@
 #include "core/Processor.h"
 #include "core/FlowFileStore.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
@@ -57,10 +57,10 @@ constexpr customize_t enum_name<PatternLocation>(PatternLocation value) noexcept
 
 namespace org::apache::nifi::minifi::processors {
 
-class DefragmentText : public core::Processor {
+class DefragmentText : public core::ProcessorImpl {
  public:
   explicit DefragmentText(std::string_view name,  const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. "

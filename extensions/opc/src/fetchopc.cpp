@@ -26,6 +26,7 @@
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "utils/Enum.h"
+#include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::processors {
 

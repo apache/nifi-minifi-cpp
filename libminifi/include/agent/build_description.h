@@ -22,7 +22,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "agent_docs.h"
+#include "agent/agent_docs.h"
 #include "core/controller/ControllerService.h"
 #include "core/ClassLoader.h"
 #include "core/expect.h"
@@ -31,28 +31,9 @@
 #include "core/Processor.h"
 #include "core/Annotation.h"
 #include "io/validation.h"
+#include "minifi-cpp/agent/build_description.h"
 
 namespace org::apache::nifi::minifi {
-
-struct BundleDetails {
-  std::string artifact;
-  std::string group;
-  std::string version;
-};
-
-class ExternalBuildDescription {
- private:
-  static std::vector<BundleDetails> &getExternal();
-
-  static std::map<std::string, Components> &getExternalMappings();
-
- public:
-  static void addExternalComponent(const BundleDetails& details, const ClassDescription& description);
-
-  static Components getClassDescriptions(const std::string &group);
-
-  static std::vector<BundleDetails> getExternalGroups();
-};
 
 class BuildDescription {
  public:

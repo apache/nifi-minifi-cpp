@@ -24,7 +24,7 @@
 #include "FileSystemRepository.h"
 #include "VolatileContentRepository.h"
 #include "DatabaseContentRepository.h"
-#include "BufferedContentSession.h"
+#include "core/BufferedContentSession.h"
 #include "FlowFileRecord.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
@@ -36,7 +36,7 @@ class ContentSessionController : public TestController {
   ContentSessionController()
       : contentRepository(std::make_shared<ContentRepositoryClass>()) {
     auto contentRepoPath = createTempDirectory();
-    auto config = std::make_shared<minifi::Configure>();
+    auto config = std::make_shared<minifi::ConfigureImpl>();
     config->setHome(contentRepoPath);
     config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, contentRepoPath.string());
     contentRepository->initialize(config);
