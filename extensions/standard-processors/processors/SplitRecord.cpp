@@ -18,6 +18,7 @@
 
 #include "core/Resource.h"
 #include "nonstd/expected.hpp"
+#include "utils/GeneralUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 namespace {
@@ -34,29 +35,21 @@ std::shared_ptr<RecordSetIO> getRecordSetIO(core::ProcessContext& context, const
 }
 }  // namespace
 
-SplitRecord::SplitRecord(std::string_view name, const utils::Identifier& uuid)
-    : Processor(name, uuid), logger_{core::logging::LoggerFactory<SplitRecord>::getLogger(uuid)} {}
-
-void SplitRecord::initialize() {
-  setSupportedProperties(Properties);
-  setSupportedRelationships(Relationships);
-}
-
 void SplitRecord::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  record_set_reader_ = getRecordSetIO<core::RecordSetReader>(context, SplitRecord::RecordReader);
+  record_set_reader_ = getRecordSetIO<core::RecordSetReader>(context, RecordReader);
   if (!record_set_reader_) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Reader set is missing or invalid");
+    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Reader set is missing or invalid");
   }
-  record_set_writer_ = getRecordSetIO<core::RecordSetWriter>(context, SplitRecord::RecordWriter);
+  record_set_writer_ = getRecordSetIO<core::RecordSetWriter>(context, RecordWriter);
   if (!record_set_writer_) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Writer set is missing or invalid");
+    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Writer set is missing or invalid");
   }
 }
 
-nonstd::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& original_flow_file) {
+nonstd::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file) {
   std::string value;
   std::size_t records_per_split = 0;
-  if (context.getProperty(RecordsPerSplit, value, original_flow_file.get())) {
+  if (context.getProperty(RecordsPerSplit, value, &original_flow_file)) {
     if (!core::Property::StringToInt(value, records_per_split)) {
       return nonstd::make_unexpected("Failed to convert Records Per Split property to an integer");
     } else if (records_per_split < 1) {
@@ -75,7 +68,7 @@ void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession&
     return;
   }
 
-  auto records_per_split = readRecordsPerSplit(context, original_flow_file);
+  auto records_per_split = readRecordsPerSplit(context, *original_flow_file);
   if (!records_per_split) {
     logger_->log_error("Failed to read Records Per Split property: {}", records_per_split.error());
     session.transfer(original_flow_file, Failure);
@@ -92,7 +85,7 @@ void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession&
   std::size_t current_index = 0;
   const auto fragment_identifier = utils::IdGenerator::getIdGenerator()->generate().to_string();
   std::size_t fragment_index = 0;
-  std::size_t fragment_count = record_set->size() / records_per_split.value() + (record_set->size() % records_per_split.value() == 0 ? 0 : 1);
+  const auto fragment_count = utils::intdiv_ceil(record_set->size(), records_per_split.value());
   while (current_index < record_set->size()) {
     auto split_flow_file = session.create(original_flow_file.get());
     if (!split_flow_file) {
@@ -102,6 +95,7 @@ void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession&
     }
 
     core::RecordSet slice_record_set;
+    slice_record_set.reserve(*records_per_split);
     for (std::size_t i = 0; i < records_per_split.value() && current_index < record_set->size(); ++i, ++current_index) {
       slice_record_set.push_back(std::move(record_set->at(current_index)));
     }
