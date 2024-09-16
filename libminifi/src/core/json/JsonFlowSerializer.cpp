@@ -90,7 +90,7 @@ void JsonFlowSerializer::addProviderCreatedParameterContexts(rapidjson::Value& f
 }
 
 void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc,
-    const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
+    const std::map<std::string, Property, std::less<>>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
     const core::flow::Overrides& overrides) const {
   std::unordered_set<std::string> processed_property_names;
 
@@ -168,7 +168,7 @@ void JsonFlowSerializer::encryptSensitiveProcessorProperties(rapidjson::Value& r
       continue;
     }
     const auto processor_overrides = overrides.contains(*processor_id) ? overrides.at(*processor_id) : core::flow::Overrides{};
-    encryptSensitiveProperties(getMember(processor_json, schema.processor_properties[0]), alloc, processor->getProperties(), encryption_provider,
+    encryptSensitiveProperties(getMember(processor_json, schema.processor_properties[0]), alloc, processor->getSupportedProperties(), encryption_provider,
         processor_overrides);
   }
 }
@@ -197,7 +197,7 @@ void JsonFlowSerializer::encryptSensitiveControllerServiceProperties(rapidjson::
       continue;
     }
     const auto controller_service_overrides = overrides.contains(*controller_service_id) ? overrides.at(*controller_service_id) : core::flow::Overrides{};
-    encryptSensitiveProperties(getMember(controller_service_json, schema.controller_service_properties[0]), alloc, controller_service->getProperties(), encryption_provider,
+    encryptSensitiveProperties(getMember(controller_service_json, schema.controller_service_properties[0]), alloc, controller_service->getSupportedProperties(), encryption_provider,
         controller_service_overrides);
   }
 }

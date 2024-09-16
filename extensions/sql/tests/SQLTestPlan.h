@@ -99,6 +99,10 @@ class SQLTestPlan {
     return flow_files;
   }
 
+  bool setProperty(const std::string_view property, const std::string_view value) const {
+    return plan_->setProperty(processor_, property, value);
+  }
+
  private:
   std::shared_ptr<TestPlan> plan_;
   core::Processor* processor_;

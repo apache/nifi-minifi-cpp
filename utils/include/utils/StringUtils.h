@@ -41,6 +41,7 @@
 #include "range/v3/view/transform.hpp"
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/join.hpp"
+#include "ParsingErrors.h"
 
 // libc++ doesn't define operator<=> on strings, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
@@ -428,9 +429,8 @@ bool matchesSequence(std::string_view str, const std::vector<std::string>& patte
 
 bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit);
 
-struct ParseError {};
 
-nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_view input);
+nonstd::expected<std::optional<char>, std::error_code> parseCharacter(std::string_view input);
 
 std::string replaceEscapedCharacters(std::string_view input);
 
@@ -438,19 +438,42 @@ std::string replaceEscapedCharacters(std::string_view input);
 template <typename T> concept arithmetic = std::integral<T> || std::floating_point<T>;
 
 template<arithmetic T>
-nonstd::expected<T, ParseError> parseNumber(std::string_view input) {
+nonstd::expected<T, std::error_code> parseNumber(std::string_view input) {
   T t{};
   const auto [ptr, ec] = std::from_chars(input.data(), input.data() + input.size(), t);
   if (ec != std::errc()) {
-    return nonstd::make_unexpected(ParseError{});
+    return nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError);
   }
   if (ptr != input.data() + input.size()) {
-    return nonstd::make_unexpected(ParseError{});
+    return nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError);
   }
   return t;
 }
 
 std::string partAfterLastOccurrenceOf(std::string_view input, char delimiter);
+
+
+template<typename ... Bases>
+struct overload : Bases ...
+{
+  using is_transparent = void;
+  using Bases::operator() ... ;
+};
+
+
+struct char_pointer_hash
+{
+  auto operator()( const char* ptr ) const noexcept
+  {
+    return std::hash<std::string_view>{}( ptr );
+  }
+};
+
+using transparent_string_hash = overload<
+    std::hash<std::string>,
+    std::hash<std::string_view>,
+    char_pointer_hash
+>;
 
 }  // namespace string
 

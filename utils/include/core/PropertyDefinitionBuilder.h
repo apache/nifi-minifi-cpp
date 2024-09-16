@@ -19,7 +19,7 @@
 #include <utility>
 
 #include "core/PropertyDefinition.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/ClassName.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -93,8 +93,8 @@ struct PropertyDefinitionBuilder {
     return *this;
   }
 
-  constexpr PropertyDefinitionBuilder<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties> withPropertyType(const PropertyType& property_type) {
-    property.type = gsl::make_not_null(&property_type);
+  constexpr PropertyDefinitionBuilder<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties> withValidator(const PropertyValidator& property_validator) {
+    property.validator = gsl::make_not_null(&property_validator);
     return *this;
   }
 
@@ -113,7 +113,7 @@ struct PropertyDefinitionBuilder {
     .dependent_properties = {},
     .exclusive_of_properties = {},
     .default_value = {},
-    .type = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE),
+    .validator = gsl::make_not_null(&StandardPropertyValidators::ALWAYS_VALID_VALIDATOR),
     .supports_expression_language = false,
     .version = 1
   };

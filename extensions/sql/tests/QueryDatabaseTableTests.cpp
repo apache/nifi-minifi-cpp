@@ -27,10 +27,9 @@ TEST_CASE("QueryDatabaseTable queries the table and returns specified columns", 
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
-  auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName, "test_table");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames, "int_col");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames, "text_col");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "test_table"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.name, "text_col"));
 
   controller.insertValues({
     {101, "one"},
@@ -56,10 +55,9 @@ TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[Que
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
-  auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName, "test_table");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames, "int_col");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames, "text_col");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "test_table"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.name, "text_col"));
 
   controller.insertValues({
     {101, "one"},
@@ -97,9 +95,9 @@ TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTab
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName, "test_table");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames, "int_col");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames, "text_col");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "test_table"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.name, "text_col"));
   sql_proc->setDynamicProperty("initial.maxvalue.int_col", "102");
 
   controller.insertValues({
@@ -127,11 +125,10 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
-  auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName, "test_table");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames, "int_col");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames, "text_col");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxRowsPerFlowFile, "3");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "test_table"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.name, "text_col"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxRowsPerFlowFile.name, "3"));
 
   controller.insertValues({
     {101, "one"},
@@ -174,10 +171,9 @@ TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabase
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
-  auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName, "test_table");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames, "int_col");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames, "text_col");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "test_table"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.name, "text_col"));
 
   controller.insertValues({
       {101, "one"},
@@ -195,13 +191,14 @@ TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabase
 
 
   // query "empty_test_table"
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName, "empty_test_table");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "empty_test_table"));
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.empty());
 
   // again query "test_table", by now the stored state is reset, so all rows are returned
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName, "test_table");
+  // set through ProcessContext to avoid corrupting ProcessContextExpr cache
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "test_table"));
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
@@ -213,10 +210,9 @@ TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[Qu
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
-  auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName, "test_table");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames, "int_col");
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames, "text_col");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "test_table"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col"));
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.name, "text_col"));
 
   controller.insertValues({
       {101, "one"},
@@ -234,7 +230,7 @@ TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[Qu
 
 
   // query using ["int_col", "text_col"] as max value columns
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames, "int_col, text_col");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col, text_col"));
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
@@ -242,7 +238,7 @@ TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[Qu
   REQUIRE(row_count == "3");
 
   // query using ["int_col"] as max value columns again
-  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames, "int_col");
+  CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col"));
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);

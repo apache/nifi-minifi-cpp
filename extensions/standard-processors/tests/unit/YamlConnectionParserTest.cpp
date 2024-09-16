@@ -211,7 +211,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
           "drop empty: NULL\n"});
       flow::Node connection_node{std::make_shared<YamlNode>(yaml_node)};
       StructuredConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-      CHECK(2 == yaml_connection_parser.getWorkQueueDataSize());
+      CHECK(minifi::Connection::DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE == yaml_connection_parser.getWorkQueueDataSize());
       CHECK(0s == yaml_connection_parser.getFlowFileExpiration());
       CHECK_FALSE(yaml_connection_parser.getDropEmpty());
     }

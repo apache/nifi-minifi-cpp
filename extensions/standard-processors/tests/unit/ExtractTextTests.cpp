@@ -34,7 +34,6 @@
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessorNode.h"
 
 #include "GetFile.h"
 #include "ExtractText.h"

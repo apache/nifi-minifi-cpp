@@ -144,8 +144,8 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
 
   auto plan = controller.createSQLPlan("ExecuteSQL", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(minifi::processors::ExecuteSQL::MaxRowsPerFlowFile, "2");
-  sql_proc->setProperty(minifi::processors::ExecuteSQL::SQLSelectQuery, "SELECT text_col FROM test_table ORDER BY int_col ASC");
+  sql_proc->setProperty(minifi::processors::ExecuteSQL::MaxRowsPerFlowFile.name, "2");
+  sql_proc->setProperty(minifi::processors::ExecuteSQL::SQLSelectQuery.name, "SELECT text_col FROM test_table ORDER BY int_col ASC");
 
   controller.insertValues({
     {101, "apple"},
@@ -211,7 +211,7 @@ TEST_CASE("ExecuteSQL select query is malformed", "[ExecuteSQL7]") {
   SQLTestController controller;
 
   auto plan = controller.createSQLPlan("ExecuteSQL", {{"success", "d"}, {"failure", "d"}});
-  plan->getSQLProcessor()->setProperty(minifi::processors::ExecuteSQL::SQLSelectQuery, "SELECT * FROM test_table WHERE int_col = ?;");
+  plan->getSQLProcessor()->setProperty(minifi::processors::ExecuteSQL::SQLSelectQuery.name, "SELECT * FROM test_table WHERE int_col = ?;");
 
   std::shared_ptr<minifi::core::FlowFile> input_file;
   SECTION("Less than required arguments") {

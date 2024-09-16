@@ -24,7 +24,7 @@
 namespace org::apache::nifi::minifi::parameter_providers {
 
 std::string EnvironmentVariableParameterProvider::readParameterGroupName() const {
-  auto parameter_group_name = getProperty(ParameterGroupName);
+  auto parameter_group_name = getProperty(ParameterGroupName.name);
   if (!parameter_group_name || parameter_group_name.value().empty()) {
     throw core::ParameterException("Parameter Group Name is required");
   }
@@ -33,7 +33,7 @@ std::string EnvironmentVariableParameterProvider::readParameterGroupName() const
 }
 
 EnvironmentVariableInclusionStrategyOptions EnvironmentVariableParameterProvider::readEnvironmentVariableInclusionStrategy() const {
-  auto env_variable_inclusion_strategy_str = getProperty(EnvironmentVariableInclusionStrategy);
+  auto env_variable_inclusion_strategy_str = getProperty(EnvironmentVariableInclusionStrategy.name);
   if (!env_variable_inclusion_strategy_str) {
     throw core::ParameterException("Environment Variable Inclusion Strategy is required");
   }
@@ -47,7 +47,7 @@ EnvironmentVariableInclusionStrategyOptions EnvironmentVariableParameterProvider
 
 void EnvironmentVariableParameterProvider::filterEnvironmentVariablesByCommaSeparatedList(std::unordered_map<std::string, std::string>& environment_variables) const {
   std::unordered_set<std::string> included_environment_variables;
-  if (auto incuded_environment_variables_str = getProperty(IncludeEnvironmentVariables)) {
+  if (auto incuded_environment_variables_str = getProperty(IncludeEnvironmentVariables.name)) {
     for (const auto& included_environment_variable : minifi::utils::string::splitAndTrimRemovingEmpty(*incuded_environment_variables_str, ",")) {
       included_environment_variables.insert(included_environment_variable);
     }
@@ -63,7 +63,7 @@ void EnvironmentVariableParameterProvider::filterEnvironmentVariablesByCommaSepa
 }
 
 void EnvironmentVariableParameterProvider::filterEnvironmentVariablesByRegularExpression(std::unordered_map<std::string, std::string>& environment_variables) const {
-  auto env_variable_regex_str = getProperty(IncludeEnvironmentVariables);
+  auto env_variable_regex_str = getProperty(IncludeEnvironmentVariables.name);
   if (env_variable_regex_str && !env_variable_regex_str->empty()) {
     logger_->log_debug("Filtering environment variables using regular expression: {}", *env_variable_regex_str);
     utils::Regex regex(*env_variable_regex_str);

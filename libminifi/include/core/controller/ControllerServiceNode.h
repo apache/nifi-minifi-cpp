@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "core/Core.h"
-#include "core/ConfigurableComponent.h"
+#include "core/ConfigurableComponentImpl.h"
 #include "core/logging/Logger.h"
 #include "minifi-cpp/core/controller/ControllerServiceNode.h"
 #include "core/PropertyDefinition.h"

@@ -30,7 +30,7 @@
 #include "SmartArchivePtrs.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "serialization/FlowFileSerializer.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
@@ -341,7 +341,7 @@ class MergeContent : public processors::BinFiles {
       .build();
   EXTENSIONAPI static constexpr auto KeepPath = core::PropertyDefinitionBuilder<>::createProperty("Keep Path")
       .withDescription("If using the Zip or Tar Merge Format, specifies whether or not the FlowFiles' paths should be included in their entry")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto AttributeStrategy = core::PropertyDefinitionBuilder<2>::createProperty("Attribute Strategy")

@@ -27,15 +27,19 @@
 namespace org::apache::nifi::minifi::processors {
 
 void AttributeRollingWindow::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  time_window_ = context.getProperty<core::TimePeriodValue>(TimeWindow)
-      | utils::transform(&core::TimePeriodValue::getMilliseconds);
-  window_length_ = context.getProperty<uint64_t>(WindowLength)
-      | utils::filter([](uint64_t value) { return value > 0; })
-      | utils::transform([](uint64_t value) { return gsl::narrow<size_t>(value); });  // narrowing on 32 bit ABI
+  time_window_ = context.getProperty(TimeWindow)
+      | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)
+      | utils::toOptional();
+
+  window_length_ = context.getProperty(WindowLength)
+      | utils::andThen(parsing::parseIntegral<uint64_t>)
+      | utils::toOptional()
+      | utils::filter([](const uint64_t value) { return value > 0; })
+      | utils::transform([](const uint64_t value) { return gsl::narrow<size_t>(value); });  // narrowing on 32 bit ABI
   if (!time_window_ && !window_length_) {
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Either 'Time window' or 'Window length' must be set"};
   }
-  context.getProperty(AttributeNamePrefix, attribute_name_prefix_);
+  attribute_name_prefix_ = context.getProperty(AttributeNamePrefix).value_or("");
   gsl_Ensures(runningInvariant());
 }
 

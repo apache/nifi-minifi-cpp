@@ -43,19 +43,14 @@ void ExecuteSQL::initialize() {
 
 void ExecuteSQL::processOnSchedule(core::ProcessContext& context) {
   output_format_ = utils::parseEnumProperty<flow_file_source::OutputType>(context, OutputFormat);
-
-  max_rows_ = [&] {
-    uint64_t max_rows = 0;
-    context.getProperty(MaxRowsPerFlowFile, max_rows);
-    return gsl::narrow<size_t>(max_rows);
-  }();
+  max_rows_ = gsl::narrow<size_t>(utils::parseU64Property(context, MaxRowsPerFlowFile));
 }
 
 void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto input_flow_file = session.get();
 
-  std::string query;
-  if (!context.getProperty(SQLSelectQuery, query, input_flow_file.get())) {
+  auto query = context.getProperty(SQLSelectQuery, input_flow_file.get());
+  if (!query) {
     if (!input_flow_file) {
       throw Exception(PROCESSOR_EXCEPTION,
                       "No incoming FlowFile and the \"" + std::string{SQLSelectQuery.name} + "\" processor property is not specified");
@@ -63,7 +58,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
     logger_->log_debug("Using the contents of the flow file as the SQL statement");
     query = to_string(session.readBuffer(input_flow_file));
   }
-  if (query.empty()) {
+  if (query->empty()) {
     logger_->log_error("Empty sql statement");
     if (input_flow_file) {
       session.transfer(input_flow_file, Failure);
@@ -74,7 +69,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
 
   std::unique_ptr<sql::Rowset> row_set;
   try {
-    row_set = connection_->prepareStatement(query)->execute(collectArguments(input_flow_file));
+    row_set = connection_->prepareStatement(*query)->execute(collectArguments(input_flow_file));
   } catch (const sql::StatementError& ex) {
     logger_->log_error("Error while executing sql statement: {}", ex.what());
     session.transfer(input_flow_file, Failure);

@@ -44,17 +44,19 @@ uint64_t ListingState::getListedKeyTimeStampInMilliseconds() const {
   return listed_key_timestamp.time_since_epoch() / std::chrono::milliseconds(1);
 }
 
-uint64_t ListingStateManager::getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state) {
+uint64_t ListingStateManager::getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state) const {
   std::string stored_listed_key_timestamp_str;
   auto it = state.find(LATEST_LISTED_OBJECT_TIMESTAMP);
   if (it != state.end()) {
     stored_listed_key_timestamp_str = it->second;
   }
 
-  int64_t stored_listed_key_timestamp = 0;
-  core::Property::StringToInt(stored_listed_key_timestamp_str, stored_listed_key_timestamp);
+  if (auto stored_listed_key_timestamp = parsing::parseIntegral<int64_t>(stored_listed_key_timestamp_str)) {
+    return *stored_listed_key_timestamp;
+  }
 
-  return stored_listed_key_timestamp;
+  logger_->log_error("Invalid listed key timestamp '{}', returning 0", stored_listed_key_timestamp_str);
+  return 0;
 }
 
 std::unordered_set<std::string> ListingStateManager::getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) {

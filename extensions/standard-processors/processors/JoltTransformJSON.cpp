@@ -16,10 +16,14 @@
  */
 
 #include "JoltTransformJSON.h"
+
+
 #include "core/Resource.h"
-#include "utils/ProcessorConfigUtils.h"
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -31,7 +35,7 @@ void JoltTransformJSON::initialize() {
 
 void JoltTransformJSON::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*session_factory*/) {
   transform_ = utils::parseEnumProperty<jolt_transform_json::JoltTransform>(context, JoltTransform);
-  const std::string spec_str = utils::getRequiredPropertyOrThrow(context, JoltSpecification.name);
+  const std::string spec_str = utils::parseProperty(context, JoltSpecification);
   if (auto spec = utils::jolt::Spec::parse(spec_str, logger_)) {
     spec_ = std::move(spec.value());
   } else {

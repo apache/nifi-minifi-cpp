@@ -18,6 +18,7 @@
 
 #include "core/state/nodes/QueueMetrics.h"
 #include "core/Resource.h"
+#include "core/state/Value.h"
 
 namespace org::apache::nifi::minifi::state::response {
 

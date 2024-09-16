@@ -38,25 +38,20 @@ void GetCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
   }
 
   CouchbaseCollection collection;
-  if (!context.getProperty(BucketName, collection.bucket_name, flow_file.get()) || collection.bucket_name.empty()) {
+  if (const auto bucket_name = utils::parseOptionalProperty(context, BucketName, flow_file.get())) {
+    collection.bucket_name = *bucket_name;
+  } else {
     logger_->log_error("Bucket '{}' is invalid or empty!", collection.bucket_name);
     session.transfer(flow_file, Failure);
     return;
   }
 
-  if (!context.getProperty(ScopeName, collection.scope_name, flow_file.get()) || collection.scope_name.empty()) {
-    collection.scope_name = ::couchbase::scope::default_name;
-  }
-
-  if (!context.getProperty(CollectionName, collection.collection_name, flow_file.get()) || collection.collection_name.empty()) {
-    collection.collection_name = ::couchbase::collection::default_name;
-  }
-
-  std::string document_id;
-  if (!context.getProperty(DocumentId, document_id, flow_file.get()) || document_id.empty()) {
-    auto ff_content = session.readBuffer(flow_file).buffer;
-    document_id = std::string(reinterpret_cast<const char*>(ff_content.data()), ff_content.size());
-  }
+  collection.scope_name = utils::parseOptionalProperty(context, ScopeName, flow_file.get()).value_or(::couchbase::scope::default_name);
+  collection.collection_name = utils::parseOptionalProperty(context, CollectionName, flow_file.get()).value_or(::couchbase::collection::default_name);
+  std::string document_id = utils::parseOptionalProperty(context, DocumentId, flow_file.get()) | utils::valueOrElse([&flow_file, &session] {
+    const auto ff_content = session.readBuffer(flow_file).buffer;
+    return std::string(reinterpret_cast<const char*>(ff_content.data()), ff_content.size());
+  });
 
   if (document_id.empty()) {
     logger_->log_error("Document ID is empty, transferring FlowFile to failure relationship");
@@ -64,8 +59,7 @@ void GetCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
     return;
   }
 
-  std::string attribute_to_put_result_to;
-  context.getProperty(PutValueToAttribute, attribute_to_put_result_to, flow_file.get());
+  std::string attribute_to_put_result_to = utils::parseOptionalProperty(context, PutValueToAttribute, flow_file.get()).value_or("");
 
   if (auto get_result = couchbase_cluster_service_->get(collection, document_id, document_type_)) {
     if (!attribute_to_put_result_to.empty()) {

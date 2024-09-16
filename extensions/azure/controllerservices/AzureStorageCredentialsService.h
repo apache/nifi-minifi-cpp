@@ -26,7 +26,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "storage/AzureStorageCredentials.h"
 #include "utils/Export.h"
 
@@ -59,7 +59,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   EXTENSIONAPI static constexpr auto UseManagedIdentityCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Managed Identity Credentials")
       .withDescription("If true Managed Identity credentials will be used together with the Storage Account Name for authentication.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

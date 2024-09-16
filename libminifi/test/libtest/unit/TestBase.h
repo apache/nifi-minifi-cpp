@@ -54,7 +54,6 @@ class StateStorage;
 class ContentRepository;
 class FlowFile;
 class Processor;
-class ProcessorNode;
 class ProcessContext;
 class ProcessSession;
 class ProcessSessionFactory;
@@ -323,7 +322,6 @@ class TestPlan {
   std::map<minifi::utils::Identifier, minifi::core::Processor*> processor_mapping_;
   std::vector<minifi::core::Processor*> processor_queue_;
   std::vector<minifi::core::Processor*> configured_processors_;  // Do not assume ordering
-  std::vector<std::shared_ptr<minifi::core::ProcessorNode>> processor_nodes_;
   std::vector<std::shared_ptr<minifi::core::ProcessContext>> processor_contexts_;
   std::vector<std::shared_ptr<minifi::core::ProcessSession>> process_sessions_;
   std::vector<std::shared_ptr<minifi::core::ProcessSessionFactory>> factories_;  // Do not assume ordering

@@ -21,10 +21,11 @@
 #include <utility>
 
 #include "core/Processor.h"
+#include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
@@ -73,12 +74,13 @@ class PutFile : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto CreateDirs = core::PropertyDefinitionBuilder<0, 1>::createProperty("Create Missing Directories")
       .withDescription("If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.")
       .withDefaultValue("true")
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .isRequired(true)
       .withDependentProperties({Directory.name})
       .build();
   EXTENSIONAPI static constexpr auto MaxDestFiles = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Count")
       .withDescription("Specifies the maximum number of files that can exist in the output directory")
-      .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("-1")
       .build();
   EXTENSIONAPI static constexpr auto Properties =

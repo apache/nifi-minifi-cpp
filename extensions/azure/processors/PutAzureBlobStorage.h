@@ -28,7 +28,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/PropertyDefinition.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/Property.h"
 #include "core/logging/LoggerFactory.h"
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
@@ -49,7 +49,7 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
         "Permission to list containers is required. If false, this check is not made, but the Put operation will "
         "fail if the container does not exist.")
     .isRequired(true)
-    .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+    .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
     .withDefaultValue("false")
     .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::to_array<core::PropertyReference>({CreateContainer}));

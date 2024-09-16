@@ -25,7 +25,7 @@
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "http/HTTPClient.h"
 
 namespace org::apache::nifi::minifi::extensions::curl {
@@ -42,7 +42,7 @@ class SplunkHECProcessor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
       .withDescription("The HTTP Event Collector HTTP Port Number.")
-      .withPropertyType(core::StandardPropertyTypes::PORT_TYPE)
+      .withValidator(core::StandardPropertyValidators::PORT_VALIDATOR)
       .withDefaultValue("8088")
       .isRequired(true)
       .build();

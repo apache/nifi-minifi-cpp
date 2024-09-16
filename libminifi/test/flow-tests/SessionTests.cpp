@@ -28,7 +28,6 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessorNode.h"
 #include "core/Processor.h"
 #include "core/RepositoryFactory.h"
 #include "repository/VolatileContentRepository.h"
@@ -86,8 +85,7 @@ TEST_CASE("Import null data") {
   output->addRelationship({"out", ""});
   output->setSourceUUID(uuid);
   processor->addConnection(output.get());
-  auto node = std::make_shared<core::ProcessorNodeImpl>(processor.get());
-  auto context = std::make_shared<core::ProcessContextImpl>(node, nullptr, prov_repo, ff_repository, content_repo);
+  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, prov_repo, ff_repository, content_repo);
   core::ProcessSessionImpl session(context);
 
   minifi::io::BufferStream input{};

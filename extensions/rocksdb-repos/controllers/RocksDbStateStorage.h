@@ -27,7 +27,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "../database/RocksDatabase.h"
 
 #include "rocksdb/options.h"
@@ -47,14 +47,14 @@ class RocksDbStateStorage : public KeyValueStateStorage {
 
   EXTENSIONAPI static constexpr auto AlwaysPersist = core::PropertyDefinitionBuilder<>::createProperty(ALWAYS_PERSIST_PROPERTY_NAME)
       .withDescription("Persist every change instead of persisting it periodically.")
-      .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .isRequired(true)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto AutoPersistenceInterval = core::PropertyDefinitionBuilder<>::createProperty(AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME)
       .withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
-      .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .isRequired(true)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("1 min")
       .build();
   EXTENSIONAPI static constexpr auto Directory = core::PropertyDefinitionBuilder<>::createProperty("Directory")

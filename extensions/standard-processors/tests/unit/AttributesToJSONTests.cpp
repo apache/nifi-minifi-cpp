@@ -227,8 +227,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Regex selected attributes are wri
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Invalid destination is set", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination, "invalid-destination");
-  REQUIRE_THROWS_AS(test_controller_.runSession(plan_), minifi::Exception);
+  CHECK_FALSE(plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination, "invalid-destination"));
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Attributes from attributes list and regex selected attributes combined are written in JSONAttributes attribute", "[AttributesToJSONTests]") {

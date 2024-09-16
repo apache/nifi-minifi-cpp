@@ -47,10 +47,10 @@ void PutUDP::notifyStop() {}
 
 void PutUDP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   // if the required properties are missing or empty even before evaluating the EL expression, then we can throw in onSchedule, before we waste any flow files
-  if (context.getProperty(Hostname).value_or(std::string{}).empty()) {
+  if (!context.getProperty(Hostname)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing hostname"};
   }
-  if (context.getProperty(Port).value_or(std::string{}).empty()) {
+  if (!context.getProperty(Port)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing port"};
   }
 }

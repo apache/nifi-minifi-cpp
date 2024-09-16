@@ -23,7 +23,7 @@
 
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/Enum.h"
 #include "data/SQLRowsetProcessor.h"
 #include "core/ProcessSession.h"
@@ -72,7 +72,7 @@ class FlowFileSource {
         "If the value specified is zero, then all rows are returned in a single FlowFile.")
       .isRequired(true)
       .supportsExpressionLanguage(true)
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({OutputFormat, MaxRowsPerFlowFile});

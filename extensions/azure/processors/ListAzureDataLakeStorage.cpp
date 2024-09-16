@@ -69,15 +69,11 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
     return std::nullopt;
   }
 
-  if (!context.getProperty(RecurseSubdirectories, params.recurse_subdirectories)) {
-    logger_->log_error("Recurse Subdirectories property missing or invalid");
-    return std::nullopt;
-  }
+  params.recurse_subdirectories = utils::parseBoolProperty(context, RecurseSubdirectories);
 
   auto createFilterRegex = [&context](std::string_view property_name) -> std::optional<minifi::utils::Regex> {
     try {
-      std::string filter_str;
-      context.getProperty(property_name, filter_str);
+      std::string filter_str = context.getProperty(property_name).value_or("");
       if (!filter_str.empty()) {
         return minifi::utils::Regex(filter_str);
       }

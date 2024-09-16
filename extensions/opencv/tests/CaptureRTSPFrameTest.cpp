@@ -32,9 +32,6 @@
 #include "unit/Catch.h"
 #include "FlowController.h"
 #include "core/Processor.h"
-#include "core/ProcessorNode.h"
-#include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
 #include "processors/LogAttribute.h"
 #include "unit/ProvenanceTestHelper.h"
 

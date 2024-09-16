@@ -41,7 +41,7 @@ void DatabaseService::initialize() {
 }
 
 void DatabaseService::onEnable() {
-  getProperty(ConnectionString, connection_string_);
+  connection_string_ = getProperty(ConnectionString.name).value_or("");
 }
 
 void DatabaseService::initializeProperties() {

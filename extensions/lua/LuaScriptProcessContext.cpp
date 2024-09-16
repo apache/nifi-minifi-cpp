@@ -29,9 +29,7 @@ LuaScriptProcessContext::LuaScriptProcessContext(core::ProcessContext& context, 
 }
 
 std::string LuaScriptProcessContext::getProperty(const std::string &name) {
-  std::string value;
-  context_.getProperty(name, value);
-  return value;
+  return context_.getProperty(name).value_or("");
 }
 
 

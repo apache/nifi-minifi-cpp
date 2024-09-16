@@ -91,12 +91,12 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test required property not set", "[
     plan->setDynamicProperty(update_attribute, "filename", "");
   }
 
-  SECTION("Test region is empty") {
-    setRequiredProperties();
-    plan->setProperty(s3_processor, "Region", "");
-  }
-
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Non blank validator tests") {
+  setRequiredProperties();
+  CHECK_FALSE(plan->setProperty(s3_processor, "Region", ""));
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {

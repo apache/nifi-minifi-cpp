@@ -25,7 +25,6 @@
 #include <utility>
 
 #include "core/Processor.h"
-#include "core/ProcessorNode.h"
 #include "core/ProcessContextBuilder.h"
 #include "core/PropertyDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -283,13 +282,11 @@ minifi::core::Processor* TestPlan::addProcessor(std::unique_ptr<minifi::core::Pr
     }
     relationships_.push_back(std::move(connection));
   }
-  std::shared_ptr<minifi::core::ProcessorNode> node = std::make_shared<minifi::core::ProcessorNodeImpl>(processor.get());
-  processor_nodes_.push_back(node);
   std::shared_ptr<minifi::core::ProcessContextBuilder> contextBuilder =
     minifi::core::ClassLoader::getDefaultClassLoader().instantiate<minifi::core::ProcessContextBuilder>("ProcessContextBuilder", "ProcessContextBuilder");
   contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_services_provider_.get())
     ->withProvenanceRepository(prov_repo_)->withConfiguration(configuration_);
-  auto context = contextBuilder->build(node);
+  auto context = contextBuilder->build(*processor);
   processor_contexts_.push_back(context);
   processor_queue_.push_back(processor.get());
   auto raw_ptr = processor.get();
@@ -404,9 +401,9 @@ bool TestPlan::setProperty(minifi::core::Processor* processor, const std::string
   }
 
   if (dynamic) {
-    return processor_contexts_.at(i)->setDynamicProperty(property, value);
+    return processor_contexts_.at(i)->setDynamicProperty(property, value).has_value();
   } else {
-    return processor_contexts_.at(i)->setProperty(property, value);
+    return processor_contexts_.at(i)->setProperty(property, value).has_value();
   }
 }
 
@@ -425,10 +422,10 @@ bool TestPlan::setDynamicProperty(minifi::core::Processor* processor, std::strin
 bool TestPlan::setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string& property, const std::string& value, bool dynamic) {
   if (dynamic) {
     controller_service_node->setDynamicProperty(property, value);
-    return controller_service_node->getControllerServiceImplementation()->setDynamicProperty(property, value);
+    return controller_service_node->getControllerServiceImplementation()->setDynamicProperty(property, value).has_value();
   } else {
     controller_service_node->setProperty(property, value);
-    return controller_service_node->getControllerServiceImplementation()->setProperty(property, value);
+    return controller_service_node->getControllerServiceImplementation()->setProperty(property, value).has_value();
   }
 }
 
@@ -473,7 +470,7 @@ std::vector<minifi::core::Processor*>::iterator TestPlan::getProcessorItByUuid(c
 
 std::shared_ptr<minifi::core::ProcessContext> TestPlan::getProcessContextForProcessor(minifi::core::Processor* processor) {
   const auto contextMatchesProcessor = [&processor] (const std::shared_ptr<minifi::core::ProcessContext>& context) {
-    return context->getProcessorNode()->getUUIDStr() ==  processor->getUUIDStr();
+    return context->getProcessor().getUUIDStr() ==  processor->getUUIDStr();
   };
   const auto context_found_at = std::find_if(processor_contexts_.begin(), processor_contexts_.end(), contextMatchesProcessor);
   if (context_found_at == processor_contexts_.end()) {

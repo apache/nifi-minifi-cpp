@@ -115,10 +115,11 @@ void ConsumeWindowsEventLog::onSchedule(core::ProcessContext& context, core::Pro
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  context.getProperty(ResolveAsAttributes, resolve_as_attributes_);
-  context.getProperty(IdentifierFunction, apply_identifier_function_);
-  header_delimiter_ = context.getProperty(EventHeaderDelimiter);
-  context.getProperty(BatchCommitSize, batch_commit_size_);
+  resolve_as_attributes_ = utils::parseBoolProperty(context, ResolveAsAttributes);
+  apply_identifier_function_ = utils::parseBoolProperty(context, IdentifierFunction);
+
+  header_delimiter_ = utils::parseOptionalProperty(context, EventHeaderDelimiter);
+  batch_commit_size_ = utils::parseU64Property(context, BatchCommitSize);
 
   header_names_.clear();
   if (auto header = context.getProperty(EventHeader)) {
@@ -167,16 +168,13 @@ void ConsumeWindowsEventLog::onSchedule(core::ProcessContext& context, core::Pro
     logger_->log_debug("Using channel as log source");
   }
 
-  std::string query;
-  context.getProperty(Query, query);
+  std::string query = context.getProperty(Query).value_or("");
   wstr_query_ = std::wstring(query.begin(), query.end());
 
-  bool processOldEvents{};
-  context.getProperty(ProcessOldEvents, processOldEvents);
+  bool processOldEvents = utils::parseBoolProperty(context, ProcessOldEvents);
 
   if (!bookmark_) {
-    std::string bookmarkDir;
-    context.getProperty(BookmarkRootDirectory, bookmarkDir);
+    std::string bookmarkDir = context.getProperty(BookmarkRootDirectory).value_or("");
     if (bookmarkDir.empty()) {
       logger_->log_error("State Directory is empty");
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "State Directory is empty");
@@ -188,10 +186,10 @@ void ConsumeWindowsEventLog::onSchedule(core::ProcessContext& context, core::Pro
     }
   }
 
-  context.getProperty(MaxBufferSize, max_buffer_size_);
+  max_buffer_size_ = utils::parseDataSizeProperty(context, MaxBufferSize);
   logger_->log_debug("ConsumeWindowsEventLog: MaxBufferSize {}", max_buffer_size_);
 
-  context.getProperty(CacheSidLookups, cache_sid_lookups_);
+  cache_sid_lookups_ = utils::parseBoolProperty(context, CacheSidLookups);
   logger_->log_debug("ConsumeWindowsEventLog: will{} cache SID to name lookups", cache_sid_lookups_ ? "" : " not");
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + path_.str() + "?" + query;

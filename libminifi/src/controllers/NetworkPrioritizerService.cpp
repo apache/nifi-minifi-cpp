@@ -33,7 +33,6 @@
 #include <cstdlib>
 
 #include "utils/StringUtils.h"
-#include "core/TypedValues.h"
 #include "core/Resource.h"
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
@@ -157,10 +156,10 @@ bool NetworkPrioritizerService::isWorkAvailable() {
 }
 
 void NetworkPrioritizerService::onEnable() {
-  std::string controllers;
-  if (getProperty(NetworkControllers, controllers) || !linked_services_.empty()) {
+  if (auto controllers = getProperty(NetworkControllers.name); controllers || !linked_services_.empty()) {
     // if this controller service is defined, it will be an intersection of this config with linked services.
-    if (getProperty(MaxThroughput, max_throughput_)) {
+    if (const auto max_throughput = getProperty(MaxThroughput.name) | utils::andThen(parsing::parseDataSize)) {
+      max_throughput_ = *max_throughput;
       logger_->log_trace("Max throughput is {}", max_throughput_);
       if (max_throughput_ < 1000) {
         bytes_per_token_ = 1;
@@ -170,23 +169,23 @@ void NetworkPrioritizerService::onEnable() {
       }
     }
 
-    getProperty(MaxPayload, max_payload_);
+    max_payload_ = *(getProperty(MaxPayload.name) | utils::andThen(parsing::parseDataSize));
 
-    if (!controllers.empty()) {
-      network_controllers_ = utils::string::split(controllers, ",");
+    if (controllers && !controllers->empty()) {
+      network_controllers_ = utils::string::split(*controllers, ",");
       for (const auto &ifc : network_controllers_) {
         logger_->log_trace("{} added to list of applied interfaces", ifc);
       }
     }
-    bool is_default = false;
-    if (getProperty(DefaultPrioritizer, is_default)) {
-      if (is_default) {
+    if (const auto is_default = getProperty(DefaultPrioritizer.name) | utils::andThen(parsing::parseBool)) {
+      if (*is_default) {
         if (io::NetworkPrioritizerFactory::getInstance()->setPrioritizer(sharedFromThis<NetworkPrioritizerService>()) < 0) {
           throw std::runtime_error("Can only have one prioritizer");
         }
       }
     }
-    getProperty(VerifyInterfaces, verify_interfaces_);
+
+    verify_interfaces_ = (getProperty(VerifyInterfaces.name) | utils::andThen(parsing::parseBool)).value_or(true);
     timestamp_ = clock_->timeSinceEpoch().count();
     enabled_ = true;
     logger_->log_trace("Enabled");

@@ -67,12 +67,11 @@ void StructuredConnectionParser::configureConnectionSourceRelationships(minifi::
 }
 
 uint64_t StructuredConnectionParser::getWorkQueueSize() const {
-  if (auto max_work_queue_data_size_node = connectionNode_[schema_.max_queue_size]) {
+  if (const auto max_work_queue_data_size_node = connectionNode_[schema_.max_queue_size]) {
     std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
-    uint64_t max_work_queue_size = 0;
-    if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
-      logger_->log_debug("Setting {} as the max queue size.", max_work_queue_size);
-      return max_work_queue_size;
+    if (const auto max_work_queue_size = parsing::parseIntegral<uint64_t>(max_work_queue_str)) {
+      logger_->log_debug("Setting {} as the max queue size.", *max_work_queue_size);
+      return *max_work_queue_size;
     }
     logger_->log_error("Invalid max queue size value: {}.", max_work_queue_str);
   }
@@ -82,13 +81,12 @@ uint64_t StructuredConnectionParser::getWorkQueueSize() const {
 uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
   const flow::Node max_work_queue_data_size_node = connectionNode_[schema_.max_queue_data_size];
   if (max_work_queue_data_size_node) {
-    std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
-    uint64_t max_work_queue_data_size = 0;
-    if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
-      logger_->log_debug("Setting {} as the max as the max queue data size.", max_work_queue_data_size);
-      return max_work_queue_data_size;
+    const std::string max_work_queue_data_size_str = max_work_queue_data_size_node.getIntegerAsString().value();
+    if (const auto max_work_queue_data_size = parsing::parseDataSize(max_work_queue_data_size_str)) {
+      logger_->log_debug("Setting {} as the max as the max queue data size.", *max_work_queue_data_size);
+      return *max_work_queue_data_size;
     }
-    logger_->log_error("Invalid max queue data size value: {}.", max_work_queue_str);
+    logger_->log_error("Invalid max queue data size value: {}.", max_work_queue_data_size_str);
   }
   return Connection::DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE;
 }
@@ -97,10 +95,9 @@ uint64_t StructuredConnectionParser::getSwapThreshold() const {
   const flow::Node swap_threshold_node = connectionNode_[schema_.swap_threshold];
   if (swap_threshold_node) {
     auto swap_threshold_str = swap_threshold_node.getString().value();
-    uint64_t swap_threshold = 0;
-    if (core::Property::StringToInt(swap_threshold_str, swap_threshold)) {
-      logger_->log_debug("Setting {} as the swap threshold.", swap_threshold);
-      return swap_threshold;
+    if (const auto swap_threshold = parsing::parseDataSize(swap_threshold_str)) {
+      logger_->log_debug("Setting {} as the swap threshold.", *swap_threshold);
+      return *swap_threshold;
     }
     logger_->log_error("Invalid swap threshold value: {}.", swap_threshold_str);
   }

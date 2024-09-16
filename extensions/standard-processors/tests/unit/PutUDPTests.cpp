@@ -51,7 +51,7 @@ TEST_CASE("PutUDP", "[putudp]") {
 
   LogTestController::getInstance().setTrace<PutUDP>();
   LogTestController::getInstance().setTrace<core::ProcessContext>();
-  put_udp->setProperty(PutUDP::Hostname, "${literal('localhost')}");
+  put_udp->setProperty(PutUDP::Hostname.name, "${literal('localhost')}");
 
   utils::net::UdpServer listener{std::nullopt, 0, core::logging::LoggerFactory<utils::net::UdpServer>::getLogger()};
 
@@ -66,7 +66,7 @@ TEST_CASE("PutUDP", "[putudp]") {
     listener.stop();
     server_thread.join();
   });
-  put_udp->setProperty(PutUDP::Port, utils::string::join_pack("${literal('", std::to_string(port), "')}"));
+  put_udp->setProperty(PutUDP::Port.name, utils::string::join_pack("${literal('", std::to_string(port), "')}"));
 
   {
     const char* const message = "first message: hello";

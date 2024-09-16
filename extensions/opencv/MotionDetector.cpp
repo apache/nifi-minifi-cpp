@@ -15,13 +15,16 @@
  * limitations under the License.
  */
 
+#include "MotionDetector.h"
+
+
 #include <utility>
 #include <vector>
 
-#include "MotionDetector.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -31,26 +34,14 @@ void MotionDetector::initialize() {
 }
 
 void MotionDetector::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string value;
+  image_encoding_ = context.getProperty(ImageEncoding).value_or("");
+  min_area_ = utils::parseU64Property(context, MinInterestArea);
+  threshold_ = utils::parseU64Property(context, Threshold);
+  dil_iter_ = utils::parseU64Property(context, DilateIter);
 
-  if (context.getProperty(ImageEncoding, value)) {
-    image_encoding_ = value;
-  }
 
-  if (context.getProperty(MinInterestArea, value)) {
-    core::Property::StringToInt(value, min_area_);
-  }
-
-  if (context.getProperty(Threshold, value)) {
-    core::Property::StringToInt(value, threshold_);
-  }
-
-  if (context.getProperty(DilateIter, value)) {
-    core::Property::StringToInt(value, dil_iter_);
-  }
-
-  if (context.getProperty(BackgroundFrame, value) && !value.empty()) {
-    bg_img_ = cv::imread(value, cv::IMREAD_GRAYSCALE);
+  if (const auto value = context.getProperty(BackgroundFrame)) {
+    bg_img_ = cv::imread(*value, cv::IMREAD_GRAYSCALE);
     double scale = IMG_WIDTH / bg_img_.size().width;
     cv::resize(bg_img_, bg_img_, cv::Size(0, 0), scale, scale);
     cv::GaussianBlur(bg_img_, bg_img_, cv::Size(21, 21), 0, 0);
@@ -75,18 +66,17 @@ bool MotionDetector::detectAndDraw(cv::Mat &frame) {
   logger_->log_trace("Get difference [{} x {}] [{} x {}]", bg_img_.rows, bg_img_.cols, gray.rows, gray.cols);
   cv::absdiff(gray, bg_img_, img_diff);
   logger_->log_trace("Apply threshold");
-  cv::threshold(img_diff, thresh, threshold_, 255, cv::THRESH_BINARY);
+  cv::threshold(img_diff, thresh, gsl::narrow<double>(threshold_), 255, cv::THRESH_BINARY);
   // Image processing.
   logger_->log_trace("Dilation");
-  cv::dilate(thresh, thresh, cv::Mat(), cv::Point(-1, -1), dil_iter_);
+  cv::dilate(thresh, thresh, cv::Mat(), cv::Point(-1, -1), gsl::narrow<int>(dil_iter_));  // NOLINT(runtime/int,google-runtime-int)
   cv::findContours(thresh, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
   // Finish process
   logger_->log_debug("Draw contours");
   bool moved = false;
   for (const auto &contour : contours) {
-    auto area = cv::contourArea(contour);
-    if (area < min_area_) {
+    if (const auto area = cv::contourArea(contour); area < gsl::narrow<double>(min_area_)) {
       continue;
     }
     moved = true;

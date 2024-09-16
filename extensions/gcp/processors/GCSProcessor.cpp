@@ -16,17 +16,20 @@
  */
 
 #include "GCSProcessor.h"
+
+#include "utils/ProcessorConfigUtils.h"
+
+#include "../controllerservices/GCPCredentialsControllerService.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "../controllerservices/GCPCredentialsControllerService.h"
 
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
 std::shared_ptr<google::cloud::storage::oauth2::Credentials> GCSProcessor::getCredentials(core::ProcessContext& context) const {
-  std::string service_name;
-  if (context.getProperty(GCSProcessor::GCPCredentials, service_name) && !IsNullOrEmpty(service_name)) {
+  const std::string service_name = utils::parseProperty(context, GCSProcessor::GCPCredentials);
+  if (!IsNullOrEmpty(service_name)) {
     auto gcp_credentials_controller_service = std::dynamic_pointer_cast<const GCPCredentialsControllerService>(context.getControllerService(service_name, getUUID()));
     if (!gcp_credentials_controller_service)
       return nullptr;
@@ -36,7 +39,7 @@ std::shared_ptr<google::cloud::storage::oauth2::Credentials> GCSProcessor::getCr
 }
 
 void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (auto number_of_retries = context.getProperty<uint64_t>(NumberOfRetries)) {
+  if (auto number_of_retries = utils::parseOptionalU64Property(context, NumberOfRetries)) {
     retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(gsl::narrow<int>(*number_of_retries));
   }
 
@@ -45,7 +48,7 @@ void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing GCP Credentials");
   }
 
-  endpoint_url_ = context.getProperty(EndpointOverrideURL);
+  endpoint_url_ = context.getProperty(EndpointOverrideURL) | utils::toOptional();
   if (endpoint_url_)
     logger_->log_debug("Endpoint overwritten: {}", *endpoint_url_);
 }

@@ -40,15 +40,15 @@ void NetworkListenerProcessor::onTrigger(core::ProcessContext&, core::ProcessSes
 
 NetworkListenerProcessor::ServerOptions NetworkListenerProcessor::readServerOptions(const core::ProcessContext& context) {
   ServerOptions options;
-  context.getProperty(getMaxBatchSizeProperty(), max_batch_size_);
+
+  max_batch_size_ = utils::parseU64Property(context, getMaxBatchSizeProperty());
   if (max_batch_size_ < 1)
     throw Exception(PROCESSOR_EXCEPTION, "Max Batch Size property is invalid");
 
-  uint64_t max_queue_size = 0;
-  context.getProperty(getMaxQueueSizeProperty(), max_queue_size);
+  uint64_t max_queue_size = utils::parseU64Property(context, getMaxQueueSizeProperty());
   options.max_queue_size = max_queue_size > 0 ? std::optional<uint64_t>(max_queue_size) : std::nullopt;
 
-  context.getProperty(getPortProperty(), options.port);
+  options.port = gsl::narrow<uint16_t>(utils::parseU64Property(context, getPortProperty()));
   return options;
 }
 
@@ -69,9 +69,8 @@ void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& contex
   gsl_Expects(!server_thread_.joinable() && !server_);
   auto options = readServerOptions(context);
 
-  std::string ssl_value;
   std::optional<utils::net::SslServerOptions> ssl_options;
-  if (context.getProperty(ssl_context_property, ssl_value) && !ssl_value.empty()) {
+  if (const auto ssl_value = context.getProperty(ssl_context_property); ssl_value && !ssl_value->empty()) {
     auto ssl_data = utils::net::getSslData(context, ssl_context_property, logger_);
     if (!ssl_data || !ssl_data->isValid()) {
       throw Exception(PROCESSOR_EXCEPTION, "SSL Context Service is set, but no valid SSL data was found!");

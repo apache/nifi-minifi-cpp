@@ -89,11 +89,15 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
         }
 
         child.children.push_back({.name = "description", .value = prop.getDescription()});
-        child.children.push_back({.name = "validator", .value = std::string{prop.getValidator().getValidatorName()}});
+        if (const auto nifi_standard_validator = prop.getValidator().getEquivalentNifiStandardValidatorName()) {
+          child.children.push_back({.name = "validator", .value = std::string{*nifi_standard_validator}});
+        }
         child.children.push_back({.name = "required", .value = prop.getRequired()});
         child.children.push_back({.name = "sensitive", .value = prop.isSensitive()});
         child.children.push_back({.name = "expressionLanguageScope", .value = prop.supportsExpressionLanguage() ? "FLOWFILE_ATTRIBUTES" : "NONE"});
-        child.children.push_back({.name = "defaultValue", .value = prop.getValue()});  // NOLINT(cppcoreguidelines-slicing)
+        if (const auto default_value = prop.getDefaultValue()) {
+          child.children.push_back({.name = "defaultValue", .value = *default_value});  // NOLINT(cppcoreguidelines-slicing)
+        }
         child.children.push_back(descriptorDependentProperties);
         child.children.push_back(descriptorExclusiveOfProperties);
 

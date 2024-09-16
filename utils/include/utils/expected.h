@@ -17,8 +17,13 @@
 #pragma once
 #include <type_traits>
 #include <utility>
+#include <optional>
+#include <iostream>
+
 #include "nonstd/expected.hpp"
 #include "utils/detail/MonadicOperationWrappers.h"
+#include "fmt/format.h"
+#include "utils/Error.h"  // for more readable std::error_code fmt::formatter
 
 namespace org::apache::nifi::minifi::utils {
 namespace detail {
@@ -82,7 +87,7 @@ auto operator|(Expected&& object, and_then_wrapper<F> f) {
   using value_type = typename std::remove_cvref_t<Expected>::value_type;
   if constexpr (std::is_void_v<value_type>) {
     using function_return_type = std::remove_cvref_t<std::invoke_result_t<F>>;
-    static_assert(is_expected_v<function_return_type>, "flatMap expects a function returning expected");
+    static_assert(is_expected_v<function_return_type>, "andThen expects a function returning expected");
     if (object.has_value()) {
       return std::invoke(std::forward<F>(f.function));
     } else {
@@ -90,7 +95,7 @@ auto operator|(Expected&& object, and_then_wrapper<F> f) {
     }
   } else {
     using function_return_type = std::remove_cvref_t<std::invoke_result_t<F, decltype(*std::forward<Expected>(object))>>;
-    static_assert(is_expected_v<function_return_type>, "flatMap expects a function returning expected");
+    static_assert(is_expected_v<function_return_type>, "andThen expects a function returning expected");
     if (object.has_value()) {
       return std::invoke(std::forward<F>(f.function), *std::forward<Expected>(object));
     } else {
@@ -176,11 +181,35 @@ auto operator|(Expected&& object, transform_error_wrapper<F> f) {
   static_assert(valid_unexpected_type<transformed_error_type>, "transformError expects a function returning a valid unexpected type");
   using transformed_expected_type = nonstd::expected<value_type, transformed_error_type>;
   if (object.has_value()) {
-    return transformed_expected_type{std::forward<Expected>(object)};
+    return transformed_expected_type{std::forward<Expected>(object).value()};
   }
   return transformed_expected_type{nonstd::unexpect, std::invoke(std::forward<F>(f.function), std::forward<Expected>(object).error())};
 }
 
+template<expected Expected>
+std::optional<typename std::remove_cvref_t<Expected>::value_type> operator|(Expected&& object, to_optional_wrapper) {
+  if (object) {
+    return std::move(*object);
+  }
+  return std::nullopt;
+}
+
+template<expected Expected>
+typename std::remove_cvref_t<Expected>::value_type operator|(Expected&& object, or_throw_wrapper e) {
+  if (object) {
+    return std::move(*object);
+  }
+  throw std::runtime_error(fmt::format("{}: {}", e.reason, object.error()));
+}
+
+template<expected Expected>
+typename std::remove_cvref_t<Expected>::value_type operator|(Expected&& object, detail::or_terminate_wrapper e) {
+  if (object) {
+    return std::move(*object);
+  }
+  std::cerr << fmt::format("Aborting due to {}: {}", e.reason, object.error()) << std::endl;
+  std::abort();
+}
 }  // namespace detail
 
 template<typename F, typename... Args>
