@@ -29,8 +29,8 @@
 #include <utility>
 #include <vector>
 
-#include "../core/state/nodes/MetricsBase.h"
-#include "../core/state/Value.h"
+#include "core/state/nodes/MetricsBase.h"
+#include "core/state/Value.h"
 #include "core/state/UpdateController.h"
 #include "controllers/UpdatePolicyControllerService.h"
 #include "C2Payload.h"

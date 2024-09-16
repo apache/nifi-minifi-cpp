@@ -27,23 +27,22 @@
 #include <utility>
 
 #include "core/Property.h"
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class AppendHostInfo : public core::Processor {
+class AppendHostInfo : public core::ProcessorImpl {
  public:
   static constexpr const char* REFRESH_POLICY_ON_TRIGGER = "On every trigger";
   static constexpr const char* REFRESH_POLICY_ON_SCHEDULE = "On schedule";
 
   explicit AppendHostInfo(std::string_view name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+      : core::ProcessorImpl(name, uuid) {
   }
   ~AppendHostInfo() override = default;
 

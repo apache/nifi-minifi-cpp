@@ -27,7 +27,6 @@
 
 namespace org::apache::nifi::minifi::utils::timeutils {
 
-using namespace std::literals::chrono_literals;
 static std::mutex global_clock_mtx;
 static std::shared_ptr<SteadyClock> global_clock{std::make_shared<SteadyClock>()};
 
@@ -129,11 +128,11 @@ std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::str
 }
 
 #ifdef WIN32
-// If minifi is not installed through the MSI installer, then TZDATA might be missing
-// date::set_install can point to the TZDATA location, but it has to be called from each library/executable that wants to use timezones
-void dateSetInstall(const std::string& install) {
+void dateSetGlobalInstall(const std::string& install) {
   date::set_install(install);
 }
 #endif
 
+
 }  // namespace org::apache::nifi::minifi::utils::timeutils
+

@@ -18,19 +18,20 @@
 
 #include "PushGrafanaLoki.h"
 
+#include "core/logging/LoggerFactory.h"
 #include "core/StateManager.h"
-#include "grafana-loki-push.pb.h"
 #include "grafana-loki-push.grpc.pb.h"
+#include "grafana-loki-push.pb.h"
 #include "grpc/grpc.h"
 
 namespace org::apache::nifi::minifi::extensions::grafana::loki {
 
-class PushGrafanaLokiGrpc : public PushGrafanaLoki {
+class PushGrafanaLokiGrpc final : public PushGrafanaLoki {
  public:
   EXTENSIONAPI static constexpr const char* Description = "A Grafana Loki push processor that uses the Grafana Loki Grpc port. The processor expects each flow file to contain a single log line to be "
                                                           "pushed to Grafana Loki, therefore it is usually used together with the TailFile processor.";
 
-  explicit PushGrafanaLokiGrpc(const std::string& name, const utils::Identifier& uuid = {})
+  explicit PushGrafanaLokiGrpc(const std::string_view name, const utils::Identifier& uuid = {})
       : PushGrafanaLoki(name, uuid, core::logging::LoggerFactory<PushGrafanaLokiGrpc>::getLogger(uuid)) {
   }
   ~PushGrafanaLokiGrpc() override = default;
@@ -64,7 +65,7 @@ class PushGrafanaLokiGrpc : public PushGrafanaLoki {
   void setUpGrpcChannel(const std::string& url, core::ProcessContext& context);
 
   std::string stream_labels_;
-  std::chrono::milliseconds connection_timeout_ms_;
+  std::chrono::milliseconds connection_timeout_ms_{};
   std::optional<std::string> tenant_id_;
   std::shared_ptr<::grpc::Channel> push_channel_;
   std::unique_ptr<logproto::Pusher::Stub> push_stub_;

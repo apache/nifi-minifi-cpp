@@ -27,7 +27,7 @@
 namespace org::apache::nifi::minifi::core::extension {
 
 class DynamicLibrary : public Module {
-  friend class ExtensionManager;
+  friend class ExtensionManagerImpl;
 
  public:
   DynamicLibrary(std::string name, std::filesystem::path library_path);

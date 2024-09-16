@@ -25,12 +25,12 @@
 
 namespace org::apache::nifi::minifi::test {
 
-class DummyProcessor : public minifi::core::Processor {
-  using minifi::core::Processor::Processor;
+class DummyProcessor : public minifi::core::ProcessorImpl {
+  using minifi::core::ProcessorImpl::ProcessorImpl;
 
  public:
-  DummyProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : Processor(name, uuid) {}
-  explicit DummyProcessor(std::string_view name) : Processor(name) {}
+  DummyProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : ProcessorImpl(name, uuid) {}
+  explicit DummyProcessor(std::string_view name) : ProcessorImpl(name) {}
   static constexpr const char* Description = "A processor that does nothing.";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};

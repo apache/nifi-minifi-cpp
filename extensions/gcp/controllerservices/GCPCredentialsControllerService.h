@@ -23,7 +23,7 @@
 
 #include "core/controller/ControllerService.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
@@ -63,7 +63,7 @@ constexpr customize_t enum_name<CredentialsLocation>(CredentialsLocation value) 
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class GCPCredentialsControllerService : public core::controller::ControllerService {
+class GCPCredentialsControllerService : public core::controller::ControllerServiceImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Manages the credentials for Google Cloud Platform. This allows for multiple Google Cloud Platform related processors "
       "to reference this single controller service so that Google Cloud Platform credentials can be managed and controlled in a central location.";
@@ -93,7 +93,7 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  using ControllerService::ControllerService;
+  using ControllerServiceImpl::ControllerServiceImpl;
 
   void initialize() override;
 

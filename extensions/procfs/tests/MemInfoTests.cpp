@@ -17,7 +17,7 @@
 
 #include "unit/Catch.h"
 #include "ProcFs.h"
-#include "Literals.h"
+#include "utils/Literals.h"
 #include "MockProcFs.h"
 
 namespace org::apache::nifi::minifi::extensions::procfs::tests {

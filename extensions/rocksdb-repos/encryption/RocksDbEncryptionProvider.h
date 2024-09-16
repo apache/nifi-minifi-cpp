@@ -23,7 +23,7 @@
 
 #include "rocksdb/env_encryption.h"
 #include "utils/crypto/EncryptionUtils.h"
-#include "logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "utils/crypto/EncryptionManager.h"
 
 namespace org::apache::nifi::minifi::core::repository {

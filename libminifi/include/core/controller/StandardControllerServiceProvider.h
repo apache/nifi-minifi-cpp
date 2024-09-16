@@ -24,7 +24,7 @@
 #include <vector>
 #include "core/ProcessGroup.h"
 #include "core/ClassLoader.h"
-#include "ControllerService.h"
+#include "core/controller/ControllerService.h"
 #include "ControllerServiceNodeMap.h"
 #include "ControllerServiceNode.h"
 #include "StandardControllerServiceNode.h"
@@ -33,10 +33,10 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class StandardControllerServiceProvider : public ControllerServiceProvider, public std::enable_shared_from_this<StandardControllerServiceProvider> {
+class StandardControllerServiceProvider : public ControllerServiceProviderImpl  {
  public:
   explicit StandardControllerServiceProvider(std::unique_ptr<ControllerServiceNodeMap> services, std::shared_ptr<Configure> configuration, ClassLoader& loader = ClassLoader::getDefaultClassLoader())
-      : ControllerServiceProvider(std::move(services)),
+      : ControllerServiceProviderImpl(std::move(services)),
         extension_loader_(loader),
         configuration_(std::move(configuration)),
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
@@ -56,7 +56,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     }
 
     std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service,
-                                                                                                              std::static_pointer_cast<ControllerServiceProvider>(shared_from_this()), id,
+                                                                                                              sharedFromThis<ControllerServiceProvider>(), id,
                                                                                                               configuration_);
 
     controller_map_->put(id, new_service_node);

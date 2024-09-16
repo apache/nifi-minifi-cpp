@@ -17,7 +17,7 @@
  */
 
 #include "ColumnHandle.h"
-#include "logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::internal {
 

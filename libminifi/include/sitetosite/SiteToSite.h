@@ -21,7 +21,7 @@
 #include <string>
 #include <utility>
 
-#include "controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextService.h"
 #include "Peer.h"
 #include "core/Property.h"
 #include "properties/Configure.h"

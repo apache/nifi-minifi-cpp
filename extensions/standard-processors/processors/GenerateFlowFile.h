@@ -24,7 +24,6 @@
 #include <utility>
 #include <vector>
 
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -37,10 +36,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class GenerateFlowFile : public core::Processor {
+class GenerateFlowFile : public core::ProcessorImpl {
  public:
   explicit GenerateFlowFile(const std::string_view name, const utils::Identifier& uuid = {}) // NOLINT
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
   ~GenerateFlowFile() override = default;
 

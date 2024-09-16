@@ -89,8 +89,8 @@ TEST_CASE("Flow with a single loop", "[SingleLoopFlow]") {
   auto controller = testController.controller_;
   auto root = testController.root_;
 
-  auto procGenerator = static_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator*>(root->findProcessorByName("Generator"));
-  auto procA = static_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("A"));
+  auto procGenerator = dynamic_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator*>(root->findProcessorByName("Generator"));
+  auto procA = dynamic_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("A"));
 
   int tryCount = 0;
   // wait for the procA to get triggered 15 times

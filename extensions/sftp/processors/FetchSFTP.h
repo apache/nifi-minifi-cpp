@@ -29,7 +29,7 @@
 #include "core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 #include "../client/SFTPClient.h"

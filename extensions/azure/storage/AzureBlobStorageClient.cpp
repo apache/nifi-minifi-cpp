@@ -31,7 +31,7 @@
 namespace org::apache::nifi::minifi::azure::storage {
 
 namespace {
-class AzureBlobStorageInputStream : public io::InputStream {
+class AzureBlobStorageInputStream : public io::InputStreamImpl {
  public:
   explicit AzureBlobStorageInputStream(Azure::Storage::Blobs::Models::DownloadBlobResult&& result)
     : result_(std::move(result)) {
@@ -102,7 +102,7 @@ std::unique_ptr<io::InputStream> AzureBlobStorageClient::fetchBlob(const FetchAz
   if (params.range_start || params.range_length) {
     Azure::Core::Http::HttpRange range;
     if (params.range_start) {
-      range.Offset = *params.range_start;
+      range.Offset = gsl::narrow<int64_t>(*params.range_start);
     }
 
     if (params.range_length) {

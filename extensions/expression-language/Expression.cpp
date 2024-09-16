@@ -34,6 +34,7 @@
 #include "utils/OsUtils.h"
 #include "expression/Expression.h"
 #include "utils/RegexUtils.h"
+#include "utils/TimeUtil.h"
 
 #ifdef WIN32
 #pragma comment(lib, "wldap32.lib" )
@@ -1634,6 +1635,7 @@ Expression Expression::make_aggregate(const std::function<Value(const Parameters
 
 #ifdef WIN32
 void dateSetInstall(const std::string& install) {
+  utils::timeutils::dateSetInstall(install);
   date::set_install(install);
 }
 #endif

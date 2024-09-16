@@ -26,11 +26,11 @@
 #include <utility>
 #include <vector>
 
-#include "ProcessContext.h"
-#include "PropertyDefinition.h"
-#include "PropertyType.h"
+#include "core/ProcessContext.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyType.h"
 #include "core/Property.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
 #include "io/StreamPipe.h"
 #include "utils/ArrayUtils.h"

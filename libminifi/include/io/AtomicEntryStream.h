@@ -24,7 +24,7 @@
 #include <cstring>
 #include <algorithm>
 
-#include "BaseStream.h"
+#include "io/BaseStream.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "Exception.h"
 #include "core/logging/LoggerFactory.h"
@@ -37,7 +37,7 @@ namespace minifi {
 namespace io {
 
 template<typename T>
-class AtomicEntryStream : public BaseStream {
+class AtomicEntryStream : public BaseStreamImpl {
  public:
   AtomicEntryStream(const T key, core::repository::AtomicEntry<T> *entry)
       : length_(0),

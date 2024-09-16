@@ -21,17 +21,17 @@
 #include <string>
 #include <string_view>
 
-#include "../ContentRepository.h"
+#include "core/ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
-class FileSystemRepository : public ContentRepository {
+class FileSystemRepository : public ContentRepositoryImpl {
  public:
   explicit FileSystemRepository(const std::string_view name = className<FileSystemRepository>())
-    : ContentRepository(name),
+    : ContentRepositoryImpl(name),
       logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
 
@@ -68,5 +68,7 @@ class FileSystemRepository : public ContentRepository {
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
+
+std::shared_ptr<core::ContentRepository> createFileSystemRepository();
 
 }  // namespace org::apache::nifi::minifi::core::repository

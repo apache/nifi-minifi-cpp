@@ -21,6 +21,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/PropertyErrors.h"
 #include "core/PropertyType.h"
+#include "core/PropertyValue.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -85,7 +86,7 @@ TEST_CASE("Parsing bool has baggage after") {
   REQUIRE_THROWS_AS(property.setValue("false almost bool"), utils::internal::ParseException);
 }
 
-class TestConfigurableComponent : public ConfigurableComponent {
+class TestConfigurableComponent : public ConfigurableComponentImpl {
  public:
   bool supportsDynamicProperties() const override {
     return true;

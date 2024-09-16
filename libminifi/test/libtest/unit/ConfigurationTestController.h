@@ -30,7 +30,7 @@ class ConfigurationTestController : public TestController {
  public:
   ConfigurationTestController() {
     flow_file_repo_ = core::createRepository("flowfilerepository");
-    configuration_ = std::make_shared<minifi::Configure>();
+    configuration_ = std::make_shared<minifi::ConfigureImpl>();
     content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
 
     LogTestController::getInstance().setDebug<TestPlan>();

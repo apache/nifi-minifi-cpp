@@ -55,7 +55,7 @@ TEST_CASE("C2DescribeManifestTest", "[c2test]") {
   minifi::Decryptor decryptor{minifi::utils::crypto::EncryptionProvider{encryption_key}};
   std::string encrypted_value = "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo=";
 
-  harness.setConfiguration(std::make_shared<minifi::Configure>(decryptor));
+  harness.setConfiguration(std::make_shared<minifi::ConfigureImpl>(decryptor));
   harness.setKeyDir(TEST_RESOURCES);
   DescribeManifestHandler responder(harness.getConfiguration(), verified);
 

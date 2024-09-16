@@ -23,11 +23,10 @@
 
 #include "../GCPAttributes.h"
 #include "GCSProcessor.h"
-#include "PropertyDefinition.h"
-#include "RelationshipDefinition.h"
+#include "core/PropertyDefinition.h"
+#include "core/RelationshipDefinition.h"
 #include "google/cloud/storage/well_known_headers.h"
-#include "RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {

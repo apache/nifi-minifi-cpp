@@ -26,7 +26,7 @@
 #include <map>
 #include <string>
 
-#include "PropertyType.h"
+#include "core/PropertyType.h"
 #include "archive_entry.h"
 #include "archive.h"
 
@@ -36,7 +36,7 @@
 #include "core/Core.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "io/ZlibStream.h"
 #include "utils/Enum.h"
 #include "utils/gsl.h"
@@ -83,10 +83,10 @@ constexpr customize_t enum_name<ExtendedCompressionFormat>(ExtendedCompressionFo
 
 namespace org::apache::nifi::minifi::processors {
 
-class CompressContent : public core::Processor {
+class CompressContent : public core::ProcessorImpl {
  public:
   explicit CompressContent(std::string_view name, const utils::Identifier& uuid = {})
-    : core::Processor(name, uuid) {
+    : core::ProcessorImpl(name, uuid) {
   }
   ~CompressContent() override = default;
 

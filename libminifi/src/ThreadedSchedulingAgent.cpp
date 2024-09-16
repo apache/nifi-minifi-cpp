@@ -75,7 +75,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
     return;
   }
 
-  std::shared_ptr<core::ProcessorNode> processor_node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::ProcessorNode> processor_node = std::make_shared<core::ProcessorNodeImpl>(processor);
 
   std::shared_ptr<core::ProcessContextBuilder> contextBuilder = core::ClassLoader::getDefaultClassLoader().instantiate<core::ProcessContextBuilder>("ProcessContextBuilder", "ProcessContextBuilder");
 
@@ -84,7 +84,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
 
   auto process_context = contextBuilder->build(processor_node);
 
-  auto session_factory = std::make_shared<core::ProcessSessionFactory>(process_context);
+  auto session_factory = std::make_shared<core::ProcessSessionFactoryImpl>(process_context);
 
   processor->onSchedule(*process_context, *session_factory);
 

@@ -41,7 +41,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
   gsl::not_null<core::ProcessGroup*> parent_ptr{ &parent };
 
   SECTION("Source relationships are read") {
-    const auto connection = std::make_shared<minifi::Connection>(nullptr, nullptr, "name");
+    const auto connection = std::make_shared<minifi::ConnectionImpl>(nullptr, nullptr, "name");
     std::string serialized_yaml;
     std::set<org::apache::nifi::minifi::core::Relationship> expectations;
     SECTION("Single relationship name") {
@@ -130,7 +130,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
     }
   }
   SECTION("Errors are handled properly when configuration lines are missing") {
-    const auto connection = std::make_shared<minifi::Connection>(nullptr, nullptr, "name");
+    const auto connection = std::make_shared<minifi::ConnectionImpl>(nullptr, nullptr, "name");
     SECTION("With empty configuration") {
       YAML::Node yaml_node = YAML::Load(std::string(""));
       flow::Node connection_node{std::make_shared<YamlNode>(yaml_node)};

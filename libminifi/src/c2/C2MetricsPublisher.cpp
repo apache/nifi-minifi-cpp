@@ -49,7 +49,7 @@ void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, c
       continue;
     }
     for (const auto& response_node : response_nodes) {
-      static_cast<state::response::ObjectNode*>(new_node.get())->add_node(response_node);
+      dynamic_cast<state::response::ObjectNode*>(new_node.get())->add_node(response_node);
     }
   }
 }
@@ -118,18 +118,18 @@ state::response::SharedResponseNode C2MetricsPublisher::loadC2ResponseConfigurat
         std::unordered_set<std::string> unique_sub_classes{sub_classes.begin(), sub_classes.end()};
         for (const std::string& subClassStr : unique_sub_classes) {
           auto node = loadC2ResponseConfiguration(subClassStr, prev_node);
-          static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(node);
+          dynamic_cast<state::response::ObjectNode*>(prev_node.get())->add_node(node);
         }
       } else {
         if (configuration_->get(classOption, class_definitions)) {
           loadNodeClasses(class_definitions, new_node);
           if (!new_node->isEmpty()) {
-            static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(new_node);
+            dynamic_cast<state::response::ObjectNode*>(prev_node.get())->add_node(new_node);
           }
         } else {
           std::string optionName = utils::string::join_pack(option, ".", name);
           auto sub_node = loadC2ResponseConfiguration(optionName, new_node);
-          static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(sub_node);
+          dynamic_cast<state::response::ObjectNode*>(prev_node.get())->add_node(sub_node);
         }
       }
     } catch (const std::exception& ex) {

@@ -30,7 +30,7 @@
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
 
-class ElasticsearchCredentialsControllerService : public core::controller::ControllerService {
+class ElasticsearchCredentialsControllerService : public core::controller::ControllerServiceImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Elasticsearch/Opensearch Credentials Controller Service";
 
@@ -57,7 +57,7 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  using ControllerService::ControllerService;
+  using ControllerServiceImpl::ControllerServiceImpl;
 
   void initialize() override;
 

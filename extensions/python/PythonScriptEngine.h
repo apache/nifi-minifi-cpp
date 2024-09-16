@@ -33,10 +33,9 @@
 #include "PythonProcessor.h"
 #include "types/PyProcessSession.h"
 #include "PythonScriptException.h"
-#include "properties/Configuration.h"
 #include "PythonInterpreter.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

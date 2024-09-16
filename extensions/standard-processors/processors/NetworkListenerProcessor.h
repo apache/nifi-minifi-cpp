@@ -29,10 +29,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class NetworkListenerProcessor : public core::Processor {
+class NetworkListenerProcessor : public core::ProcessorImpl {
  public:
   NetworkListenerProcessor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-    : core::Processor(name, uuid),
+    : core::ProcessorImpl(name, uuid),
       logger_(std::move(logger)) {
   }
   ~NetworkListenerProcessor() override;

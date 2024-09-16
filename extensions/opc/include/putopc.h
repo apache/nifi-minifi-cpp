@@ -31,7 +31,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "controllers/SSLContextService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 

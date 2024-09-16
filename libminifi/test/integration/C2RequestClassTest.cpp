@@ -23,7 +23,7 @@
 #include "integration/HTTPHandlers.h"
 #include "unit/TestUtils.h"
 #include "integration/CivetStream.h"
-#include "StreamPipe.h"
+#include "io/StreamPipe.h"
 #include "properties/Configuration.h"
 #include "unit/Catch.h"
 

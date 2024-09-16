@@ -30,6 +30,8 @@
 #include "io/validation.h"
 #include "core/Resource.h"
 
+#undef DELETE  // macro on windows
+
 namespace org::apache::nifi::minifi::sitetosite {
 
 std::shared_ptr<utils::IdGenerator> HttpSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();

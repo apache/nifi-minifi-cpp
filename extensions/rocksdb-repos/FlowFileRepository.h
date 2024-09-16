@@ -28,13 +28,13 @@
 #include "rocksdb/slice.h"
 #include "rocksdb/utilities/checkpoint.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "Connection.h"
+#include "core/logging/LoggerFactory.h"
+#include "minifi-cpp/Connection.h"
 #include "concurrentqueue.h"
 #include "database/RocksDatabase.h"
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "utils/crypto/EncryptionProvider.h"
-#include "SwapManager.h"
+#include "minifi-cpp/SwapManager.h"
 #include "FlowFileLoader.h"
 #include "range/v3/algorithm/all_of.hpp"
 #include "utils/Literals.h"
@@ -117,7 +117,7 @@ class FlowFileRepository : public RocksDbRepository, public SwapManager {
 
   void deserializeFlowFilesWithNoContentClaim(minifi::internal::OpenRocksDb& opendb, std::list<ExpiredFlowFileInfo>& flow_files);
 
-  bool contentSizeIsAmpleForFlowFile(const FlowFileRecord& flow_file_record, const std::shared_ptr<ResourceClaim>& resource_claim) const;
+  bool contentSizeIsAmpleForFlowFile(const FlowFile& flow_file_record, const std::shared_ptr<ResourceClaim>& resource_claim) const;
   Connectable* getContainer(const std::string& container_id);
 
   moodycamel::ConcurrentQueue<ExpiredFlowFileInfo> keys_to_delete_;

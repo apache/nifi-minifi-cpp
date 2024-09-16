@@ -27,8 +27,8 @@
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "provenance/Provenance.h"
+#include "core/logging/LoggerFactory.h"
+#include "minifi-cpp/provenance/Provenance.h"
 #include "utils/Literals.h"
 #include "RocksDbRepository.h"
 

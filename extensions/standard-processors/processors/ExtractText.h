@@ -31,15 +31,14 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "FlowFileRecord.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class ExtractText : public core::Processor {
+class ExtractText : public core::ProcessorImpl {
  public:
   explicit ExtractText(std::string_view name,  const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   // Default maximum bytes to read into an attribute

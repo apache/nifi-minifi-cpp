@@ -34,12 +34,12 @@
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
 
-class PostElasticsearch : public core::Processor {
+class PostElasticsearch : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "An Elasticsearch/Opensearch post processor that uses the Elasticsearch/Opensearch _bulk REST API.";
 
   explicit PostElasticsearch(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
   ~PostElasticsearch() override = default;
 

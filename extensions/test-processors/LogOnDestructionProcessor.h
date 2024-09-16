@@ -22,15 +22,15 @@
 #include <string>
 #include <utility>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class LogOnDestructionProcessor : public core::Processor {
+class LogOnDestructionProcessor : public core::ProcessorImpl {
  public:
   explicit LogOnDestructionProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
-    : Processor(name, uuid) {
+    : ProcessorImpl(name, uuid) {
   }
 
   ~LogOnDestructionProcessor() override {

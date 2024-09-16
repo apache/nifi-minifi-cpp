@@ -29,9 +29,9 @@
 
 namespace org::apache::nifi::minifi::core::extension {
 
-const std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
+const std::shared_ptr<logging::Logger> ExtensionManagerImpl::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
 
-ExtensionManager::ExtensionManager()
+ExtensionManagerImpl::ExtensionManagerImpl()
     : modules_([] {
         std::vector<std::unique_ptr<Module>> modules;
         modules.push_back(std::make_unique<Executable>());
@@ -40,14 +40,18 @@ ExtensionManager::ExtensionManager()
       active_module_(modules_[0].get()) {
 }
 
-ExtensionManager& ExtensionManager::get() {
-  static ExtensionManager instance;
+ExtensionManagerImpl& ExtensionManagerImpl::get() {
+  static ExtensionManagerImpl instance;
   return instance;
+}
+
+ExtensionManager& ExtensionManager::get() {
+  return ExtensionManagerImpl::get();
 }
 
 constexpr const char* DEFAULT_EXTENSION_PATH = "../extensions/*";
 
-bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
+bool ExtensionManagerImpl::initialize(const std::shared_ptr<Configure>& config) {
   static bool initialized = ([&] {
     logger_->log_trace("Initializing extensions");
     // initialize executable
@@ -104,11 +108,11 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
   return initialized;
 }
 
-void ExtensionManager::registerExtension(Extension& extension) {
+void ExtensionManagerImpl::registerExtension(Extension& extension) {
   active_module_->registerExtension(extension);
 }
 
-void ExtensionManager::unregisterExtension(Extension& extension) {
+void ExtensionManagerImpl::unregisterExtension(Extension& extension) {
   for (const auto& module : modules_) {
     if (module->unregisterExtension(extension)) {
       return;

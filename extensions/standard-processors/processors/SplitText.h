@@ -30,7 +30,6 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "FlowFileRecord.h"
 #include "utils/Export.h"
 #include "utils/expected.h"
 
@@ -87,10 +86,10 @@ class LineReader {
 
 }  // namespace detail
 
-class SplitText : public core::Processor {
+class SplitText : public core::ProcessorImpl {
  public:
   explicit SplitText(std::string_view name,  const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Splits a text file into multiple smaller text files on line boundaries limited by maximum number of lines or total size of fragment. "

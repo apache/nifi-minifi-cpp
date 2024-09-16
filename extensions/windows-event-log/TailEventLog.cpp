@@ -31,6 +31,7 @@
 #include "core/Resource.h"
 
 #include "utils/OsUtils.h"
+#include "core/Property.h"
 
 namespace org::apache::nifi::minifi::processors {
 

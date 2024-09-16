@@ -36,7 +36,7 @@
 #include "spdlog/formatter.h"
 
 #include "core/Core.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerBase.h"
 #include "LoggerProperties.h"
 #include "internal/CompressionManager.h"
 #include "alert/AlertSink.h"
@@ -142,10 +142,10 @@ class LoggerConfiguration {
 
   static std::shared_ptr<spdlog::logger> getSpdlogLogger(const std::string& name);
 
-  class LoggerImpl : public Logger {
+  class LoggerImpl : public LoggerBase {
    public:
     explicit LoggerImpl(std::string name, const std::optional<utils::Identifier>& id, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
-        : Logger(delegate, controller),
+        : LoggerBase(delegate, controller),
           name(std::move(name)),
           id(internal::formatId(id)) {
     }

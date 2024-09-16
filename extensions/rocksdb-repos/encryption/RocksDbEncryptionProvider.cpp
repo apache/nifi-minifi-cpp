@@ -22,7 +22,7 @@
 
 #include "RocksDbEncryptionProvider.h"
 #include "utils/crypto/ciphers/Aes256Ecb.h"
-#include "logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 

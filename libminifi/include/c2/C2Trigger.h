@@ -35,10 +35,10 @@ namespace org::apache::nifi::minifi::c2 {
  *
  * The state machine expects triggered (yes ) -> getAction -> reset(optional)
  */
-class C2Trigger : public core::Connectable {
+class C2Trigger : public core::ConnectableImpl {
  public:
   C2Trigger(std::string_view name, const utils::Identifier& uuid)
-        : core::Connectable(name, uuid) {
+        : core::ConnectableImpl(name, uuid) {
   }
   ~C2Trigger() override = default;
 

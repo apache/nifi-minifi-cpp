@@ -24,7 +24,7 @@
 #include <map>
 #include <limits>
 
-#include "../core/state/Value.h"
+#include "core/state/Value.h"
 #include "core/state/UpdateController.h"
 #include "utils/Enum.h"
 #include "utils/gsl.h"

@@ -24,7 +24,7 @@
 
 namespace org::apache::nifi::minifi::test {
 
-class TestQueueMetrics : public state::response::ResponseNode {
+class TestQueueMetrics : public state::response::ResponseNodeImpl {
  public:
   TestQueueMetrics() {
     metrics_ = {
@@ -62,8 +62,8 @@ class TestControllerSocketMetricsPublisher : public c2::ControllerSocketMetricsP
 class ControllerSocketMetricsPublisherTestFixture {
  public:
   ControllerSocketMetricsPublisherTestFixture()
-      : configuration_(std::make_shared<Configure>()),
-        response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr)),
+      : configuration_(std::make_shared<ConfigureImpl>()),
+        response_node_loader_(std::make_shared<state::response::ResponseNodeLoaderImpl>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr)),
         test_response_node_(std::make_shared<TestQueueMetrics>()),
         controller_socket_metrics_publisher_("test_publisher") {
     controller_socket_metrics_publisher_.initialize(configuration_, response_node_loader_);

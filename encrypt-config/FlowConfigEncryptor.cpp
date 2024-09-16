@@ -179,7 +179,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
     throw std::runtime_error("Error: cannot re-encrypt without an .old key!");
   }
 
-  const auto configure = std::make_shared<Configure>();
+  const auto configure = std::make_shared<ConfigureImpl>();
   configure->setHome(minifi_home);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
@@ -191,7 +191,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
       utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{*keys.old_key}} :
       utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{keys.encryption_key}};
 
-  core::extension::ExtensionManager::get().initialize(configure);
+  core::extension::ExtensionManagerImpl::get().initialize(configure);
 
   core::flow::AdaptiveConfiguration adaptive_configuration{core::ConfigurationContext{
       .flow_file_repo = nullptr,

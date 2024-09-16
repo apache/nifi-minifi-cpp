@@ -23,7 +23,7 @@
 #include "MetricsExposer.h"
 #include "prometheus/exposer.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {

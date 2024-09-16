@@ -35,9 +35,10 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
 #include "sitetosite/SiteToSiteClient.h"
-#include "controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextService.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
+#include "core/ClassLoader.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -74,10 +75,10 @@ struct RPG {
   std::string protocol_;
 };
 
-class RemoteProcessorGroupPort : public core::Processor {
+class RemoteProcessorGroupPort : public core::ProcessorImpl {
  public:
   RemoteProcessorGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
-      : core::Processor(name, uuid),
+      : core::ProcessorImpl(name, uuid),
         configure_(std::move(configure)),
         direction_(sitetosite::SEND),
         transmitting_(false),

@@ -196,7 +196,8 @@ bool GetFile::fileMatchesRequestCriteria(const std::filesystem::path& full_name,
     return false;
   }
 
-  auto* const getfile_metrics = static_cast<GetFileMetrics*>(metrics_.get());
+  auto* const getfile_metrics = dynamic_cast<GetFileMetrics*>(metrics_.get());
+  gsl_Assert(getfile_metrics);
   getfile_metrics->input_bytes += file_size;
   ++getfile_metrics->accepted_files;
   return true;

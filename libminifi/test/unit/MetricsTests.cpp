@@ -28,6 +28,7 @@
 #include "unit/DummyProcessor.h"
 #include "range/v3/algorithm/find_if.hpp"
 #include "unit/SingleProcessorTestController.h"
+#include "core/ProcessorMetrics.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -51,14 +52,14 @@ TEST_CASE("QueueMetricsTestConnections", "[c2m3]") {
 
   REQUIRE("QueueMetrics" == metrics.getName());
 
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   content_repo->initialize(configuration);
 
   std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
 
-  auto connection = std::make_unique<minifi::Connection>(repo, content_repo, "testconnection");
+  auto connection = std::make_unique<minifi::ConnectionImpl>(repo, content_repo, "testconnection");
 
   connection->setBackpressureThresholdDataSize(1024);
   connection->setBackpressureThresholdCount(1024);
@@ -210,7 +211,7 @@ TEST_CASE("VolatileRepositorymetricsCanBeFull", "[c2m4]") {
 
 TEST_CASE("Test on trigger runtime processor metrics", "[ProcessorMetrics]") {
   DummyProcessor dummy_processor("dummy");
-  minifi::core::ProcessorMetrics metrics(dummy_processor);
+  minifi::core::ProcessorMetricsImpl metrics(dummy_processor);
 
   REQUIRE("DummyProcessorMetrics" == metrics.getName());
 
@@ -249,7 +250,7 @@ TEST_CASE("Test on trigger runtime processor metrics", "[ProcessorMetrics]") {
 
 TEST_CASE("Test commit runtime processor metrics", "[ProcessorMetrics]") {
   DummyProcessor dummy_processor("dummy");
-  minifi::core::ProcessorMetrics metrics(dummy_processor);
+  minifi::core::ProcessorMetricsImpl metrics(dummy_processor);
 
   REQUIRE("DummyProcessorMetrics" == metrics.getName());
 

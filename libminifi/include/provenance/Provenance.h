@@ -40,284 +40,183 @@
 #include "utils/gsl.h"
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
+#include "minifi-cpp/provenance/Provenance.h"
 
 namespace org::apache::nifi::minifi::provenance {
 
-class ProvenanceEventRecord : public core::SerializableComponent {
+class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public virtual ProvenanceEventRecord {
  public:
-  enum ProvenanceEventType {
-    /**
-     * A CREATE event is used when a FlowFile is generated from data that was
-     * not received from a remote system or external process
-     */
-    CREATE,
-
-    /**
-     * Indicates a provenance event for receiving data from an external process. This Event Type
-     * is expected to be the first event for a FlowFile. As such, a Processor that receives data
-     * from an external source and uses that data to replace the content of an existing FlowFile
-     * should use the {@link #FETCH} event type, rather than the RECEIVE event type.
-     */
-    RECEIVE,
-
-    /**
-     * Indicates that the contents of a FlowFile were overwritten using the contents of some
-     * external resource. This is similar to the {@link #RECEIVE} event but varies in that
-     * RECEIVE events are intended to be used as the event that introduces the FlowFile into
-     * the system, whereas FETCH is used to indicate that the contents of an existing FlowFile
-     * were overwritten.
-     */
-    FETCH,
-
-    /**
-     * Indicates a provenance event for sending data to an external process
-     */
-    SEND,
-
-    /**
-     * Indicates that the contents of a FlowFile were downloaded by a user or external entity.
-     */
-    DOWNLOAD,
-
-    /**
-     * Indicates a provenance event for the conclusion of an object's life for
-     * some reason other than object expiration
-     */
-    DROP,
-
-    /**
-     * Indicates a provenance event for the conclusion of an object's life due
-     * to the fact that the object could not be processed in a timely manner
-     */
-    EXPIRE,
-
-    /**
-     * FORK is used to indicate that one or more FlowFile was derived from a
-     * parent FlowFile.
-     */
-    FORK,
-
-    /**
-     * JOIN is used to indicate that a single FlowFile is derived from joining
-     * together multiple parent FlowFiles.
-     */
-    JOIN,
-
-    /**
-     * CLONE is used to indicate that a FlowFile is an exact duplicate of its
-     * parent FlowFile.
-     */
-    CLONE,
-
-    /**
-     * CONTENT_MODIFIED is used to indicate that a FlowFile's content was
-     * modified in some way. When using this Event Type, it is advisable to
-     * provide details about how the content is modified.
-     */
-    CONTENT_MODIFIED,
-
-    /**
-     * ATTRIBUTES_MODIFIED is used to indicate that a FlowFile's attributes were
-     * modified in some way. This event is not needed when another event is
-     * reported at the same time, as the other event will already contain all
-     * FlowFile attributes.
-     */
-    ATTRIBUTES_MODIFIED,
-
-    /**
-     * ROUTE is used to show that a FlowFile was routed to a specified
-     * {@link org.apache.nifi.processor.Relationship Relationship} and should provide
-     * information about why the FlowFile was routed to this relationship.
-     */
-    ROUTE,
-
-    /**
-     * Indicates a provenance event for adding additional information such as a
-     * new linkage to a new URI or UUID
-     */
-    ADDINFO,
-
-    /**
-     * Indicates a provenance event for replaying a FlowFile. The UUID of the
-     * event will indicate the UUID of the original FlowFile that is being
-     * replayed. The event will contain exactly one Parent UUID that is also the
-     * UUID of the FlowFile that is being replayed and exactly one Child UUID
-     * that is the UUID of the a newly created FlowFile that will be re-queued
-     * for processing.
-     */
-    REPLAY
-  };
   static const char *ProvenanceEventTypeStr[REPLAY + 1];
 
-  ProvenanceEventRecord(ProvenanceEventType event, std::string componentId, std::string componentType);
+  ProvenanceEventRecordImpl(ProvenanceEventType event, std::string componentId, std::string componentType);
 
-  ProvenanceEventRecord()
-      : core::SerializableComponent(core::className<ProvenanceEventRecord>()) {
+  ProvenanceEventRecordImpl()
+      : core::SerializableComponentImpl(core::className<ProvenanceEventRecord>()) {
     _eventTime = std::chrono::system_clock::now();
   }
 
-  virtual ~ProvenanceEventRecord() = default;
+  ~ProvenanceEventRecordImpl() override = default;
 
-  utils::Identifier getEventId() const {
+  utils::Identifier getEventId() const override {
     return getUUID();
   }
 
-  void setEventId(const utils::Identifier &id) {
+  void setEventId(const utils::Identifier &id) override {
     setUUID(id);
   }
 
-  std::map<std::string, std::string> getAttributes() const {
+  std::map<std::string, std::string> getAttributes() const override {
     return _attributes;
   }
 
-  uint64_t getFileSize() const {
+  uint64_t getFileSize() const override {
     return _size;
   }
 
-  uint64_t getFileOffset() const {
+  uint64_t getFileOffset() const override {
     return _offset;
   }
 
-  std::chrono::system_clock::time_point getFlowFileEntryDate() const {
+  std::chrono::system_clock::time_point getFlowFileEntryDate() const override {
     return _entryDate;
   }
 
-  std::chrono::system_clock::time_point getlineageStartDate() const {
+  std::chrono::system_clock::time_point getlineageStartDate() const override {
     return _lineageStartDate;
   }
 
-  std::chrono::system_clock::time_point getEventTime() const {
+  std::chrono::system_clock::time_point getEventTime() const override {
     return _eventTime;
   }
 
-  std::chrono::milliseconds getEventDuration() const {
+  std::chrono::milliseconds getEventDuration() const override {
     return _eventDuration;
   }
 
-  void setEventDuration(std::chrono::milliseconds duration) {
+  void setEventDuration(std::chrono::milliseconds duration) override {
     _eventDuration = duration;
   }
 
-  ProvenanceEventType getEventType() const {
+  ProvenanceEventType getEventType() const override {
     return _eventType;
   }
 
-  std::string getComponentId() const {
+  std::string getComponentId() const override {
     return _componentId;
   }
 
-  std::string getComponentType() const {
+  std::string getComponentType() const override {
     return _componentType;
   }
 
-  utils::Identifier getFlowFileUuid() const {
+  utils::Identifier getFlowFileUuid() const override {
     return flow_uuid_;
   }
 
-  std::string getContentFullPath() const {
+  std::string getContentFullPath() const override {
     return _contentFullPath;
   }
 
-  std::vector<utils::Identifier> getLineageIdentifiers() const {
+  std::vector<utils::Identifier> getLineageIdentifiers() const override {
     return _lineageIdentifiers;
   }
 
-  std::string getDetails() const {
+  std::string getDetails() const override {
     return _details;
   }
 
-  void setDetails(const std::string& details) {
+  void setDetails(const std::string& details) override {
     _details = details;
   }
 
-  std::string getTransitUri() {
+  std::string getTransitUri() override {
     return _transitUri;
   }
 
-  void setTransitUri(const std::string& uri) {
+  void setTransitUri(const std::string& uri) override {
     _transitUri = uri;
   }
 
-  std::string getSourceSystemFlowFileIdentifier() const {
+  std::string getSourceSystemFlowFileIdentifier() const override {
     return _sourceSystemFlowFileIdentifier;
   }
 
-  void setSourceSystemFlowFileIdentifier(const std::string& identifier) {
+  void setSourceSystemFlowFileIdentifier(const std::string& identifier) override {
     _sourceSystemFlowFileIdentifier = identifier;
   }
 
-  std::vector<utils::Identifier> getParentUuids() const {
+  std::vector<utils::Identifier> getParentUuids() const override {
     return _parentUuids;
   }
 
-  void addParentUuid(const utils::Identifier& uuid) {
+  void addParentUuid(const utils::Identifier& uuid) override {
     if (std::find(_parentUuids.begin(), _parentUuids.end(), uuid) != _parentUuids.end())
       return;
     else
       _parentUuids.push_back(uuid);
   }
 
-  void addParentFlowFile(const core::FlowFile& flow_file) {
+  void addParentFlowFile(const core::FlowFile& flow_file) override {
     addParentUuid(flow_file.getUUID());
   }
 
-  void removeParentUuid(const utils::Identifier& uuid) {
+  void removeParentUuid(const utils::Identifier& uuid) override {
     _parentUuids.erase(std::remove(_parentUuids.begin(), _parentUuids.end(), uuid), _parentUuids.end());
   }
 
-  void removeParentFlowFile(const core::FlowFile& flow_file) {
+  void removeParentFlowFile(const core::FlowFile& flow_file) override {
     removeParentUuid(flow_file.getUUID());
   }
 
-  std::vector<utils::Identifier> getChildrenUuids() const {
+  std::vector<utils::Identifier> getChildrenUuids() const override {
     return _childrenUuids;
   }
 
-  void addChildUuid(const utils::Identifier& uuid) {
+  void addChildUuid(const utils::Identifier& uuid) override {
     if (std::find(_childrenUuids.begin(), _childrenUuids.end(), uuid) != _childrenUuids.end())
       return;
     else
       _childrenUuids.push_back(uuid);
   }
 
-  void addChildFlowFile(const core::FlowFile& flow_file) {
+  void addChildFlowFile(const core::FlowFile& flow_file) override {
     addChildUuid(flow_file.getUUID());
     return;
   }
 
-  void removeChildUuid(const utils::Identifier& uuid) {
+  void removeChildUuid(const utils::Identifier& uuid) override {
     _childrenUuids.erase(std::remove(_childrenUuids.begin(), _childrenUuids.end(), uuid), _childrenUuids.end());
   }
 
-  void removeChildFlowFile(const core::FlowFile& flow_file) {
+  void removeChildFlowFile(const core::FlowFile& flow_file) override {
     removeChildUuid(flow_file.getUUID());
   }
 
-  std::string getAlternateIdentifierUri() const {
+  std::string getAlternateIdentifierUri() const override {
     return _alternateIdentifierUri;
   }
 
-  void setAlternateIdentifierUri(const std::string& uri) {
+  void setAlternateIdentifierUri(const std::string& uri) override {
     _alternateIdentifierUri = uri;
   }
 
-  std::string getRelationship() const {
+  std::string getRelationship() const override {
     return _relationship;
   }
 
-  void setRelationship(const std::string& relation) {
+  void setRelationship(const std::string& relation) override {
     _relationship = relation;
   }
 
-  std::string getSourceQueueIdentifier() const {
+  std::string getSourceQueueIdentifier() const override {
     return _sourceQueueIdentifier;
   }
 
-  void setSourceQueueIdentifier(const std::string& identifier) {
+  void setSourceQueueIdentifier(const std::string& identifier) override {
     _sourceQueueIdentifier = identifier;
   }
 
-  void fromFlowFile(const core::FlowFile& flow_file) {
+  void fromFlowFile(const core::FlowFile& flow_file) override {
     _entryDate = flow_file.getEntryDate();
     _lineageStartDate = flow_file.getlineageStartDate();
     _lineageIdentifiers = flow_file.getlineageIdentifiers();
@@ -334,7 +233,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
 
   bool serialize(io::OutputStream& output_stream) override;
   bool deserialize(io::InputStream &input_stream) override;
-  bool loadFromRepository(const std::shared_ptr<core::Repository> &repo);
+  bool loadFromRepository(const std::shared_ptr<core::Repository> &repo) override;
 
  protected:
   ProvenanceEventType _eventType;
@@ -367,55 +266,55 @@ class ProvenanceEventRecord : public core::SerializableComponent {
  private:
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
-  ProvenanceEventRecord(const ProvenanceEventRecord &parent);
-  ProvenanceEventRecord &operator=(const ProvenanceEventRecord &parent);
+  ProvenanceEventRecordImpl(const ProvenanceEventRecordImpl &parent);
+  ProvenanceEventRecordImpl &operator=(const ProvenanceEventRecordImpl &parent);
   static std::shared_ptr<core::logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-class ProvenanceReporter {
+class ProvenanceReporterImpl : public virtual ProvenanceReporter {
  public:
-  ProvenanceReporter(std::shared_ptr<core::Repository> repo, std::string componentId, std::string componentType)
+  ProvenanceReporterImpl(std::shared_ptr<core::Repository> repo, std::string componentId, std::string componentType)
       : logger_(core::logging::LoggerFactory<ProvenanceReporter>::getLogger()) {
     _componentId = componentId;
     _componentType = componentType;
     repo_ = repo;
   }
 
-  virtual ~ProvenanceReporter() {
+  ~ProvenanceReporterImpl() override {
     clear();
   }
 
-  std::set<std::shared_ptr<ProvenanceEventRecord>> getEvents() const {
+  std::set<std::shared_ptr<ProvenanceEventRecord>> getEvents() const override {
     return _events;
   }
 
-  void add(const std::shared_ptr<ProvenanceEventRecord> &event) {
+  void add(const std::shared_ptr<ProvenanceEventRecord> &event) override {
     _events.insert(event);
   }
 
-  void remove(const std::shared_ptr<ProvenanceEventRecord> &event) {
+  void remove(const std::shared_ptr<ProvenanceEventRecord> &event) override {
     if (_events.find(event) != _events.end()) {
       _events.erase(event);
     }
   }
 
-  void clear() {
+  void clear() override {
     _events.clear();
   }
 
-  void commit();
-  void create(const core::FlowFile& flow_file, const std::string& detail);
-  void route(const core::FlowFile& flow_file, const core::Relationship& relation, const std::string& detail, std::chrono::milliseconds processingDuration);
-  void modifyAttributes(const core::FlowFile& flow_file, const std::string& detail);
-  void modifyContent(const core::FlowFile& flow_file, const std::string& detail, std::chrono::milliseconds processingDuration);
-  void clone(const core::FlowFile& parent, const core::FlowFile& child);
-  void expire(const core::FlowFile& flow_file, const std::string& detail);
-  void drop(const core::FlowFile& flow_file, const std::string& reason);
-  void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force);
-  void fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration);
+  void commit() override;
+  void create(const core::FlowFile& flow_file, const std::string& detail) override;
+  void route(const core::FlowFile& flow_file, const core::Relationship& relation, const std::string& detail, std::chrono::milliseconds processingDuration) override;
+  void modifyAttributes(const core::FlowFile& flow_file, const std::string& detail) override;
+  void modifyContent(const core::FlowFile& flow_file, const std::string& detail, std::chrono::milliseconds processingDuration) override;
+  void clone(const core::FlowFile& parent, const core::FlowFile& child) override;
+  void expire(const core::FlowFile& flow_file, const std::string& detail) override;
+  void drop(const core::FlowFile& flow_file, const std::string& reason) override;
+  void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) override;
+  void fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) override;
   void receive(const core::FlowFile& flow_file, const std::string& transitUri,
-    const std::string& sourceSystemFlowFileIdentifier, const std::string& detail, std::chrono::milliseconds processingDuration);
+    const std::string& sourceSystemFlowFileIdentifier, const std::string& detail, std::chrono::milliseconds processingDuration) override;
 
  protected:
   std::shared_ptr<ProvenanceEventRecord> allocate(ProvenanceEventRecord::ProvenanceEventType eventType, const core::FlowFile& flow_file) {
@@ -423,7 +322,7 @@ class ProvenanceReporter {
       return nullptr;
     }
 
-    auto event = std::make_shared<ProvenanceEventRecord>(eventType, _componentId, _componentType);
+    auto event = std::make_shared<ProvenanceEventRecordImpl>(eventType, _componentId, _componentType);
     if (event)
       event->fromFlowFile(flow_file);
 
@@ -440,8 +339,8 @@ class ProvenanceReporter {
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
-  ProvenanceReporter(const ProvenanceReporter &parent);
-  ProvenanceReporter &operator=(const ProvenanceReporter &parent);
+  ProvenanceReporterImpl(const ProvenanceReporterImpl &parent);
+  ProvenanceReporterImpl &operator=(const ProvenanceReporterImpl &parent);
 };
 
 }  // namespace org::apache::nifi::minifi::provenance

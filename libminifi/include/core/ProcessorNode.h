@@ -23,26 +23,27 @@
 #include <utility>
 #include <vector>
 
-#include "ConfigurableComponent.h"
-#include "Connectable.h"
-#include "Property.h"
+#include "core/ConfigurableComponent.h"
+#include "core/Connectable.h"
+#include "core/Property.h"
+#include "minifi-cpp/core/ProcessorNode.h"
 
 namespace org::apache::nifi::minifi::core {
 
 /**
  * Processor node functions as a pass through to the implementing Connectables
  */
-class ProcessorNode : public ConfigurableComponent, public Connectable {
+class ProcessorNodeImpl : public ConfigurableComponentImpl, public ConnectableImpl, public virtual ProcessorNode {
  public:
-  explicit ProcessorNode(Connectable* processor);
+  explicit ProcessorNodeImpl(Connectable* processor);
 
-  ProcessorNode(const ProcessorNode &other) = delete;
-  ProcessorNode(ProcessorNode &&other) = delete;
+  ProcessorNodeImpl(const ProcessorNodeImpl &other) = delete;
+  ProcessorNodeImpl(ProcessorNodeImpl &&other) = delete;
 
-  ~ProcessorNode() override;
+  ~ProcessorNodeImpl() override;
 
-  ProcessorNode& operator=(const ProcessorNode &other) = delete;
-  ProcessorNode& operator=(ProcessorNode &&other) = delete;
+  ProcessorNodeImpl& operator=(const ProcessorNodeImpl &other) = delete;
+  ProcessorNodeImpl& operator=(ProcessorNodeImpl &&other) = delete;
 
   /**
    * Get property using the provided name.
@@ -50,7 +51,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  Connectable* getProcessor() const {
+  Connectable* getProcessor() const override {
     return processor_;
   }
 
@@ -70,7 +71,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     if (nullptr != processor_cast) {
       return processor_cast->getProperty<T>(name, value);
     } else {
-      return ConfigurableComponent::getProperty<T>(name, value);
+      return ConfigurableComponentImpl::getProperty<T>(name, value);
     }
   }
   /**
@@ -79,9 +80,9 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value property value.
    * @return result of setting property.
    */
-  bool setProperty(const std::string &name, const std::string& value) {
+  bool setProperty(const std::string &name, const std::string& value) override {
     const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
-    bool ret = ConfigurableComponent::setProperty(name, value);
+    bool ret = ConfigurableComponentImpl::setProperty(name, value);
     if (nullptr != processor_cast)
       ret = processor_cast->setProperty(name, value);
 
@@ -94,12 +95,12 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  bool getDynamicProperty(const std::string name, std::string &value) const {
+  bool getDynamicProperty(const std::string& name, std::string &value) const override {
     const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     if (processor_cast) {
       return processor_cast->getDynamicProperty(name, value);
     } else {
-      return ConfigurableComponent::getDynamicProperty(name, value);
+      return ConfigurableComponentImpl::getDynamicProperty(name, value);
     }
   }
 
@@ -121,9 +122,9 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value property value.
    * @return result of setting property.
    */
-  bool setDynamicProperty(const std::string& name, const std::string& value) {
+  bool setDynamicProperty(const std::string& name, const std::string& value) override {
     const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
-    auto ret = ConfigurableComponent::setDynamicProperty(name, value);
+    auto ret = ConfigurableComponentImpl::setDynamicProperty(name, value);
 
     if (processor_cast) {
       ret = processor_cast->setDynamicProperty(name, value);
@@ -138,12 +139,12 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  std::vector<std::string> getDynamicPropertyKeys() const {
+  std::vector<std::string> getDynamicPropertyKeys() const override {
     const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     if (processor_cast) {
       return processor_cast->getDynamicPropertyKeys();
     } else {
-      return ConfigurableComponent::getDynamicPropertyKeys();
+      return ConfigurableComponentImpl::getDynamicPropertyKeys();
     }
   }
 
@@ -153,24 +154,28 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value property value.
    * @return whether property was set or not
    */
-  bool setProperty(const Property &prop, const std::string& value) {
+  bool setProperty(const Property &prop, const std::string& value) override {
     const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
-    bool ret = ConfigurableComponent::setProperty(prop, value);
+    bool ret = ConfigurableComponentImpl::setProperty(prop, value);
     if (nullptr != processor_cast)
       ret = processor_cast->setProperty(prop, value);
 
     return ret;
   }
 
-  void setAutoTerminatedRelationships(std::vector<Relationship> relationships) {
+  void setAutoTerminatedRelationships(std::span<const Relationship> relationships) override {
     processor_->setAutoTerminatedRelationships(relationships);
   }
 
-  bool isAutoTerminated(const Relationship& relationship) {
+  void setAutoTerminatedRelationships(std::vector<Relationship> relationships) {
+    setAutoTerminatedRelationships(std::span(relationships));
+  }
+
+  bool isAutoTerminated(const Relationship& relationship) override {
     return processor_->isAutoTerminated(relationship);
   }
 
-  bool isSupportedRelationship(const Relationship& relationship) {
+  bool isSupportedRelationship(const Relationship& relationship) override {
     return processor_->isSupportedRelationship(relationship);
   }
 
@@ -179,7 +184,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param name
    */
   void setName(std::string name) override {
-    Connectable::setName(name);
+    ConnectableImpl::setName(name);
     processor_->setName(std::move(name));
   }
 
@@ -188,11 +193,11 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param uuid uuid to apply to the internal representation.
    */
   void setUUID(const utils::Identifier& uuid) override {
-    Connectable::setUUID(uuid);
+    ConnectableImpl::setUUID(uuid);
     processor_->setUUID(uuid);
   }
 
-  std::chrono::milliseconds getPenalizationPeriod() {
+  std::chrono::milliseconds getPenalizationPeriod() const override {
     return processor_->getPenalizationPeriod();
   }
 
@@ -208,7 +213,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Get next incoming connection
    * @return next incoming connection
    */
-  Connectable* getNextIncomingConnection() {
+  Connectable* getNextIncomingConnection() override {
     return processor_->getNextIncomingConnection();
   }
 
@@ -219,7 +224,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   /**
    * @return true if incoming connections > 0
    */
-  bool hasIncomingConnections() {
+  bool hasIncomingConnections() const override {
     return processor_->hasIncomingConnections();
   }
 
@@ -228,7 +233,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param uuid uuid struct to which we will copy the memory
    * @return success of request
    */
-  utils::Identifier getUUID() const {
+  utils::Identifier getUUID() const override {
     return processor_->getUUID();
   }
 
@@ -236,7 +241,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Return the UUID string
    * @return the UUID str
    */
-  utils::SmallString<36> getUUIDStr() const {
+  utils::SmallString<36> getUUIDStr() const override {
     return processor_->getUUIDStr();
   }
 
@@ -245,7 +250,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     return processor_->getName();
   }
 
-  uint8_t getMaxConcurrentTasks() {
+  uint8_t getMaxConcurrentTasks() const override {
     return processor_->getMaxConcurrentTasks();
   }
 

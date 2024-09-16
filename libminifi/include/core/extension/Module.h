@@ -24,7 +24,7 @@
 #include "core/logging/Logger.h"
 #include "utils/gsl.h"
 #include "properties/Configure.h"
-#include "Extension.h"
+#include "core/extension/Extension.h"
 
 namespace org {
 namespace apache {
@@ -37,7 +37,7 @@ namespace extension {
  * Represents an initializable component of the agent.
  */
 class Module {
-  friend class ExtensionManager;
+  friend class ExtensionManagerImpl;
 
  protected:
   explicit Module(std::string name);

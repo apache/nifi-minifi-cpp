@@ -28,7 +28,7 @@
 #include <utility>
 
 #include "open62541/client.h"
-#include "logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "Exception.h"
 
 namespace org::apache::nifi::minifi::opc {

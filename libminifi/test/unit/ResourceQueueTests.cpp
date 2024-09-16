@@ -19,10 +19,10 @@
 #include <chrono>
 #include <set>
 
-#include "ResourceQueue.h"
+#include "utils/ResourceQueue.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 using namespace std::literals::chrono_literals;
 

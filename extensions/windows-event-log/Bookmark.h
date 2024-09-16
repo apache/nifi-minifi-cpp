@@ -27,7 +27,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "wel/UniqueEvtHandle.h"
-#include "logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "utils/expected.h"
 #include "wel/EventPath.h"
 
