@@ -1,4 +1,5 @@
 /**
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,33 +18,39 @@
 
 #pragma once
 
-#include <memory>
-#include <set>
 #include <string>
-#include <utility>
-#include <vector>
-
-#include "ConfigurableComponent.h"
-#include "Connectable.h"
-#include "Property.h"
+#include <system_error>
+#include "magic_enum.hpp"
 
 namespace org::apache::nifi::minifi::core {
 
-class ProcessorNode : public virtual ConfigurableComponent, public virtual Connectable {
- public:
-  virtual Connectable* getProcessor() const = 0;
+enum class ParsingErrorCode : std::underlying_type_t<std::byte> {
+  GeneralParsingError,
+  SmallerThanMinimum,
+  LargerThanMaximum,
+};
 
-  using ConfigurableComponent::getProperty;
 
-  template<typename T>
-  bool getProperty(const std::string &name, T &value) {
-    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(getProcessor());
-    if (nullptr != processor_cast) {
-      return processor_cast->getProperty<T>(name, value);
-    } else {
-      return ConfigurableComponent::getProperty<T>(name, value);
+struct ParsingErrorCategory final : std::error_category {
+  [[nodiscard]] const char* name() const noexcept override {
+    return "parsing error";
+  }
+
+  [[nodiscard]] std::string message(int ev) const override {
+    const auto ec = static_cast<ParsingErrorCode>(ev);
+    auto e_str = std::string{magic_enum::enum_name<ParsingErrorCode>(ec)};
+    if (e_str.empty()) {
+      return "UNKNOWN ERROR";
     }
+    return e_str;
   }
 };
 
+const ParsingErrorCategory& parsing_error_category() noexcept;
+
+std::error_code make_error_code(ParsingErrorCode c);
+
 }  // namespace org::apache::nifi::minifi::core
+
+template <>
+struct std::is_error_code_enum<org::apache::nifi::minifi::core::ParsingErrorCode> : std::true_type {};

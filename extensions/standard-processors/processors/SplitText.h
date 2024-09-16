@@ -103,17 +103,17 @@ class SplitText : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto LineSplitCount = core::PropertyDefinitionBuilder<>::createProperty("Line Split Count")
       .withDescription("The number of lines that will be added to each split file, excluding header lines. A value of zero requires Maximum Fragment Size to be set, and line count will not "
         "be considered in determining splits.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaximumFragmentSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum Fragment Size")
       .withDescription("The maximum size of each split file, including header lines. NOTE: in the case where a single line exceeds this property (including headers, if applicable), "
         "that line will be output in a split of its own which exceeds this Maximum Fragment Size setting.")
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto HeaderLineCount = core::PropertyDefinitionBuilder<>::createProperty("Header Line Count")
       .withDescription("The number of lines that should be considered part of the header; the header lines will be duplicated to all split files.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .isRequired(true)
       .build();
@@ -125,7 +125,7 @@ class SplitText : public core::ProcessorImpl {
       .withDescription("Whether to remove newlines at the end of each split file. This should be false if you intend to merge the split files later. If this is set to 'true' and a FlowFile is "
         "generated that contains only 'empty lines' (i.e., consists only of \\r and \\n characters), the FlowFile will not be emitted. Note, however, that if header lines are specified, "
         "the resultant FlowFile will never be empty as it will consist of the header lines, so a FlowFile may be emitted that contains only the header lines.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .isRequired(true)
       .build();

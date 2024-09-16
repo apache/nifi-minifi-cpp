@@ -44,7 +44,7 @@ class ExpressionContextBuilder : public core::ProcessContextBuilderImpl {
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
-  std::shared_ptr<core::ProcessContext> build(const std::shared_ptr<ProcessorNode> &processor) override;
+  std::shared_ptr<core::ProcessContext> build(Processor& processor) override;
 };
 
 }  // namespace org::apache::nifi::minifi::core::expressions

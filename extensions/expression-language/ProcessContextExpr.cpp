@@ -16,67 +16,68 @@
  */
 
 #include "ProcessContextExpr.h"
+
 #include <memory>
 #include <string>
 
+#include "asio/detail/mutex.hpp"
+#include "utils/PropertyErrors.h"
+
 namespace org::apache::nifi::minifi::core {
 
-bool ProcessContextExpr::getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const FlowFile* const flow_file) {
-  if (!supports_expression_language) {
-    return ProcessContextImpl::getProperty(property_name, value);
+nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(const std::string_view name, const FlowFile* flow_file) const {
+  const auto property = getProcessor().getPropertyReference(name);
+  if (!property) {
+    return nonstd::make_unexpected(PropertyErrorCode::NotSupportedProperty);
   }
-  std::string name{property_name};
-  if (expressions_.find(name) == expressions_.end()) {
-    std::string expression_str;
-    if (!ProcessContextImpl::getProperty(name, expression_str)) {
-      return false;
+
+  if (!property->supports_expression_language) {
+    return ProcessContextImpl::getProperty(name, flow_file);
+  }
+  if (!cached_expressions_.contains(name)) {
+    auto expression_str = ProcessContextImpl::getProperty(name, flow_file);
+    if (!expression_str) { return expression_str; }
+    cached_expressions_.emplace(std::string{name}, expression::compile(*expression_str));
+  }
+  expression::Parameters p(this, flow_file);
+  auto result = cached_expressions_[std::string{name}](p).asString();
+  if (!property->validator->validate(result)) {
+    return nonstd::make_unexpected(PropertyErrorCode::ValidationFailed);
+  }
+  return result;
+}
+
+nonstd::expected<std::string, std::error_code> ProcessContextExpr::getDynamicProperty(const std::string_view name, const FlowFile* flow_file) const {
+  if (!cached_dynamic_expressions_.contains(name)) {
+    auto expression_str = ProcessContextImpl::getDynamicProperty(name, flow_file);
+    if (!expression_str) { return expression_str; }
+    cached_dynamic_expressions_.emplace(std::string{name}, expression::compile(*expression_str));
+  }
+  const expression::Parameters p(this, flow_file);
+  return cached_dynamic_expressions_[std::string{name}](p).asString();
+}
+
+nonstd::expected<void, std::error_code> ProcessContextExpr::setProperty(const std::string_view name, std::string value) {
+  cached_expressions_.erase(std::string{name});
+  return ProcessContextImpl::setProperty(name, std::move(value));
+}
+
+nonstd::expected<void, std::error_code> ProcessContextExpr::setDynamicProperty(std::string name, std::string value) {
+  cached_dynamic_expressions_.erase(name);
+  return ProcessContextImpl::setDynamicProperty(std::move(name), std::move(value));
+}
+
+std::map<std::string, std::string> ProcessContextExpr::getDynamicProperties(const FlowFile* flow_file) const {
+  auto dynamic_props = ProcessContextImpl::getDynamicProperties(flow_file);
+  for (auto& [dynamic_property_name, dynamic_property_value] : dynamic_props) {
+    if (!cached_dynamic_expressions_.contains(dynamic_property_name)) {
+      auto expression = expression::compile(dynamic_property_value);
+      expression::Parameters p(this, flow_file);
+      dynamic_property_value = expression(p).asString();
+      cached_dynamic_expressions_.emplace(std::string{dynamic_property_name}, std::move(expression));
     }
-    logger_->log_debug("Compiling expression for {}/{}: {}", getProcessorNode()->getName(), name, expression_str);
-    expressions_.emplace(name, expression::compile(expression_str));
-    expression_strs_.insert_or_assign(name, expression_str);
   }
-
-  minifi::expression::Parameters p(sharedFromThis<VariableRegistry>(), flow_file);
-  value = expressions_[name](p).asString();
-  logger_->log_debug(R"(expression "{}" of property "{}" evaluated to: {})", expression_strs_[name], name, value);
-  return true;
-}
-
-bool ProcessContextExpr::getProperty(const Property& property, std::string& value, const FlowFile* const flow_file) {
-  return getProperty(property.supportsExpressionLanguage(), property.getName(), value, flow_file);
-}
-
-bool ProcessContextExpr::getProperty(const PropertyReference& property, std::string& value, const FlowFile* const flow_file) {
-  return getProperty(property.supports_expression_language, property.name, value, flow_file);
-}
-
-bool ProcessContextExpr::getDynamicProperty(const Property &property, std::string &value, const FlowFile* const flow_file) {
-  if (!property.supportsExpressionLanguage()) {
-    return ProcessContextImpl::getDynamicProperty(property.getName(), value);
-  }
-  auto name = property.getName();
-  if (dynamic_property_expressions_.find(name) == dynamic_property_expressions_.end()) {
-    std::string expression_str;
-    ProcessContextImpl::getDynamicProperty(name, expression_str);
-    logger_->log_debug("Compiling expression for {}/{}: {}", getProcessorNode()->getName(), name, expression_str);
-    dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
-    expression_strs_.insert_or_assign(name, expression_str);
-  }
-  minifi::expression::Parameters p(sharedFromThis<VariableRegistry>(), flow_file);
-  value = dynamic_property_expressions_[name](p).asString();
-  logger_->log_debug(R"(expression "{}" of dynamic property "{}" evaluated to: {})", expression_strs_[name], name, value);
-  return true;
-}
-
-
-bool ProcessContextExpr::setProperty(const std::string& property, std::string value) {
-  expressions_.erase(property);
-  return ProcessContextImpl::setProperty(property, value);
-}
-
-bool ProcessContextExpr::setDynamicProperty(const std::string& property, std::string value) {
-  dynamic_property_expressions_.erase(property);
-  return ProcessContextImpl::setDynamicProperty(property, value);
+  return dynamic_props;
 }
 
 }  // namespace org::apache::nifi::minifi::core

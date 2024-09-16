@@ -199,7 +199,7 @@ std::optional<TargetDuration> cast_to_matching_unit(std::string& unit, const int
 }  // namespace details
 
 template<class TargetDuration>
-std::optional<TargetDuration> StringToDuration(const std::string& input) {
+std::optional<TargetDuration> StringToDuration(const std::string_view input) {
   std::string unit;
   int64_t value;
   if (!string::splitToValueAndUnit(input, value, unit))

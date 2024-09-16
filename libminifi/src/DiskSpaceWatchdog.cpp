@@ -28,13 +28,8 @@ namespace org::apache::nifi::minifi {
 namespace {
 namespace chr = std::chrono;
 
-template<typename T, typename = std::enable_if_t<std::is_integral<T>::value>>
-std::optional<T> data_size_string_to_int(const std::string& str) {
-  T result{};
-  // actually aware of data units like B, kB, MB, etc.
-  const bool success = core::Property::StringToInt(str, result);
-  if (!success) return std::nullopt;
-  return std::make_optional(result);
+std::optional<uint64_t> data_size_string_to_int(const std::string& str) {
+  return (parsing::parseDataSize(str) | utils::transform([](const auto& value) { return std::optional{value}; })).value_or(std::nullopt);
 }
 
 }  // namespace
@@ -42,8 +37,8 @@ std::optional<T> data_size_string_to_int(const std::string& str) {
 namespace disk_space_watchdog {
 Config read_config(const Configure& conf) {
   const auto interval_ms = conf.get(Configure::minifi_disk_space_watchdog_interval) | utils::andThen(utils::timeutils::StringToDuration<chr::milliseconds>);
-  const auto stop_bytes = conf.get(Configure::minifi_disk_space_watchdog_stop_threshold) | utils::andThen(data_size_string_to_int<std::uintmax_t>);
-  const auto restart_bytes = conf.get(Configure::minifi_disk_space_watchdog_restart_threshold) | utils::andThen(data_size_string_to_int<std::uintmax_t>);
+  const auto stop_bytes = conf.get(Configure::minifi_disk_space_watchdog_stop_threshold) | utils::andThen(data_size_string_to_int);
+  const auto restart_bytes = conf.get(Configure::minifi_disk_space_watchdog_restart_threshold) | utils::andThen(data_size_string_to_int);
   if (restart_bytes < stop_bytes) { throw std::runtime_error{"disk space watchdog stop threshold must be <= restart threshold"}; }
   constexpr auto mebibytes = 1024 * 1024;
   return {

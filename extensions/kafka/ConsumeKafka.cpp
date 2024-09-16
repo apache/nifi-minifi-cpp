@@ -32,10 +32,9 @@ namespace org::apache::nifi::minifi {
 namespace core {
 // The upper limit for Max Poll Time is 4 seconds. This is because Watchdog would potentially start
 // reporting issues with the processor health otherwise
-ValidationResult ConsumeKafkaMaxPollTimePropertyType::validate(const std::string& subject, const std::string& input) const {
-  const auto parsed_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(input);
-  const bool is_valid = parsed_value.has_value() && 0ms < *parsed_value && *parsed_value <= 4s;
-  return ValidationResult{.valid = is_valid, .subject = subject, .input = input};
+bool ConsumeKafkaMaxPollTimePropertyType::validate(const std::string_view input) const {
+  const auto parsed_time = parsing::parseDurationMinMax<std::chrono::nanoseconds>(input, 0ms, 4s);
+  return parsed_time.has_value();
 }
 }  // namespace core
 
@@ -48,24 +47,23 @@ void ConsumeKafka::initialize() {
 
 void ConsumeKafka::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   // Required properties
-  kafka_brokers_ = utils::getRequiredPropertyOrThrow(context, KafkaBrokers.name);
-  topic_names_ = utils::listFromRequiredCommaSeparatedProperty(context, TopicNames.name);
-  topic_name_format_ = utils::getRequiredPropertyOrThrow(context, TopicNameFormat.name);
-  honor_transactions_ = utils::parseBooleanPropertyOrThrow(context, HonorTransactions.name);
-  group_id_ = utils::getRequiredPropertyOrThrow(context, GroupID.name);
-  offset_reset_ = utils::getRequiredPropertyOrThrow(context, OffsetReset.name);
-  key_attribute_encoding_ = utils::getRequiredPropertyOrThrow(context, KeyAttributeEncoding.name);
-  max_poll_time_milliseconds_ = utils::parseTimePropertyMSOrThrow(context, MaxPollTime.name);
-  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(context, SessionTimeout.name);
+  kafka_brokers_                = utils::parseProperty(context, KafkaBrokers);
+  topic_names_                  = utils::string::splitAndTrim(utils::parseProperty(context, TopicNames), ",");
+  topic_name_format_            = utils::parseProperty(context, TopicNameFormat);
+  honor_transactions_           = utils::parseBoolProperty(context, HonorTransactions);
+  group_id_                     = utils::parseProperty(context, GroupID);
+  offset_reset_                 = utils::parseProperty(context, OffsetReset);
+  key_attribute_encoding_       = utils::parseProperty(context, KeyAttributeEncoding);
+  max_poll_time_milliseconds_   = utils::parseMsProperty(context, MaxPollTime);
+  session_timeout_milliseconds_ = utils::parseMsProperty(context, SessionTimeout);
 
   // Optional properties
-  context.getProperty(MessageDemarcator, message_demarcator_);
-  context.getProperty(MessageHeaderEncoding, message_header_encoding_);
-  context.getProperty(DuplicateHeaderHandling, duplicate_header_handling_);
+  message_demarcator_ = context.getProperty(MessageDemarcator).value_or("");
+  message_header_encoding_ = context.getProperty(MessageHeaderEncoding).value_or("");
+  duplicate_header_handling_ = context.getProperty(DuplicateHeaderHandling).value_or("");
 
-  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.name);
-  max_poll_records_ = gsl::narrow<std::size_t>(context.getProperty<uint64_t>(MaxPollRecords)
-                                                   .value_or(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE.parse(DEFAULT_MAX_POLL_RECORDS)));
+  headers_to_add_as_attributes_ = utils::string::splitAndTrim(utils::parseOptionalProperty(context, HeadersToAddAsAttributes).value_or(""), ",");
+  max_poll_records_ = gsl::narrow<std::size_t>(utils::parseU64Property(context, MaxPollRecords));
 
   if (!utils::string::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) &&
       !utils::string::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
@@ -139,14 +137,12 @@ void ConsumeKafka::extend_config_from_dynamic_properties(const core::ProcessCont
   using utils::setKafkaConfigurationField;
 
   const std::vector<std::string> dynamic_prop_keys = context.getDynamicPropertyKeys();
-  if (dynamic_prop_keys.empty()) { return; }
-  logger_->log_info(
-      "Loading {} extra kafka configuration fields from ConsumeKafka dynamic "
-      "properties:",
-      dynamic_prop_keys.size());
-  for (const std::string& key: dynamic_prop_keys) {
-    std::string value;
-    gsl_Expects(context.getDynamicProperty(key, value));
+  if (dynamic_prop_keys.empty()) {
+    return;
+  }
+  logger_->log_info("Loading {} extra kafka configuration fields from ConsumeKafka dynamic properties:", dynamic_prop_keys.size());
+  for (const std::string& key : dynamic_prop_keys) {
+    std::string value = context.getDynamicProperty(key) | utils::expect("");
     logger_->log_info("{}: {}", key.c_str(), value.c_str());
     setKafkaConfigurationField(*conf_, key, value);
   }

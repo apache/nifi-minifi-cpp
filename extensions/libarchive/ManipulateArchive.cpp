@@ -50,7 +50,7 @@ void ManipulateArchive::initialize() {
 }
 
 void ManipulateArchive::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-    context.getProperty(Operation, operation_);
+    operation_ = context.getProperty(Operation).value_or("");
     bool invalid = false;
     std::transform(operation_.begin(), operation_.end(), operation_.begin(), ::tolower);
 
@@ -64,10 +64,10 @@ void ManipulateArchive::onSchedule(core::ProcessContext& context, core::ProcessS
         invalid = true;
     }
 
-    context.getProperty(Target, targetEntry_);
-    context.getProperty(Destination, destination_);
-    context.getProperty(Before, before_);
-    context.getProperty(After, after_);
+    targetEntry_ = context.getProperty(Target).value_or("");
+    destination_ = context.getProperty(Destination).value_or("");
+    before_ = context.getProperty(Before).value_or("");
+    after_ = context.getProperty(After).value_or("");
 
     // All operations which create new entries require a set destination
     if (op_create == destination_.empty()) {

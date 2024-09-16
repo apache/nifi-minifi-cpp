@@ -34,7 +34,7 @@ void SplitContent::initialize() {
 }
 
 void SplitContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  auto byte_sequence_str = utils::getRequiredPropertyOrThrow<std::string>(context, ByteSequence.name);
+  auto byte_sequence_str = utils::parseProperty(context, ByteSequence);
   const auto byte_sequence_format = utils::parseEnumProperty<ByteSequenceFormat>(context, ByteSequenceFormatProperty);
   std::vector<std::byte> byte_sequence{};
   if (byte_sequence_format == ByteSequenceFormat::Hexadecimal) {
@@ -46,7 +46,7 @@ void SplitContent::onSchedule(core::ProcessContext& context, core::ProcessSessio
   if (byte_sequence.empty()) { throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Cannot operate without byte sequence"); }
   byte_sequence_matcher_.emplace(ByteSequenceMatcher(std::move(byte_sequence)));
   byte_sequence_location_ = utils::parseEnumProperty<ByteSequenceLocation>(context, ByteSequenceLocationProperty);
-  keep_byte_sequence = utils::getRequiredPropertyOrThrow<bool>(context, KeepByteSequence.name);
+  keep_byte_sequence = utils::parseBoolProperty(context, KeepByteSequence);
 }
 
 namespace {

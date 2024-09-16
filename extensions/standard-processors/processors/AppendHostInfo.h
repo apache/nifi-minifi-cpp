@@ -29,6 +29,7 @@
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/ProcessContext.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"

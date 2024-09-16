@@ -20,17 +20,19 @@
 
 #pragma once
 
+
+#include <memory>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
-#include <memory>
+#include <vector>
 
+#include "FlowFileSource.h"
+#include "SQLProcessor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "SQLProcessor.h"
-#include "FlowFileSource.h"
+#include "core/StateManager.h"
 #include "data/SQLColumnIdentifier.h"
 #include "utils/ArrayUtils.h"
 

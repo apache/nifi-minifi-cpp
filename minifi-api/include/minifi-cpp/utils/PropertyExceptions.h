@@ -22,21 +22,16 @@
 
 #include "Exception.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 namespace core {
 
 class PropertyValue;
-class ConfigurableComponent;
 class Property;
 
 } /* namespace core */
 
-namespace utils {
-namespace internal {
+namespace utils::internal {
 
 class ValueException : public Exception {
  public:
@@ -82,9 +77,6 @@ class RequiredPropertyMissingException : public PropertyException {
   using PropertyException::PropertyException;
 };
 
-} /* namespace internal */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+} // namespace utils::internal
+
+} // namespace org::apache::nifi::minifi

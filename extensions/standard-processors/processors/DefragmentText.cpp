@@ -39,27 +39,21 @@ void DefragmentText::initialize() {
 }
 
 void DefragmentText::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (auto max_buffer_age = context.getProperty(MaxBufferAge) | utils::andThen(&core::TimePeriodValue::fromString)) {
-    max_age_ = max_buffer_age->getMilliseconds();
+  if (auto max_buffer_age = context.getProperty(MaxBufferAge) | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)) {
+    max_age_ = *max_buffer_age;
     setTriggerWhenEmpty(true);
-    logger_->log_trace("The Buffer maximum age is configured to be {}", max_buffer_age->getMilliseconds());
+    logger_->log_trace("The Buffer maximum age is configured to be {}", max_age_);
   }
-
-  auto max_buffer_size = context.getProperty<core::DataSizeValue>(MaxBufferSize);
-  if (max_buffer_size.has_value() && max_buffer_size->getValue() > 0) {
-    max_size_ = max_buffer_size->getValue();
-    logger_->log_trace("The Buffer maximum size is configured to be {} B", max_buffer_size->getValue());
+  if (auto max_buffer_size = context.getProperty(MaxBufferSize) | utils::andThen(parsing::parseDataSize)) {
+    max_size_ = *max_buffer_size;
+    logger_->log_trace("The Buffer maximum size is configured to be {} B", *max_buffer_size);
   }
 
   pattern_location_ = utils::parseEnumProperty<defragment_text::PatternLocation>(context, PatternLoc);
 
-  std::string pattern_str;
-  if (context.getProperty(Pattern, pattern_str) && !pattern_str.empty()) {
-    pattern_ = utils::Regex(pattern_str);
-    logger_->log_trace("The Pattern is configured to be {}", pattern_str);
-  } else {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Pattern property missing or invalid");
-  }
+  pattern_ = context.getProperty(Pattern)
+    | utils::transform([](const auto pattern_str) { return utils::Regex{pattern_str}; })
+    | utils::expect("Pattern property missing or invalid");
 }
 
 void DefragmentText::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
@@ -177,12 +171,12 @@ bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession& session,
     split_after_last_pattern = nullptr;
     return false;
   }
-  auto split_position = getSplitPosition(last_regex_match, pattern_location_);
+  const auto split_position = gsl::narrow<int64_t>(getSplitPosition(last_regex_match, pattern_location_));
   if (split_position != 0) {
     split_before_last_pattern = session.clone(*original_flow_file, 0, split_position);
   }
-  if (split_position != original_flow_file->getSize()) {
-    split_after_last_pattern = session.clone(*original_flow_file, split_position, original_flow_file->getSize() - split_position);
+  if (split_position != gsl::narrow<int64_t>(original_flow_file->getSize())) {
+    split_after_last_pattern = session.clone(*original_flow_file, split_position, gsl::narrow<int64_t>(original_flow_file->getSize()) - split_position);
   }
   updateAttributesForSplitFiles(*original_flow_file, split_before_last_pattern, split_after_last_pattern, split_position);
   return true;

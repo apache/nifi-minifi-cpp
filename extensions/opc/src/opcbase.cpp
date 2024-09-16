@@ -21,9 +21,8 @@
 #include "opc.h"
 #include "opcbase.h"
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "core/Core.h"
+#include "core/ProcessContext.h"
+
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -37,19 +36,26 @@ namespace org::apache::nifi::minifi::processors {
     username_.clear();
     trustBuffers_.clear();
 
-    context.getProperty(OPCServerEndPoint, endPointURL_);
-    context.getProperty(ApplicationURI, applicationURI_);
+    endPointURL_ = context.getProperty(OPCServerEndPoint).value_or("");
+    applicationURI_ = context.getProperty(ApplicationURI).value_or("");
 
-    if (context.getProperty(Username, username_) != context.getProperty(Password, password_)) {
+    const auto username = context.getProperty(Username);
+    const auto password = context.getProperty(Password);
+
+    if (username.has_value() != password.has_value()) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Both or neither of Username and Password should be provided!");
     }
+    username_ = username.value_or("");
+    password_ = password.value_or("");
 
-    auto certificatePathRes = context.getProperty(CertificatePath, certpath_);
-    auto keyPathRes = context.getProperty(KeyPath, keypath_);
-    context.getProperty(TrustedPath, trustpath_);
-    if (certificatePathRes != keyPathRes) {
+    auto certificatePath = context.getProperty(CertificatePath);
+    auto keyPath = context.getProperty(KeyPath);
+    trustpath_ = context.getProperty(TrustedPath).value_or("");
+    if (certificatePath.has_value() != keyPath.has_value()) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "All or none of Certificate path and Key path should be provided!");
     }
+    keypath_ = keyPath.value_or("");
+    certpath_ = certificatePath.value_or("");
 
     if (certpath_.empty()) {
       return;

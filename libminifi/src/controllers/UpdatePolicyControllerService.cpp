@@ -51,32 +51,22 @@ bool UpdatePolicyControllerService::isWorkAvailable() {
 }
 
 void UpdatePolicyControllerService::onEnable() {
-  std::string enableStr;
   std::string persistStr;
 
-  bool enable_all = false;
-  if (getProperty(AllowAllProperties, enableStr)) {
-    enable_all = utils::string::toBool(enableStr).value_or(false);
-  }
+  const bool enable_all = (getProperty(AllowAllProperties.name) | utils::andThen(parsing::parseBool)).value_or(false);
+  persist_updates_ = (getProperty(PersistUpdates.name) | utils::andThen(parsing::parseBool)).value_or(false);
 
-  if (getProperty(PersistUpdates, persistStr)) {
-    persist_updates_ = utils::string::toBool(persistStr).value_or(false);
-  }
+  const auto builder = state::UpdatePolicyBuilder::newBuilder(enable_all);
 
-  auto builder = state::UpdatePolicyBuilder::newBuilder(enable_all);
-
-  core::Property all_prop("Allowed Properties", "Properties for which we will allow updates");
-  core::Property dall_prop("Disallowed Properties", "Properties for which we will not allow updates");
-
-  if (getProperty(AllowedProperties, all_prop)) {
-    for (const auto &str : all_prop.getValues()) {
-      builder->allowPropertyUpdate(str);
+  if (auto allowed_props = getAllPropertyValues(AllowedProperties.name)) {
+    for (const auto& allowed_prop : *allowed_props) {
+      builder->allowPropertyUpdate(allowed_prop);
     }
   }
 
-  if (getProperty(DisallowedProperties, dall_prop)) {
-    for (const auto &str : dall_prop.getValues()) {
-      builder->disallowPropertyUpdate(str);
+  if (auto disallowed_props = getAllPropertyValues(DisallowedProperties.name)) {
+    for (const auto& disallowed_prop : *disallowed_props) {
+      builder->disallowPropertyUpdate(disallowed_prop);
     }
   }
   policy_ = builder->build();
