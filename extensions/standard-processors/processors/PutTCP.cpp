@@ -16,18 +16,19 @@
  */
 #include "PutTCP.h"
 
-#include <utility>
+
 #include <tuple>
+#include <utility>
 
-#include "range/v3/range/conversion.hpp"
-
-#include "utils/gsl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "core/logging/Logger.h"
+#include "range/v3/range/conversion.hpp"
+#include "utils/gsl.h"
 #include "utils/net/AsioCoro.h"
 #include "utils/net/AsioSocketUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 using namespace std::literals::chrono_literals;
 using org::apache::nifi::minifi::utils::net::TcpSocket;
@@ -51,48 +52,44 @@ void PutTCP::notifyStop() {}
 
 void PutTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   // if the required properties are missing or empty even before evaluating the EL expression, then we can throw in onSchedule, before we waste any flow files
-  if (context.getProperty(Hostname).value_or(std::string{}).empty()) {
+  if (!getProperty(Hostname.name)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing hostname"};
   }
-  if (context.getProperty(Port).value_or(std::string{}).empty()) {
+  if (!getProperty(Port.name)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing port"};
   }
-  if (const auto idle_connection_expiration = context.getProperty<core::TimePeriodValue>(IdleConnectionExpiration); idle_connection_expiration && idle_connection_expiration->getMilliseconds() > 0ms)
-    idle_connection_expiration_ = idle_connection_expiration->getMilliseconds();
+  if (const auto idle_connection_expiration = utils::parseOptionalMsProperty(context, IdleConnectionExpiration); idle_connection_expiration && *idle_connection_expiration > 0ms)
+    idle_connection_expiration_ = idle_connection_expiration;
   else
     idle_connection_expiration_.reset();
 
-  if (const auto timeout = context.getProperty<core::TimePeriodValue>(Timeout); timeout && timeout->getMilliseconds() > 0ms)
-    timeout_duration_ = timeout->getMilliseconds();
+  if (const auto timeout = utils::parseOptionalMsProperty(context, Timeout); timeout && *timeout > 0ms)
+    timeout_duration_ = *timeout;
   else
     timeout_duration_ = 15s;
 
-  if (context.getProperty<bool>(ConnectionPerFlowFile).value_or(false))
+  if (utils::parseBoolProperty(context, ConnectionPerFlowFile))
     connections_.reset();
   else
     connections_.emplace();
 
-  std::string context_name;
   ssl_context_.reset();
-  if (context.getProperty(SSLContextService, context_name) && !IsNullOrEmpty(context_name)) {
-    if (auto controller_service = context.getControllerService(context_name, getUUID())) {
-      if (const auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(context_name, getUUID()))) {
+  if (const auto context_name = context.getProperty(SSLContextService); context_name && !IsNullOrEmpty(*context_name)) {
+    if (auto controller_service = context.getControllerService(*context_name, getUUID())) {
+      if (const auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*context_name, getUUID()))) {
         ssl_context_ = utils::net::getSslContext(*ssl_context_service);
       } else {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, context_name + " is not an SSL Context Service");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, *context_name + " is not an SSL Context Service");
       }
     } else {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service: " + context_name);
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service: " + *context_name);
     }
   }
 
   const auto delimiter_str = context.getProperty(OutgoingMessageDelimiter).value_or(std::string{});
   delimiter_ = utils::span_to<std::vector>(as_bytes(std::span(delimiter_str)));
 
-  if (const auto max_size_of_socket_send_buffer = context.getProperty<core::DataSizeValue>(MaxSizeOfSocketSendBuffer))
-    max_size_of_socket_send_buffer_ = max_size_of_socket_send_buffer->getValue();
-  else
-    max_size_of_socket_send_buffer_.reset();
+  max_size_of_socket_send_buffer_ = utils::parseOptionalDataSizeProperty(context, MaxSizeOfSocketSendBuffer);
 }
 
 void PutTCP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {

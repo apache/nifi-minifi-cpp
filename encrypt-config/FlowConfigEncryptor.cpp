@@ -82,7 +82,7 @@ std::vector<SensitiveItem> listSensitiveItems(const minifi::core::ProcessGroup &
   process_group.getAllProcessors(processors);
   for (const auto* processor : processors) {
     gsl_Expects(processor);
-    for (const auto& [_, property] : processor->getProperties()) {
+    for (const auto& [_, property] : processor->getSupportedProperties()) {
       if (property.isSensitive()) {
         sensitive_items.push_back(SensitiveItem{
             .component_type = ComponentType::Processor,
@@ -90,7 +90,7 @@ std::vector<SensitiveItem> listSensitiveItems(const minifi::core::ProcessGroup &
             .component_name = processor->getName(),
             .item_name = property.getName(),
             .item_display_name = property.getDisplayName(),
-            .item_value = property.getValue().to_string()});
+            .item_value = std::string{property.getValue().value_or("")}});
       }
     }
   }
@@ -104,7 +104,7 @@ std::vector<SensitiveItem> listSensitiveItems(const minifi::core::ProcessGroup &
       continue;
     }
     processed_controller_services.insert(controller_service->getUUID());
-    for (const auto& [_, property] : controller_service->getProperties()) {
+    for (const auto& [_, property] : controller_service->getSupportedProperties()) {
       if (property.isSensitive()) {
         sensitive_items.push_back(SensitiveItem{
             .component_type = ComponentType::ControllerService,
@@ -112,7 +112,7 @@ std::vector<SensitiveItem> listSensitiveItems(const minifi::core::ProcessGroup &
             .component_name = controller_service->getName(),
             .item_name = property.getName(),
             .item_display_name = property.getDisplayName(),
-            .item_value = property.getValue().to_string()});
+            .item_value = std::string{property.getValue().value_or("")}});
       }
     }
   }

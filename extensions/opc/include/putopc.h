@@ -52,7 +52,7 @@ class PutOPCProcessor : public BaseOPCProcessor {
       .build();
   EXTENSIONAPI static constexpr auto ParentNameSpaceIndex = core::PropertyDefinitionBuilder<>::createProperty("Parent node namespace index")
       .withDescription("The index of the namespace. Used only if node ID type is not path.")
-      .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
   EXTENSIONAPI static constexpr auto ValueType = core::PropertyDefinitionBuilder<opc::StringToOPCDataTypeMap.size()>::createProperty("Value type")

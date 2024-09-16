@@ -21,6 +21,7 @@
 #include <chrono>
 #include "core/repository/VolatileContentRepository.h"
 #include "core/ProcessGroup.h"
+#include "core/Processor.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "TailFile.h"
 #include "unit/Catch.h"
@@ -733,14 +734,13 @@ TEST_CASE("Property value sequences can use parameters") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("MyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
   REQUIRE(proc);
-  core::Property property("Simple Property", "");
-  proc->getProperty("Simple Property", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
+  auto values = proc->getAllPropertyValues("Simple Property");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
 }
 
 TEST_CASE("Dynamic properties can use parameters") {
@@ -795,17 +795,15 @@ TEST_CASE("Dynamic properties can use parameters") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("MyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
   REQUIRE(proc);
-  core::Property property("My Dynamic Property Sequence", "");
-  proc->getDynamicProperty("My Dynamic Property Sequence", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
+  auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
   std::string value;
-  REQUIRE(proc->getDynamicProperty("My Dynamic Property", value));
-  CHECK(value == "value1");
+  REQUIRE("value1" == proc->getDynamicProperty("My Dynamic Property"));
 }
 
 TEST_CASE("Test sensitive parameters in sensitive properties") {
@@ -913,14 +911,14 @@ TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("MyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
   REQUIRE(proc);
   core::Property property("Sensitive Property", "");
-  proc->getProperty("Sensitive Property", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
+  auto values = proc->getAllPropertyValues("Sensitive Property");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
 }
 
 TEST_CASE("NiFi flow json can use alternative targetUris field") {

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #include "QuerySplunkIndexingStatus.h"
 
 #include <unordered_map>
@@ -23,15 +22,14 @@
 #include <utility>
 
 #include "SplunkAttributes.h"
-
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "http/HTTPClient.h"
-
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
 
@@ -47,10 +45,10 @@ struct FlowFileWithIndexStatus {
   std::optional<bool> indexing_status_ = std::nullopt;
 };
 
-std::unordered_map<uint64_t, FlowFileWithIndexStatus> getUndeterminedFlowFiles(core::ProcessSession& session, size_t batch_size) {
+std::unordered_map<uint64_t, FlowFileWithIndexStatus> getUndeterminedFlowFiles(core::ProcessSession& session, uint64_t batch_size) {
   std::unordered_map<uint64_t, FlowFileWithIndexStatus> undetermined_flow_files;
   std::unordered_set<uint64_t> duplicate_ack_ids;
-  for (size_t i = 0; i < batch_size; ++i) {
+  for (uint64_t i = 0; i < batch_size; ++i) {
     auto flow = session.get();
     if (flow == nullptr)
       break;
@@ -141,12 +139,8 @@ void QuerySplunkIndexingStatus::initialize() {
 
 void QuerySplunkIndexingStatus::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   SplunkHECProcessor::onSchedule(context, session_factory);
-  std::string max_wait_time_str;
-  if (auto max_age = context.getProperty<core::TimePeriodValue>(MaximumWaitingTime)) {
-    max_age_ = max_age->getMilliseconds();
-  }
-
-  context.getProperty(MaxQuerySize, batch_size_);
+  max_age_ = utils::parseMsProperty(context, MaximumWaitingTime);
+  batch_size_ = utils::parseU64Property(context, MaxQuerySize);
   initializeClient(client_, getNetworkLocation().append(getEndpoint()), getSSLContextService(context));
 }
 

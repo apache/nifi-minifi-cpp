@@ -17,19 +17,20 @@
 
 #include "PutSFTP.h"
 
-#include <memory>
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <utility>
 
 #include "core/FlowFile.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Resource.h"
+#include "core/logging/Logger.h"
 #include "io/BufferStream.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -54,29 +55,12 @@ PutSFTP::~PutSFTP() = default;
 void PutSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   parseCommonPropertiesOnSchedule(context);
 
-  std::string value;
-  if (!context.getProperty(CreateDirectory, value)) {
-    logger_->log_error("Create Directory attribute is missing or invalid");
-  } else {
-    create_directory_ = utils::string::toBool(value).value_or(false);
-  }
-  if (!context.getProperty(BatchSize, value)) {
-    logger_->log_error("Batch Size attribute is missing or invalid");
-  } else {
-    core::Property::StringToInt(value, batch_size_);
-  }
-  context.getProperty(ConflictResolution, conflict_resolution_);
-  if (context.getProperty(RejectZeroByte, value)) {
-    reject_zero_byte_ = utils::string::toBool(value).value_or(true);
-  }
-  if (context.getProperty(DotRename, value)) {
-    dot_rename_ = utils::string::toBool(value).value_or(true);
-  }
-  if (!context.getProperty(UseCompression, value)) {
-    logger_->log_error("Use Compression attribute is missing or invalid");
-  } else {
-    use_compression_ = utils::string::toBool(value).value_or(false);
-  }
+  create_directory_ = utils::parseBoolProperty(context, CreateDirectory);
+  batch_size_ = utils::parseU64Property(context, BatchSize);
+  conflict_resolution_ = utils::parseProperty(context, ConflictResolution);
+  reject_zero_byte_ = utils::parseBoolProperty(context, RejectZeroByte);
+  dot_rename_ = utils::parseBoolProperty(context, DotRename);
+  use_compression_ = utils::parseBoolProperty(context, UseCompression);
 
   startKeepaliveThreadIfNeeded();
 }
@@ -97,20 +81,10 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
   /* Parse processor-specific properties */
   std::filesystem::path filename;
   std::filesystem::path remote_path;
-  bool disable_directory_listing = false;
-  std::string temp_file_name;
-  std::optional<std::chrono::system_clock::time_point> last_modified_;
-  bool permissions_set = false;
-  uint32_t permissions = 0U;
-  bool remote_owner_set = false;
-  uint64_t remote_owner = 0U;
-  bool remote_group_set = false;
-  uint64_t remote_group = 0U;
 
   if (auto file_name_str = flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME))
     filename = *file_name_str;
 
-  std::string value;
   if (auto remote_path_str = context.getProperty(RemotePath, flow_file.get())) {
     remote_path = std::filesystem::path(*remote_path_str, std::filesystem::path::format::generic_format).lexically_normal();
     while (remote_path.filename().empty() && !remote_path.empty())
@@ -119,29 +93,17 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
       remote_path = ".";
   }
 
-  if (context.getDynamicProperty(std::string{DisableDirectoryListing.name}, value) ||
-      context.getProperty(DisableDirectoryListing, value)) {
-    disable_directory_listing = utils::string::toBool(value).value_or(false);
-  }
-  context.getProperty(TempFilename, temp_file_name, flow_file.get());
-  if (context.getProperty(LastModifiedTime, value, flow_file.get()))
-    last_modified_ = utils::timeutils::parseDateTimeStr(value);
+  bool disable_directory_listing = context.getDynamicProperty(std::string{DisableDirectoryListing.name})
+      | utils::andThen(parsing::parseBool)
+      | utils::valueOrElse([&]() -> bool { return utils::parseBoolProperty(context, DisableDirectoryListing);});
 
-  if (context.getProperty(Permissions, value, flow_file.get())) {
-    if (core::Property::StringToPermissions(value, permissions)) {
-      permissions_set = true;
-    }
-  }
-  if (context.getProperty(RemoteOwner, value, flow_file.get())) {
-    if (core::Property::StringToInt(value, remote_owner)) {
-      remote_owner_set = true;
-    }
-  }
-  if (context.getProperty(RemoteGroup, value, flow_file.get())) {
-    if (core::Property::StringToInt(value, remote_group)) {
-      remote_group_set = true;
-    }
-  }
+  std::string temp_file_name = context.getProperty(TempFilename, flow_file.get()).value_or("");
+  auto last_modified_ = utils::parseOptionalProperty(context, LastModifiedTime, flow_file.get())
+      | utils::andThen(utils::timeutils::parseDateTimeStr);
+
+  std::optional<uint32_t> permissions = context.getProperty(Permissions, flow_file.get()) | utils::andThen(parsing::parsePermissions) | utils::toOptional();
+  std::optional<uint64_t> remote_owner = utils::parseOptionalU64Property(context, RemoteOwner, flow_file.get());
+  std::optional<uint64_t> remote_group = utils::parseOptionalU64Property(context, RemoteGroup, flow_file.get());
 
   /* Reject zero-byte files if needed */
   if (reject_zero_byte_ && flow_file->getSize() == 0U) {
@@ -305,9 +267,9 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
 
   /* Set file attributes if needed */
   if (last_modified_ ||
-      permissions_set ||
-      remote_owner_set ||
-      remote_group_set) {
+      permissions ||
+      remote_owner ||
+      remote_group) {
     utils::SFTPClient::SFTPAttributes attrs{};
     attrs.flags = 0U;
     if (last_modified_) {
@@ -320,17 +282,17 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
       attrs.mtime = std::chrono::duration_cast<std::chrono::seconds>(last_modified_->time_since_epoch()).count();
       attrs.atime = std::chrono::duration_cast<std::chrono::seconds>(last_modified_->time_since_epoch()).count();
     }
-    if (permissions_set) {
+    if (permissions) {
       attrs.flags |= utils::SFTPClient::SFTP_ATTRIBUTE_PERMISSIONS;
-      attrs.permissions = permissions;
+      attrs.permissions = *permissions;
     }
-    if (remote_owner_set) {
+    if (remote_owner) {
       attrs.flags |= utils::SFTPClient::SFTP_ATTRIBUTE_UID;
-      attrs.uid = remote_owner;
+      attrs.uid = *remote_owner;
     }
-    if (remote_group_set) {
+    if (remote_group) {
       attrs.flags |= utils::SFTPClient::SFTP_ATTRIBUTE_GID;
-      attrs.gid = remote_group;
+      attrs.gid = *remote_group;
     }
     if (!client->setAttributes(final_target_path, attrs)) {
       /* This is not fatal, just log a warning */

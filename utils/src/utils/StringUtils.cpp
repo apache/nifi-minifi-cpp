@@ -518,7 +518,7 @@ bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& un
   return true;
 }
 
-nonstd::expected<std::optional<char>, ParseError> parseCharacter(const std::string_view input) {
+nonstd::expected<std::optional<char>, std::error_code> parseCharacter(const std::string_view input) {
   if (input.empty()) { return std::nullopt; }
   if (input.size() == 1) { return input[0]; }
 
@@ -536,7 +536,7 @@ nonstd::expected<std::optional<char>, ParseError> parseCharacter(const std::stri
       default: break;
     }
   }
-  return nonstd::make_unexpected(ParseError{});
+  return nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError);
 }
 
 std::string replaceEscapedCharacters(std::string_view input) {

@@ -50,7 +50,7 @@ class ListenSyslog : public NetworkListenerProcessor {
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")
       .withDescription("The port for Syslog communication. (Well-known ports (0-1023) require root access)")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::LISTEN_PORT_TYPE)
+      .withValidator(core::StandardPropertyTypes::PORT_VALIDATOR)
       .withDefaultValue("514")
       .build();
   EXTENSIONAPI static constexpr auto ProtocolProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<utils::net::IpProtocol>()>::createProperty("Protocol")
@@ -61,19 +61,19 @@ class ListenSyslog : public NetworkListenerProcessor {
       .build();
   EXTENSIONAPI static constexpr auto MaxBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Size")
       .withDescription("The maximum number of Syslog events to process at a time.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("500")
       .build();
   EXTENSIONAPI static constexpr auto ParseMessages = core::PropertyDefinitionBuilder<>::createProperty("Parse Messages")
       .withDescription("Indicates if the processor should parse the Syslog messages. "
           "If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto MaxQueueSize = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Message Queue")
       .withDescription("Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. "
           "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("10000")
       .build();
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")

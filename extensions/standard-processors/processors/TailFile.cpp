@@ -251,11 +251,9 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
     }
   }
 
-  std::string file_name_str;
-  context.getProperty(FileName, file_name_str);
+  std::string file_name_str = context.getProperty(FileName).value_or("");
 
-  std::string mode;
-  context.getProperty(TailMode, mode);
+  std::string mode = context.getProperty(TailMode).value_or("");
 
   if (mode == "Multiple file") {
     tail_mode_ = Mode::MULTIPLE;
@@ -273,11 +271,8 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory does not exist or is not a directory");
     }
 
-    context.getProperty(RecursiveLookup, recursive_lookup_);
-
-    if (auto lookup_frequency = context.getProperty<core::TimePeriodValue>(LookupFrequency)) {
-      lookup_frequency_ = lookup_frequency->getMilliseconds();
-    }
+    recursive_lookup_ = utils::parseBoolProperty(context, RecursiveLookup);
+    lookup_frequency_ = utils::parseMsProperty(context, LookupFrequency);
 
     recoverState(context);
 
@@ -297,15 +292,11 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
     recoverState(context);
   }
 
-  std::string rolling_filename_pattern_glob;
-  context.getProperty(RollingFilenamePattern, rolling_filename_pattern_glob);
+  std::string rolling_filename_pattern_glob = utils::parseProperty(context, RollingFilenamePattern);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
   initial_start_position_ = utils::parseEnumProperty<InitialStartPositions>(context, InitialStartPosition);
-
-  uint32_t batch_size = 0;
-  if (context.getProperty(BatchSize, batch_size) && batch_size != 0) {
-    batch_size_ = batch_size;
-  }
+  batch_size_ = gsl::narrow<uint32_t>(utils::parseU64Property(context, BatchSize));
+  if (batch_size_ == 0) { batch_size_.reset(); }
 }
 
 void TailFile::parseAttributeProviderServiceProperty(const core::ProcessContext& context) {
@@ -463,8 +454,7 @@ bool TailFile::getStateFromStateManager(std::map<std::filesystem::path, TailStat
 
 bool TailFile::getStateFromLegacyStateFile(const core::ProcessContext& context,
                                            std::map<std::filesystem::path, TailState> &new_tail_states) const {
-  std::string state_file_name_property;
-  context.getProperty(StateFile, state_file_name_property);
+  const std::string state_file_name_property = context.getProperty(StateFile).value_or("");
   std::string state_file = state_file_name_property + "." + getUUIDStr();
 
   std::ifstream file(state_file.c_str(), std::ifstream::in);
@@ -807,7 +797,7 @@ std::string TailFile::baseDirectoryFromAttributes(const controllers::AttributePr
   for (const auto& [key, value] : attribute_map) {
     flow_file->setAttribute(key, value);
   }
-  return context.getProperty(BaseDirectory, flow_file.get()).value();
+  return context.getProperty(BaseDirectory, flow_file.get()) | utils::expect("Base directory is required for multiple tail mode.");
 }
 
 std::chrono::milliseconds TailFile::getLookupFrequency() const {

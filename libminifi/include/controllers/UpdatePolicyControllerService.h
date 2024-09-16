@@ -46,8 +46,8 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
 
   explicit UpdatePolicyControllerService(std::string_view name, const std::shared_ptr<Configure> &configuration)
       : UpdatePolicyControllerService(name) {
-    setConfiguration(configuration);
-    initialize();
+    ControllerServiceImpl::setConfiguration(configuration);
+    UpdatePolicyControllerService::initialize();
   }
 
   MINIFIAPI static constexpr const char* Description = "UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates. "
@@ -55,13 +55,13 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
 
   MINIFIAPI static constexpr auto AllowAllProperties = core::PropertyDefinitionBuilder<>::createProperty("Allow All Properties")
       .withDescription("Allows all properties, which are also not disallowed, to be updated")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   MINIFIAPI static constexpr auto PersistUpdates = core::PropertyDefinitionBuilder<>::createProperty("Persist Updates")
       .withDescription("Property that dictates whether updates should persist after a restart")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   MINIFIAPI static constexpr auto AllowedProperties = core::PropertyDefinitionBuilder<>::createProperty("Allowed Properties")

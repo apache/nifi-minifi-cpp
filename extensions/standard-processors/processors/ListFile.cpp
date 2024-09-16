@@ -16,11 +16,14 @@
  */
 #include "ListFile.h"
 
+
 #include <filesystem>
 
+#include "core/ProcessContext.h"
+#include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
-#include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -36,40 +39,21 @@ void ListFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  if (auto input_directory_str = context.getProperty(InputDirectory); !input_directory_str || input_directory_str->empty()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory property missing or invalid");
-  } else {
-    input_directory_ = *input_directory_str;
-  }
+  input_directory_ = utils::parseProperty(context, InputDirectory);
 
-  context.getProperty(RecurseSubdirectories, recurse_subdirectories_);
+  recurse_subdirectories_ = utils::parseBoolProperty(context, RecurseSubdirectories);
 
-  std::string value;
-  if (context.getProperty(FileFilter.name, value) && !value.empty()) {
-    file_filter_.filename_filter = std::regex(value);
-  }
+  file_filter_.filename_filter = context.getProperty(FileFilter) | utils::transform([] (const auto& str) { return std::regex(str);}) | utils::toOptional();
+  file_filter_.path_filter = context.getProperty(PathFilter) | utils::transform([] (const auto& str) { return std::regex(str);}) | utils::toOptional();
 
-  if (recurse_subdirectories_ && context.getProperty(PathFilter.name, value) && !value.empty()) {
-    file_filter_.path_filter = std::regex(value);
-  }
+  file_filter_.minimum_file_age = utils::parseOptionalMsProperty(context, MinimumFileAge);
+  file_filter_.maximum_file_age = utils::parseOptionalMsProperty(context, MaximumFileAge);
 
-  if (auto minimum_file_age = context.getProperty<core::TimePeriodValue>(MinimumFileAge)) {
-    file_filter_.minimum_file_age =  minimum_file_age->getMilliseconds();
-  }
+  file_filter_.minimum_file_size = utils::parseOptionalDataSizeProperty(context, MinimumFileSize);
+  file_filter_.maximum_file_size = utils::parseOptionalDataSizeProperty(context, MaximumFileSize);
 
-  if (auto maximum_file_age = context.getProperty<core::TimePeriodValue>(MaximumFileAge)) {
-    file_filter_.maximum_file_age =  maximum_file_age->getMilliseconds();
-  }
 
-  if (auto minimum_file_size = context.getProperty<core::DataSizeValue>(MinimumFileSize)) {
-    file_filter_.minimum_file_size = minimum_file_size->getValue();
-  }
-
-  if (auto maximum_file_size = context.getProperty<core::DataSizeValue>(MaximumFileSize)) {
-    file_filter_.maximum_file_size = maximum_file_size->getValue();
-  }
-
-  context.getProperty(IgnoreHiddenFiles.name, file_filter_.ignore_hidden_files);
+  file_filter_.ignore_hidden_files = utils::parseBoolProperty(context, IgnoreHiddenFiles);
 }
 
 std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& session, const utils::ListedFile& listed_file) {

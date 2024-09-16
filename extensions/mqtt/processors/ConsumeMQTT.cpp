@@ -16,17 +16,19 @@
  */
 #include "ConsumeMQTT.h"
 
-#include <memory>
-#include <string>
-#include <set>
+
 #include <cinttypes>
+#include <memory>
+#include <set>
+#include <string>
 #include <vector>
 
-#include "utils/StringUtils.h"
-#include "utils/ValueParser.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/StringUtils.h"
+#include "utils/ValueParser.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -46,45 +48,14 @@ void ConsumeMQTT::enqueueReceivedMQTTMsg(SmartMessage message) {
 }
 
 void ConsumeMQTT::readProperties(core::ProcessContext& context) {
-  if (auto value = context.getProperty(Topic)) {
-    topic_ = std::move(*value);
-  }
-  logger_->log_debug("ConsumeMQTT: Topic [{}]", topic_);
-
-  if (const auto value = context.getProperty(CleanSession) | utils::andThen(&utils::string::toBool)) {
-    clean_session_ = *value;
-  }
-  logger_->log_debug("ConsumeMQTT: CleanSession [{}]", clean_session_);
-
-  if (const auto value = context.getProperty(CleanStart) | utils::andThen(&utils::string::toBool)) {
-    clean_start_ = *value;
-  }
-  logger_->log_debug("ConsumeMQTT: CleanStart [{}]", clean_start_);
-
-  if (const auto session_expiry_interval = context.getProperty(SessionExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
-    session_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(session_expiry_interval->getMilliseconds());
-  }
-  logger_->log_debug("ConsumeMQTT: SessionExpiryInterval [{}] s", int64_t{session_expiry_interval_.count()});
-
-  if (const auto value = context.getProperty(QueueBufferMaxMessage) | utils::andThen(&utils::toNumber<uint64_t>)) {
-    max_queue_size_ = *value;
-  }
-  logger_->log_debug("ConsumeMQTT: Queue Max Message [{}]", max_queue_size_);
-
-  if (auto value = context.getProperty(AttributeFromContentType)) {
-    attribute_from_content_type_ = std::move(*value);
-  }
-  logger_->log_debug("ConsumeMQTT: Attribute From Content Type [{}]", attribute_from_content_type_);
-
-  if (const auto topic_alias_maximum = context.getProperty(TopicAliasMaximum) | utils::andThen(&utils::toNumber<uint32_t>)) {
-    topic_alias_maximum_ = gsl::narrow<uint16_t>(*topic_alias_maximum);
-  }
-  logger_->log_debug("ConsumeMQTT: Topic Alias Maximum [{}]", topic_alias_maximum_);
-
-  if (const auto receive_maximum = context.getProperty(ReceiveMaximum) | utils::andThen(&utils::toNumber<uint32_t>)) {
-    receive_maximum_ = gsl::narrow<uint16_t>(*receive_maximum);
-  }
-  logger_->log_debug("ConsumeMQTT: Receive Maximum [{}]", receive_maximum_);
+  topic_ = utils::parseProperty(context, Topic);
+  clean_session_ = utils::parseBoolProperty(context, CleanSession);
+  clean_start_ = utils::parseBoolProperty(context, CleanStart);
+  session_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseMsProperty(context, SessionExpiryInterval));
+  max_queue_size_ = utils::parseU64Property(context, QueueBufferMaxMessage);
+  attribute_from_content_type_ = context.getProperty(AttributeFromContentType).value_or("");
+  topic_alias_maximum_ = gsl::narrow<uint16_t>(utils::parseU64Property(context, QueueBufferMaxMessage));
+  receive_maximum_ = gsl::narrow<uint16_t>(utils::parseU64Property(context, ReceiveMaximum));
 }
 
 void ConsumeMQTT::onTriggerImpl(core::ProcessContext&, core::ProcessSession& session) {
@@ -232,26 +203,31 @@ void ConsumeMQTT::resolveTopicFromAlias(SmartMessage& smart_message) {
   }
 }
 
+
 void ConsumeMQTT::checkProperties() {
+  auto is_property_explicitly_set = [this](const std::string_view property_name) -> bool {
+    const auto property_values = getAllPropertyValues(property_name) | utils::expect("It should only be called on valid property");
+    return !property_values.empty();
+  };
   if (mqtt_version_ == mqtt::MqttVersions::V_3_1_0 || mqtt_version_ == mqtt::MqttVersions::V_3_1_1 || mqtt_version_ == mqtt::MqttVersions::V_3X_AUTO) {
-    if (isPropertyExplicitlySet(CleanStart)) {
+    if (is_property_explicitly_set(CleanStart.name)) {
       logger_->log_warn("MQTT 3.x specification does not support Clean Start. Property is not used.");
     }
-    if (isPropertyExplicitlySet(SessionExpiryInterval)) {
+    if (is_property_explicitly_set(SessionExpiryInterval.name)) {
       logger_->log_warn("MQTT 3.x specification does not support Session Expiry Intervals. Property is not used.");
     }
-    if (isPropertyExplicitlySet(AttributeFromContentType)) {
+    if (is_property_explicitly_set(AttributeFromContentType.name)) {
       logger_->log_warn("MQTT 3.x specification does not support Content Types and thus attributes cannot be created from them. Property is not used.");
     }
-    if (isPropertyExplicitlySet(TopicAliasMaximum)) {
+    if (is_property_explicitly_set(TopicAliasMaximum.name)) {
       logger_->log_warn("MQTT 3.x specification does not support Topic Alias Maximum. Property is not used.");
     }
-    if (isPropertyExplicitlySet(ReceiveMaximum)) {
+    if (is_property_explicitly_set(ReceiveMaximum.name)) {
       logger_->log_warn("MQTT 3.x specification does not support Receive Maximum. Property is not used.");
     }
   }
 
-  if (mqtt_version_ == mqtt::MqttVersions::V_5_0 && isPropertyExplicitlySet(CleanSession)) {
+  if (mqtt_version_ == mqtt::MqttVersions::V_5_0 && is_property_explicitly_set(CleanSession.name)) {
     logger_->log_warn("MQTT 5.0 specification does not support Clean Session. Property is not used.");
   }
 

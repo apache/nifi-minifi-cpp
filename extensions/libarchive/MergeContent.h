@@ -341,7 +341,7 @@ class MergeContent : public processors::BinFiles {
       .build();
   EXTENSIONAPI static constexpr auto KeepPath = core::PropertyDefinitionBuilder<>::createProperty("Keep Path")
       .withDescription("If using the Zip or Tar Merge Format, specifies whether or not the FlowFiles' paths should be included in their entry")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto AttributeStrategy = core::PropertyDefinitionBuilder<2>::createProperty("Attribute Strategy")

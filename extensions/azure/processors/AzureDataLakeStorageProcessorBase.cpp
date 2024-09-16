@@ -39,16 +39,18 @@ void AzureDataLakeStorageProcessorBase::onSchedule(core::ProcessContext& context
   credentials_ = *credentials;
 }
 
-bool AzureDataLakeStorageProcessorBase::setCommonParameters(
-    storage::AzureDataLakeStorageParameters& params, core::ProcessContext& context, const core::FlowFile* const flow_file) {
+bool AzureDataLakeStorageProcessorBase::setCommonParameters(storage::AzureDataLakeStorageParameters& params,
+      core::ProcessContext& context,
+      const core::FlowFile* const flow_file) {
   params.credentials = credentials_;
 
-  if (!context.getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
+  params.file_system_name = context.getProperty(FilesystemName, flow_file).value_or("");
+  if (params.file_system_name.empty()) {
     logger_->log_error("Filesystem Name '{}' is invalid or empty!", params.file_system_name);
     return false;
   }
 
-  context.getProperty(DirectoryName, params.directory_name, flow_file);
+  params.directory_name = context.getProperty(DirectoryName, flow_file).value_or("");
 
   return true;
 }

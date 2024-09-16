@@ -56,7 +56,7 @@ std::optional<storage::ListAzureBlobStorageParameters> ListAzureBlobStorage::bui
     return std::nullopt;
   }
 
-  context.getProperty(Prefix, params.prefix, nullptr);
+  params.prefix = context.getProperty(Prefix).value_or("");
 
   return params;
 }

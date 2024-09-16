@@ -16,7 +16,7 @@
  */
 #pragma once
 
-#include <core/ConfigurableComponent.h>
+#include <core/ConfigurableComponentImpl.h>
 #include <core/Processor.h>
 
 #include <memory>

@@ -245,21 +245,3 @@ TEST_CASE("PerformanceDataMonitorAllPredefinedGroups", "[performancedatamonitora
 
   REQUIRE(tester.runWithRetries(assertions));
 }
-
-TEST_CASE("PerformanceDataMonitorDecimalPlacesPropertyTest", "[performancedatamonitordecimalplacespropertytest]") {
-  {
-    PerformanceDataMonitorTester tester;
-    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "asd");
-    REQUIRE_THROWS_WITH(tester.runWithRetries([]{ return true; }, 1), "General Operation: Invalid conversion to int64_t for asd");
-  }
-  {
-    PerformanceDataMonitorTester tester;
-    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "1234586123");
-    REQUIRE_THROWS_WITH(tester.runWithRetries([]{ return true; }, 1), "Process Schedule Operation: PerformanceDataMonitor Decimal Places is out of range");
-  }
-  {
-    PerformanceDataMonitorTester tester;
-    tester.setPerformanceMonitorProperty(PerformanceDataMonitor::DecimalPlaces, "");
-    REQUIRE_NOTHROW(tester.runWithRetries([]{ return true; }, 1));
-  }
-}

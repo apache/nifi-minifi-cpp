@@ -54,7 +54,7 @@ TEST_CASE("AbstractProcessor case1", "[processor][abstractprocessor][case1]") {
   REQUIRE(processor.supportsDynamicRelationships() == true);
   REQUIRE(processor.getInputRequirement() == core::annotation::Input::INPUT_FORBIDDEN);
   REQUIRE(processor.isSingleThreaded());
-  const auto properties = processor.getProperties();
+  const auto properties = processor.getSupportedProperties();
   REQUIRE(properties.size() == 2);
   REQUIRE(properties.contains("Property 1"));
   REQUIRE(properties.at("Property 1").supportsExpressionLanguage());
@@ -98,7 +98,7 @@ TEST_CASE("AbstractProcessor case2", "[processor][abstractprocessor][case2]") {
   REQUIRE(!processor.supportsDynamicRelationships());
   REQUIRE(processor.getInputRequirement() == core::annotation::Input::INPUT_REQUIRED);
   REQUIRE(!processor.isSingleThreaded());
-  const auto properties = processor.getProperties();
+  const auto properties = processor.getSupportedProperties();
   REQUIRE(properties.size() == 2);
   REQUIRE(properties.contains("prop 1"));
   REQUIRE(properties.at("prop 1").supportsExpressionLanguage());

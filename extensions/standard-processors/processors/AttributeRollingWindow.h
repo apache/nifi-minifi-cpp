@@ -51,14 +51,14 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
   EXTENSIONAPI static constexpr auto TimeWindow = core::PropertyDefinitionBuilder<>::createProperty("Time window")
       .withDescription("The amount of time for a rolling window. The format of the value is expected to be a "
           "count followed by a time unit. For example 5 millis, 10 secs, 1 min, 3 hours, 2 days, etc.")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto WindowLength = core::PropertyDefinitionBuilder<>::createProperty("Window length")
       .withDescription("The window length in number of values. Takes precedence over 'Time window'. If set to zero, "
           "the 'Time window' property is used instead.")
       .isRequired(true)
       .withDefaultValue("0")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto AttributeNamePrefix = core::PropertyDefinitionBuilder<>::createProperty("Attribute name prefix")
       .withDescription("The prefix to add to the generated attribute names. For example, if this is set to 'rolling.window.', "

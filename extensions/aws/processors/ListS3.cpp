@@ -18,12 +18,13 @@
 #include "ListS3.h"
 
 #include <algorithm>
-#include <utility>
 #include <memory>
+#include <utility>
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
 
@@ -51,29 +52,29 @@ void ListS3::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   list_request_params_->setClientConfig(common_properties->proxy, common_properties->endpoint_override_url);
   list_request_params_->bucket = common_properties->bucket;
 
-  context.getProperty(Delimiter, list_request_params_->delimiter);
+  if (const auto delimiter = context.getProperty(Delimiter)) {
+    list_request_params_->delimiter = *delimiter;
+  }
   logger_->log_debug("ListS3: Delimiter [{}]", list_request_params_->delimiter);
 
-  context.getProperty(Prefix, list_request_params_->prefix);
+  if (const auto prefix = context.getProperty(Prefix)) {
+    list_request_params_->prefix = *prefix;
+  }
   logger_->log_debug("ListS3: Prefix [{}]", list_request_params_->prefix);
 
-  context.getProperty(UseVersions, list_request_params_->use_versions);
+  list_request_params_->use_versions = minifi::utils::parseBoolProperty(context, UseVersions);
   logger_->log_debug("ListS3: UseVersions [{}]", list_request_params_->use_versions);
 
-  if (auto minimum_object_age = context.getProperty<core::TimePeriodValue>(MinimumObjectAge)) {
-    list_request_params_->min_object_age = minimum_object_age->getMilliseconds().count();
-  } else {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Minimum Object Age missing or invalid");
-  }
+  list_request_params_->min_object_age = minifi::utils::parseMsProperty(context, MinimumObjectAge).count();
   logger_->log_debug("S3Processor: Minimum Object Age [{}]", list_request_params_->min_object_age);
 
-  context.getProperty(WriteObjectTags, write_object_tags_);
+  write_object_tags_ = minifi::utils::parseBoolProperty(context, WriteObjectTags);
   logger_->log_debug("ListS3: WriteObjectTags [{}]", write_object_tags_);
 
-  context.getProperty(WriteUserMetadata, write_user_metadata_);
+  write_user_metadata_ = minifi::utils::parseBoolProperty(context, WriteUserMetadata);
   logger_->log_debug("ListS3: WriteUserMetadata [{}]", write_user_metadata_);
 
-  context.getProperty(RequesterPays, requester_pays_);
+  requester_pays_ = minifi::utils::parseBoolProperty(context, RequesterPays);
   logger_->log_debug("ListS3: RequesterPays [{}]", requester_pays_);
 }
 

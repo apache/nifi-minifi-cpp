@@ -65,9 +65,9 @@ ProcessSessionImpl::ProcessSessionImpl(std::shared_ptr<ProcessContext> processCo
         : process_context_(std::move(processContext)),
           logger_(logging::LoggerFactory<ProcessSession>::getLogger()),
           stateManager_(process_context_->hasStateManager() ? process_context_->getStateManager() : nullptr) {
-  logger_->log_trace("ProcessSession created for {}", process_context_->getProcessorNode()->getName());
+  logger_->log_trace("ProcessSession created for {}", process_context_->getProcessor().getName());
   auto repo = process_context_->getProvenanceRepository();
-  provenance_report_ = std::make_shared<provenance::ProvenanceReporterImpl>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
+  provenance_report_ = std::make_shared<provenance::ProvenanceReporterImpl>(repo, process_context_->getProcessor().getName(), process_context_->getProcessor().getName());
   content_session_ = process_context_->getContentRepository()->createSession();
 
   if (stateManager_ && !stateManager_->beginTransaction()) {
@@ -94,7 +94,7 @@ void ProcessSessionImpl::add(const std::shared_ptr<core::FlowFile> &record) {
 
 std::shared_ptr<core::FlowFile> ProcessSessionImpl::create(const core::FlowFile* const parent) {
   auto record = std::make_shared<FlowFileRecordImpl>();
-  auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
+  auto flow_version = process_context_->getProcessor().getFlowIdentifier();
   if (flow_version != nullptr) {
     record->setAttribute(SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());
   }
@@ -116,7 +116,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::create(const core::FlowFile*
   added_flowfiles_[uuid].flow_file = record;
   logger_->log_debug("Create FlowFile with UUID {}", record->getUUIDStr());
   std::stringstream details;
-  details << process_context_->getProcessorNode()->getName() << " creates flow record " << record->getUUIDStr();
+  details << process_context_->getProcessor().getName() << " creates flow record " << record->getUUIDStr();
   provenance_report_->create(*record, details.str());
 
   return record;
@@ -141,7 +141,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::clone(const core::FlowFile& 
 std::shared_ptr<core::FlowFile> ProcessSessionImpl::cloneDuringTransfer(const core::FlowFile& parent) {
   auto record = std::make_shared<FlowFileRecordImpl>();
 
-  auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
+  auto flow_version = process_context_->getProcessor().getFlowIdentifier();
   if (flow_version != nullptr) {
     record->setAttribute(SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());
   }
@@ -199,30 +199,30 @@ void ProcessSessionImpl::remove(const std::shared_ptr<core::FlowFile> &flow) {
   logger_->log_debug("Removing flow file with UUID: {}", flow->getUUIDStr());
   flow->setDeleted(true);
   deleted_flowfiles_.push_back(flow);
-  std::string reason = process_context_->getProcessorNode()->getName() + " drop flow record " + flow->getUUIDStr();
+  std::string reason = process_context_->getProcessor().getName() + " drop flow record " + flow->getUUIDStr();
   provenance_report_->drop(*flow, reason);
 }
 
 void ProcessSessionImpl::putAttribute(core::FlowFile& flow_file, std::string_view key, const std::string& value) {
   flow_file.setAttribute(key, value);
-  std::string details = fmt::format("{} modify flow record {} attribute {}:{}", process_context_->getProcessorNode()->getName(), flow_file.getUUIDStr(), key, value);
+  std::string details = fmt::format("{} modify flow record {} attribute {}:{}", process_context_->getProcessor().getName(), flow_file.getUUIDStr(), key, value);
   provenance_report_->modifyAttributes(flow_file, details);
 }
 
 void ProcessSessionImpl::removeAttribute(core::FlowFile& flow_file, std::string_view key) {
   flow_file.removeAttribute(key);
-  std::string details = fmt::format("{} remove flow record {} attribute {}", process_context_->getProcessorNode()->getName(), flow_file.getUUIDStr(), key);
+  std::string details = fmt::format("{} remove flow record {} attribute {}", process_context_->getProcessor().getName(), flow_file.getUUIDStr(), key);
   provenance_report_->modifyAttributes(flow_file, details);
 }
 
 void ProcessSessionImpl::penalize(const std::shared_ptr<core::FlowFile> &flow) {
-  const std::chrono::milliseconds penalization_period = process_context_->getProcessorNode()->getPenalizationPeriod();
-  logger_->log_info("Penalizing {} for {} at {}", flow->getUUIDStr(), penalization_period, process_context_->getProcessorNode()->getName());
+  const std::chrono::milliseconds penalization_period = process_context_->getProcessor().getPenalizationPeriod();
+  logger_->log_info("Penalizing {} for {} at {}", flow->getUUIDStr(), penalization_period, process_context_->getProcessor().getName());
   std::dynamic_pointer_cast<FlowFileImpl>(flow)->penalize(penalization_period);
 }
 
 void ProcessSessionImpl::transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) {
-  logger_->log_debug("Transferring {} from {} to relationship {}", flow->getUUIDStr(), process_context_->getProcessorNode()->getName(), relationship.getName());
+  logger_->log_debug("Transferring {} from {} to relationship {}", flow->getUUIDStr(), process_context_->getProcessor().getName(), relationship.getName());
   utils::Identifier uuid = flow->getUUID();
   if (auto it = added_flowfiles_.find(uuid); it != added_flowfiles_.end()) {
     it->second.rel = &*relationships_.insert(relationship).first;
@@ -263,7 +263,7 @@ void ProcessSessionImpl::write(core::FlowFile &flow, const io::OutputStreamCallb
     flow.setResourceClaim(claim);
 
     stream->close();
-    std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow.getUUIDStr();
+    std::string details = process_context_->getProcessor().getName() + " modify flow record content " + flow.getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(flow, details, duration);
     if (metrics_) {
@@ -323,7 +323,7 @@ void ProcessSessionImpl::append(const std::shared_ptr<core::FlowFile> &flow, con
     }
 
     std::stringstream details;
-    details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
+    details << process_context_->getProcessor().getName() << " modify flow record content " << flow->getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(*flow, details.str(), duration);
   } catch (const std::exception& exception) {
@@ -501,7 +501,7 @@ void ProcessSessionImpl::importFrom(io::InputStream &stream, const std::shared_p
       metrics_->bytesWritten() += content_stream->size();
     }
     std::stringstream details;
-    details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
+    details << process_context_->getProcessor().getName() << " modify flow record content " << flow->getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(*flow, details.str(), duration);
   } catch (const std::exception& exception) {
@@ -569,7 +569,7 @@ void ProcessSessionImpl::import(const std::string& source, const std::shared_ptr
           (void)std::remove(source.c_str());
         }
         std::stringstream details;
-        details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
+        details << process_context_->getProcessor().getName() << " modify flow record content " << flow->getUUIDStr();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
         provenance_report_->modifyContent(*flow, details.str(), duration);
       } else {
@@ -669,7 +669,7 @@ void ProcessSessionImpl::import(const std::string& source, std::vector<std::shar
         if (metrics_) {
           metrics_->bytesWritten() += stream->size();
         }
-        std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
+        std::string details = process_context_->getProcessor().getName() + " modify flow record content " + flowFile->getUUIDStr();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
         provenance_report_->modifyContent(*flowFile, details, duration);
         flows.push_back(flowFile);
@@ -799,10 +799,10 @@ ProcessSessionImpl::RouteResult ProcessSessionImpl::routeFlowFile(const std::sha
     return RouteResult::Error_NoRelationship;
   }
   // Find the relationship, we need to find the connections for that relationship
-  const auto connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship.getName());
+  const auto connections = process_context_->getProcessor().getOutGoingConnections(relationship.getName());
   if (connections.empty()) {
     // No connection
-    if (!process_context_->getProcessorNode()->isAutoTerminated(relationship)) {
+    if (!process_context_->getProcessor().isAutoTerminated(relationship)) {
       // Not autoterminate, we should have the connect
       std::string message = "Connect empty for non auto terminated relationship " + relationship.getName();
       throw Exception(PROCESS_SESSION_EXCEPTION, message);
@@ -949,7 +949,7 @@ void ProcessSessionImpl::commit() {
     relationships_.clear();
     // persistent the provenance report
     this->provenance_report_->commit();
-    logger_->log_debug("ProcessSession committed for {}", process_context_->getProcessorNode()->getName());
+    logger_->log_debug("ProcessSession committed for {}", process_context_->getProcessor().getName());
     if (metrics_) {
       auto time_delta = std::chrono::steady_clock::now() - commit_start_time;
       metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(time_delta));
@@ -977,7 +977,7 @@ void ProcessSessionImpl::rollback() {
       flowFile->copy(*it.second.snapshot);
       penalize(flowFile);
       logger_->log_debug("ProcessSession rollback for {}, record {}, to connection {}",
-          process_context_->getProcessorNode()->getName(),
+          process_context_->getProcessor().getName(),
           flowFile->getUUIDStr(),
           flowFile->getConnection()->getName());
       connectionQueues[flowFile->getConnection()].push_back(flowFile);
@@ -1010,7 +1010,7 @@ void ProcessSessionImpl::rollback() {
     updated_flowfiles_.clear();
     deleted_flowfiles_.clear();
     relationships_.clear();
-    logger_->log_warn("ProcessSession rollback for {} executed", process_context_->getProcessorNode()->getName());
+    logger_->log_warn("ProcessSession rollback for {} executed", process_context_->getProcessor().getName());
   } catch (const std::exception& exception) {
     logger_->log_warn("Caught Exception during process session rollback, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
@@ -1113,8 +1113,8 @@ void ProcessSessionImpl::ensureNonNullResourceClaim(
       auto claim = flowFile->getResourceClaim();
       if (!claim) {
         logger_->log_debug("Processor {} ({}) did not create a ResourceClaim, creating an empty one",
-                           process_context_->getProcessorNode()->getUUIDStr(),
-                           process_context_->getProcessorNode()->getName());
+                           process_context_->getProcessor().getUUIDStr(),
+                           process_context_->getProcessor().getName());
         io::BufferStream emptyBufferStream;
         write(flowFile, OutputStreamPipe{emptyBufferStream});
       }
@@ -1123,17 +1123,17 @@ void ProcessSessionImpl::ensureNonNullResourceClaim(
 }
 
 std::shared_ptr<core::FlowFile> ProcessSessionImpl::get() {
-  const auto first = process_context_->getProcessorNode()->pickIncomingConnection();
+  const auto first = process_context_->getProcessor().pickIncomingConnection();
 
   if (first == nullptr) {
-    logger_->log_trace("Get is null for {}", process_context_->getProcessorNode()->getName());
+    logger_->log_trace("Get is null for {}", process_context_->getProcessor().getName());
     return nullptr;
   }
 
   auto current = dynamic_cast<Connection*>(first);
   if (!current) {
     logger_->log_error("The incoming connection [{}] of the processor [{}] \"{}\" is not actually a Connection.",
-                       first->getUUIDStr(), process_context_->getProcessorNode()->getUUIDStr(), process_context_->getProcessorNode()->getName());
+                       first->getUUIDStr(), process_context_->getProcessor().getUUIDStr(), process_context_->getProcessor().getName());
     return {};
   }
 
@@ -1144,7 +1144,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::get() {
       // Remove expired flow record
       for (const auto& record : expired) {
         std::stringstream details;
-        details << process_context_->getProcessorNode()->getName() << " expire flow record " << record->getUUIDStr();
+        details << process_context_->getProcessor().getName() << " expire flow record " << record->getUUIDStr();
         provenance_report_->expire(*record, details.str());
         // there is no rolling back expired FlowFiles
         if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
@@ -1160,7 +1160,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::get() {
       logger_->log_debug("Create Snapshot FlowFile with UUID {}", snapshot->getUUIDStr());
       utils::Identifier uuid = ret->getUUID();
       updated_flowfiles_[uuid] = {ret, snapshot};
-      auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
+      auto flow_version = process_context_->getProcessor().getFlowIdentifier();
       if (flow_version != nullptr) {
         ret->setAttribute(SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());
       }
@@ -1170,7 +1170,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::get() {
       }
       return ret;
     }
-    current = dynamic_cast<Connection*>(process_context_->getProcessorNode()->pickIncomingConnection());
+    current = dynamic_cast<Connection*>(process_context_->getProcessor().pickIncomingConnection());
   } while (current != nullptr && current != first);
 
   return nullptr;
@@ -1181,7 +1181,7 @@ void ProcessSessionImpl::flushContent() {
 }
 
 bool ProcessSessionImpl::outgoingConnectionsFull(const std::string& relationship) {
-  std::set<Connectable*> connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship);
+  std::set<Connectable*> connections = process_context_->getProcessor().getOutGoingConnections(relationship);
   Connection * connection = nullptr;
   for (const auto conn : connections) {
     connection = dynamic_cast<Connection*>(conn);

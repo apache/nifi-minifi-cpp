@@ -41,6 +41,7 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
   EXTENSIONAPI static constexpr auto ContainerName = core::PropertyDefinitionBuilder<>::createProperty("Container Name")
       .withDescription("Name of the Azure Storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.")
       .supportsExpressionLanguage(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto StorageAccountName = core::PropertyDefinitionBuilder<>::createProperty("Storage Account Name")
@@ -70,7 +71,7 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
   EXTENSIONAPI static constexpr auto UseManagedIdentityCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Managed Identity Credentials")
       .withDescription("If true Managed Identity credentials will be used together with the Storage Account Name for authentication.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureStorageProcessorBase::Properties, std::to_array<core::PropertyReference>({

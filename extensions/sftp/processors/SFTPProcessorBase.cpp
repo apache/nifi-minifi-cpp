@@ -17,7 +17,6 @@
 
 #include "SFTPProcessorBase.h"
 
-#include <memory>
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
@@ -26,19 +25,21 @@
 #include <iterator>
 #include <limits>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "utils/ByteArrayCallback.h"
+#include "ResourceClaim.h"
 #include "core/FlowFile.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
+#include "core/logging/Logger.h"
 #include "io/BufferStream.h"
-#include "ResourceClaim.h"
+#include "utils/ByteArrayCallback.h"
 #include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -69,31 +70,12 @@ void SFTPProcessorBase::notifyStop() {
 }
 
 void SFTPProcessorBase::parseCommonPropertiesOnSchedule(core::ProcessContext& context) {
-  std::string value;
-  if (!context.getProperty(StrictHostKeyChecking, value)) {
-    logger_->log_error("Strict Host Key Checking attribute is missing or invalid");
-  } else {
-    strict_host_checking_ = utils::string::toBool(value).value_or(false);
-  }
-  context.getProperty(HostKeyFile, host_key_file_);
-  if (auto connection_timeout = context.getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
-    connection_timeout_ = connection_timeout->getMilliseconds();
-  } else {
-    logger_->log_error("Connection Timeout attribute is missing or invalid");
-  }
-
-  if (auto data_timeout = context.getProperty<core::TimePeriodValue>(DataTimeout)) {
-    data_timeout_ = data_timeout->getMilliseconds();
-  } else {
-    logger_->log_error("Data Timeout attribute is missing or invalid");
-  }
-
-  if (!context.getProperty(SendKeepaliveOnTimeout, value)) {
-    logger_->log_error("Send Keep Alive On Timeout attribute is missing or invalid");
-  } else {
-    use_keepalive_on_timeout_ = utils::string::toBool(value).value_or(true);
-  }
-  context.getProperty(ProxyType, proxy_type_);
+  strict_host_checking_ = utils::parseBoolProperty(context, StrictHostKeyChecking);
+  host_key_file_ = utils::parseOptionalProperty(context, HostKeyFile).value_or("");
+  connection_timeout_ = utils::parseMsProperty(context, ConnectionTimeout);
+  data_timeout_ = utils::parseMsProperty(context, DataTimeout);
+  use_keepalive_on_timeout_ = utils::parseBoolProperty(context, SendKeepaliveOnTimeout);
+  proxy_type_ = utils::parseProperty(context, ProxyType);
 }
 
 SFTPProcessorBase::CommonProperties::CommonProperties()
@@ -102,47 +84,21 @@ SFTPProcessorBase::CommonProperties::CommonProperties()
 }
 
 bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(core::ProcessContext& context, const core::FlowFile* const flow_file, CommonProperties& common_properties) {
-  std::string value;
-  if (!context.getProperty(Hostname, common_properties.hostname, flow_file)) {
-    logger_->log_error("Hostname attribute is missing");
+  try {
+    common_properties.hostname = utils::parseProperty(context, Hostname, flow_file);
+    common_properties.port = gsl::narrow<uint16_t>(utils::parseU64Property(context, Port, flow_file));
+    common_properties.username = utils::parseOptionalProperty(context, Username, flow_file).value_or("");
+    common_properties.private_key_path = utils::parseOptionalProperty(context, PrivateKeyPath, flow_file).value_or("");
+    common_properties.private_key_passphrase = utils::parseOptionalProperty(context, PrivateKeyPassphrase, flow_file).value_or("");
+    common_properties.password = utils::parseOptionalProperty(context, Password, flow_file).value_or("");
+    common_properties.proxy_host = utils::parseOptionalProperty(context, ProxyHost, flow_file).value_or("");
+    common_properties.proxy_port = gsl::narrow<uint16_t>(utils::parseOptionalU64Property(context, ProxyHost, flow_file).value_or(0));
+    common_properties.proxy_username = utils::parseOptionalProperty(context, HttpProxyUsername, flow_file).value_or("");
+    common_properties.proxy_password = utils::parseOptionalProperty(context, HttpProxyPassword, flow_file).value_or("");
+  } catch (const std::exception& e) {
+    logger_->log_error("Failed to parse common properties on {}", e.what());
     return false;
   }
-  if (!context.getProperty(Port, value, flow_file)) {
-    logger_->log_error("Port attribute is missing or invalid");
-    return false;
-  } else {
-    int port_tmp = 0;
-    if (!core::Property::StringToInt(value, port_tmp) ||
-        port_tmp <= std::numeric_limits<uint16_t>::min() ||
-        port_tmp > std::numeric_limits<uint16_t>::max()) {
-      logger_->log_error("Port attribute \"{}\" is invalid", value);
-      return false;
-    } else {
-      common_properties.port = static_cast<uint16_t>(port_tmp);
-    }
-  }
-  if (!context.getProperty(Username, common_properties.username, flow_file)) {
-    logger_->log_error("Username attribute is missing");
-    return false;
-  }
-  context.getProperty(Password, common_properties.password, flow_file);
-  context.getProperty(PrivateKeyPath, common_properties.private_key_path, flow_file);
-  context.getProperty(PrivateKeyPassphrase, common_properties.private_key_passphrase, flow_file);
-  context.getProperty(Password, common_properties.password, flow_file);
-  context.getProperty(ProxyHost, common_properties.proxy_host, flow_file);
-  if (context.getProperty(ProxyPort, value, flow_file) && !value.empty()) {
-    int port_tmp = 0;
-    if (!core::Property::StringToInt(value, port_tmp) ||
-        port_tmp <= std::numeric_limits<uint16_t>::min() ||
-        port_tmp > std::numeric_limits<uint16_t>::max()) {
-      logger_->log_error("Proxy Port attribute \"{}\" is invalid", value);
-      return false;
-    } else {
-      common_properties.proxy_port = static_cast<uint16_t>(port_tmp);
-    }
-  }
-  context.getProperty(HttpProxyUsername, common_properties.proxy_username, flow_file);
-  context.getProperty(HttpProxyPassword, common_properties.proxy_password, flow_file);
 
   return true;
 }

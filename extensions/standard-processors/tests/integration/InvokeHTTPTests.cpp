@@ -29,7 +29,6 @@
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessorNode.h"
 #include "processors/LogAttribute.h"
 #include "unit/SingleProcessorTestController.h"
 #include "integration/ConnectionCountingServer.h"
@@ -124,10 +123,10 @@ TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in H
 
   LogTestController::getInstance().setDebug<InvokeHTTP>();
 
-  invokehttp->setProperty(InvokeHTTP::Method, "GET");
-  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
-  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "fail");
-  invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
+  invokehttp->setProperty(InvokeHTTP::Method.name, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy.name, "fail");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend.name, ".*");
   invokehttp->setAutoTerminatedRelationships(std::array<core::Relationship, 4>{InvokeHTTP::RelNoRetry, InvokeHTTP::Success, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   const auto result = test_controller.trigger("data", {{"invalid header", "value"}});
   auto file_contents = result.at(InvokeHTTP::RelFailure);
@@ -145,10 +144,10 @@ TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that wou
 
   LogTestController::getInstance().setDebug<InvokeHTTP>();
 
-  invokehttp->setProperty(InvokeHTTP::Method, "GET");
-  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
-  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "fail");
-  invokehttp->setProperty(InvokeHTTP::AttributesToSend, "valid.*");
+  invokehttp->setProperty(InvokeHTTP::Method.name, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy.name, "fail");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend.name, "valid.*");
   invokehttp->setAutoTerminatedRelationships(std::array<core::Relationship, 4>{InvokeHTTP::RelNoRetry, InvokeHTTP::Success, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   const auto result = test_controller.trigger("data", {{"invalid header", "value"}, {"valid-header", "value2"}});
   REQUIRE(result.at(InvokeHTTP::RelFailure).empty());
@@ -167,9 +166,9 @@ TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]")
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
-  invokehttp->setProperty(InvokeHTTP::Method, "GET");
-  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
-  invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
+  invokehttp->setProperty(InvokeHTTP::Method.name, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend.name, ".*");
   invokehttp->setAutoTerminatedRelationships(std::array<core::Relationship, 4>{InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   const auto result = test_controller.trigger("data", {{"invalid header", "value"}, {"", "value2"}});
   auto file_contents = result.at(InvokeHTTP::Success);
@@ -188,10 +187,10 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
-  invokehttp->setProperty(InvokeHTTP::Method, "GET");
-  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
-  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
-  invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
+  invokehttp->setProperty(InvokeHTTP::Method.name, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy.name, "drop");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend.name, ".*");
   invokehttp->setAutoTerminatedRelationships(std::array<core::Relationship, 4>{InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   const auto result = test_controller.trigger("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
   auto file_contents = result.at(InvokeHTTP::Success);
@@ -210,10 +209,10 @@ TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
-  invokehttp->setProperty(InvokeHTTP::Method, "GET");
-  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
-  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
-  invokehttp->setProperty(InvokeHTTP::AttributesToSend, "");
+  invokehttp->setProperty(InvokeHTTP::Method.name, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy.name, "drop");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend.name, "");
   invokehttp->setAutoTerminatedRelationships(std::array<core::Relationship, 4>{InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   const auto result = test_controller.trigger("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
   auto file_contents = result.at(InvokeHTTP::Success);
@@ -232,9 +231,9 @@ TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
-  invoke_http->setProperty(InvokeHTTP::Method, "GET");
-  invoke_http->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
-  invoke_http->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
+  invoke_http->setProperty(InvokeHTTP::Method.name, "GET");
+  invoke_http->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL);
+  invoke_http->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy.name, "drop");
   invoke_http->setAutoTerminatedRelationships(std::array<core::Relationship, 4>{InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
 
   bool date_header{};
@@ -245,7 +244,7 @@ TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
     date_header = true;
   };
 
-  invoke_http->setProperty(InvokeHTTP::DateHeader, date_header ? "true" : "false");
+  invoke_http->setProperty(InvokeHTTP::DateHeader.name, date_header ? "true" : "false");
   const auto result = test_controller.trigger("data");
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
@@ -262,10 +261,10 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
-  invokehttp->setProperty(InvokeHTTP::Method, "GET");
-  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
-  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
-  invokehttp->setProperty(InvokeHTTP::AttributesToSend, "he.*er");
+  invokehttp->setProperty(InvokeHTTP::Method.name, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy.name, "drop");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend.name, "he.*er");
   invokehttp->setAutoTerminatedRelationships(std::array<core::Relationship, 4>{InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   const auto result = test_controller.trigger("data", {{"header1", "value1"}, {"header", "value2"}});
   auto file_contents = result.at(InvokeHTTP::Success);
@@ -284,9 +283,9 @@ TEST_CASE("HTTPTestsResponseBodyinAttribute", "[InvokeHTTP]") {
 
   minifi::test::ConnectionCountingServer connection_counting_server;
 
-  invoke_http->setProperty(InvokeHTTP::Method, "POST");
-  invoke_http->setProperty(InvokeHTTP::URL, "http://localhost:" + connection_counting_server.getPort()  + "/reverse");
-  invoke_http->setProperty(InvokeHTTP::PutResponseBodyInAttribute, "http.body");
+  invoke_http->setProperty(InvokeHTTP::Method.name, "POST");
+  invoke_http->setProperty(InvokeHTTP::URL.name, "http://localhost:" + connection_counting_server.getPort()  + "/reverse");
+  invoke_http->setProperty(InvokeHTTP::PutResponseBodyInAttribute.name, "http.body");
   const auto result = test_controller.trigger("data", {{"header1", "value1"}, {"header", "value2"}});
   auto success_flow_files = result.at(InvokeHTTP::Success);
   CHECK(result.at(InvokeHTTP::RelFailure).empty());
@@ -309,9 +308,9 @@ TEST_CASE("HTTPTestsResponseBody", "[InvokeHTTP]") {
 
   minifi::test::ConnectionCountingServer connection_counting_server;
 
-  invoke_http->setProperty(InvokeHTTP::Method, "POST");
-  invoke_http->setProperty(InvokeHTTP::URL, "http://localhost:" + connection_counting_server.getPort()  + "/reverse");
-  invoke_http->setProperty(InvokeHTTP::SendMessageBody, "true");
+  invoke_http->setProperty(InvokeHTTP::Method.name, "POST");
+  invoke_http->setProperty(InvokeHTTP::URL.name, "http://localhost:" + connection_counting_server.getPort()  + "/reverse");
+  invoke_http->setProperty(InvokeHTTP::SendMessageBody.name, "true");
   const auto result = test_controller.trigger("data", {{"header1", "value1"}, {"header", "value2"}});
   CHECK(result.at(InvokeHTTP::RelFailure).empty());
   CHECK(result.at(InvokeHTTP::RelNoRetry).empty());
@@ -332,8 +331,8 @@ TEST_CASE("Test Keepalive", "[InvokeHTTP]") {
 
   minifi::test::ConnectionCountingServer connection_counting_server;
 
-  invoke_http->setProperty(InvokeHTTP::Method, "GET");
-  invoke_http->setProperty(InvokeHTTP::URL, "http://localhost:" + connection_counting_server.getPort()  + "/method");
+  invoke_http->setProperty(InvokeHTTP::Method.name, "GET");
+  invoke_http->setProperty(InvokeHTTP::URL.name, "http://localhost:" + connection_counting_server.getPort()  + "/method");
 
   for (auto i = 0; i < 4; ++i) {
     const auto result = test_controller.trigger(InputFlowFileData{"data"});
@@ -345,6 +344,23 @@ TEST_CASE("Test Keepalive", "[InvokeHTTP]") {
   }
 
   CHECK(1 == connection_counting_server.getConnectionCounter());
+}
+
+TEST_CASE("Validating data transfer speed") {
+  const auto& data_transfer_speed_validator = processors::invoke_http::DATA_TRANSFER_SPEED_VALIDATOR;
+  CHECK(data_transfer_speed_validator.validate("10 kB/s"));
+  CHECK(data_transfer_speed_validator.validate("20 MB/s"));
+  CHECK(data_transfer_speed_validator.validate("20 TB/s"));
+  CHECK_FALSE(data_transfer_speed_validator.validate("1KBinvalidsuffix"));
+  CHECK_FALSE(data_transfer_speed_validator.validate("1KB"));
+}
+
+TEST_CASE("Data transfer speed parsing") {
+  CHECK(processors::invoke_http::parseDataTransferSpeed("10 kB/s") == 10_KiB);
+  CHECK(processors::invoke_http::parseDataTransferSpeed("20 MB/s") == 20_MiB);
+  CHECK(processors::invoke_http::parseDataTransferSpeed("19 TB/s") == 19_TiB);
+  CHECK(processors::invoke_http::parseDataTransferSpeed("1KBinvalidsuffix") == nonstd::make_unexpected(make_error_code(core::ParsingErrorCode::GeneralParsingError)));
+  CHECK(processors::invoke_http::parseDataTransferSpeed("1KB") == nonstd::make_unexpected(make_error_code(core::ParsingErrorCode::GeneralParsingError)));
 }
 
 }  // namespace org::apache::nifi::minifi::test

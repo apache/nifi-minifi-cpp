@@ -44,7 +44,7 @@ void ProcFsMonitor::onSchedule(core::ProcessContext& context, core::ProcessSessi
   output_format_ = utils::parseEnumProperty<OutputFormat>(context, OutputFormatProperty);
   output_compactness_ = utils::parseEnumProperty<OutputCompactness>(context, OutputCompactnessProperty);
   result_relativeness_ = utils::parseEnumProperty<ResultRelativeness>(context, ResultRelativenessProperty);
-  setupDecimalPlacesFromProperties(context);
+  decimal_places_ = context.getProperty(DecimalPlaces) | utils::andThen(parsing::parseIntegral<uint8_t>) | utils::toOptional();
 }
 
 namespace {
@@ -116,26 +116,6 @@ rapidjson::Value& ProcFsMonitor::prepareJSONBody(rapidjson::Document& root) {
     return root;
   } else {
     throw Exception(GENERAL_EXCEPTION, "Invalid output format");
-  }
-}
-
-void ProcFsMonitor::setupDecimalPlacesFromProperties(const core::ProcessContext& context) {
-  std::string decimal_places_str;
-  if (!context.getProperty(DecimalPlaces, decimal_places_str) || decimal_places_str.empty()) {
-    decimal_places_ = std::nullopt;
-    return;
-  }
-
-  try {
-    const auto decimal_places = std::stoul(decimal_places_str);
-    if (decimal_places > std::numeric_limits<uint8_t>::max() || decimal_places == 0) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "ProcFsMonitor Decimal Places property is zero or too large");
-    }
-    decimal_places_ = gsl::narrow<uint8_t>(decimal_places);
-    logger_->log_trace("Rounding is enabled with {} decimal places", decimal_places_.value());
-  } catch (const std::exception&) {
-    logger_->log_error("ProcFsMonitor Decimal Places property is invalid or out of range: {}", decimal_places_str);
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "ProcFsMonitor Decimal Places property is invalid or out of range");
   }
 }
 

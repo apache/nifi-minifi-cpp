@@ -32,7 +32,6 @@
 #include "agent/agent_docs.h"
 #include "agent/agent_version.h"
 #include "core/Core.h"
-#include "core/PropertyValue.h"
 #include "core/PropertyType.h"
 #include "core/Relationship.h"
 #include "TableFormatter.h"
@@ -53,12 +52,11 @@ std::string formatName(std::string_view name_view, bool is_required) {
 }
 
 std::string formatAllowedValues(const minifi::core::Property& property) {
-  if (property.getValidator().getValidatorName() == minifi::core::StandardPropertyTypes::BOOLEAN_TYPE.getValidatorName()) {
+  if (property.getValidator().getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyTypes::BOOLEAN_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
     return "true<br/>false";
   } else {
     const auto allowed_values = property.getAllowedValues();
     return allowed_values
-        | ranges::views::transform([](const auto &value) { return value.to_string(); })
         | ranges::views::join(std::string_view{"<br/>"})
         | ranges::to<std::string>();
   }
@@ -129,7 +127,7 @@ void writeProperties(std::ostream& docs, const minifi::ClassDescription& documen
   for (const auto &property : documentation.class_properties_) {
     properties.addRow({
         formatName(property.getName(), property.getRequired()),
-        property.getDefaultValue().to_string(),
+        property.getDefaultValue().value_or(""),
         formatAllowedValues(property),
         formatDescription(property)
     });

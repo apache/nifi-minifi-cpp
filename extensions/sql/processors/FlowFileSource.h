@@ -72,7 +72,7 @@ class FlowFileSource {
         "If the value specified is zero, then all rows are returned in a single FlowFile.")
       .isRequired(true)
       .supportsExpressionLanguage(true)
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({OutputFormat, MaxRowsPerFlowFile});

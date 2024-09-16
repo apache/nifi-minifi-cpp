@@ -32,7 +32,7 @@ bool AzureBlobStorageSingleBlobProcessorBase::setBlobOperationParameters(
     return false;
   }
 
-  context.getProperty(Blob, params.blob_name, &flow_file);
+  params.blob_name = context.getProperty(Blob, &flow_file).value_or("");
   if (params.blob_name.empty() && (!flow_file.getAttribute("filename", params.blob_name) || params.blob_name.empty())) {
     logger_->log_error("Blob is not set and default 'filename' attribute could not be found!");
     return false;

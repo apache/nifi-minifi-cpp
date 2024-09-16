@@ -51,19 +51,15 @@ void QueryDatabaseTable::initialize() {
 
 void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   output_format_ = utils::parseEnumProperty<flow_file_source::OutputType>(context, OutputFormat);
-  max_rows_ = [&] {
-    uint64_t max_rows = 0;
-    context.getProperty(MaxRowsPerFlowFile, max_rows);
-    return gsl::narrow<size_t>(max_rows);
-  }();
+  max_rows_ = gsl::narrow<size_t>(utils::parseU64Property(context, MaxRowsPerFlowFile));
 
   state_manager_ = context.getStateManager();
   if (state_manager_ == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  context.getProperty(TableName, table_name_);
-  context.getProperty(WhereClause, extra_where_clause_);
+  table_name_ = context.getProperty(TableName).value_or("");
+  extra_where_clause_ = context.getProperty(WhereClause).value_or("");
 
   return_columns_.clear();
   queried_columns_.clear();
@@ -197,10 +193,9 @@ void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext
     if (!it->second.empty()) {
       continue;
     }
-    std::string value;
-    if (context.getDynamicProperty(key, value) && !value.empty()) {
-      it->second = value;
-      logger_->log_info("Setting initial maximum value of {} to {}", column_name.str(), value);
+    if (auto dynamic_property_value = context.getDynamicProperty(key); dynamic_property_value && !dynamic_property_value->empty()) {
+      it->second = *dynamic_property_value;
+      logger_->log_info("Setting initial maximum value of {} to {}", column_name.str(), *dynamic_property_value);
     }
   }
 }

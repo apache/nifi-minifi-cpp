@@ -54,19 +54,19 @@ void CompressContent::initialize() {
 }
 
 void CompressContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  context.getProperty(CompressLevel, compressLevel_);
+  compressLevel_ = gsl::narrow<int>(utils::parseI64Property(context, CompressLevel));
   compressMode_ = utils::parseEnumProperty<compress_content::CompressionMode>(context, CompressMode);
   compressFormat_ = utils::parseEnumProperty<compress_content::ExtendedCompressionFormat>(context, CompressFormat);
-  context.getProperty(UpdateFileName, updateFileName_);
-  context.getProperty(EncapsulateInTar, encapsulateInTar_);
-  context.getProperty(BatchSize, batchSize_);
+  updateFileName_ = utils::parseBoolProperty(context, UpdateFileName);
+  encapsulateInTar_ = utils::parseBoolProperty(context, EncapsulateInTar);
+  batchSize_ = utils::parseU64Property(context, BatchSize);
 
   logger_->log_info("Compress Content: Mode [{}] Format [{}] Level [{}] UpdateFileName [{}] EncapsulateInTar [{}]",
       magic_enum::enum_name(compressMode_), magic_enum::enum_name(compressFormat_), compressLevel_, updateFileName_, encapsulateInTar_);
 }
 
 void CompressContent::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  size_t processedFlowFileCount = 0;
+  uint64_t processedFlowFileCount = 0;
   for (; processedFlowFileCount < batchSize_; ++processedFlowFileCount) {
     std::shared_ptr<core::FlowFile> flowFile = session.get();
     if (!flowFile) {

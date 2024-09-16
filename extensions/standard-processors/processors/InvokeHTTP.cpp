@@ -28,11 +28,13 @@
 #include "core/ProcessContext.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
-#include "utils/gsl.h"
-#include "utils/ProcessorConfigUtils.h"
-#include "utils/OptionalUtils.h"
-#include "range/v3/view/filter.hpp"
 #include "range/v3/algorithm/any_of.hpp"
+#include "range/v3/view/filter.hpp"
+#include "utils/OptionalUtils.h"
+#include "utils/ProcessorConfigUtils.h"
+#include "utils/gsl.h"
+
+using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::processors {
 namespace invoke_http {
@@ -75,6 +77,25 @@ void HttpClientStore::returnClient(http::HTTPClient& client) {
 
 }  // namespace invoke_http
 
+namespace {
+nonstd::expected<std::string_view, std::error_code> removePerSecSuffix(const std::string_view input) {
+  const auto trimmed_input = utils::string::trim(input);
+  if (trimmed_input.ends_with("/s") || trimmed_input.ends_with("/S")) {
+    return trimmed_input.substr(0, trimmed_input.size() - 2);
+  }
+  return nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError);
+}
+}  // namespace
+
+nonstd::expected<uint64_t, std::error_code> invoke_http::parseDataTransferSpeed(const std::string_view input) {
+  return removePerSecSuffix(input) | utils::andThen(parsing::parseDataSize);
+}
+
+bool invoke_http::DataTransferSpeedValidator::validate(const std::string_view input) const {
+  return parseDataTransferSpeed(input).has_value();
+}
+
+
 std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
 
 void InvokeHTTP::initialize() {
@@ -103,52 +124,47 @@ void setupClientTransferEncoding(http::HTTPClient& client, bool use_chunked_enco
 }  // namespace
 
 void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context) {
-  std::string url;
-  if (!context.getProperty(URL, url) || url.empty())
+  if (const auto url = context.getProperty(URL.name); !url || url->empty())
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "URL property missing or empty");
 
   method_ = utils::parseEnumProperty<http::HttpRequestMethod>(context, Method);
 
-  context.getProperty(SendMessageBody, send_message_body_);
+  send_message_body_ = utils::parseBoolProperty(context, SendMessageBody);
 
   attributes_to_send_ = context.getProperty(AttributesToSend)
+                        | utils::toOptional()
                         | utils::filter([](const std::string& s) { return !s.empty(); })  // avoid compiling an empty string to regex
                         | utils::transform([](const std::string& regex_str) { return utils::Regex{regex_str}; })
                         | utils::orElse([this] { logger_->log_debug("{} is missing, so the default value will be used", AttributesToSend.name); });
 
-  always_output_response_ = (context.getProperty(AlwaysOutputResponse) | utils::andThen(&utils::string::toBool)).value_or(false);
-  penalize_no_retry_ = (context.getProperty(PenalizeOnNoRetry) | utils::andThen(&utils::string::toBool)).value_or(false);
+  always_output_response_ = utils::parseOptionalBoolProperty(context, AlwaysOutputResponse).value_or(false);
+  penalize_no_retry_ = (context.getProperty(PenalizeOnNoRetry) | utils::andThen(parsing::parseBool)).value_or(false);
 
   invalid_http_header_field_handling_strategy_ = utils::parseEnumProperty<invoke_http::InvalidHTTPHeaderFieldHandlingOption>(context, InvalidHTTPHeaderFieldHandlingStrategy);
 
-  put_response_body_in_attribute_ = context.getProperty(PutResponseBodyInAttribute);
+  put_response_body_in_attribute_ = context.getProperty(PutResponseBodyInAttribute) | utils::toOptional();
   if (put_response_body_in_attribute_ && put_response_body_in_attribute_->empty()) {
     logger_->log_warn("{} is set to an empty string", PutResponseBodyInAttribute.name);
     put_response_body_in_attribute_.reset();
   }
 
-  use_chunked_encoding_ = (context.getProperty(UseChunkedEncoding) | utils::andThen(&utils::string::toBool)).value_or(false);
-  send_date_header_ = context.getProperty<bool>(DateHeader).value_or(true);
+  use_chunked_encoding_ = utils::parseBoolProperty(context, UseChunkedEncoding);
+  send_date_header_ = utils::parseOptionalBoolProperty(context, DateHeader).value_or(true);
 
-  context.getProperty(UploadSpeedLimit, maximum_upload_speed_);
-  context.getProperty(DownloadSpeedLimit, maximum_download_speed_);
+  maximum_upload_speed_ = context.getProperty(UploadSpeedLimit) | utils::andThen(invoke_http::parseDataTransferSpeed) | utils::toOptional();
+  maximum_download_speed_ = context.getProperty(DownloadSpeedLimit) | utils::andThen(invoke_http::parseDataTransferSpeed) | utils::toOptional();
 
-  if (auto connection_timeout = context.getProperty<core::TimePeriodValue>(InvokeHTTP::ConnectTimeout))
-    connect_timeout_ = connection_timeout->getMilliseconds();
+  connect_timeout_ = utils::parseMsProperty(context, ConnectTimeout);  // Shouldn't fail due to default value;
+  read_timeout_ = utils::parseMsProperty(context, ReadTimeout);  // Shouldn't fail due to default value;
 
-  if (auto read_timeout = context.getProperty<core::TimePeriodValue>(InvokeHTTP::ReadTimeout))
-    read_timeout_ = read_timeout->getMilliseconds();
-
-  context.getProperty(InvokeHTTP::ProxyHost, proxy_.host);
+  proxy_.host = context.getProperty(InvokeHTTP::ProxyHost).value_or("");
+  proxy_.port = (context.getProperty(InvokeHTTP::ProxyPort) | utils::andThen(parsing::parseIntegral<int>)).value_or(0);
   std::string port_str;
-  if (context.getProperty(InvokeHTTP::ProxyPort, port_str) && !port_str.empty()) {
-    core::Property::StringToInt(port_str, proxy_.port);
-  }
-  context.getProperty(InvokeHTTP::ProxyUsername, proxy_.username);
-  context.getProperty(InvokeHTTP::ProxyPassword, proxy_.password);
+  proxy_.username = context.getProperty(InvokeHTTP::ProxyUsername).value_or("");
+  proxy_.password = context.getProperty(InvokeHTTP::ProxyPassword).value_or("");
 
-  follow_redirects_ = context.getProperty<bool>(InvokeHTTP::FollowRedirects).value_or(false);
-  content_type_ = context.getProperty(InvokeHTTP::ContentType);
+  follow_redirects_ = utils::parseBoolProperty(context, FollowRedirects);  // Shouldn't fail due to default value;
+  content_type_ = utils::parseProperty(context, InvokeHTTP::ContentType);  // Shouldn't fail due to default value;
 
   if (auto ssl_context_name = context.getProperty(SSLContext)) {
     if (auto service = context.getControllerService(*ssl_context_name, getUUID())) {
@@ -170,8 +186,12 @@ gsl::not_null<std::unique_ptr<http::HTTPClient>> InvokeHTTP::createHTTPClientFro
   if (send_message_body_ && content_type_)
     client->setContentType(*content_type_);
   setupClientTransferEncoding(*client, use_chunked_encoding_);
-  client->setMaximumUploadSpeed(maximum_upload_speed_.getValue());
-  client->setMaximumDownloadSpeed(maximum_download_speed_.getValue());
+  if (maximum_upload_speed_) {
+    client->setMaximumUploadSpeed(*maximum_upload_speed_);
+  }
+  if (maximum_download_speed_) {
+    client->setMaximumDownloadSpeed(*maximum_download_speed_);
+  }
 
   return gsl::make_not_null(std::move(client));
 }

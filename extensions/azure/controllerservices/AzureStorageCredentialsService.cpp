@@ -29,25 +29,23 @@ void AzureStorageCredentialsService::initialize() {
 }
 
 void AzureStorageCredentialsService::onEnable() {
-  std::string value;
-  if (getProperty(StorageAccountName, value)) {
-    credentials_.setStorageAccountName(value);
+  if (auto storage_account_name = getProperty(StorageAccountName.name)) {
+    credentials_.setStorageAccountName(*storage_account_name);
   }
-  if (getProperty(StorageAccountKey, value)) {
-    credentials_.setStorageAccountKey(value);
+  if (auto storage_account_key = getProperty(StorageAccountKey.name)) {
+    credentials_.setStorageAccountKey(*storage_account_key);
   }
-  if (getProperty(SASToken, value)) {
-    credentials_.setSasToken(value);
+  if (auto sas_token = getProperty(SASToken.name)) {
+    credentials_.setSasToken(*sas_token);
   }
-  if (getProperty(CommonStorageAccountEndpointSuffix, value)) {
-    credentials_.setEndpontSuffix(value);
+  if (auto common_storage_account_endpoint_suffix = getProperty(CommonStorageAccountEndpointSuffix.name)) {
+    credentials_.setEndpontSuffix(*common_storage_account_endpoint_suffix);
   }
-  if (getProperty(ConnectionString, value)) {
-    credentials_.setConnectionString(value);
+  if (auto connection_String = getProperty(ConnectionString.name)) {
+    credentials_.setConnectionString(*connection_String);
   }
-  bool use_managed_identity_credentials = false;
-  if (getProperty(UseManagedIdentityCredentials, use_managed_identity_credentials)) {
-    credentials_.setUseManagedIdentityCredentials(use_managed_identity_credentials);
+  if (auto use_managed_identity_credentials = getProperty(UseManagedIdentityCredentials.name) | utils::andThen(parsing::parseBool)) {
+    credentials_.setUseManagedIdentityCredentials(*use_managed_identity_credentials);
   }
 }
 

@@ -31,6 +31,7 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
 #include "core/Resource.h"
+#include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -43,8 +44,8 @@ void PutFile::initialize() {
 
 void PutFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(context, ConflictResolution);
-  try_mkdirs_ = context.getProperty<bool>(CreateDirs).value_or(true);
-  if (auto max_dest_files = context.getProperty<int64_t>(MaxDestFiles); max_dest_files && *max_dest_files > 0) {
+  try_mkdirs_ = utils::parseBoolProperty(context, CreateDirs);
+  if (auto max_dest_files = utils::parseOptionalI64Property(context, MaxDestFiles); max_dest_files && *max_dest_files > 0) {
     max_dest_files_ = gsl::narrow_cast<uint64_t>(*max_dest_files);
   }
 
@@ -143,8 +144,7 @@ void PutFile::putFile(core::ProcessSession& session,
 
 #ifndef WIN32
 void PutFile::getPermissions(const core::ProcessContext& context) {
-  std::string permissions_str;
-  context.getProperty(Permissions, permissions_str);
+  const std::string permissions_str = context.getProperty(Permissions).value_or("");
   if (permissions_str.empty()) {
     return;
   }
@@ -161,8 +161,7 @@ void PutFile::getPermissions(const core::ProcessContext& context) {
 }
 
 void PutFile::getDirectoryPermissions(const core::ProcessContext& context) {
-  std::string dir_permissions_str;
-  context.getProperty(DirectoryPermissions, dir_permissions_str);
+  const std::string dir_permissions_str = context.getProperty(DirectoryPermissions).value_or("");
   if (dir_permissions_str.empty()) {
     return;
   }

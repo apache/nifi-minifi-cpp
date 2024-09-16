@@ -102,25 +102,16 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[aw
 
   SECTION("Test no object key is set") {
     setRequiredProperties();
-    plan->setDynamicProperty(update_attribute, "filename", "");
-  }
-
-  SECTION("Test storage class is empty") {
-    setRequiredProperties();
-    plan->setProperty(s3_processor, "Storage Class", "");
-  }
-
-  SECTION("Test region is empty") {
-    setRequiredProperties();
-    plan->setProperty(s3_processor, "Region", "");
-  }
-
-  SECTION("Test no server side encryption is set") {
-    setRequiredProperties();
-    plan->setProperty(s3_processor, "Server Side Encryption", "");
+    CHECK(plan->setDynamicProperty(update_attribute, "filename", ""));
   }
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan), minifi::Exception);
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Non blank properties", "[awsS3Config]") {
+  setRequiredProperties();
+  CHECK_FALSE(plan->setProperty(s3_processor, "Server Side Encryption", ""));
+  CHECK_FALSE(plan->setProperty(s3_processor, "Storage Class", ""));
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test incomplete credentials in credentials service", "[awsS3Config]") {
@@ -261,7 +252,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multipart upload limits", "[awsS
     plan->setProperty(s3_processor, "Multipart Part Size", "51 GB");
   }
 
-  REQUIRE_THROWS_AS(test_controller.runSession(plan), minifi::Exception);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan), std::runtime_error);
 }
 
 TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart upload", "[awsS3MultipartUpload]") {

@@ -52,18 +52,17 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& 
   utils::setKafkaConfigurationField(*config, "sasl.mechanism", std::string{magic_enum::enum_name(sasl_mechanism)});
   logger_->log_debug("Kafka sasl.mechanism [{}]", magic_enum::enum_name(sasl_mechanism));
 
-  auto setKafkaConfigIfNotEmpty =
-      [this, &context, config](const core::PropertyReference& property, const std::string& kafka_config_name, bool log_value = true) {
-        std::string value;
-        if (context.getProperty(property, value) && !value.empty()) {
-          utils::setKafkaConfigurationField(*config, kafka_config_name, value);
-          if (log_value) {
-            logger_->log_debug("Kafka {} [{}]", kafka_config_name, value);
-          } else {
-            logger_->log_debug("Kafka {} was set", kafka_config_name);
-          }
-        }
-      };
+  auto setKafkaConfigIfNotEmpty = [this, &context, config](const core::PropertyReference& property, const std::string& kafka_config_name, bool log_value = true) {
+    const std::string value = context.getProperty(property).value_or("");
+    if (!value.empty()) {
+      utils::setKafkaConfigurationField(*config, kafka_config_name, value);
+      if (log_value) {
+        logger_->log_debug("Kafka {} [{}]", kafka_config_name, value);
+      } else {
+        logger_->log_debug("Kafka {} was set", kafka_config_name);
+      }
+    }
+  };
 
   setKafkaConfigIfNotEmpty(KerberosServiceName, "sasl.kerberos.service.name");
   setKafkaConfigIfNotEmpty(KerberosPrincipal, "sasl.kerberos.principal");

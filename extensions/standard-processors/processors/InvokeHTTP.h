@@ -29,6 +29,7 @@
 #include "core/Core.h"
 #include "core/OutputAttributeDefinition.h"
 #include "core/Processor.h"
+#include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
@@ -49,6 +50,20 @@ class HttpClientStoreTestAccessor;
 namespace org::apache::nifi::minifi::processors {
 
 namespace invoke_http {
+
+class DataTransferSpeedValidator final : public core::PropertyValidator {
+ public:
+    DataTransferSpeedValidator() = default;
+    constexpr ~DataTransferSpeedValidator() override {}  // NOLINT see comment at parent
+
+    [[nodiscard]] std::optional<std::string_view> getEquivalentNifiStandardValidatorName() const override { return std::nullopt; }
+    [[nodiscard]] bool validate(std::string_view input) const override;
+};
+
+inline constexpr auto DATA_TRANSFER_SPEED_VALIDATOR = DataTransferSpeedValidator{};
+
+nonstd::expected<uint64_t, std::error_code> parseDataTransferSpeed(const std::string_view input);
+
 class HttpClientStore {
  public:
   HttpClientStore(const size_t size, std::function<gsl::not_null<std::unique_ptr<http::HTTPClient>>(const std::string&)> create_client_function)
@@ -134,24 +149,24 @@ class InvokeHTTP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto ConnectTimeout = core::PropertyDefinitionBuilder<>::createProperty("Connection Timeout")
       .withDescription("Max wait time for connection to remote service")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("5 s")
       .build();
   EXTENSIONAPI static constexpr auto ReadTimeout = core::PropertyDefinitionBuilder<>::createProperty("Read Timeout")
       .withDescription("Max wait time for response from remote service")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("15 s")
       .build();
   EXTENSIONAPI static constexpr auto DateHeader = core::PropertyDefinitionBuilder<>::createProperty("Include Date Header")
       .withDescription("Include an RFC-2616 Date header in the request.")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto FollowRedirects = core::PropertyDefinitionBuilder<>::createProperty("Follow Redirects")
       .withDescription("Follow HTTP redirects issued by remote server.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto AttributesToSend = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Send")
@@ -187,25 +202,25 @@ class InvokeHTTP : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto SendBody = core::PropertyDefinitionBuilder<>::createProperty("send-message-body", "Send Body")
       .withDescription("DEPRECATED. Only kept for backwards compatibility, no functionality is included.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto SendMessageBody = core::PropertyDefinitionBuilder<>::createProperty("Send Message Body")
       .withDescription("If true, sends the HTTP message body on POST/PUT/PATCH requests (default). "
           "If false, suppresses the message body and content-type header for these requests.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto UseChunkedEncoding = core::PropertyDefinitionBuilder<>::createProperty("Use Chunked Encoding")
       .withDescription("When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header"
           " and instead send 'Transfer-Encoding' with a value of 'chunked'."
           " This will enable the data transfer mechanism which was introduced in HTTP 1.1 to pass data of unknown lengths in chunks.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto DisablePeerVerification = core::PropertyDefinitionBuilder<>::createProperty("Disable Peer Verification")
       .withDescription("DEPRECATED. The value is ignored, peer and host verification are always performed when using SSL/TLS.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto PutResponseBodyInAttribute = core::PropertyDefinitionBuilder<>::createProperty("Put Response Body in Attribute")
@@ -215,12 +230,12 @@ class InvokeHTTP : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto AlwaysOutputResponse = core::PropertyDefinitionBuilder<>::createProperty("Always Output Response")
       .withDescription("Will force a response FlowFile to be generated and routed to the 'Response' relationship regardless of what the server status code received is ")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto PenalizeOnNoRetry = core::PropertyDefinitionBuilder<>::createProperty("Penalize on \"No Retry\"")
       .withDescription("Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto InvalidHTTPHeaderFieldHandlingStrategy
@@ -234,11 +249,11 @@ class InvokeHTTP : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto UploadSpeedLimit = core::PropertyDefinitionBuilder<>::createProperty("Upload Speed Limit")
       .withDescription("Maximum upload speed, e.g. '500 KB/s'. Leave this empty if you want no limit.")
-      .withPropertyType(core::StandardPropertyTypes::DATA_TRANSFER_SPEED_TYPE)
+      .withValidator(invoke_http::DATA_TRANSFER_SPEED_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto DownloadSpeedLimit = core::PropertyDefinitionBuilder<>::createProperty("Download Speed Limit")
       .withDescription("Maximum download speed,e.g. '500 KB/s'. Leave this empty if you want no limit.")
-      .withPropertyType(core::StandardPropertyTypes::DATA_TRANSFER_SPEED_TYPE)
+      .withValidator(invoke_http::DATA_TRANSFER_SPEED_VALIDATOR)
       .build();
 
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
@@ -340,8 +355,8 @@ class InvokeHTTP : public core::ProcessorImpl {
   bool penalize_no_retry_{false};
   bool send_message_body_{true};
   bool send_date_header_{true};
-  core::DataTransferSpeedValue maximum_upload_speed_{0};
-  core::DataTransferSpeedValue maximum_download_speed_{0};
+  std::optional<uint64_t> maximum_upload_speed_ = std::nullopt;
+  std::optional<uint64_t> maximum_download_speed_ = std::nullopt;
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 

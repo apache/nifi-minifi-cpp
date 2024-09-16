@@ -17,6 +17,7 @@
 #include "ListenTCP.h"
 
 #include "core/Resource.h"
+#include "core/ProcessContext.h"
 #include "controllers/SSLContextService.h"
 #include "utils/ProcessorConfigUtils.h"
 
@@ -35,7 +36,7 @@ void ListenTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
     delimiter_str = "\n";
   }
 
-  const auto consume_delimiter = context.getProperty<bool>(ConsumeDelimiter).value_or(true);
+  const auto consume_delimiter = utils::parseBoolProperty(context, ConsumeDelimiter);
   startTcpServer(context, SSLContextService, ClientAuth, consume_delimiter, std::move(delimiter_str));
 }
 

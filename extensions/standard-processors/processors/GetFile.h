@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "core/Processor.h"
+#include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -95,52 +96,53 @@ class GetFile : public core::ProcessorImpl {
       .withDescription("The input directory from which to pull files")
       .isRequired(true)
       .supportsExpressionLanguage(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto Recurse = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
       .withDescription("Indicates whether or not to pull files from subdirectories")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto KeepSourceFile = core::PropertyDefinitionBuilder<>::createProperty("Keep Source File")
       .withDescription("If true, the file is not deleted after it has been copied to the Content Repository")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto MinAge = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Age")
       .withDescription("The minimum age that a file must be in order to be pulled;"
           " any file younger than this amount of time (according to last modification date) will be ignored")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("0 sec")
       .build();
   EXTENSIONAPI static constexpr auto MaxAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
       .withDescription("The maximum age that a file must be in order to be pulled;"
           " any file older than this amount of time (according to last modification date) will be ignored")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("0 sec")
       .build();
   EXTENSIONAPI static constexpr auto MinSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
       .withDescription("The minimum size that a file can be in order to be pulled")
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .withDefaultValue("0 B")
       .build();
   EXTENSIONAPI static constexpr auto MaxSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Size")
       .withDescription("The maximum size that a file can be in order to be pulled")
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .withDefaultValue("0 B")
       .build();
   EXTENSIONAPI static constexpr auto IgnoreHiddenFile = core::PropertyDefinitionBuilder<>::createProperty("Ignore Hidden Files")
       .withDescription("Indicates whether or not hidden files should be ignored")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto PollInterval = core::PropertyDefinitionBuilder<>::createProperty("Polling Interval")
       .withDescription("Indicates how long to wait before performing a directory listing")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("0 sec")
       .build();
   EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
       .withDescription("The maximum number of files to pull in each iteration")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("10")
       .build();
   EXTENSIONAPI static constexpr auto FileFilter = core::PropertyDefinitionBuilder<>::createProperty("File Filter")

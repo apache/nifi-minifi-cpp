@@ -41,7 +41,7 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   EXTENSIONAPI static constexpr auto RecurseSubdirectories = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
       .withDescription("Indicates whether to list files from subdirectories of the directory")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto FileFilter = core::PropertyDefinitionBuilder<>::createProperty("File Filter")

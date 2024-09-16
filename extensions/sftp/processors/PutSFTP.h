@@ -64,7 +64,7 @@ class PutSFTP : public SFTPProcessorBase {
   EXTENSIONAPI static constexpr auto CreateDirectory = core::PropertyDefinitionBuilder<>::createProperty("Create Directory")
       .withDescription("Specifies whether or not the remote directory should be created if it does not exist.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto DisableDirectoryListing = core::PropertyDefinitionBuilder<>::createProperty("Disable Directory Listing")
@@ -75,13 +75,13 @@ class PutSFTP : public SFTPProcessorBase {
           "Also, if any other SFTP client created the directory after this processor performed a listing and before a directory creation request by this processor is finished, "
           "then an error is returned because the directory already exists.")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
       .withDescription("The maximum number of FlowFiles to send in a single connection")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("500")
       .build();
   EXTENSIONAPI static constexpr auto ConflictResolution = core::PropertyDefinitionBuilder<6>::createProperty("Conflict Resolution")
@@ -99,14 +99,14 @@ class PutSFTP : public SFTPProcessorBase {
   EXTENSIONAPI static constexpr auto RejectZeroByte = core::PropertyDefinitionBuilder<>::createProperty("Reject Zero-Byte Files")
       .withDescription("Determines whether or not Zero-byte files should be rejected without attempting to transfer")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto DotRename = core::PropertyDefinitionBuilder<>::createProperty("Dot Rename")
       .withDescription("If true, then the filename of the sent file is prepended with a \".\" and then renamed back to the original once the file is completely sent. "
           "Otherwise, there is no rename. This property is ignored if the Temporary Filename property is set.")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto TempFilename = core::PropertyDefinitionBuilder<>::createProperty("Temporary Filename")
@@ -150,7 +150,7 @@ class PutSFTP : public SFTPProcessorBase {
   EXTENSIONAPI static constexpr auto UseCompression = core::PropertyDefinitionBuilder<>::createProperty("Use Compression")
       .withDescription("Indicates whether or not ZLIB compression should be used when transferring files")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SFTPProcessorBase::Properties, std::to_array<core::PropertyReference>({

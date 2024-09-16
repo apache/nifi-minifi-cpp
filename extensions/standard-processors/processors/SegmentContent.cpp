@@ -26,7 +26,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-constexpr size_t BUFFER_TARGET_SIZE = 1024;
+constexpr uint64_t BUFFER_TARGET_SIZE = 1024;
 
 void SegmentContent::initialize() {
   setSupportedProperties(Properties);
@@ -39,7 +39,7 @@ namespace {
 void updateSplitAttributesAndTransfer(core::ProcessSession& session, const std::vector<std::shared_ptr<core::FlowFile>>& splits, const core::FlowFile& original) {
   const std::string fragment_identifier_ = original.getAttribute(core::SpecialFlowAttribute::UUID).value_or(utils::IdGenerator::getIdGenerator()->generate().to_string());
   const auto original_filename = original.getAttribute(core::SpecialFlowAttribute::FILENAME).value_or("");
-  for (size_t split_i = 0; split_i < splits.size(); ++split_i) {
+  for (uint64_t split_i = 0; split_i < splits.size(); ++split_i) {
     const auto& split = splits[split_i];
     split->setAttribute(SegmentContent::FragmentCountOutputAttribute.name, std::to_string(splits.size()));
     split->setAttribute(SegmentContent::FragmentIndexOutputAttribute.name, std::to_string(split_i + 1));  // One based indexing
@@ -57,10 +57,9 @@ void SegmentContent::onTrigger(core::ProcessContext& context, core::ProcessSessi
     return;
   }
 
-  size_t max_segment_size{};
-  const auto segment_size_str = context.getProperty(SegmentSize, original.get());
-  if (!segment_size_str || !core::DataSizeValue::StringToInt(*segment_size_str, max_segment_size) || max_segment_size == 0) {
-    throw Exception(PROCESSOR_EXCEPTION, fmt::format("Invalid Segment Size: '{}'", segment_size_str.value_or("")));
+  const uint64_t max_segment_size = utils::parseDataSizeProperty(context, SegmentSize, original.get());
+  if (max_segment_size == 0) {
+    throw Exception(PROCESSOR_EXCEPTION, fmt::format("Invalid Segment Size: '0'"));
   }
 
   const auto ff_content_stream = session.getFlowFileContentStream(*original);
@@ -71,12 +70,12 @@ void SegmentContent::onTrigger(core::ProcessContext& context, core::ProcessSessi
   std::vector<std::byte> buffer;
   std::vector<std::shared_ptr<core::FlowFile>> segments{};
 
-  size_t current_segment_size = 0;
-  size_t num_bytes_read{};
+  uint64_t current_segment_size = 0;
+  uint64_t num_bytes_read{};
   bool needs_new_segment = true;
   while (true) {
-    const size_t segment_remaining_size = max_segment_size - current_segment_size;
-    const size_t buffer_size = std::min(BUFFER_TARGET_SIZE, segment_remaining_size);
+    const uint64_t segment_remaining_size = max_segment_size - current_segment_size;
+    const uint64_t buffer_size = std::min(BUFFER_TARGET_SIZE, segment_remaining_size);
     buffer.resize(buffer_size);
     num_bytes_read = ff_content_stream->read(buffer);
     if (io::isError(num_bytes_read)) {

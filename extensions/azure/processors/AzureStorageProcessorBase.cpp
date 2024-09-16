@@ -30,8 +30,8 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 std::tuple<AzureStorageProcessorBase::GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> AzureStorageProcessorBase::getCredentialsFromControllerService(
     core::ProcessContext &context) const {
-  std::string service_name;
-  if (!context.getProperty(AzureStorageCredentialsService, service_name) || service_name.empty()) {
+  std::string service_name = context.getProperty(AzureStorageCredentialsService).value_or("");
+  if (service_name.empty()) {
     return std::make_tuple(GetCredentialsFromControllerResult::CONTROLLER_NAME_EMPTY, std::nullopt);
   }
 

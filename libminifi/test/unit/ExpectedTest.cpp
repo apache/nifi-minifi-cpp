@@ -473,7 +473,7 @@ TEST_CASE("expected valueOrElse", "[expected][valueOrElse]") {
   REQUIRE(gsl::narrow<int>("hello"sv.size()) == (ex | utils::valueOrElse([](const std::string& err) { return gsl::narrow<int>(err.size()); })));
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw std::exception(); }), std::exception);  // NOLINT(performance-unnecessary-value-param)
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](const std::string&) -> int { throw std::exception(); }), std::exception);
-  REQUIRE_THROWS_AS(std::move(ex) | utils::valueOrElse([](std::string&&) -> int { throw std::exception(); }), std::exception);
+  REQUIRE_THROWS_WITH(std::move(ex) | utils::valueOrElse([](std::string&& error) -> int { throw std::runtime_error(std::move(error)); }), "hello");
 }
 
 TEST_CASE("expected transformError", "[expected][transformError]") {
@@ -484,6 +484,13 @@ TEST_CASE("expected transformError", "[expected][transformError]") {
     auto ret = e | utils::transformError(mul2);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 42);
+  }
+
+  {
+    nonstd::expected<size_t, std::string> e = nonstd::make_unexpected("sajt");
+    auto ret = e | utils::transformError([](const std::string& error) -> size_t { return error.length(); });
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 4);
   }
 
   {
@@ -534,4 +541,23 @@ TEST_CASE("expected transformError", "[expected][transformError]") {
     REQUIRE(ret);
     REQUIRE(*ret == 21);
   }
+}
+
+TEST_CASE("expected toOptional") {
+  nonstd::expected<int, std::string> unexpected{nonstd::unexpect, "hello"};
+  nonstd::expected<int, std::string> expected{5};
+
+  std::optional<int> res1 = std::move(unexpected) | utils::toOptional();
+  std::optional<int> res2 = std::move(expected) | utils::toOptional();
+
+  CHECK(res1 == std::nullopt);
+  CHECK(res2 == 5);
+}
+
+TEST_CASE("expected expect") {
+  nonstd::expected<int, std::string> unexpected{nonstd::unexpect, "hello"};
+  nonstd::expected<int, std::string> expected{5};
+
+  REQUIRE_THROWS_WITH(std::move(unexpected) | utils::expect("should throw"), "should throw");
+  CHECK((std::move(expected) | utils::expect("should be 5")) == 5);
 }

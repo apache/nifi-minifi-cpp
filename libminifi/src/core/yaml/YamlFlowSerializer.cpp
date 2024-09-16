@@ -99,7 +99,7 @@ void YamlFlowSerializer::encryptSensitiveProcessorProperties(YAML::Node& flow_de
       continue;
     }
     const auto processor_overrides = overrides.contains(*processor_id) ? overrides.at(*processor_id) : core::flow::Overrides{};
-    encryptSensitiveProperties(processor_yaml[schema.processor_properties[0]], processor->getProperties(), encryption_provider, processor_overrides);
+    encryptSensitiveProperties(processor_yaml[schema.processor_properties[0]], processor->getSupportedProperties(), encryption_provider, processor_overrides);
   }
 }
 
@@ -123,7 +123,7 @@ void YamlFlowSerializer::encryptSensitiveControllerServiceProperties(YAML::Node&
       continue;
     }
     const auto controller_service_overrides = overrides.contains(*controller_service_id) ? overrides.at(*controller_service_id) : core::flow::Overrides{};
-    encryptSensitiveProperties(controller_service_yaml[schema.controller_service_properties[0]], controller_service->getProperties(), encryption_provider, controller_service_overrides);
+    encryptSensitiveProperties(controller_service_yaml[schema.controller_service_properties[0]], controller_service->getSupportedProperties(), encryption_provider, controller_service_overrides);
   }
 }
 

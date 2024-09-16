@@ -44,6 +44,7 @@ class FetchModbusTcp final : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
       .withDescription("The port or service on the destination.")
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .withDefaultValue("502")
       .isRequired(true)
       .supportsExpressionLanguage(true)
@@ -56,21 +57,21 @@ class FetchModbusTcp final : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto IdleConnectionExpiration = core::PropertyDefinitionBuilder<>::createProperty("Idle Connection Expiration")
       .withDescription("The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature.")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("15 seconds")
       .isRequired(true)
       .supportsExpressionLanguage(false)
       .build();
   EXTENSIONAPI static constexpr auto ConnectionPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Connection Per FlowFile")
       .withDescription("Specifies whether to send each FlowFile's content on an individual connection.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .isRequired(true)
       .supportsExpressionLanguage(false)
       .build();
   EXTENSIONAPI static constexpr auto Timeout = core::PropertyDefinitionBuilder<>::createProperty("Timeout")
       .withDescription("The timeout for connecting to and communicating with the destination.")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("15 seconds")
       .isRequired(true)
       .supportsExpressionLanguage(false)
@@ -113,7 +114,6 @@ class FetchModbusTcp final : public core::ProcessorImpl {
   void initialize() override;
 
  private:
-  void readDynamicPropertyKeys(const core::ProcessContext& context);
   void processFlowFile(const std::shared_ptr<utils::net::ConnectionHandlerBase>& connection_handler,
     core::ProcessContext& context,
     core::ProcessSession& session,
@@ -129,7 +129,6 @@ class FetchModbusTcp final : public core::ProcessorImpl {
   std::shared_ptr<core::FlowFile> getOrCreateFlowFile(core::ProcessSession& session) const;
   void removeExpiredConnections();
 
-  std::vector<core::Property> dynamic_property_keys_;
   asio::io_context io_context_;
   std::optional<std::unordered_map<utils::net::ConnectionId, std::shared_ptr<utils::net::ConnectionHandlerBase>>> connections_;
   std::optional<std::chrono::milliseconds> idle_connection_expiration_;

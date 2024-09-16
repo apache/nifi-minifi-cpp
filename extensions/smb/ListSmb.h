@@ -58,7 +58,7 @@ class ListSmb : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto RecurseSubdirectories = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
       .withDescription("Indicates whether to list files from subdirectories of the directory")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .isRequired(true)
       .build();
@@ -71,24 +71,24 @@ class ListSmb : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto MinimumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Age")
       .withDescription("The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("5 sec")
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
       .withDescription("The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto MinimumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
       .withDescription("The minimum size that a file must be in order to be pulled")
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Size")
       .withDescription("The maximum size that a file can be in order to be pulled")
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto IgnoreHiddenFiles = core::PropertyDefinitionBuilder<>::createProperty("Ignore Hidden Files")
       .withDescription("Indicates whether or not hidden files should be ignored")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .isRequired(true)
       .build();

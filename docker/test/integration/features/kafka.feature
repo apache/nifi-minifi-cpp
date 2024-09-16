@@ -403,25 +403,6 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | 3                | 5 sec             | 15 seconds   | 6                     | 12                    |
       | 6                | 5 sec             | 15 seconds   | 12                    | 24                    |
 
-  Scenario Outline: Unsupported encoding attributes for ConsumeKafka throw scheduling errors
-    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
-    And the "<property name>" property of the ConsumeKafka processor is set to "<property value>"
-    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
-    And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
-
-    And a kafka broker is set up in correspondence with the third-party kafka publisher
-
-    When all instances start up
-    And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
-    And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic
-
-    Then no files are placed in the monitored directory in 20 seconds of running time
-
-    Examples: Unsupported property values
-      | message 1        | message 2      | property name           | property value |
-      | Miyamoto Musashi | Eiji Yoshikawa | Key Attribute Encoding  | UTF-32         |
-      | Shogun           | James Clavell  | Message Header Encoding | UTF-32         |
-
   Scenario: ConsumeKafka receives data via SSL
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And these processor properties are set:

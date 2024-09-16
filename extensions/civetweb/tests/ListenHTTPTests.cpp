@@ -157,10 +157,7 @@ class ListenHTTPTestsFixture {
 
   void check_content_type(minifi::http::HTTPClient& client) {
     if (endpoint == "test") {
-      std::string content_type;
-      if (!update_attribute->getDynamicProperty("mime.type", content_type)) {
-        content_type = "application/octet-stream";
-      }
+      const auto content_type = update_attribute->getDynamicProperty("mime.type").value_or("application/octet-stream");
       REQUIRE(content_type == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-type")));
       REQUIRE("19" == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-length")));
     } else {
@@ -206,7 +203,7 @@ class ListenHTTPTestsFixture {
     if (client_to_use) {
       REQUIRE(response_expectations.size() == 1);
     }
-    auto* proc = dynamic_cast<minifi::processors::ListenHTTP*>(plan->getCurrentContext()->getProcessorNode()->getProcessor());
+    auto* proc = dynamic_cast<minifi::processors::ListenHTTP*>(&plan->getCurrentContext()->getProcessor());
     REQUIRE(proc);
 
     std::vector<std::thread> client_threads;
@@ -702,7 +699,7 @@ TEST_CASE("ListenHTTP bored yield", "[listenhttp][bored][yield]") {
   using processors::ListenHTTP;
   SingleProcessorTestController controller{std::make_unique<ListenHTTP>("listenhttp")};
   auto listen_http = controller.getProcessor();
-  listen_http->setProperty(ListenHTTP::Port, "0");
+  listen_http->setProperty(ListenHTTP::Port.name, "0");
 
   REQUIRE(!listen_http->isYield());
   const auto output = controller.trigger();

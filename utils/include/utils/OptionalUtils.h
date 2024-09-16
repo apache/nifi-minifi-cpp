@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 #include "utils/detail/MonadicOperationWrappers.h"
@@ -124,6 +125,14 @@ auto operator|(std::optional<SourceType> o, filter_wrapper<F> f) noexcept(noexce
   } else {
     return std::nullopt;
   }
+}
+
+template<typename T, typename E>
+nonstd::expected<T, E> operator|(std::optional<T> object, to_expected_wrapper<E> e) {
+  if (!object) {
+    return nonstd::make_unexpected(e.error);
+  }
+  return std::move(*object);
 }
 }  // namespace detail
 }  // namespace org::apache::nifi::minifi::utils

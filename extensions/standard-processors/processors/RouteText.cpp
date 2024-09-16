@@ -19,19 +19,22 @@
 
 #include <algorithm>
 #include <map>
-#include <vector>
 #include <utility>
+#include <vector>
 
+#include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "io/StreamPipe.h"
 #include "core/logging/LoggerFactory.h"
-#include "range/v3/view/transform.hpp"
+#include "io/StreamPipe.h"
 #include "range/v3/range/conversion.hpp"
-#include "range/v3/view/tail.hpp"
 #include "range/v3/view/join.hpp"
-#include "utils/ProcessorConfigUtils.h"
+#include "range/v3/view/tail.hpp"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/algorithm/all_of.hpp"
+#include "range/v3/algorithm/any_of.hpp"
 #include "utils/OptionalUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "utils/Searcher.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -47,11 +50,26 @@ void RouteText::initialize() {
 void RouteText::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   routing_ = utils::parseEnumProperty<route_text::Routing>(context, RoutingStrategy);
   matching_ = utils::parseEnumProperty<route_text::Matching>(context, MatchingStrategy);
-  context.getProperty(TrimWhitespace, trim_);
-  case_policy_ = context.getProperty<bool>(IgnoreCase).value_or(false) ? route_text::CasePolicy::IGNORE_CASE : route_text::CasePolicy::CASE_SENSITIVE;
-  group_regex_ = context.getProperty(GroupingRegex) | utils::transform([] (const auto& str) {return utils::Regex(str);});
+  trim_ = utils::parseBoolProperty(context, TrimWhitespace);
+  case_policy_ = utils::parseBoolProperty(context, IgnoreCase) ? route_text::CasePolicy::IGNORE_CASE : route_text::CasePolicy::CASE_SENSITIVE;
+  group_regex_ = context.getProperty(GroupingRegex) | utils::toOptional() | utils::transform([] (const auto& str) {return utils::Regex(str);});
   segmentation_ = utils::parseEnumProperty<route_text::Segmentation>(context, SegmentationStrategy);
-  context.getProperty(GroupingFallbackValue, group_fallback_);
+  group_fallback_ = context.getProperty(GroupingFallbackValue).value_or("");
+
+
+  {
+    const auto static_relationships = RouteText::Relationships;
+    std::vector<core::RelationshipDefinition> relationships(static_relationships.begin(), static_relationships.end());
+
+    for (const auto& property_name : getDynamicPropertyKeys()) {
+      core::RelationshipDefinition rel{property_name, "Dynamic Route"};
+      dynamic_relationships_[property_name] = rel;
+      relationships.push_back(rel);
+      logger_->log_info("RouteText registered dynamic route '{}'", property_name);
+    }
+
+    setSupportedRelationships(relationships);
+  }
 }
 
 class RouteText::ReadCallback {
@@ -140,46 +158,37 @@ class RouteText::MatchingContext {
       flow_file_(std::move(flow_file)),
       case_policy_(case_policy) {}
 
-  const utils::Regex& getRegexProperty(const core::Property& prop) {
-    auto it = regex_values_.find(prop.getName());
+  const utils::Regex& getRegexProperty(const std::string& property_name) {
+    auto it = regex_values_.find(property_name);
     if (it != regex_values_.end()) {
       return it->second;
     }
-    std::string value;
-    if (!process_context_.getDynamicProperty(prop, value, flow_file_.get())) {
-      throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
-    }
+    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::expect("Missing dynamic property");
     std::vector<utils::Regex::Mode> flags;
     if (case_policy_ == route_text::CasePolicy::IGNORE_CASE) {
       flags.push_back(utils::Regex::Mode::ICASE);
     }
-    return (regex_values_[prop.getName()] = utils::Regex(value, flags));
+    return (regex_values_[property_name] = utils::Regex(value, flags));
   }
 
-  const std::string& getStringProperty(const core::Property& prop) {
-    auto it = string_values_.find(prop.getName());
+  const std::string& getStringProperty(const std::string& property_name) {
+    auto it = string_values_.find(property_name);
     if (it != string_values_.end()) {
       return it->second;
     }
-    std::string value;
-    if (!process_context_.getDynamicProperty(prop, value, flow_file_.get())) {
-      throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
-    }
-    return (string_values_[prop.getName()] = value);
+    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::expect("Missing dynamic property");
+    return (string_values_[property_name] = value);
   }
 
-  const auto& getSearcher(const core::Property& prop) {
-    auto it = searcher_values_.find(prop.getName());
+  const auto& getSearcher(const std::string& property_name) {
+    auto it = searcher_values_.find(property_name);
     if (it != searcher_values_.end()) {
       return it->second.searcher_;
     }
-    std::string value;
-    if (!process_context_.getDynamicProperty(prop, value, flow_file_.get())) {
-      throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
-    }
+    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::expect("Missing dynamic property");
 
     return searcher_values_.emplace(
-        std::piecewise_construct, std::forward_as_tuple(prop.getName()),
+        std::piecewise_construct, std::forward_as_tuple(property_name),
         std::forward_as_tuple(value, case_policy_)).first->second.searcher_;
   }
 
@@ -240,10 +249,11 @@ void RouteText::onTrigger(core::ProcessContext& context, core::ProcessSession& s
 
     // group extraction always uses the preprocessed
     auto group = getGroup(preprocessed_value);
+    auto dynamic_property_keys = getDynamicPropertyKeys();
     switch (routing_) {
       case route_text::Routing::ALL: {
-        if (std::all_of(dynamic_properties_.cbegin(), dynamic_properties_.cend(), [&] (const auto& prop) {
-          return matchSegment(matching_context, segment, prop.second);
+        if (ranges::all_of(dynamic_property_keys, [&] (const auto& property_name) {
+          return matchSegment(matching_context, segment, property_name);
         })) {
           flow_file_contents[{Matched, group}] += original_value;
         } else {
@@ -252,8 +262,8 @@ void RouteText::onTrigger(core::ProcessContext& context, core::ProcessSession& s
         return;
       }
       case route_text::Routing::ANY: {
-        if (std::any_of(dynamic_properties_.cbegin(), dynamic_properties_.cend(), [&] (const auto& prop) {
-          return matchSegment(matching_context, segment, prop.second);
+        if (ranges::any_of(dynamic_property_keys, [&] (const auto& property_name) {
+          return matchSegment(matching_context, segment, property_name);
         })) {
           flow_file_contents[{Matched, group}] += original_value;
         } else {
@@ -263,8 +273,8 @@ void RouteText::onTrigger(core::ProcessContext& context, core::ProcessSession& s
       }
       case route_text::Routing::DYNAMIC: {
         bool routed = false;
-        for (const auto& [property_name, prop] : dynamic_properties_) {
-          if (matchSegment(matching_context, segment, prop)) {
+        for (const auto& property_name : dynamic_property_keys) {
+          if (matchSegment(matching_context, segment, property_name)) {
             flow_file_contents[{dynamic_relationships_[property_name], group}] += original_value;
             routed = true;
           }
@@ -308,9 +318,8 @@ std::string_view RouteText::preprocess(std::string_view str) const {
 }
 
 namespace {
-bool getDynamicPropertyWithOverrides(core::ProcessContext& context,
-    const core::Property &property,
-    std::string &value,
+std::optional<std::string> getDynamicPropertyWithOverrides(core::ProcessContext& context,
+    const std::string& property_name,
     core::FlowFile& flow_file,
     const std::map<std::string, std::string>& overrides) {
   std::map<std::string, std::optional<std::string>> original_attributes;
@@ -327,11 +336,11 @@ bool getDynamicPropertyWithOverrides(core::ProcessContext& context,
       }
     }
   });
-  return context.getDynamicProperty(property, value, &flow_file);
+  return context.getDynamicProperty(property_name, &flow_file) | utils::toOptional();
 }
 }  // namespace
 
-bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, const core::Property& prop) const {
+bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, const std::string& property_name) const {
   switch (matching_) {
     case route_text::Matching::EXPRESSION: {
       std::map<std::string, std::string> variables;
@@ -342,32 +351,31 @@ bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, c
         variables["line"] = segment.value_;
         variables["lineNo"] = std::to_string(segment.idx_);
       }
-      std::string result;
-      if (getDynamicPropertyWithOverrides(context.process_context_, prop, result, *context.flow_file_, variables)) {
-        return utils::string::toBool(result).value_or(false);
+      if (const auto result = getDynamicPropertyWithOverrides(context.process_context_, property_name, *context.flow_file_, variables)) {
+        return utils::string::toBool(*result).value_or(false);
       } else {
-        throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
+        throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + property_name + "'");
       }
     }
     case route_text::Matching::STARTS_WITH: {
-      return utils::string::startsWith(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
+      return utils::string::startsWith(segment.value_, context.getStringProperty(property_name), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
     }
     case route_text::Matching::ENDS_WITH: {
-      return utils::string::endsWith(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
+      return utils::string::endsWith(segment.value_, context.getStringProperty(property_name), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
     }
     case route_text::Matching::CONTAINS: {
-      return std::search(segment.value_.begin(), segment.value_.end(), context.getSearcher(prop)) != segment.value_.end();
+      return std::search(segment.value_.begin(), segment.value_.end(), context.getSearcher(property_name)) != segment.value_.end();
     }
     case route_text::Matching::EQUALS: {
-      return utils::string::equals(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
+      return utils::string::equals(segment.value_, context.getStringProperty(property_name), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
     }
     case route_text::Matching::CONTAINS_REGEX: {
       std::string segment_str = std::string(segment.value_);
-      return utils::regexSearch(segment_str, context.getRegexProperty(prop));
+      return utils::regexSearch(segment_str, context.getRegexProperty(property_name));
     }
     case route_text::Matching::MATCHES_REGEX: {
       std::string segment_str = std::string(segment.value_);
-      return utils::regexMatch(segment_str, context.getRegexProperty(prop));
+      return utils::regexMatch(segment_str, context.getRegexProperty(property_name));
     }
   }
   throw Exception(PROCESSOR_EXCEPTION, "Unknown matching strategy");
@@ -390,21 +398,6 @@ std::optional<std::string> RouteText::getGroup(const std::string_view& segment) 
     | ranges::to<std::string>();
 }
 
-void RouteText::onDynamicPropertyModified(const core::Property& /*orig_property*/, const core::Property& new_property) {
-  dynamic_properties_[new_property.getName()] = new_property;
-
-  const auto static_relationships = RouteText::Relationships;
-  std::vector<core::RelationshipDefinition> relationships(static_relationships.begin(), static_relationships.end());
-
-  for (const auto& [property_name, prop] : dynamic_properties_) {
-    core::RelationshipDefinition rel{property_name, "Dynamic Route"};
-    dynamic_relationships_[property_name] = rel;
-    relationships.push_back(rel);
-    logger_->log_info("RouteText registered dynamic route '{}' with expression '{}'", property_name, prop.getValue().to_string());
-  }
-
-  setSupportedRelationships(relationships);
-}
 
 REGISTER_RESOURCE(RouteText, Processor);
 

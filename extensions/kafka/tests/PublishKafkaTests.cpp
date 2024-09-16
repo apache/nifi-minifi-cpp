@@ -27,44 +27,43 @@ TEST_CASE("Scheduling should fail when batch size is larger than the max queue m
   LogTestController::getInstance().setTrace<processors::PublishKafka>();
   SingleProcessorTestController test_controller(std::make_unique<processors::PublishKafka>("PublishKafka"));
   const auto publish_kafka = test_controller.getProcessor();
-  publish_kafka->setProperty(processors::PublishKafka::ClientName, "test_client");
-  publish_kafka->setProperty(processors::PublishKafka::SeedBrokers, "test_seedbroker");
-  publish_kafka->setProperty(processors::PublishKafka::QueueBufferMaxMessage, "1000");
-  publish_kafka->setProperty(processors::PublishKafka::BatchSize, "1500");
+  publish_kafka->setProperty(processors::PublishKafka::ClientName.name, "test_client");
+  publish_kafka->setProperty(processors::PublishKafka::SeedBrokers.name, "test_seedbroker");
+  publish_kafka->setProperty(processors::PublishKafka::QueueBufferMaxMessage.name, "1000");
+  publish_kafka->setProperty(processors::PublishKafka::BatchSize.name, "1500");
   REQUIRE_THROWS_WITH(test_controller.trigger(""), "Process Schedule Operation: Invalid configuration: Batch Size cannot be larger than Queue Max Message");
 }
 
 TEST_CASE("Compress Codec property") {
   using processors::PublishKafka;
   SingleProcessorTestController test_controller(std::make_unique<PublishKafka>("PublishKafka"));
-  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::ClientName, "test_client");
-  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::SeedBrokers, "test_seedbroker");
-  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::Topic, "test_topic");
-  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::MessageTimeOut, "10ms");
+  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::ClientName.name, "test_client");
+  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::SeedBrokers.name, "test_seedbroker");
+  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::Topic.name, "test_topic");
+  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::MessageTimeOut.name, "10ms");
 
   SECTION("none") {
-    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "none"));
+    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "none"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("gzip") {
-    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "gzip"));
+    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "gzip"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("snappy") {
-    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "snappy"));
+    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "snappy"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("lz4") {
-    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "lz4"));
+    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "lz4"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("zstd") {
-    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "zstd"));
+    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "zstd"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("foo") {
-    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "foo"));
-    REQUIRE_THROWS(test_controller.trigger("input"));
+    REQUIRE_FALSE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "foo"));
   }
 }
 

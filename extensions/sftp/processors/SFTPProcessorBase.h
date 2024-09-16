@@ -82,7 +82,7 @@ class SFTPProcessorBase : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto StrictHostKeyChecking = core::PropertyDefinitionBuilder<>::createProperty("Strict Host Key Checking")
       .withDescription("Indicates whether or not strict enforcement of hosts keys should be applied")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
           .build();
   EXTENSIONAPI static constexpr auto HostKeyFile = core::PropertyDefinitionBuilder<>::createProperty("Host Key File")
@@ -92,19 +92,19 @@ class SFTPProcessorBase : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto ConnectionTimeout = core::PropertyDefinitionBuilder<>::createProperty("Connection Timeout")
       .withDescription("Amount of time to wait before timing out while creating a connection")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("30 sec")
       .build();
   EXTENSIONAPI static constexpr auto DataTimeout = core::PropertyDefinitionBuilder<>::createProperty("Data Timeout")
       .withDescription("When transferring a file between the local and remote system, this value specifies how long is allowed to elapse without any data being transferred between systems")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("30 sec")
       .build();
   EXTENSIONAPI static constexpr auto SendKeepaliveOnTimeout = core::PropertyDefinitionBuilder<>::createProperty("Send Keep Alive On Timeout")
       .withDescription("Indicates whether or not to send a single Keep Alive message when SSH socket times out")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto ProxyType = core::PropertyDefinitionBuilder<3>::createProperty("Proxy Type")

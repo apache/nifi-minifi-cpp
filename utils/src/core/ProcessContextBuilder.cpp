@@ -60,7 +60,7 @@ std::shared_ptr<ProcessContextBuilder> ProcessContextBuilderImpl::withConfigurat
   return sharedFromThis<ProcessContextBuilder>();
 }
 
-std::shared_ptr<core::ProcessContext> ProcessContextBuilderImpl::build(const std::shared_ptr<ProcessorNode> &processor) {
+std::shared_ptr<core::ProcessContext> ProcessContextBuilderImpl::build(Processor& processor) {
   return std::make_shared<core::ProcessContextImpl>(processor, controller_service_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
 }
 

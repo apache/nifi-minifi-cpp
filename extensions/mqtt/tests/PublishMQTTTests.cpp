@@ -49,34 +49,34 @@ struct Fixture {
 }  // namespace
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyTopic", "[publishMQTTTest]") {
-  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::Matchers::EndsWith("Required property is empty: Topic"));
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883");
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::Matchers::EndsWith("Process Schedule Operation: PublishMQTT: Topic is required"));
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyBrokerURI", "[publishMQTTTest]") {
-  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::Matchers::EndsWith("Required property is empty: Broker URI"));
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic.name, "mytopic");
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::Matchers::EndsWith("Expected valid value from publishMqttProcessor::Broker URI"));
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3_1_0", "[publishMQTTTest]") {
-  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
-  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_3_1_0));
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic.name, "mytopic");
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883");
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_3_1_0)});
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::Matchers::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3", "[publishMQTTTest]") {
-  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
-  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::MessageExpiryInterval, "60 sec");
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic.name, "mytopic");
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883");
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::MessageExpiryInterval.name, "60 sec");
   REQUIRE_NOTHROW(plan_->scheduleProcessor(publishMqttProcessor_));
   REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Message Expiry Intervals. Property is not used.", 1s));
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_ContentType_V_3", "[publishMQTTTest]") {
-  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
-  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::ContentType, "text/plain");
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic.name, "mytopic");
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883");
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::ContentType.name, "text/plain");
   REQUIRE_NOTHROW(plan_->scheduleProcessor(publishMqttProcessor_));
   REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Content Types. Property is not used.", 1s));
 }

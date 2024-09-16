@@ -17,16 +17,16 @@
 
 #include "FetchModbusTcp.h"
 
-#include <utils/net/ConnectionHandler.h>
-
-#include "core/Resource.h"
-
+#include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
+#include "io/validation.h"
 #include "modbus/Error.h"
 #include "modbus/ReadModbusFunctions.h"
 #include "utils/net/AsioCoro.h"
 #include "utils/net/AsioSocketUtils.h"
-#include "io/validation.h"
+#include "utils/ProcessorConfigUtils.h"
+#include "utils/net/ConnectionHandler.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -34,8 +34,8 @@ namespace org::apache::nifi::minifi::modbus {
 
 
 void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  const auto record_set_writer_name = context.getProperty(RecordSetWriter);
-  record_set_writer_ = std::dynamic_pointer_cast<core::RecordSetWriter>(context.getControllerService(record_set_writer_name.value_or(""), getUUID()));
+  const auto record_set_writer_name = context.getProperty(RecordSetWriter).value_or("");;
+  record_set_writer_ = std::dynamic_pointer_cast<core::RecordSetWriter>(context.getControllerService(record_set_writer_name, getUUID()));
   if (!record_set_writer_) {
     throw Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Invalid or missing RecordSetWriter"};
   }
@@ -47,19 +47,12 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
   if (context.getProperty(Port).value_or(std::string{}).empty()) {
     throw Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "missing port"};
   }
-  if (const auto idle_connection_expiration = context.getProperty<core::TimePeriodValue>(IdleConnectionExpiration); idle_connection_expiration && idle_connection_expiration->getMilliseconds() > 0ms) {
-    idle_connection_expiration_ = idle_connection_expiration->getMilliseconds();
-  } else {
-    idle_connection_expiration_.reset();
-  }
 
-  if (const auto timeout = context.getProperty<core::TimePeriodValue>(Timeout); timeout && timeout->getMilliseconds() > 0ms) {
-    timeout_duration_ = timeout->getMilliseconds();
-  } else {
-    timeout_duration_ = 15s;
-  }
+  idle_connection_expiration_ = utils::parseOptionalMsProperty(context, IdleConnectionExpiration);
+  timeout_duration_ = utils::parseOptionalMsProperty(context, Timeout).value_or(15s);
 
-  if (context.getProperty<bool>(ConnectionPerFlowFile).value_or(false)) {
+
+  if (context.getProperty(ConnectionPerFlowFile) | utils::andThen(parsing::parseBool) | utils::expect("FetchModbusTcp::ConnectionPerFlowFile is required property")) {
     connections_.reset();
   } else {
     connections_.emplace();
@@ -77,8 +70,6 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service: " + *controller_service_name);
     }
   }
-
-  readDynamicPropertyKeys(context);
 }
 
 void FetchModbusTcp::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
@@ -126,14 +117,6 @@ void FetchModbusTcp::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void FetchModbusTcp::readDynamicPropertyKeys(const core::ProcessContext& context) {
-  dynamic_property_keys_.clear();
-  const std::vector<std::string> dynamic_prop_keys = context.getDynamicPropertyKeys();
-  for (const auto& key : dynamic_prop_keys) {
-    dynamic_property_keys_.emplace_back(core::PropertyDefinitionBuilder<>::createProperty(key).withDescription("auto generated").supportsExpressionLanguage(true).build());
-  }
-}
-
 std::shared_ptr<core::FlowFile> FetchModbusTcp::getOrCreateFlowFile(core::ProcessSession& session) const {
   if (hasIncomingConnections()) {
     return session.get();
@@ -144,15 +127,14 @@ std::shared_ptr<core::FlowFile> FetchModbusTcp::getOrCreateFlowFile(core::Proces
 std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> FetchModbusTcp::getAddressMap(core::ProcessContext& context, const core::FlowFile& flow_file) {
   std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> address_map{};
   const auto unit_id_str = context.getProperty(UnitIdentifier, &flow_file).value_or("1");
-  const uint8_t unit_id = utils::string::parseNumber<uint8_t>(unit_id_str) | utils::valueOrElse([this](const utils::string::ParseError&) {
+  const uint8_t unit_id = utils::string::parseNumber<uint8_t>(unit_id_str) | utils::valueOrElse([this](const auto&) {
     logger_->log_error("Couldnt parse UnitIdentifier");
     return uint8_t{1};
   });
-  for (const auto& dynamic_property : dynamic_property_keys_) {
-    if (std::string dynamic_property_value{}; context.getDynamicProperty(dynamic_property, dynamic_property_value, &flow_file)) {
-      if (auto modbus_func = ReadModbusFunction::parse(++transaction_id_, unit_id, dynamic_property_value); modbus_func) {
-        address_map.emplace(dynamic_property.getName(), std::move(modbus_func));
-      }
+
+  for (const auto& [dynamic_property_key, dynamic_property_value] : context.getDynamicProperties(&flow_file)) {
+    if (auto modbus_func = ReadModbusFunction::parse(++transaction_id_, unit_id, dynamic_property_value); modbus_func) {
+      address_map.emplace(dynamic_property_key, std::move(modbus_func));
     }
   }
   return address_map;
