@@ -39,11 +39,13 @@ class PutUDP final : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Hostname = core::PropertyDefinitionBuilder<>::createProperty("Hostname")
     .withDescription("The ip address or hostname of the destination.")
     .withDefaultValue("localhost")
+    .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
     .isRequired(true)
     .supportsExpressionLanguage(true)
     .build();
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
     .withDescription("The port on the destination. Can be a service name like ssh or http, as defined in /etc/services.")
+    .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
     .isRequired(true)
     .supportsExpressionLanguage(true)
     .build();

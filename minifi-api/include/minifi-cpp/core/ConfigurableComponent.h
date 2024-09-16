@@ -18,72 +18,41 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "Core.h"
-#include <mutex>
-#include <iostream>
-#include <map>
-#include <memory>
-
-#include "logging/Logger.h"
 #include "Property.h"
-#include "utils/gsl.h"
+#include "PropertyDefinition.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::core {
 
-/**
- * Represents a configurable component
- * Purpose: Extracts configuration items for all components and localized them
- */
-class ConfigurableComponent {
- public:
-  virtual bool getProperty(const std::string& name, uint64_t& value) const = 0;
-  virtual bool getProperty(const std::string& name, int64_t& value) const = 0;
-  virtual bool getProperty(const std::string& name, uint32_t& value) const = 0;
-  virtual bool getProperty(const std::string& name, int& value) const = 0;
-  virtual bool getProperty(const std::string& name, bool& value) const = 0;
-  virtual bool getProperty(const std::string& name, double& value) const = 0;
-  virtual bool getProperty(const std::string& name, std::string& value) const = 0;
+class ConfigurableComponent : public virtual CoreComponent {
+public:
+ virtual ~ConfigurableComponent() = default;
 
-
-  virtual bool getProperty(const std::string &name, Property &prop) const = 0;
-  virtual bool setProperty(const std::string& name, const std::string& value) = 0;
-  virtual bool updateProperty(const std::string &name, const std::string &value) = 0;
-  virtual bool updateProperty(const PropertyReference& property, std::string_view value) = 0;
-  virtual bool setProperty(const Property& prop, const std::string& value) = 0;
-  virtual bool setProperty(const PropertyReference& property, std::string_view value) = 0;
-  virtual bool setProperty(const Property& prop, PropertyValue &value) = 0;
-  virtual bool supportsDynamicProperties() const = 0;
-  virtual bool supportsDynamicRelationships() const = 0;
-  virtual bool getDynamicProperty(const std::string& name, std::string &value) const = 0;
-  virtual bool getDynamicProperty(const std::string& name, core::Property &item) const = 0;
-  virtual bool setDynamicProperty(const std::string& name, const std::string& value) = 0;
-  virtual bool updateDynamicProperty(const std::string &name, const std::string &value) = 0;
-  virtual void onPropertyModified(const Property& /*old_property*/, const Property& /*new_property*/) = 0;
-  virtual void onDynamicPropertyModified(const Property& /*old_property*/, const Property& /*new_property*/) = 0;
-  virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
-  virtual std::map<std::string, Property> getProperties() const = 0;
-  virtual bool isPropertyExplicitlySet(const Property&) const = 0;
-  virtual bool isPropertyExplicitlySet(const PropertyReference&) const = 0;
-  virtual ~ConfigurableComponent() = default;
-  virtual void initialize() = 0;
+  virtual void initialize() {};
   virtual bool canEdit() = 0;
 
-  template<typename T>
-  bool getProperty(const std::string& name, T& value) const;
+  [[nodiscard]] virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const = 0;
+  virtual nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) = 0;
+  virtual nonstd::expected<void, std::error_code> appendProperty(std::string_view name, std::string value) = 0;
+  virtual nonstd::expected<void, std::error_code> clearProperty(std::string_view name) = 0;
 
-  template<typename T>
-  bool getProperty(const std::string& name, std::optional<T>& value) const;
+  [[nodiscard]] virtual nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name) const = 0;
+  virtual nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) = 0;
+  virtual nonstd::expected<void, std::error_code> appendDynamicProperty(std::string_view name, std::string value) = 0;
 
-  template<typename T>
-  bool getProperty(const core::PropertyReference& property, T& value) const;
+  [[nodiscard]] virtual nonstd::expected<PropertyReference, std::error_code> getPropertyReference(std::string_view name) const = 0;
 
-  template<typename T = std::string> requires(std::is_default_constructible_v<T>)
-  std::optional<T> getProperty(const std::string& property_name) const;
+  [[nodiscard]] virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
+  [[nodiscard]] virtual std::map<std::string, std::string> getDynamicProperties() const = 0;
 
-  template<typename T = std::string> requires(std::is_default_constructible_v<T>)
-  std::optional<T> getProperty(const core::PropertyReference& property) const;
+  [[nodiscard]] virtual bool supportsDynamicProperties() const = 0;
+  [[nodiscard]] virtual bool supportsDynamicRelationships() const = 0;
+
+  [[nodiscard]] virtual std::map<std::string, Property> getSupportedProperties() const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

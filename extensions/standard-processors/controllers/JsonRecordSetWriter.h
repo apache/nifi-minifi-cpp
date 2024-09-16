@@ -21,6 +21,7 @@
 #include "core/FlowFile.h"
 #include "core/ProcessSession.h"
 #include "utils/Enum.h"
+#include "rapidjson/document.h"
 
 namespace org::apache::nifi::minifi::standard {
 enum class OutputGroupingType {
@@ -73,7 +74,7 @@ class JsonRecordSetWriter final : public core::RecordSetWriterImpl {
 
   EXTENSIONAPI static constexpr auto PrettyPrint = core::PropertyDefinitionBuilder<>::createProperty("Pretty Print JSON")
     .withDescription("Specifies whether or not the JSON should be pretty printed (only used when Array output is selected)")
-    .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+    .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
     .withDefaultValue("false")
     .build();
 

@@ -31,7 +31,7 @@ bool AzureDataLakeStorageFileProcessorBase::setFileOperationCommonParameters(
     return false;
   }
 
-  context.getProperty(FileName, params.filename, &flow_file);
+  params.filename = context.getProperty(FileName, &flow_file).value_or("");
   if (params.filename.empty() && (!flow_file.getAttribute("filename", params.filename) || params.filename.empty())) {
     logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
     return false;

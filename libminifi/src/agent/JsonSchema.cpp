@@ -44,6 +44,7 @@ static std::string escape(std::string str) {
 
 static std::string prettifyJson(const std::string& str) {
   rapidjson::Document doc;
+  std::cout << str << std::endl;
   rapidjson::ParseResult res = doc.Parse(str.c_str(), str.length());
   gsl_Assert(res);
 
@@ -61,35 +62,37 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
   if (const auto& values = prop.getAllowedValues(); !values.empty()) {
     out << R"(, "enum": [)"
         << (values
-            | ranges::views::transform([] (auto& val) {return '"' + escape(val.to_string()) + '"';})
+            | ranges::views::transform([] (auto& val) {return '"' + escape(val) + '"';})
             | ranges::views::join(',')
             | ranges::to<std::string>())
         << "]";
   }
-  if (const auto& def_value = prop.getDefaultValue(); !def_value.empty()) {
-    const auto& type = def_value.getTypeInfo();
-    // order is important as both DataSizeValue and TimePeriodValue's type_id is uint64_t
-    if (std::dynamic_pointer_cast<core::DataSizeValue>(def_value.getValue())
-        || std::dynamic_pointer_cast<core::TimePeriodValue>(def_value.getValue())) {  // NOLINT(bugprone-branch-clone)
-      // special value types
-      out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
-    } else if (type == state::response::Value::INT_TYPE
-        || type == state::response::Value::INT64_TYPE
-        || type == state::response::Value::UINT32_TYPE
-        || type == state::response::Value::UINT64_TYPE) {
-      out << R"(, "type": "integer", "default": )" << static_cast<int64_t>(def_value);
-    } else if (type == state::response::Value::DOUBLE_TYPE) {
-      out << R"(, "type": "number", "default": )" << static_cast<double>(def_value);
-    } else if (type == state::response::Value::BOOL_TYPE) {
-      out << R"(, "type": "boolean", "default": )" << (static_cast<bool>(def_value) ? "true" : "false");
+  if (const auto validator_name = prop.getValidator().getEquivalentNifiStandardValidatorName()) {
+    if (validator_name == "INTEGER_VALIDATOR" || validator_name == "NON_NEGATIVE_INTEGER_VALIDATOR") {
+      out << R"(, "type": "integer")";
+      if (const auto default_value = prop.getDefaultValue()) {
+        out << R"(, "default": )" << *default_value;
+      }
+    } else if (validator_name == "BOOLEAN_VALIDATOR") {
+      out << R"(, "type": "boolean")";
+      if (const auto default_value = prop.getDefaultValue()) {
+        out << R"(, "default": )" << *default_value;
+      }
     } else {
-      out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
+      out << R"(, "type": "string")";
+      if (const auto default_value = prop.getDefaultValue()) {
+        out << R"(, "default": ")" << escape(*default_value) << '"';
+      }
     }
   } else {
-    // no default value, no type information, fallback to string
     out << R"(, "type": "string")";
+    if (const auto default_value = prop.getDefaultValue()) {
+      out << R"(, "default": ")" << escape(*default_value) << '"';
+    }
   }
-  out << "}";  // property.getName()
+
+
+  out << "}";
 }
 
 template<typename PropertyContainer>
@@ -99,7 +102,7 @@ void writeProperties(const PropertyContainer& props, bool supports_dynamic, std:
         << R"("additionalProperties": )" << (supports_dynamic? "true" : "false") << ","
         << R"("required": [)"
         << (props
-            | ranges::views::filter([] (auto& prop) {return prop.getRequired() && prop.getDefaultValue().empty();})
+            | ranges::views::filter([] (auto& prop) {return prop.getRequired() && !prop.getDefaultValue().has_value();})
             | ranges::views::transform([] (auto& prop) {return '"' + escape(prop.getName()) + '"';})
             | ranges::views::join(',')
             | ranges::to<std::string>())

@@ -67,7 +67,7 @@ SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata
   for (const auto& [config_property_name, config_property_validator] : updatable_not_sensitive_configuration_properties) {
     std::unordered_map<std::string, std::string> property;
     property.emplace("propertyName", config_property_name);
-    property.emplace("validator", config_property_validator->getValidatorName());
+    property.emplace("validator", config_property_validator->getEquivalentNifiStandardValidatorName().value_or("VALID"));
     if (configuration_reader_) {
       if (auto property_value = configuration_reader_(std::string(config_property_name))) {
         property.emplace("propertyValue", *property_value);

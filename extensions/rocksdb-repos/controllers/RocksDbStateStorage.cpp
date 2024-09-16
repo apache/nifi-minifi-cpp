@@ -45,19 +45,19 @@ void RocksDbStateStorage::onEnable() {
     return;
   }
 
-  const auto always_persist = getProperty<bool>(AlwaysPersist).value_or(false);
+  const auto always_persist = getProperty(AlwaysPersist.name)
+      | utils::andThen(parsing::parseBool)
+      | utils::expect("RocksDbStateStorage::AlwaysPersist has default value");
   logger_->log_info("Always Persist property: {}", always_persist);
 
-  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval).value_or(core::TimePeriodValue{}).getMilliseconds();
+  const auto auto_persistence_interval = getProperty(AutoPersistenceInterval.name)
+      | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)
+      | utils::expect("RocksDbStateStorage::AutoPersistenceInterval has default value");
   logger_->log_info("Auto Persistence Interval property: {}", auto_persistence_interval);
 
-  if (!getProperty(Directory, directory_)) {
-    logger_->log_error("Invalid or missing property: Directory");
-    return;
-  }
+  directory_ = getProperty(Directory.name) | utils::expect("RocksDbStateStorage::Directory is required property");
 
   auto_persistor_.start(always_persist, auto_persistence_interval, [this] { return persistNonVirtual(); });
-
   db_.reset();
 
   auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});

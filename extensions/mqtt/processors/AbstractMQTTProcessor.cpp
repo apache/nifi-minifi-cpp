@@ -26,20 +26,14 @@
 namespace org::apache::nifi::minifi::processors {
 
 void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (auto value = context.getProperty(BrokerURI)) {
-    uri_ = std::move(*value);
-  }
-  logger_->log_debug("AbstractMQTTProcessor: BrokerURI [{}]", uri_);
-
+  uri_ = utils::parseProperty(context, BrokerURI);
   mqtt_version_ = utils::parseEnumProperty<mqtt::MqttVersions>(context, MqttVersion);
-  logger_->log_debug("AbstractMQTTProcessor: MQTT Specification Version: {}", magic_enum::enum_name(mqtt_version_));
 
   if (auto value = context.getProperty(ClientID)) {
     clientID_ = std::move(*value);
   } else if (mqtt_version_ == mqtt::MqttVersions::V_3_1_0) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "MQTT 3.1.0 specification does not support empty client IDs");
   }
-  logger_->log_debug("AbstractMQTTProcessor: ClientID [{}]", clientID_);
 
   if (auto value = context.getProperty(Username)) {
     username_ = std::move(*value);
@@ -51,14 +45,10 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::Proc
   }
   logger_->log_debug("AbstractMQTTProcessor: Password [{}]", password_);
 
-  if (const auto keep_alive_interval = context.getProperty(KeepAliveInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
-    keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
-  }
+  keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseMsProperty(context, KeepAliveInterval));
   logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [{}] s", int64_t{keep_alive_interval_.count()});
 
-  if (const auto connection_timeout = context.getProperty(ConnectionTimeout) | utils::andThen(&core::TimePeriodValue::fromString)) {
-    connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
-  }
+  connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseMsProperty(context, ConnectionTimeout));
   logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [{}] s", int64_t{connection_timeout_.count()});
 
   qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(context, QoS);
@@ -107,11 +97,8 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::Proc
     logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [{}]", magic_enum::enum_name(last_will_qos_));
     last_will_->qos = static_cast<int>(last_will_qos_);
 
-    if (const auto value = context.getProperty(LastWillRetain) | utils::andThen(&utils::string::toBool)) {
-      logger_->log_debug("AbstractMQTTProcessor: Last Will Retain [{}]", *value);
-      last_will_retain_ = {*value};
-      last_will_->retained = last_will_retain_;
-    }
+    last_will_retain_ = utils::parseBoolProperty(context, LastWillRetain);
+    last_will_->retained = last_will_retain_;
 
     if (auto value = context.getProperty(LastWillContentType)) {
       logger_->log_debug("AbstractMQTTProcessor: Last Will Content Type [{}]", *value);

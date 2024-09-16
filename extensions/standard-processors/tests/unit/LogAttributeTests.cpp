@@ -66,7 +66,7 @@ TEST_CASE("LogAttribute LogLevel and LogPrefix", "[LogAttribute]") {
     std::make_tuple("error", "", "--------------------------------------------------"));
 
   REQUIRE(controller.plan->setProperty(log_attribute, LogAttribute::LogLevel, log_level));
-  REQUIRE(controller.plan->setProperty(log_attribute, LogAttribute::LogPrefix, log_prefix));
+  controller.plan->setProperty(log_attribute, LogAttribute::LogPrefix, log_prefix);
 
   controller.plan->scheduleProcessor(log_attribute);
   const auto result = controller.trigger("hello world", {{"eng", "apple"}, {"ger", "Apfel"}, {"fra", "pomme"}});
@@ -112,8 +112,8 @@ TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
     expected_ger = false;
   }
 
-  REQUIRE(controller.plan->setProperty(log_attribute, LogAttribute::AttributesToLog, attrs_to_log));
-  REQUIRE(controller.plan->setProperty(log_attribute, LogAttribute::AttributesToIgnore, attrs_to_ignore));
+  controller.plan->setProperty(log_attribute, LogAttribute::AttributesToLog, attrs_to_log);
+  controller.plan->setProperty(log_attribute, LogAttribute::AttributesToIgnore, attrs_to_ignore);
 
 
   controller.plan->scheduleProcessor(log_attribute);

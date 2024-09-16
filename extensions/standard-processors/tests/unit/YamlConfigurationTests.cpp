@@ -215,7 +215,7 @@ Remote Processing Groups: []
 Provenance Reporting:
       )";
 
-    REQUIRE_THROWS_AS(yamlConfig.getRootFromPayload(CONFIG_YAML_EMPTY_RETRY_ATTRIBUTE), minifi::utils::internal::InvalidValueException);
+    REQUIRE_THROWS_WITH(yamlConfig.getRootFromPayload(CONFIG_YAML_EMPTY_RETRY_ATTRIBUTE), "Unable to parse configuration file for component named 'RetryFlowFile' because ValidationFailed");
     REQUIRE(LogTestController::getInstance().contains("Invalid value was set for property 'Retry Attribute' creating component 'RetryFlowFile'"));
   }
 }
@@ -536,8 +536,7 @@ Processors:
     REQUIRE(!rootFlowConfig->findProcessorByName("GetFile")->getUUIDStr().empty());
   } catch (const std::exception &e) {
     caught_exception = true;
-    REQUIRE("Unable to parse configuration file for component named 'XYZ' because required property "
-        "'Input Directory' is not set [in '/Processors/0/Properties' section of configuration file]" == std::string(e.what()));
+    REQUIRE("Unable to parse configuration file for component named 'XYZ' because ValidationFailed" == std::string(e.what()));
   }
 
   REQUIRE(caught_exception);
@@ -567,8 +566,10 @@ Processors:
   REQUIRE(!rootFlowConfig->findProcessorByName("XYZ")->getUUIDStr().empty());
 }
 
-class DummyComponent : public core::ConfigurableComponentImpl {
+class DummyComponent : public core::ConfigurableComponentImpl, public core::CoreComponentImpl {
  public:
+  DummyComponent() : ConfigurableComponentImpl(), CoreComponentImpl("DummyComponent") {}
+
   bool supportsDynamicProperties() const override {
     return false;
   }
@@ -1584,14 +1585,13 @@ Parameter Context Name: my-context
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
-  auto* proc = flow->findProcessorByName("DummyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("DummyProcessor"));
   REQUIRE(proc);
-  core::Property property("Simple Property", "");
-  proc->getProperty("Simple Property", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
+  auto values = proc->getAllPropertyValues("Simple Property");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
 }
 
 TEST_CASE("Dynamic properties can use parameters", "[YamlConfiguration]") {
@@ -1635,17 +1635,16 @@ Parameter Context Name: my-context
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("DummyProcessor");
-  REQUIRE(proc);
   core::Property property("My Dynamic Property Sequence", "");
-  proc->getDynamicProperty("My Dynamic Property Sequence", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
-  std::string value;
-  REQUIRE(proc->getDynamicProperty("My Dynamic Property", value));
-  CHECK(value == "value1");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("DummyProcessor"));
+  REQUIRE(proc);
+  auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
+
+  REQUIRE(proc->getDynamicProperty("My Dynamic Property") == "value1");
 }
 
 TEST_CASE("Test sensitive parameters in sensitive properties", "[YamlConfiguration]") {
@@ -1737,13 +1736,12 @@ Parameter Context Name: my-context
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
-  auto* proc = flow->findProcessorByName("DummyProcessor");
-  core::Property property("Sensitive Property", "");
-  proc->getProperty("Sensitive Property", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("DummyProcessor"));
+  auto values = proc->getAllPropertyValues("Sensitive Property");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
 }
 
 TEST_CASE("Test parameters in controller services", "[YamlConfiguration]") {
@@ -2108,12 +2106,9 @@ Parameter Context Name: c-context
   auto* proc = flow->findProcessorByName("DummyProcessor");
   REQUIRE(proc);
   std::string value;
-  REQUIRE(proc->getDynamicProperty("My A Property", value));
-  CHECK(value == "1");
-  REQUIRE(proc->getDynamicProperty("My B Property", value));
-  CHECK(value == "3");
-  REQUIRE(proc->getDynamicProperty("My C Property", value));
-  CHECK(value == "5");
+  REQUIRE("1" == proc->getDynamicProperty("My A Property"));
+  REQUIRE("3" == proc->getDynamicProperty("My B Property"));
+  REQUIRE("5" == proc->getDynamicProperty("My C Property"));
 }
 
 TEST_CASE("Parameter providers can be used for parameter values", "[YamlConfiguration]") {

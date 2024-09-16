@@ -26,6 +26,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/OptionalUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
 
@@ -37,7 +38,7 @@ void FetchS3Object::initialize() {
 void FetchS3Object::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   S3Processor::onSchedule(context, session_factory);
 
-  context.getProperty(RequesterPays, requester_pays_);
+  requester_pays_ = minifi::utils::parseBoolProperty(context, RequesterPays);
   logger_->log_debug("FetchS3Object: RequesterPays [{}]", requester_pays_);
 }
 
@@ -50,14 +51,18 @@ std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3Re
   get_object_params.bucket = common_properties.bucket;
   get_object_params.requester_pays = requester_pays_;
 
-  context.getProperty(ObjectKey, get_object_params.object_key, &flow_file);
+  if (const auto object_key = context.getProperty(ObjectKey, &flow_file)) {
+    get_object_params.object_key = * object_key;
+  }
   if (get_object_params.object_key.empty() && (!flow_file.getAttribute("filename", get_object_params.object_key) || get_object_params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return std::nullopt;
   }
   logger_->log_debug("FetchS3Object: Object Key [{}]", get_object_params.object_key);
 
-  context.getProperty(Version, get_object_params.version, &flow_file);
+  if (const auto version = context.getProperty(Version, &flow_file)) {
+    get_object_params.version = *version;
+  }
   logger_->log_debug("FetchS3Object: Version [{}]", get_object_params.version);
   get_object_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   return get_object_params;

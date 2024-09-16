@@ -22,6 +22,7 @@
 #include "utils/TimeUtil.h"
 #include "utils/OsUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::extensions::smb {
@@ -42,34 +43,18 @@ void ListSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFact
 
   input_directory_ = context.getProperty(InputDirectory).value_or("");
 
-  context.getProperty(RecurseSubdirectories, recurse_subdirectories_);
+  recurse_subdirectories_ = utils::parseBoolProperty(context, RecurseSubdirectories);
 
-  std::string value;
-  if (context.getProperty(FileFilter, value) && !value.empty()) {
-    file_filter_.filename_filter = std::regex(value);
-  }
+  file_filter_.filename_filter = context.getProperty(FileFilter) | utils::transform([] (const auto& str) { return std::regex(str);}) | utils::toOptional();
+  file_filter_.path_filter = context.getProperty(PathFilter) | utils::transform([] (const auto& str) { return std::regex(str);}) | utils::toOptional();
 
-  if (recurse_subdirectories_ && context.getProperty(PathFilter, value) && !value.empty()) {
-    file_filter_.path_filter = std::regex(value);
-  }
+  file_filter_.minimum_file_age = utils::parseOptionalMsProperty(context, MinimumFileAge);
+  file_filter_.maximum_file_age = utils::parseOptionalMsProperty(context, MaximumFileAge);
 
-  if (auto minimum_file_age = context.getProperty<core::TimePeriodValue>(MinimumFileAge)) {
-    file_filter_.minimum_file_age =  minimum_file_age->getMilliseconds();
-  }
+  file_filter_.minimum_file_size = utils::parseOptionalDataSizeProperty(context, MinimumFileSize);
+  file_filter_.maximum_file_size = utils::parseOptionalDataSizeProperty(context, MaximumFileSize);
 
-  if (auto maximum_file_age = context.getProperty<core::TimePeriodValue>(MaximumFileAge)) {
-    file_filter_.maximum_file_age =  maximum_file_age->getMilliseconds();
-  }
-
-  if (const auto minimum_file_size = context.getProperty<core::DataSizeValue>(MinimumFileSize)) {
-    file_filter_.minimum_file_size = minimum_file_size->getValue();
-  }
-
-  if (const auto maximum_file_size = context.getProperty<core::DataSizeValue>(MaximumFileSize)) {
-    file_filter_.maximum_file_size = maximum_file_size->getValue();
-  }
-
-  context.getProperty(IgnoreHiddenFiles, file_filter_.ignore_hidden_files);
+  file_filter_.ignore_hidden_files = utils::parseBoolProperty(context, IgnoreHiddenFiles);
 }
 
 namespace {

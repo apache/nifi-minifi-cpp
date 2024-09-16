@@ -17,11 +17,13 @@
 
 #include "ListGCSBucket.h"
 
-#include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
+
+#include "../GCPAttributes.h"
 #include "core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "../GCPAttributes.h"
+#include "core/Resource.h"
 
 namespace gcs = ::google::cloud::storage;
 
@@ -34,14 +36,14 @@ void ListGCSBucket::initialize() {
 
 void ListGCSBucket::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   GCSProcessor::onSchedule(context, session_factory);
-  context.getProperty(Bucket, bucket_);
+  bucket_ = utils::parseProperty(context, Bucket);
 }
 
 void ListGCSBucket::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   gsl_Expects(gcp_credentials_);
 
   gcs::Client client = getClient();
-  auto list_all_versions = context.getProperty<bool>(ListAllVersions);
+  auto list_all_versions = utils::parseOptionalBoolProperty(context, ListAllVersions);
   gcs::Versions versions = (list_all_versions && *list_all_versions) ? gcs::Versions(true) : gcs::Versions(false);
   auto objects_in_bucket = client.ListObjects(bucket_, versions);
   for (const auto& object_in_bucket : objects_in_bucket) {

@@ -22,7 +22,7 @@
 #include <string_view>
 #include <utility>
 
-#include "PropertyType.h"
+#include "PropertyValidator.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -39,7 +39,7 @@ struct PropertyDefinition {
   std::array<std::string_view, NumDependentProperties> dependent_properties;
   std::array<std::pair<std::string_view, std::string_view>, NumExclusiveOfProperties> exclusive_of_properties;
   std::optional<std::string_view> default_value;
-  gsl::not_null<const PropertyType*> type;
+  gsl::not_null<const PropertyValidator*> validator;
   bool supports_expression_language;
 
   uint8_t version;
@@ -56,24 +56,45 @@ struct PropertyReference {
   std::span<const std::string_view> dependent_properties;
   std::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties;
   std::optional<std::string_view> default_value;
-  gsl::not_null<const PropertyType*> type;
+  gsl::not_null<const PropertyValidator*> validator;
   bool supports_expression_language = false;
 
   template<size_t NumAllowedValues = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0>
   constexpr PropertyReference(const PropertyDefinition<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties>& property_definition)  // NOLINT: non-explicit on purpose
-    : name{property_definition.name},
-      display_name{property_definition.display_name},
-      description{property_definition.description},
-      is_required{property_definition.is_required},
-      is_sensitive{property_definition.is_sensitive},
-      allowed_values{property_definition.allowed_values},
-      allowed_types{property_definition.allowed_types},
-      dependent_properties{property_definition.dependent_properties},
-      exclusive_of_properties{property_definition.exclusive_of_properties},
-      default_value{property_definition.default_value},
-      type{property_definition.type},
-      supports_expression_language{property_definition.supports_expression_language} {
-  }
+      : name{property_definition.name},
+        display_name{property_definition.display_name},
+        description{property_definition.description},
+        is_required{property_definition.is_required},
+        is_sensitive{property_definition.is_sensitive},
+        allowed_values{property_definition.allowed_values},
+        allowed_types{property_definition.allowed_types},
+        dependent_properties{property_definition.dependent_properties},
+        exclusive_of_properties{property_definition.exclusive_of_properties},
+        default_value{property_definition.default_value},
+        validator{property_definition.validator},
+        supports_expression_language{property_definition.supports_expression_language} {}
+
+  PropertyReference(const std::string_view name, const std::string_view display_name, const std::string_view description, const bool is_required, const bool is_sensitive, const std::span<const std::string_view> allowed_values,
+      std::span<const std::string_view> allowed_types, const std::span<const std::string_view> dependent_properties, const std::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties, std::optional<std::string_view> default_value,
+      const gsl::not_null<const PropertyValidator*> validator, const bool supports_expression_language)
+      : name(name),
+        display_name(display_name),
+        description(description),
+        is_required(is_required),
+        is_sensitive(is_sensitive),
+        allowed_values(allowed_values),
+        allowed_types(allowed_types),
+        dependent_properties(dependent_properties),
+        exclusive_of_properties(exclusive_of_properties),
+        default_value(default_value),
+        validator(validator),
+        supports_expression_language(supports_expression_language) {}
+
+  PropertyReference(const PropertyReference&) = default;
+  PropertyReference(PropertyReference&&) = default;
+  PropertyReference& operator=(PropertyReference&&) = default;
+  PropertyReference& operator=(const PropertyReference&) = default;
+  ~PropertyReference() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::core
