@@ -57,11 +57,11 @@ std::optional<MultipartUploadState> MultipartUploadStateStorage::getState(const 
   MultipartUploadState state;
   state.upload_id = state_map[state_key + ".upload_id"];
 
-  core::Property::StringToInt(state_map[state_key + ".upload_time"], state.upload_time_ms_since_epoch);
-  core::Property::StringToInt(state_map[state_key + ".uploaded_parts"], state.uploaded_parts);
-  core::Property::StringToInt(state_map[state_key + ".uploaded_size"], state.uploaded_size);
-  core::Property::StringToInt(state_map[state_key + ".part_size"], state.part_size);
-  core::Property::StringToInt(state_map[state_key + ".full_size"], state.full_size);
+  state.upload_time_ms_since_epoch = parsing::parseIntegral<int64_t>(state_map[state_key + ".upload_time"]) | utils::expect("Expected parsable upload_time_ms_since_epoch");
+  state.uploaded_parts = parsing::parseIntegral<size_t>(state_map[state_key + ".uploaded_parts"]) | utils::expect("Expected parsable state.uploaded_parts");
+  state.uploaded_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".uploaded_size"]) | utils::expect("Expected parsable state.uploaded_size");
+  state.part_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".part_size"]) | utils::expect("Expected parsable state.part_size");
+  state.full_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".full_size"]) | utils::expect("Expected parsable state.full_size");
   state.uploaded_etags = minifi::utils::string::splitAndTrimRemovingEmpty(state_map[state_key + ".uploaded_etags"], ";");
   return state;
 }
@@ -110,15 +110,15 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
     if (!minifi::utils::string::endsWith(property_key, upload_time_suffix)) {
       continue;
     }
-    int64_t stored_upload_time{};
-    if (!core::Property::StringToInt(value, stored_upload_time)) {
+    if (const auto stored_upload_time = parsing::parseIntegral<int64_t>(value); !stored_upload_time) {
       logger_->log_error("Multipart upload cache key '{}' has invalid value '{}'", property_key, value);
       continue;
-    }
-    auto upload_time = Aws::Utils::DateTime(stored_upload_time);
-    if (upload_time < age_off_time) {
-      auto state_key_and_property_name = property_key.substr(0, property_key.size() - upload_time_suffix.size());
-      keys_to_remove.push_back(state_key_and_property_name);
+    } else {
+      auto upload_time = Aws::Utils::DateTime(*stored_upload_time);
+      if (upload_time < age_off_time) {
+        auto state_key_and_property_name = property_key.substr(0, property_key.size() - upload_time_suffix.size());
+        keys_to_remove.push_back(state_key_and_property_name);
+      }
     }
   }
   for (const auto& key : keys_to_remove) {

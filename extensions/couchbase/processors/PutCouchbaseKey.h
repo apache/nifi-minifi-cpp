@@ -82,16 +82,19 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
   EXTENSIONAPI static constexpr auto BucketName = core::PropertyDefinitionBuilder<>::createProperty("Bucket Name")
       .withDescription("The name of bucket to access.")
       .withDefaultValue("default")
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .isRequired(true)
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ScopeName = core::PropertyDefinitionBuilder<>::createProperty("Scope Name")
       .withDescription("Scope to use inside the bucket. If not specified, the _default scope is used.")
       .supportsExpressionLanguage(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto CollectionName = core::PropertyDefinitionBuilder<>::createProperty("Collection Name")
       .withDescription("Collection to use inside the bucket scope. If not specified, the _default collection is used.")
       .supportsExpressionLanguage(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto DocumentType = core::PropertyDefinitionBuilder<magic_enum::enum_count<CouchbaseValueType>()>::createProperty("Document Type")
       .withDescription("Content type to store data as.")
@@ -103,6 +106,7 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
       .withDescription("A static, fixed Couchbase document id, or an expression to construct the Couchbase document id. "
                        "If not specified, either the FlowFile uuid attribute or if that's not found a generated uuid will be used.")
       .supportsExpressionLanguage(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto PersistTo = core::PropertyDefinitionBuilder<6>::createProperty("Persist To")
       .withDescription("Durability constraint about disk persistence.")

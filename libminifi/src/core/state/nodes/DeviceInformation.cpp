@@ -23,6 +23,7 @@
 #include "core/Resource.h"
 #include "utils/net/NetworkInterfaceInfo.h"
 #include "utils/OsUtils.h"
+#include "core/state/Value.h"
 
 namespace org::apache::nifi::minifi::state::response {
 

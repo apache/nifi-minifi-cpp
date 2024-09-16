@@ -76,6 +76,7 @@ class ProcFsMonitor final : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto DecimalPlaces = core::PropertyDefinitionBuilder<>::createProperty("Round to decimal places")
       .withDescription("The number of decimal places to round the values to (blank for no rounding)")
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto ResultRelativenessProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<ResultRelativeness>()>::createProperty("Result Type")
       .withDescription("Absolute returns the current procfs values, relative calculates the usage between triggers")
@@ -108,8 +109,6 @@ class ProcFsMonitor final : public core::ProcessorImpl {
 
  private:
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);
-
-  void setupDecimalPlacesFromProperties(const core::ProcessContext& context);
 
   void processCPUInformation(const std::vector<std::pair<std::string, CpuStatData>>& current_cpu_stats,
                              rapidjson::Value& body,

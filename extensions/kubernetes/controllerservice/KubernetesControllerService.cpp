@@ -58,19 +58,16 @@ void KubernetesControllerService::onEnable() {
     logger_->log_error("Could not create the API client in the Kubernetes Controller Service: {}", ex.what());
   }
 
-  std::string namespace_filter;
-  if (getProperty(NamespaceFilter, namespace_filter) && !namespace_filter.empty()) {
-    namespace_filter_ = utils::Regex{namespace_filter};
+  if (std::string namespace_filter = getProperty(NamespaceFilter.name).value_or(""); !namespace_filter.empty()) {
+    namespace_filter_ = utils::Regex{std::move(namespace_filter)};
   }
 
-  std::string pod_name_filter;
-  if (getProperty(PodNameFilter, pod_name_filter) && !pod_name_filter.empty()) {
-    pod_name_filter_ = utils::Regex{pod_name_filter};
+  if (std::string pod_name_filter = getProperty(PodNameFilter.name).value_or(""); !pod_name_filter.empty()) {
+    pod_name_filter_ = utils::Regex{std::move(pod_name_filter)};
   }
 
-  std::string container_name_filter;
-  if (getProperty(ContainerNameFilter, container_name_filter) && !container_name_filter.empty()) {
-    container_name_filter_ = utils::Regex{container_name_filter};
+  if (std::string container_name_filter = getProperty(ContainerNameFilter.name).value_or(""); !container_name_filter.empty()) {
+    container_name_filter_ = utils::Regex{std::move(container_name_filter)};
   }
 }
 

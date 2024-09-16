@@ -49,7 +49,7 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
         "Permission to list containers is required. If false, this check is not made, but the Put operation will "
         "fail if the container does not exist.")
     .isRequired(true)
-    .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+    .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
     .withDefaultValue("false")
     .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::to_array<core::PropertyReference>({CreateContainer}));

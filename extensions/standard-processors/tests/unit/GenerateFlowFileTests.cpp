@@ -102,7 +102,7 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest") {
 
   constexpr int32_t file_size = 10;
 
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::FileSize, std::to_string(file_size));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::FileSize, std::to_string(file_size)));
   test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false");
   test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
   SECTION("Empty custom data") {

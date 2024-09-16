@@ -23,6 +23,8 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
+
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -34,7 +36,7 @@ void PutAzureBlobStorage::initialize() {
 
 void PutAzureBlobStorage::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   AzureBlobStorageProcessorBase::onSchedule(context, session_factory);
-  context.getProperty(CreateContainer, create_container_);
+  create_container_ = minifi::utils::parseBoolProperty(context, CreateContainer);
 }
 
 std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::buildPutAzureBlobStorageParameters(
