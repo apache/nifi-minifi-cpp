@@ -1028,4 +1028,124 @@ TEST_CASE("NiFi flow json can use alternative targetUris field") {
   REQUIRE(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 }
 
+
+TEST_CASE("Test parameters in controller services") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_parameter_value = minifi::utils::crypto::property_encryption::encrypt("secret1!!1!", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{my_value_1}", *context.sensitive_values_encryptor);
+  core::flow::AdaptiveConfiguration json_config(context);
+
+  static const std::string CONFIG_JSON =
+      fmt::format(R"(
+{{
+  "parameterContexts": [
+    {{
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "my-context",
+      "description": "my parameter context",
+      "parameters": [
+        {{
+          "name": "my_value_1",
+          "description": "",
+          "sensitive": true,
+          "value": "{}"
+        }},
+        {{
+          "name": "my_value_2",
+          "description": "",
+          "sensitive": false,
+          "value": "/opt/secrets/private-key.pem"
+        }}
+      ]
+    }}
+  ],
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [],
+    "controllerServices": [{{
+      "identifier": "a00f8722-2419-44ee-929c-ad68644ad557",
+      "name": "SSLContextService",
+      "type": "org.apache.nifi.minifi.controllers.SSLContextService",
+      "properties": {{
+        "Passphrase": "{}",
+        "Private Key": "#{{my_value_2}}",
+        "Use System Cert Store": "true"
+      }}
+    }}],
+    "parameterContextName": "my-context"
+  }}
+}})", encrypted_parameter_value, encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = json_config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+  auto* controller = flow->findControllerService("SSLContextService");
+  REQUIRE(controller);
+  auto impl = controller->getControllerServiceImplementation();
+  CHECK(impl->getProperty("Passphrase").value() == "secret1!!1!");
+  CHECK(impl->getProperty("Private Key").value() == "/opt/secrets/private-key.pem");
+}
+
+TEST_CASE("Parameters can be used in controller services in nested process groups") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_parameter_value = minifi::utils::crypto::property_encryption::encrypt("secret1!!1!", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{my_value_1}", *context.sensitive_values_encryptor);
+  core::flow::AdaptiveConfiguration json_config(context);
+
+  static const std::string CONFIG_JSON =
+      fmt::format(R"(
+{{
+  "parameterContexts": [
+    {{
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "my-context",
+      "description": "my parameter context",
+      "parameters": [
+        {{
+          "name": "my_value_1",
+          "description": "",
+          "sensitive": true,
+          "value": "{}"
+        }},
+        {{
+          "name": "my_value_2",
+          "description": "",
+          "sensitive": false,
+          "value": "/opt/secrets/private-key.pem"
+        }}
+      ]
+    }}
+  ],
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [],
+    "processGroups": [{{
+      "name": "MiNiFi SubFlow",
+      "processors": [],
+      "controllerServices": [{{
+        "identifier": "a00f8722-2419-44ee-929c-ad68644ad557",
+        "name": "SSLContextService",
+        "type": "org.apache.nifi.minifi.controllers.SSLContextService",
+        "properties": {{
+          "Passphrase": "{}",
+          "Private Key": "#{{my_value_2}}",
+          "Use System Cert Store": "true"
+        }}
+      }}],
+      "parameterContextName": "my-context"
+    }}]
+  }}
+}})", encrypted_parameter_value, encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = json_config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+  auto* controller = flow->findControllerService("SSLContextService", core::ProcessGroup::Traverse::IncludeChildren);
+  REQUIRE(controller);
+  auto impl = controller->getControllerServiceImplementation();
+  REQUIRE(impl);
+  CHECK(impl->getProperty("Passphrase").value() == "secret1!!1!");
+  CHECK(impl->getProperty("Private Key").value() == "/opt/secrets/private-key.pem");
+}
+
 }  // namespace org::apache::nifi::minifi::test
