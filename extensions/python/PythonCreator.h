@@ -113,7 +113,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     processor->initialize();
     minifi::BundleDetails details;
     details.artifact = path.filename().string();
-    details.version = processor->getVersion().value_or(minifi::AgentBuild::VERSION);
+    details.version = processor->getVersion() && !processor->getVersion()->empty() ? *processor->getVersion() : minifi::AgentBuild::VERSION;
     details.group = "python";
 
     minifi::ClassDescription description{

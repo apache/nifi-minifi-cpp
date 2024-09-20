@@ -19,10 +19,12 @@
 
 #include <fstream>
 
+#include "agent/agent_version.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/TestControllerWithFlow.h"
 #include "unit/EmptyFlow.h"
+#include "unit/TestUtils.h"
 #include "c2/C2MetricsPublisher.h"
 #include "utils/gsl.h"
 
@@ -113,6 +115,45 @@ class MyPyProc3(FlowFileTransform):
         user = flow_file.getContentsAsBytes().decode('utf-8')
         response = f"Hello {user}! I am a {color} processor. I am feeling {mood}."
         return FlowFileTransformResult('success', contents=response.encode('utf-8'))
+)";
+
+  std::ofstream{python_dir / "nifi_python_processors" / "MyPyProc4.py"} << R"(
+from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
+
+class MyPyProc4(FlowFileTransform):
+
+    class Java:
+        implements = ['org.apache.nifi.python.processor.FlowFileTransform']
+
+    class ProcessorDetails:
+        description = "Test processor number four. Does not define a version."
+        dependencies = []
+
+    def __init__(self, **kwargs):
+        pass
+
+    def transform(self, context, flow_file):
+        return FlowFileTransformResult('success')
+)";
+
+  std::ofstream{python_dir / "nifi_python_processors" / "MyPyProc5.py"} << R"(
+from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
+
+class MyPyProc5(FlowFileTransform):
+
+    class Java:
+        implements = ['org.apache.nifi.python.processor.FlowFileTransform']
+
+    class ProcessorDetails:
+        version = ''
+        description = "Test processor number five. Defines a version, but it is blank."
+        dependencies = []
+
+    def __init__(self, **kwargs):
+        pass
+
+    def transform(self, context, flow_file):
+        return FlowFileTransformResult('success')
 )";
 
   controller.configuration_->set(minifi::Configuration::nifi_python_processor_dir, python_dir.string());
@@ -245,5 +286,15 @@ class MyPyProc3(FlowFileTransform):
     auto* original = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "original";});
     REQUIRE(original);
     CHECK(getNode(original->children, "description").value == "Original flow file");
+  }
+
+  {
+    auto python_bundle = findPythonBundle("MyPyProc4");
+    CHECK(getNode(python_bundle->children, "version").value == minifi::AgentBuild::VERSION);
+  }
+
+  {
+    auto python_bundle = findPythonBundle("MyPyProc5");
+    CHECK(getNode(python_bundle->children, "version").value == minifi::AgentBuild::VERSION);
   }
 }
