@@ -540,9 +540,9 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
       controller_service_node->initialize();
       if (Node propertiesNode = service_node[schema_.controller_service_properties]) {
         // we should propagate properties to the node and to the implementation
-        parsePropertiesNode(propertiesNode, *controller_service_node, name, nullptr);
+        parsePropertiesNode(propertiesNode, *controller_service_node, name, parent_group->getParameterContext());
         if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
-          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, nullptr);
+          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, parent_group->getParameterContext());
         }
       }
 
