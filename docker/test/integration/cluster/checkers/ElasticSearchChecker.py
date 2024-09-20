@@ -39,7 +39,6 @@ class ElasticSearchChecker:
         if code != 0:
             return None
         output_lines = output.splitlines()
-        print(output_lines)
         result = json.loads(output_lines[-1])
         return result["encoded"]
 
