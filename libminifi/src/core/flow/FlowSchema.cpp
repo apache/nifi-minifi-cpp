@@ -141,7 +141,7 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .rpg_proxy_port = {"proxyPort"},
       .rpg_input_ports = {"inputPorts"},
       .rpg_output_ports = {"outputPorts"},
-      .rpg_port_properties = {},
+      .rpg_port_properties = {"properties"},
       .rpg_port_target_id = {"targetId"},
 
       .parameter_contexts = {"parameterContexts"},

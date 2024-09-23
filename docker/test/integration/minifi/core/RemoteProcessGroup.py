@@ -27,9 +27,13 @@ class RemoteProcessGroup(object):
             self.name = name
 
         self.url = url
+        self.properties = {}
 
     def get_name(self):
         return self.name
 
     def get_uuid(self):
         return self.uuid
+
+    def add_property(self, name, value):
+        self.properties[name] = value

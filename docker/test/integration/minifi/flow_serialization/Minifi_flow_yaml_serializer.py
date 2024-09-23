@@ -96,7 +96,7 @@ class Minifi_flow_yaml_serializer:
                 'id': str(connectable.instance_id),
                 'name': connectable.name,
                 'max concurrent tasks': 1,
-                'Properties': {}
+                'Properties': connectable.properties
             })
 
         if isinstance(connectable, Processor):

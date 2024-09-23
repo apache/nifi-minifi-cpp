@@ -22,30 +22,53 @@ import gzip
 import os
 
 
+class NiFiOptions:
+    def __init__(self):
+        self.use_ssl = False
+
+
 class NifiContainer(FlowContainer):
     NIFI_VERSION = '2.0.0-M2'
     NIFI_ROOT = '/opt/nifi/nifi-' + NIFI_VERSION
 
-    def __init__(self, feature_context, config_dir, name, vols, network, image_store, command=None):
+    def __init__(self, feature_context, config_dir, options, name, vols, network, image_store, command=None):
         if not command:
-            entry_command = (r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.sensitive.props.key\)=.*/\1=secret_key_12345/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.remote.input.secure\)=.*/\1=false/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.web.http.port\)=.*/\1=8080/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.web.https.port\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.web.https.host\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.web.http.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.security.keystore\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.security.keystoreType\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.security.keystorePasswd\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.security.keyPasswd\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.security.truststore\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.security.truststoreType\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.security.truststorePasswd\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
-                             r"sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\1=10000/' {nifi_root}/conf/nifi.properties && "
-                             r"cp /tmp/nifi_config/flow.json.gz {nifi_root}/conf && {nifi_root}/bin/nifi.sh run & "
-                             r"nifi_pid=$! &&"
-                             r"tail -F --pid=${{nifi_pid}} {nifi_root}/logs/nifi-app.log").format(name=name, nifi_root=NifiContainer.NIFI_ROOT)
+            if options.use_ssl:
+                entry_command = (r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.remote.input.secure\)=.*/\1=true/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.sensitive.props.key\)=.*/\1=secret_key_12345/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.web.https.port\)=.*/\1=8443/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.web.https.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.keystore\)=.*/\1=\/tmp\/resources\/keystore.jks/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.keystoreType\)=.*/\1=jks/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.keystorePasswd\)=.*/\1=passw0rd1!/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.keyPasswd\)=.*/#\1=passw0rd1!/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.truststore\)=.*/\1=\/tmp\/resources\/truststore.jks/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.truststoreType\)=.*/\1=jks/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.truststorePasswd\)=.*/\1=passw0rd1!/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\1=10443/' {nifi_root}/conf/nifi.properties && "
+                                 r"cp /tmp/nifi_config/flow.json.gz {nifi_root}/conf && {nifi_root}/bin/nifi.sh run & "
+                                 r"nifi_pid=$! &&"
+                                 r"tail -F --pid=${{nifi_pid}} {nifi_root}/logs/nifi-app.log").format(name=name, nifi_root=NifiContainer.NIFI_ROOT)
+            else:
+                entry_command = (r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.sensitive.props.key\)=.*/\1=secret_key_12345/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.remote.input.secure\)=.*/\1=false/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.web.http.port\)=.*/\1=8080/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.web.https.port\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.web.https.host\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.web.http.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.keystore\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.keystoreType\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.keystorePasswd\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.keyPasswd\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.truststore\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.truststoreType\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.security.truststorePasswd\)=.*/#\1=/' {nifi_root}/conf/nifi.properties && "
+                                 r"sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\1=10000/' {nifi_root}/conf/nifi.properties && "
+                                 r"cp /tmp/nifi_config/flow.json.gz {nifi_root}/conf && {nifi_root}/bin/nifi.sh run & "
+                                 r"nifi_pid=$! &&"
+                                 r"tail -F --pid=${{nifi_pid}} {nifi_root}/logs/nifi-app.log").format(name=name, nifi_root=NifiContainer.NIFI_ROOT)
             command = ["/bin/sh", "-c", entry_command]
         super().__init__(feature_context, config_dir, name, 'nifi', vols, network, image_store, command)
 

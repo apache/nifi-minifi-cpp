@@ -418,3 +418,6 @@ class DockerTestCluster:
 
     def set_value_on_plc_with_modbus(self, container_name, modbus_cmd):
         return self.modbus_checker.set_value_on_plc_with_modbus(container_name, modbus_cmd)
+
+    def enable_ssl_in_nifi(self):
+        self.container_store.enable_ssl_in_nifi()

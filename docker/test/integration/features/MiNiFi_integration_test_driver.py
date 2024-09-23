@@ -12,22 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import logging
 import time
 import uuid
+
 from typing import List
-
-import OpenSSL.crypto
-
 from pydoc import locate
-
-from ssl_utils.SSL_cert_utils import make_self_signed_cert, make_cert_without_extended_usage, make_server_cert
 from minifi.core.InputPort import InputPort
-
 from cluster.DockerTestCluster import DockerTestCluster
-
 from minifi.validators.OutputValidator import OutputValidator
 from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidator
 from minifi.validators.NoFileOutPutValidator import NoFileOutPutValidator
@@ -54,44 +46,7 @@ class MiNiFi_integration_test:
         self.test_file_hash = None
 
         self.docker_directory_bindings = context.directory_bindings
-        self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.feature_id), self.docker_directory_bindings.get_data_directories(self.feature_id))
-        self.root_ca_cert, self.root_ca_key = make_self_signed_cert("root CA")
-
-        minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=f"minifi-cpp-flow-{self.feature_id}",
-                                                                                 ca_cert=self.root_ca_cert,
-                                                                                 ca_key=self.root_ca_key)
-        minifi_server_cert, minifi_server_key = make_server_cert(common_name=f"server-{self.feature_id}",
-                                                                 ca_cert=self.root_ca_cert,
-                                                                 ca_key=self.root_ca_key)
-        self_signed_server_cert, self_signed_server_key = make_self_signed_cert(f"server-{self.feature_id}")
-
-        self.put_test_resource('root_ca.crt',
-                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                               cert=self.root_ca_cert))
-        self.put_test_resource("system_certs_dir/ca-root-nss.crt",
-                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                               cert=self.root_ca_cert))
-        self.put_test_resource('minifi_client.crt',
-                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                               cert=minifi_client_cert))
-        self.put_test_resource('minifi_client.key',
-                               OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                              pkey=minifi_client_key))
-        self.put_test_resource('minifi_server.crt',
-                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                               cert=minifi_server_cert)
-                               + OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                                pkey=minifi_server_key))
-        self.put_test_resource('self_signed_server.crt',
-                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                               cert=self_signed_server_cert)
-                               + OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                                pkey=self_signed_server_key))
-        self.put_test_resource('minifi_merged_cert.crt',
-                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                               cert=minifi_client_cert)
-                               + OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                                pkey=minifi_client_key))
+        self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(), self.docker_directory_bindings.get_data_directories())
 
     def get_container_name_with_postfix(self, container_name: str):
         return self.cluster.container_store.get_container_name_with_postfix(container_name)
@@ -196,18 +151,18 @@ class MiNiFi_integration_test:
         if file_name is None:
             file_name = str(uuid.uuid4())
         test_data = decode_escaped_str(test_data)
-        self.docker_directory_bindings.put_file_to_docker_path(self.feature_id, path, file_name, test_data.encode('utf-8'))
+        self.docker_directory_bindings.put_file_to_docker_path(path, file_name, test_data.encode('utf-8'))
 
     def add_random_test_data(self, path: str, size: int, file_name: str = None):
         if file_name is None:
             file_name = str(uuid.uuid4())
-        self.test_file_hash = self.docker_directory_bindings.put_random_file_to_docker_path(self.feature_id, path, file_name, size)
+        self.test_file_hash = self.docker_directory_bindings.put_random_file_to_docker_path(path, file_name, size)
 
     def put_test_resource(self, file_name, contents):
-        self.docker_directory_bindings.put_test_resource(self.feature_id, file_name, contents)
+        self.docker_directory_bindings.put_test_resource(file_name, contents)
 
-    def rm_out_child(self):
-        self.docker_directory_bindings.rm_out_child(self.feature_id)
+    def get_test_resource_path(self, file_name):
+        return self.docker_directory_bindings.get_test_resource_path(file_name)
 
     def add_file_system_observer(self, file_system_observer):
         self.file_system_observer = file_system_observer
@@ -482,3 +437,6 @@ class MiNiFi_integration_test:
 
     def set_value_on_plc_with_modbus(self, container_name, modbus_cmd):
         assert self.cluster.set_value_on_plc_with_modbus(container_name, modbus_cmd)
+
+    def enable_ssl_in_nifi(self):
+        self.cluster.enable_ssl_in_nifi()

@@ -292,6 +292,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     if (!token.empty())
       client->setRequestHeader("Authorization", token);
 
+    client->setVerbose(false);
 
     if (client->submit() && client->getResponseCode() == 200) {
       const std::vector<char> &response_body = client->getResponseBody();
