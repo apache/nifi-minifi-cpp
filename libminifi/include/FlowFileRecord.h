@@ -47,7 +47,7 @@ namespace core {
 class ProcessSession;
 }
 
-class FlowFileRecord : public core::FlowFile {
+class FlowFileRecord : public core::FlowFileImpl {
   friend class core::ProcessSession;
 
  public:

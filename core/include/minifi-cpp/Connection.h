@@ -34,6 +34,7 @@
 #include "core/Relationship.h"
 #include "core/FlowFile.h"
 #include "core/Repository.h"
+#include "minifi-cpp/utils/Literals.h"
 
 namespace org::apache::nifi::minifi {
 

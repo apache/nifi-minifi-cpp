@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_PROPERTYERRORS_H_
-#define LIBMINIFI_INCLUDE_UTILS_PROPERTYERRORS_H_
+#pragma once
 
 #include <string>
 
@@ -89,5 +88,3 @@ class RequiredPropertyMissingException : public PropertyException {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_PROPERTYERRORS_H_

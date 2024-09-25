@@ -23,12 +23,12 @@ namespace org::apache::nifi::minifi::core {
 
 bool ProcessContextExpr::getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const FlowFile* const flow_file) {
   if (!supports_expression_language) {
-    return ProcessContext::getProperty(property_name, value);
+    return ProcessContextImpl::getProperty(property_name, value);
   }
   std::string name{property_name};
   if (expressions_.find(name) == expressions_.end()) {
     std::string expression_str;
-    if (!ProcessContext::getProperty(name, expression_str)) {
+    if (!ProcessContextImpl::getProperty(name, expression_str)) {
       return false;
     }
     logger_->log_debug("Compiling expression for {}/{}: {}", getProcessorNode()->getName(), name, expression_str);
@@ -52,12 +52,12 @@ bool ProcessContextExpr::getProperty(const PropertyReference& property, std::str
 
 bool ProcessContextExpr::getDynamicProperty(const Property &property, std::string &value, const FlowFile* const flow_file) {
   if (!property.supportsExpressionLanguage()) {
-    return ProcessContext::getDynamicProperty(property.getName(), value);
+    return ProcessContextImpl::getDynamicProperty(property.getName(), value);
   }
   auto name = property.getName();
   if (dynamic_property_expressions_.find(name) == dynamic_property_expressions_.end()) {
     std::string expression_str;
-    ProcessContext::getDynamicProperty(name, expression_str);
+    ProcessContextImpl::getDynamicProperty(name, expression_str);
     logger_->log_debug("Compiling expression for {}/{}: {}", getProcessorNode()->getName(), name, expression_str);
     dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
     expression_strs_.insert_or_assign(name, expression_str);
@@ -71,12 +71,12 @@ bool ProcessContextExpr::getDynamicProperty(const Property &property, std::strin
 
 bool ProcessContextExpr::setProperty(const std::string& property, std::string value) {
   expressions_.erase(property);
-  return ProcessContext::setProperty(property, value);
+  return ProcessContextImpl::setProperty(property, value);
 }
 
 bool ProcessContextExpr::setDynamicProperty(const std::string& property, std::string value) {
   dynamic_property_expressions_.erase(property);
-  return ProcessContext::setDynamicProperty(property, value);
+  return ProcessContextImpl::setDynamicProperty(property, value);
 }
 
 }  // namespace org::apache::nifi::minifi::core

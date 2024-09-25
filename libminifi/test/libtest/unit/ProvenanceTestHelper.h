@@ -149,7 +149,7 @@ class TestVolatileRepository : public TestRepositoryBase<org::apache::nifi::mini
   }
 };
 
-class TestThreadedRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::ThreadedRepository> {
+class TestThreadedRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::ThreadedRepositoryImpl> {
  public:
   ~TestThreadedRepository() override {
     stop();
@@ -185,10 +185,10 @@ class TestRocksDbRepository : public TestThreadedRepository {
   }
 };
 
-class TestFlowRepository : public org::apache::nifi::minifi::core::ThreadedRepository {
+class TestFlowRepository : public org::apache::nifi::minifi::core::ThreadedRepositoryImpl {
  public:
   TestFlowRepository()
-    : org::apache::nifi::minifi::core::ThreadedRepository("ff", "./dir", 1s, TEST_MAX_REPOSITORY_STORAGE_SIZE, 0ms) {
+    : org::apache::nifi::minifi::core::ThreadedRepositoryImpl("ff", "./dir", 1s, TEST_MAX_REPOSITORY_STORAGE_SIZE, 0ms) {
   }
 
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {

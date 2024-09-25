@@ -51,20 +51,4 @@ class PropertyType : public PropertyParser, public PropertyValidator {
   virtual constexpr ~PropertyType() {}  // NOLINT can't use = default because of gcc bug: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=93413
 };
 
-namespace StandardPropertyTypes {
-
-enum class PropertyTypeCode : int64_t {
-  INTEGER = 0,
-  LONG = 1,
-  BOOLEAN = 2,
-  DATA_SIZE = 3,
-  TIME_PERIOD = 4,
-  NON_BLANK = 5,
-  PORT = 6
-};
-
-const core::PropertyType& translateCodeToPropertyType(const PropertyTypeCode& code);
-
-}  // namespace StandardPropertyTypes
-
 }  // namespace org::apache::nifi::minifi::core

@@ -37,7 +37,6 @@
 #include "minifi-cpp/ResourceClaim.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
-#include "utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::provenance {
 

@@ -21,16 +21,7 @@
 #include <string>
 #include <utility>
 
-#include "utils/StringUtils.h"
-#include "utils/tls/ExtendedKeyUsage.h"
-#include "io/validation.h"
-#include "../core/controller/ControllerService.h"
-#include "core/logging/LoggerFactory.h"
-#include "core/PropertyDefinition.h"
-#include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
-#include "utils/Export.h"
-#include "utils/tls/CertificateUtils.h"
+#include "minifi-cpp/core/controller/ControllerService.h"
 
 namespace org::apache::nifi::minifi::controllers {
 

@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_WEAKREFERENCE_H_
-#define LIBMINIFI_INCLUDE_CORE_WEAKREFERENCE_H_
+#pragma once
 
 #include <memory>
 
@@ -61,5 +60,3 @@ class ReferenceContainer {
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_WEAKREFERENCE_H_

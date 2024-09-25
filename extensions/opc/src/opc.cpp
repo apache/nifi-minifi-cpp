@@ -565,7 +565,7 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {
   std::array<char, 1024> buffer{};
   (void)vsnprintf(buffer.data(), buffer.size(), msg, args);
-  auto loggerPtr = reinterpret_cast<core::logging::BaseLogger*>(context);
+  auto loggerPtr = reinterpret_cast<core::logging::Logger*>(context);
   loggerPtr->log_string(MapOPCLogLevel(level), buffer.data());
 }
 

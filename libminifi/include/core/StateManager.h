@@ -17,12 +17,14 @@
 
 #pragma once
 
-#include "Core.h"
+#include "core/Core.h"
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
+
+#include "minifi-cpp/core/StateManager.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -31,35 +33,13 @@ namespace org::apache::nifi::minifi::core {
  * Supported operations: get(), set(), clear(), persist().
  * Behavior can be transactional. Use beginTransaction() to enter a transaction and commit() or rollback() to conclude it.
  */
-class StateManager {
+class StateManagerImpl : public virtual StateManager {
  public:
-  using State = std::unordered_map<std::string, std::string>;
-
-  explicit StateManager(const utils::Identifier& id)
+  explicit StateManagerImpl(const utils::Identifier& id)
     : id_(id) {
   }
 
-  virtual ~StateManager() = default;
-
-  virtual bool set(const State& kvs) = 0;
-  virtual bool get(State& kvs) = 0;
-
-  std::optional<State> get() {
-    if (State out; get(out)) {
-      return out;
-    }
-    return std::nullopt;
-  }
-
-  virtual bool clear() = 0;
-  virtual bool persist() = 0;
-
-  [[nodiscard]] virtual bool isTransactionInProgress() const = 0;
-
-  virtual bool beginTransaction() = 0;
-  virtual bool commit() = 0;
-  virtual bool rollback() = 0;
-
+  ~StateManagerImpl() override = default;
  protected:
   utils::Identifier id_;
 };

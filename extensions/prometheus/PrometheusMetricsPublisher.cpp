@@ -27,7 +27,7 @@
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
 PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid, std::unique_ptr<MetricsExposer> exposer)
-  : state::MetricsPublisher(name, uuid),
+  : state::MetricsPublisherImpl(name, uuid),
     exposer_(std::move(exposer)) {}
 
 void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {

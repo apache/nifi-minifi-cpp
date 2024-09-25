@@ -24,14 +24,14 @@
 
 #include "ControllerSocketReporter.h"
 #include "core/state/MetricsPublisher.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerFactory.h"
 #include "c2/HeartbeatJsonSerializer.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
-class ControllerSocketMetricsPublisher : public state::MetricsPublisher, public ControllerSocketReporter {
+class ControllerSocketMetricsPublisher : public state::MetricsPublisherImpl, public ControllerSocketReporter {
  public:
-  using MetricsPublisher::MetricsPublisher;
+  using MetricsPublisherImpl::MetricsPublisherImpl;
   MINIFIAPI static constexpr const char* Description = "Provides the response nodes for c2 operations through localized environment through a simple TCP socket.";
 
   void clearMetricNodes() override;

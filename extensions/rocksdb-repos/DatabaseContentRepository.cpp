@@ -144,7 +144,7 @@ DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> r
       use_synchronous_writes_(use_synchronous_writes) {}
 
 std::shared_ptr<ContentSession> DatabaseContentRepository::createSession() {
-  return std::make_shared<Session>(sharedFromThis(), use_synchronous_writes_);
+  return std::make_shared<Session>(sharedFromThis<ContentRepository>(), use_synchronous_writes_);
 }
 
 void DatabaseContentRepository::Session::commit() {

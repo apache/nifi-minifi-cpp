@@ -48,6 +48,14 @@ class ResourceClaim {
   static std::shared_ptr<ResourceClaim> create(std::shared_ptr<core::ContentRepository> repository);
 
   virtual std::ostream& write(std::ostream& stream) const = 0;
+
+  friend std::ostream& operator<<(std::ostream& stream, const ResourceClaim& claim) {
+    return claim.write(stream);
+  }
+
+  friend std::ostream& operator<<(std::ostream& stream, const std::shared_ptr<ResourceClaim>& claim) {
+    return claim->write(stream);
+  }
 };
 
 }  // namespace org::apache::nifi::minifi

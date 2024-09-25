@@ -17,7 +17,7 @@
 
 #include "core/extension/Extension.h"
 #include "core/extension/ExtensionManager.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 

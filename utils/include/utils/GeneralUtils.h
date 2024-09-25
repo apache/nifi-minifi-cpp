@@ -67,27 +67,17 @@ struct type_identity {
 
 using gsl::owner;
 
-namespace internal {
-
 /*
  * We need this base class to enable safe multiple inheritance
  * from std::enable_shared_from_this, it also needs to be polymorphic
  * to allow dynamic_cast to the derived class.
  */
-struct EnableSharedFromThisBase : std::enable_shared_from_this<EnableSharedFromThisBase> {
-  virtual ~EnableSharedFromThisBase() = default;
-};
+struct EnableSharedFromThis : virtual std::enable_shared_from_this<EnableSharedFromThis> {
+  virtual ~EnableSharedFromThis() = default;
 
-}  // namespace internal
-
-/*
- * The virtual inheritance ensures that there is only a single
- * std::weak_ptr instance in each instance.
- */
-template<typename T>
-struct EnableSharedFromThis : virtual internal::EnableSharedFromThisBase {
+  template<typename T>
   std::shared_ptr<T> sharedFromThis() {
-    return std::dynamic_pointer_cast<T>(internal::EnableSharedFromThisBase::shared_from_this());
+    return std::dynamic_pointer_cast<T>(shared_from_this());
   }
 };
 

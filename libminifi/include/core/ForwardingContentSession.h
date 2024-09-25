@@ -22,7 +22,7 @@
 #include <memory>
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
-#include "ContentSession.h"
+#include "core/ContentSession.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -32,7 +32,7 @@ class ContentRepository;
  * Warning: this implementation simply forwards all calls to the underlying
  * repository without any atomicity guarantees or possibility of rollback.
  */
-class ForwardingContentSession : public ContentSession {
+class ForwardingContentSession : public ContentSessionImpl {
  public:
   explicit ForwardingContentSession(std::shared_ptr<ContentRepository> repository);
 

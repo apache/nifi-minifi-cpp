@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_
+#pragma once
 
 #include <zlib.h>
 
@@ -26,14 +25,11 @@
 #include <vector>
 
 #include "OutputStream.h"
+#include "Stream.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 enum class ZlibCompressionFormat : uint8_t {
   ZLIB,
@@ -47,7 +43,7 @@ enum class ZlibStreamState : uint8_t {
   FINISHED
 };
 
-class ZlibBaseStream : public OutputStreamImpl {
+class ZlibBaseStream : public StreamImpl, public virtual OutputStreamImpl {
  public:
   virtual bool isFinished() const;
 
@@ -108,9 +104,4 @@ class ZlibDecompressStream : public ZlibBaseStream {
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_IO_ZLIBSTREAM_H_
+}  // namespace org::apache::nifi::minifi:io

@@ -25,11 +25,12 @@
 #include "core/ClassLoader.h"
 #include "processors/ProcessorUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::core {
 
 FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
-    : CoreComponent(core::className<FlowConfiguration>()),
+    : CoreComponentImpl(core::className<FlowConfiguration>()),
       flow_file_repo_(std::move(ctx.flow_file_repo)),
       content_repo_(std::move(ctx.content_repo)),
       configuration_(std::move(ctx.configuration)),
@@ -163,10 +164,10 @@ std::unique_ptr<minifi::Connection> FlowConfiguration::createConnection(const st
   if (flow_file_repo_) {
     auto swap_manager = std::dynamic_pointer_cast<SwapManager>(flow_file_repo_);
     if (swap_manager) {
-      return std::make_unique<minifi::Connection>(flow_file_repo_, content_repo_, std::move(swap_manager), name, uuid);
+      return std::make_unique<minifi::ConnectionImpl>(flow_file_repo_, content_repo_, std::move(swap_manager), name, uuid);
     }
   }
-  return std::make_unique<minifi::Connection>(flow_file_repo_, content_repo_, name, uuid);
+  return std::make_unique<minifi::ConnectionImpl>(flow_file_repo_, content_repo_, name, uuid);
 }
 
 std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(const std::string &class_name, const std::string &full_class_name, const std::string &name,

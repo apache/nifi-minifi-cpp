@@ -40,9 +40,6 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "utils/BackTrace.h"
 #include "minifi-cpp/SwapManager.h"
-#include "utils/Literals.h"
-#include "utils/StringUtils.h"
-#include "utils/TimeUtil.h"
 #include "core/Core.h"
 
 #ifndef WIN32
@@ -50,11 +47,6 @@
 #endif
 
 namespace org::apache::nifi::minifi::core {
-
-constexpr auto REPOSITORY_DIRECTORY = "./repo";
-constexpr auto MAX_REPOSITORY_STORAGE_SIZE = 10_MiB;
-constexpr auto MAX_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
-constexpr auto REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class Repository : public virtual core::CoreComponent, public virtual core::RepositoryMetricsSource {
  public:

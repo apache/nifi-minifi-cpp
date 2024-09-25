@@ -27,8 +27,6 @@
 #include <vector>
 #include <algorithm>
 
-#include "spdlog/common.h"
-#include "spdlog/logger.h"
 #include "utils/gsl.h"
 #include "utils/Enum.h"
 #include "utils/GeneralUtils.h"
@@ -37,20 +35,6 @@
 #include "fmt/ostream.h"
 
 namespace org::apache::nifi::minifi::core::logging {
-
-inline constexpr size_t LOG_BUFFER_SIZE = 4096;
-
-class LoggerControl {
- public:
-  LoggerControl();
-
-  [[nodiscard]] bool is_enabled() const;
-
-  void setEnabled(bool status);
-
- protected:
-  std::atomic<bool> is_enabled_;
-};
 
 enum LOG_LEVEL {
   trace = 0,
@@ -62,42 +46,6 @@ enum LOG_LEVEL {
   off = 6
 };
 
-inline spdlog::level::level_enum mapToSpdLogLevel(LOG_LEVEL level) {
-  switch (level) {
-    case trace: return spdlog::level::trace;
-    case debug: return spdlog::level::debug;
-    case info: return spdlog::level::info;
-    case warn: return spdlog::level::warn;
-    case err: return spdlog::level::err;
-    case critical: return spdlog::level::critical;
-    case off: return spdlog::level::off;
-  }
-  throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
-}
-
-inline LOG_LEVEL mapFromSpdLogLevel(spdlog::level::level_enum level) {
-  switch (level) {
-    case spdlog::level::trace: return LOG_LEVEL::trace;
-    case spdlog::level::debug: return LOG_LEVEL::debug;
-    case spdlog::level::info: return LOG_LEVEL::info;
-    case spdlog::level::warn: return LOG_LEVEL::warn;
-    case spdlog::level::err: return LOG_LEVEL::err;
-    case spdlog::level::critical: return LOG_LEVEL::critical;
-    case spdlog::level::off: return LOG_LEVEL::off;
-    case spdlog::level::n_levels: break;
-  }
-  throw std::invalid_argument(fmt::format("Invalid spdlog::level::level_enum {}", magic_enum::enum_underlying(level)));
-}
-
-class BaseLogger {
- public:
-  virtual ~BaseLogger();
-
-  virtual void log_string(LOG_LEVEL level, std::string str) = 0;
-  virtual bool should_log(LOG_LEVEL level) = 0;
-  [[nodiscard]] virtual LOG_LEVEL level() const = 0;
-};
-
 inline constexpr auto map_args = utils::overloaded {
     [](auto&& f) requires(std::is_invocable_v<decltype(f)>) { return std::invoke(std::forward<decltype(f)>(f)); },
     [](auto&& value) { return std::forward<decltype(value)>(value); }
@@ -106,69 +54,57 @@ inline constexpr auto map_args = utils::overloaded {
 template<typename... Args>
 using log_format_string = fmt::format_string<std::invoke_result_t<decltype(map_args), Args>...>;
 
-class Logger : public BaseLogger {
+class Logger {
  public:
-  Logger(Logger const&) = delete;
-  Logger& operator=(Logger const&) = delete;
-
   template<typename ...Args>
   void log_with_level(LOG_LEVEL log_level, log_format_string<Args...> fmt, Args&& ...args) {
-    return log(mapToSpdLogLevel(log_level), std::move(fmt), std::forward<Args>(args)...);
+    return log(log_level, std::move(fmt), std::forward<Args>(args)...);
   }
 
   template<typename ...Args>
   void log_critical(log_format_string<Args...> fmt, Args&& ...args) {
-    log(spdlog::level::critical, std::move(fmt), std::forward<Args>(args)...);
+    log(LOG_LEVEL::critical, std::move(fmt), std::forward<Args>(args)...);
   }
 
   template<typename ...Args>
   void log_error(log_format_string<Args...> fmt, Args&& ...args) {
-    log(spdlog::level::err, std::move(fmt), std::forward<Args>(args)...);
+    log(LOG_LEVEL::err, std::move(fmt), std::forward<Args>(args)...);
   }
 
   template<typename ...Args>
   void log_warn(log_format_string<Args...> fmt, Args&& ...args) {
-    log(spdlog::level::warn, std::move(fmt), std::forward<Args>(args)...);
+    log(LOG_LEVEL::warn, std::move(fmt), std::forward<Args>(args)...);
   }
 
   template<typename ...Args>
   void log_info(log_format_string<Args...> fmt, Args&& ...args) {
-    log(spdlog::level::info, std::move(fmt), std::forward<Args>(args)...);
+    log(LOG_LEVEL::info, std::move(fmt), std::forward<Args>(args)...);
   }
 
   template<typename ...Args>
   void log_debug(log_format_string<Args...> fmt, Args&& ...args) {
-    log(spdlog::level::debug, std::move(fmt), std::forward<Args>(args)...);
+    log(LOG_LEVEL::debug, std::move(fmt), std::forward<Args>(args)...);
   }
 
   template<typename ...Args>
   void log_trace(log_format_string<Args...> fmt, Args&& ...args) {
-    log(spdlog::level::trace, std::move(fmt), std::forward<Args>(args)...);
+    log(LOG_LEVEL::trace, std::move(fmt), std::forward<Args>(args)...);
   }
 
-  void set_max_log_size(int size) {
-    max_log_size_ = size;
-  }
-
-  bool should_log(LOG_LEVEL level) override;
-  void log_string(LOG_LEVEL level, std::string str) override;
-  LOG_LEVEL level() const override;
-
+  virtual void set_max_log_size(int size) = 0;
   virtual std::optional<std::string> get_id() = 0;
+  virtual void log_string(LOG_LEVEL level, std::string str) = 0;
+  virtual bool should_log(LOG_LEVEL level) = 0;
+  [[nodiscard]] virtual LOG_LEVEL level() const = 0;
+
+  virtual ~Logger() = default;
 
  protected:
-  Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller);
-
-  Logger(std::shared_ptr<spdlog::logger> delegate); // NOLINT
-
-  std::shared_ptr<spdlog::logger> delegate_;
-  std::shared_ptr<LoggerControl> controller_;
-
-  std::mutex mutex_;
+  virtual int getMaxLogSize() = 0;
 
  private:
   std::string trimToMaxSizeAndAddId(std::string my_string) {
-    auto max_log_size = max_log_size_.load();
+    auto max_log_size = getMaxLogSize();
     if (max_log_size >= 0 && my_string.size() > gsl::narrow<size_t>(max_log_size))
       my_string = my_string.substr(0, max_log_size);
     if (auto id = get_id()) {
@@ -184,17 +120,12 @@ class Logger : public BaseLogger {
   }
 
   template<typename ...Args>
-  inline void log(spdlog::level::level_enum level, log_format_string<Args...> fmt, Args&& ...args) {
-    if (controller_ && !controller_->is_enabled())
-      return;
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (!delegate_->should_log(level)) {
+  inline void log(LOG_LEVEL level, log_format_string<Args...> fmt, Args&& ...args) {
+    if (!should_log(level)) {
       return;
     }
-    delegate_->log(level, stringify(std::move(fmt), map_args(std::forward<Args>(args))...));
+    log_string(level, stringify(std::move(fmt), map_args(std::forward<Args>(args))...));
   }
-
-  std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
 };
 
 }  // namespace org::apache::nifi::minifi::core::logging

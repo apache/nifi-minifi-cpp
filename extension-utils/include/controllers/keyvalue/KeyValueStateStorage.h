@@ -26,11 +26,9 @@
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/StateManager.h"
 #include "core/StateStorage.h"
+#include "minifi-cpp/controllers/keyvalue/KeyValueStateStorage.h"
 
 namespace org::apache::nifi::minifi::controllers {
-
-constexpr const char* ALWAYS_PERSIST_PROPERTY_NAME = "Always Persist";
-constexpr const char* AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME = "Auto Persistence Interval";
 
 class KeyValueStateStorage : public core::StateStorageImpl, public core::controller::ControllerServiceImpl {
  public:

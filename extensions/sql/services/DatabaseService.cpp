@@ -33,7 +33,7 @@ void DatabaseService::initialize() {
     return;
   }
 
-  ControllerService::initialize();
+  ControllerServiceImpl::initialize();
 
   initializeProperties();
 

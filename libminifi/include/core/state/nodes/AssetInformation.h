@@ -22,10 +22,10 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-class AssetInformation : public ResponseNode {
+class AssetInformation : public ResponseNodeImpl {
  public:
   AssetInformation();
-  explicit AssetInformation(std::string_view name, const utils::Identifier& uuid = {}) : ResponseNode(name, uuid) {}
+  explicit AssetInformation(std::string_view name, const utils::Identifier& uuid = {}) : ResponseNodeImpl(name, uuid) {}
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines hash for all asset identifiers";
 

@@ -27,7 +27,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class SerializableComponent : public core::CoreComponent {
+class SerializableComponent : public virtual core::CoreComponent {
  public:
   ~SerializableComponent() override = default;
 

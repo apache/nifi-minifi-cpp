@@ -41,17 +41,18 @@
 #include "minifi-cpp/io/StreamCallback.h"
 
 namespace org::apache::nifi::minifi::core {
+
 namespace detail {
+
 struct ReadBufferResult {
   int64_t status;
   std::vector<std::byte> buffer;
 };
 
-std::string to_string(const ReadBufferResult& read_buffer_result);
 }  // namespace detail
 
 // ProcessSession Class
-class ProcessSession : public ReferenceContainer {
+class ProcessSession : public virtual ReferenceContainer {
  public:
   ~ProcessSession() override = default;
 

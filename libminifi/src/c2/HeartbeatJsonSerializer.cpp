@@ -77,27 +77,27 @@ static void setJsonStr(const std::string& key, const c2::C2Value& value, rapidjs
   } else {
     if (type_index == state::response::Value::BOOL_TYPE) {
       bool value = false;
-      base_type->convertValue(value);
+      base_type->getValue(value);
       valueVal.SetBool(value);
     } else if (type_index == state::response::Value::INT_TYPE) {
       int value = 0;
-      base_type->convertValue(value);
+      base_type->getValue(value);
       valueVal.SetInt(value);
     } else if (type_index == state::response::Value::UINT32_TYPE) {
       uint32_t value = 0;
-      base_type->convertValue(value);
+      base_type->getValue(value);
       valueVal.SetUint(value);
     } else if (type_index == state::response::Value::INT64_TYPE) {
       int64_t value = 0;
-      base_type->convertValue(value);
+      base_type->getValue(value);
       valueVal.SetInt64(value);
     } else if (type_index == state::response::Value::UINT64_TYPE) {
       int64_t value = 0;
-      base_type->convertValue(value);
+      base_type->getValue(value);
       valueVal.SetInt64(value);
     } else if (type_index == state::response::Value::DOUBLE_TYPE) {
       double value = 0;
-      base_type->convertValue(value);
+      base_type->getValue(value);
       valueVal.SetDouble(value);
     } else {
       valueVal.SetString(base_type->getStringValue().c_str(), alloc);

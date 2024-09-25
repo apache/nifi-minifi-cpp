@@ -21,7 +21,7 @@
 #include "openssl/evp.h"
 #include "openssl/err.h"
 #include "openssl/rand.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::utils::crypto {
 

@@ -29,10 +29,10 @@
 
 namespace org::apache::nifi::minifi::core {
 
-ForwardingContentSession::ForwardingContentSession(std::shared_ptr<ContentRepository> repository) : ContentSession(std::move(repository)) {}
+ForwardingContentSession::ForwardingContentSession(std::shared_ptr<ContentRepository> repository) : ContentSessionImpl(std::move(repository)) {}
 
 std::shared_ptr<ResourceClaim> ForwardingContentSession::create() {
-  auto claim = std::make_shared<ResourceClaim>(repository_);
+  auto claim = ResourceClaim::create(repository_);
   created_claims_.insert(claim);
   return claim;
 }

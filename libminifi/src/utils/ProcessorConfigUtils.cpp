@@ -22,6 +22,7 @@
 
 #include "range/v3/algorithm/contains.hpp"
 #include "utils/StringUtils.h"
+#include "core/TypedValues.h"
 
 namespace org::apache::nifi::minifi::utils {
 

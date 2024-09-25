@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "Core.h"
+#include "core/Core.h"
 #include "StateManager.h"
 
 #include <memory>

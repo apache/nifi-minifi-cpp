@@ -37,8 +37,6 @@
 #include "minifi-cpp/core/FlowFile.h"
 #include "minifi-cpp/core/StateStorage.h"
 #include "minifi-cpp/core/VariableRegistry.h"
-#include "utils/file/FileUtils.h"
-#include "utils/PropertyErrors.h"
 
 namespace org::apache::nifi::minifi::core {
 

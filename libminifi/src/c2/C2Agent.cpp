@@ -445,7 +445,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
     }
     case ClearOperand::corecomponentstate: {
       for (const auto& corecomponent : resp.operation_arguments) {
-        auto state_storage = core::ProcessContext::getStateStorage(logger_, controller_, configuration_);
+        auto state_storage = core::ProcessContextImpl::getStateStorage(logger_, controller_, configuration_);
         if (state_storage != nullptr) {
           update_sink_->executeOnComponent(corecomponent.second.to_string(), [this, &state_storage] (state::StateController& component) {
             logger_->log_debug("Clearing state for component {}", component.getComponentName());
@@ -557,7 +557,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       response.setLabel("corecomponentstate");
       C2Payload states(Operation::acknowledge, resp.ident, true);
       states.setLabel("corecomponentstate");
-      auto state_storage = core::ProcessContext::getStateStorage(logger_, controller_, configuration_);
+      auto state_storage = core::ProcessContextImpl::getStateStorage(logger_, controller_, configuration_);
       if (state_storage != nullptr) {
         auto core_component_states = state_storage->getAllStates();
         for (const auto& core_component_state : core_component_states) {

@@ -59,10 +59,10 @@ std::unique_ptr<core::ContentRepository> createContentRepository(const std::stri
   throw std::runtime_error("Support for the provided configuration class could not be found");
 }
 
-class NoOpThreadedRepository : public core::ThreadedRepository {
+class NoOpThreadedRepository : public core::ThreadedRepositoryImpl {
  public:
   explicit NoOpThreadedRepository(std::string_view repo_name)
-    : ThreadedRepository(repo_name) {
+    : ThreadedRepositoryImpl(repo_name) {
   }
 
   NoOpThreadedRepository(NoOpThreadedRepository&&) = delete;

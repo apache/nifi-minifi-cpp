@@ -266,7 +266,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream& inS
     }
   }
 
-  file->claim_ = std::make_shared<ResourceClaim>(content_full_path, content_repo);
+  file->claim_ = std::make_shared<ResourceClaimImpl>(content_full_path, content_repo);
 
   return file;
 }

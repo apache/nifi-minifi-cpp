@@ -35,7 +35,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "utils/Id.h"
 #include "utils/ResourceQueue.h"
-#include "../http/HTTPClient.h"
+#include "http/HTTPClient.h"
 #include "utils/Export.h"
 #include "utils/Enum.h"
 #include "utils/RegexUtils.h"
