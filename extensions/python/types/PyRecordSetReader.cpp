@@ -47,6 +47,7 @@ static PyType_Spec PyRecordSetReaderTypeSpec{
 };
 
 int PyRecordSetReader::init(PyRecordSetReader* self, PyObject* args, PyObject*) {
+  gsl_Expects(self && args);
   PyObject* weak_ptr_capsule = nullptr;
   if (!PyArg_ParseTuple(args, "O", &weak_ptr_capsule)) {
     return -1;
@@ -60,6 +61,7 @@ int PyRecordSetReader::init(PyRecordSetReader* self, PyObject* args, PyObject*) 
 }
 
 PyObject* PyRecordSetReader::read(PyRecordSetReader* self, PyObject* args) {
+  gsl_Expects(self && args);
   auto record_set_reader = self->record_set_reader_.lock();
   if (!record_set_reader) {
     PyErr_SetString(PyExc_AttributeError, "tried reading ssl context service outside 'on_trigger'");
@@ -84,7 +86,7 @@ PyObject* PyRecordSetReader::read(PyRecordSetReader* self, PyObject* args) {
     return nullptr;
   }
 
-  auto read_result = record_set_reader->read(flow_file, *process_session->getSession());
+  auto read_result = record_set_reader->read(flow_file, process_session->getSession());
   if  (!read_result) {
     std::string error_message = "failed to read record set with the following error: " + read_result.error().message();
     PyErr_SetString(PyExc_RuntimeError, error_message.c_str());

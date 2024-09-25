@@ -47,6 +47,7 @@ static PyType_Spec PyRecordSetWriterTypeSpec{
 };
 
 int PyRecordSetWriter::init(PyRecordSetWriter* self, PyObject* args, PyObject*) {
+  gsl_Expects(self && args);
   PyObject* weak_ptr_capsule = nullptr;
   if (!PyArg_ParseTuple(args, "O", &weak_ptr_capsule)) {
     return -1;
@@ -60,6 +61,7 @@ int PyRecordSetWriter::init(PyRecordSetWriter* self, PyObject* args, PyObject*) 
 }
 
 PyObject* PyRecordSetWriter::write(PyRecordSetWriter* self, PyObject* args) {
+  gsl_Expects(self && args);
   auto record_set_writer = self->record_set_writer_.lock();
   if (!record_set_writer) {
     PyErr_SetString(PyExc_AttributeError, "tried reading record set writer outside 'on_trigger'");
@@ -99,7 +101,7 @@ PyObject* PyRecordSetWriter::write(PyRecordSetWriter* self, PyObject* args) {
     record_set.push_back(core::Record::fromJson(document));
   }
 
-  record_set_writer->write(record_set, flow_file, *process_session->getSession());
+  record_set_writer->write(record_set, flow_file, process_session->getSession());
   Py_RETURN_NONE;
 }
 
