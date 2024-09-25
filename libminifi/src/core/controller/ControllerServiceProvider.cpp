@@ -25,7 +25,7 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerService> ControllerServiceProvider::getControllerService(const std::string &identifier) const {
+std::shared_ptr<ControllerService> ControllerServiceProviderImpl::getControllerService(const std::string &identifier) const {
   auto service = controller_map_->get(identifier);
   if (service != nullptr) {
     return service->getControllerServiceImplementation();
@@ -34,7 +34,7 @@ std::shared_ptr<ControllerService> ControllerServiceProvider::getControllerServi
   }
 }
 
-void ControllerServiceProvider::putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node) {
+void ControllerServiceProviderImpl::putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node) {
   gsl_Expects(controller_map_);
   controller_map_->put(identifier, controller_service_node);
 }

@@ -78,7 +78,7 @@ class ClassLoader {
    * @param uuid uuid of object
    * @return nullptr or object created from class_name definition.
    */
-  template<class T>
+  template<class T = CoreComponent>
   std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name);
 
   /**

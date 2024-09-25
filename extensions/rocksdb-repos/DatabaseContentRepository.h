@@ -25,7 +25,7 @@
 
 #include "core/ContentRepository.h"
 #include "core/BufferedContentSession.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Property.h"
 #include "database/RocksDatabase.h"
 #include "properties/Configure.h"
@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::core::repository {
 
-class DatabaseContentRepository : public core::ContentRepository {
+class DatabaseContentRepository : public core::ContentRepositoryImpl {
   class Session : public BufferedContentSession {
    public:
     explicit Session(std::shared_ptr<ContentRepository> repository, bool use_synchronous_writes);

@@ -30,7 +30,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "ProcessContext.h"
+#include "core/ProcessContext.h"
 #include "FlowFileRecord.h"
 #include "Exception.h"
 #include "core/logging/LoggerFactory.h"
@@ -39,96 +39,95 @@
 #include "WeakReference.h"
 #include "provenance/Provenance.h"
 #include "utils/gsl.h"
-#include "ProcessorMetrics.h"
+#include "minifi-cpp/core/ProcessorMetrics.h"
+#include "minifi-cpp/core/ProcessSession.h"
 
-namespace org::apache::nifi::minifi::core {
-namespace detail {
-struct ReadBufferResult {
-  int64_t status;
-  std::vector<std::byte> buffer;
-};
+namespace org::apache::nifi::minifi::core::detail {
 
 std::string to_string(const ReadBufferResult& read_buffer_result);
-}  // namespace detail
+
+}  // namespace org::apache::nifi::minifi::core::detail
+
+namespace org::apache::nifi::minifi::core {
 
 // ProcessSession Class
-class ProcessSession : public ReferenceContainer {
+class ProcessSessionImpl : public ReferenceContainerImpl, public virtual ProcessSession {
  public:
   // Constructor
   /*!
    * Create a new process session
    */
-  explicit ProcessSession(std::shared_ptr<ProcessContext> processContext);
+  explicit ProcessSessionImpl(std::shared_ptr<ProcessContext> processContext);
 
   // Destructor
-  virtual ~ProcessSession();
+  ~ProcessSessionImpl() override;
 
   // Commit the session
-  void commit();
+  void commit() override;
   // Roll Back the session
-  void rollback();
+  void rollback() override;
 
-  nonstd::expected<void, std::exception_ptr> rollbackNoThrow() noexcept;
+  nonstd::expected<void, std::exception_ptr> rollbackNoThrow() noexcept override;
   // Get Provenance Report
-  std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() {
+  std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() override {
     return provenance_report_;
   }
   // writes the created contents to the underlying repository
-  void flushContent();
+  void flushContent() override;
 
-  virtual std::shared_ptr<core::FlowFile> get();
+  std::shared_ptr<core::FlowFile> get() override;
 
-  std::shared_ptr<core::FlowFile> create(const core::FlowFile* const parent = nullptr);
-  virtual void add(const std::shared_ptr<core::FlowFile> &record);
-  std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent);
-  std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent, int64_t offset, int64_t size);
+  std::shared_ptr<core::FlowFile> create(const core::FlowFile* const parent = nullptr) override;
+  void add(const std::shared_ptr<core::FlowFile> &record) override;
+  std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent) override;
+  std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent, int64_t offset, int64_t size) override;
   // Transfer the FlowFile to the relationship
-  virtual void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship);
-  void transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name);
+  void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) override;
+  void transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name) override;
 
-  void putAttribute(core::FlowFile& flow, std::string_view key, const std::string& value);
-  void removeAttribute(core::FlowFile& flow, std::string_view key);
+  void putAttribute(core::FlowFile& flow, std::string_view key, const std::string& value) override;
+  void removeAttribute(core::FlowFile& flow, std::string_view key) override;
 
-  void remove(const std::shared_ptr<core::FlowFile> &flow);
+  void remove(const std::shared_ptr<core::FlowFile> &flow) override;
   // Access the contents of the flow file as an input stream; returns null if the flow file has no content claim
-  std::shared_ptr<io::InputStream> getFlowFileContentStream(const core::FlowFile& flow_file);
+  std::shared_ptr<io::InputStream> getFlowFileContentStream(const core::FlowFile& flow_file) override;
   // Execute the given read callback against the content
-  int64_t read(const std::shared_ptr<core::FlowFile>& flow_file, const io::InputStreamCallback& callback);
+  int64_t read(const std::shared_ptr<core::FlowFile>& flow_file, const io::InputStreamCallback& callback) override;
 
-  int64_t read(const core::FlowFile& flow_file, const io::InputStreamCallback& callback);
+  int64_t read(const core::FlowFile& flow_file, const io::InputStreamCallback& callback) override;
   // Read content into buffer
-  detail::ReadBufferResult readBuffer(const std::shared_ptr<core::FlowFile>& flow);
+  detail::ReadBufferResult readBuffer(const std::shared_ptr<core::FlowFile>& flow) override;
   // Execute the given write callback against the content
-  void write(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback);
+  void write(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) override;
 
-  void write(core::FlowFile& flow, const io::OutputStreamCallback& callback);
+  void write(core::FlowFile& flow, const io::OutputStreamCallback& callback) override;
   // Read and write the flow file at the same time (eg. for processing it line by line)
-  int64_t readWrite(const std::shared_ptr<core::FlowFile> &flow, const io::InputOutputStreamCallback& callback);
+  int64_t readWrite(const std::shared_ptr<core::FlowFile> &flow, const io::InputOutputStreamCallback& callback) override;
   // Replace content with buffer
-  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer);
-  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer);
+  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer) override;
+  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer) override;
   // Execute the given write/append callback against the content
-  void append(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback);
+  void append(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) override;
   // Append buffer to content
-  void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, std::span<const char> buffer);
-  void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, std::span<const std::byte> buffer);
+  void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, std::span<const char> buffer) override;
+  void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, std::span<const std::byte> buffer) override;
   // Penalize the flow
-  void penalize(const std::shared_ptr<core::FlowFile> &flow);
+  void penalize(const std::shared_ptr<core::FlowFile> &flow) override;
 
-  bool outgoingConnectionsFull(const std::string& relationship);
+  bool outgoingConnectionsFull(const std::string& relationship) override;
 
   /**
    * Imports a file from the data stream
    * @param stream incoming data stream that contains the data to store into a file
    * @param flow flow file
    */
-  void importFrom(io::InputStream &stream, const std::shared_ptr<core::FlowFile> &flow);
-  void importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow);
+  void importFrom(io::InputStream &stream, const std::shared_ptr<core::FlowFile> &flow) override;
+  void importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow) override;
 
   // import from the data source.
-  void import(const std::string& source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource = true, uint64_t offset = 0);
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter); // NOLINT
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, uint64_t offset, char inputDelimiter);
+  void import(const std::string& source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource = true, uint64_t offset = 0) override;
+  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) override; // NOLINT
+  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, uint64_t offset, char inputDelimiter) override;
 
   /**
    * Exports the data stream to a file
@@ -136,29 +135,27 @@ class ProcessSession : public ReferenceContainer {
    * @param flow flow file
    * @param bool whether or not to keep the content in the flow file
    */
-  bool exportContent(const std::string &destination, const std::shared_ptr<core::FlowFile> &flow,
-  bool keepContent);
+  bool exportContent(const std::string &destination, const std::shared_ptr<core::FlowFile> &flow, bool keepContent) override;
 
-  bool exportContent(const std::string &destination, const std::string &tmpFileName, const std::shared_ptr<core::FlowFile> &flow,
-  bool keepContent);
+  bool exportContent(const std::string &destination, const std::string &tmpFileName, const std::shared_ptr<core::FlowFile> &flow, bool keepContent) override;
 
   // Stash the content to a key
-  void stash(const std::string &key, const std::shared_ptr<core::FlowFile> &flow);
+  void stash(const std::string &key, const std::shared_ptr<core::FlowFile> &flow) override;
   // Restore content previously stashed to a key
-  void restore(const std::string &key, const std::shared_ptr<core::FlowFile> &flow);
+  void restore(const std::string &key, const std::shared_ptr<core::FlowFile> &flow) override;
 
-  bool existsFlowFileInRelationship(const Relationship &relationship);
+  bool existsFlowFileInRelationship(const Relationship &relationship) override;
 
-  void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) {
+  void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) override {
     metrics_ = metrics;
   }
 
-  bool hasBeenTransferred(const core::FlowFile &flow) const;
+  bool hasBeenTransferred(const core::FlowFile &flow) const override;
 
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
-  ProcessSession(const ProcessSession &parent) = delete;
-  ProcessSession &operator=(const ProcessSession &parent) = delete;
+  ProcessSessionImpl(const ProcessSessionImpl &parent) = delete;
+  ProcessSessionImpl &operator=(const ProcessSessionImpl &parent) = delete;
 
  protected:
   struct FlowFileUpdate {

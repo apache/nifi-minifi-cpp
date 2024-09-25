@@ -79,13 +79,13 @@ class CRCStreamBase : public virtual StreamImpl {
 };
 
 template<typename StreamType>
-class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStreamImpl {
+class InputCRCStream : public virtual CRCStreamBase<StreamType>, public virtual InputStream {
  protected:
   using CRCStreamBase<StreamType>::child_stream_;
   using CRCStreamBase<StreamType>::crc_;
 
  public:
-  using InputStreamImpl::read;
+  using InputStream::read;
 
   size_t read(std::span<std::byte> buf) override {
     const auto ret = child_stream_->read(buf);
@@ -99,7 +99,7 @@ class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStr
 };
 
 template<typename StreamType>
-class OutputCRCStream : public virtual CRCStreamBase<StreamType>, public OutputStreamImpl {
+class OutputCRCStream : public virtual CRCStreamBase<StreamType>, public virtual OutputStream {
  protected:
   using CRCStreamBase<StreamType>::child_stream_;
   using CRCStreamBase<StreamType>::crc_;

@@ -44,7 +44,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const u
 }
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version, ProcessGroup* parent)
-    : CoreComponent(name, uuid, id_generator_),
+    : CoreComponentImpl(name, uuid, id_generator_),
       config_version_(version),
       type_(type),
       parent_process_group_(parent),
@@ -56,7 +56,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const u
 }
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
-    : CoreComponent(name, {}, id_generator_),
+    : CoreComponentImpl(name, {}, id_generator_),
       config_version_(0),
       type_(type),
       parent_process_group_(nullptr),
@@ -99,7 +99,7 @@ void ProcessGroup::addPort(std::unique_ptr<Port> port) {
   auto [processor, inserted] = addProcessor(std::move(port));
   if (inserted) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    ports_.insert(static_cast<Port*>(processor));
+    ports_.insert(dynamic_cast<Port*>(processor));
   }
 }
 
@@ -372,13 +372,13 @@ void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
   // only allow connections between processors of the same process group or in/output ports of child process groups
   // check input and output ports connection restrictions inside and outside a process group
   Processor* source = findPortById(insertedConnection->getSourceUUID());
-  if (source && static_cast<Port*>(source)->getPortType() == PortType::OUTPUT) {
+  if (source && dynamic_cast<Port*>(source)->getPortType() == PortType::OUTPUT) {
     logger_->log_error("Output port [id = '{}'] cannot be a source inside the process group in the connection [name = '{}', id = '{}']",
                        insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
     source = nullptr;
   } else if (!source) {
     source = findChildPortById(insertedConnection->getSourceUUID());
-    if (source && static_cast<Port*>(source)->getPortType() == PortType::INPUT) {
+    if (source && dynamic_cast<Port*>(source)->getPortType() == PortType::INPUT) {
       logger_->log_error("Input port [id = '{}'] cannot be a source outside the process group in the connection [name = '{}', id = '{}']",
                           insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
       source = nullptr;
@@ -396,13 +396,13 @@ void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
   }
 
   Processor* destination = findPortById(insertedConnection->getDestinationUUID());
-  if (destination && static_cast<Port*>(destination)->getPortType() == PortType::INPUT) {
+  if (destination && dynamic_cast<Port*>(destination)->getPortType() == PortType::INPUT) {
     logger_->log_error("Input port [id = '{}'] cannot be a destination inside the process group in the connection [name = '{}', id = '{}']",
                        insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
     destination = nullptr;
   } else if (!destination) {
     destination = findChildPortById(insertedConnection->getDestinationUUID());
-    if (destination && static_cast<Port*>(destination)->getPortType() == PortType::OUTPUT) {
+    if (destination && dynamic_cast<Port*>(destination)->getPortType() == PortType::OUTPUT) {
       logger_->log_error("Output port [id = '{}'] cannot be a destination outside the process group in the connection [name = '{}', id = '{}']",
                           insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
       destination = nullptr;

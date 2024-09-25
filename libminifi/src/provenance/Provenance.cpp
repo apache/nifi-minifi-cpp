@@ -34,21 +34,21 @@
 
 namespace org::apache::nifi::minifi::provenance {
 
-std::shared_ptr<utils::IdGenerator> ProvenanceEventRecord::id_generator_ = utils::IdGenerator::getIdGenerator();
-std::shared_ptr<core::logging::Logger> ProvenanceEventRecord::logger_ = core::logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
+std::shared_ptr<utils::IdGenerator> ProvenanceEventRecordImpl::id_generator_ = utils::IdGenerator::getIdGenerator();
+std::shared_ptr<core::logging::Logger> ProvenanceEventRecordImpl::logger_ = core::logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
 
 const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD",  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     "DROP", "EXPIRE", "FORK", "JOIN", "CLONE", "CONTENT_MODIFIED", "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
 
-ProvenanceEventRecord::ProvenanceEventRecord(ProvenanceEventRecord::ProvenanceEventType event, std::string componentId, std::string componentType)
-    : core::SerializableComponent(core::className<ProvenanceEventRecord>()),
+ProvenanceEventRecordImpl::ProvenanceEventRecordImpl(ProvenanceEventRecord::ProvenanceEventType event, std::string componentId, std::string componentType)
+    : core::SerializableComponentImpl(core::className<ProvenanceEventRecord>()),
       _eventType(event),
       _eventTime(std::chrono::system_clock::now()),
       _componentId(std::move(componentId)),
       _componentType(std::move(componentType)) {
 }
 
-bool ProvenanceEventRecord::loadFromRepository(const std::shared_ptr<core::Repository> &repo) {
+bool ProvenanceEventRecordImpl::loadFromRepository(const std::shared_ptr<core::Repository> &repo) {
   std::string value;
   bool ret = false;
 
@@ -78,7 +78,7 @@ bool ProvenanceEventRecord::loadFromRepository(const std::shared_ptr<core::Repos
   return ret;
 }
 
-bool ProvenanceEventRecord::serialize(io::OutputStream& output_stream) {
+bool ProvenanceEventRecordImpl::serialize(io::OutputStream& output_stream) {
   {
     const auto ret = output_stream.write(this->uuid_);
     if (ret == 0 || io::isError(ret)) {
@@ -241,7 +241,7 @@ bool ProvenanceEventRecord::serialize(io::OutputStream& output_stream) {
   return true;
 }
 
-bool ProvenanceEventRecord::deserialize(io::InputStream &input_stream) {
+bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   {
     const auto ret = input_stream.read(uuid_);
     if (ret == 0 || io::isError(ret)) {
@@ -444,7 +444,7 @@ bool ProvenanceEventRecord::deserialize(io::InputStream &input_stream) {
   return true;
 }
 
-void ProvenanceReporter::commit() {
+void ProvenanceReporterImpl::commit() {
   if (repo_->isNoop()) {
     return;
   }
@@ -465,7 +465,7 @@ void ProvenanceReporter::commit() {
   repo_->MultiPut(flowData);
 }
 
-void ProvenanceReporter::create(const core::FlowFile& flow_file, const std::string& detail) {
+void ProvenanceReporterImpl::create(const core::FlowFile& flow_file, const std::string& detail) {
   auto event = allocate(ProvenanceEventRecord::CREATE, flow_file);
 
   if (event) {
@@ -474,7 +474,7 @@ void ProvenanceReporter::create(const core::FlowFile& flow_file, const std::stri
   }
 }
 
-void ProvenanceReporter::route(const core::FlowFile& flow_file, const core::Relationship& relation, const std::string& detail, std::chrono::milliseconds processingDuration) {
+void ProvenanceReporterImpl::route(const core::FlowFile& flow_file, const core::Relationship& relation, const std::string& detail, std::chrono::milliseconds processingDuration) {
   auto event = allocate(ProvenanceEventRecord::ROUTE, flow_file);
 
   if (event) {
@@ -485,7 +485,7 @@ void ProvenanceReporter::route(const core::FlowFile& flow_file, const core::Rela
   }
 }
 
-void ProvenanceReporter::modifyAttributes(const core::FlowFile& flow_file, const std::string& detail) {
+void ProvenanceReporterImpl::modifyAttributes(const core::FlowFile& flow_file, const std::string& detail) {
   auto event = allocate(ProvenanceEventRecord::ATTRIBUTES_MODIFIED, flow_file);
 
   if (event) {
@@ -494,7 +494,7 @@ void ProvenanceReporter::modifyAttributes(const core::FlowFile& flow_file, const
   }
 }
 
-void ProvenanceReporter::modifyContent(const core::FlowFile& flow_file, const std::string& detail, std::chrono::milliseconds processingDuration) {
+void ProvenanceReporterImpl::modifyContent(const core::FlowFile& flow_file, const std::string& detail, std::chrono::milliseconds processingDuration) {
   auto event = allocate(ProvenanceEventRecord::CONTENT_MODIFIED, flow_file);
 
   if (event) {
@@ -504,7 +504,7 @@ void ProvenanceReporter::modifyContent(const core::FlowFile& flow_file, const st
   }
 }
 
-void ProvenanceReporter::clone(const core::FlowFile& parent, const core::FlowFile& child) {
+void ProvenanceReporterImpl::clone(const core::FlowFile& parent, const core::FlowFile& child) {
   auto event = allocate(ProvenanceEventRecord::CLONE, parent);
 
   if (event) {
@@ -514,7 +514,7 @@ void ProvenanceReporter::clone(const core::FlowFile& parent, const core::FlowFil
   }
 }
 
-void ProvenanceReporter::expire(const core::FlowFile& flow_file, const std::string& detail) {
+void ProvenanceReporterImpl::expire(const core::FlowFile& flow_file, const std::string& detail) {
   auto event = allocate(ProvenanceEventRecord::EXPIRE, flow_file);
 
   if (event) {
@@ -523,7 +523,7 @@ void ProvenanceReporter::expire(const core::FlowFile& flow_file, const std::stri
   }
 }
 
-void ProvenanceReporter::drop(const core::FlowFile& flow_file, const std::string& reason) {
+void ProvenanceReporterImpl::drop(const core::FlowFile& flow_file, const std::string& reason) {
   auto event = allocate(ProvenanceEventRecord::DROP, flow_file);
 
   if (event) {
@@ -533,7 +533,7 @@ void ProvenanceReporter::drop(const core::FlowFile& flow_file, const std::string
   }
 }
 
-void ProvenanceReporter::send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) {
+void ProvenanceReporterImpl::send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) {
   auto event = allocate(ProvenanceEventRecord::SEND, flow_file);
 
   if (event) {
@@ -549,7 +549,7 @@ void ProvenanceReporter::send(const core::FlowFile& flow_file, const std::string
   }
 }
 
-void ProvenanceReporter::receive(const core::FlowFile& flow_file,
+void ProvenanceReporterImpl::receive(const core::FlowFile& flow_file,
                                  const std::string& transitUri,
                                  const std::string& sourceSystemFlowFileIdentifier,
                                  const std::string& detail,
@@ -565,7 +565,7 @@ void ProvenanceReporter::receive(const core::FlowFile& flow_file,
   }
 }
 
-void ProvenanceReporter::fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) {
+void ProvenanceReporterImpl::fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) {
   auto event = allocate(ProvenanceEventRecord::FETCH, flow_file);
 
   if (event) {

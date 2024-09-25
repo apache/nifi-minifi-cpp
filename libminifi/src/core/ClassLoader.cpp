@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "range/v3/action/sort.hpp"
 #include "range/v3/action/unique.hpp"
 

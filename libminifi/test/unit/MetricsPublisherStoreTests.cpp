@@ -26,9 +26,9 @@
 
 namespace org::apache::nifi::minifi::test {
 
-class FirstDummyMetricsPublisher : public minifi::state::MetricsPublisher {
+class FirstDummyMetricsPublisher : public minifi::state::MetricsPublisherImpl {
  public:
-  using MetricsPublisher::MetricsPublisher;
+  using MetricsPublisherImpl::MetricsPublisherImpl;
 
   static constexpr const char* Description = "FirstDummyMetricsPublisher";
 
@@ -36,9 +36,9 @@ class FirstDummyMetricsPublisher : public minifi::state::MetricsPublisher {
   void loadMetricNodes() override {}
 };
 
-class SecondDummyMetricsPublisher : public minifi::state::MetricsPublisher {
+class SecondDummyMetricsPublisher : public minifi::state::MetricsPublisherImpl {
  public:
-  using MetricsPublisher::MetricsPublisher;
+  using MetricsPublisherImpl::MetricsPublisherImpl;
 
   static constexpr const char* Description = "SecondDummyMetricsPublisher";
 

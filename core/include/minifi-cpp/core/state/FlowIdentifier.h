@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_
+
+#pragma once
 
 #include <string>
 
@@ -34,43 +34,10 @@ namespace state {
  */
 class FlowIdentifier {
  public:
-  FlowIdentifier() = delete;
-
-  /**
-   * Constructor accepts the url, bucket id, and flow id.
-   */
-  explicit FlowIdentifier(const std::string &url, const std::string &bucket_id, const std::string &flow_id) {
-    registry_url_ = url;
-    bucket_id_ = bucket_id;
-    flow_id_ = flow_id;
-  }
-
-  /**
-   * In most cases the lock guard isn't necessary for these getters; however,
-   * we don't want to cause issues if the FlowVersion object is ever used in a way
-   * that breaks the current paradigm.
-   */
-  std::string getRegistryUrl() const {
-    return registry_url_;
-  }
-
-  std::string getBucketId() const {
-    return bucket_id_;
-  }
-
-  std::string getFlowId() const {
-    return flow_id_;
-  }
-
- protected:
-  FlowIdentifier(const FlowIdentifier &other) = default;
-  FlowIdentifier &operator=(const FlowIdentifier &other) = default;
-
- private:
-  std::string registry_url_;
-  std::string bucket_id_;
-  std::string flow_id_;
-  friend class FlowVersion;
+  virtual std::string getRegistryUrl() const = 0 ;
+  virtual std::string getBucketId() const = 0;
+  virtual std::string getFlowId() const = 0;
+  virtual ~FlowIdentifier() = default;
 };
 
 
@@ -79,5 +46,3 @@ class FlowIdentifier {
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_

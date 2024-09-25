@@ -49,21 +49,6 @@ class ResponseNode : public virtual core::Connectable, public virtual PublishedM
 };
 
 /**
- * Purpose: Defines a metric that
- */
-class DeviceInformation : public ResponseNode {
- public:
-};
-
-/**
- * Purpose: Defines a metric that
- */
-class ObjectNode : public ResponseNode {
- public:
-  virtual void add_node(const SharedResponseNode &node) = 0;
-};
-
-/**
  * Purpose: Retrieves Metrics from the defined class. The current Metric, which is a consumable for any reader of Metrics must have the ability to set metrics.
  *
  */
@@ -103,34 +88,6 @@ class NodeReporter {
    * @return the agent manifest response node
    */
   virtual ReportedNode getAgentManifest() = 0;
-};
-
-/**
- * Purpose: Sink interface for all metrics. The current Metric, which is a consumable for any reader of Metrics must have the ability to set metrics.
- *
- */
-class ResponseNodeSink {
- public:
-  virtual ~ResponseNodeSink() = default;
-  /**
-   * Setter for nodes in this sink.
-   * @param metrics metrics to insert into the current sink.
-   * @return result of the set operation.
-   *  0 Success
-   *  1 No error condition, but cannot obtain lock in timely manner.
-   *  -1 failure
-   */
-  virtual int16_t setResponseNodes(const std::shared_ptr<ResponseNode> &metrics) = 0;
-
-  /**
-   * Setter for metrics nodes in this sink.
-   * @param metrics metrics to insert into the current sink.
-   * @return result of the set operation.
-   *  0 Success
-   *  1 No error condition, but cannot obtain lock in timely manner.
-   *  -1 failure
-   */
-  virtual int16_t setMetricsNodes(const std::shared_ptr<ResponseNode> &metrics) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

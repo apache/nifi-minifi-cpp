@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "core/Annotation.h"
-#include "core/DynamicProperty.h"
+#include "minifi-cpp/core/DynamicProperty.h"
 #include "core/OutputAttributeDefinition.h"
 #include "core/Property.h"
 #include "core/PropertyDefinition.h"
@@ -30,6 +30,7 @@
 #include "core/RelationshipDefinition.h"
 #include "utils/Export.h"
 #include "utils/StringUtils.h"
+#include "core/ClassName.h"
 
 namespace org::apache::nifi::minifi {
 

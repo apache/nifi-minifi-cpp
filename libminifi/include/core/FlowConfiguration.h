@@ -68,7 +68,7 @@ enum class FlowSerializationType { Json, NifiJson, Yaml };
  * Purpose: Flow configuration defines the mechanism
  * by which we will configure our flow controller
  */
-class FlowConfiguration : public CoreComponent {
+class FlowConfiguration : public CoreComponentImpl {
  public:
   /**
    * Constructor that will be used for configuring

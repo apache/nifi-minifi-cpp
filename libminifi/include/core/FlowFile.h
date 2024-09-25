@@ -28,102 +28,100 @@
 
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
-#include "Connectable.h"
+#include "core/Connectable.h"
 #include "WeakReference.h"
-#include "utils/FlatMap.h"
 #include "utils/Export.h"
+#include "minifi-cpp/core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::core {
 
 class Connectable;
 
-class FlowFile : public CoreComponent, public ReferenceContainer {
+class FlowFileImpl : public CoreComponentImpl, public ReferenceContainerImpl, public virtual FlowFile {
  public:
-  FlowFile();
-  FlowFile& operator=(const FlowFile& other);
-
-  using AttributeMap = utils::FlatMap<std::string, std::string>;
+  FlowFileImpl();
+  FlowFileImpl& operator=(const FlowFileImpl& other);
 
   /**
    * Returns a pointer to this flow file record's
    * claim
    */
-  [[nodiscard]] std::shared_ptr<ResourceClaim> getResourceClaim() const;
+  [[nodiscard]] std::shared_ptr<ResourceClaim> getResourceClaim() const override;
   /**
    * Sets _claim to the inbound claim argument
    */
-  void setResourceClaim(const std::shared_ptr<ResourceClaim>& claim);
+  void setResourceClaim(const std::shared_ptr<ResourceClaim>& claim) override;
 
   /**
    * clear the resource claim
    */
-  void clearResourceClaim();
+  void clearResourceClaim() override;
 
   /**
    * Returns a pointer to this flow file record's
    * claim at the given stash key
    */
-  std::shared_ptr<ResourceClaim> getStashClaim(const std::string& key);
+  std::shared_ptr<ResourceClaim> getStashClaim(const std::string& key) override;
 
   /**
    * Sets the given stash key to the inbound claim argument
    */
-  void setStashClaim(const std::string& key, const std::shared_ptr<ResourceClaim>& claim);
+  void setStashClaim(const std::string& key, const std::shared_ptr<ResourceClaim>& claim) override;
 
   /**
    * Clear the resource claim at the given stash key
    */
-  void clearStashClaim(const std::string& key);
+  void clearStashClaim(const std::string& key) override;
 
   /**
    * Return true if the given stash claim exists
    */
-  bool hasStashClaim(const std::string& key);
+  bool hasStashClaim(const std::string& key) override;
 
   /**
    * Get lineage identifiers
    */
-  const std::vector<utils::Identifier>& getlineageIdentifiers() const;
-  std::vector<utils::Identifier>& getlineageIdentifiers();
+  const std::vector<utils::Identifier>& getlineageIdentifiers() const override;
+  std::vector<utils::Identifier>& getlineageIdentifiers() override;
 
   /**
    * Returns whether or not this flow file record
    * is marked as deleted.
    * @return marked deleted
    */
-  [[nodiscard]] bool isDeleted() const;
+  [[nodiscard]] bool isDeleted() const override;
 
   /**
    * Sets whether to mark this flow file record
    * as deleted
    * @param deleted deleted flag
    */
-  void setDeleted(bool deleted);
+  void setDeleted(bool deleted) override;
 
   /**
    * Get entry date for this record
    * @return entry date uint64_t
    */
-  [[nodiscard]] std::chrono::system_clock::time_point getEntryDate() const;
+  [[nodiscard]] std::chrono::system_clock::time_point getEntryDate() const override;
 
   /**
    * Gets the event time.
    * @return event time.
    */
-  [[nodiscard]] std::chrono::system_clock::time_point getEventTime() const;
+  [[nodiscard]] std::chrono::system_clock::time_point getEventTime() const override;
   /**
    * Get lineage start date
    * @return lineage start date uint64_t
    */
-  [[nodiscard]] std::chrono::system_clock::time_point getlineageStartDate() const;
+  [[nodiscard]] std::chrono::system_clock::time_point getlineageStartDate() const override;
 
   /**
    * Sets the lineage start date
    * @param date new lineage start date
    */
-  void setLineageStartDate(std::chrono::system_clock::time_point date);
+  void setLineageStartDate(std::chrono::system_clock::time_point date) override;
 
-  void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) {
+  void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) override {
     lineage_Identifiers_ = lineage_Identifiers;
   }
   /**
@@ -133,9 +131,9 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * @param value value to set
    * @return result of finding key
    */
-  bool getAttribute(std::string_view key, std::string& value) const;
+  bool getAttribute(std::string_view key, std::string& value) const override;
 
-  [[nodiscard]] std::optional<std::string> getAttribute(std::string_view key) const;
+  [[nodiscard]] std::optional<std::string> getAttribute(std::string_view key) const override;
 
   /**
    * Updates the value in the attribute map that corresponds
@@ -144,19 +142,19 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * @param value value to set to attribute name
    * @return result of finding key
    */
-  bool updateAttribute(std::string_view key, const std::string& value);
+  bool updateAttribute(std::string_view key, const std::string& value) override;
 
   /**
    * Removes the attribute
    * @param key attribute name to remove
    * @return result of finding key
    */
-  bool removeAttribute(std::string_view key);
+  bool removeAttribute(std::string_view key) override;
 
   /**
    * setAttribute, if attribute already there, update it, else, add it
    */
-  bool setAttribute(std::string_view key, std::string value) {
+  bool setAttribute(std::string_view key, std::string value) override {
     return attributes_.insert_or_assign(std::string{key}, std::move(value)).second;
   }
 
@@ -164,7 +162,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Returns the map of attributes
    * @return attributes.
    */
-  [[nodiscard]] std::map<std::string, std::string> getAttributes() const {
+  [[nodiscard]] std::map<std::string, std::string> getAttributes() const override {
     return {attributes_.begin(), attributes_.end()};
   }
 
@@ -172,7 +170,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Returns the map of attributes
    * @return attributes.
    */
-  AttributeMap *getAttributesPtr() {
+  AttributeMap *getAttributesPtr() override {
     return &attributes_;
   }
 
@@ -180,26 +178,26 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * adds an attribute if it does not exist
    *
    */
-  bool addAttribute(std::string_view key, const std::string& value);
+  bool addAttribute(std::string_view key, const std::string& value) override;
 
   /**
    * Set the size of this record.
    * @param size size of record to set.
    */
-  void setSize(const uint64_t size) {
+  void setSize(const uint64_t size) override {
     size_ = size;
   }
   /**
    * Returns the size of corresponding flow file
    * @return size as a uint64_t
    */
-  [[nodiscard]] uint64_t getSize() const;
+  [[nodiscard]] uint64_t getSize() const override;
 
   /**
    * Sets the offset
    * @param offset offset to apply to this record.
    */
-  void setOffset(const uint64_t offset) {
+  void setOffset(const uint64_t offset) override {
     offset_ = offset;
   }
 
@@ -208,11 +206,11 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
     to_be_processed_after_ = std::chrono::steady_clock::now() + duration;
   }
 
-  [[nodiscard]] std::chrono::steady_clock::time_point getPenaltyExpiration() const {
+  [[nodiscard]] std::chrono::steady_clock::time_point getPenaltyExpiration() const override {
     return to_be_processed_after_;
   }
 
-  void setPenaltyExpiration(std::chrono::time_point<std::chrono::steady_clock> to_be_processed_after) {
+  void setPenaltyExpiration(std::chrono::time_point<std::chrono::steady_clock> to_be_processed_after) override {
     to_be_processed_after_ = to_be_processed_after;
   }
 
@@ -220,13 +218,13 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Gets the offset within the flow file
    * @return size as a uint64_t
    */
-  [[nodiscard]] uint64_t getOffset() const;
+  [[nodiscard]] uint64_t getOffset() const override;
 
-  [[nodiscard]] bool isPenalized() const {
+  [[nodiscard]] bool isPenalized() const override {
     return to_be_processed_after_ > std::chrono::steady_clock::now();
   }
 
-  [[nodiscard]] uint64_t getId() const {
+  [[nodiscard]] uint64_t getId() const override {
     return id_;
   }
 
@@ -234,18 +232,18 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
    */
-  void setConnection(core::Connectable* connection);
+  void setConnection(core::Connectable* connection) override;
   /**
    * Returns the original connection referenced by this record.
    * @return shared original connection pointer.
    */
-  [[nodiscard]] Connectable* getConnection() const;
+  [[nodiscard]] Connectable* getConnection() const override;
 
-  void setStoredToRepository(bool storedInRepository) {
+  void setStoredToRepository(bool storedInRepository) override {
     stored = storedInRepository;
   }
 
-  [[nodiscard]] bool isStored() const {
+  [[nodiscard]] bool isStored() const override {
     return stored;
   }
 
@@ -287,34 +285,6 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   static std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   static std::shared_ptr<utils::NonRepeatingStringGenerator> numeric_id_generator_;
-};
-
-// FlowFile Attribute
-struct SpecialFlowAttribute {
-  // The flowfile's path indicates the relative directory to which a FlowFile belongs and does not contain the filename
-  MINIFIAPI static constexpr std::string_view PATH = "path";
-  // The flowfile's absolute path indicates the absolute directory to which a FlowFile belongs and does not contain the filename
-  MINIFIAPI static constexpr std::string_view ABSOLUTE_PATH = "absolute.path";
-  // The filename of the FlowFile. The filename should not contain any directory structure.
-  MINIFIAPI static constexpr std::string_view FILENAME = "filename";
-  // A unique UUID assigned to this FlowFile.
-  MINIFIAPI static constexpr std::string_view UUID = "uuid";
-  // A numeric value indicating the FlowFile priority
-  MINIFIAPI static constexpr std::string_view priority = "priority";
-  // The MIME Type of this FlowFile
-  MINIFIAPI static constexpr std::string_view MIME_TYPE = "mime.type";
-  // Specifies the reason that a FlowFile is being discarded
-  MINIFIAPI static constexpr std::string_view DISCARD_REASON = "discard.reason";
-  // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
-  MINIFIAPI static constexpr std::string_view ALTERNATE_IDENTIFIER = "alternate.identifier";
-  // Flow identifier
-  MINIFIAPI static constexpr std::string_view FLOW_ID = "flow.id";
-
-  static constexpr std::array<std::string_view, 9> getSpecialFlowAttributes() {
-    return {
-        PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID
-    };
-  }
 };
 
 }  // namespace org::apache::nifi::minifi::core

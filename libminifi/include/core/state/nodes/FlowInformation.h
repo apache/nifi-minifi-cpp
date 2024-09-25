@@ -76,7 +76,7 @@ class FlowVersion : public DeviceInformation {
 
   void setFlowVersion(const std::string &url, const std::string &bucket_id, const std::string &flow_id) {
     std::lock_guard<std::mutex> lock(guard);
-    identifier = std::make_shared<FlowIdentifier>(url, bucket_id, flow_id.empty() ? utils::IdGenerator::getIdGenerator()->generate().to_string() : flow_id);
+    identifier = std::make_shared<FlowIdentifierImpl>(url, bucket_id, flow_id.empty() ? utils::IdGenerator::getIdGenerator()->generate().to_string() : flow_id);
   }
 
   std::vector<SerializedResponseNode> serialize() override;

@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <string>
 
-#include "ProcessContext.h"
+#include "core/ProcessContext.h"
 #include "impl/expression/Expression.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -32,19 +32,19 @@ namespace org::apache::nifi::minifi::core {
  * state. With this case, we can rely on instantiation of a builder to create the necessary
  * ProcessContext. *
  */
-class ProcessContextExpr final : public core::ProcessContext {
+class ProcessContextExpr final : public core::ProcessContextImpl {
  public:
   ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider,
                      const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo,
-                     const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
-      : core::ProcessContext(processor, controller_service_provider, repo, flow_repo, content_repo),
+                     const std::shared_ptr<core::ContentRepository> &content_repo = core::repository::createFileSystemRepository())
+      : core::ProcessContextImpl(processor, controller_service_provider, repo, flow_repo, content_repo),
         logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
   }
 
   ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider,
                      const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration,
-                     const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
-      : core::ProcessContext(processor, controller_service_provider, repo, flow_repo, configuration, content_repo),
+                     const std::shared_ptr<core::ContentRepository> &content_repo = core::repository::createFileSystemRepository())
+      : core::ProcessContextImpl(processor, controller_service_provider, repo, flow_repo, configuration, content_repo),
         logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
   }
 

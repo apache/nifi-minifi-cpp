@@ -26,18 +26,16 @@
 #include <utility>
 #include <vector>
 
-#include "utils/TimeUtil.h"
 #include "minifi-cpp/ResourceClaim.h"
 #include "Connectable.h"
 #include "WeakReference.h"
-#include "utils/FlatMap.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/FlatMap.h"
 
 namespace org::apache::nifi::minifi::core {
 
 class Connectable;
 
-class FlowFile : public CoreComponent, public ReferenceContainer {
+class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer {
  public:
   using AttributeMap = utils::FlatMap<std::string, std::string>;
 

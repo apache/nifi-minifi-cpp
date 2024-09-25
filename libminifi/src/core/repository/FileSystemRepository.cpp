@@ -69,7 +69,7 @@ bool FileSystemRepository::removeKey(const std::string& content_path) {
 }
 
 std::shared_ptr<ContentSession> FileSystemRepository::createSession() {
-  return std::make_shared<ForwardingContentSession>(sharedFromThis());
+  return std::make_shared<ForwardingContentSession>(sharedFromThis<ContentRepository>());
 }
 
 void FileSystemRepository::clearOrphans() {
@@ -109,6 +109,10 @@ uint64_t FileSystemRepository::getRepositoryEntryCount() const {
     begin(dir_it),
     end(dir_it),
     [](auto& entry) { return entry.is_regular_file(); });
+}
+
+std::shared_ptr<core::ContentRepository> createFileSystemRepository() {
+  return std::make_shared<FileSystemRepository>();
 }
 
 }  // namespace org::apache::nifi::minifi::core::repository

@@ -79,6 +79,8 @@ class InputStream : public virtual Stream {
 
     return sizeof(Integral);
   }
+
+  std::optional<std::byte> readByte();
 };
 
 }  // namespace org::apache::nifi::minifi::io

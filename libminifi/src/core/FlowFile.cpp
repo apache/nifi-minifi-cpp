@@ -28,12 +28,12 @@
 namespace org::apache::nifi::minifi {
 namespace core {
 
-std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator::getIdGenerator();
-std::shared_ptr<utils::NonRepeatingStringGenerator> FlowFile::numeric_id_generator_ = std::make_shared<utils::NonRepeatingStringGenerator>();
-std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
+std::shared_ptr<utils::IdGenerator> FlowFileImpl::id_generator_ = utils::IdGenerator::getIdGenerator();
+std::shared_ptr<utils::NonRepeatingStringGenerator> FlowFileImpl::numeric_id_generator_ = std::make_shared<utils::NonRepeatingStringGenerator>();
+std::shared_ptr<logging::Logger> FlowFileImpl::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
-FlowFile::FlowFile()
-    : CoreComponent("FlowFile"),
+FlowFileImpl::FlowFileImpl()
+    : CoreComponentImpl("FlowFile"),
       stored(false),
       marked_delete_(false),
       entry_date_(std::chrono::system_clock::now()),
@@ -46,7 +46,7 @@ FlowFile::FlowFile()
       to_be_processed_after_(std::chrono::steady_clock::now()) {
 }
 
-FlowFile& FlowFile::operator=(const FlowFile& other) {
+FlowFileImpl& FlowFileImpl::operator=(const FlowFileImpl& other) {
   if (this == &other) {
     return *this;
   }
@@ -70,7 +70,7 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
  * is marked as deleted.
  * @return marked deleted
  */
-bool FlowFile::isDeleted() const {
+bool FlowFileImpl::isDeleted() const {
   return marked_delete_;
 }
 
@@ -79,29 +79,29 @@ bool FlowFile::isDeleted() const {
  * as deleted
  * @param deleted deleted flag
  */
-void FlowFile::setDeleted(const bool deleted) {
+void FlowFileImpl::setDeleted(const bool deleted) {
   marked_delete_ = deleted;
   if (marked_delete_) {
     removeReferences();
   }
 }
 
-std::shared_ptr<ResourceClaim> FlowFile::getResourceClaim() const {
+std::shared_ptr<ResourceClaim> FlowFileImpl::getResourceClaim() const {
   return claim_;
 }
 
-void FlowFile::clearResourceClaim() {
+void FlowFileImpl::clearResourceClaim() {
   claim_ = nullptr;
 }
-void FlowFile::setResourceClaim(const std::shared_ptr<ResourceClaim>& claim) {
+void FlowFileImpl::setResourceClaim(const std::shared_ptr<ResourceClaim>& claim) {
   claim_ = claim;
 }
 
-std::shared_ptr<ResourceClaim> FlowFile::getStashClaim(const std::string& key) {
+std::shared_ptr<ResourceClaim> FlowFileImpl::getStashClaim(const std::string& key) {
   return stashedContent_[key];
 }
 
-void FlowFile::setStashClaim(const std::string& key, const std::shared_ptr<ResourceClaim>& claim) {
+void FlowFileImpl::setStashClaim(const std::string& key, const std::shared_ptr<ResourceClaim>& claim) {
   if (hasStashClaim(key)) {
     logger_->log_warn("Stashing content of record {} to existing key {}; "
                       "existing content will be overwritten",
@@ -111,7 +111,7 @@ void FlowFile::setStashClaim(const std::string& key, const std::shared_ptr<Resou
   stashedContent_[key] = claim;
 }
 
-void FlowFile::clearStashClaim(const std::string& key) {
+void FlowFileImpl::clearStashClaim(const std::string& key) {
   auto claimIt = stashedContent_.find(key);
   if (claimIt != stashedContent_.end()) {
     claimIt->second = nullptr;
@@ -119,31 +119,31 @@ void FlowFile::clearStashClaim(const std::string& key) {
   }
 }
 
-bool FlowFile::hasStashClaim(const std::string& key) {
+bool FlowFileImpl::hasStashClaim(const std::string& key) {
   return stashedContent_.find(key) != stashedContent_.end();
 }
 
 // ! Get Entry Date
-std::chrono::system_clock::time_point FlowFile::getEntryDate() const {
+std::chrono::system_clock::time_point FlowFileImpl::getEntryDate() const {
   return entry_date_;
 }
-std::chrono::system_clock::time_point FlowFile::getEventTime() const {
+std::chrono::system_clock::time_point FlowFileImpl::getEventTime() const {
   return event_time_;
 }
 // ! Get Lineage Start Date
-std::chrono::system_clock::time_point FlowFile::getlineageStartDate() const {
+std::chrono::system_clock::time_point FlowFileImpl::getlineageStartDate() const {
   return lineage_start_date_;
 }
 
-const std::vector<utils::Identifier>& FlowFile::getlineageIdentifiers() const {
+const std::vector<utils::Identifier>& FlowFileImpl::getlineageIdentifiers() const {
   return lineage_Identifiers_;
 }
 
-std::vector<utils::Identifier>& FlowFile::getlineageIdentifiers() {
+std::vector<utils::Identifier>& FlowFileImpl::getlineageIdentifiers() {
   return lineage_Identifiers_;
 }
 
-bool FlowFile::getAttribute(std::string_view key, std::string& value) const {
+bool FlowFileImpl::getAttribute(std::string_view key, std::string& value) const {
   const auto attribute = getAttribute(key);
   if (!attribute) {
     return false;
@@ -152,7 +152,7 @@ bool FlowFile::getAttribute(std::string_view key, std::string& value) const {
   return true;
 }
 
-std::optional<std::string> FlowFile::getAttribute(std::string_view key) const {
+std::optional<std::string> FlowFileImpl::getAttribute(std::string_view key) const {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     return it->second;
@@ -161,15 +161,15 @@ std::optional<std::string> FlowFile::getAttribute(std::string_view key) const {
 }
 
 // Get Size
-uint64_t FlowFile::getSize() const {
+uint64_t FlowFileImpl::getSize() const {
   return size_;
 }
 // ! Get Offset
-uint64_t FlowFile::getOffset() const {
+uint64_t FlowFileImpl::getOffset() const {
   return offset_;
 }
 
-bool FlowFile::removeAttribute(std::string_view key) {
+bool FlowFileImpl::removeAttribute(std::string_view key) {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     attributes_.erase(it);
@@ -179,7 +179,7 @@ bool FlowFile::removeAttribute(std::string_view key) {
   }
 }
 
-bool FlowFile::updateAttribute(std::string_view key, const std::string& value) {
+bool FlowFileImpl::updateAttribute(std::string_view key, const std::string& value) {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     it->second = value;
@@ -189,7 +189,7 @@ bool FlowFile::updateAttribute(std::string_view key, const std::string& value) {
   }
 }
 
-bool FlowFile::addAttribute(std::string_view key, const std::string& value) {
+bool FlowFileImpl::addAttribute(std::string_view key, const std::string& value) {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     // attribute already there in the map
@@ -200,7 +200,7 @@ bool FlowFile::addAttribute(std::string_view key, const std::string& value) {
   }
 }
 
-void FlowFile::setLineageStartDate(const std::chrono::system_clock::time_point date) {
+void FlowFileImpl::setLineageStartDate(const std::chrono::system_clock::time_point date) {
   lineage_start_date_ = date;
 }
 
@@ -208,7 +208,7 @@ void FlowFile::setLineageStartDate(const std::chrono::system_clock::time_point d
  * Sets the original connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setConnection(core::Connectable* connection) {
+void FlowFileImpl::setConnection(core::Connectable* connection) {
   connection_ = connection;
 }
 
@@ -216,7 +216,7 @@ void FlowFile::setConnection(core::Connectable* connection) {
  * Returns the original connection referenced by this record.
  * @return shared original connection pointer.
  */
-core::Connectable* FlowFile::getConnection() const {
+core::Connectable* FlowFileImpl::getConnection() const {
   return connection_;
 }
 

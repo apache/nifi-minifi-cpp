@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "PropertyDefinition.h"
 #include "PropertyValue.h"
 #include "PropertyType.h"
 #include "range/v3/view/transform.hpp"
@@ -30,8 +31,6 @@
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
-
-struct PropertyReference;
 
 class Property {
  public:
@@ -119,13 +118,7 @@ class Property {
     return allowed_values_;
   }
 
-  void addAllowedValue(const PropertyValue &value) {
-    allowed_values_.push_back(value);
-  }
-
-  void clearAllowedValues() {
-    allowed_values_.clear();
-  }
+  void setAllowedValues(gsl::span<const std::string_view> allowed_values, const core::PropertyParser& property_parser);
 
   /**
    * Add value to the collection of values.

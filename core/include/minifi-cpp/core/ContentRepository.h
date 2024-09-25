@@ -38,7 +38,7 @@ namespace org::apache::nifi::minifi::core {
 /**
  * Content repository definition that extends StreamManager.
  */
-class ContentRepository : public virtual core::CoreComponent, public virtual StreamManager<minifi::ResourceClaim>, public virtual utils::EnableSharedFromThis<ContentRepository>, public virtual core::RepositoryMetricsSource {
+class ContentRepository : public virtual core::CoreComponent, public virtual StreamManager<minifi::ResourceClaim>, public virtual utils::EnableSharedFromThis, public virtual core::RepositoryMetricsSource {
  public:
   ~ContentRepository() override = default;
 

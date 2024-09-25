@@ -29,10 +29,10 @@
 
 namespace org::apache::nifi::minifi::core::logging {
 
-class LoggerProperties : public Properties {
+class LoggerProperties : public PropertiesImpl {
  public:
   LoggerProperties()
-      : Properties("Logger properties") {
+      : PropertiesImpl("Logger properties") {
   }
   /**
    * Gets all keys that start with the given prefix and do not have a "." after the prefix and "." separator.

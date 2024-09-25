@@ -25,13 +25,13 @@
 #include "PublishedMetricGaugeCollection.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Id.h"
 #include "PrometheusExposerWrapper.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
-class PrometheusMetricsPublisher : public state::MetricsPublisher {
+class PrometheusMetricsPublisher : public state::MetricsPublisherImpl {
  public:
   explicit PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid = {}, std::unique_ptr<MetricsExposer> exposer = nullptr);
 

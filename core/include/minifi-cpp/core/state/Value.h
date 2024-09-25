@@ -50,6 +50,13 @@ class Value {
 
   virtual std::type_index getTypeIndex() = 0;
 
+  virtual bool getValue(uint32_t &ref) = 0;
+  virtual bool getValue(int &ref) = 0;
+  virtual bool getValue(int64_t &ref) = 0;
+  virtual bool getValue(uint64_t &ref) = 0;
+  virtual bool getValue(bool &ref) = 0;
+  virtual bool getValue(double &ref) = 0;
+
   MINIFIAPI static const std::type_index UINT64_TYPE;
   MINIFIAPI static const std::type_index INT64_TYPE;
   MINIFIAPI static const std::type_index UINT32_TYPE;

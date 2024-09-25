@@ -21,6 +21,9 @@
 #include <utility>
 #include <string>
 #include "rapidjson/prettywriter.h"
+#include "utils/gsl.h"
+#include "rapidjson/document.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::state::response {
 

@@ -25,11 +25,12 @@
 #include <memory>
 #include "core/StreamManager.h"
 #include "utils/Id.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
+#include "core/ContentRepository.h"
 
 namespace org::apache::nifi::minifi {
 
-utils::NonRepeatingStringGenerator ResourceClaim::non_repeating_string_generator_;
+utils::NonRepeatingStringGenerator ResourceClaimImpl::non_repeating_string_generator_;
 
 std::string default_directory_path;
 
@@ -37,7 +38,7 @@ void setDefaultDirectory(std::string path) {
   default_directory_path = std::move(path);
 }
 
-ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
+ResourceClaimImpl::ResourceClaimImpl(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
     : _contentFullPath([&] {
         auto contentDirectory = claim_manager->getStoragePath();
         if (contentDirectory.empty())
@@ -52,15 +53,19 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
   logger_->log_debug("Resource Claim created {}", _contentFullPath);
 }
 
-ResourceClaim::ResourceClaim(Path path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
+ResourceClaimImpl::ResourceClaimImpl(Path path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
     : _contentFullPath(std::move(path)),
       claim_manager_(std::move(claim_manager)),
       logger_(core::logging::LoggerFactory<ResourceClaim>::getLogger()) {
   if (claim_manager_) increaseFlowFileRecordOwnedCount();
 }
 
-ResourceClaim::~ResourceClaim() {
+ResourceClaimImpl::~ResourceClaimImpl() {
   if (claim_manager_) decreaseFlowFileRecordOwnedCount();
+}
+
+std::shared_ptr<ResourceClaim> ResourceClaim::create(std::shared_ptr<core::ContentRepository> repository) {
+  return std::make_shared<ResourceClaimImpl>(repository);
 }
 
 }  // namespace org::apache::nifi::minifi

@@ -22,17 +22,17 @@
 #include <mutex>
 
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "MetricsPublisher.h"
+#include "core/logging/LoggerFactory.h"
+#include "core/state/MetricsPublisher.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "utils/LogUtils.h"
 #include "utils/StoppableThread.h"
 
 namespace org::apache::nifi::minifi::state {
 
-class LogMetricsPublisher : public MetricsPublisher {
+class LogMetricsPublisher : public MetricsPublisherImpl {
  public:
-  using MetricsPublisher::MetricsPublisher;
+  using MetricsPublisherImpl::MetricsPublisherImpl;
 
   MINIFIAPI static constexpr const char* Description = "Serializes all the configured metrics into a json output and writes the json to the MiNiFi logs periodically";
 

@@ -37,6 +37,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessorNode.h"
 #include "http/BaseHTTPClient.h"
+#include "controllers/SSLContextService.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
@@ -120,11 +121,11 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
   }
   std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(context_name);
   if (nullptr != service) {
-    ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+    ssl_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
   } else {
     std::string secureStr;
     if (configure_->get(Configure::nifi_remote_input_secure, secureStr) && utils::string::toBool(secureStr).value_or(false)) {
-      ssl_service = std::make_shared<minifi::controllers::SSLContextService>(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
+      ssl_service = std::make_shared<minifi::controllers::SSLContextServiceImpl>(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
       ssl_service->onEnable();
     }
   }

@@ -53,7 +53,7 @@ class MockControllerService : public minifi::core::controller::ControllerService
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override {
-    minifi::core::controller::ControllerService::initialize();
+    minifi::core::controller::ControllerServiceImpl::initialize();
     enable();
   }
 

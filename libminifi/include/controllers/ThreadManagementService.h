@@ -27,6 +27,7 @@
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerFactory.h"
+#include "minifi-cpp/controllers/ThreadManagementService.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -34,58 +35,28 @@ namespace org::apache::nifi::minifi::controllers {
  * Purpose: Thread management service provides a contextual awareness across
  * thread pools that enables us to deliver QOS to an agent.
  */
-class ThreadManagementService : public core::controller::ControllerService {
+class ThreadManagementServiceImpl : public core::controller::ControllerServiceImpl, public virtual ThreadManagementService {
  public:
-  explicit ThreadManagementService(std::string_view name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
+  explicit ThreadManagementServiceImpl(std::string_view name, const utils::Identifier &uuid = {})
+      : ControllerServiceImpl(name, uuid),
         logger_(core::logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
 
-  explicit ThreadManagementService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(name),
+  explicit ThreadManagementServiceImpl(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
+      : ControllerServiceImpl(name),
         logger_(core::logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
-
-  /**
-   * Helps to determine if the number of tasks will increase the pools above their threshold.
-   * @param new_tasks tasks to be added.
-   * @return true if above max, false otherwise.
-   */
-  virtual bool isAboveMax(const int new_tasks) = 0;
-
-  /**
-   * Returns the max number of threads allowed by all pools
-   * @return max threads.
-   */
-  virtual uint16_t getMaxThreads() = 0;
-
-  /**
-   * Function based on cooperative multitasking that will tell a caller whether or not the number of threads should be reduced.
-   * @return true if threading impacts QOS.
-   */
-  virtual bool shouldReduce() = 0;
-
-  /**
-   * Function to indicate to this controller service that we've reduced threads in a threadpool
-   */
-  virtual void reduce() = 0;
 
   /**
    * Registration function to tabulate total threads.
    * @param threads threads from a thread pool.
    */
-  virtual void registerThreadCount(const int threads) {
+  void registerThreadCount(const int threads) override {
     thread_count_ += threads;
   }
 
-  /**
-   * Function to help callers identify if they can increase threads.
-   * @return true if QOS won't be breached.
-   */
-  virtual bool canIncrease() = 0;
-
   void initialize() override {
-    ControllerService::initialize();
+    ControllerServiceImpl::initialize();
   }
 
   void yield() override {

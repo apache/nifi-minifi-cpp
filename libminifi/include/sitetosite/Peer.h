@@ -130,7 +130,7 @@ class PeerStatus {
 static const char MAGIC_BYTES[] = { 'N', 'i', 'F', 'i' };
 
 // Site2SitePeer Class
-class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
+class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStreamImpl {
  public:
   SiteToSitePeer()
       : stream_(nullptr),

@@ -54,10 +54,10 @@ class DataPacket {
   std::shared_ptr<core::logging::Logger> logger_reference_;
 };
 
-class SiteToSiteClient : public core::Connectable {
+class SiteToSiteClient : public core::ConnectableImpl {
  public:
   SiteToSiteClient()
-      : core::Connectable("SitetoSiteClient") {
+      : core::ConnectableImpl("SitetoSiteClient") {
   }
 
   ~SiteToSiteClient() override = default;

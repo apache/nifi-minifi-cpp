@@ -33,20 +33,20 @@ namespace org::apache::nifi::minifi::state::response {
  * C2 server.
  *
  */
-class RepositoryMetrics : public ResponseNode {
+class RepositoryMetrics : public ResponseNodeImpl {
  public:
   RepositoryMetrics(std::string_view name, const utils::Identifier &uuid)
-      : ResponseNode(name, uuid),
+      : ResponseNodeImpl(name, uuid),
         repository_metrics_source_store_(getName()) {
   }
 
   explicit RepositoryMetrics(std::string_view name)
-      : ResponseNode(name),
+      : ResponseNodeImpl(name),
         repository_metrics_source_store_(getName()) {
   }
 
   RepositoryMetrics()
-      : ResponseNode("RepositoryMetrics"),
+      : ResponseNodeImpl("RepositoryMetrics"),
         repository_metrics_source_store_(getName()) {
   }
 

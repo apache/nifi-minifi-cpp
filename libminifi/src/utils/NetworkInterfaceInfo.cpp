@@ -16,7 +16,7 @@
  */
 #include "utils/NetworkInterfaceInfo.h"
 #include "utils/net/Socket.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #ifdef WIN32
 #include <iphlpapi.h>
 #pragma comment(lib, "IPHLPAPI.lib")
