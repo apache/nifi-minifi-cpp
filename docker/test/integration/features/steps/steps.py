@@ -47,7 +47,7 @@ import os
 # Background
 @given("the content of \"{directory}\" is monitored")
 def step_impl(context, directory):
-    context.test.add_file_system_observer(FileSystemObserver(context.directory_bindings.docker_path_to_local_path(context.feature_id, directory)))
+    context.test.add_file_system_observer(FileSystemObserver(context.directory_bindings.docker_path_to_local_path(directory)))
 
 
 def __create_processor(context, processor_type, processor_name, property_name, property_value, container_name, engine='minifi-cpp'):
@@ -318,7 +318,7 @@ def step_impl(context, processor_name):
 
 
 # NiFi setups
-@given("a NiFi flow receiving data from a RemoteProcessGroup \"{source_name}\" on port 8080")
+@given("a NiFi flow receiving data from a RemoteProcessGroup \"{source_name}\"")
 def step_impl(context, source_name):
     remote_process_group = context.test.get_remote_process_group_by_name("RemoteProcessGroup")
     source = context.test.generate_input_port_for_remote_process_group(remote_process_group, source_name)
@@ -333,6 +333,11 @@ def step_impl(context, source_name):
 @given("a NiFi flow with the name \"{flow_name}\" is set up")
 def step_impl(context, flow_name):
     context.test.acquire_container(context=context, name=flow_name, engine='nifi')
+
+
+@given("SSL is enabled in NiFi flow")
+def step_impl(context):
+    context.test.enable_ssl_in_nifi()
 
 
 @given("a transient MiNiFi flow with the name \"{flow_name}\" is set up")
@@ -496,9 +501,20 @@ def setUpSslContextServiceForProcessor(context, processor_name: str):
     minifi_key_file = '/tmp/resources/minifi_client.key'
     root_ca_crt_file = '/tmp/resources/root_ca.crt'
     ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
-    post_elasticsearch_json = context.test.get_node_by_name(processor_name)
-    post_elasticsearch_json.controller_services.append(ssl_context_service)
-    post_elasticsearch_json.set_property("SSL Context Service", ssl_context_service.name)
+    processor = context.test.get_node_by_name(processor_name)
+    processor.controller_services.append(ssl_context_service)
+    processor.set_property("SSL Context Service", ssl_context_service.name)
+
+
+def setUpSslContextServiceForRPG(context, rpg_name: str):
+    minifi_crt_file = '/tmp/resources/minifi_client.crt'
+    minifi_key_file = '/tmp/resources/minifi_client.key'
+    root_ca_crt_file = '/tmp/resources/root_ca.crt'
+    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(ssl_context_service)
+    rpg = context.test.get_remote_process_group_by_name(rpg_name)
+    rpg.add_property("SSL Context Service", ssl_context_service.name)
 
 
 @given(u'a SSL context service is set up for PostElasticsearch and Elasticsearch')
@@ -551,14 +567,14 @@ def step_impl(context):
     root_ca_crt_file = '/tmp/resources/root_ca.crt'
     ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
 
-    splunk_cert, splunk_key = make_server_cert(context.test.get_container_name_with_postfix("splunk"), context.test.root_ca_cert, context.test.root_ca_key)
+    splunk_cert, splunk_key = make_server_cert(context.test.get_container_name_with_postfix("splunk"), context.root_ca_cert, context.root_ca_key)
     put_splunk_http = context.test.get_node_by_name("PutSplunkHTTP")
     put_splunk_http.controller_services.append(ssl_context_service)
     put_splunk_http.set_property("SSL Context Service", ssl_context_service.name)
     query_splunk_indexing_status = context.test.get_node_by_name("QuerySplunkIndexingStatus")
     query_splunk_indexing_status.controller_services.append(ssl_context_service)
     query_splunk_indexing_status.set_property("SSL Context Service", ssl_context_service.name)
-    context.test.enable_splunk_hec_ssl('splunk', OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, splunk_cert), OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, splunk_key), OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, context.test.root_ca_cert))
+    context.test.enable_splunk_hec_ssl('splunk', OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, splunk_cert), OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, splunk_key), OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, context.root_ca_cert))
 
 
 @given(u'the {processor_one} processor is set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
@@ -690,11 +706,11 @@ def step_impl(context, content, topic_name):
 @when("a message with content \"{content}\" is published to the \"{topic_name}\" topic using an ssl connection")
 def step_impl(context, content, topic_name):
     ca_cert_file = tempfile.NamedTemporaryFile(delete=False)
-    ca_cert_file.write(OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM, cert=context.test.root_ca_cert))
+    ca_cert_file.write(OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM, cert=context.root_ca_cert))
     ca_cert_file.close()
     os.chmod(ca_cert_file.name, 0o644)
 
-    client_cert, client_key = make_client_cert(socket.gethostname(), context.test.root_ca_cert, context.test.root_ca_key)
+    client_cert, client_key = make_client_cert(socket.gethostname(), context.root_ca_cert, context.root_ca_key)
     client_cert_file = tempfile.NamedTemporaryFile(delete=False)
     client_cert_file.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, client_cert))
     client_cert_file.close()
@@ -1065,6 +1081,11 @@ def step_impl(context):
     context.test.set_ssl_context_properties_in_minifi()
 
 
+@given("SSL properties are set in MiNiFi")
+def step_impl(context):
+    context.test.set_ssl_context_properties_in_minifi()
+
+
 @given(u'a MiNiFi C2 server is set up')
 def step_impl(context):
     context.test.acquire_container(context=context, name="minifi-c2-server", engine="minifi-c2-server")
@@ -1278,6 +1299,11 @@ def step_impl(context, lines: str, timeout_seconds: int):
 @given(u'a SSL context service is set up for the following processor: \"{processor_name}\"')
 def step_impl(context, processor_name: str):
     setUpSslContextServiceForProcessor(context, processor_name)
+
+
+@given(u'a SSL context service is set up for the following remote process group: \"{remote_process_group}\"')
+def step_impl(context, remote_process_group: str):
+    setUpSslContextServiceForRPG(context, remote_process_group)
 
 
 # Nginx reverse proxy

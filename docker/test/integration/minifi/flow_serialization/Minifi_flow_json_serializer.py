@@ -94,7 +94,8 @@ class Minifi_flow_json_serializer:
 
             res_group['inputPorts'].append({
                 'identifier': str(connectable.instance_id),
-                'name': connectable.name
+                'name': connectable.name,
+                'properties': connectable.properties
             })
 
         if isinstance(connectable, Processor):

@@ -85,11 +85,14 @@ def before_feature(context, feature):
     context.feature_id = feature_id
     context.directory_bindings = DockerTestDirectoryBindings(feature_id)
     context.directory_bindings.create_new_data_directories()
+    context.directory_bindings.create_cert_files()
+    context.root_ca_cert = context.directory_bindings.root_ca_cert
+    context.root_ca_key = context.directory_bindings.root_ca_key
     if "requires.kubernetes.cluster" in feature.tags:
         context.kubernetes_proxy = KubernetesProxy(
-            context.directory_bindings.get_data_directories(context.feature_id)["kubernetes_temp_dir"],
+            context.directory_bindings.get_data_directories()["kubernetes_temp_dir"],
             os.path.join(os.environ['TEST_DIRECTORY'], 'resources', 'kubernetes', 'pods-etc'))
-        context.kubernetes_proxy.create_config(context.directory_bindings.get_directory_bindings(context.feature_id))
+        context.kubernetes_proxy.create_config(context.directory_bindings.get_directory_bindings())
         context.kubernetes_proxy.start_cluster()
 
 
