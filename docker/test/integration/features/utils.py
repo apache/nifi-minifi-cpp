@@ -25,7 +25,7 @@ def retry_check(max_tries=5, retry_interval=1):
     def retry_check_func(func):
         @functools.wraps(func)
         def retry_wrapper(*args, **kwargs):
-            for i in range(max_tries):
+            for _ in range(max_tries):
                 if func(*args, **kwargs):
                     return True
                 time.sleep(retry_interval)
