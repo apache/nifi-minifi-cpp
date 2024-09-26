@@ -26,7 +26,7 @@
 #include "core/PropertyType.h"
 #include "utils/Enum.h"
 #include "data/SQLRowsetProcessor.h"
-#include "ProcessSession.h"
+#include "core/ProcessSession.h"
 #include "data/JSONSQLWriter.h"
 
 namespace org::apache::nifi::minifi::processors::flow_file_source {

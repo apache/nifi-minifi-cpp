@@ -16,4 +16,24 @@
  */
 #pragma once
 
+#include <string>
+#include <optional>
+#include <unordered_map>
+#include <vector>
+
+#include "core/controller/ControllerService.h"
 #include "minifi-cpp/controllers/AttributeProviderService.h"
+
+namespace org::apache::nifi::minifi::controllers {
+
+class AttributeProviderServiceImpl : public core::controller::ControllerServiceImpl, public virtual AttributeProviderService {
+ public:
+  using ControllerServiceImpl::ControllerServiceImpl;
+
+  void yield() override {}
+  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
+  bool isWorkAvailable() override { return false; }
+};
+
+}  // namespace org::apache::nifi::minifi::controllers
+

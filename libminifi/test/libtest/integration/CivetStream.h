@@ -24,7 +24,7 @@
 
 namespace org::apache::nifi::minifi::io {
 
-class CivetStream : public io::InputStream {
+class CivetStream : public io::InputStreamImpl {
  public:
   /**
    * File Stream constructor that accepts an fstream shared pointer.

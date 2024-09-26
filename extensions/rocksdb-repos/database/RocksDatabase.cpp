@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/StringUtils.h"
 #include "RocksDbInstance.h"
 

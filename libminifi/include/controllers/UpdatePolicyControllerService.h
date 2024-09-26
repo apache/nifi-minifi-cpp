@@ -38,7 +38,7 @@ namespace org::apache::nifi::minifi::controllers {
  * Purpose: UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates.
  * Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.
  */
-class UpdatePolicyControllerService : public core::controller::ControllerServiceImpl, public std::enable_shared_from_this<UpdatePolicyControllerService> {
+class UpdatePolicyControllerService : public core::controller::ControllerServiceImpl {
  public:
   explicit UpdatePolicyControllerService(std::string_view name, const utils::Identifier &uuid = {})
       : ControllerServiceImpl(name, uuid) {

@@ -44,7 +44,7 @@ class ReadArchiveStream : public virtual InputStream {
   virtual std::optional<EntryInfo> nextEntry() = 0;
 };
 
-class ArchiveStreamProvider : public core::CoreComponent {
+class ArchiveStreamProvider : public virtual core::CoreComponent {
  public:
   using CoreComponent::CoreComponent;
   virtual std::unique_ptr<WriteArchiveStream> createWriteStream(int compress_level, const std::string& compress_format,

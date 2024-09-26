@@ -60,6 +60,8 @@ class ProcessContextExpr final : public core::ProcessContextImpl {
 
   bool setDynamicProperty(const std::string& property, std::string value) override;
 
+  using ProcessContextImpl::getProperty;
+
  private:
   bool getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const FlowFile* const flow_file);
 

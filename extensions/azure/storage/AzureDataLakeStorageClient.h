@@ -28,7 +28,7 @@
 
 #include "DataLakeStorageClient.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/span.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
@@ -74,7 +74,7 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
   std::vector<Azure::Storage::Files::DataLake::Models::PathItem> listDirectory(const ListAzureDataLakeStorageParameters& params) override;
 
  private:
-  class AzureDataLakeStorageInputStream : public io::InputStream {
+  class AzureDataLakeStorageInputStream : public io::InputStreamImpl {
    public:
     explicit AzureDataLakeStorageInputStream(Azure::Storage::Files::DataLake::Models::DownloadFileResult&& result)
       : result_(std::move(result)) {

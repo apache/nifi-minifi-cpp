@@ -31,7 +31,7 @@ PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, 
     exposer_(std::move(exposer)) {}
 
 void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
-  state::MetricsPublisher::initialize(configuration, response_node_loader);
+  state::MetricsPublisherImpl::initialize(configuration, response_node_loader);
   if (!exposer_) {
     exposer_ = std::make_unique<PrometheusExposerWrapper>(readExposerConfig());
   }

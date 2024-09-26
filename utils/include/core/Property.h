@@ -18,3 +18,13 @@
 #pragma once
 
 #include "minifi-cpp/core/Property.h"
+#include "TypedValues.h"
+
+namespace org::apache::nifi::minifi::core {
+
+template<typename T>
+bool Property::StringToInt(std::string input, T &output) {
+  return DataSizeValue::StringToInt<T>(input, output);
+}
+
+}  // namespace org::apache::nifi::minifi::core

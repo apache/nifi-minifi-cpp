@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/controller/ControllerService.h"
 #include <string>
 #include <memory>

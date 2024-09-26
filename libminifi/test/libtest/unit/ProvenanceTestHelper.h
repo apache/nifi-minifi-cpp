@@ -114,7 +114,7 @@ class TestRepositoryBase : public T_BaseRepository {
   std::map<std::string, std::string> repository_results_;
 };
 
-class TestRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::Repository> {
+class TestRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::RepositoryImpl> {
  public:
   bool start() override {
     return true;
@@ -245,7 +245,7 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
  public:
   TestFlowController(std::shared_ptr<org::apache::nifi::minifi::core::Repository> repo, std::shared_ptr<org::apache::nifi::minifi::core::Repository> flow_file_repo,
       const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& /*content_repo*/)
-      :org::apache::nifi::minifi::FlowController(repo, flow_file_repo, std::make_shared<org::apache::nifi::minifi::Configure>(), nullptr,
+      :org::apache::nifi::minifi::FlowController(repo, flow_file_repo, org::apache::nifi::minifi::Configure::create(), nullptr,
           std::make_shared<org::apache::nifi::minifi::core::repository::VolatileContentRepository>()) {
   }
 

@@ -576,4 +576,8 @@ void ProvenanceReporterImpl::fetch(const core::FlowFile& flow_file, const std::s
   }
 }
 
+std::shared_ptr<ProvenanceEventRecord> ProvenanceEventRecord::create() {
+  return std::make_shared<ProvenanceEventRecordImpl>();
+}
+
 }  // namespace org::apache::nifi::minifi::provenance

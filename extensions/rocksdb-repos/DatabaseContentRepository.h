@@ -49,7 +49,7 @@ class DatabaseContentRepository : public core::ContentRepositoryImpl {
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.database.content.repository.encryption.key";
 
   explicit DatabaseContentRepository(std::string_view name = className<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
-    : core::ContentRepository(name, uuid),
+    : core::ContentRepositoryImpl(name, uuid),
       is_valid_(false),
       db_(nullptr),
       logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {

@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "utils/StringUtils.h"
+#include "core/ClassName.h"
 
 namespace org::apache::nifi::minifi {
 

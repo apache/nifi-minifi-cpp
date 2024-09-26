@@ -36,7 +36,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/logging/Logger.h"
 #include "controllers/SSLContextService.h"
 #include "rdkafka.h"

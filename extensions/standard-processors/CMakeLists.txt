@@ -27,7 +27,7 @@ target_include_directories(minifi-standard-processors PUBLIC "${CMAKE_SOURCE_DIR
 
 include(RangeV3)
 include(Asio)
-target_link_libraries(minifi-standard-processors minifi-core minifi-extension-utils Threads::Threads range-v3 asio)
+target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3 asio)
 
 include(Coroutines)
 enable_coroutines()

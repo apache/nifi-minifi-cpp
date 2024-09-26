@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "KafkaProcessorBase.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
@@ -36,8 +36,6 @@
 #include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi {
-
-class FlowFileRecord;
 
 namespace core {
 class ConsumeKafkaMaxPollTimePropertyType : public TimePeriodPropertyType {
@@ -239,8 +237,8 @@ class ConsumeKafka : public KafkaProcessorBase {
   std::string resolve_duplicate_headers(const std::vector<std::string>& matching_headers) const;
   std::vector<std::string> get_matching_headers(const rd_kafka_message_t& message, const std::string& header_name) const;
   std::vector<std::pair<std::string, std::string>> get_flowfile_attributes_from_message_header(const rd_kafka_message_t& message) const;
-  void add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t& message) const;
-  std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> transform_pending_messages_into_flowfiles(core::ProcessSession& session) const;
+  void add_kafka_attributes_to_flowfile(std::shared_ptr<core::FlowFile>& flow_file, const rd_kafka_message_t& message) const;
+  std::optional<std::vector<std::shared_ptr<core::FlowFile>>> transform_pending_messages_into_flowfiles(core::ProcessSession& session) const;
   void process_pending_messages(core::ProcessSession& session);
 
   std::string kafka_brokers_;

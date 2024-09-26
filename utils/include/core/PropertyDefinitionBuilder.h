@@ -20,6 +20,7 @@
 
 #include "core/PropertyDefinition.h"
 #include "core/PropertyType.h"
+#include "core/ClassName.h"
 
 namespace org::apache::nifi::minifi::core {
 

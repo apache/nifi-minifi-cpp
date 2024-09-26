@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class GetGPS : public core::Processor {
+class GetGPS : public core::ProcessorImpl {
  public:
   explicit GetGPS(std::string name, const utils::Identifier& uuid = {})
       : core::Processor(std::move(name), uuid) {

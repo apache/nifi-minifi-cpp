@@ -35,17 +35,17 @@
 
 namespace org::apache::nifi::minifi {
 
-std::shared_ptr<core::logging::Logger> FlowFileRecord::logger_ = core::logging::LoggerFactory<FlowFileRecord>::getLogger();
-std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
+std::shared_ptr<core::logging::Logger> FlowFileRecordImpl::logger_ = core::logging::LoggerFactory<FlowFileRecord>::getLogger();
+std::atomic<uint64_t> FlowFileRecordImpl::local_flow_seq_number_(0);
 
-FlowFileRecord::FlowFileRecord() {
+FlowFileRecordImpl::FlowFileRecordImpl() {
   // TODO(adebreceni):
   //  we should revisit if we need these in a follow-up ticket
   id_ = local_flow_seq_number_++;
   addAttribute(core::SpecialFlowAttribute::FILENAME, std::to_string(utils::timeutils::getTimeNano()));
 }
 
-std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
+std::shared_ptr<FlowFileRecord> FlowFileRecordImpl::DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
     const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
   std::string value;
 
@@ -66,7 +66,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
   return record;
 }
 
-bool FlowFileRecord::Serialize(io::OutputStream &outStream) {
+bool FlowFileRecordImpl::Serialize(io::OutputStream &outStream) {
   {
     uint64_t event_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(event_time_.time_since_epoch()).count();
     const auto ret = outStream.write(event_time_ms);
@@ -149,7 +149,7 @@ bool FlowFileRecord::Serialize(io::OutputStream &outStream) {
   return true;
 }
 
-bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowRepository) {
+bool FlowFileRecordImpl::Persist(const std::shared_ptr<core::Repository>& flowRepository) {
   if (flowRepository->isNoop()) {
     return true;
   }
@@ -173,8 +173,8 @@ bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowReposi
   return true;
 }
 
-std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream& inStream, const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
-  auto file = std::make_shared<FlowFileRecord>();
+std::shared_ptr<FlowFileRecord> FlowFileRecordImpl::DeSerialize(io::InputStream& inStream, const std::shared_ptr<core::ContentRepository>& content_repo, utils::Identifier& container) {
+  auto file = std::make_shared<FlowFileRecordImpl>();
 
   {
     uint64_t event_time_in_ms;
@@ -269,6 +269,23 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream& inS
   file->claim_ = std::make_shared<ResourceClaimImpl>(content_full_path, content_repo);
 
   return file;
+}
+
+std::shared_ptr<core::FlowFile> core::FlowFile::create() {
+  return std::make_shared<FlowFileRecordImpl>();
+}
+
+std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(std::span<const std::byte> buffer, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container) {
+  return FlowFileRecordImpl::DeSerialize(buffer, content_repo, container);
+}
+
+std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container) {
+  return FlowFileRecordImpl::DeSerialize(stream, content_repo, container);
+}
+
+std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
+                                                   const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container) {
+  return FlowFileRecordImpl::DeSerialize(key, flowRepository, content_repo, container);
 }
 
 }  // namespace org::apache::nifi::minifi

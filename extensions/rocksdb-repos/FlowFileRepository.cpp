@@ -26,10 +26,11 @@
 
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
-#include "FlowFileRecord.h"
 #include "utils/gsl.h"
 #include "core/Resource.h"
 #include "utils/OptionalUtils.h"
+#include "core/TypedValues.h"
+#include "FlowFileRecord.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -118,7 +119,7 @@ void FlowFileRepository::run() {
   flush();
 }
 
-bool FlowFileRepository::contentSizeIsAmpleForFlowFile(const FlowFileRecord& flow_file_record, const std::shared_ptr<ResourceClaim>& resource_claim) const {
+bool FlowFileRepository::contentSizeIsAmpleForFlowFile(const FlowFile& flow_file_record, const std::shared_ptr<ResourceClaim>& resource_claim) const {
   const auto stream_size = resource_claim ? content_repo_->size(*resource_claim) : 0;
   const auto required_size = flow_file_record.getOffset() + flow_file_record.getSize();
   return stream_size >= required_size;
@@ -276,7 +277,7 @@ void FlowFileRepository::runCompaction() {
 }
 
 bool FlowFileRepository::start() {
-  const bool ret = ThreadedRepository::start();
+  const bool ret = ThreadedRepositoryImpl::start();
   if (swap_loader_) {
     swap_loader_->start();
   }
@@ -293,7 +294,7 @@ bool FlowFileRepository::stop() {
   if (swap_loader_) {
     swap_loader_->stop();
   }
-  return ThreadedRepository::stop();
+  return ThreadedRepositoryImpl::stop();
 }
 
 void FlowFileRepository::store(std::vector<std::shared_ptr<core::FlowFile>> flow_files) {

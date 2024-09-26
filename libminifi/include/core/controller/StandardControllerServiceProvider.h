@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class StandardControllerServiceProvider : public ControllerServiceProviderImpl, public std::enable_shared_from_this<StandardControllerServiceProvider> {
+class StandardControllerServiceProvider : public ControllerServiceProviderImpl  {
  public:
   explicit StandardControllerServiceProvider(std::unique_ptr<ControllerServiceNodeMap> services, std::shared_ptr<Configure> configuration, ClassLoader& loader = ClassLoader::getDefaultClassLoader())
       : ControllerServiceProviderImpl(std::move(services)),
@@ -56,7 +56,7 @@ class StandardControllerServiceProvider : public ControllerServiceProviderImpl, 
     }
 
     std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service,
-                                                                                                              std::static_pointer_cast<ControllerServiceProvider>(shared_from_this()), id,
+                                                                                                              sharedFromThis<ControllerServiceProvider>(), id,
                                                                                                               configuration_);
 
     controller_map_->put(id, new_service_node);

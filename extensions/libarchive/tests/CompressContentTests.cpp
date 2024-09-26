@@ -125,21 +125,21 @@ class CompressDecompressionTestController : public TestController {
     REQUIRE(processoruuid);
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    content_repo->initialize(std::make_shared<minifi::Configure>());
+    content_repo->initialize(std::make_shared<minifi::ConfigureImpl>());
     // connection from compress processor to success
-    output = std::make_shared<minifi::Connection>(repo, content_repo, "Output");
+    output = std::make_shared<minifi::ConnectionImpl>(repo, content_repo, "Output");
     output->addRelationship(core::Relationship("success", "compress successful output"));
     output->setSource(processor.get());
     output->setSourceUUID(processoruuid);
     processor->addConnection(output.get());
     // connection to compress processor
-    input = std::make_shared<minifi::Connection>(repo, content_repo, "Input");
+    input = std::make_shared<minifi::ConnectionImpl>(repo, content_repo, "Input");
     input->setDestination(processor.get());
     input->setDestinationUUID(processoruuid);
     processor->addConnection(input.get());
 
     // connection from compress processor to failure
-    failure_output = std::make_shared<minifi::Connection>(repo, content_repo, "FailureOutput");
+    failure_output = std::make_shared<minifi::ConnectionImpl>(repo, content_repo, "FailureOutput");
     failure_output->addRelationship(core::Relationship("failure", "compress failure output"));
     failure_output->setSource(processor.get());
     failure_output->setSourceUUID(processoruuid);
@@ -148,8 +148,8 @@ class CompressDecompressionTestController : public TestController {
     processor->incrementActiveTasks();
     processor->setScheduledState(core::ScheduledState::RUNNING);
 
-    context = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(processor.get()), nullptr, repo, repo, content_repo);
-    helper_session = std::make_shared<core::ProcessSession>(context);
+    context = std::make_shared<core::ProcessContextImpl>(std::make_shared<core::ProcessorNodeImpl>(processor.get()), nullptr, repo, repo, content_repo);
+    helper_session = std::make_shared<core::ProcessSessionImpl>(context);
   }
 
   [[nodiscard]] std::shared_ptr<core::FlowFile> importFlowFile(const std::filesystem::path& content_path) const {
@@ -170,9 +170,9 @@ class CompressDecompressionTestController : public TestController {
   }
 
   void trigger() const {
-    auto factory = core::ProcessSessionFactory(context);
+    auto factory = core::ProcessSessionFactoryImpl(context);
     processor->onSchedule(*context, factory);
-    auto session = core::ProcessSession(context);
+    auto session = core::ProcessSessionImpl(context);
     processor->onTrigger(*context, session);
     session.commit();
   }
@@ -647,12 +647,12 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   }
 
   REQUIRE(processor->getName() == "compresscontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
   processor->onSchedule(*context, *factory);
 
   // Trigger once to process batchSize
   {
-    auto session = std::make_shared<core::ProcessSession>(context);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context);
     processor->onTrigger(*context, *session);
     session->commit();
   }
@@ -667,7 +667,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
 
   // Trigger a second time to process the remaining files
   {
-    auto session = std::make_unique<core::ProcessSession>(context);
+    auto session = std::make_unique<core::ProcessSessionImpl>(context);
     processor->onTrigger(*context, *session);
     session->commit();
   }

@@ -24,9 +24,10 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/ContentRepositoryDependentTests.h"
-#include "Processor.h"
+#include "core/Processor.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "unit/TestUtils.h"
+#include "core/repository/FileSystemRepository.h"
 
 namespace {
 
@@ -42,7 +43,7 @@ class Fixture {
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan(plan_config_);
   std::shared_ptr<minifi::core::Processor> dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
   std::shared_ptr<minifi::core::ProcessContext> context_ = [this] { test_plan_->runNextProcessor(); return test_plan_->getCurrentContext(); }();
-  std::unique_ptr<minifi::core::ProcessSession> process_session_ = std::make_unique<core::ProcessSession>(context_);
+  std::unique_ptr<minifi::core::ProcessSession> process_session_ = std::make_unique<core::ProcessSessionImpl>(context_);
 };
 
 const minifi::core::Relationship Success{"success", "everything is fine"};
@@ -144,7 +145,7 @@ class TestVolatileFlowFileRepository : public core::repository::VolatileFlowFile
 
 TEST_CASE("ProcessSession::commit avoids dangling ResourceClaims when using VolatileFlowFileRepository", "[incrementbefore]") {
   TempDirectory tmp_dir;
-  auto configuration = std::make_shared<minifi::Configure>();
+  auto configuration = std::make_shared<minifi::ConfigureImpl>();
   configuration->setHome(tmp_dir.getPath());
   configuration->set(minifi::Configure::nifi_volatile_repository_options_flowfile_max_count, "2");
   auto ff_repo = std::make_shared<TestVolatileFlowFileRepository>("flowfile");

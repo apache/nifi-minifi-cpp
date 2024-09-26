@@ -29,7 +29,7 @@
 
 #include "core/logging/Logger.h"
 #include "concurrentqueue.h"
-#include "MinifiConcurrentQueue.h"
+#include "utils/MinifiConcurrentQueue.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -41,7 +41,7 @@ namespace org::apache::nifi::minifi::utils {
  * */
 
 template<class ResourceType>
-class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<ResourceType>> {
+class ResourceQueue : public utils::EnableSharedFromThis {
  public:
   class ResourceWrapper {
    public:
@@ -75,7 +75,7 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
     // Use an existing resource, if one is available
     if (internal_queue_.tryDequeue(resource)) {
       logDebug("Using available [{}] resource instance", static_cast<void*>(resource.get()));
-      return ResourceWrapper(this->weak_from_this(), std::move(resource));
+      return ResourceWrapper(sharedFromThis<ResourceQueue<ResourceType>>(), std::move(resource));
     } else {
       const std::lock_guard<std::mutex> lock(counter_mutex_);
       if (!maximum_number_of_creatable_resources_ || resources_created_ < maximum_number_of_creatable_resources_) {
@@ -85,14 +85,14 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
                  static_cast<void*>(resource.get()),
                  resources_created_,
                  maximum_number_of_creatable_resources_ ? " / " + std::to_string(*maximum_number_of_creatable_resources_) : "");
-        return ResourceWrapper(this->weak_from_this(), std::move(resource));
+        return ResourceWrapper(sharedFromThis<ResourceQueue<ResourceType>>(), std::move(resource));
       }
     }
     logDebug("Waiting for resource");
     if (!internal_queue_.dequeueWait(resource)) {
       throw std::runtime_error("No resource available");
     }
-    return ResourceWrapper(this->weak_from_this(), std::move(resource));
+    return ResourceWrapper(sharedFromThis<ResourceQueue<ResourceType>>(), std::move(resource));
   }
 
  protected:

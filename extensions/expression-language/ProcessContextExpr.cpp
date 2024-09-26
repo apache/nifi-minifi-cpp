@@ -36,7 +36,7 @@ bool ProcessContextExpr::getProperty(bool supports_expression_language, std::str
     expression_strs_.insert_or_assign(name, expression_str);
   }
 
-  minifi::expression::Parameters p(shared_from_this(), flow_file);
+  minifi::expression::Parameters p(sharedFromThis<VariableRegistry>(), flow_file);
   value = expressions_[name](p).asString();
   logger_->log_debug(R"(expression "{}" of property "{}" evaluated to: {})", expression_strs_[name], name, value);
   return true;
@@ -62,7 +62,7 @@ bool ProcessContextExpr::getDynamicProperty(const Property &property, std::strin
     dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
     expression_strs_.insert_or_assign(name, expression_str);
   }
-  minifi::expression::Parameters p(shared_from_this(), flow_file);
+  minifi::expression::Parameters p(sharedFromThis<VariableRegistry>(), flow_file);
   value = dynamic_property_expressions_[name](p).asString();
   logger_->log_debug(R"(expression "{}" of dynamic property "{}" evaluated to: {})", expression_strs_[name], name, value);
   return true;

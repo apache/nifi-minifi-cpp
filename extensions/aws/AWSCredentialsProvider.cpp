@@ -77,7 +77,7 @@ std::optional<Aws::Auth::AWSCredentials> AWSCredentialsProvider::getAWSCredentia
   }
 
   if (!credentials_file_.empty()) {
-    auto properties = std::make_shared<minifi::Properties>();
+    auto properties = minifi::Properties::create();
     properties->loadConfigureFile(credentials_file_.c_str());
     std::string access_key;
     std::string secret_key;

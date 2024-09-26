@@ -93,7 +93,7 @@ void ProcessSessionImpl::add(const std::shared_ptr<core::FlowFile> &record) {
 }
 
 std::shared_ptr<core::FlowFile> ProcessSessionImpl::create(const core::FlowFile* const parent) {
-  auto record = std::make_shared<FlowFileRecord>();
+  auto record = std::make_shared<FlowFileRecordImpl>();
   auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
   if (flow_version != nullptr) {
     record->setAttribute(SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());
@@ -139,7 +139,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::clone(const core::FlowFile& 
 }
 
 std::shared_ptr<core::FlowFile> ProcessSessionImpl::cloneDuringTransfer(const core::FlowFile& parent) {
-  auto record = std::make_shared<FlowFileRecord>();
+  auto record = std::make_shared<FlowFileRecordImpl>();
 
   auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
   if (flow_version != nullptr) {
@@ -1129,7 +1129,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::get() {
     if (ret) {
       // add the flow record to the current process session update map
       ret->setDeleted(false);
-      std::shared_ptr<FlowFile> snapshot = std::make_shared<FlowFileRecord>();
+      std::shared_ptr<FlowFile> snapshot = std::make_shared<FlowFileRecordImpl>();
       *snapshot = *ret;
       logger_->log_debug("Create Snapshot FlowFile with UUID {}", snapshot->getUUIDStr());
       utils::Identifier uuid = ret->getUUID();

@@ -25,13 +25,13 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Enum.h"
 #include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::extensions::smb {
 
-class SmbConnectionControllerService : public core::controller::ControllerService {
+class SmbConnectionControllerService : public core::controller::ControllerServiceImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "SMB Connection Controller Service";
 
@@ -70,7 +70,7 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  using ControllerService::ControllerService;
+  using ControllerServiceImpl::ControllerServiceImpl;
 
   void initialize() override;
 

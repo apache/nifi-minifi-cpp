@@ -31,7 +31,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class KamikazeProcessor : public core::Processor {
+class KamikazeProcessor : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static const std::string OnScheduleExceptionStr;
   EXTENSIONAPI static const std::string OnTriggerExceptionStr;
@@ -40,7 +40,7 @@ class KamikazeProcessor : public core::Processor {
   EXTENSIONAPI static const std::string OnUnScheduleLogStr;
 
   explicit KamikazeProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This processor can throw exceptions in onTrigger and onSchedule calls based on configuration. Only for testing purposes.";

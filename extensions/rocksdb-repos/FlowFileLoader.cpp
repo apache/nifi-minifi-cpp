@@ -23,9 +23,9 @@
 #include <vector>
 #include <utility>
 
-#include "logging/LoggerConfiguration.h"
-#include "FlowFileRecord.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/gsl.h"
+#include "FlowFileRecord.h"
 
 namespace org::apache::nifi::minifi {
 

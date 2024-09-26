@@ -39,7 +39,7 @@ TEST_CASE("Test ControllerServicesMap", "[cs1]") {
   REQUIRE(map.getAllControllerServices().empty());
 
   std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
-  std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, "ID", std::make_shared<minifi::Configure>());
+  std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, "ID", std::make_shared<minifi::ConfigureImpl>());
 
   map.put("ID", testNode);
   REQUIRE(1 == map.getAllControllerServices().size());
@@ -58,7 +58,7 @@ TEST_CASE("Test StandardControllerServiceNode nullPtr", "[cs1]") {
   core::controller::ControllerServiceNodeMap map;
 
   try {
-    std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(nullptr, "ID", std::make_shared<minifi::Configure>());
+    std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(nullptr, "ID", std::make_shared<minifi::ConfigureImpl>());
   } catch (const minifi::Exception &) {
     return;
   }
@@ -68,7 +68,7 @@ TEST_CASE("Test StandardControllerServiceNode nullPtr", "[cs1]") {
 
 std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(const std::string& id) {
   std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
-  std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, id, std::make_shared<minifi::Configure>());
+  std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, id, std::make_shared<minifi::ConfigureImpl>());
 
   return testNode;
 }

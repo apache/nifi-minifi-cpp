@@ -20,14 +20,14 @@
 #include <string>
 
 #include "../controllerservice/KubernetesControllerService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class CollectKubernetesPodMetrics : public core::Processor {
+class CollectKubernetesPodMetrics : public core::ProcessorImpl {
  public:
   explicit CollectKubernetesPodMetrics(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {

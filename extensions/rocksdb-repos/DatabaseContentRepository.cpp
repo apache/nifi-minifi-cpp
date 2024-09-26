@@ -148,7 +148,7 @@ std::shared_ptr<ContentSession> DatabaseContentRepository::createSession() {
 }
 
 void DatabaseContentRepository::Session::commit() {
-  auto dbContentRepository = std::static_pointer_cast<DatabaseContentRepository>(repository_);
+  auto dbContentRepository = std::dynamic_pointer_cast<DatabaseContentRepository>(repository_);
   auto opendb = dbContentRepository->db_->open();
   if (!opendb) {
     throw Exception(REPOSITORY_EXCEPTION, "Couldn't open rocksdb database to commit content changes");

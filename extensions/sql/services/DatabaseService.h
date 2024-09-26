@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/controller/ControllerService.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -34,16 +34,16 @@ namespace org::apache::nifi::minifi::sql::controllers {
  * services to internal services. While a controller service is generally configured from the flow,
  * we want to follow the open closed principle and provide Database services
  */
-class DatabaseService : public core::controller::ControllerService {
+class DatabaseService : public core::controller::ControllerServiceImpl {
  public:
   explicit DatabaseService(std::string_view name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
+      : ControllerServiceImpl(name, uuid),
         initialized_(false) {
     initialize();
   }
 
   explicit DatabaseService(std::string_view name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name),
+      : ControllerServiceImpl(name),
         initialized_(false) {
     setConfiguration(configuration);
     initialize();

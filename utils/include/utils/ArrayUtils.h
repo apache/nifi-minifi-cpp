@@ -27,6 +27,28 @@
 
 namespace org::apache::nifi::minifi::utils {
 
+namespace detail {
+template<typename... T, std::size_t... Idx>
+constexpr auto tuple_to_array_impl(const std::tuple<T...>& data, std::index_sequence<Idx...>) {
+  return std::array{std::get<Idx>(data)...};
+};
+
+template<typename T, std::size_t N, std::size_t... Idx>
+constexpr auto array_to_tuple_impl(const std::array<T, N>& data, std::index_sequence<Idx...>) {
+  return std::make_tuple(data[Idx]...);
+};
+}  // namespace detail
+
+template<typename... T>
+constexpr auto tuple_to_array(const std::tuple<T...>& data) {
+  return detail::tuple_to_array_impl(data, std::make_index_sequence<sizeof...(T)>{});
+};
+
+template<typename T, std::size_t N>
+constexpr auto array_to_tuple(const std::array<T, N>& data) {
+  return detail::array_to_tuple_impl(data, std::make_index_sequence<N>{});
+};
+
 /**
  * Concatenates the arrays in the argument list.
  * Similar to std::tuple_cat, but for arrays instead of tuples.
@@ -34,12 +56,7 @@ namespace org::apache::nifi::minifi::utils {
  */
 template <typename Type, std::size_t... sizes>
 constexpr auto array_cat(const std::array<Type, sizes>&... arrays) {
-  std::array<Type, (sizes + ...)> result;
-  std::size_t index{};
-
-  ((std::copy_n(arrays.begin(), sizes, result.begin() + index), index += sizes), ...);
-
-  return result;
+  return tuple_to_array(std::tuple_cat(array_to_tuple(arrays)...));
 }
 
 template<std::size_t size>

@@ -21,7 +21,7 @@
 #include <vector>
 #include <memory>
 
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "utils/Id.h"
 
 namespace org::apache::nifi::minifi {

@@ -24,7 +24,6 @@
 #include <atomic>
 #include <utility>
 
-#include "core/state/nodes/MetricsBase.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -59,7 +58,7 @@ class GetFileMetrics : public core::ProcessorMetricsImpl {
   }
 
   std::vector<state::response::SerializedResponseNode> serialize() override {
-    auto resp = core::ProcessorMetrics::serialize();
+    auto resp = core::ProcessorMetricsImpl::serialize();
     auto& root_node = resp[0];
 
     state::response::SerializedResponseNode accepted_files_node{"AcceptedFiles", accepted_files.load()};
@@ -72,7 +71,7 @@ class GetFileMetrics : public core::ProcessorMetricsImpl {
   }
 
   std::vector<state::PublishedMetric> calculateMetrics() override {
-    auto metrics = core::ProcessorMetrics::calculateMetrics();
+    auto metrics = core::ProcessorMetricsImpl::calculateMetrics();
     metrics.push_back({"accepted_files", static_cast<double>(accepted_files.load()), getCommonLabels()});
     metrics.push_back({"input_bytes", static_cast<double>(input_bytes.load()), getCommonLabels()});
     return metrics;

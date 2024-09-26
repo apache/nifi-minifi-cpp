@@ -34,7 +34,7 @@
 #include "aws/s3/model/ObjectCannedACL.h"
 
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/AWSInitializer.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
@@ -44,6 +44,9 @@
 #include "Exception.h"
 #include "MultipartUploadStateStorage.h"
 #include "range/v3/algorithm/find.hpp"
+#include "utils/Literals.h"
+#include "io/InputStream.h"
+#include "io/OutputStream.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 

@@ -32,7 +32,7 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ControllerServiceProvider : public virtual CoreComponent, public virtual ConfigurableComponent, public virtual ControllerServiceLookup {
+class ControllerServiceProvider : public virtual CoreComponent, public virtual ConfigurableComponent, public virtual ControllerServiceLookup, public utils::EnableSharedFromThis {
  public:
   ~ControllerServiceProvider() override = default;
 

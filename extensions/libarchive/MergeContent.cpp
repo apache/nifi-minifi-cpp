@@ -213,7 +213,7 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
         });
   }
 
-  std::shared_ptr<core::FlowFile> merge_flow = std::static_pointer_cast<FlowFileRecord>(session.create());
+  std::shared_ptr<core::FlowFile> merge_flow = session.create();
   auto removeMergeFlow = gsl::finally([&](){
     if (!session.hasBeenTransferred(*merge_flow)) {
       session.remove(merge_flow);

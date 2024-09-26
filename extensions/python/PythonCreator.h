@@ -25,17 +25,16 @@
 #include <memory>
 #include <filesystem>
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Resource.h"
 #include "ExecutePythonProcessor.h"
 #include "PythonConfigState.h"
 #include "PythonObjectFactory.h"
-#include "agent/agent_version.h"
-#include "agent/build_description.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "minifi-cpp/agent/build_description.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "range/v3/algorithm.hpp"
-#include "properties/Configuration.h"
 #include "utils/file/FilePattern.h"
 #include "range/v3/view/filter.hpp"
 #include "PythonDependencyInstaller.h"
@@ -46,10 +45,10 @@ namespace org::apache::nifi::minifi::extensions::python {
 /**
  * Can be used to load the python processors from NiFi properties.
  */
-class PythonCreator : public minifi::core::CoreComponent {
+class PythonCreator : public minifi::core::CoreComponentImpl {
  public:
   explicit PythonCreator(std::string name, const utils::Identifier &uuid = {})
-      : minifi::core::CoreComponent(std::move(name), uuid) {
+      : minifi::core::CoreComponentImpl(std::move(name), uuid) {
   }
 
   ~PythonCreator() override {

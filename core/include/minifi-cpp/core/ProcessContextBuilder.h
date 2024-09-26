@@ -44,9 +44,9 @@ namespace org::apache::nifi::minifi::core {
  * While this incurs a tiny cost to look up, it allows us to have a replaceable builder that erases the type we are
  * constructing.
  */
-class ProcessContextBuilder : public virtual core::CoreComponent {
+class ProcessContextBuilder : public virtual core::CoreComponent, public virtual utils::EnableSharedFromThis {
  public:
-  virtual std::shared_ptr<ProcessContextBuilder> withProvider(core::controller::ControllerServiceProvider* controller_service_provider);
+  virtual std::shared_ptr<ProcessContextBuilder> withProvider(core::controller::ControllerServiceProvider* controller_service_provider) = 0;
   virtual std::shared_ptr<ProcessContextBuilder> withProvenanceRepository(const std::shared_ptr<core::Repository> &repo) = 0;
   virtual std::shared_ptr<ProcessContextBuilder> withFlowFileRepository(const std::shared_ptr<core::Repository> &repo) = 0;
   virtual std::shared_ptr<ProcessContextBuilder> withContentRepository(const std::shared_ptr<core::ContentRepository> &repo) = 0;

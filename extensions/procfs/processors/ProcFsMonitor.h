@@ -29,7 +29,7 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/logging/Logger.h"
 #include "utils/Enum.h"
 
@@ -53,7 +53,7 @@ enum class ResultRelativeness {
   Absolute
 };
 
-class ProcFsMonitor : public core::Processor {
+class ProcFsMonitor : public core::ProcessorImpl {
  public:
   explicit ProcFsMonitor(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(std::move(name), uuid) {

@@ -33,6 +33,7 @@
 #include "minifi-cpp/core/FlowFile.h"
 #include "VariableRegistry.h"
 #include "minifi-cpp/core/ProcessContextBuilder.h"
+#include "utils/GeneralUtils.h"
 
 namespace org::apache::nifi::minifi::core {
 /**
@@ -43,7 +44,7 @@ namespace org::apache::nifi::minifi::core {
  * While this incurs a tiny cost to look up, it allows us to have a replaceable builder that erases the type we are
  * constructing.
  */
-class ProcessContextBuilderImpl : public core::CoreComponentImpl, public virtual ProcessContextBuilder, public std::enable_shared_from_this<ProcessContextBuilder> {
+class ProcessContextBuilderImpl : public core::CoreComponentImpl, public virtual ProcessContextBuilder {
  public:
   ProcessContextBuilderImpl(std::string_view name, const minifi::utils::Identifier &uuid);
 

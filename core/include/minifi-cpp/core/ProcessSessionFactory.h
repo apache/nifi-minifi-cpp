@@ -34,7 +34,7 @@ namespace core {
 // ProcessSessionFactory Class
 class ProcessSessionFactory {
  public:
-  virtual std::shared_ptr<ProcessSession> createSession();
+  virtual std::shared_ptr<ProcessSession> createSession() = 0;
   virtual ~ProcessSessionFactory() = default;
 };
 

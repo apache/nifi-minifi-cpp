@@ -31,7 +31,7 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-class KubernetesControllerService : public AttributeProviderService {
+class KubernetesControllerService : public AttributeProviderServiceImpl {
  public:
   explicit KubernetesControllerService(const std::string& name, const utils::Identifier& uuid = {});
   KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration);

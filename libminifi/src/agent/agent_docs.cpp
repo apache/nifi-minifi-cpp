@@ -19,6 +19,17 @@
 
 namespace org::apache::nifi::minifi {
 
-std::map<std::string, Components> AgentDocs::class_mappings_;
+namespace {
+std::map<std::string, Components> AgentDocs_class_mappings;
+}  // namespace
+
+const std::map<std::string, Components>& AgentDocs::getClassDescriptions() {
+  return AgentDocs_class_mappings;
+}
+
+std::map<std::string, Components>& AgentDocs::getMutableClassDescriptions() {
+  return AgentDocs_class_mappings;
+}
+
 
 }  // namespace org::apache::nifi::minifi

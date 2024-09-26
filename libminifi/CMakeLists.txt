@@ -91,7 +91,7 @@ if (UNIX AND (CMAKE_SYSTEM_PROCESSOR MATCHES "armv7"))
     target_link_libraries(core-minifi "-latomic")
 endif()
 
-SET (LIBMINIFI core-minifi PARENT_SCOPE)
+SET(LIBMINIFI minifi-core minifi-extension-utils $<LINK_ONLY:core-minifi> PARENT_SCOPE)
 
 if (WIN32)
     install(TARGETS core-minifi ARCHIVE DESTINATION bin COMPONENT bin)
