@@ -32,6 +32,7 @@ static PyMethodDef PyProcessContext_methods[] = {  // NOLINT(cppcoreguidelines-a
     {"getControllerService", (PyCFunction) PyProcessContext::getControllerService, METH_VARARGS, nullptr},
     {"getName", (PyCFunction) PyProcessContext::getName, METH_VARARGS, nullptr},
     {"getProperties", (PyCFunction) PyProcessContext::getProperties, METH_VARARGS, nullptr},
+    {"yieldResources", (PyCFunction) PyProcessContext::getProperties, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -166,6 +167,18 @@ PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
   }
 
   return object::returnReference(py_properties);
+}
+
+PyObject* PyProcessContext::yieldResources(PyProcessContext* self, PyObject*) {
+  auto context = self->process_context_;
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  context->yield();
+
+  Py_RETURN_NONE;
 }
 
 PyTypeObject* PyProcessContext::typeObject() {

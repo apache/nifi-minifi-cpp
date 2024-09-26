@@ -29,4 +29,5 @@ class CreateNothing(FlowFileSource):
         pass
 
     def create(self, context):
+        context.yield_resources()
         return None
