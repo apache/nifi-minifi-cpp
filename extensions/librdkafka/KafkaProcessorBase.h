@@ -45,7 +45,7 @@ enum class SASLMechanismOption {
 };
 }  // namespace kafka
 
-class KafkaProcessorBase : public core::Processor {
+class KafkaProcessorBase : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("SSL Context Service Name")
@@ -92,7 +92,7 @@ class KafkaProcessorBase : public core::Processor {
 
 
   KafkaProcessorBase(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-      : core::Processor(name, uuid),
+      : core::ProcessorImpl(name, uuid),
         logger_(std::move(logger)) {
   }
 

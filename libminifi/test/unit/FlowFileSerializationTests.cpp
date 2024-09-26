@@ -30,7 +30,7 @@
 #include "FlowFileRecord.h"
 
 std::shared_ptr<minifi::FlowFileRecord> createEmptyFlowFile() {
-  auto flowFile = std::make_shared<minifi::FlowFileRecord>();
+  auto flowFile = std::make_shared<minifi::FlowFileRecordImpl>();
   flowFile->removeAttribute(core::SpecialFlowAttribute::FILENAME);
   return flowFile;
 }

@@ -29,7 +29,7 @@
 namespace org::apache::nifi::minifi::io {
 
 RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable, minifi::internal::WriteBatch* batch, bool use_synchronous_writes)
-    : BaseStream(),
+    : BaseStreamImpl(),
       path_(std::move(path)),
       write_enable_(write_enable),
       db_(db),

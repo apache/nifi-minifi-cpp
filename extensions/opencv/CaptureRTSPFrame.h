@@ -26,7 +26,7 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "io/StreamPipe.h"
@@ -35,7 +35,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class CaptureRTSPFrame : public core::Processor {
+class CaptureRTSPFrame : public core::ProcessorImpl {
  public:
   explicit CaptureRTSPFrame(std::string name, const utils::Identifier &uuid = {})
       : Processor(std::move(name), uuid) {

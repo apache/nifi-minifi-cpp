@@ -42,6 +42,7 @@
 #include "core/VariableRegistry.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/controllers/keyvalue/KeyValueStateStorage.h"
+#include "core/ConfigurableComponent.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -90,14 +91,6 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   }
 
   using ProcessContext::getProperty;
-
-  bool getProperty(const std::string& name, uint64_t& value) const override {return getPropertyImp(name, value);}
-  bool getProperty(const std::string& name, int64_t& value) const override {return getPropertyImp(name, value);}
-  bool getProperty(const std::string& name, uint32_t& value) const override {return getPropertyImp(name, value);}
-  bool getProperty(const std::string& name, int& value) const override {return getPropertyImp(name, value);}
-  bool getProperty(const std::string& name, bool& value) const override {return getPropertyImp(name, value);}
-  bool getProperty(const std::string& name, double& value) const override {return getPropertyImp(name, value);}
-  bool getProperty(const std::string& name, std::string& value) const override {return getPropertyImp(name, value);}
 
   std::optional<std::string> getProperty(const Property&, const FlowFile* const) override;
 
@@ -401,8 +394,12 @@ std::optional<T> ProcessContext::getProperty(const PropertyReference& property) 
   return std::nullopt;
 }
 
+bool ProcessContext::getProperty(std::string_view name, detail::NotAFlowFile auto& value) const {
+  return getProcessorNode()->getProperty<typename std::common_type<decltype(value)>::type>(std::string{name}, value);
+}
+
 bool ProcessContext::getProperty(const PropertyReference& property, detail::NotAFlowFile auto& value) const {
-  return getProperty(property.name, value);
+  return getProcessorNode()->getProperty<typename std::common_type<decltype(value)>::type>(std::string{property.name}, value);
 }
 
 }  // namespace org::apache::nifi::minifi::core

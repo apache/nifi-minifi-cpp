@@ -35,6 +35,16 @@ namespace org::apache::nifi::minifi::core {
 class ProcessorNode : public virtual ConfigurableComponent, public virtual Connectable {
  public:
   virtual Connectable* getProcessor() const = 0;
+
+  template<typename T>
+  bool getProperty(const std::string &name, T &value) {
+    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(getProcessor());
+    if (nullptr != processor_cast) {
+      return processor_cast->getProperty<T>(name, value);
+    } else {
+      return ConfigurableComponent::getProperty<T>(name, value);
+    }
+  }
 };
 
 }  // namespace org::apache::nifi::minifi::core

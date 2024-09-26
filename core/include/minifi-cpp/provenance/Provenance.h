@@ -188,6 +188,8 @@ class ProvenanceEventRecord : public virtual core::SerializableComponent {
   virtual void setSourceQueueIdentifier(const std::string& identifier) = 0;
   virtual void fromFlowFile(const core::FlowFile& flow_file) = 0;
   virtual bool loadFromRepository(const std::shared_ptr<core::Repository> &repo) = 0;
+
+  static std::shared_ptr<ProvenanceEventRecord> create();
 };
 
 class ProvenanceReporter {

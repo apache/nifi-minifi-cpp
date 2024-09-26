@@ -24,7 +24,7 @@
 #include <unordered_map>
 
 #include "rocksdb/db.h"
-#include "logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "RocksDbUtils.h"
 #include "OpenRocksDb.h"
 

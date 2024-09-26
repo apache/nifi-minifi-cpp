@@ -23,18 +23,17 @@
 #include <utility>
 #include <vector>
 
-#include "FlowFileRecord.h"
-#include "RelationshipDefinition.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Processor.h"
-#include "RelationshipDefinition.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
+#include "core/ProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -108,7 +107,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     uint16_t limit_{MQTT_MAX_RECEIVE_MAXIMUM};
   };
 
-  class PublishMQTTMetrics : public core::ProcessorMetrics {
+  class PublishMQTTMetrics : public core::ProcessorMetricsImpl {
    public:
     PublishMQTTMetrics(const core::Processor& source_processor, const InFlightMessageCounter& in_flight_message_counter);
     std::vector<state::response::SerializedResponseNode> serialize() override;

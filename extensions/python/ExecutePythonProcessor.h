@@ -38,10 +38,10 @@
 
 namespace org::apache::nifi::minifi::extensions::python::processors {
 
-class ExecutePythonProcessor : public core::Processor {
+class ExecutePythonProcessor : public core::ProcessorImpl {
  public:
   explicit ExecutePythonProcessor(std::string_view name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid),
+      : ProcessorImpl(name, uuid),
         processor_initialized_(false),
         python_dynamic_(false),
         reload_on_script_change_(true) {

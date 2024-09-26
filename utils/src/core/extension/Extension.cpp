@@ -16,23 +16,23 @@
  */
 
 #include "core/extension/Extension.h"
-#include "core/extension/ExtensionManager.h"
+#include "minifi-cpp/core/extension/ExtensionManager.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
 static std::shared_ptr<logging::Logger> init_logger = logging::LoggerFactory<ExtensionInitializer>::getLogger();
 
-Extension::Extension(std::string name, ExtensionInitImpl init_impl, ExtensionDeinitImpl deinit_impl, ExtensionInit init)
+ExtensionImpl::ExtensionImpl(std::string name, ExtensionInitImpl init_impl, ExtensionDeinitImpl deinit_impl, ExtensionInit init)
     : name_(std::move(name)), init_impl_(init_impl), deinit_impl_(deinit_impl), init_(init) {
   ExtensionManager::get().registerExtension(*this);
 }
 
-Extension::~Extension() {
+ExtensionImpl::~ExtensionImpl() {
   ExtensionManager::get().unregisterExtension(*this);
 }
 
-ExtensionInitializer::ExtensionInitializer(Extension& extension, const ExtensionConfig& config): extension_(extension) {
+ExtensionInitializer::ExtensionInitializer(ExtensionImpl& extension, const ExtensionConfig& config): extension_(extension) {
   init_logger->log_trace("Initializing extension: {}", extension_.getName());
   if (!extension_.init_impl_(config)) {
     throw std::runtime_error("Failed to initialize extension");

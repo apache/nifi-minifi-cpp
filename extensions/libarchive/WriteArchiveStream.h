@@ -27,7 +27,9 @@
 #include "archive.h"
 #include "SmartArchivePtrs.h"
 #include "utils/Enum.h"
-#include "logging/LoggerConfiguration.h"
+#include "core/Core.h"
+#include "core/logging/LoggerFactory.h"
+#include "io/Stream.h"
 
 namespace org::apache::nifi::minifi::io {
 
@@ -61,7 +63,7 @@ constexpr customize_t enum_name<CompressionFormat>(CompressionFormat value) noex
 
 namespace org::apache::nifi::minifi::io {
 
-class WriteArchiveStreamImpl final: public WriteArchiveStream {
+class WriteArchiveStreamImpl final: public StreamImpl, public WriteArchiveStream {
   [[nodiscard]] processors::archive_write_unique_ptr createWriteArchive() const;
 
  public:

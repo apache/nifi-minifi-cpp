@@ -50,7 +50,7 @@ void waitToVerifyProcessor() {
 
 TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
   using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
@@ -89,7 +89,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
   });
   auto pg = yaml_config.getRoot();
 
-  auto provider = std::make_shared<core::controller::StandardControllerServiceProvider>(std::make_unique<core::controller::ControllerServiceNodeMap>(), std::make_shared<minifi::Configure>());
+  auto provider = std::make_shared<core::controller::StandardControllerServiceProvider>(std::make_unique<core::controller::ControllerServiceNodeMap>(), std::make_shared<minifi::ConfigureImpl>());
   auto* mockNode = pg->findControllerService("MockItLikeIts1995");
   REQUIRE(mockNode != nullptr);
   mockNode->enable();
@@ -108,7 +108,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
     REQUIRE(ssl_client_node != nullptr);
     ssl_client_node->enable();
     REQUIRE(ssl_client_node->getControllerServiceImplementation() != nullptr);
-    ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_node->getControllerServiceImplementation());
+    ssl_client = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_node->getControllerServiceImplementation());
   }
   REQUIRE(!ssl_client->getCACertificate().empty());
   // now let's disable one of the controller services.

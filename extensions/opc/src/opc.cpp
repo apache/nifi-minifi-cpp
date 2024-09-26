@@ -25,7 +25,7 @@
 #include <array>
 
 #include "utils/StringUtils.h"
-#include "logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "Exception.h"
 
 #include "utils/gsl.h"

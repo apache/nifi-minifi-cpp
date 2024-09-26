@@ -22,6 +22,7 @@
 #include <string>
 
 #include "../ListingStateManager.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::utils {
 

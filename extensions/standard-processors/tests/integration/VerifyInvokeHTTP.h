@@ -17,7 +17,7 @@
  */
 #pragma once
 
-#include "PropertyDefinition.h"
+#include "core/PropertyDefinition.h"
 
 #include <memory>
 #include <utility>
@@ -75,7 +75,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
       const auto processorController = dynamic_cast<minifi::state::ProcessorController*>(&component);
       assert(processorController);
       auto& proc = processorController->getProcessor();
-      proc.setProperty(property, value);
+      proc.setProperty(property, std::string_view{value});
       executed = true;
     });
 

@@ -58,12 +58,12 @@ class SQLTestPlan {
   }
 
   std::shared_ptr<core::FlowFile> addInput(std::initializer_list<std::pair<std::string, std::string>> attributes = {}, const std::optional<std::string>& content = {}) {
-    auto flow_file = std::make_shared<minifi::FlowFileRecord>();
+    auto flow_file = std::make_shared<minifi::FlowFileRecordImpl>();
     for (const auto& attr : attributes) {
       flow_file->setAttribute(attr.first, attr.second);
     }
     if (content) {
-      auto claim = std::make_shared<minifi::ResourceClaim>(plan_->getContentRepo());
+      auto claim = std::make_shared<minifi::ResourceClaimImpl>(plan_->getContentRepo());
       auto content_stream = plan_->getContentRepo()->write(*claim);
       const auto ret = content_stream->write(reinterpret_cast<const uint8_t*>(content->c_str()), content->length());
       REQUIRE(ret == content->length());

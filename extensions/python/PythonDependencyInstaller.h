@@ -21,7 +21,7 @@
 #include <filesystem>
 
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "properties/Configure.h"
 
 namespace org::apache::nifi::minifi::extensions::python {

@@ -39,9 +39,9 @@ SerializedResponseNode& get(SerializedResponseNode& node, const std::string& fie
 
 namespace test::apple {
 
-class ExampleService : public core::controller::ControllerService {
+class ExampleService : public core::controller::ControllerServiceImpl {
  public:
-  using ControllerService::ControllerService;
+  using ControllerServiceImpl::ControllerServiceImpl;
 
   static constexpr const char* Description = "An example service";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
@@ -56,9 +56,9 @@ class ExampleService : public core::controller::ControllerService {
 
 REGISTER_RESOURCE(ExampleService, ControllerService);
 
-class ExampleProcessor : public core::Processor {
+class ExampleProcessor : public core::ProcessorImpl {
  public:
-  using Processor::Processor;
+  using ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "An example processor";
   static constexpr auto ExampleProperty = core::PropertyDefinitionBuilder<>::createProperty("Example Property")

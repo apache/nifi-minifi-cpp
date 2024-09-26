@@ -26,6 +26,7 @@
 #include "modbus/ReadModbusFunctions.h"
 #include "utils/net/AsioCoro.h"
 #include "utils/net/AsioSocketUtils.h"
+#include "io/validation.h"
 
 using namespace std::literals::chrono_literals;
 

@@ -193,7 +193,7 @@ TEST_CASE("C2AssetSync", "[c2test]") {
   FileProvider file_C_provider{file_C};
   std::string file_A_v2 = "hello from file A version 2";
   FileProvider file_Av2_provider{file_A_v2};
-  C2HeartbeatHandler hb_handler{std::make_shared<minifi::Configure>()};
+  C2HeartbeatHandler hb_handler{std::make_shared<minifi::ConfigureImpl>()};
 
   VerifyC2AssetSync harness;
   harness.setUrl("http://localhost:0/api/file/A.txt", &file_A_provider);

@@ -29,7 +29,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "concurrentqueue.h"
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"

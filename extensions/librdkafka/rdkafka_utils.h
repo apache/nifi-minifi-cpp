@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/gsl.h"
 #include "rdkafka.h"
 #include "utils/net/Ssl.h"

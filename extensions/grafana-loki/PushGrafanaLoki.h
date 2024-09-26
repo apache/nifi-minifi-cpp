@@ -32,7 +32,7 @@
 
 namespace org::apache::nifi::minifi::extensions::grafana::loki {
 
-class PushGrafanaLoki : public core::Processor {
+class PushGrafanaLoki : public core::ProcessorImpl {
  public:
   PushGrafanaLoki(const std::string& name, const utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
       : Processor(name, uuid),

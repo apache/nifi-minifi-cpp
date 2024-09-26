@@ -23,6 +23,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
+#include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::processors {
 

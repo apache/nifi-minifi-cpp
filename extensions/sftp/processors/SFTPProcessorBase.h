@@ -38,7 +38,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class SFTPProcessorBase : public core::Processor {
+class SFTPProcessorBase : public core::ProcessorImpl {
  public:
   SFTPProcessorBase(std::string_view name, const utils::Identifier& uuid);
   ~SFTPProcessorBase() override;

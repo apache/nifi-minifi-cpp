@@ -34,7 +34,7 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
@@ -42,7 +42,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class ListenHTTP : public core::Processor {
+class ListenHTTP : public core::ProcessorImpl {
  private:
   static constexpr std::string_view DEFAULT_BUFFER_SIZE_STR = "20000";
 
@@ -50,7 +50,7 @@ class ListenHTTP : public core::Processor {
   using FlowFileBufferPair = std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
 
   explicit ListenHTTP(std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }

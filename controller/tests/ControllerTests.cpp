@@ -34,6 +34,7 @@
 #include "controllers/SSLContextService.h"
 #include "utils/StringUtils.h"
 #include "state/UpdateController.h"
+#include "core/state/nodes/ResponseNodeLoader.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -205,10 +206,10 @@ class TestControllerSocketReporter : public c2::ControllerSocketReporter {
   }
 };
 
-class TestControllerServiceProvider : public core::controller::ControllerServiceProvider {
+class TestControllerServiceProvider : public core::controller::ControllerServiceProviderImpl {
  public:
   explicit TestControllerServiceProvider(std::shared_ptr<controllers::SSLContextService> ssl_context_service)
-    : core::controller::ControllerServiceProvider("TestControllerServiceProvider"),
+    : core::controller::ControllerServiceProviderImpl("TestControllerServiceProvider"),
       ssl_context_service_(std::move(ssl_context_service)) {
   }
   std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string&) const override {
@@ -243,7 +244,7 @@ class ControllerTestFixture {
   };
 
   ControllerTestFixture()
-    : configuration_(std::make_shared<minifi::Configure>()),
+    : configuration_(std::make_shared<minifi::ConfigureImpl>()),
       controller_(std::make_shared<TestStateController>()),
       update_sink_(std::make_unique<TestUpdateSink>(controller_)) {
     configuration_->set(minifi::Configure::controller_socket_host, "localhost");
@@ -253,7 +254,7 @@ class ControllerTestFixture {
     configuration_->set(minifi::Configure::nifi_security_client_pass_phrase, "abcdefgh");
     configuration_->set(minifi::Configure::nifi_security_client_ca_certificate, (minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "root-ca.pem").string());
     configuration_->set(minifi::Configure::controller_ssl_context_service, "SSLContextService");
-    ssl_context_service_ = std::make_shared<controllers::SSLContextService>("SSLContextService", configuration_);
+    ssl_context_service_ = std::make_shared<controllers::SSLContextServiceImpl>("SSLContextService", configuration_);
     ssl_context_service_->onEnable();
     controller_service_provider_ = std::make_unique<TestControllerServiceProvider>(ssl_context_service_);
     controller_socket_data_.host = "localhost";
@@ -482,7 +483,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[controllerTest
   }
 
   auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
-  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoaderImpl>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   reporter->initialize(configuration_, response_node_loader);
   initalizeControllerSocket(reporter);
 
@@ -505,7 +506,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test jstack getter", "[controllerTests]
   }
 
   auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
-  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoaderImpl>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   reporter->initialize(configuration_, response_node_loader);
   initalizeControllerSocket(reporter);
 
@@ -533,7 +534,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test debug bundle getter", "[controller
   }
 
   auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
-  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoaderImpl>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   reporter->initialize(configuration_, response_node_loader);
   initalizeControllerSocket(reporter);
 
@@ -547,7 +548,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test debug bundle is created to non-exi
   setConnectionType(ControllerTestFixture::ConnectionType::UNSECURE);
 
   auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
-  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoaderImpl>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   reporter->initialize(configuration_, response_node_loader);
   initalizeControllerSocket(reporter);
 
@@ -561,7 +562,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Debug bundle retrieval fails if target 
   setConnectionType(ControllerTestFixture::ConnectionType::UNSECURE);
 
   auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
-  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoaderImpl>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   reporter->initialize(configuration_, response_node_loader);
   initalizeControllerSocket(reporter);
 

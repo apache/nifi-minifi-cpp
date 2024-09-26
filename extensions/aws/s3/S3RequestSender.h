@@ -50,7 +50,7 @@
 #include "aws/s3/model/AbortMultipartUploadRequest.h"
 #include "aws/s3/model/AbortMultipartUploadResult.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/AWSInitializer.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {

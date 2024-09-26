@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -42,7 +42,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class PerformanceDataMonitor : public core::Processor {
+class PerformanceDataMonitor : public core::ProcessorImpl {
  public:
   static constexpr const char* JSON_FORMAT_STR = "JSON";
   static constexpr const char* OPEN_TELEMETRY_FORMAT_STR = "OpenTelemetry";

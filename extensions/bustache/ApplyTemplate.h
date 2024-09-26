@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::processors {
 /**
  * Applies a mustache template using incoming attributes as template parameters.
  */
-class ApplyTemplate : public core::Processor {
+class ApplyTemplate : public core::ProcessorImpl {
  public:
   explicit ApplyTemplate(std::string name, const utils::Identifier& uuid = {})
       : Processor(std::move(name), uuid) {}

@@ -1,10 +1,12 @@
 file(GLOB SOURCES
         src/*.cpp
         src/core/*.cpp
+        src/core/extension/*.cpp
         src/io/*.cpp
         src/http/*.cpp
         src/utils/*.cpp
-        src/utils/net/*.cpp)
+        src/utils/net/*.cpp
+        src/utils/file/*.cpp)
 
 add_library(minifi-utils STATIC ${SOURCES})
 target_include_directories(minifi-utils PUBLIC include)

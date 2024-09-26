@@ -26,10 +26,10 @@
 #include <utility>
 #include <vector>
 
-#include "PropertyDefinition.h"
+#include "core/PropertyDefinition.h"
 #include "core/Property.h"
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
 
 template<typename T>

@@ -34,14 +34,14 @@ namespace minifi = org::apache::nifi::minifi;
 std::atomic<bool> disabled;
 std::mutex control_mutex;
 
-class MockControllerService : public minifi::core::controller::ControllerService {
+class MockControllerService : public minifi::core::controller::ControllerServiceImpl {
  public:
   explicit MockControllerService(std::string_view name, const minifi::utils::Identifier &uuid)
-      : ControllerService(name, uuid) {
+      : ControllerServiceImpl(name, uuid) {
   }
 
   explicit MockControllerService(std::string_view name)
-      : ControllerService(name) {
+      : ControllerServiceImpl(name) {
   }
   MockControllerService() = default;
 
@@ -80,15 +80,15 @@ class MockControllerService : public minifi::core::controller::ControllerService
   std::string str;
 };
 
-class MockProcessor : public minifi::core::Processor {
+class MockProcessor : public minifi::core::ProcessorImpl {
  public:
   explicit MockProcessor(std::string_view name, const minifi::utils::Identifier &uuid)
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
     setTriggerWhenEmpty(true);
   }
 
   explicit MockProcessor(std::string_view name)
-      : Processor(name) {
+      : ProcessorImpl(name) {
     setTriggerWhenEmpty(true);
   }
 
@@ -117,7 +117,7 @@ class MockProcessor : public minifi::core::Processor {
       if (!disabled.load()) {
         REQUIRE(context.isControllerServiceEnabled(linked_service));
         REQUIRE(nullptr != service);
-        REQUIRE("pushitrealgood" == std::static_pointer_cast<MockControllerService>(service)->doSomething());
+        REQUIRE("pushitrealgood" == std::dynamic_pointer_cast<MockControllerService>(service)->doSomething());
       } else {
         REQUIRE_FALSE(context.isControllerServiceEnabled(linked_service));
       }

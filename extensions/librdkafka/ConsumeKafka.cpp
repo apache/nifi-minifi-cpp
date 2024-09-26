@@ -316,7 +316,7 @@ std::vector<std::pair<std::string, std::string>> ConsumeKafka::get_flowfile_attr
   return attributes_from_headers;
 }
 
-void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t& message) const {
+void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<core::FlowFile>& flow_file, const rd_kafka_message_t& message) const {
   // We do not currently support batching messages into a single flowfile
   flow_file->setAttribute(KAFKA_COUNT_ATTR, "1");
   const std::optional<std::string> message_key = utils::get_encoded_message_key(message, key_attr_encoding_attr_to_enum());
@@ -328,8 +328,8 @@ void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileReco
   flow_file->setAttribute(KAFKA_TOPIC_ATTR, rd_kafka_topic_name(message.rkt));
 }
 
-std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transform_pending_messages_into_flowfiles(core::ProcessSession& session) const {
-  std::vector<std::shared_ptr<FlowFileRecord>> flow_files_created;
+std::optional<std::vector<std::shared_ptr<core::FlowFile>>> ConsumeKafka::transform_pending_messages_into_flowfiles(core::ProcessSession& session) const {
+  std::vector<std::shared_ptr<core::FlowFile>> flow_files_created;
   for (const auto& message : pending_messages_) {
     std::string message_content = extract_message(*message);
     std::vector<std::pair<std::string, std::string>> attributes_from_headers = get_flowfile_attributes_from_message_header(*message);
@@ -337,7 +337,7 @@ std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transf
       utils::string::split(message_content, message_demarcator_) :
       std::vector<std::string>{ message_content }};
     for (auto& flowfile_content : split_message) {
-      std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session.create());
+      std::shared_ptr<core::FlowFile> flow_file = session.create();
       if (flow_file == nullptr) {
         logger_->log_error("Failed to create flowfile.");
         // Either transform all flowfiles or none
@@ -357,7 +357,7 @@ std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transf
 
 
 void ConsumeKafka::process_pending_messages(core::ProcessSession& session) {
-  std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> flow_files_created = transform_pending_messages_into_flowfiles(session);
+  std::optional<std::vector<std::shared_ptr<core::FlowFile>>> flow_files_created = transform_pending_messages_into_flowfiles(session);
   if (!flow_files_created) {
     return;
   }

@@ -21,29 +21,16 @@
 #include <string>
 #include <vector>
 
-#include "core/logging/Logger.h"
-#include "Module.h"
-#include "properties/Configure.h"
+#include "Extension.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
 class ExtensionManager {
-  ExtensionManager();
-
  public:
   static ExtensionManager& get();
 
-  bool initialize(const std::shared_ptr<Configure>& config);
-
-  void registerExtension(Extension& extension);
-  void unregisterExtension(Extension& extension);
-
- private:
-  std::vector<std::unique_ptr<Module>> modules_;
-
-  Module* active_module_ = nullptr;
-
-  static const std::shared_ptr<logging::Logger> logger_;
+  virtual void registerExtension(Extension& extension) = 0;
+  virtual void unregisterExtension(Extension& extension) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::extension

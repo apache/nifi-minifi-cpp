@@ -25,7 +25,7 @@
 #include "unit/TestRecord.h"
 #include "controllers/JsonRecordSetReader.h"
 #include "controllers/JsonRecordSetWriter.h"
-#include "core/Record.h"
+#include "minifi-cpp/core/Record.h"
 
 namespace org::apache::nifi::minifi::standard::test {
 

@@ -31,7 +31,7 @@
 namespace org::apache::nifi::minifi::azure::storage {
 
 namespace {
-class AzureBlobStorageInputStream : public io::InputStream {
+class AzureBlobStorageInputStream : public io::InputStreamImpl {
  public:
   explicit AzureBlobStorageInputStream(Azure::Storage::Blobs::Models::DownloadBlobResult&& result)
     : result_(std::move(result)) {

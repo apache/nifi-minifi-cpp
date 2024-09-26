@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,19 +16,4 @@
  */
 #pragma once
 
-#include "core/controller/ControllerService.h"
-
-#include "core/FlowFile.h"
-#include "core/ProcessSession.h"
-#include "Record.h"
-
-namespace org::apache::nifi::minifi::core {
-
-class RecordSetWriter : public controller::ControllerService {
- public:
-  using ControllerService::ControllerService;
-
-  virtual void write(const RecordSet& record_set, const std::shared_ptr<FlowFile>& flow_file, ProcessSession& session) = 0;
-};
-
-}  // namespace org::apache::nifi::minifi::core
+#include "minifi-cpp/agent/agent_version.h"

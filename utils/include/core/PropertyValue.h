@@ -130,7 +130,7 @@ struct Converter<T, std::enable_if_t<std::is_same_v<T, int > || std::is_same_v<T
 };
 
 template<typename T>
-struct Converter<T, std::enable_if_t<std::is_same_v<T, char* > || std::is_same_v<T, const char* >, void>> {
+struct Converter<T, std::enable_if_t<std::is_same_v<T, char* > || std::is_same_v<T, const char* > || (std::is_array_v<T> && std::is_same_v<std::remove_extent_t<T>, char>), void>> {
   void operator()(PropertyValue& self, const T& ref) {
     // translated these into strings
     self.operator=<std::string>(std::string(ref));

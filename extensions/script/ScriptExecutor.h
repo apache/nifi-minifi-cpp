@@ -20,15 +20,15 @@
 #include <string>
 #include <variant>
 
-#include "Core.h"
-#include "ProcessContext.h"
-#include "ProcessSession.h"
+#include "core/Core.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi::extensions::script {
 
-class ScriptExecutor : public minifi::core::CoreComponent {
+class ScriptExecutor : public minifi::core::CoreComponentImpl {
  public:
-  ScriptExecutor(const std::string_view name, const utils::Identifier& uuid) : core::CoreComponent(name, uuid) {}
+  ScriptExecutor(const std::string_view name, const utils::Identifier& uuid) : core::CoreComponentImpl(name, uuid) {}
 
   virtual void onTrigger(core::ProcessContext& context, core::ProcessSession& session) = 0;
   virtual void initialize(std::filesystem::path script_file,

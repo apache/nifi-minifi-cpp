@@ -25,7 +25,7 @@
 #include <sstream>
 #include <string>
 
-#include "Relationship.h"
+#include "core/Relationship.h"
 #include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
@@ -162,7 +162,7 @@ class MergeTestController : public TestController {
 
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
     auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    content_repo->initialize(std::make_shared<minifi::Configure>());
+    content_repo->initialize(std::make_shared<minifi::ConfigureImpl>());
 
     merge_content_processor_ = std::make_unique<minifi::processors::MergeContent>("mergecontent");
     merge_content_processor_->initialize();
@@ -173,7 +173,7 @@ class MergeTestController : public TestController {
     REQUIRE(logAttributeuuid);
 
     // output from merge processor to log attribute
-    output_ = std::make_unique<minifi::Connection>(repo, content_repo, "logattributeconnection");
+    output_ = std::make_unique<minifi::ConnectionImpl>(repo, content_repo, "logattributeconnection");
     output_->addRelationship(minifi::processors::MergeContent::Merge);
     output_->setSource(merge_content_processor_.get());
     output_->setDestination(log_attribute_processor_.get());
@@ -181,7 +181,7 @@ class MergeTestController : public TestController {
     output_->setDestinationUUID(logAttributeuuid);
     merge_content_processor_->addConnection(output_.get());
     // input to merge processor
-    input_ = std::make_unique<minifi::Connection>(repo, content_repo, "mergeinput");
+    input_ = std::make_unique<minifi::ConnectionImpl>(repo, content_repo, "mergeinput");
     input_->setDestination(merge_content_processor_.get());
     input_->setDestinationUUID(processoruuid);
     merge_content_processor_->addConnection(input_.get());
@@ -193,7 +193,7 @@ class MergeTestController : public TestController {
     log_attribute_processor_->incrementActiveTasks();
     log_attribute_processor_->setScheduledState(core::ScheduledState::RUNNING);
 
-    context_ = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(merge_content_processor_.get()), nullptr, repo, repo, content_repo);
+    context_ = std::make_shared<core::ProcessContextImpl>(std::make_shared<core::ProcessorNodeImpl>(merge_content_processor_.get()), nullptr, repo, repo, content_repo);
 
     for (size_t i = 0; i < 6; ++i) {
       flowFileContents_[i] = utils::string::repeat(std::to_string(i), 32);
@@ -227,7 +227,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]")
   context_->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
   context_->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // Generate 6 flowfiles, first three merged to one, second three merged to one
   for (const int i : {0, 2, 5, 4, 1, 3}) {
     const auto flow = sessionGenFlowFile.create();
@@ -246,10 +246,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]")
     input_->put(flow);
   }
 
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -288,7 +288,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefil
   context_->setProperty(minifi::processors::MergeContent::Footer, FOOTER_FILE);
   context_->setProperty(minifi::processors::MergeContent::Demarcator, DEMARCATOR_FILE);
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // Generate 6 flowfiles, first three merged to one, second three merged to one
   for (const int i : {0, 2, 5, 4, 1, 3}) {
     const auto flow = sessionGenFlowFile.create();
@@ -308,10 +308,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefil
   }
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -345,7 +345,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
   context_->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
   context_->setProperty(minifi::processors::MergeContent::MaxBinAge, "1 sec");
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // Generate 5 flowfiles, first threes merged to one, the other two merged to one
   for (const int i : {0, 2, 5, 1, 3}) {
     const auto flow = sessionGenFlowFile.create();
@@ -365,16 +365,16 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
   }
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 5; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   std::this_thread::sleep_for(std::chrono::milliseconds(2000));
   {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -408,7 +408,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileBinPack", "[mergefiletest4]") {
   context_->setProperty(minifi::processors::MergeContent::MinSize, "96");
   context_->setProperty(minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
@@ -419,10 +419,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileBinPack", "[mergefiletest4]") {
   }
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -452,7 +452,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileTar", "[mergefiletest4]") {
   context_->setProperty(minifi::processors::MergeContent::MinSize, "96");
   context_->setProperty(minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
@@ -463,10 +463,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileTar", "[mergefiletest4]") {
   }
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -503,7 +503,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileZip", "[mergefiletest5]") {
   context_->setProperty(minifi::processors::MergeContent::MinSize, "96");
   context_->setProperty(minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
@@ -514,10 +514,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileZip", "[mergefiletest5]") {
   }
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -559,7 +559,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileOnAttribute", "[mergefiletest5]"
   context_->setProperty(minifi::processors::MergeContent::MinEntries, "3");
   context_->setProperty(minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // Generate 6 flowfiles, even files are merged to one, odd files are merged to an other
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
@@ -573,10 +573,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileOnAttribute", "[mergefiletest5]"
   }
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -601,7 +601,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping Only C
   context_->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
   context_->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
 
   // Generate 3 flowfiles merging all into one
   for (const int i : {1, 2, 0}) {
@@ -626,10 +626,10 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping Only C
     input_->put(flow);
   }
 
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 3; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -651,7 +651,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
   context_->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
   context_->setProperty(minifi::processors::MergeContent::AttributeStrategy, minifi::processors::merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE);
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // Generate 3 flowfiles merging all into one
   for (const int i : {1, 2, 0}) {
     const auto flow = sessionGenFlowFile.create();
@@ -675,10 +675,10 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
     input_->put(flow);
   }
 
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 3; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -709,7 +709,7 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   std::string footer = "}END";
   std::string demarcator = "_";
 
-  core::ProcessSession session(context);
+  core::ProcessSessionImpl session(context);
 
   minifi::PayloadSerializer payloadSerializer([&] (const std::shared_ptr<core::FlowFile>& ff, const minifi::io::InputStreamCallback& cb) {
     return session.read(ff, cb);
@@ -768,10 +768,10 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
 
   const auto expected = utils::span_to<std::string>(utils::as_span<const char>(result->getBuffer()));
 
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
   merge_content_processor->onSchedule(*context, *factory);
   for (int i = 0; i < 3; i++) {
-    auto mergeSession = std::make_shared<core::ProcessSession>(context);
+    auto mergeSession = std::make_shared<core::ProcessSessionImpl>(context);
     merge_content_processor->onTrigger(*context, *mergeSession);
     mergeSession->commit();
   }
@@ -800,7 +800,7 @@ TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") 
   context_->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
   context_->setProperty(minifi::processors::BinFiles::BatchSize, "3");
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // enqueue 5 (five) flowFiles
   for (const int i : {0, 1, 2, 3, 4}) {
     const auto flow = sessionGenFlowFile.create();
@@ -810,11 +810,11 @@ TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") 
   }
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   // two trigger is enough to process all five flowFiles
   for (int i = 0; i < 2; i++) {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
@@ -859,7 +859,7 @@ TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testM
   context_->setProperty(minifi::processors::BinFiles::MinEntries, "3");
   context_->setProperty(minifi::processors::BinFiles::MaxEntries, "3");
 
-  core::ProcessSession sessionGenFlowFile(context_);
+  core::ProcessSessionImpl sessionGenFlowFile(context_);
   // enqueue 6 (six) flowFiles
   for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
@@ -869,11 +869,11 @@ TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testM
   }
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
   merge_content_processor_->onSchedule(*context_, *factory);
   // a single trigger is enough to process all five flowFiles
   {
-    auto session = std::make_shared<core::ProcessSession>(context_);
+    auto session = std::make_shared<core::ProcessSessionImpl>(context_);
     merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }

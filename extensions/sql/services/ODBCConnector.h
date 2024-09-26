@@ -21,7 +21,7 @@
 #include <string>
 #include <utility>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/controller/ControllerService.h"
 
 #include "DatabaseService.h"

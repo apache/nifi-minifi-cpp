@@ -32,7 +32,7 @@ class ResponseNodeLoaderTestFixture {
  public:
   ResponseNodeLoaderTestFixture()
     : root_(std::make_unique<minifi::core::ProcessGroup>(minifi::core::ProcessGroupType::ROOT_PROCESS_GROUP, "root")),
-      configuration_(std::make_shared<minifi::Configure>()),
+      configuration_(std::make_shared<minifi::ConfigureImpl>()),
       prov_repo_(std::make_shared<TestRepository>()),
       ff_repository_(std::make_shared<TestRepository>()),
       content_repo_(std::make_shared<minifi::core::repository::VolatileContentRepository>()),
@@ -57,7 +57,7 @@ class ResponseNodeLoaderTestFixture {
   }
 
   void addConnection(const std::string& connection_name, const std::string& relationship_name, const minifi::utils::Identifier& src_uuid, const minifi::utils::Identifier& dst_uuid) {
-    auto connection = std::make_unique<minifi::Connection>(ff_repository_, content_repo_, connection_name);
+    auto connection = std::make_unique<minifi::ConnectionImpl>(ff_repository_, content_repo_, connection_name);
     connection->addRelationship({relationship_name, "d"});
     connection->setDestinationUUID(src_uuid);
     connection->setSourceUUID(dst_uuid);
@@ -69,7 +69,7 @@ class ResponseNodeLoaderTestFixture {
   std::shared_ptr<TestRepository> prov_repo_;
   std::shared_ptr<TestRepository> ff_repository_;
   std::shared_ptr<minifi::core::ContentRepository> content_repo_;
-  minifi::state::response::ResponseNodeLoader response_node_loader_;
+  minifi::state::response::ResponseNodeLoaderImpl response_node_loader_;
 };
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load non-existent response node", "[responseNodeLoaderTest]") {

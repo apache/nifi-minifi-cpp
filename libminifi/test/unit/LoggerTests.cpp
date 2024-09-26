@@ -25,7 +25,7 @@
 #include "unit/Catch.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/ZlibStream.h"
-#include "StreamPipe.h"
+#include "io/StreamPipe.h"
 #include "unit/TestUtils.h"
 #include "utils/span.h"
 #include "utils/net/AsioSocketUtils.h"

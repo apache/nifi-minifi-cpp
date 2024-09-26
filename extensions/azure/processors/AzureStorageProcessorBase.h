@@ -26,7 +26,7 @@
 #include <utility>
 #include <tuple>
 
-#include "PropertyDefinition.h"
+#include "core/PropertyDefinition.h"
 #include "core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Processor.h"
@@ -35,7 +35,7 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class AzureStorageProcessorBase : public core::Processor {
+class AzureStorageProcessorBase : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr auto AzureStorageCredentialsService = core::PropertyDefinitionBuilder<>::createProperty("Azure Storage Credentials Service")
       .withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
@@ -43,7 +43,7 @@ class AzureStorageProcessorBase : public core::Processor {
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({AzureStorageCredentialsService});
 
   AzureStorageProcessorBase(std::string_view name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
-    : core::Processor(name, uuid),
+    : core::ProcessorImpl(name, uuid),
       logger_(logger) {
   }
 

@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,7 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include "minifi-cpp/core/Property.h"
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+#include "agent_docs.h"
+
+namespace org::apache::nifi::minifi {
+
+struct BundleDetails {
+  std::string artifact;
+  std::string group;
+  std::string version;
+};
+
+class ExternalBuildDescription {
+ private:
+  static std::vector<BundleDetails> &getExternal();
+
+  static std::map<std::string, Components> &getExternalMappings();
+
+ public:
+  static void addExternalComponent(const BundleDetails& details, const ClassDescription& description);
+
+  static Components getClassDescriptions(const std::string &group);
+
+  static std::vector<BundleDetails> getExternalGroups();
+};
+
+}  // namespace org::apache::nifi::minifi

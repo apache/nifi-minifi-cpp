@@ -17,7 +17,7 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "utils/FlatMap.h"
+#include "minifi-cpp/utils/FlatMap.h"
 
 
 TEST_CASE("FlatMap operator[]", "[flatmap::subscript]") {

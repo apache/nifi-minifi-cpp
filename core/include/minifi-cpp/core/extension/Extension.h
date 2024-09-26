@@ -21,29 +21,15 @@
 #include <vector>
 #include <string>
 
-#include "properties/Configure.h"
+#include "minifi-cpp/properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace extension {
-
-class Extension;
+namespace org::apache::nifi::minifi::core::extension {
 
 using ExtensionConfig = std::shared_ptr<org::apache::nifi::minifi::Configure>;
-using ExtensionInit = bool(*)(Extension&, const ExtensionConfig&);
-using ExtensionInitImpl = bool(*)(const ExtensionConfig&);
-using ExtensionDeinitImpl = void(*)();
-
-class ExtensionInitializer;
 
 class Extension {
-  friend class ExtensionInitializer;
  public:
-  explicit Extension(std::string name, ExtensionInitImpl init_impl, ExtensionDeinitImpl deinit_impl, ExtensionInit init);
-  virtual ~Extension();
+  virtual ~Extension() = default;
 
   /**
    * Ensures that the extension is initialized at most once, and schedules
@@ -54,51 +40,8 @@ class Extension {
    * @param config
    * @return True if the initialization succeeded
    */
-  bool initialize(const ExtensionConfig& config) {
-    return init_(*this, config);
-  }
-
-  const std::string& getName() const {
-    return name_;
-  }
-
- private:
-  std::string name_;
-  /**
-   * Actual implementation of the initialization logic.
-   */
-  ExtensionInitImpl init_impl_;
-  /**
-   * Actual implementation of the deinitialization logic.
-   */
-  ExtensionDeinitImpl deinit_impl_;
-
-  ExtensionInit init_;
+  virtual bool initialize(const ExtensionConfig& config) = 0;
+  virtual const std::string& getName() const = 0;
 };
 
-class ExtensionInitializer {
- public:
-  explicit ExtensionInitializer(Extension& extension, const ExtensionConfig& config);
-  ~ExtensionInitializer();
-
- private:
-  Extension& extension_;
-};
-
-#define REGISTER_EXTENSION(name, init, deinit) \
-  static org::apache::nifi::minifi::core::extension::Extension extension_registrar(name, init, deinit, \
-  [] (org::apache::nifi::minifi::core::extension::Extension& extension, const org::apache::nifi::minifi::core::extension::ExtensionConfig& config) -> bool { \
-    try {                             \
-      static org::apache::nifi::minifi::core::extension::ExtensionInitializer initializer(extension, config);                                                  \
-      return true; \
-    } catch (...) {                   \
-      return false;                                  \
-    }                                 \
-  })
-
-}  // namespace extension
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::extension

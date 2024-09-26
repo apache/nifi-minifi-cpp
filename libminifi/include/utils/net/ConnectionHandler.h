@@ -19,8 +19,8 @@
 
 #include <asio/read.hpp>
 
-#include "AsioCoro.h"
-#include "AsioSocketUtils.h"
+#include "utils/net/AsioCoro.h"
+#include "utils/net/AsioSocketUtils.h"
 #include "ConnectionHandlerBase.h"
 
 namespace org::apache::nifi::minifi::utils::net {

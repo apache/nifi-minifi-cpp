@@ -25,7 +25,7 @@
 #include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "../utils/gsl.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -56,7 +56,7 @@ class SwappingFlowFileTestRepo : public TestFlowRepository, public minifi::SwapM
     for (const auto& ff : flow_files) {
       ids.push_back(minifi::SwappedFlowFile{ff->getUUID(), ff->getPenaltyExpiration()});
       minifi::io::BufferStream output;
-      std::static_pointer_cast<minifi::FlowFileRecord>(ff)->Serialize(output);
+      std::dynamic_pointer_cast<minifi::FlowFileRecord>(ff)->Serialize(output);
       Put(ff->getUUIDStr().c_str(), reinterpret_cast<const uint8_t*>(output.getBuffer().data()), output.size());
     }
     swap_events_.push_back({Store, ids});
@@ -209,7 +209,7 @@ class SwapTestController : public TestController {
 
   void pushAll(std::initializer_list<unsigned> seconds) {
     for (auto sec : seconds) {
-      auto ff = std::static_pointer_cast<core::FlowFile>(std::make_shared<minifi::FlowFileRecord>());
+      auto ff = std::static_pointer_cast<core::FlowFile>(std::make_shared<minifi::FlowFileRecordImpl>());
       ff->setPenaltyExpiration(Timepoint{std::chrono::seconds{sec}});
       queue_->push(std::move(ff));
     }
@@ -236,7 +236,7 @@ TEST_CASE("Setting swap threshold sets underlying queue limits", "[SwapTest1]") 
   const size_t min_size = target_size / 2;
   const size_t max_size = target_size * 3 / 2;
 
-  minifi::Connection conn(nullptr, nullptr, "");
+  minifi::ConnectionImpl conn(nullptr, nullptr, "");
   conn.setSwapThreshold(target_size);
   REQUIRE(utils::FlowFileQueueTestAccessor::get_min_size_(utils::ConnectionTestAccessor::get_queue_(conn)) == min_size);
   REQUIRE(utils::FlowFileQueueTestAccessor::get_target_size_(utils::ConnectionTestAccessor::get_queue_(conn)) == target_size);

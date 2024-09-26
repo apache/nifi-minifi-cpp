@@ -85,17 +85,17 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   minifi::utils::Identifier invokehttp_uuid = invokehttp->getUUID();
   REQUIRE(invokehttp_uuid);
 
-  auto node = std::make_shared<core::ProcessorNode>(invokehttp.get());
-  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNodeImpl>(invokehttp.get());
+  auto context = std::make_shared<core::ProcessContextImpl>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
   context->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL, TestHTTPServer::URL);
 
-  auto session = std::make_shared<core::ProcessSession>(context);
+  auto session = std::make_shared<core::ProcessSessionImpl>(context);
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  auto factory2 = std::make_shared<core::ProcessSessionFactory>(context);
+  auto factory2 = std::make_shared<core::ProcessSessionFactoryImpl>(context);
   invokehttp->onSchedule(*context, *factory2);
   invokehttp->onTrigger(*context, *session);
 
@@ -143,14 +143,14 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   minifi::utils::Identifier invokehttp_uuid = invokehttp->getUUID();
   REQUIRE(invokehttp_uuid);
 
-  auto configuration = std::make_shared<minifi::Configure>();
+  auto configuration = std::make_shared<minifi::ConfigureImpl>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
 
-  auto connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
+  auto connection = std::make_shared<minifi::ConnectionImpl>(repo, content_repo, "getfileCreate2Connection");
   connection->addRelationship(core::Relationship("success", "description"));
 
-  auto connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "listenhttp");
+  auto connection2 = std::make_shared<minifi::ConnectionImpl>(repo, content_repo, "listenhttp");
 
   connection2->addRelationship(core::Relationship("No Retry", "description"));
 
@@ -164,27 +164,27 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   invokehttp->addConnection(connection.get());
   invokehttp->addConnection(connection2.get());
 
-  auto node = std::make_shared<core::ProcessorNode>(listenhttp.get());
-  auto node2 = std::make_shared<core::ProcessorNode>(invokehttp.get());
-  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
-  auto context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNodeImpl>(listenhttp.get());
+  auto node2 = std::make_shared<core::ProcessorNodeImpl>(invokehttp.get());
+  auto context = std::make_shared<core::ProcessContextImpl>(node, nullptr, repo, repo, content_repo);
+  auto context2 = std::make_shared<core::ProcessContextImpl>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8680");
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
 
   context2->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
   context2->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL, "http://localhost:8680/testytesttest");
-  auto session = std::make_shared<core::ProcessSession>(context);
-  auto session2 = std::make_shared<core::ProcessSession>(context2);
+  auto session = std::make_shared<core::ProcessSessionImpl>(context);
+  auto session2 = std::make_shared<core::ProcessSessionImpl>(context2);
 
   REQUIRE(listenhttp->getName() == "listenhttp");
 
-  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+  auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
 
   std::shared_ptr<core::FlowFile> record;
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  auto factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
+  auto factory2 = std::make_shared<core::ProcessSessionFactoryImpl>(context2);
   invokehttp->onSchedule(*context2, *factory2);
   invokehttp->onTrigger(*context2, *session2);
 

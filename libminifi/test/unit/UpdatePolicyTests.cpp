@@ -29,7 +29,7 @@
 
 TEST_CASE("TestEmptyPolicy", "[test1]") {
   auto controller = std::make_shared<minifi::controllers::UpdatePolicyControllerService>("TestService");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   controller->initialize();
   controller->onEnable();
   REQUIRE(false == controller->canUpdate("anyproperty"));
@@ -37,7 +37,7 @@ TEST_CASE("TestEmptyPolicy", "[test1]") {
 
 TEST_CASE("TestAllowAll", "[test1]") {
   auto controller = std::make_shared<minifi::controllers::UpdatePolicyControllerService>("TestService");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   controller->initialize();
   controller->setProperty(minifi::controllers::UpdatePolicyControllerService::AllowAllProperties, "true");
   controller->onEnable();
@@ -46,7 +46,7 @@ TEST_CASE("TestAllowAll", "[test1]") {
 
 TEST_CASE("TestAllowAllFails", "[test1]") {
   auto controller = std::make_shared<minifi::controllers::UpdatePolicyControllerService>("TestService");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   controller->initialize();
   controller->setProperty(minifi::controllers::UpdatePolicyControllerService::AllowAllProperties, "false");
   controller->onEnable();
@@ -55,7 +55,7 @@ TEST_CASE("TestAllowAllFails", "[test1]") {
 
 TEST_CASE("TestEnableProperty", "[test1]") {
   auto controller = std::make_shared<minifi::controllers::UpdatePolicyControllerService>("TestService");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   controller->initialize();
   controller->setProperty(minifi::controllers::UpdatePolicyControllerService::AllowAllProperties, "false");
   controller->setProperty(minifi::controllers::UpdatePolicyControllerService::AllowedProperties, "anyproperty");
@@ -65,7 +65,7 @@ TEST_CASE("TestEnableProperty", "[test1]") {
 
 TEST_CASE("TestDisableProperty", "[test1]") {
   auto controller = std::make_shared<minifi::controllers::UpdatePolicyControllerService>("TestService");
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   controller->initialize();
   controller->setProperty(minifi::controllers::UpdatePolicyControllerService::AllowAllProperties, "true");
   controller->setProperty(minifi::controllers::UpdatePolicyControllerService::DisallowedProperties, "anyproperty");

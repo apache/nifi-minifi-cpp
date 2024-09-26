@@ -81,7 +81,7 @@ bool ProvenanceRepository::getElements(std::vector<std::shared_ptr<core::Seriali
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     if (max_size >= requested_batch)
       break;
-    auto eventRead = std::make_shared<ProvenanceEventRecord>();
+    auto eventRead = ProvenanceEventRecord::create();
     std::string key = it->key().ToString();
     io::BufferStream stream(gsl::make_span(it->value()).as_span<const std::byte>());
     if (eventRead->deserialize(stream)) {

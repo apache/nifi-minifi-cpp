@@ -17,7 +17,7 @@
  */
 
 #include "SociConnectors.h"
-#include "logging/LoggerFactory.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::sql {
 

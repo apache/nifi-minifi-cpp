@@ -35,7 +35,10 @@
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "unit/TestUtils.h"
+#include "core/ProcessorNode.h"
+#include "core/repository/FileSystemRepository.h"
 
+using ConnectionImpl = minifi::ConnectionImpl;
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
 
@@ -43,9 +46,9 @@ using minifi::test::utils::verifyEventHappenedInPollTime;
 
 namespace {
 
-class TestProcessor : public minifi::core::Processor {
+class TestProcessor : public minifi::core::ProcessorImpl {
  public:
-  using Processor::Processor;
+  using ProcessorImpl::ProcessorImpl;
 
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
@@ -62,20 +65,20 @@ struct TestFlow{
     auto processor = processorGenerator(mainProcUUID());
     {
       processor_ = processor.get();
-      auto node = std::make_shared<core::ProcessorNode>(processor_);
-      processorContext = std::make_shared<core::ProcessContext>(node, nullptr, prov_repo, ff_repository, content_repo);
+      auto node = std::make_shared<core::ProcessorNodeImpl>(processor_);
+      processorContext = std::make_shared<core::ProcessContextImpl>(node, nullptr, prov_repo, ff_repository, content_repo);
     }
 
     // setup INPUT processor
     {
       inputProcessor = std::make_shared<TestProcessor>("source", inputProcUUID());
-      auto node = std::make_shared<core::ProcessorNode>(inputProcessor.get());
-      inputContext = std::make_shared<core::ProcessContext>(node, nullptr, prov_repo,
+      auto node = std::make_shared<core::ProcessorNodeImpl>(inputProcessor.get());
+      inputContext = std::make_shared<core::ProcessContextImpl>(node, nullptr, prov_repo,
                                                             ff_repository, content_repo);
     }
 
     // setup Input Connection
-    auto input = std::make_unique<Connection>(ff_repository, content_repo, "Input", inputConnUUID());
+    auto input = std::make_unique<ConnectionImpl>(ff_repository, content_repo, "Input", inputConnUUID());
     {
       input_ = input.get();
       input->addRelationship({"input", "d"});
@@ -85,7 +88,7 @@ struct TestFlow{
     }
 
     // setup Output Connection
-    auto output = std::make_unique<Connection>(ff_repository, content_repo, "Output", outputConnUUID());
+    auto output = std::make_unique<ConnectionImpl>(ff_repository, content_repo, "Output", outputConnUUID());
     {
       output_ = output.get();
       output->addRelationship(relationshipToOutput);
@@ -102,12 +105,12 @@ struct TestFlow{
 
     // prepare Merge Processor for execution
     processor_->setScheduledState(core::ScheduledState::RUNNING);
-    process_session_factory_ = std::make_unique<core::ProcessSessionFactory>(processorContext);
+    process_session_factory_ = std::make_unique<core::ProcessSessionFactoryImpl>(processorContext);
     processor_->onSchedule(*processorContext, *process_session_factory_);
   }
   std::shared_ptr<core::FlowFile> write(const std::string& data) {
     minifi::io::BufferStream stream(data);
-    core::ProcessSession sessionGenFlowFile(inputContext);
+    core::ProcessSessionImpl sessionGenFlowFile(inputContext);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(stream, flow);
     REQUIRE(flow->getResourceClaim()->getFlowFileRecordOwnedCount() == 1);
@@ -116,10 +119,10 @@ struct TestFlow{
     return flow;
   }
   std::string read(const std::shared_ptr<core::FlowFile>& file) {
-    return to_string(core::ProcessSession{processorContext}.readBuffer(file));
+    return to_string(core::ProcessSessionImpl{processorContext}.readBuffer(file));
   }
   void trigger() {
-    auto session = std::make_shared<core::ProcessSession>(processorContext);
+    auto session = std::make_shared<core::ProcessSessionImpl>(processorContext);
     processor_->onTrigger(*processorContext, *session);
     session->commit();
   }
@@ -171,7 +174,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
   auto dir = testController.createTempDirectory();
 
-  auto config = std::make_shared<minifi::Configure>();
+  auto config = std::make_shared<minifi::ConfigureImpl>();
   config->setHome(dir);
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
@@ -250,9 +253,9 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   }
 }
 
-class ContentUpdaterProcessor : public core::Processor {
+class ContentUpdaterProcessor : public core::ProcessorImpl {
  public:
-  ContentUpdaterProcessor(std::string_view name, const utils::Identifier& id) : Processor(name, id) {}
+  ContentUpdaterProcessor(std::string_view name, const utils::Identifier& id) : ProcessorImpl(name, id) {}
 
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
@@ -285,7 +288,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
 
   auto dir = testController.createTempDirectory();
 
-  auto config = std::make_shared<minifi::Configure>();
+  auto config = std::make_shared<minifi::ConfigureImpl>();
   config->setHome(dir);
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());

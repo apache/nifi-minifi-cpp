@@ -18,7 +18,7 @@
 #include "properties/Decryptor.h"
 #include "unit/Catch.h"
 #include "unit/TestBase.h"
-#include "StringUtils.h"
+#include "utils/StringUtils.h"
 #include "properties/Configure.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -88,7 +88,7 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
   utils::crypto::Bytes encryption_key = utils::string::from_hex("5506c28d0fe265299e294a4c766b723a48986764953e93d38b3c627176fd10ed");
   minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
 
-  minifi::Configure configuration{decryptor};
+  minifi::ConfigureImpl configuration{decryptor};
   std::filesystem::path resources_dir{TEST_RESOURCES};
   configuration.setHome(resources_dir);
   configuration.loadConfigureFile("encrypted.minifi.properties");

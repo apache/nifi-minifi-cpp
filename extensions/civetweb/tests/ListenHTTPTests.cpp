@@ -119,7 +119,7 @@ class ListenHTTPTestsFixture {
   }
 
   void create_ssl_context_service(const char* ca, const char* client_cert) {
-    auto config = std::make_shared<minifi::Configure>();
+    auto config = std::make_shared<minifi::ConfigureImpl>();
     auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
     if (ca != nullptr) {
       config->set(minifi::Configure::nifi_security_client_ca_certificate, (executable_dir / "resources" / ca).string());
@@ -129,7 +129,7 @@ class ListenHTTPTestsFixture {
       config->set(minifi::Configure::nifi_security_client_private_key, (executable_dir / "resources" / client_cert).string());
       config->set(minifi::Configure::nifi_security_client_pass_phrase, "Password12");
     }
-    ssl_context_service = std::make_shared<minifi::controllers::SSLContextService>("SSLContextService", config);
+    ssl_context_service = std::make_shared<minifi::controllers::SSLContextServiceImpl>("SSLContextService", config);
     ssl_context_service->onEnable();
   }
 

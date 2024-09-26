@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
-#define LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
+#pragma once
 
 // The Windows version of pyconfig.h (https://github.com/python/cpython/blob/3.10/PC/pyconfig.h, also on main as of 2022-08-18)
 // rather unhelpfully #define's COMPILER as the detected compiler version.  Since we have a COMPILER variable below, we need to #undef it
@@ -25,12 +24,9 @@
 
 #include <string>
 #include <vector>
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class AgentBuild {
  public:
@@ -44,9 +40,4 @@ class AgentBuild {
   static std::vector<std::string> getExtensions();
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
+}  // namespace namespace org::apache::nifi::minifi

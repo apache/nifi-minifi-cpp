@@ -25,7 +25,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/state/nodes/MetricsBase.h"
 #include "core/Core.h"
 #include "core/OutputAttributeDefinition.h"
 #include "core/Processor.h"

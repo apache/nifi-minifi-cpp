@@ -37,27 +37,27 @@ ProcessContextBuilderImpl::ProcessContextBuilderImpl(std::string_view name)
 
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilderImpl::withProvider(core::controller::ControllerServiceProvider* controller_service_provider) {
   controller_service_provider_ = controller_service_provider;
-  return this->shared_from_this();
+  return sharedFromThis<ProcessContextBuilder>();
 }
 
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilderImpl::withProvenanceRepository(const std::shared_ptr<core::Repository> &repo) {
   prov_repo_ = repo;
-  return this->shared_from_this();
+  return sharedFromThis<ProcessContextBuilder>();
 }
 
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilderImpl::withFlowFileRepository(const std::shared_ptr<core::Repository> &repo) {
   flow_repo_ = repo;
-  return this->shared_from_this();
+  return sharedFromThis<ProcessContextBuilder>();
 }
 
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilderImpl::withContentRepository(const std::shared_ptr<core::ContentRepository> &repo) {
   content_repo_ = repo;
-  return this->shared_from_this();
+  return sharedFromThis<ProcessContextBuilder>();
 }
 
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilderImpl::withConfiguration(const std::shared_ptr<minifi::Configure> &configuration) {
   configuration_ = configuration;
-  return this->shared_from_this();
+  return sharedFromThis<ProcessContextBuilder>();
 }
 
 std::shared_ptr<core::ProcessContext> ProcessContextBuilderImpl::build(const std::shared_ptr<ProcessorNode> &processor) {

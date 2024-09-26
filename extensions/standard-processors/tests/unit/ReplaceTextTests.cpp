@@ -165,7 +165,7 @@ TEST_CASE("Substitute Variables works correctly in ReplaceText", "[applyReplacem
   replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
   replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::SUBSTITUTE_VARIABLES);
 
-  const auto flow_file = std::make_shared<minifi::FlowFileRecord>();
+  const auto flow_file = std::make_shared<minifi::FlowFileRecordImpl>();
   flow_file->setAttribute("color", "green");
   flow_file->setAttribute("food", "eggs and ham");
 

@@ -50,7 +50,7 @@ REGISTER_RESOURCE(FirstDummyMetricsPublisher, DescriptionOnly);
 REGISTER_RESOURCE(SecondDummyMetricsPublisher, DescriptionOnly);
 
 TEST_CASE("Test single metrics publisher store", "[MetricsPublisherStore]") {
-  auto configuration = std::make_shared<minifi::Configure>();
+  auto configuration = std::make_shared<minifi::ConfigureImpl>();
   configuration->set(Configuration::nifi_metrics_publisher_class, "FirstDummyMetricsPublisher");
   minifi::state::MetricsPublisherStore metrics_publisher_store(configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   metrics_publisher_store.initialize(nullptr, nullptr);
@@ -59,7 +59,7 @@ TEST_CASE("Test single metrics publisher store", "[MetricsPublisherStore]") {
 }
 
 TEST_CASE("Test multiple metrics publisher stores", "[MetricsPublisherStore]") {
-  auto configuration = std::make_shared<minifi::Configure>();
+  auto configuration = std::make_shared<minifi::ConfigureImpl>();
   configuration->set(Configuration::nifi_metrics_publisher_class, "FirstDummyMetricsPublisher,SecondDummyMetricsPublisher");
   minifi::state::MetricsPublisherStore metrics_publisher_store(configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   metrics_publisher_store.initialize(nullptr, nullptr);

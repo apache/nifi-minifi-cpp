@@ -27,7 +27,7 @@
 
 #include "utils/AWSInitializer.h"
 #include "core/controller/ControllerService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
@@ -37,14 +37,14 @@ class AWSCredentialsServiceTestAccessor;
 
 namespace org::apache::nifi::minifi::aws::controllers {
 
-class AWSCredentialsService : public core::controller::ControllerService {
+class AWSCredentialsService : public core::controller::ControllerServiceImpl {
  public:
   explicit AWSCredentialsService(std::string_view name, const minifi::utils::Identifier &uuid = {})
-      : ControllerService(name, uuid) {
+      : ControllerServiceImpl(name, uuid) {
   }
 
   explicit AWSCredentialsService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(name) {
+      : ControllerServiceImpl(name) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Manages the Amazon Web Services (AWS) credentials for an AWS account. This allows for multiple "

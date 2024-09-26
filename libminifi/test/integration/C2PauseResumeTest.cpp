@@ -121,7 +121,7 @@ TEST_CASE("C2PauseResumeTest", "[c2test]") {
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "C2PauseResumeTest.yml";
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_path.string());
 

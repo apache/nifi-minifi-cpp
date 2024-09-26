@@ -26,8 +26,6 @@ namespace org::apache::nifi::minifi::core {
 
 class RecordSetWriter : public virtual controller::ControllerService {
  public:
-  using ControllerService::ControllerService;
-
   virtual void write(const RecordSet& record_set, const std::shared_ptr<FlowFile>& flow_file, ProcessSession& session) = 0;
 };
 

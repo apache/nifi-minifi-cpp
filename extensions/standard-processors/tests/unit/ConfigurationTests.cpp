@@ -19,7 +19,7 @@
 #include "unit/Catch.h"
 
 #include "properties/Configuration.h"
-#include "Environment.h"
+#include "utils/Environment.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -65,7 +65,7 @@ TEST_CASE("Configuration can fix misconfigured timeperiod<->integer validated pr
       << "nifi.c2.agent.heartbeat.period=1min\n"
       << "nifi.administrative.yield.duration=30000\n";
   auto properties_file_time_after_creation = std::filesystem::last_write_time(properties_path);
-  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
+  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::ConfigureImpl>();
 
   configure->loadConfigureFile(properties_path);
   CHECK(configure->get("nifi.c2.agent.heartbeat.period") == "60000");
@@ -109,7 +109,7 @@ TEST_CASE("Configuration can fix misconfigured datasize<->integer validated prop
     properties_file.close();
   }
   auto properties_file_time_after_creation = std::filesystem::last_write_time(properties_path);
-  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
+  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::ConfigureImpl>();
 
   configure->loadConfigureFile(properties_path, "nifi.log.");
   CHECK(configure->get("appender.rolling.max_file_size") == "6000 B");
@@ -146,7 +146,7 @@ TEST_CASE("Configuration can fix misconfigured validated properties within envir
       << "compression.cached.log.max.size=${SOME_VARIABLE}\n"
       << "compression.compressed.log.max.size=3000\n";
   auto properties_file_time_after_creation = std::filesystem::last_write_time(properties_path);
-  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
+  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::ConfigureImpl>();
 
   configure->loadConfigureFile(properties_path, "nifi.log.");
   CHECK(configure->get("compression.cached.log.max.size") == "4000 B");

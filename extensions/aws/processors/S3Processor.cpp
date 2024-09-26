@@ -32,12 +32,12 @@
 namespace org::apache::nifi::minifi::aws::processors {
 
 S3Processor::S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-  : core::Processor(name, uuid),
+  : core::ProcessorImpl(name, uuid),
     logger_(std::move(logger)) {
 }
 
 S3Processor::S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-  : core::Processor(name, uuid),
+  : core::ProcessorImpl(name, uuid),
     logger_(std::move(logger)),
     s3_wrapper_(std::move(s3_request_sender)) {
 }
