@@ -116,6 +116,14 @@ class ExecutePythonProcessor : public core::Processor {
     return description_;
   }
 
+  void setVersion(const std::string& version) {
+    version_ = version;
+  }
+
+  const std::optional<std::string>& getVersion() const {
+    return version_;
+  }
+
   void setPythonClassName(const std::string& python_class_name) {
     python_class_name_ = python_class_name;
   }
@@ -140,6 +148,7 @@ class ExecutePythonProcessor : public core::Processor {
   std::vector<core::Property> python_properties_;
 
   std::string description_;
+  std::optional<std::string> version_;
 
   bool processor_initialized_;
   bool python_dynamic_;

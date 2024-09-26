@@ -42,6 +42,9 @@ class ProcessorBase(ABC):
         else:
             processor.setDescription(self.__class__.__name__)
 
+        if hasattr(self, 'ProcessorDetails') and hasattr(self.ProcessorDetails, 'version'):
+            processor.setVersion(self.ProcessorDetails.version)
+
     def onInitialize(self, processor: Processor):
         processor.setSupportsDynamicProperties()
         for property in self.getPropertyDescriptors():

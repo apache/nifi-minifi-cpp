@@ -26,11 +26,14 @@
 #include <utility>
 #include <vector>
 
+#include "core/state/Value.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 #include "TestBase.h"
 
+#include "catch2/catch_tostring.hpp"
+#include "fmt/format.h"
 #include "rapidjson/document.h"
 #include "asio.hpp"
 #include "asio/ssl.hpp"
@@ -229,3 +232,12 @@ inline bool runningAsUnixRoot() {
 #endif
 }
 }  // namespace org::apache::nifi::minifi::test::utils
+
+namespace Catch {
+template <>
+struct StringMaker<minifi::state::response::ValueNode> {
+  static std::string convert(const minifi::state::response::ValueNode& value_node) {
+    return fmt::format(R"("{}")", value_node.to_string());
+  }
+};
+}  // namespace Catch

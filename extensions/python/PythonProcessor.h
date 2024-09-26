@@ -40,6 +40,8 @@ class PythonProcessor {
 
   void setDescription(const std::string& desc);
 
+  void setVersion(const std::string& version);
+
   void addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue, bool required, bool el, bool sensitive,
       const std::optional<int64_t>& property_type_code, gsl::span<const std::string_view> allowable_values, const std::optional<std::string>& controller_service_type_name);
 
