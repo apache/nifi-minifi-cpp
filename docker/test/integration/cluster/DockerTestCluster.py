@@ -305,8 +305,11 @@ class DockerTestCluster:
         startup_success = self.wait_for_startup_log(container_name, 300)
         if not startup_success:
             logging.error("Cluster startup failed for %s", container_name)
-            self.log_app_output()
-        return startup_success
+            return False
+        if not self.container_store.run_post_startup_commands(container_name):
+            logging.error("Failed to run post startup commands for container %s", container_name)
+            return False
+        return True
 
     def wait_for_all_containers_to_finish_startup(self):
         for container_name in self.container_store.get_container_names():

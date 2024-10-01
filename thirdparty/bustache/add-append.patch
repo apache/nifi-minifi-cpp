@@ -1,0 +1,39 @@
+diff --git a/include/bustache/model.hpp b/include/bustache/model.hpp
+index 575969a..6df2cff 100644
+--- a/include/bustache/model.hpp
++++ b/include/bustache/model.hpp
+@@ -8,7 +8,7 @@
+ #define BUSTACHE_MODEL_HPP_INCLUDED
+ 
+ #include <bustache/format.hpp>
+-#include <version> 
++#include <version>
+ #include <vector>
+ #include <cstring>
+ #include <concepts>
+@@ -330,6 +330,16 @@ namespace bustache::detail
+             buf[count++] = c;
+         }
+ 
++        template <typename U>
++        void append(const U* begin, const U* end)
++        {
++            size_t content_count = end - begin;
++            for (size_t i = 0; i < content_count; ++i) {
++                push_back(begin[i]);
++            }
++            begin += content_count;
++        }
++
+         void flush() { os(buf, count); }
+ 
+         std::size_t count = 0;
+@@ -592,7 +602,7 @@ namespace bustache
+     {
+         static constexpr model kind = model::atom;
+     };
+-    
++
+     template<String T>
+     struct impl_test<T>
+     {

@@ -16,18 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-include(FetchContent)
-include(fmt)
-set(BUSTACHE_USE_FMT ON CACHE STRING "" FORCE)
 
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/bustache/add-append.patch")
+if (NOT (ENABLE_ALL OR ENABLE_COUCHBASE))
+    return()
+endif()
 
-set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+include(Couchbase)
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-FetchContent_Declare(Bustache
-        GIT_REPOSITORY  https://github.com/jamboree/bustache.git
-        GIT_TAG         47096caa8e1f9f7ebe34e3a022dbb822c174011d
-        PATCH_COMMAND   "${PC}"
-)
-FetchContent_MakeAvailable(Bustache)
+file(GLOB SOURCES  "*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
+
+add_minifi_library(minifi-couchbase SHARED ${SOURCES})
+
+target_include_directories(minifi-couchbase PRIVATE BEFORE "${CMAKE_CURRENT_SOURCE_DIR}" "controllerservices" "processors" ${COUCHBASE_INCLUDE_DIR})
+target_link_libraries(minifi-couchbase ${LIBMINIFI} couchbase_cxx_client_static hdr_histogram_static snappy llhttp::llhttp)
+
+register_extension(minifi-couchbase "COUCHBASE EXTENSIONS" COUCHBASE-EXTENSIONS "This enables Couchbase support" "extensions/couchbase/tests")
+
+register_extension_linter(minifi-couchbase-extensions-linter)
