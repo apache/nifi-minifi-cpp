@@ -16,12 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-include(FetchContent)
 
-set(SPDLOG_FMT_EXTERNAL ON CACHE STRING "" FORCE)
-FetchContent_Declare(Spdlog
-        URL  https://github.com/gabime/spdlog/archive/refs/tags/v1.14.1.tar.gz
-        URL_HASH SHA256=1586508029a7d0670dfcb2d97575dcdc242d3868a259742b69f100801ab4e16b
-        OVERRIDE_FIND_PACKAGE
-        )
-FetchContent_MakeAvailable(Spdlog)
+if (NOT (ENABLE_ALL OR ENABLE_COUCHBASE))
+    return()
+endif()
+
+include(Couchbase)
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+
+file(GLOB SOURCES  "*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
+
+add_minifi_library(minifi-couchbase SHARED ${SOURCES})
+
+target_include_directories(minifi-couchbase PRIVATE BEFORE "${CMAKE_CURRENT_SOURCE_DIR}" "controllerservices" "processors" ${COUCHBASE_INCLUDE_DIR})
+target_link_libraries(minifi-couchbase ${LIBMINIFI} couchbase_cxx_client_static hdr_histogram_static snappy llhttp::llhttp)
+
+register_extension(minifi-couchbase "COUCHBASE EXTENSIONS" COUCHBASE-EXTENSIONS "This enables Couchbase support" "extensions/couchbase/tests")
+
+register_extension_linter(minifi-couchbase-extensions-linter)

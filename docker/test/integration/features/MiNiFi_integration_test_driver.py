@@ -63,38 +63,43 @@ class MiNiFi_integration_test:
         self.cluster.acquire_container(context=context, name='kafka-broker', engine='kafka-broker')
         self.cluster.deploy_container(name='zookeeper')
         self.cluster.deploy_container(name='kafka-broker')
-        assert self.cluster.wait_for_container_startup_to_finish('kafka-broker')
+        assert self.cluster.wait_for_container_startup_to_finish('kafka-broker') or self.cluster.log_app_output()
 
     def start_splunk(self, context):
         self.cluster.acquire_container(context=context, name='splunk', engine='splunk')
         self.cluster.deploy_container(name='splunk')
-        assert self.cluster.wait_for_container_startup_to_finish('splunk')
-        assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token')
+        assert self.cluster.wait_for_container_startup_to_finish('splunk') or self.cluster.log_app_output()
+        assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token') or self.cluster.log_app_output()
 
     def start_elasticsearch(self, context):
         self.cluster.acquire_container(context=context, name='elasticsearch', engine='elasticsearch')
         self.cluster.deploy_container('elasticsearch')
-        assert self.cluster.wait_for_container_startup_to_finish('elasticsearch')
+        assert self.cluster.wait_for_container_startup_to_finish('elasticsearch') or self.cluster.log_app_output()
 
     def start_opensearch(self, context):
         self.cluster.acquire_container(context=context, name='opensearch', engine='opensearch')
         self.cluster.deploy_container('opensearch')
-        assert self.cluster.wait_for_container_startup_to_finish('opensearch')
+        assert self.cluster.wait_for_container_startup_to_finish('opensearch') or self.cluster.log_app_output()
 
     def start_minifi_c2_server(self, context):
         self.cluster.acquire_container(context=context, name="minifi-c2-server", engine="minifi-c2-server")
         self.cluster.deploy_container('minifi-c2-server')
-        assert self.cluster.wait_for_container_startup_to_finish('minifi-c2-server')
+        assert self.cluster.wait_for_container_startup_to_finish('minifi-c2-server') or self.cluster.log_app_output()
+
+    def start_couchbase_server(self, context):
+        self.cluster.acquire_container(context=context, name='couchbase-server', engine='couchbase-server')
+        self.cluster.deploy_container('couchbase-server')
+        assert self.cluster.wait_for_container_startup_to_finish('couchbase-server') or self.cluster.log_app_output()
 
     def start(self, container_name=None):
         if container_name is not None:
             logging.info("Starting container %s", container_name)
             self.cluster.deploy_container(container_name)
-            assert self.cluster.wait_for_container_startup_to_finish(container_name)
+            assert self.cluster.wait_for_container_startup_to_finish(container_name) or self.cluster.log_app_output()
             return
         logging.info("MiNiFi_integration_test start")
         self.cluster.deploy_all()
-        assert self.cluster.wait_for_all_containers_to_finish_startup()
+        assert self.cluster.wait_for_all_containers_to_finish_startup() or self.cluster.log_app_output()
 
     def stop(self, container_name):
         logging.info("Stopping container %s", container_name)

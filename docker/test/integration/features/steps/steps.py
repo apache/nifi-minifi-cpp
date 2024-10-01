@@ -26,6 +26,7 @@ from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
 from minifi.controllers.JsonRecordSetReader import JsonRecordSetReader
+from minifi.controllers.CouchbaseClusterService import CouchbaseClusterService
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -1366,3 +1367,24 @@ def step_impl(context):
 @given(u'PLC register has been set with {modbus_cmd} command')
 def step_impl(context, modbus_cmd):
     context.test.set_value_on_plc_with_modbus(context.test.get_container_name_with_postfix('diag-slave-tcp'), modbus_cmd)
+
+
+# Couchbase
+@given("a Couchbase server is set up")
+def step_impl(context):
+    context.test.acquire_container(context=context, name="couchbase-server", engine="couchbase-server")
+
+
+@when(u'a Couchbase server is started')
+def step_impl(context):
+    context.test.start_couchbase_server(context)
+
+
+@given("a CouchbaseClusterService is setup up for {processor_name} with the name \"{service_name}\"")
+def step_impl(context, processor_name, service_name):
+    couchbase_cluster_controller_service = CouchbaseClusterService(
+        name=service_name,
+        connection_string="couchbase://{server_hostname}".format(server_hostname=context.test.get_container_name_with_postfix("couchbase-server")))
+    processor = context.test.get_node_by_name(processor_name)
+    processor.controller_services.append(couchbase_cluster_controller_service)
+    processor.set_property("Couchbase Cluster Controller Service", couchbase_cluster_controller_service.name)

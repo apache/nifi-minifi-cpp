@@ -40,6 +40,7 @@ from .containers.GrafanaLokiContainer import GrafanaLokiContainer
 from .containers.GrafanaLokiContainer import GrafanaLokiOptions
 from .containers.ReverseProxyContainer import ReverseProxyContainer
 from .containers.DiagSlave import DiagSlave
+from .containers.CouchbaseServerContainer import CouchbaseServerContainer
 from .FeatureContext import FeatureContext
 
 
@@ -302,6 +303,14 @@ class ContainerStore:
                                                         network=self.network,
                                                         image_store=self.image_store,
                                                         command=command))
+        elif engine == "couchbase-server":
+            return self.containers.setdefault(container_name,
+                                              CouchbaseServerContainer(feature_context=feature_context,
+                                                                       name=container_name,
+                                                                       vols=self.vols,
+                                                                       network=self.network,
+                                                                       image_store=self.image_store,
+                                                                       command=command))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
@@ -411,3 +420,7 @@ class ContainerStore:
 
     def enable_ssl_in_nifi(self):
         self.nifi_options.use_ssl = True
+
+    def run_post_startup_commands(self, container_name):
+        container_name = self.get_container_name_with_postfix(container_name)
+        return self.containers[container_name].run_post_startup_commands()

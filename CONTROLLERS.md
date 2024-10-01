@@ -17,6 +17,7 @@ limitations under the License.
 
 - [AWSCredentialsService](#AWSCredentialsService)
 - [AzureStorageCredentialsService](#AzureStorageCredentialsService)
+- [CouchbaseClusterService](#CouchbaseClusterService)
 - [ElasticsearchCredentialsControllerService](#ElasticsearchCredentialsControllerService)
 - [GCPCredentialsControllerService](#GCPCredentialsControllerService)
 - [JsonRecordSetReader](#JsonRecordSetReader)
@@ -69,6 +70,23 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Common Storage Account Endpoint Suffix |               |                  | Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).                                                             |
 | Connection String                      |               |                  | Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.                                                                                                              |
 | **Use Managed Identity Credentials**   | false         | true<br/>false   | If true Managed Identity credentials will be used together with the Storage Account Name for authentication.                                                                                                                                                 |
+
+
+## CouchbaseClusterService
+
+### Description
+
+Provides a centralized Couchbase connection and bucket passwords management. Bucket passwords can be specified via dynamic properties.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                  | Default Value | Allowable Values | Description                                                                                                                                                      |
+|-----------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Connection String** |               |                  | The hostnames or ip addresses of the bootstraping nodes and optional parameters. Syntax) couchbase://node1,node2,nodeN?param1=value1&param2=value2&paramN=valueN |
+| User Name             |               |                  | The user name to authenticate MiNiFi as a Couchbase client.                                                                                                      |
+| User Password         |               |                  | The user password to authenticate MiNiFi as a Couchbase client.<br/>**Sensitive Property: true**                                                                 |
 
 
 ## ElasticsearchCredentialsControllerService
