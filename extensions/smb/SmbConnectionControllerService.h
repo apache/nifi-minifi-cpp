@@ -20,7 +20,10 @@
 #include <string>
 #include <memory>
 
-#include "ProcessContext.h"
+#include <Windows.h>
+#include <winnetwk.h>
+
+#include "core/ProcessContext.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/controller/ControllerService.h"

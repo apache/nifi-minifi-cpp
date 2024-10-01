@@ -22,6 +22,8 @@
 #include <memory>
 #include <string>
 
+#include <Windows.h>
+
 #include "core/Core.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -43,7 +45,7 @@ const char log_name[255] = "Application";
 class TailEventLog : public core::ProcessorImpl {
  public:
   explicit TailEventLog(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+      : core::ProcessorImpl(name, uuid) {
   }
   virtual ~TailEventLog() = default;
 

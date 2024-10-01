@@ -26,6 +26,7 @@
 #include <fstream>
 #include <GenerateFlowFile.h>
 #ifdef WIN32
+#include <windows.h>
 #include <fileapi.h>
 #include <system_error>
 #endif /* WIN32 */

@@ -76,7 +76,7 @@ class ValueNode {
   ValueNode() = default;
 
   template<typename T>
-  requires (supported_types::contains<T>())  // NOLINT
+  requires (ValueNode::supported_types::contains<T>())  // NOLINT
   /* implicit, because it doesn't change the meaning, and it simplifies construction of maps */
   ValueNode(const T value);  // NOLINT
 
@@ -85,7 +85,7 @@ class ValueNode {
    * createValue
    */
   template<typename T>
-  requires (supported_types::contains<T>())  // NOLINT
+  requires (ValueNode::supported_types::contains<T>())  // NOLINT
   ValueNode& operator=(const T ref);
 
   inline bool operator==(const ValueNode &rhs) const {

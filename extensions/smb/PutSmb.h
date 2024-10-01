@@ -32,7 +32,7 @@ namespace org::apache::nifi::minifi::extensions::smb {
 class PutSmb : public core::ProcessorImpl {
  public:
   explicit PutSmb(std::string name,  const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+      : core::ProcessorImpl(std::move(name), uuid) {
   }
 
   enum class FileExistsResolutionStrategy {
