@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <string>
 #include <optional>
+#include <functional>
 
 #include "Properties.h"
 #include "minifi-cpp/utils/Export.h"

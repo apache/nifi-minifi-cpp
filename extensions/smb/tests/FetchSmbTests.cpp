@@ -22,7 +22,7 @@
 #include "SmbConnectionControllerService.h"
 #include "utils/MockSmbConnectionControllerService.h"
 #include "unit/SingleProcessorTestController.h"
-#include "OsUtils.h"
+#include "utils/OsUtils.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::extensions::smb::test {

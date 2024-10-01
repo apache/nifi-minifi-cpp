@@ -19,6 +19,11 @@
  */
 #pragma once
 
+#ifdef WIN32
+// ignore the warning about inheriting via dominance from Properties
+#pragma warning(disable : 4250)
+#endif
+
 #include <map>
 #include <memory>
 #include <optional>

@@ -17,6 +17,11 @@
  */
 #pragma once
 
+#ifdef WIN32
+// ignore the warning about inheriting via dominance from CoreComponent
+#pragma warning(disable : 4250)
+#endif
+
 #include <algorithm>
 #include <array>
 #include <memory>

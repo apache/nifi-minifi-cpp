@@ -27,8 +27,6 @@
 #include <cassert>
 
 #ifdef WIN32
-// ignore the warning about inheriting via dominance from CRCStreamBase
-#pragma warning(disable : 4250)
 #include <winsock2.h>
 
 #else

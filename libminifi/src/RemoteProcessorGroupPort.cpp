@@ -38,6 +38,7 @@
 #include "core/ProcessorNode.h"
 #include "http/BaseHTTPClient.h"
 #include "controllers/SSLContextService.h"
+#include "utils/net/DNS.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 

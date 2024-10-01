@@ -92,11 +92,11 @@ template<typename Writer>
 }
 
 std::string SerializedResponseNode::to_string() const {
-  return to_string<rapidjson::Writer<rapidjson::StringBuffer>>(*this);
+  return response::to_string<rapidjson::Writer<rapidjson::StringBuffer>>(*this);
 }
 
 std::string SerializedResponseNode::to_pretty_string() const {
-  return to_string<rapidjson::PrettyWriter<rapidjson::StringBuffer>>(*this);
+  return response::to_string<rapidjson::PrettyWriter<rapidjson::StringBuffer>>(*this);
 }
 }  // namespace org::apache::nifi::minifi::state::response
 

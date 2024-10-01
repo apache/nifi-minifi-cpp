@@ -18,6 +18,11 @@
 
 #pragma once
 
+#ifdef WIN32
+// ignore the warning about inheriting via dominance from Stream
+#pragma warning(disable : 4250)
+#endif
+
 #include <span>
 #include "utils/gsl.h"
 
