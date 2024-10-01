@@ -77,6 +77,7 @@ limitations under the License.
 - [PushGrafanaLokiREST](#PushGrafanaLokiREST)
 - [PutAzureBlobStorage](#PutAzureBlobStorage)
 - [PutAzureDataLakeStorage](#PutAzureDataLakeStorage)
+- [PutCouchbaseKey](#PutCouchbaseKey)
 - [PutFile](#PutFile)
 - [PutGCSObject](#PutGCSObject)
 - [PutOPCProcessor](#PutOPCProcessor)
@@ -2199,6 +2200,46 @@ In the list below, the names of required properties appear in bold. Any other pr
 |---------|-------------------------------------------------------------------------------------------------------|
 | success | Files that have been successfully written to Azure storage are transferred to this relationship       |
 | failure | Files that could not be written to Azure storage for some reason are transferred to this relationship |
+
+
+## PutCouchbaseKey
+
+### Description
+
+Put a document to Couchbase Server via Key/Value access.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                                     | Default Value | Allowable Values                                   | Description                                                                                                                                                                                  |
+|------------------------------------------|---------------|----------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Couchbase Cluster Controller Service** |               |                                                    | A Couchbase Cluster Controller Service which manages connections to a Couchbase cluster.                                                                                                     |
+| **Bucket Name**                          | default       |                                                    | The name of bucket to access.<br/>**Supports Expression Language: true**                                                                                                                     |
+| Scope Name                               |               |                                                    | Scope to use inside the bucket. If not specified, the _default scope is used.<br/>**Supports Expression Language: true**                                                                     |
+| Collection Name                          |               |                                                    | Collection to use inside the bucket scope. If not specified, the _default collection is used.<br/>**Supports Expression Language: true**                                                     |
+| Document Id                              |               |                                                    | A static, fixed Couchbase document id, or an expression to construct the Couchbase document id. If not specified, the FlowFile UUID will be used.<br/>**Supports Expression Language: true** |
+| **Persist To**                           | NONE          | NONE<br/>ACTIVE<br/>ONE<br/>TWO<br/>THREE<br/>FOUR | Durability constraint about disk persistence.                                                                                                                                                |
+| **Replicate To**                         | NONE          | NONE<br/>ONE<br/>TWO<br/>THREE                     | Durability constraint about replication.                                                                                                                                                     |
+
+### Relationships
+
+| Name    | Description                                                                                                |
+|---------|------------------------------------------------------------------------------------------------------------|
+| success | All FlowFiles that are written to Couchbase Server are routed to this relationship.                        |
+| failure | All FlowFiles failed to be written to Couchbase Server and not retry-able are routed to this relationship. |
+| retry   | All FlowFiles failed to be written to Couchbase Server but can be retried are routed to this relationship. |
+
+### Output Attributes
+
+| Attribute                     | Relationship | Description                                   |
+|-------------------------------|--------------|-----------------------------------------------|
+| couchbase.bucket              | success      | Bucket where the document was stored.         |
+| couchbase.doc.id              | success      | Id of the document.                           |
+| couchbase.doc.cas             | success      | CAS of the document.                          |
+| couchbase.doc.sequence.number | success      | Sequence number associated with the document. |
+| couchbase.partition.uuid      | success      | UUID of partition.                            |
+| couchbase.partition.id        | success      | ID of partition (also known as vBucket).      |
 
 
 ## PutFile
