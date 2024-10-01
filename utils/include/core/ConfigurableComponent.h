@@ -229,11 +229,7 @@ bool ConfigurableComponentImpl::getPropertyImpl(const std::string& name, T &valu
     }
     logger_->log_debug("Component {} property name {} value {}", name, property.getName(), property.getValue().to_string());
 
-    if constexpr (std::is_base_of<TransformableValue, T>::value) {
-      value = T(property.getValue().operator std::string());
-    } else {
-      value = static_cast<T>(property.getValue());  // cast throws if the value is invalid
-    }
+    value = static_cast<T>(property.getValue());  // cast throws if the value is invalid
     return true;
   } else {
     logger_->log_warn("Could not find property {}", name);
@@ -253,6 +249,16 @@ bool ConfigurableComponent::getProperty(const std::string& name, T& value) const
   } else {
     return getProperty(name, value);
   }
+}
+
+template<typename T>
+bool ConfigurableComponent::getProperty(const std::string& name, std::optional<T>& value) const {
+  T raw_value;
+  if (getProperty(name, raw_value)) {
+    value = raw_value;
+    return true;
+  }
+  return false;
 }
 
 template<typename T>

@@ -39,6 +39,8 @@ class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer
  public:
   using AttributeMap = utils::FlatMap<std::string, std::string>;
 
+  virtual void copy(const FlowFile&) = 0;
+
   [[nodiscard]] virtual std::shared_ptr<ResourceClaim> getResourceClaim() const = 0;
   virtual void setResourceClaim(const std::shared_ptr<ResourceClaim>& claim) = 0;
   virtual void clearResourceClaim() = 0;

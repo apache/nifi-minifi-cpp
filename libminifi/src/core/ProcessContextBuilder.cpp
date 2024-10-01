@@ -19,6 +19,6 @@
 
 namespace org::apache::nifi::minifi::core {
 
-REGISTER_RESOURCE_AS(ProcessContextBuilderImpl, InternalResource, ("ProcessContextBuilder"));
+REGISTER_RESOURCE_IMPLEMENTATION(ProcessContextBuilderImpl, "ProcessContextBuilder", InternalResource);
 
 }  // namespace org::apache::nifi::minifi::core

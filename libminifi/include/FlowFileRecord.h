@@ -54,6 +54,10 @@ class FlowFileRecordImpl : public core::FlowFileImpl, public virtual FlowFileRec
  public:
   FlowFileRecordImpl();
 
+  void copy(const core::FlowFile& other) override {
+    *this = *dynamic_cast<const FlowFileRecordImpl*>(&other);
+  }
+
   bool Serialize(io::OutputStream &outStream) override;
 
   //! Serialize and Persistent to the repository
