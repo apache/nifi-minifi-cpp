@@ -92,4 +92,7 @@ class StaticClassType {
 #define REGISTER_RESOURCE_AS(CLASSNAME, TYPE, NAMES) \
         static const auto& CLASSNAME##_registrar = core::StaticClassType<CLASSNAME, minifi::ResourceType::TYPE>::get(#CLASSNAME, MAKE_INIT_LIST NAMES)
 
+#define REGISTER_RESOURCE_IMPLEMENTATION(CLASS, CLASSNAME, TYPE) \
+        static const auto& CLASS##_registrar = core::StaticClassType<CLASS, minifi::ResourceType::TYPE>::get(CLASSNAME, {CLASSNAME})
+
 }  // namespace org::apache::nifi::minifi::core

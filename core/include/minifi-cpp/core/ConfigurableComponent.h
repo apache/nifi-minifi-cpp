@@ -74,6 +74,9 @@ class ConfigurableComponent {
   bool getProperty(const std::string& name, T& value) const;
 
   template<typename T>
+  bool getProperty(const std::string& name, std::optional<T>& value) const;
+
+  template<typename T>
   bool getProperty(const core::PropertyReference& property, T& value) const;
 
   template<typename T = std::string> requires(std::is_default_constructible_v<T>)

@@ -30,7 +30,6 @@
 #include <vector>
 
 #include "core/ProcessContext.h"
-#include "core/StateManager.h"
 #include "core/state/UpdateController.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"

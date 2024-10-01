@@ -948,7 +948,7 @@ void ProcessSessionImpl::rollback() {
     for (const auto &it : updated_flowfiles_) {
       auto flowFile = it.second.modified;
       // restore flowFile to original state
-      *flowFile = *it.second.snapshot;
+      flowFile->copy(*it.second.snapshot);
       penalize(flowFile);
       logger_->log_debug("ProcessSession rollback for {}, record {}, to connection {}",
           process_context_->getProcessorNode()->getName(),
@@ -1130,7 +1130,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::get() {
       // add the flow record to the current process session update map
       ret->setDeleted(false);
       std::shared_ptr<FlowFile> snapshot = std::make_shared<FlowFileRecordImpl>();
-      *snapshot = *ret;
+      snapshot->copy(*ret);
       logger_->log_debug("Create Snapshot FlowFile with UUID {}", snapshot->getUUIDStr());
       utils::Identifier uuid = ret->getUUID();
       updated_flowfiles_[uuid] = {ret, snapshot};

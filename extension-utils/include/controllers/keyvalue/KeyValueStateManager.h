@@ -33,6 +33,7 @@ class KeyValueStateManager final : public core::StateManagerImpl {
  public:
   KeyValueStateManager(const utils::Identifier& id, gsl::not_null<KeyValueStateStorage*> storage);
 
+  using StateManagerImpl::get;
   bool set(const core::StateManager::State& kvs) override;
   bool get(core::StateManager::State& kvs) override;
   bool clear() override;

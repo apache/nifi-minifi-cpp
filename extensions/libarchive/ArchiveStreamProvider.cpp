@@ -48,6 +48,6 @@ class ArchiveStreamProviderImpl : public core::CoreComponentImpl, public virtual
   }
 };
 
-REGISTER_RESOURCE_AS(ArchiveStreamProviderImpl, InternalResource, ("ArchiveStreamProvider"));
+REGISTER_RESOURCE_IMPLEMENTATION(ArchiveStreamProviderImpl, "ArchiveStreamProvider", InternalResource);
 
 }  // namespace org::apache::nifi::minifi::io

@@ -42,6 +42,10 @@ class FlowFileImpl : public CoreComponentImpl, public ReferenceContainerImpl, pu
   FlowFileImpl();
   FlowFileImpl& operator=(const FlowFileImpl& other);
 
+  void copy(const FlowFile& other) override {
+    *this = *dynamic_cast<const FlowFileImpl*>(&other);
+  }
+
   /**
    * Returns a pointer to this flow file record's
    * claim

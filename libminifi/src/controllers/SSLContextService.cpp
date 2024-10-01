@@ -594,6 +594,6 @@ void SSLContextServiceImpl::verifyCertificateExpiration() {
 #endif
 }
 
-REGISTER_RESOURCE_AS(SSLContextServiceImpl, ControllerService, ("SSLContextService"));
+REGISTER_RESOURCE_IMPLEMENTATION(SSLContextServiceImpl, "SSLContextService", ControllerService);
 
 }  // namespace org::apache::nifi::minifi::controllers
