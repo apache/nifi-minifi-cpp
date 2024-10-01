@@ -18,138 +18,112 @@
 
 #include <cstdio>
 #include <fstream>
-#include <map>
-#include <memory>
-#include <utility>
 #include <string>
 #include <iostream>
 #include <set>
 #include <algorithm>
 #include <random>
-#include <cstdlib>
 #include "FlowController.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "core/Core.h"
-#include "core/FlowFile.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessorNode.h"
 #include "core/Resource.h"
 #include "TailFile.h"
 #include "LogAttribute.h"
 #include "unit/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "unit/SingleProcessorTestController.h"
+#include "TextFragmentUtils.h"
 
 using namespace std::literals::chrono_literals;
 
-static const std::string NEWLINE_FILE = ""  // NOLINT
+static constexpr std::string_view NEWLINE_FILE = ""  // NOLINT
         "one,two,three\n"
         "four,five,six, seven";
-static const char *TMP_FILE = "minifi-tmpfile.txt";
-static const char *ROLLED_OVER_TMP_FILE = "minifi-tmpfile.txt.old.1";
-static const char *STATE_FILE = "minifi-state-file.txt";
-static const std::string ROLLED_OVER_TAIL_DATA = "rolled_over_data\n";
-static const std::string NEW_TAIL_DATA = "newdata\n";
-static const std::string ADDITIONALY_CREATED_FILE_CONTENT = "additional file data\n";
+static constexpr std::string_view TMP_FILE = "minifi-tmpfile.txt";
+static constexpr std::string_view ROLLED_OVER_TMP_FILE = "minifi-tmpfile.txt.old.1";
+static constexpr std::string_view STATE_FILE = "minifi-state-file.txt";
+static constexpr std::string_view ROLLED_OVER_TAIL_DATA = "rolled_over_data\n";
+static constexpr std::string_view NEW_TAIL_DATA = "newdata\n";
+static constexpr std::string_view ADDITIONALY_CREATED_FILE_CONTENT = "additional file data\n";
 
 namespace {
-std::filesystem::path createTempFile(const std::filesystem::path& directory, const std::filesystem::path& file_name, const std::string& contents,
-    std::ios_base::openmode open_mode = std::ios::out | std::ios::binary) {
+std::filesystem::path createTempFile(const std::filesystem::path& directory, const std::filesystem::path& file_name,
+    const std::string_view contents, const std::ios_base::openmode open_mode = std::ios::out | std::ios::binary,
+    const std::chrono::file_clock::duration offset = 0ms) {
   if (!utils::file::exists(directory)) {
     std::filesystem::create_directories(directory);
   }
-  std::string full_file_name = (directory / file_name).string();
-  std::ofstream tmpfile{full_file_name, open_mode};
-  tmpfile << contents;
+  auto full_file_name = directory / file_name;
+  {
+    std::ofstream tmp_file{full_file_name, open_mode};
+    tmp_file << contents;
+  }
+  std::filesystem::last_write_time(full_file_name, std::chrono::file_clock::now() + offset);
+
   return full_file_name;
 }
 
-void appendTempFile(const std::filesystem::path& directory, const std::filesystem::path& file_name, const std::string& contents,
-    std::ios_base::openmode open_mode = std::ios::app | std::ios::binary) {
+void appendTempFile(const std::filesystem::path& directory, const std::filesystem::path& file_name,
+    const std::string_view contents, const std::ios_base::openmode open_mode = std::ios::app | std::ios::binary) {
   createTempFile(directory, file_name, contents, open_mode);
 }
 
 }  // namespace
 
-TEST_CASE("TailFile reads the file until the first delimiter", "[simple]") {
+TEST_CASE("TailFile reads the file until the first delimiter then picks up the second line if a delimiter is written between runs", "[simple]") {
   // Create and write to the test file
+  auto tail_file = std::make_shared<minifi::processors::TailFile>("TailFile");
 
-  TestController testController;
-  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
-  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+  minifi::test::SingleProcessorTestController test_controller(tail_file);
 
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  auto tailfile = plan->addProcessor("TailFile", "tailfileProc");
-  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
-
-  auto dir = testController.createTempDirectory();
+  auto dir = test_controller.createTempDirectory();
   auto temp_file_path = dir / TMP_FILE;
 
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file_path, std::ios::out | std::ios::binary);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
+  {
+    std::ofstream tmp_file;
+    tmp_file.open(temp_file_path, std::ios::out | std::ios::binary);
+    tmp_file << NEWLINE_FILE;
+  }
 
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName, temp_file_path.string());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter, "\n");
+  test_controller.plan->setProperty(tail_file, minifi::processors::TailFile::FileName, temp_file_path.string());
+  test_controller.plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, "\n");
 
-  testController.runSession(plan, false);
-  auto records = plan->getProvenanceRecords();
-  REQUIRE(records.size() == 5);  // line 1: CREATE, MODIFY; line 2: CREATE, MODIFY, DROP
-
-  testController.runSession(plan, false);
-
-  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
-
-  LogTestController::getInstance().reset();
-}
-
-TEST_CASE("TailFile picks up the second line if a delimiter is written between runs", "[state]") {
-  // Create and write to the test file
-  TestController testController;
-  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
-  LogTestController::getInstance().setDebug<core::ProcessSession>();
-  LogTestController::getInstance().setTrace<TestPlan>();
-  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
-
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  auto tailfile = plan->addProcessor("TailFile", "tailfileProc");
-
-  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
-
-  auto dir = testController.createTempDirectory();
-  auto temp_file_path = dir / TMP_FILE;
-
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file_path, std::ios::out | std::ios::binary);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
-
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName, temp_file_path.string());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter, "\n");
-
-  testController.runSession(plan, true);
-
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
-
-  plan->reset(true);  // start a new but with state file
-  LogTestController::getInstance().clear();
-
-  std::ofstream appendStream;
-  appendStream.open(temp_file_path, std::ios_base::app | std::ios_base::binary);
-  appendStream << std::endl;
-  testController.runSession(plan, true);
-
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.14-34.txt"));
-
-  LogTestController::getInstance().reset();
+  {
+    auto trigger_res = test_controller.trigger();
+    const auto& success_ffs = trigger_res.at(minifi::processors::TailFile::Success);
+    REQUIRE(success_ffs.size() == 1);
+    CHECK(test_controller.plan->getContent(success_ffs[0]) == "one,two,three\n");
+    CHECK(success_ffs[0]->getAttribute(minifi::processors::textfragmentutils::BASE_NAME_ATTRIBUTE) == "minifi-tmpfile");
+    CHECK(success_ffs[0]->getAttribute(minifi::processors::textfragmentutils::POST_NAME_ATTRIBUTE) == "txt");
+    CHECK(success_ffs[0]->getAttribute(minifi::processors::textfragmentutils::OFFSET_ATTRIBUTE) == "0");
+    CHECK(success_ffs[0]->getAttribute(core::SpecialFlowAttribute::PATH) == dir.string());
+    CHECK(success_ffs[0]->getAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH) == temp_file_path.string() );
+    CHECK(success_ffs[0]->getAttribute(core::SpecialFlowAttribute::FILENAME) == "minifi-tmpfile.0-13.txt");
+  }
+  {
+    std::ofstream appendStream;
+    appendStream.open(temp_file_path, std::ios_base::app | std::ios_base::binary);
+    appendStream << std::endl;
+  }
+  {
+    auto trigger_res = test_controller.trigger();
+    const auto& success_ffs = trigger_res.at(minifi::processors::TailFile::Success);
+    REQUIRE(success_ffs.size() == 1);
+    CHECK(test_controller.plan->getContent(success_ffs[0]) == "four,five,six, seven\n");
+    CHECK(success_ffs[0]->getAttribute(minifi::processors::textfragmentutils::BASE_NAME_ATTRIBUTE) == "minifi-tmpfile");
+    CHECK(success_ffs[0]->getAttribute(minifi::processors::textfragmentutils::POST_NAME_ATTRIBUTE) == "txt");
+    CHECK(success_ffs[0]->getAttribute(minifi::processors::textfragmentutils::OFFSET_ATTRIBUTE) == "14");
+    CHECK(success_ffs[0]->getAttribute(core::SpecialFlowAttribute::PATH) == dir.string());
+    CHECK(success_ffs[0]->getAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH) == temp_file_path.string() );
+    CHECK(success_ffs[0]->getAttribute(core::SpecialFlowAttribute::FILENAME) == "minifi-tmpfile.14-34.txt");
+  }
 }
 
 TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[state]") {
@@ -169,15 +143,16 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
   auto dir = testController.createTempDirectory();
   auto temp_file_path = dir / TMP_FILE;
 
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file_path, std::ios::out | std::ios::binary);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
+  {
+    std::ofstream tmp_file;
+    tmp_file.open(temp_file_path, std::ios::out | std::ios::binary);
+    tmp_file << NEWLINE_FILE;
+  }
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName, temp_file_path.string());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter, "\n");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
@@ -186,7 +161,7 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
 
   plan->getProcessContextForProcessor(tailfile)->getStateManager()->clear();
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   // if we lose state we restart
   REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
@@ -221,7 +196,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName, temp_file_path.string());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter, "\n");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
   REQUIRE(temp_file_path.has_filename());
@@ -236,7 +211,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
                                                                                    {"file.0.position", "14"},
                                                                                    {"file.0.current", temp_file_path.string()}});
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     // if we lose state we restart
     REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.14-34.txt"));
@@ -248,7 +223,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
                                                                                    {"file.0.position", std::to_string(i)},
                                                                                    {"file.0.current", temp_file_path.string()}});
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
   }
 
   plan->runCurrentProcessor();
@@ -278,7 +253,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
   auto new_state_file_path = state_file_path.string() + ("." + id);
 
   SECTION("single") {
-    const auto temp_file = createTempFile(dir, TMP_FILE, NEWLINE_FILE + '\n');
+    const auto temp_file = createTempFile(dir, TMP_FILE, std::string(NEWLINE_FILE) + '\n');
 
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName, temp_file.string());
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile, state_file_path.string());
@@ -297,7 +272,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     }
     new_state_file.close();
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.14-34.txt"));
 
     std::unordered_map<std::string, std::string> state;
@@ -320,8 +295,8 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
   SECTION("multiple") {
     const std::string file_name_1 = "bar.txt";
     const std::string file_name_2 = "foo.txt";
-    const auto temp_file_1 = createTempFile(dir, file_name_1, NEWLINE_FILE + '\n');
-    const auto temp_file_2 = createTempFile(dir, file_name_2, NEWLINE_FILE + '\n');
+    const auto temp_file_1 = createTempFile(dir, file_name_1, std::string(NEWLINE_FILE) + '\n');
+    const auto temp_file_2 = createTempFile(dir, file_name_2, std::string(NEWLINE_FILE) + '\n');
 
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode, "Multiple file");
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::BaseDirectory, dir.string());
@@ -340,7 +315,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     newstatefile << "CURRENT." << file_name_2 << "=" << temp_file_2.string() << std::endl;
     newstatefile.close();
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains(file_name_1.substr(0, file_name_1.rfind('.')) + ".14-34.txt"));
     REQUIRE(LogTestController::getInstance().contains(file_name_2.substr(0, file_name_2.rfind('.')) + ".15-34.txt"));
 
@@ -384,7 +359,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs"
   auto directory = testController.createTempDirectory();
   auto first_test_file = createTempFile(directory, "first.log", "my first log line\n");
   plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName, first_test_file.string());
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:first.0-17.log"));
 
@@ -393,7 +368,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs"
     plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName, second_test_file.string());
     plan->reset(true);  // clear the memory, but keep the state file
     LogTestController::getInstance().clear();
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:second.0-18.log"));
   }
@@ -404,7 +379,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs"
     plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName, second_test_file.string());
     plan->reset(true);  // clear the memory, but keep the state file
     LogTestController::getInstance().clear();
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
   }
 }
@@ -430,7 +405,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
   createTempFile(directory, "first.fruit.log", "apple\n");
   createTempFile(directory, "second.fruit.log", "orange\n");
   createTempFile(directory, "first.animal.log", "hippopotamus\n");
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:first.fruit.0-5.log"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:first.animal.0-12.log"));
@@ -442,7 +417,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
     plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName, "first\\.f.*\\.log");
     plan->reset(true);  // clear the memory, but keep the state file
     LogTestController::getInstance().clear();
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:first.fruit.6-12.log"));
   }
@@ -451,7 +426,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
     plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName, ".*\\.fruit\\.log");
     plan->reset(true);  // clear the memory, but keep the state file
     LogTestController::getInstance().clear();
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow file"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:first.fruit.6-12.log"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:second.fruit.0-6.log"));
@@ -488,11 +463,11 @@ TEST_CASE("TailFile finds the single input file in both Single and Multiple mode
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::LookupFrequency, "0 sec");
   }
 
-  testController.runSession(plan, false);
+  TestController::runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   REQUIRE(records.size() == 2);
 
-  testController.runSession(plan, false);
+  TestController::runSession(plan, false);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size()) + " Offset:0"));
@@ -521,7 +496,7 @@ TEST_CASE("TailFile picks up new files created between runs", "[multiple_file]")
 
   createTempFile(dir, "application.log", "line1\nline2\n");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
 
   createTempFile(dir, "another.log", "some more content\n");
@@ -529,7 +504,7 @@ TEST_CASE("TailFile picks up new files created between runs", "[multiple_file]")
   plan->reset();
   LogTestController::getInstance().clear();
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
 
   LogTestController::getInstance().reset();
@@ -559,16 +534,16 @@ TEST_CASE("TailFile can handle input files getting removed", "[multiple_file]") 
   createTempFile(dir, "one.log", "line one\n");
   createTempFile(dir, "two.log", "some stuff\n");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
 
   plan->reset();
   LogTestController::getInstance().clear();
 
   appendTempFile(dir, "one.log", "line two\nline three\nline four\n");
-  std::filesystem::remove(dir / "two.log");
+  CHECK(std::filesystem::remove(dir / "two.log"));
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
 
   LogTestController::getInstance().reset();
@@ -629,7 +604,7 @@ TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
     plan->setProperty(log_attr, minifi::processors::LogAttribute::MaxPayloadLineLength, "16");
   }
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
   REQUIRE(LogTestController::getInstance().contains(utils::string::to_hex(line1)));
@@ -688,7 +663,7 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
   plan->setProperty(log_attr, minifi::processors::LogAttribute::HexencodePayload, "true");
   plan->setProperty(log_attr, minifi::processors::LogAttribute::MaxPayloadLineLength, "80");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 5 flow files"));
   auto line1_hex = utils::string::to_hex(line1.substr(0, 4096));
@@ -774,132 +749,132 @@ TEST_CASE("TailFile onSchedule throws in Multiple mode if the Base Directory doe
 }
 
 TEST_CASE("TailFile finds and finishes the renamed file and continues with the new log file", "[rotation]") {
-  TestController testController;
+  auto tail_file = std::make_shared<minifi::processors::TailFile>("TailFile");
 
-  const char DELIM = ',';
-  size_t expected_pieces = std::count(NEWLINE_FILE.begin(), NEWLINE_FILE.end(), DELIM);  // The last piece is left as considered unfinished
+  minifi::test::SingleProcessorTestController test_controller(tail_file);
+
+  constexpr char DELIM = ',';
+  constexpr size_t expected_pieces = std::ranges::count(NEWLINE_FILE, DELIM);  // The last piece is left as considered unfinished
 
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
   LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
 
-  auto plan = testController.createPlan();
-  auto dir = testController.createTempDirectory();
+  auto dir = test_controller.createTempDirectory();
   auto in_file = dir / "testfifo.txt";
 
-  std::ofstream in_file_stream(in_file, std::ios::out | std::ios::binary);
-  in_file_stream << NEWLINE_FILE;
-  in_file_stream.flush();
+  {
+    std::ofstream in_file_stream(in_file, std::ios::out | std::ios::binary);
+    in_file_stream << NEWLINE_FILE;
+  }
+  std::filesystem::last_write_time(in_file, std::chrono::file_clock::now() - 200ms);
 
   // Build MiNiFi processing graph
-  auto tail_file = plan->addProcessor("TailFile", "Tail");
-  plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, std::string(1, DELIM));
+  test_controller.plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, std::string(1, DELIM));
 
   SECTION("single") {
-    plan->setProperty(tail_file, minifi::processors::TailFile::FileName, in_file.string());
+    test_controller.plan->setProperty(tail_file, minifi::processors::TailFile::FileName, in_file.string());
   }
   SECTION("Multiple") {
-    plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName, "testfifo.txt");
-    plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::TailMode, "Multiple file");
-    plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::BaseDirectory, dir.string());
-    plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::LookupFrequency, "0 sec");
+    test_controller.plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName, "testfifo.txt");
+    test_controller.plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::TailMode, "Multiple file");
+    test_controller.plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::BaseDirectory, dir.string());
+    test_controller.plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::LookupFrequency, "0 sec");
   }
-
-  auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
-  plan->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog, "0");
-  plan->setProperty(log_attr, minifi::processors::LogAttribute::LogPayload, "true");
-  // Log as many FFs as it can to make sure exactly the expected amount is produced
-
-  plan->runNextProcessor();  // Tail
-  plan->runNextProcessor();  // Log
-
-  REQUIRE(LogTestController::getInstance().contains(std::string("Logged ") + std::to_string(expected_pieces) + " flow files"));
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));  // make sure the new file gets newer modification time
-
-  in_file_stream << DELIM;
-  in_file_stream.close();
+  {
+    auto res = test_controller.trigger();
+    const auto& success_ffs = res.at(minifi::processors::TailFile::Success);
+    REQUIRE(success_ffs.size() == expected_pieces);
+    CHECK(test_controller.plan->getContent(success_ffs[0]) == "one,");
+    CHECK(test_controller.plan->getContent(success_ffs[1]) == "two,");
+    CHECK(test_controller.plan->getContent(success_ffs[2]) == "three\nfour,");
+    CHECK(test_controller.plan->getContent(success_ffs[3]) == "five,");
+    CHECK(test_controller.plan->getContent(success_ffs[4]) == "six,");
+  }
 
   auto rotated_file = in_file;
   rotated_file += ".1";
 
   REQUIRE_NOTHROW(std::filesystem::rename(in_file, rotated_file));
+  std::filesystem::last_write_time(rotated_file, std::chrono::file_clock::now());
 
-  std::ofstream new_in_file_stream(in_file, std::ios::out | std::ios::binary);
-  new_in_file_stream << "five" << DELIM << "six" << DELIM;
-  new_in_file_stream.close();
+  {
+    std::ofstream new_in_file_stream(in_file, std::ios::out | std::ios::binary);
+    new_in_file_stream << "five" << DELIM << "six" << DELIM;
+  }
+  std::filesystem::last_write_time(in_file, std::chrono::file_clock::now() - 100ms);
 
-  plan->reset();
-  LogTestController::getInstance().clear();
-
-  plan->runNextProcessor();  // Tail
-  plan->runNextProcessor();  // Log
-
-  // Find the last flow file in the rotated file, and then pick up the new file
-  REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:testfifo.txt.28-34.1"));
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:testfifo.0-4.txt"));
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:testfifo.5-8.txt"));
+  {
+    auto res = test_controller.trigger();
+    const auto& success_ffs = res.at(minifi::processors::TailFile::Success);
+    CHECK(success_ffs.size() == 3);
+    CHECK(success_ffs[0]->getAttribute(core::SpecialFlowAttribute::FILENAME) == "testfifo.txt.28-33.1");
+    CHECK(test_controller.plan->getContent(success_ffs[0]) == " seven");
+    CHECK(success_ffs[1]->getAttribute(core::SpecialFlowAttribute::FILENAME) == "testfifo.0-4.txt");
+    CHECK(test_controller.plan->getContent(success_ffs[1]) == "five,");
+    CHECK(success_ffs[2]->getAttribute(core::SpecialFlowAttribute::FILENAME) == "testfifo.5-8.txt");
+    CHECK(test_controller.plan->getContent(success_ffs[2]) == "six,");
+  };
 }
 
 TEST_CASE("TailFile finds and finishes multiple rotated files and continues with the new log file", "[rotation]") {
-  TestController testController;
+  auto tailfile = std::make_shared<minifi::processors::TailFile>("TailFile");
+  minifi::test::SingleProcessorTestController test_controller(tailfile);
 
-  const char DELIM = ':';
-
-  LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
-  LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
-  auto plan = testController.createPlan();
-  auto dir = testController.createTempDirectory();
-  auto test_file = dir / "fruits.log";
 
-  std::ofstream test_file_stream_0(test_file, std::ios::binary);
-  test_file_stream_0 << "Apple" << DELIM << "Orange" << DELIM;
-  test_file_stream_0.flush();
+  constexpr char DELIM = ':';
 
-  // Build MiNiFi processing graph
-  auto tail_file = plan->addProcessor("TailFile", "Tail");
-  plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, std::string(1, DELIM));
-  plan->setProperty(tail_file, minifi::processors::TailFile::FileName, test_file.string());
-  auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
-  plan->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog, "0");
+  auto dir = test_controller.createTempDirectory();
+  auto fruits_log_path = dir / "fruits.log";
 
-  testController.runSession(plan, true);
+  tailfile->setProperty(minifi::processors::TailFile::FileName, fruits_log_path.string());
+  tailfile->setProperty(minifi::processors::TailFile::Delimiter, std::string(1, DELIM));
 
-  REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0-5.log"));
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.6-12.log"));
+  const auto file_modi_time_t0 = std::chrono::file_clock::now();
+  {
+    std::ofstream test_file_stream(fruits_log_path, std::ios::binary);
+    test_file_stream << "Apple" << DELIM << "Orange" << DELIM;
+  }
+  std::filesystem::last_write_time(fruits_log_path, file_modi_time_t0 - 1s);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  {
+    const auto result = test_controller.trigger();
+    const auto& success_ffs = result.at(minifi::processors::TailFile::Success);
+    REQUIRE(success_ffs.size() == 2);
+    CHECK(test_controller.plan->getContent(success_ffs[0]) == "Apple:");
+    CHECK(test_controller.plan->getContent(success_ffs[1]) == "Orange:");
+  }
 
-  test_file_stream_0 << "Pear" << DELIM;
-  test_file_stream_0.close();
+  {
+    std::ofstream test_file_stream(fruits_log_path, std::ios::binary | std::ios::app);
+    test_file_stream << "Pear" << DELIM;
+  }
 
   auto first_rotated_file = dir / "fruits.0.log";
-  REQUIRE_NOTHROW(std::filesystem::rename(test_file, first_rotated_file));
+  REQUIRE_NOTHROW(std::filesystem::rename(fruits_log_path, first_rotated_file));
 
-  std::ofstream test_file_stream_1(test_file, std::ios::binary);
-  test_file_stream_1 << "Pineapple" << DELIM << "Kiwi" << DELIM;
-  test_file_stream_1.close();
+  {
+    std::ofstream test_file_stream_1(fruits_log_path, std::ios::binary);
+    test_file_stream_1 << "Pineapple" << DELIM << "Kiwi" << DELIM;
+  }
 
   auto second_rotated_file = dir / "fruits.1.log";
-  REQUIRE_NOTHROW(std::filesystem::rename(test_file, second_rotated_file));
+  REQUIRE_NOTHROW(std::filesystem::rename(fruits_log_path, second_rotated_file));
 
-  std::ofstream test_file_stream_2(test_file, std::ios::binary);
+  std::ofstream test_file_stream_2(fruits_log_path, std::ios::binary);
   test_file_stream_2 << "Apricot" << DELIM;
   test_file_stream_2.close();
 
-  plan->reset();
-  LogTestController::getInstance().clear();
-
-  testController.runSession(plan, true);
-
-  REQUIRE(LogTestController::getInstance().contains("Logged 4 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0.13-17.log"));   // Pear
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.1.0-9.log"));     // Pineapple
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.1.10-14.log"));   // Kiwi
-  REQUIRE(LogTestController::getInstance().contains("key:filename value:fruits.0-7.log"));       // Apricot
+  {
+    const auto result = test_controller.trigger();
+    const auto& success_ffs = result.at(minifi::processors::TailFile::Success);
+    REQUIRE(success_ffs.size() == 4);
+    CHECK(test_controller.plan->getContent(success_ffs[0]) == "Pear:");
+    CHECK(test_controller.plan->getContent(success_ffs[1]) == "Pineapple:");
+    CHECK(test_controller.plan->getContent(success_ffs[2]) == "Kiwi:");
+    CHECK(test_controller.plan->getContent(success_ffs[3]) == "Apricot:");
+  }
 }
 
 TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
@@ -921,12 +896,10 @@ TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
                                                                      true);
   plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
-  createTempFile(dir, "test.2019-08-20", "line1\nline2\nline3\nline4\n");   // very old rotated file
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-
+  createTempFile(dir, "test.2019-08-20", "line1\nline2\nline3\nline4\n", std::ios::out | std::ios::binary, -1s);   // very old rotated file
   createTempFile(dir, "test.log", "line5\nline6\nline7\n");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
   REQUIRE(false == LogTestController::getInstance().contains("key:filename value:test.2019-08-20", std::chrono::seconds(0)));
 
@@ -938,7 +911,7 @@ TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
   plan->reset();
   LogTestController::getInstance().clear();
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(false == LogTestController::getInstance().contains("key:filename value:test.2019-08-20", std::chrono::seconds(0)));
 
@@ -955,9 +928,9 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   auto plan = testController.createPlan();
   auto dir = testController.createTempDirectory();
 
-  createTempFile(dir, "fruit.log", "apple\npear\nbanana\n");
-  createTempFile(dir, "animal.log", "bear\ngiraffe\n");
-  createTempFile(dir, "color.log", "red\nblue\nyellow\npurple\n");
+  createTempFile(dir, "fruit.log", "apple\npear\nbanana\n", std::ios::out | std::ios::binary, -1100ms);
+  createTempFile(dir, "animal.log", "bear\ngiraffe\n", std::ios::out | std::ios::binary, -1100ms);
+  createTempFile(dir, "color.log", "red\nblue\nyellow\npurple\n", std::ios::out | std::ios::binary, -1100ms);
 
   auto tail_file = plan->addProcessor("TailFile", "Tail");
   plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, "\n");
@@ -969,7 +942,7 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   auto log_attribute = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged " + std::to_string(3 + 2 + 4) + " flow files"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:fruit.0-5.log"));
@@ -981,8 +954,6 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   REQUIRE(LogTestController::getInstance().contains("key:filename value:color.4-8.log"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:color.9-15.log"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:color.16-22.log"));
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   appendTempFile(dir, "fruit.log", "orange\n");
   appendTempFile(dir, "animal.log", "axolotl\n");
@@ -998,7 +969,7 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   plan->reset();
   LogTestController::getInstance().clear();
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 6 flow files"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:fruit.18-24.0"));
@@ -1018,7 +989,7 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
 
   auto plan = testController.createPlan();
   auto dir = testController.createTempDirectory();
-  auto test_file = createTempFile(dir, "test.log", "some stuff\n");
+  auto test_file = createTempFile(dir, "test.log", "some stuff\n", std::ios::out | std::ios::binary, -100ms);
 
   // Build MiNiFi processing graph
   auto tail_file = plan->addProcessor("TailFile", "Tail");
@@ -1050,12 +1021,10 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
   auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   plan->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-10.log"));
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   appendTempFile(dir, "test.log", "one more line\n");
   std::filesystem::rename(dir / "test.log", dir / "test.rolled.log");
@@ -1065,7 +1034,7 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
   plan->reset();
   LogTestController::getInstance().clear();
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   for (const auto &log_line : expected_log_lines) {
     REQUIRE(LogTestController::getInstance().contains(log_line));
@@ -1081,9 +1050,11 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
 
   auto log_dir = testController.createTempDirectory();
 
+  const auto file_modi_time_t0 = std::chrono::file_clock::now();
   auto test_file_1 = createTempFile(log_dir, "test.1", "line one\nline two\nline three\n");  // old rotated file
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::filesystem::last_write_time(log_dir/"test.1", file_modi_time_t0 - 1100ms);
   auto test_file = createTempFile(log_dir, "test.log", "line four\nline five\nline six\n");  // current log file
+  std::filesystem::last_write_time(log_dir/"test.log", file_modi_time_t0 - 100ms);
 
   auto state_dir = testController.createTempDirectory();
 
@@ -1101,13 +1072,11 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
     test_plan->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog, "0");
     test_plan->setProperty(log_attr, minifi::processors::LogAttribute::LogPayload, "true");
 
-    testController.runSession(test_plan, true);
+    TestController::runSession(test_plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
   }
 
   LogTestController::getInstance().clear();
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   appendTempFile(log_dir, "test.log", "line seven\n");
   std::filesystem::rename(log_dir / "test.1", log_dir / "test.2");
@@ -1122,7 +1091,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
     test_plan->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog, "0");
     test_plan->setProperty(log_attr, minifi::processors::LogAttribute::LogPayload, "true");
 
-    testController.runSession(test_plan, true);
+    TestController::runSession(test_plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:test.29-39.1"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:test.0-27.log"));
@@ -1148,7 +1117,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
   SECTION("Empty log file => yield") {
     createTempFile(temp_directory, "first.log", "");
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     REQUIRE(tail_file->getYieldTime() > 0ms);
 
@@ -1156,7 +1125,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
       plan->reset();
       tail_file->clearYield();
 
-      testController.runSession(plan, true);
+      TestController::runSession(plan, true);
 
       REQUIRE(tail_file->getYieldTime() > 0ms);
     }
@@ -1167,7 +1136,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
 
       appendTempFile(temp_directory, "first.log", "stuff stuff\nand stuff\n");
 
-      testController.runSession(plan, true);
+      TestController::runSession(plan, true);
 
       REQUIRE(tail_file->getYieldTime() == 0ms);
     }
@@ -1176,7 +1145,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
   SECTION("Non-empty log file => don't yield") {
     createTempFile(temp_directory, "second.log", "some content\n");
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     REQUIRE(tail_file->getYieldTime() == 0ms);
 
@@ -1184,7 +1153,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
       plan->reset();
       tail_file->clearYield();
 
-      testController.runSession(plan, true);
+      TestController::runSession(plan, true);
 
       REQUIRE(tail_file->getYieldTime() > 0ms);
     }
@@ -1195,7 +1164,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
 
       appendTempFile(temp_directory, "second.log", "stuff stuff\nand stuff\n");
 
-      testController.runSession(plan, true);
+      TestController::runSession(plan, true);
 
       REQUIRE(tail_file->getYieldTime() == 0ms);
     }
@@ -1209,9 +1178,9 @@ TEST_CASE("TailFile yields if no work is done on any files", "[yield][multiple_f
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
   LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
 
-  auto temp_directory = testController.createTempDirectory();
-  auto plan = testController.createPlan();
-  auto tail_file = plan->addProcessor("TailFile", "Tail");
+  const auto temp_directory = testController.createTempDirectory();
+  const auto plan = testController.createPlan();
+  const auto tail_file = plan->addProcessor("TailFile", "Tail");
   plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, "\n");
   plan->setProperty(tail_file, minifi::processors::TailFile::TailMode, "Multiple file");
   plan->setProperty(tail_file, minifi::processors::TailFile::FileName, ".*\\.log");
@@ -1222,12 +1191,12 @@ TEST_CASE("TailFile yields if no work is done on any files", "[yield][multiple_f
   createTempFile(temp_directory, "second.log", "different stuff\n");
   createTempFile(temp_directory, "third.log", "stuff stuff\n");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
   plan->reset();
   tail_file->clearYield();
 
   SECTION("No file changed => yield") {
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     REQUIRE(tail_file->getYieldTime() > 0ms);
   }
@@ -1237,7 +1206,7 @@ TEST_CASE("TailFile yields if no work is done on any files", "[yield][multiple_f
     SECTION("second") { appendTempFile(temp_directory, "second.log", "more stuff\n"); }
     SECTION("third") { appendTempFile(temp_directory, "third.log", "more stuff\n"); }
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     REQUIRE(tail_file->getYieldTime() == 0ms);
   }
@@ -1253,7 +1222,7 @@ TEST_CASE("TailFile yields if no work is done on any files", "[yield][multiple_f
       appendTempFile(temp_directory, "third.log", "more stuff\n");
     }
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     REQUIRE(tail_file->getYieldTime() == 0ms);
   }
@@ -1266,21 +1235,21 @@ TEST_CASE("TailFile doesn't yield if work was done on rotated files only", "[yie
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
   LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
 
-  auto temp_directory = testController.createTempDirectory();
-  auto full_file_name = createTempFile(temp_directory, "test.log", "stuff\n");
+  const auto file_modi_time_t0 = std::chrono::file_clock::now();
+  const auto temp_directory = testController.createTempDirectory();
+  const auto full_file_name = createTempFile(temp_directory, "test.log", "stuff\n");
+  std::filesystem::last_write_time(full_file_name, file_modi_time_t0 - 100ms);
 
-  auto plan = testController.createPlan();
+  const auto plan = testController.createPlan();
 
-  auto tail_file = plan->addProcessor("TailFile", "Tail");
+  const auto tail_file = plan->addProcessor("TailFile", "Tail");
   plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, "\n");
   plan->setProperty(tail_file, minifi::processors::TailFile::FileName, full_file_name.string());
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   plan->reset();
   tail_file->clearYield();
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   SECTION("File rotated but not written => yield") {
     std::filesystem::rename(temp_directory / "test.log", temp_directory / "test.1");
@@ -1291,7 +1260,7 @@ TEST_CASE("TailFile doesn't yield if work was done on rotated files only", "[yie
       createTempFile(temp_directory, "test.log", "");
     }
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     REQUIRE(tail_file->getYieldTime() > 0ms);
   }
@@ -1307,7 +1276,7 @@ TEST_CASE("TailFile doesn't yield if work was done on rotated files only", "[yie
       createTempFile(temp_directory, "test.log", "even more stuff\n");
     }
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     REQUIRE(tail_file->getYieldTime() == 0ms);
   }
@@ -1339,7 +1308,7 @@ TEST_CASE("TailFile handles the Delimiter setting correctly", "[delimiter]") {
     auto log_attribute = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
     plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     if (delimiter.empty()) {
       REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
@@ -1370,7 +1339,7 @@ TEST_CASE("TailFile handles Unix/Windows line endings correctly", "[simple]") {
   auto log_attribute = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
 #ifdef WIN32
   std::size_t line_ending_size = 2;
@@ -1416,19 +1385,19 @@ TEST_CASE("TailFile can tail all files in a directory recursively", "[multiple]"
   plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload, "true");
 
   SECTION("Recursive lookup not set => defaults to false") {
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
   }
 
   SECTION("Recursive lookup set to false") {
     plan->setProperty(tail_file, minifi::processors::TailFile::RecursiveLookup, "false");
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
   }
 
   SECTION("Recursive lookup set to true") {
     plan->setProperty(tail_file, minifi::processors::TailFile::RecursiveLookup, "true");
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 5 flow files"));
   }
 }
@@ -1454,7 +1423,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
   plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
   SECTION("Lookup frequency not set => defaults to 10 minutes") {
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     const auto tail_file_processor = dynamic_cast<minifi::processors::TailFile*>(tail_file);
     REQUIRE(tail_file_processor);
@@ -1463,7 +1432,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
 
   SECTION("Lookup frequency set to zero => new files are picked up immediately") {
     plan->setProperty(tail_file, minifi::processors::TailFile::LookupFrequency, "0 sec");
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
 
     plan->reset();
@@ -1472,14 +1441,14 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     createTempFile(directory, "test.blue.log", "sky\n");
     createTempFile(directory, "test.green.log", "grass\n");
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   }
 
   SECTION("Lookup frequency set to 500 ms => new files are only picked up after 500 ms") {
     plan->setProperty(tail_file, minifi::processors::TailFile::LookupFrequency, "500 ms");
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
 
     plan->reset();
@@ -1488,20 +1457,20 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     createTempFile(directory, "test.blue.log", "sky\n");
     createTempFile(directory, "test.green.log", "grass\n");
 
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
     plan->reset();
     LogTestController::getInstance().clear();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(550));
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   }
 
   SECTION("Lookup frequency set to a thousand years => files already present when started are still picked up") {
     plan->setProperty(tail_file, minifi::processors::TailFile::LookupFrequency, "365000 days");
-    testController.runSession(plan, true);
+    TestController::runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
   }
 }
@@ -1526,7 +1495,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
   SECTION("Initial Start Position is set to Beginning of File") {
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition, "Beginning of File");
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
@@ -1536,7 +1505,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
 
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + NEW_TAIL_DATA.find_first_of('\n')) + " Offset:0"));
@@ -1545,7 +1514,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
   SECTION("Initial Start Position is set to Beginning of Time") {
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition, "Beginning of Time");
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
@@ -1556,7 +1525,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
 
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size() - NEWLINE_FILE.find_first_of('\n') + NEW_TAIL_DATA.find_first_of('\n')) + " Offset:0"));
@@ -1565,7 +1534,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
   SECTION("Initial Start Position is set to Current Time") {
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition, "Current Time");
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
@@ -1574,7 +1543,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
 
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEW_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
@@ -1592,15 +1561,17 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   auto tailfile = plan->addProcessor("TailFile", "tailfileProc");
   auto logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
+  const auto file_modi_time_t0 = std::chrono::file_clock::now();
   auto dir = testController.createTempDirectory();
   auto temp_file_path = createTempFile(dir, TMP_FILE, NEWLINE_FILE);
+  std::filesystem::last_write_time(temp_file_path, file_modi_time_t0 - 100ms);
 
   plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog, "0");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName, temp_file_path.string());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter, "\n");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition, "Current Time");
 
-  testController.runSession(plan);
+  TestController::runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
@@ -1608,12 +1579,11 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   LogTestController::getInstance().clear();
 
   const std::string DATA_IN_NEW_FILE = "data in new file\n";
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));  // make sure the new file gets newer modification time
   appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
   std::filesystem::rename(dir / TMP_FILE, dir / ROLLED_OVER_TMP_FILE);
   createTempFile(dir, TMP_FILE, DATA_IN_NEW_FILE);
 
-  testController.runSession(plan);
+  TestController::runSession(plan);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEW_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
@@ -1646,7 +1616,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
   SECTION("Initial Start Position is set to Beginning of File") {
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition, "Beginning of File");
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
@@ -1658,7 +1628,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(ADDITIONALY_CREATED_FILE_CONTENT.find_first_of('\n') + 1) + " Offset:0"));
@@ -1668,7 +1638,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
   SECTION("Initial Start Position is set to Beginning of Time") {
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition, "Beginning of Time");
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
@@ -1681,7 +1651,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(ADDITIONALY_CREATED_FILE_CONTENT.find_first_of('\n') + 1) + " Offset:0"));
@@ -1691,7 +1661,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
   SECTION("Initial Start Position is set to Current Time") {
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition, "Current Time");
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
@@ -1701,7 +1671,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
-    testController.runSession(plan);
+    TestController::runSession(plan);
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(ADDITIONALY_CREATED_FILE_CONTENT.find_first_of('\n') + 1) + " Offset:0"));
@@ -1736,7 +1706,7 @@ TEST_CASE("Initial Start Position is set to invalid or empty value", "[initialSt
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition, "Invalid Value");
   }
 
-  REQUIRE_THROWS_AS(testController.runSession(plan), minifi::Exception);
+  REQUIRE_THROWS_AS(TestController::runSession(plan), minifi::Exception);
 }
 
 TEST_CASE("TailFile onSchedule throws if an invalid Attribute Provider Service is found", "[configuration][AttributeProviderService]") {
@@ -1755,7 +1725,7 @@ TEST_CASE("TailFile onSchedule throws if an invalid Attribute Provider Service i
 
 namespace {
 
-class TestAttributeProviderService : public minifi::controllers::AttributeProviderService {
+class TestAttributeProviderService final : public minifi::controllers::AttributeProviderService {
  public:
   using AttributeProviderService::AttributeProviderService;
 
@@ -1801,7 +1771,7 @@ TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderSer
   createTempFile(temp_directory / "my_yellow_apple_003" / "horse", "0.log", "yellow apple\n");
   createTempFile(temp_directory / "my_yellow_banana_004" / "dolphin", "0.log", "yellow banana\n");
 
-  testController.runSession(plan);
+  TestController::runSession(plan);
 
   CHECK(LogTestController::getInstance().contains("Logged 3 flow files"));
   CHECK(LogTestController::getInstance().contains("key:absolute.path value:" + (temp_directory / "my_red_apple_001" / "dog" / "0.log").string()));
