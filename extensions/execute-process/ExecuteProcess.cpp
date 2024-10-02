@@ -19,11 +19,12 @@
  */
 #include "ExecuteProcess.h"
 
+#include <unistd.h>
+
 #include <array>
 #include <iomanip>
 #include <memory>
 #include <string>
-#include <unistd.h>
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
