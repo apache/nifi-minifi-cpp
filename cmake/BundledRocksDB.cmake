@@ -19,8 +19,7 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     message("Using bundled RocksDB")
 
     if (NOT WIN32)
-        include(GetZstd)
-        get_zstd()
+        include(Zstd)
         list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zstd/dummy")
 
         include(LZ4)
@@ -28,9 +27,9 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     endif()
 
     # Patch to fix build issue on ARM7 architecture: https://github.com/facebook/rocksdb/issues/8609#issuecomment-1009572506
-    set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/rocksdb/arm7.patch")
-    set(PATCH_FILE_2 "${SOURCE_DIR}/thirdparty/rocksdb/dboptions_equality_operator.patch")
-    set(PATCH_FILE_3 "${SOURCE_DIR}/thirdparty/rocksdb/cstdint.patch")
+    set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/rocksdb/all/patches/arm7.patch")
+    set(PATCH_FILE_2 "${SOURCE_DIR}/thirdparty/rocksdb/all/patches/dboptions_equality_operator.patch")
+    set(PATCH_FILE_3 "${SOURCE_DIR}/thirdparty/rocksdb/all/patches/cstdint.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\") &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\") &&\
@@ -64,17 +63,10 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
                 -DROCKSDB_INSTALL_ON_WINDOWS=ON
                 -DWITH_XPRESS=ON)
     else()
-    if(MINIFI_ZSTD_SOURCE STREQUAL "CONAN" AND MINIFI_ZLIB_SOURCE STREQUAL "CONAN")
         list(APPEND ROCKSDB_CMAKE_ARGS
-            -DWITH_ZLIB=OFF
-            -DWITH_ZSTD=OFF)
-    else()
-        list(APPEND ROCKSDB_CMAKE_ARGS
-            -DWITH_ZLIB=ON
-            -DWITH_ZSTD=ON)
-    endif()
-        list(APPEND ROCKSDB_CMAKE_ARGS
+                -DWITH_ZLIB=ON
                 -DWITH_BZ2=ON
+                -DWITH_ZSTD=ON
                 -DWITH_LZ4=ON)
     endif()
 
@@ -103,11 +95,7 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     add_library(RocksDB::RocksDB STATIC IMPORTED)
     set_target_properties(RocksDB::RocksDB PROPERTIES IMPORTED_LOCATION "${ROCKSDB_LIBRARY}")
     if (NOT WIN32)
-        if(MINIFI_ZSTD_SOURCE STREQUAL "CONAN" AND MINIFI_ZLIB_SOURCE STREQUAL "CONAN")
-            add_dependencies(rocksdb-external BZip2::BZip2 lz4::lz4)
-        else()
-            add_dependencies(rocksdb-external ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
-        endif()
+        add_dependencies(rocksdb-external ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
     endif()
     add_dependencies(RocksDB::RocksDB rocksdb-external)
     file(MAKE_DIRECTORY ${ROCKSDB_INCLUDE_DIR})

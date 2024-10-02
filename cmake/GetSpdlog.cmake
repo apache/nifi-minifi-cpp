@@ -25,7 +25,7 @@ function(get_spdlog)
 
         add_library(spdlog ALIAS spdlog::spdlog)
     elseif(MINIFI_SPDLOG_SOURCE STREQUAL "BUILD")
-        message("Using CMAKE's ExternalProject_Add to manage source building Spdlog external lib")
+        message("Using CMake to build Spdlog from source")
         include(Spdlog)
     endif()
 endfunction(get_spdlog)

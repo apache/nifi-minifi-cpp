@@ -15,12 +15,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_civetweb)
-    if(MINIFI_CIVETWEB_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to manage installing prebuilt CivetWeb external lib")
-        find_package(civetweb REQUIRED)
-    elseif(MINIFI_CIVETWEB_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build CivetWeb from source")
-        include(CivetWeb)
+function(get_rocksdb SOURCE_DIR BINARY_DIR)
+    if(MINIFI_ROCKSDB_SOURCE STREQUAL "CONAN")
+        message("Using Conan Packager to manage installing prebuilt RocksDB external lib")
+        find_package(RocksDB REQUIRED)
+        add_library(RocksDB::RocksDB ALIAS RocksDB::rocksdb)
+    elseif(MINIFI_ROCKSDB_SOURCE STREQUAL "BUILD")
+        message("Using CMake to build RocksDB from source")
+
+        if (BUILD_ROCKSDB)
+            include(BundledRocksDB)
+            use_bundled_rocksdb(${SOURCE_DIR} ${BINARY_DIR})
+        else()
+            list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}/cmake/rocksdb/sys")
+            find_package(RocksDB REQUIRED)
+        endif()
     endif()
-endfunction(get_civetweb)
+endfunction(get_rocksdb SOURCE_DIR BINARY_DIR)

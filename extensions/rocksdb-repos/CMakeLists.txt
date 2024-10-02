@@ -21,13 +21,8 @@ if (NOT ENABLE_ROCKSDB)
     return()
 endif()
 
-if (BUILD_ROCKSDB)
-    include(BundledRocksDB)
-    use_bundled_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-else()
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/rocksdb/sys")
-    find_package(RocksDB REQUIRED)
-endif()
+include(GetRocksDB)
+get_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
