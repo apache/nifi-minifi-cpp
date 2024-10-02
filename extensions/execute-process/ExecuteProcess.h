@@ -46,10 +46,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class ExecuteProcess : public core::ProcessorImpl {
+class ExecuteProcess final : public core::ProcessorImpl {
  public:
   explicit ExecuteProcess(const std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
+      : ProcessorImpl(name, uuid),
         working_dir_(".") {
   }
   ~ExecuteProcess() override {
