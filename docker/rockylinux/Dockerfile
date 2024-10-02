@@ -39,10 +39,9 @@ RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
 
 # Install the system dependencies needed for a build
-# gpsd-devel and ccache are in EPEL
+# ccache is in EPEL
 RUN dnf -y install epel-release && dnf -y install gcc-toolset-12 sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_ALL=ON"; then dnf -y --enablerepo=devel install gpsd-devel python3-devel; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_GPS=ON"; then dnf -y install gpsd-devel; fi && \
+    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_ALL=ON"; then dnf -y --enablerepo=devel install python3-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then dnf -y install python3-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SFTP=ON" && [ "${DOCKER_SKIP_TESTS}" == "OFF" ]; then dnf -y install java-1.8.0-openjdk maven; fi
 

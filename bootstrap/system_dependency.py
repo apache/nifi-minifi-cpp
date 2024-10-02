@@ -30,8 +30,6 @@ def _create_system_dependencies(minifi_options: MinifiOptions) -> Dict[str, Set[
         system_dependencies['m4'] = {'m4'}
     if minifi_options.is_enabled("ENABLE_LIBARCHIVE"):
         system_dependencies['libarchive'] = {'libarchive'}
-    if minifi_options.is_enabled("ENABLE_GPS"):
-        system_dependencies['gpsd'] = {'gpsd'}
     if minifi_options.is_enabled("ENABLE_SQL"):
         system_dependencies['automake'] = {'automake'}
         system_dependencies['autoconf'] = {'autoconf'}

@@ -19,11 +19,7 @@
 verify_enable_platform() {
   feature="$1"
   if [ "$OS_MAJOR" = "6" ]; then
-    if [ "${feature}" = "GPS_ENABLED" ]; then
-      echo "false"
-    else
-      verify_gcc_enable "${feature}"
-    fi
+    verify_gcc_enable "${feature}"
   else
     verify_gcc_enable "${feature}"
   fi
@@ -84,8 +80,6 @@ build_deps(){
             INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "python" ]; then
             INSTALLED+=("python3-devel")
-          elif [ "$FOUND_VALUE" = "gpsd" ]; then
-            INSTALLED+=("gpsd-devel")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
             INSTALLED+=("xz-devel")
           elif [ "$FOUND_VALUE" = "libssh2" ]; then

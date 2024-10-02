@@ -81,8 +81,6 @@ build_deps() {
                         INSTALLED+=("automake")
                     elif [ "$FOUND_VALUE" = "python" ]; then
                         INSTALLED+=("python36-devel")
-                    elif [ "$FOUND_VALUE" = "gpsd" ]; then
-                        INSTALLED+=("gpsd-devel")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
                         INSTALLED+=("xz-devel")
                         INSTALLED+=("bzip2-devel")
