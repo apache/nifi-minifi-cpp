@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::state::response {
 class ConfigurationChecksums : public ResponseNodeImpl {
  public:
   ConfigurationChecksums() = default;
-  explicit ConfigurationChecksums(std::string name, const utils::Identifier& uuid = {}) : ResponseNodeImpl(std::move(name), uuid) {}
+  explicit ConfigurationChecksums(const std::string_view name, const utils::Identifier& uuid = {}) : ResponseNodeImpl(name, uuid) {}
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines checksums of configuration files in the C2 protocol";
 

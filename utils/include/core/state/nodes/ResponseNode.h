@@ -44,12 +44,12 @@ class ResponseNodeImpl : public core::ConnectableImpl, public PublishedMetricPro
         is_array_(false) {
   }
 
-  explicit ResponseNodeImpl(std::string_view name)
+  explicit ResponseNodeImpl(const std::string_view name)
       : core::ConnectableImpl(name),
         is_array_(false) {
   }
 
-  ResponseNodeImpl(std::string_view name, const utils::Identifier& uuid)
+  ResponseNodeImpl(const std::string_view name, const utils::Identifier& uuid)
       : core::ConnectableImpl(name, uuid),
         is_array_(false) {
   }

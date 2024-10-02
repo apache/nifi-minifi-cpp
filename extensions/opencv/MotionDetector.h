@@ -33,10 +33,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class MotionDetector : public core::ProcessorImpl {
+class MotionDetector final : public core::ProcessorImpl {
  public:
-  explicit MotionDetector(std::string name, const utils::Identifier &uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit MotionDetector(const std::string_view name, const utils::Identifier &uuid = {})
+      : ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Detect motion from captured images.";

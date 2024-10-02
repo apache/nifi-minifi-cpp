@@ -34,17 +34,17 @@ namespace org::apache::nifi::minifi::sql::controllers {
  * services to internal services. While a controller service is generally configured from the flow,
  * we want to follow the open closed principle and provide Database services
  */
-class ODBCService : public DatabaseService {
+class ODBCService final : public DatabaseService {
  public:
-  explicit ODBCService(std::string name, const utils::Identifier &uuid = {})
-    : DatabaseService(std::move(name), uuid) {
-    initialize();
+  explicit ODBCService(const std::string_view name, const utils::Identifier &uuid = {})
+    : DatabaseService(name, uuid) {
+    DatabaseService::initialize();
   }
 
-  explicit ODBCService(std::string_view name, const std::shared_ptr<Configure> &configuration)
+  explicit ODBCService(const std::string_view name, const std::shared_ptr<Configure> &configuration)
       : DatabaseService(name) {
-    setConfiguration(configuration);
-    initialize();
+    ControllerServiceImpl::setConfiguration(configuration);
+    DatabaseService::initialize();
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Controller service that provides ODBC database connection";
