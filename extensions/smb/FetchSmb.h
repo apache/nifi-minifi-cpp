@@ -37,10 +37,10 @@
 
 namespace org::apache::nifi::minifi::extensions::smb {
 
-class FetchSmb : public core::ProcessorImpl {
+class FetchSmb final : public core::ProcessorImpl {
  public:
-  explicit FetchSmb(std::string name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(std::move(name), uuid) {
+  explicit FetchSmb(const std::string_view name, const utils::Identifier& uuid = {})
+      : core::ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches files from a SMB Share. Designed to be used in tandem with ListSmb.";

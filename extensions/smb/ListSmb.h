@@ -39,8 +39,8 @@ namespace org::apache::nifi::minifi::extensions::smb {
 
 class ListSmb : public core::ProcessorImpl {
  public:
-  explicit ListSmb(std::string name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(std::move(name), uuid) {
+  explicit ListSmb(std::string_view name, const utils::Identifier& uuid = {})
+      : core::ProcessorImpl(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from an SMB share. For each file that is listed, "

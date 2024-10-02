@@ -52,8 +52,8 @@ class DeviceInformation : public ResponseNodeImpl {
  */
 class ObjectNode : public ResponseNodeImpl {
  public:
-  explicit ObjectNode(std::string name, const utils::Identifier& uuid = {})
-      : ResponseNodeImpl(std::move(name), uuid) {
+  explicit ObjectNode(const std::string_view name, const utils::Identifier& uuid = {})
+      : ResponseNodeImpl(name, uuid) {
   }
 
   void add_node(const SharedResponseNode &node) {

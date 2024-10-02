@@ -24,14 +24,14 @@
 
 namespace org::apache::nifi::minifi::core {
 
-ConnectableImpl::ConnectableImpl(std::string_view name, const utils::Identifier &uuid)
+ConnectableImpl::ConnectableImpl(const std::string_view name, const utils::Identifier &uuid)
     : CoreComponentImpl(name, uuid),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),
       logger_(logging::LoggerFactory<Connectable>::getLogger(uuid_)) {
 }
 
-ConnectableImpl::ConnectableImpl(std::string_view name)
+ConnectableImpl::ConnectableImpl(const std::string_view name)
     : CoreComponentImpl(name),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),

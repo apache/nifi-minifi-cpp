@@ -53,10 +53,10 @@ enum class ResultRelativeness {
   Absolute
 };
 
-class ProcFsMonitor : public core::ProcessorImpl {
+class ProcFsMonitor final : public core::ProcessorImpl {
  public:
-  explicit ProcFsMonitor(std::string name, utils::Identifier uuid = utils::Identifier())
-      : Processor(std::move(name), uuid) {
+  explicit ProcFsMonitor(const std::string_view name, utils::Identifier uuid = utils::Identifier())
+      : ProcessorImpl(name, uuid) {
   }
   ~ProcFsMonitor() override = default;
 

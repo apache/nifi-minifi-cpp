@@ -19,7 +19,6 @@
 #pragma once
 
 #include <vector>
-#include <utility>
 #include <algorithm>
 #include <string>
 #include <memory>
@@ -47,8 +46,8 @@ namespace org::apache::nifi::minifi::extensions::python {
  */
 class PythonCreator : public minifi::core::CoreComponentImpl {
  public:
-  explicit PythonCreator(std::string name, const utils::Identifier &uuid = {})
-      : minifi::core::CoreComponentImpl(std::move(name), uuid) {
+  explicit PythonCreator(const std::string_view name, const utils::Identifier &uuid = {})
+      : minifi::core::CoreComponentImpl(name, uuid) {
   }
 
   ~PythonCreator() override {
