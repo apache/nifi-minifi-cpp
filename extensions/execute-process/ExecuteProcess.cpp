@@ -20,17 +20,18 @@
 #include "ExecuteProcess.h"
 
 #include <array>
-
+#include <iomanip>
 #include <memory>
 #include <string>
-#include <iomanip>
+#include <unistd.h>
+
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "utils/StringUtils.h"
 #include "core/TypedValues.h"
-#include "utils/gsl.h"
 #include "utils/Environment.h"
+#include "utils/StringUtils.h"
+#include "utils/gsl.h"
 
 using namespace std::literals::chrono_literals;
 

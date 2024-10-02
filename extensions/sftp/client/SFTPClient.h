@@ -20,18 +20,23 @@
 #include <curl/curl.h>
 #include <libssh2.h>
 #include <libssh2_sftp.h>
-#include <vector>
+
 #include <iostream>
-#include <string>
-#include <tuple>
 #include <memory>
 #include <optional>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "Exception.h"
-#include "utils/Enum.h"
-#include "http/BaseHTTPClient.h"
 #include "core/logging/Logger.h"
+#include "http/BaseHTTPClient.h"
+#include "utils/Enum.h"
 
+namespace org::apache::nifi::minifi::io {
+class OutputStream;
+class InputStream;
+}
 namespace org::apache::nifi::minifi::utils {
 
 enum class SFTPError {

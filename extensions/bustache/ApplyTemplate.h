@@ -23,21 +23,19 @@
 #include <string>
 #include <utility>
 
-#include "PropertyDefinition.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 /**
  * Applies a mustache template using incoming attributes as template parameters.
  */
-class ApplyTemplate : public core::ProcessorImpl {
+class ApplyTemplate final : public core::ProcessorImpl {
  public:
-  explicit ApplyTemplate(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {}
+  explicit ApplyTemplate(const std::string_view name, const utils::Identifier& uuid = {})
+      : ProcessorImpl(name, uuid) {}
 
   EXTENSIONAPI static constexpr const char* Description = "Applies the mustache template specified by the \"Template\" property and writes the output to the flow file content. "
     "FlowFile attributes are used as template parameters.";
