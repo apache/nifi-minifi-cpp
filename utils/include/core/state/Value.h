@@ -504,4 +504,8 @@ ValueNode& ValueNode::operator=(const T ref) {
   return *this;
 }
 
+inline std::string to_string(const SerializedResponseNode& node) { return node.to_string(); }
+
+std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes);
+
 }  // namespace org::apache::nifi::minifi::state::response

@@ -44,6 +44,8 @@
 #include "utils/gsl.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "minifi-cpp/core/Processor.h"
+#include "core/Property.h"
+#include "core/ProcessContext.h"
 
 #define ADD_GET_PROCESSOR_NAME \
   std::string getProcessorType() const override { \
@@ -65,7 +67,6 @@ class Connection;
 
 namespace core {
 
-class ProcessContext;
 class ProcessSession;
 class ProcessSessionFactory;
 

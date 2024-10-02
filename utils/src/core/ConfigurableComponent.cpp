@@ -21,6 +21,7 @@
 #include <map>
 #include <vector>
 
+#include "core/PropertyValue.h"
 #include "core/ConfigurableComponent.h"
 #include "core/logging/LoggerFactory.h"
 #include "range/v3/range/conversion.hpp"

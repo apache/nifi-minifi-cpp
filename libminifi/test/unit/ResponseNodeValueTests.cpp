@@ -17,7 +17,7 @@
  */
 #include <memory>
 
-#include "../../include/core/state/Value.h"
+#include "core/state/Value.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 
