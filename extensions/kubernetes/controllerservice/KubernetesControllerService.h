@@ -33,8 +33,8 @@ namespace org::apache::nifi::minifi::controllers {
 
 class KubernetesControllerService : public AttributeProviderServiceImpl {
  public:
-  explicit KubernetesControllerService(const std::string& name, const utils::Identifier& uuid = {});
-  KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration);
+  explicit KubernetesControllerService(const std::string_view name, const utils::Identifier& uuid = {});
+  KubernetesControllerService(const std::string_view name, const std::shared_ptr<Configure>& configuration);
 
   EXTENSIONAPI static constexpr const char* Description = "Controller service that provides access to the Kubernetes API";
 

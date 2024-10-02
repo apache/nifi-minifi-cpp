@@ -31,12 +31,12 @@ extern "C" {
 
 namespace org::apache::nifi::minifi::controllers {
 
-KubernetesControllerService::KubernetesControllerService(const std::string& name, const utils::Identifier& uuid)
-  : AttributeProviderService(name, uuid),
+KubernetesControllerService::KubernetesControllerService(const std::string_view name, const utils::Identifier& uuid)
+  : AttributeProviderServiceImpl(name, uuid),
     logger_{core::logging::LoggerFactory<KubernetesControllerService>::getLogger(uuid)} {
 }
 
-KubernetesControllerService::KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration)
+KubernetesControllerService::KubernetesControllerService(const std::string_view name, const std::shared_ptr<Configure>& configuration)
   : KubernetesControllerService{name} {
     setConfiguration(configuration);
     initialize();
