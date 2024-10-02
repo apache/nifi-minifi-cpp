@@ -27,7 +27,6 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Enum.h"
 #include "google/cloud/storage/well_known_headers.h"

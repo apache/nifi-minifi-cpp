@@ -17,7 +17,6 @@
  */
 #pragma once
 
-#include "core/PropertyDefinition.h"
 
 #include <memory>
 #include <utility>
@@ -29,6 +28,7 @@
 #include "processors/LogAttribute.h"
 #include "controllers/SSLContextService.h"
 #include "core/state/ProcessorController.h"
+#include "core/PropertyDefinition.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "unit/Catch.h"
 #include "unit/ProvenanceTestHelper.h"
