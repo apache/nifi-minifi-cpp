@@ -32,17 +32,17 @@ struct PropertyDefinition {
   std::string_view name;
   std::string_view display_name;
   std::string_view description;
-  bool is_required = false;
-  bool is_sensitive = false;
+  bool is_required;
+  bool is_sensitive;
   std::array<std::string_view, NumAllowedValues> allowed_values;
   std::span<const std::string_view> allowed_types;
   std::array<std::string_view, NumDependentProperties> dependent_properties;
   std::array<std::pair<std::string_view, std::string_view>, NumExclusiveOfProperties> exclusive_of_properties;
   std::optional<std::string_view> default_value;
   gsl::not_null<const PropertyType*> type;
-  bool supports_expression_language = false;
+  bool supports_expression_language;
 
-  uint8_t version = 1;
+  uint8_t version;
 };
 
 struct PropertyReference {

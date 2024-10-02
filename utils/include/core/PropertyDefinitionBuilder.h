@@ -103,7 +103,19 @@ struct PropertyDefinitionBuilder {
   }
 
   PropertyDefinition<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties> property{
-    .type = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE)
+    .name = {},
+    .display_name = {},
+    .description = {},
+    .is_required = false,
+    .is_sensitive = false,
+    .allowed_values = {},
+    .allowed_types = {},
+    .dependent_properties = {},
+    .exclusive_of_properties = {},
+    .default_value = {},
+    .type = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE),
+    .supports_expression_language = false,
+    .version = 1
   };
 };
 
