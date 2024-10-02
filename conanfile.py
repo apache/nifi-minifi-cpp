@@ -7,7 +7,7 @@ import shutil
 
 required_conan_version = ">=2.0"
 
-shared_requires = ("openssl/3.2.1", "libcurl/8.4.0", "civetweb/1.16", "libxml2/2.12.6", "fmt/10.2.1", "spdlog/1.14.0", "catch2/3.5.4", "zlib/1.2.11", "zstd/1.5.2")
+shared_requires = ("openssl/3.2.1", "libcurl/8.4.0", "civetweb/1.16", "libxml2/2.12.6", "fmt/10.2.1", "spdlog/1.14.0", "catch2/3.5.4", "zlib/1.2.11", "zstd/1.5.2", "bzip2/1.0.8", "rocksdb/8.10.2@minifi/develop")
 
 shared_sources = ("CMakeLists.txt", "libminifi/*", "extensions/*", "minifi_main/*", "nanofi/*", "bin/*", "bootstrap/*", "cmake/*", "conf/*", "controller/*", "encrypt-config/*", "etc/*", "examples/*", "msi/*", "thirdparty/*", "docker/*", "LICENSE", "NOTICE", "README.md", "C2.md", "CONFIGURE.md", "CONTRIBUTING.md", "CONTROLLERS.md", "EXPRESSIONS.md", "Extensions.md", "JNI.md", "METRICS.md", "OPS.md", "PROCESSORS.md", "ThirdParties.md", "Windows.md", "aptitude.sh", "arch.sh", "bootstrap.sh", "bstrp_functions.sh", "centos.sh", "CPPLINT.cfg", "darwin.sh", "debian.sh", "deploy.sh", "fedora.sh", "generateVersion.sh", "linux.sh", "rheldistro.sh", "run_clang_tidy.sh", "run_clang_tidy.sh", "run_flake8.sh", "run_shellcheck.sh", "suse.sh", "versioninfo.rc.in")
 
@@ -31,7 +31,9 @@ class MiNiFiCppMain(ConanFile):
         tc.variables["MINIFI_LIBCURL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_OPENSSL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_ZLIB_SOURCE"] = "CONAN"
+        tc.variables["MINIFI_ROCKSDB_SOURCE"] = "CONAN"
         tc.variables["MINIFI_ZSTD_SOURCE"] = "CONAN"
+        tc.variables["MINIFI_BZIP2_SOURCE"] = "CONAN"
         tc.variables["MINIFI_CIVETWEB_SOURCE"] = "CONAN"
         tc.variables["MINIFI_LIBXML2_SOURCE"] = "CONAN"
         tc.variables["MINIFI_FMT_SOURCE"] = "CONAN"

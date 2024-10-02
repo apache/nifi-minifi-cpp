@@ -25,6 +25,7 @@ We will walk through the steps to build MiNiFi using conan version 2 that comes 
   - [Build MiNiFi C++ with Conan](#build-minifi-c---with-conan)
   - [Create MiNiFi C++ Conan Package](#create-minifi-c---conan-package)
   - [Conclusion](#conclusion)
+  - [Appendix](#appendix)
 
 ## Description
 
@@ -120,3 +121,15 @@ To have a more consistent quick build process for MiNiFi, we can use conan versi
 There are multiple benefits of having MiNiFi prebuilt conan packages. We can upload these MiNiFi conan packages to a conan repository like jfrog for version management. We can easily integrate MiNiFi's edge data pipeline features into other C++ software infrastructure using conan's CMake support. We can still use MiNiFi for edge data collection from the IoT devices embedded on robotic systems. We can integrate MiNiFi into self-driving cars (sensor examples: cameras, lidar, radar, inertial measurement unit (IMU), electronic speed controller (ESC), steering servo, etc), into medical imaging robots (sensor examples: depth cameras, ultrasound, gamma detector, force/torque sensor, joint position sensor, etc) or some other real-time robotic system.
 
 By leveraging MiNiFi as a conan package, we can leverage MiNiFi that comes with the best practices of building data pipelines from NiFi and bring them into existing C++ real-time robotics infrastructure. Some teams across companies typically have their own custom edge data pipelines that process data for the different events to eventually perform actions on that data. As an alternative to all these companies and their teams having their own custom edge data pipeline libraries, MiNiFi C++, which is like a headless NiFi, can provide a more consistent standard approach for team's to build edge pipelines. Through all stages of the edge data pipelines, MiNiFi can still provide telemetry to NiFi instances running in the cloud.
+
+## Appendix
+
+### Create Custom RocksDB Conan Package
+
+~~~bash
+pushd nifi-minifi-cpp/thirdparty/rocksdb/all
+
+conan create . --user=minifi --channel=develop --version=8.10.2 -pr=../../../etc/conan/profiles/release-linux
+
+popd
+~~~

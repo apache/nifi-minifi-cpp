@@ -3,19 +3,19 @@ index ae5ed2c26..0038c6bff 100644
 --- a/include/rocksdb/options.h
 +++ b/include/rocksdb/options.h
 @@ -397,6 +397,7 @@ struct DbPath {
- 
+
    DbPath() : target_size(0) {}
    DbPath(const std::string& p, uint64_t t) : path(p), target_size(t) {}
 +  bool operator==(const DbPath& other) const = default;
  };
- 
+
  extern const char* kHostnameForDbHostId;
 @@ -1008,6 +1009,8 @@ struct DBOptions {
    // Create DBOptions from Options
    explicit DBOptions(const Options& options);
- 
+
 +  bool operator==(const DBOptions& other) const = default;
 +
    void Dump(Logger* log) const;
- 
+
    // Allows OS to incrementally sync files to disk while they are being
