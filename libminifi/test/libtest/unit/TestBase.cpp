@@ -672,11 +672,20 @@ void TestPlan::validateAnnotations() const {
   }
 }
 
+std::vector<std::byte> TestPlan::getContentAsBytes(const core::FlowFile& flow_file) const {
+  const auto content_claim = flow_file.getResourceClaim();
+  const auto content_stream = content_repo_->read(*content_claim);
+  const auto output_stream = std::make_shared<minifi::io::BufferStream>();
+  std::ignore = minifi::InputStreamPipe{*output_stream}(content_stream);
+  auto content = output_stream->getBuffer().subspan(flow_file.getOffset(), flow_file.getSize());
+  return ranges::to<std::vector>(content);
+}
+
 std::string TestPlan::getContent(const minifi::core::FlowFile& file) const {
-  auto content_claim = file.getResourceClaim();
-  auto content_stream = content_repo_->read(*content_claim);
-  auto output_stream = std::make_shared<minifi::io::BufferStream>();
-  minifi::InputStreamPipe{*output_stream}(content_stream);
+  const auto content_claim = file.getResourceClaim();
+  const auto content_stream = content_repo_->read(*content_claim);
+  const auto output_stream = std::make_shared<minifi::io::BufferStream>();
+  std::ignore = minifi::InputStreamPipe{*output_stream}(content_stream);
   return utils::span_to<std::string>(minifi::utils::as_span<const char>(output_stream->getBuffer()).subspan(file.getOffset(), file.getSize()));
 }
 
