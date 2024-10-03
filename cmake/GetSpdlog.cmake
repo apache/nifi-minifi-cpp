@@ -20,7 +20,7 @@ function(get_spdlog)
     get_fmt()
 
     if(MINIFI_SPDLOG_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to manage installing prebuilt Spdlog external lib")
+        message("Using Conan Packager to install Spdlog")
         find_package(spdlog REQUIRED)
 
         add_library(spdlog ALIAS spdlog::spdlog)
