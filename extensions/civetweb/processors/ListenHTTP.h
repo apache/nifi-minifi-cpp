@@ -55,8 +55,6 @@ class ListenHTTP : public core::Processor {
  public:
   friend struct ::org::apache::nifi::minifi::test::ListenHTTPTestAccessor;
 
-  using FlowFileBufferPair = std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
-
   explicit ListenHTTP(std::string_view name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
     callbacks_.log_message = &logMessage;
@@ -169,8 +167,14 @@ class ListenHTTP : public core::Processor {
     enum class FailureReason {
       PROCESSOR_SHUTDOWN
     };
-    using RequestValue = std::pair<std::reference_wrapper<core::ProcessSession>, std::promise<void>>;
-    using FailureValue = std::pair<FailureReason, std::promise<void>>;
+    struct RequestValue {
+      std::reference_wrapper<core::ProcessSession> session;
+      std::promise<void> ret;
+    };
+    struct FailureValue {
+      FailureReason reason;
+      std::promise<void> ret;
+    };
     using Request = std::promise<nonstd::expected<RequestValue, FailureValue>>;
 
     Handler(std::string base_uri,

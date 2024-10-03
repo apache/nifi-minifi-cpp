@@ -348,7 +348,7 @@ void ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_i
   auto req_result = req_triggered.get();
   if (!req_result) {
     sendHttp503(conn);
-    req_result.error().second.set_value();
+    req_result.error().ret.set_value();
     return;
   }
 
