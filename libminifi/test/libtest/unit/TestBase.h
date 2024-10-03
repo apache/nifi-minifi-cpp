@@ -285,6 +285,7 @@ class TestPlan {
     return state_storage_;
   }
 
+  std::vector<std::byte> getContentAsBytes(const core::FlowFile& flow_file) const;
   std::string getContent(const std::shared_ptr<const minifi::core::FlowFile>& file) const { return getContent(*file); }
   std::string getContent(const minifi::core::FlowFile& file) const;
 

@@ -2809,6 +2809,37 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | All files, containing log events, are routed to success |
 
 
+## SegmentContent
+
+### Description
+
+Segments a FlowFile into multiple smaller segments on byte boundaries.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name             | Default Value | Allowable Values | Description                                                                                |
+|------------------|---------------|------------------|--------------------------------------------------------------------------------------------|
+| **Segment Size** |               | <br/>            | The maximum data size in bytes for each segment<br/>**Supports Expression Language: true** |
+
+### Relationships
+
+| Name     | Description                                                                                                                                                                     |
+|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| original | The original FlowFile will be sent to this relationship                                                                                                                         |
+| segments | All segments will be sent to this relationship. If the file was small enough that it was not segmented, a copy of the original is sent to this relationship as well as original |
+
+### Output Attributes
+
+| Attribute                 | Relationship | Description                                                                                                             |
+|---------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------|
+| fragment.identifier       |              | All segments produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute |
+| fragment.index            |              | A one-up number that indicates the ordering of the segments that were created from a single parent FlowFile             |
+| fragment.count            |              | The number of segments generated from the parent FlowFile                                                               |
+| segment.original.filename |              | The filename of the parent FlowFile                                                                                     |
+
+
 ## SplitText
 
 ### Description
