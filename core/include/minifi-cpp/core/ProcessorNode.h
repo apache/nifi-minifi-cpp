@@ -36,6 +36,8 @@ class ProcessorNode : public virtual ConfigurableComponent, public virtual Conne
  public:
   virtual Connectable* getProcessor() const = 0;
 
+  using ConfigurableComponent::getProperty;
+
   template<typename T>
   bool getProperty(const std::string &name, T &value) {
     const auto processor_cast = dynamic_cast<ConfigurableComponent*>(getProcessor());

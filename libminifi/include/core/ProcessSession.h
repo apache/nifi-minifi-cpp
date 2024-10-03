@@ -126,8 +126,6 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
 
   // import from the data source.
   void import(const std::string& source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource = true, uint64_t offset = 0) override;
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) override; // NOLINT
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, uint64_t offset, char inputDelimiter) override;
 
   /**
    * Exports the data stream to a file
