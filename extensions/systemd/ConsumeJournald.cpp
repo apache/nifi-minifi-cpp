@@ -32,8 +32,8 @@ namespace org::apache::nifi::minifi::extensions::systemd {
 
 namespace chr = std::chrono;
 
-ConsumeJournald::ConsumeJournald(std::string_view name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
-    :core::Processor{name, id}, libwrapper_{std::move(libwrapper)}
+ConsumeJournald::ConsumeJournald(const std::string_view name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
+    :core::ProcessorImpl{name, id}, libwrapper_{std::move(libwrapper)}
 {}
 
 void ConsumeJournald::initialize() {
