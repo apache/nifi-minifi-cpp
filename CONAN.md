@@ -17,6 +17,8 @@
 
 We will walk through the steps to build MiNiFi using conan version 2 that comes with CMake integration. We will also go through the process of creating a MiNiFi conan package for easier integration into other C++ projects. We will start with a discussion on building MiNiFi using the standalone CMake approach and the conan approach. After we have built MiNiFi and created a MiNiFi conan package, we will conclude by elaborating on some of the benefits that can come with integrating a MiNiFi conan package into new or existing C++ infrastructure with respect to real-time robotic systems.
 
+Conan build support is experimental, and not yet suitable for general use.
+
 ## Table of Contents
 
 - [Apache NiFi - MiNiFi - C++ Conan Build Guide](#apache-nifi---minifi---c---conan-build-guide)

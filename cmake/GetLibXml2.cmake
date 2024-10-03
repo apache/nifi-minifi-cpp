@@ -17,10 +17,10 @@
 
 function(get_libxml2 SOURCE_DIR BINARY_DIR)
     if(MINIFI_LIBXML2_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to install LibXml2")
+        message("Using Conan Packager to install libxml2")
         find_package(libxml2 REQUIRED)
     elseif(MINIFI_LIBXML2_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build LibXml2 from source")
+        message("Using CMake to build libxml2 from source")
         include(BundledLibXml2)
         use_bundled_libxml2(${SOURCE_DIR} ${BINARY_DIR})
     endif()
