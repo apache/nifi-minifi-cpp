@@ -17,7 +17,7 @@
 
 function(get_zlib SOURCE_DIR BINARY_DIR)
     if(MINIFI_ZLIB_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to manage installing prebuilt zlib external lib")
+        message("Using Conan Packager to install zlib")
         find_package(ZLIB REQUIRED)
     elseif(MINIFI_ZLIB_SOURCE STREQUAL "BUILD")
         message("Using CMake to build zlib from source")

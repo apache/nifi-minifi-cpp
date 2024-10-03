@@ -17,7 +17,7 @@
 
 function(get_fmt)
     if(MINIFI_FMT_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to manage installing prebuilt Fmt external lib")
+        message("Using Conan Packager to install Fmt")
         find_package(fmt REQUIRED)
     elseif(MINIFI_FMT_SOURCE STREQUAL "BUILD")
         message("Using CMake to build Fmt from source")

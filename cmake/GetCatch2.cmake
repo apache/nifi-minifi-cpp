@@ -17,7 +17,7 @@
 
 function(get_catch2)
     if(MINIFI_CATCH2_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to manage installing prebuilt Catch2 external lib")
+        message("Using Conan Packager to install Catch2")
         find_package(Catch2 REQUIRED)
         add_library(Catch2WithMain ALIAS Catch2::Catch2WithMain)
     elseif(MINIFI_CATCH2_SOURCE STREQUAL "BUILD")

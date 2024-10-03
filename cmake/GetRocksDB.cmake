@@ -17,7 +17,7 @@
 
 function(get_rocksdb SOURCE_DIR BINARY_DIR)
     if(MINIFI_ROCKSDB_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to manage installing prebuilt RocksDB external lib")
+        message("Using Conan Packager to install RocksDB")
         find_package(RocksDB REQUIRED)
         add_library(RocksDB::RocksDB ALIAS RocksDB::rocksdb)
     elseif(MINIFI_ROCKSDB_SOURCE STREQUAL "BUILD")
