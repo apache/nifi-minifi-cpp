@@ -262,8 +262,8 @@ class MgConnectionInputStream : public io::InputStream {
 
   size_t read(std::span<std::byte> out_buffer) override {
     const auto mg_read_return = mg_read(conn_, out_buffer.data(), std::min(out_buffer.size(), size_.value_or(std::numeric_limits<size_t>::max()) - offset_));
-    if (mg_read_return <= 0) {
-      return 0;
+    if (mg_read_return < 0) {
+      return io::STREAM_ERROR;
     }
     offset_ += gsl::narrow<size_t>(mg_read_return);
     return gsl::narrow<size_t>(mg_read_return);
