@@ -39,10 +39,11 @@ class PyProcessSession {
   void remove(const std::shared_ptr<core::FlowFile>& flow_file);
   std::string getContentsAsString(const std::shared_ptr<core::FlowFile>& flow_file);
   void putAttribute(const std::shared_ptr<core::FlowFile>& flow_file, std::string_view key, const std::string& value);
+  core::ProcessSession& getSession() const { return session_; }
 
  private:
   std::vector<std::shared_ptr<core::FlowFile>> flow_files_;
-  gsl::not_null<core::ProcessSession*> session_;
+  core::ProcessSession& session_;
 };
 
 struct PyProcessSessionObject {
