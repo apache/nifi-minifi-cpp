@@ -94,6 +94,7 @@ limitations under the License.
 - [RetryFlowFile](#RetryFlowFile)
 - [RouteOnAttribute](#RouteOnAttribute)
 - [RouteText](#RouteText)
+- [SplitRecord](#SplitRecord)
 - [SplitText](#SplitText)
 - [TailEventLog](#TailEventLog)
 - [TailFile](#TailFile)
@@ -2831,6 +2832,41 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                             |
 |---------|---------------------------------------------------------|
 | success | All files, containing log events, are routed to success |
+
+
+## SplitRecord
+
+### Description
+
+Splits up an input FlowFile that is in a record-oriented data format into multiple smaller FlowFiles
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                  | Default Value | Allowable Values | Description                                                                                                                   |
+|-----------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| **Record Reader**     |               |                  | Specifies the Controller Service to use for reading incoming data                                                             |
+| **Record Writer**     |               |                  | Specifies the Controller Service to use for writing out the records                                                           |
+| **Records Per Split** |               |                  | Specifies how many records should be written to each 'split' or 'segment' FlowFile<br/>**Supports Expression Language: true** |
+
+### Relationships
+
+| Name     | Description                                                                                                                                                       |
+|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| failure  | If a FlowFile cannot be transformed from the configured input format to the configured output format, the unchanged FlowFile will be routed to this relationship. |
+| original | Upon successfully splitting an input FlowFile, the original FlowFile will be sent to this relationship.                                                           |
+| splits   | The individual 'segments' of the original FlowFile will be routed to this relationship.                                                                           |
+
+### Output Attributes
+
+| Attribute                 | Relationship | Description                                                                                                                    |
+|---------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------|
+| record.count              |              | The number of records in the FlowFile. This is added to FlowFiles that are routed to the 'splits' Relationship.                |
+| fragment.identifier       |              | All split FlowFiles produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute |
+| fragment.index            |              | A one-up number that indicates the ordering of the split FlowFiles that were created from a single parent FlowFile             |
+| fragment.count            |              | The number of split FlowFiles generated from the parent FlowFile                                                               |
+| segment.original.filename |              | The filename of the parent FlowFile                                                                                            |
 
 
 ## SplitText
