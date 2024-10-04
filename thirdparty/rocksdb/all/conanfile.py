@@ -6,7 +6,7 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
-from conan.tools.files import apply_conandata_patches, collect_libs, copy, export_conandata_patches, get, rm, rmdir
+from conan.tools.files import patch, collect_libs, copy, export_conandata_patches, get, rm, rmdir
 from conan.tools.microsoft import check_min_vs, is_msvc, is_msvc_static_runtime
 from conan.tools.scm import Version
 
@@ -96,7 +96,6 @@ class RocksDBConan(ConanFile):
             self.requires("zlib/[>=1.2.11 <2]")
         if self.options.with_bz2:
             self.requires("bzip2/1.0.8")
-            # self.requires("bzip2/1.0.8@minifi/dev") # prebuilt with minifi bz2 patch
         if self.options.with_zstd:
             self.requires("zstd/1.5.2")
         if self.options.get_safe("with_tbb"):
@@ -174,7 +173,8 @@ class RocksDBConan(ConanFile):
         deps.generate()
 
     def build(self):
-        apply_conandata_patches(self)
+        for patch_data in self.conan_data.get("patches", {}).get(self.version, []):
+            patch(self, patch_file=patch_data["patch_file"], base_path=self.source_folder, strip=1, fuzz=True)
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
