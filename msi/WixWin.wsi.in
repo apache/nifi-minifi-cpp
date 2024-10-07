@@ -29,7 +29,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
       Manufacturer="$(var.CPACK_PACKAGE_VENDOR)">
 
 
-    <Package InstallerVersion="301" Compressed="yes"/>
+    <Package InstallScope="perMachine" InstallerVersion="301" Compressed="yes"/>
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of Apache NiFi MiNiFi C++ is already installed." />
 
