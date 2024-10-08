@@ -22,8 +22,8 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-const std::string ListingStateManager::LATEST_LISTED_OBJECT_PREFIX = "listed_key.";
-const std::string ListingStateManager::LATEST_LISTED_OBJECT_TIMESTAMP = "listed_timestamp";
+static const std::string LATEST_LISTED_OBJECT_PREFIX = "listed_key.";
+static const std::string LATEST_LISTED_OBJECT_TIMESTAMP = "listed_timestamp";
 
 bool ListingState::wasObjectListedAlready(const ListedObject &object) const {
   return listed_key_timestamp > object.getLastModified() ||

@@ -57,9 +57,6 @@ class ListingStateManager {
   void storeState(const ListingState &latest_listing_state);
 
  private:
-  static const std::string LATEST_LISTED_OBJECT_PREFIX;
-  static const std::string LATEST_LISTED_OBJECT_TIMESTAMP;
-
   [[nodiscard]] static uint64_t getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state);
   [[nodiscard]] static std::unordered_set<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
 

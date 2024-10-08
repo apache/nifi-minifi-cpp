@@ -70,14 +70,6 @@ class ValueImpl : public Value {
     return type_id;
   }
 
-  static const std::type_index UINT64_TYPE;
-  static const std::type_index INT64_TYPE;
-  static const std::type_index UINT32_TYPE;
-  static const std::type_index INT_TYPE;
-  static const std::type_index BOOL_TYPE;
-  static const std::type_index DOUBLE_TYPE;
-  static const std::type_index STRING_TYPE;
-
  protected:
   template<typename T>
   void setTypeId() {
