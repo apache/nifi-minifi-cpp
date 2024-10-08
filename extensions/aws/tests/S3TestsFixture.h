@@ -133,8 +133,8 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
     LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
     LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
 
-    this->mock_s3_request_sender_ptr = new MockS3RequestSender();
-    std::unique_ptr<minifi::aws::s3::S3RequestSender> mock_s3_request_sender(this->mock_s3_request_sender_ptr);
+    auto mock_s3_request_sender = std::make_unique<MockS3RequestSender>();
+    this->mock_s3_request_sender_ptr = mock_s3_request_sender.get();
     auto s3_processor_unique_ptr = std::unique_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_request_sender)));
     this->s3_processor = s3_processor_unique_ptr.get();
 
@@ -195,8 +195,8 @@ template<typename T>
 class FlowProducerS3TestsFixture : public S3TestsFixture<T> {
  public:
   FlowProducerS3TestsFixture() {
-    this->mock_s3_request_sender_ptr = new MockS3RequestSender();
-    std::unique_ptr<minifi::aws::s3::S3RequestSender> mock_s3_request_sender(this->mock_s3_request_sender_ptr);
+    auto mock_s3_request_sender = std::make_unique<MockS3RequestSender>();
+    this->mock_s3_request_sender_ptr = mock_s3_request_sender.get();
     auto s3_processor_unique_ptr = std::unique_ptr<T>(new T("S3Processor", utils::Identifier(), std::move(mock_s3_request_sender)));
     this->s3_processor = s3_processor_unique_ptr.get();
 
