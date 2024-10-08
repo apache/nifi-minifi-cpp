@@ -31,12 +31,13 @@
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "S3Wrapper.h"
 #include "AWSCredentialsProvider.h"
+#include "core/Property.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/OptionalUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -94,7 +95,7 @@ struct CommonProperties {
   std::string endpoint_override_url;
 };
 
-class S3Processor : public core::Processor {
+class S3Processor : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr auto Bucket = core::PropertyDefinitionBuilder<>::createProperty("Bucket")
       .withDescription("The S3 bucket")

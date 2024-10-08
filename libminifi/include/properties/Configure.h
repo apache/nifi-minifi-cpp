@@ -23,30 +23,31 @@
 
 #include "properties/Configuration.h"
 #include "properties/Decryptor.h"
-#include "core/AgentIdentificationProvider.h"
+#include "minifi-cpp/core/AgentIdentificationProvider.h"
 #include "core/logging/LoggerProperties.h"
+#include "minifi-cpp/properties/Configure.h"
 
 struct ConfigTestAccessor;
 
 namespace org::apache::nifi::minifi {
 
-class Configure : public Configuration, public core::AgentIdentificationProvider {
+class ConfigureImpl : public ConfigurationImpl, public virtual core::AgentIdentificationProvider, public virtual Configure {
   friend struct ::ConfigTestAccessor;
  public:
-  explicit Configure(std::optional<Decryptor> decryptor = std::nullopt, std::shared_ptr<core::logging::LoggerProperties> logger_properties = {})
+  explicit ConfigureImpl(std::optional<Decryptor> decryptor = std::nullopt, std::shared_ptr<core::logging::LoggerProperties> logger_properties = {})
       : decryptor_(std::move(decryptor))
       , logger_properties_(std::move(logger_properties)) {
   }
 
-  bool get(const std::string& key, std::string& value) const;
-  bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
-  std::optional<std::string> get(const std::string& key) const;
-  std::optional<std::string> getWithFallback(const std::string& key, const std::string& alternate_key) const;
-  std::optional<std::string> getRawValue(const std::string& key) const;
+  bool get(const std::string& key, std::string& value) const override;
+  bool get(const std::string& key, const std::string& alternate_key, std::string& value) const override;
+  std::optional<std::string> get(const std::string& key) const override;
+  std::optional<std::string> getWithFallback(const std::string& key, const std::string& alternate_key) const override;
+  std::optional<std::string> getRawValue(const std::string& key) const override;
 
   std::optional<std::string> getAgentClass() const override;
   std::string getAgentIdentifier() const override;
-  void setFallbackAgentIdentifier(const std::string& id);
+  void setFallbackAgentIdentifier(const std::string& id) override;
 
   using Configuration::set;
   void set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) override;

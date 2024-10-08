@@ -23,7 +23,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 #include "asio/ip/udp.hpp"
 #include "utils/net/AsioSocketUtils.h"
@@ -33,7 +33,7 @@ using asio::ip::udp;
 namespace org::apache::nifi::minifi::processors {
 
 PutUDP::PutUDP(std::string_view name, const utils::Identifier& uuid)
-    : Processor(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger(uuid)}
+    : ProcessorImpl(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger(uuid)}
 { }
 
 PutUDP::~PutUDP() = default;

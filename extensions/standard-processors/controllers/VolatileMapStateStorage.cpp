@@ -30,7 +30,7 @@ VolatileMapStateStorage::VolatileMapStateStorage(const std::string& name, const 
 }
 
 void VolatileMapStateStorage::initialize() {
-  ControllerService::initialize();
+  ControllerServiceImpl::initialize();
   setSupportedProperties(Properties);
 }
 

@@ -24,8 +24,8 @@
 #include <memory>
 #include <utility>
 
-#include "../FlowFileRecord.h"
-#include "../core/Processor.h"
+#include "FlowFileRecord.h"
+#include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
@@ -33,10 +33,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class GetGPS : public core::Processor {
+class GetGPS : public core::ProcessorImpl {
  public:
-  explicit GetGPS(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit GetGPS(const std::string_view name, const utils::Identifier& uuid = {})
+      : core::ProcessorImpl(name, uuid) {
     gpsdHost_ = "localhost";
     gpsdPort_ = "2947";
     gpsdWaitTime_ = 50000000;

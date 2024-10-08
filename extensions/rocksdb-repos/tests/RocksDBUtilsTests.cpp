@@ -32,7 +32,7 @@ TEST_CASE("Get global RocksDB options to override", "[rocksdbutils]") {
     {"create_if_missing", "false"}
   };
 
-  auto config = std::make_shared<minifi::Configure>();
+  auto config = std::make_shared<minifi::ConfigureImpl>();
   config->set("nifi.c2.rest.url", "http://localhost:8080");
   config->set("nifi.global.rocksdb.options.table_cache_numshardbits", "456");
   config->set("nifi.global.rocksdb.options.keep_log_file_num", "123");

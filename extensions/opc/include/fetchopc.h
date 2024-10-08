@@ -32,7 +32,7 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "controllers/SSLContextService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 #include "utils/gsl.h"

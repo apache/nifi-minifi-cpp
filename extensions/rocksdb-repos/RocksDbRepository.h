@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::core::repository {
 
 constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::milliseconds(500);
 
-class RocksDbRepository : public ThreadedRepository {
+class RocksDbRepository : public ThreadedRepositoryImpl {
  public:
   RocksDbRepository(std::string_view repo_name,
                     std::string directory,
@@ -37,7 +37,7 @@ class RocksDbRepository : public ThreadedRepository {
                     int64_t max_partition_bytes,
                     std::chrono::milliseconds purge_period,
                     std::shared_ptr<logging::Logger> logger)
-    : ThreadedRepository(repo_name, std::move(directory), max_partition_millis, max_partition_bytes, purge_period),
+    : ThreadedRepositoryImpl(repo_name, std::move(directory), max_partition_millis, max_partition_bytes, purge_period),
       logger_(std::move(logger)) {
   }
 

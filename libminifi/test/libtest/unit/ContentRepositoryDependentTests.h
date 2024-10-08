@@ -28,7 +28,7 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/DummyProcessor.h"
-#include "StreamPipe.h"
+#include "io/StreamPipe.h"
 
 #pragma once
 
@@ -66,7 +66,7 @@ class Fixture {
       test_plan_->runNextProcessor();
       return test_plan_->getCurrentContext();
     }();
-    process_session_ = std::make_unique<core::ProcessSession>(context_);
+    process_session_ = std::make_unique<core::ProcessSessionImpl>(context_);
   }
 
   core::ProcessSession &processSession() { return *process_session_; }

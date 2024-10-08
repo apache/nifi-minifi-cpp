@@ -35,8 +35,9 @@ file(GLOB SOURCES  "*.cpp" "controllers/*.cpp" "database/*.cpp" "encryption/*.cp
 
 add_minifi_library(minifi-rocksdb-repos SHARED ${SOURCES})
 
-target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-rocksdb-repos RocksDB::RocksDB)
+target_link_libraries(minifi-rocksdb-repos PUBLIC RocksDB::RocksDB)
+target_link_libraries(minifi-rocksdb-repos PUBLIC minifi-core minifi-extension-utils Threads::Threads)
+target_link_libraries(minifi-rocksdb-repos PRIVATE $<LINK_ONLY:core-minifi>)
 
 register_extension(minifi-rocksdb-repos "ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/rocksdb-repos/tests")
 register_extension_linter(minifi-rocksdb-repos-linter)

@@ -114,7 +114,7 @@ class TestRepositoryBase : public T_BaseRepository {
   std::map<std::string, std::string> repository_results_;
 };
 
-class TestRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::Repository> {
+class TestRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::RepositoryImpl> {
  public:
   bool start() override {
     return true;
@@ -149,7 +149,7 @@ class TestVolatileRepository : public TestRepositoryBase<org::apache::nifi::mini
   }
 };
 
-class TestThreadedRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::ThreadedRepository> {
+class TestThreadedRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::ThreadedRepositoryImpl> {
  public:
   ~TestThreadedRepository() override {
     stop();
@@ -185,10 +185,10 @@ class TestRocksDbRepository : public TestThreadedRepository {
   }
 };
 
-class TestFlowRepository : public org::apache::nifi::minifi::core::ThreadedRepository {
+class TestFlowRepository : public org::apache::nifi::minifi::core::ThreadedRepositoryImpl {
  public:
   TestFlowRepository()
-    : org::apache::nifi::minifi::core::ThreadedRepository("ff", "./dir", 1s, TEST_MAX_REPOSITORY_STORAGE_SIZE, 0ms) {
+    : org::apache::nifi::minifi::core::ThreadedRepositoryImpl("ff", "./dir", 1s, TEST_MAX_REPOSITORY_STORAGE_SIZE, 0ms) {
   }
 
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
@@ -245,7 +245,7 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
  public:
   TestFlowController(std::shared_ptr<org::apache::nifi::minifi::core::Repository> repo, std::shared_ptr<org::apache::nifi::minifi::core::Repository> flow_file_repo,
       const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& /*content_repo*/)
-      :org::apache::nifi::minifi::FlowController(repo, flow_file_repo, std::make_shared<org::apache::nifi::minifi::Configure>(), nullptr,
+      :org::apache::nifi::minifi::FlowController(repo, flow_file_repo, org::apache::nifi::minifi::Configure::create(), nullptr,
           std::make_shared<org::apache::nifi::minifi::core::repository::VolatileContentRepository>()) {
   }
 

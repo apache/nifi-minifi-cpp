@@ -25,7 +25,7 @@
 
 #include "core/ContentRepository.h"
 #include "core/BufferedContentSession.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Property.h"
 #include "database/RocksDatabase.h"
 #include "properties/Configure.h"
@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::core::repository {
 
-class DatabaseContentRepository : public core::ContentRepository {
+class DatabaseContentRepository : public core::ContentRepositoryImpl {
   class Session : public BufferedContentSession {
    public:
     explicit Session(std::shared_ptr<ContentRepository> repository, bool use_synchronous_writes);
@@ -49,7 +49,7 @@ class DatabaseContentRepository : public core::ContentRepository {
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.database.content.repository.encryption.key";
 
   explicit DatabaseContentRepository(std::string_view name = className<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
-    : core::ContentRepository(name, uuid),
+    : core::ContentRepositoryImpl(name, uuid),
       is_valid_(false),
       db_(nullptr),
       logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {

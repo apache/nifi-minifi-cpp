@@ -57,10 +57,10 @@ class ProcessorWithStatistics {
   std::function<void()> onTriggerCb_;
 };
 
-class TestProcessor : public core::Processor, public ProcessorWithStatistics {
+class TestProcessor : public core::ProcessorImpl, public ProcessorWithStatistics {
  public:
-  TestProcessor(std::string_view name, const utils::Identifier& uuid) : Processor(name, uuid) {}
-  explicit TestProcessor(const std::string& name) : Processor(name) {}
+  TestProcessor(std::string_view name, const utils::Identifier& uuid) : ProcessorImpl(name, uuid) {}
+  explicit TestProcessor(const std::string& name) : ProcessorImpl(name) {}
 
   static constexpr const char* Description = "Processor used for testing cycles";
   static constexpr auto Properties = std::to_array<core::PropertyReference>({AppleProbability, BananaProbability});

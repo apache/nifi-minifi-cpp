@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_
+#pragma once
 
 #include <string>
+#include "minifi-cpp/core/state/FlowIdentifier.h"
 
 
 namespace org {
@@ -32,14 +32,14 @@ namespace state {
  *
  * Design: Immutable collection of strings for the component parts.
  */
-class FlowIdentifier {
+class FlowIdentifierImpl : public virtual FlowIdentifier {
  public:
-  FlowIdentifier() = delete;
+  FlowIdentifierImpl() = delete;
 
   /**
    * Constructor accepts the url, bucket id, and flow id.
    */
-  explicit FlowIdentifier(const std::string &url, const std::string &bucket_id, const std::string &flow_id) {
+  explicit FlowIdentifierImpl(const std::string &url, const std::string &bucket_id, const std::string &flow_id) {
     registry_url_ = url;
     bucket_id_ = bucket_id;
     flow_id_ = flow_id;
@@ -50,21 +50,21 @@ class FlowIdentifier {
    * we don't want to cause issues if the FlowVersion object is ever used in a way
    * that breaks the current paradigm.
    */
-  std::string getRegistryUrl() const {
+  std::string getRegistryUrl() const override {
     return registry_url_;
   }
 
-  std::string getBucketId() const {
+  std::string getBucketId() const override {
     return bucket_id_;
   }
 
-  std::string getFlowId() const {
+  std::string getFlowId() const override {
     return flow_id_;
   }
 
  protected:
-  FlowIdentifier(const FlowIdentifier &other) = default;
-  FlowIdentifier &operator=(const FlowIdentifier &other) = default;
+  FlowIdentifierImpl(const FlowIdentifierImpl &other) = default;
+  FlowIdentifierImpl &operator=(const FlowIdentifierImpl &other) = default;
 
  private:
   std::string registry_url_;
@@ -79,5 +79,3 @@ class FlowIdentifier {
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_FLOWIDENTIFIER_H_

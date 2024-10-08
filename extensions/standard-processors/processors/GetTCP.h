@@ -26,9 +26,7 @@
 #include <asio/io_context.hpp>
 #include "utils/Literals.h"
 
-#include "../core/state/nodes/MetricsBase.h"
-#include "FlowFileRecord.h"
-#include "core/OutputAttributeDefinition.h"
+#include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -37,7 +35,7 @@
 #include "core/Core.h"
 #include "concurrentqueue.h"
 #include "utils/ThreadPool.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "controllers/SSLContextService.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
@@ -46,10 +44,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class GetTCP : public core::Processor {
+class GetTCP : public core::ProcessorImpl {
  public:
   explicit GetTCP(std::string_view name, const utils::Identifier& uuid = {})
-    : Processor(name, uuid) {
+    : ProcessorImpl(name, uuid) {
   }
 
   ~GetTCP() override {

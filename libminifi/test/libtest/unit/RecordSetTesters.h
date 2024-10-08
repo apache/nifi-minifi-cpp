@@ -20,8 +20,9 @@
 
 #include "controllers/RecordSetReader.h"
 #include "controllers/RecordSetWriter.h"
-#include "core/Record.h"
+#include "minifi-cpp/core/Record.h"
 #include "TestBase.h"
+#include "core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi::core::test {
 
@@ -38,7 +39,7 @@ class RecordSetFixture {
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan(plan_config_);
   std::shared_ptr<Processor> dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
   std::shared_ptr<ProcessContext> context_ = [this] { test_plan_->runNextProcessor(); return test_plan_->getCurrentContext(); }();
-  std::unique_ptr<ProcessSession> process_session_ = std::make_unique<ProcessSession>(context_);
+  std::unique_ptr<ProcessSession> process_session_ = std::make_unique<ProcessSessionImpl>(context_);
 
   const Relationship relationship_{"success", "description"};
 };

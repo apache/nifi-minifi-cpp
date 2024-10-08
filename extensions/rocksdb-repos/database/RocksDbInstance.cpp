@@ -19,7 +19,7 @@
 #include "RocksDbInstance.h"
 #include <vector>
 #include <utility>
-#include "logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "rocksdb/utilities/options_util.h"
 #include "OpenRocksDb.h"
 #include "ColumnHandle.h"

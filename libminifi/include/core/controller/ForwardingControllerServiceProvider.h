@@ -27,9 +27,9 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ForwardingControllerServiceProvider : public ControllerServiceProvider {
+class ForwardingControllerServiceProvider : public ControllerServiceProviderImpl {
  public:
-  using ControllerServiceProvider::ControllerServiceProvider;
+  using ControllerServiceProviderImpl::ControllerServiceProviderImpl;
 
   std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &longType, const std::string &id, bool firstTimeAdded) override {
     return controller_service_provider_impl_->createControllerService(type, longType, id, firstTimeAdded);

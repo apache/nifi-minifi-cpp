@@ -19,11 +19,3 @@
 
 cmake_minimum_required(VERSION 3.24)
 
-
-include_directories(../../libminifi/include ../../libminifi/include/core)
-
-if(WIN32)
-	include_directories(../../libminifi/opsys/win)
-else()
-	include_directories(../../libminifi/opsys/posix)
-endif()

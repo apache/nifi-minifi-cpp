@@ -21,15 +21,11 @@
 #include <string_view>
 #include <memory>
 
+#include "minifi-cpp/core/logging/LoggerFactory.h"
 #include "core/logging/Logger.h"
 #include "core/Core.h"
 
 namespace org::apache::nifi::minifi::core::logging {
-
-class LoggerFactoryBase {
- public:
-  static std::shared_ptr<Logger> getAliasedLogger(std::string_view name, const std::optional<utils::Identifier>& id = {});
-};
 
 template<typename T>
 class LoggerFactory : public LoggerFactoryBase {

@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "core/controller/ControllerService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
@@ -32,7 +32,7 @@
 
 namespace org::apache::nifi::minifi::azure::controllers {
 
-class AzureStorageCredentialsService : public core::controller::ControllerService {
+class AzureStorageCredentialsService : public core::controller::ControllerServiceImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Manages the credentials for an Azure Storage account. This allows for multiple Azure Storage related processors to reference this single "
       "controller service so that Azure storage credentials can be managed and controlled in a central location.";
@@ -76,11 +76,11 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   explicit AzureStorageCredentialsService(std::string_view name, const minifi::utils::Identifier& uuid = {})
-      : ControllerService(name, uuid) {
+      : ControllerServiceImpl(name, uuid) {
   }
 
   explicit AzureStorageCredentialsService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(name) {
+      : ControllerServiceImpl(name) {
   }
 
   void initialize() override;

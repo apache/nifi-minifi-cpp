@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#include "MetricsPublisher.h"
+#include "minifi-cpp/core/state/MetricsPublisher.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "utils/gsl.h"
 #include "core/ProcessGroup.h"

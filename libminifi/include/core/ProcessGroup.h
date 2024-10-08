@@ -29,7 +29,7 @@
 #include <utility>
 #include <tuple>
 
-#include "Processor.h"
+#include "minifi-cpp/core/Processor.h"
 #include "Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
@@ -61,7 +61,7 @@ enum ProcessGroupType {
   REMOTE_PROCESS_GROUP,
 };
 
-class ProcessGroup : public CoreComponent {
+class ProcessGroup : public CoreComponentImpl {
   friend struct ::ProcessGroupTestAccessor;
  public:
   enum class Traverse {

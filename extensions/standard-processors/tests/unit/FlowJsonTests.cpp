@@ -333,9 +333,9 @@ TEST_CASE("Cannot use the same parameter name within a parameter context twice")
   REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Parameter name 'file_size' already exists, parameter names must be unique within a parameter context!");
 }
 
-class DummyFlowJsonProcessor : public core::Processor {
+class DummyFlowJsonProcessor : public core::ProcessorImpl {
  public:
-  using core::Processor::Processor;
+  using core::ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "A processor that does nothing.";
   static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")

@@ -28,7 +28,7 @@ namespace minifi = org::apache::nifi::minifi;
 /**
  * Test repository
  */
-class SiteToSiteResponder : public minifi::io::BaseStream {
+class SiteToSiteResponder : public minifi::io::BaseStreamImpl {
  private:
   minifi::io::BufferStream server_responses_;
   std::queue<std::string> client_responses_;

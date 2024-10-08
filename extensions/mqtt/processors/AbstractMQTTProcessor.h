@@ -23,12 +23,12 @@
 #include <vector>
 #include <shared_mutex>
 
-#include "PropertyDefinition.h"
+#include "core/PropertyDefinition.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Enum.h"
 #include "MQTTAsync.h"
 
@@ -84,10 +84,10 @@ namespace org::apache::nifi::minifi::processors {
 
 static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
-class AbstractMQTTProcessor : public core::Processor {
+class AbstractMQTTProcessor : public core::ProcessorImpl {
  public:
   explicit AbstractMQTTProcessor(std::string_view name, const utils::Identifier& uuid = {}, std::shared_ptr<core::ProcessorMetrics> metrics = {})
-      : core::Processor(name, uuid, std::move(metrics)) {
+      : core::ProcessorImpl(name, uuid, std::move(metrics)) {
   }
 
   ~AbstractMQTTProcessor() override {

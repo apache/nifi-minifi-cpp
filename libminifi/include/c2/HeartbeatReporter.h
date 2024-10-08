@@ -34,10 +34,10 @@ namespace org::apache::nifi::minifi::c2 {
  * Defines a heartbeat reporting interface. Note that this differs from
  * C2Protocol as heartbeats can be any interface which provides only one way communication.
  */
-class HeartbeatReporter : public core::Connectable {
+class HeartbeatReporter : public core::ConnectableImpl {
  public:
   HeartbeatReporter(std::string_view name, const utils::Identifier& uuid)
-      : core::Connectable(name, uuid),
+      : core::ConnectableImpl(name, uuid),
         controller_(nullptr),
         update_sink_(nullptr),
         configuration_(nullptr) {
