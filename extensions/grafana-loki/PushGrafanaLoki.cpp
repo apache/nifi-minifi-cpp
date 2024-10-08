@@ -77,9 +77,9 @@ void PushGrafanaLoki::LogBatch::setStartPushTime(std::chrono::system_clock::time
 
 const core::Relationship PushGrafanaLoki::Self("__self__", "Marks the FlowFile to be owned by this processor");
 
-std::shared_ptr<minifi::controllers::SSLContextService> PushGrafanaLoki::getSSLContextService(core::ProcessContext& context) {
+std::shared_ptr<minifi::controllers::SSLContextService> PushGrafanaLoki::getSSLContextService(core::ProcessContext& context) const {
   if (auto ssl_context = context.getProperty(PushGrafanaLoki::SSLContextService)) {
-    return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*ssl_context));
+    return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*ssl_context, getUUID()));
   }
   return std::shared_ptr<minifi::controllers::SSLContextService>{};
 }

@@ -48,7 +48,7 @@ std::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromContr
     return std::nullopt;
   }
 
-  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(service_name);
+  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(service_name, getUUID());
   if (!service) {
     logger_->log_error("AWS credentials service with name: '{}' could not be found", service_name);
     return std::nullopt;
@@ -121,7 +121,7 @@ void S3Processor::onSchedule(core::ProcessContext& context, core::ProcessSession
 
   if (auto communications_timeout = context.getProperty<core::TimePeriodValue>(CommunicationsTimeout)) {
     logger_->log_debug("S3Processor: Communications Timeout {}", communications_timeout->getMilliseconds());
-    client_config_->connectTimeoutMs = gsl::narrow<long>(communications_timeout->getMilliseconds().count());  // NOLINT(runtime/int)
+    client_config_->connectTimeoutMs = gsl::narrow<long>(communications_timeout->getMilliseconds().count());  // NOLINT(runtime/int,google-runtime-int)
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }

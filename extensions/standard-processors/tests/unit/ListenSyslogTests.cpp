@@ -249,9 +249,8 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164
 }
 
 TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
-  const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
-
-  SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "2"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
@@ -306,9 +305,8 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
 }
 
 TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProcessor]") {
-  const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
-
-  SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "100"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "true"));
@@ -412,8 +410,8 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
 }
 
 TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog][NetworkListenerProcessor]") {
-  const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
-  SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, "0"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "100"));
@@ -434,9 +432,8 @@ TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog][NetworkListenerProc
 }
 
 TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][NetworkListenerProcessor]") {
-  const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
-
-  SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "10"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxQueueSize, "50"));
@@ -493,8 +490,8 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
 }
 
 TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][NetworkListenerProcessor]") {
-  const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
-  SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  const auto listen_syslog = controller.getProcessor<ListenSyslog>();
 
   auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();

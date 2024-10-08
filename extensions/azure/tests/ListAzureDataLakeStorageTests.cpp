@@ -42,10 +42,11 @@ class ListAzureDataLakeStorageTestsFixture {
     plan_ = test_controller_.createPlan();
     auto mock_data_lake_storage_client = std::make_unique<MockDataLakeStorageClient>();
     mock_data_lake_storage_client_ptr_ = mock_data_lake_storage_client.get();
-    list_azure_data_lake_storage_ = std::shared_ptr<minifi::azure::processors::ListAzureDataLakeStorage>(
+    auto list_azure_data_lake_storage_unique_ptr = std::unique_ptr<minifi::azure::processors::ListAzureDataLakeStorage>(
       new minifi::azure::processors::ListAzureDataLakeStorage("ListAzureDataLakeStorage", utils::Identifier(), std::move(mock_data_lake_storage_client)));
+    list_azure_data_lake_storage_ = list_azure_data_lake_storage_unique_ptr.get();
 
-    plan_->addProcessor(list_azure_data_lake_storage_, "ListAzureDataLakeStorage", { {"success", "d"} });
+    plan_->addProcessor(std::move(list_azure_data_lake_storage_unique_ptr), "ListAzureDataLakeStorage", { {"success", "d"} });
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
     plan_->setProperty(logattribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
@@ -73,7 +74,7 @@ class ListAzureDataLakeStorageTestsFixture {
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_;
   MockDataLakeStorageClient* mock_data_lake_storage_client_ptr_;
-  std::shared_ptr<core::Processor> list_azure_data_lake_storage_;
+  core::Processor* list_azure_data_lake_storage_;
   std::shared_ptr<core::controller::ControllerServiceNode> azure_storage_cred_service_;
 };
 
