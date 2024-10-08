@@ -33,7 +33,7 @@ class CouchbaseServerContainer(Container):
             ["couchbase-cli", "cluster-init", "-c", "localhost", "--cluster-username", "Administrator", "--cluster-password", "password123", "--services", "data,index,query",
              "--cluster-ramsize", "2048", "--cluster-index-ramsize", "256"],
             ["couchbase-cli", "bucket-create", "-c", "localhost", "--username", "Administrator", "--password", "password123", "--bucket", "test_bucket", "--bucket-type", "couchbase",
-             "--bucket-ramsize", "1024"]
+             "--bucket-ramsize", "1024", "--max-ttl", "36000"]
         ]
         for command in commands:
             (code, _) = self.client.containers.get(self.name).exec_run(command)
@@ -47,7 +47,7 @@ class CouchbaseServerContainer(Container):
             return
 
         self.docker_container = self.client.containers.run(
-            "couchbase:community-7.6.2",
+            "couchbase:enterprise-7.2.5",
             detach=True,
             name=self.name,
             network=self.network.name,
