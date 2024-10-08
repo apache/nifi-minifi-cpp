@@ -152,7 +152,6 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
 
  private:
   std::shared_ptr<controllers::CouchbaseClusterService> couchbase_cluster_service_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutCouchbaseKey>::getLogger(uuid_);
   CouchbaseValueType document_type_ = CouchbaseValueType::Json;
   ::couchbase::persist_to persist_to_ = ::couchbase::persist_to::none;
   ::couchbase::replicate_to replicate_to_ = ::couchbase::replicate_to::none;

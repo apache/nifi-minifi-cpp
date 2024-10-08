@@ -15,10 +15,10 @@
 from ..core.Processor import Processor
 
 
-class PutCouchbaseKey(Processor):
+class GetCouchbaseKey(Processor):
     def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
-        super(PutCouchbaseKey, self).__init__(
+        super(GetCouchbaseKey, self).__init__(
             context=context,
-            clazz='PutCouchbaseKey',
+            clazz='GetCouchbaseKey',
             auto_terminate=['success', 'failure', 'retry'],
             schedule=schedule)

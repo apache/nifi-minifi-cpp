@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 #include <mutex>
+#include <variant>
 
 #include "core/controller/ControllerService.h"
 #include "core/PropertyDefinition.h"
@@ -39,9 +40,17 @@ struct CouchbaseCollection {
   std::string collection_name;
 };
 
-struct CouchbaseUpsertResult {
+struct CouchbaseCallResult {
   std::string bucket_name;
   std::uint64_t cas{0};
+};
+
+struct CouchbaseGetResult : public CouchbaseCallResult {
+  std::string expiry;
+  std::variant<std::vector<std::byte>, std::string> value;
+};
+
+struct CouchbaseUpsertResult : public CouchbaseCallResult {
   std::uint64_t sequence_number{0};
   std::uint64_t partition_uuid{0};
   std::uint16_t partition_id{0};
@@ -75,6 +84,7 @@ class CouchbaseClient {
 
   nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id,
     const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options);
+  nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> get(const CouchbaseCollection& collection, const std::string& document_id, CouchbaseValueType return_type);
   nonstd::expected<void, CouchbaseErrorType> establishConnection();
   void close();
 
@@ -149,6 +159,11 @@ class CouchbaseClusterService : public core::controller::ControllerService {
       const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
     gsl_Expects(client_);
     return client_->upsert(collection, document_type, document_id, buffer, options);
+  }
+
+  virtual nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> get(const CouchbaseCollection& collection, const std::string& document_id, CouchbaseValueType return_type) {
+    gsl_Expects(client_);
+    return client_->get(collection, document_id, return_type);
   }
 
   static gsl::not_null<std::shared_ptr<CouchbaseClusterService>> getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property);
