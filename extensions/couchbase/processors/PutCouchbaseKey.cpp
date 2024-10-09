@@ -62,7 +62,7 @@ void PutCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
   options.durability(persist_to_, replicate_to_);
   auto result = session.readBuffer(flow_file);
   if (auto upsert_result = couchbase_cluster_service_->upsert(collection, document_id, result.buffer, options)) {
-    session.putAttribute(*flow_file, "couchbase.bucket", std::string(upsert_result->bucket_name));
+    session.putAttribute(*flow_file, "couchbase.bucket", upsert_result->bucket_name);
     session.putAttribute(*flow_file, "couchbase.doc.id", document_id);
     session.putAttribute(*flow_file, "couchbase.doc.cas", std::to_string(upsert_result->cas));
     session.putAttribute(*flow_file, "couchbase.doc.sequence.number", std::to_string(upsert_result->sequence_number));
@@ -70,7 +70,7 @@ void PutCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
     session.putAttribute(*flow_file, "couchbase.partition.id", std::to_string(upsert_result->partition_id));
     session.transfer(flow_file, Success);
   } else if (upsert_result.error() == CouchbaseErrorType::TEMPORARY) {
-    logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to timeout, transferring to retry relationship",
+    logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to temporary issue, transferring to retry relationship",
       document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
     session.transfer(flow_file, Retry);
   } else {
