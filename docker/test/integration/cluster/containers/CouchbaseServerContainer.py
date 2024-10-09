@@ -21,6 +21,7 @@ class CouchbaseServerContainer(Container):
         super().__init__(feature_context, name, 'couchbase-server', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
+        # after startup the logs are only available in the container, only this message is shown
         return "logs available in"
 
     @retry_check(15, 2)
@@ -45,11 +46,9 @@ class CouchbaseServerContainer(Container):
         if not self.set_deployed():
             return
 
-        port_list = [*range(8091, 8098), 9123, 11207, 11210, 11280, *range(18091, 18097)]
         self.docker_container = self.client.containers.run(
             "couchbase:community-7.6.2",
             detach=True,
             name=self.name,
             network=self.network.name,
-            ports={f'{port}/tcp': port for port in port_list},
             entrypoint=self.command)
