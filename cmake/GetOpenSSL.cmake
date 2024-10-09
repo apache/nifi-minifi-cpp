@@ -17,7 +17,7 @@
 
 function(get_openssl SOURCE_DIR BINARY_DIR)
     if(MINIFI_OPENSSL_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to install OpenSSL")
+        message("Using Conan to install OpenSSL")
         find_package(OpenSSL REQUIRED)
     elseif(MINIFI_OPENSSL_SOURCE STREQUAL "BUILD")
         message("Using CMake to build OpenSSL from source")

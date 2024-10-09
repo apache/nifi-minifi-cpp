@@ -17,7 +17,7 @@
 
 function(get_zstd)
     if(MINIFI_ZSTD_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to install zstd")
+        message("Using Conan to install zstd")
         find_package(zstd REQUIRED)
         add_library(zstd::zstd ALIAS zstd::libzstd_static)
     elseif(MINIFI_ZSTD_SOURCE STREQUAL "BUILD")
