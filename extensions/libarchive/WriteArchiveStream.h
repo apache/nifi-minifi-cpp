@@ -25,8 +25,8 @@
 #include "io/ArchiveStream.h"
 #include "archive_entry.h"
 #include "archive.h"
+#include "SmartArchivePtrs.h"
 #include "utils/Enum.h"
-#include "core/Core.h"
 #include "logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::io {
@@ -61,29 +61,22 @@ constexpr customize_t enum_name<CompressionFormat>(CompressionFormat value) noex
 
 namespace org::apache::nifi::minifi::io {
 
-class WriteArchiveStreamImpl: public WriteArchiveStream {
-  struct archive_write_deleter {
-    int operator()(struct archive* ptr) const {
-      return archive_write_free(ptr);
-    }
-  };
-  using archive_ptr = std::unique_ptr<struct archive, archive_write_deleter>;
-  struct archive_entry_deleter {
-    void operator()(struct archive_entry* ptr) const {
-      archive_entry_free(ptr);
-    }
-  };
-  using archive_entry_ptr = std::unique_ptr<struct archive_entry, archive_entry_deleter>;
-
-  archive_ptr createWriteArchive();
+class WriteArchiveStreamImpl final: public WriteArchiveStream {
+  [[nodiscard]] processors::archive_write_unique_ptr createWriteArchive() const;
 
  public:
-  WriteArchiveStreamImpl(int compress_level, CompressionFormat compress_format, std::shared_ptr<OutputStream> sink)
+  WriteArchiveStreamImpl(const int compress_level, CompressionFormat compress_format, std::shared_ptr<OutputStream> sink)
     : compress_level_(compress_level),
       compress_format_(compress_format),
-      sink_(std::move(sink)) {
-    arch_ = createWriteArchive();
+      sink_(std::move(sink)),
+      arch_(createWriteArchive()) {
   }
+
+  WriteArchiveStreamImpl() = delete;
+  WriteArchiveStreamImpl(const WriteArchiveStreamImpl&) = delete;
+  WriteArchiveStreamImpl(WriteArchiveStreamImpl&&) = delete;
+  WriteArchiveStreamImpl& operator=(const WriteArchiveStreamImpl&) = delete;
+  WriteArchiveStreamImpl& operator=(WriteArchiveStreamImpl&&) = delete;
 
   using OutputStream::write;
 
@@ -101,15 +94,15 @@ class WriteArchiveStreamImpl: public WriteArchiveStream {
  private:
   static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
     auto* const output = static_cast<OutputStream*>(context);
-    const auto ret = output->write(reinterpret_cast<const uint8_t*>(buff), size);
+    const auto ret = output->write(static_cast<const uint8_t*>(buff), size);
     return io::isError(ret) ? -1 : gsl::narrow<la_ssize_t>(ret);
   }
 
   int compress_level_;
   CompressionFormat compress_format_;
   std::shared_ptr<io::OutputStream> sink_;
-  archive_ptr arch_;
-  archive_entry_ptr arch_entry_;
+  processors::archive_write_unique_ptr arch_{};
+  processors::archive_entry_unique_ptr arch_entry_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<WriteArchiveStreamImpl>::getLogger();
 };
 

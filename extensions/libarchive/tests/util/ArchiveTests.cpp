@@ -25,11 +25,12 @@
 #include <algorithm>
 #include <set>
 #include <string>
-#include <utility>
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "utils/gsl.h"
+#include "SmartArchivePtrs.h"
+
 
 TAE_MAP_T build_test_archive_map(int NUM_FILES, const char* const* FILE_NAMES, const char* const* FILE_CONTENT) {
   TAE_MAP_T test_entries;
@@ -70,11 +71,11 @@ OrderedTestArchive build_ordered_test_archive(int NUM_FILES, const char* const* 
 
 void build_test_archive(const std::filesystem::path& path, const TAE_MAP_T& entries, FN_VEC_T order) {
   std::cout << "Creating " << path << std::endl;
-  archive * test_archive = archive_write_new();
+  const auto test_archive = minifi::processors::archive_write_unique_ptr{archive_write_new()};
 
-  archive_write_set_format_ustar(test_archive);
-  archive_write_open_filename(test_archive, path.string().c_str());
-  struct archive_entry* entry = archive_entry_new();
+  archive_write_set_format_ustar(test_archive.get());
+  archive_write_open_filename(test_archive.get(), path.string().c_str());
+  const auto entry = minifi::processors::archive_entry_unique_ptr{archive_entry_new()};
 
   if (order.empty()) {  // Use map sort order
     for (auto &kvp : entries)
@@ -86,25 +87,22 @@ void build_test_archive(const std::filesystem::path& path, const TAE_MAP_T& entr
 
     std::cout << "Adding entry: " << name << std::endl;
 
-    archive_entry_set_filetype(entry, test_entry.type);
-    archive_entry_set_pathname(entry, test_entry.name.c_str());
-    archive_entry_set_size(entry, gsl::narrow<la_int64_t>(test_entry.size));
-    archive_entry_set_perm(entry, test_entry.perms);
-    archive_entry_set_uid(entry, test_entry.uid);
-    archive_entry_set_gid(entry, test_entry.gid);
-    archive_entry_set_mtime(entry, test_entry.mtime, test_entry.mtime_nsec);
+    archive_entry_set_filetype(entry.get(), test_entry.type);
+    archive_entry_set_pathname(entry.get(), test_entry.name.c_str());
+    archive_entry_set_size(entry.get(), gsl::narrow<la_int64_t>(test_entry.size));
+    archive_entry_set_perm(entry.get(), test_entry.perms);
+    archive_entry_set_uid(entry.get(), test_entry.uid);
+    archive_entry_set_gid(entry.get(), test_entry.gid);
+    archive_entry_set_mtime(entry.get(), test_entry.mtime, test_entry.mtime_nsec);
 
-    archive_write_header(test_archive, entry);
-    archive_write_data(test_archive, test_entry.content, test_entry.size);
+    archive_write_header(test_archive.get(), entry.get());
+    archive_write_data(test_archive.get(), test_entry.content, test_entry.size);
 
-    archive_entry_clear(entry);
+    archive_entry_clear(entry.get());
   }
-
-  archive_entry_free(entry);
-  archive_write_close(test_archive);
 }
 
-void build_test_archive(const std::filesystem::path& path, OrderedTestArchive& ordered_archive) {
+void build_test_archive(const std::filesystem::path& path, const OrderedTestArchive& ordered_archive) {
   build_test_archive(path, ordered_archive.map, ordered_archive.order);
 }
 
@@ -112,20 +110,20 @@ bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& 
   FN_VEC_T read_names;
   FN_VEC_T extra_names;
   bool ok = true;
-  struct archive *a = archive_read_new();
+  auto a = minifi::processors::archive_read_unique_ptr{archive_read_new()};
   struct archive_entry *entry = nullptr;
 
-  archive_read_support_format_all(a);
-  archive_read_support_filter_all(a);
+  archive_read_support_format_all(a.get());
+  archive_read_support_filter_all(a.get());
 
-  int r = archive_read_open_filename(a, path.string().c_str(), 16384);
+  int r = archive_read_open_filename(a.get(), path.string().c_str(), 16384);
 
   if (r != ARCHIVE_OK) {
     std::cout << "Unable to open archive " << path << " for checking!" << std::endl;
     return false;
   }
 
-  while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+  while (archive_read_next_header(a.get(), &entry) == ARCHIVE_OK) {
     std::string name { archive_entry_pathname(entry) };
     auto it = entries.find(name);
     if (it == entries.end()) {
@@ -145,7 +143,7 @@ bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& 
         bool read_ok = true;
 
         for (;;) {
-          const auto rlen = archive_read_data(a, buf.data(), size);
+          const auto rlen = archive_read_data(a.get(), buf.data(), size);
           if (rlen == 0)
             break;
           if (rlen < 0) {
@@ -173,9 +171,6 @@ bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& 
     }
   }
 
-  archive_read_close(a);
-  archive_read_free(a);
-
   if (!extra_names.empty()) {
     ok = false;
     std::cout << "Extra files found: ";
@@ -195,7 +190,7 @@ bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& 
   } else {
     std::set<std::string> read_names_set(read_names.begin(), read_names.end());
     std::set<std::string> test_file_entries_set;
-    std::transform(entries.begin(), entries.end(), std::inserter(test_file_entries_set, test_file_entries_set.end()), [](const std::pair<std::string, TestArchiveEntry>& p) {return p.first;});
+    ranges::transform(entries, std::inserter(test_file_entries_set, test_file_entries_set.end()), [](const std::pair<std::string, TestArchiveEntry>& p) {return p.first;});
 
     REQUIRE(read_names_set == test_file_entries_set);
   }
@@ -203,6 +198,6 @@ bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& 
   return ok;
 }
 
-bool check_archive_contents(const std::filesystem::path& path, const OrderedTestArchive& archive, bool check_attributes) {
+bool check_archive_contents(const std::filesystem::path& path, const OrderedTestArchive& archive, const bool check_attributes) {
   return check_archive_contents(path, archive.map, check_attributes, archive.order);
 }

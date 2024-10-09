@@ -33,6 +33,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "Exception.h"
+#include "SmartArchivePtrs.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -150,7 +151,7 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
 }
 
 int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
-  auto inputArchive = archive_read_new();
+  auto input_archive = processors::archive_read_unique_ptr{archive_read_new()};
   struct archive_entry *entry = nullptr;
   int64_t nlen = 0;
 
@@ -158,35 +159,35 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
   data.stream = stream;
   data.processor = proc_;
 
-  archive_read_support_format_all(inputArchive);
-  archive_read_support_filter_all(inputArchive);
+  archive_read_support_format_all(input_archive.get());
+  archive_read_support_filter_all(input_archive.get());
 
   // Read each item in the archive
-  if (archive_read_open(inputArchive, &data, ok_cb, read_cb, ok_cb)) {
-    logger_->log_error("FocusArchiveEntry can't open due to archive error: {}", archive_error_string(inputArchive));
+  if (archive_read_open(input_archive.get(), &data, ok_cb, read_cb, ok_cb)) {
+    logger_->log_error("FocusArchiveEntry can't open due to archive error: {}", archive_error_string(input_archive.get()));
     return nlen;
   }
 
   while (proc_->isRunning()) {
-    auto res = archive_read_next_header(inputArchive, &entry);
+    auto res = archive_read_next_header(input_archive.get(), &entry);
 
     if (res == ARCHIVE_EOF) {
       break;
     }
 
     if (res < ARCHIVE_OK) {
-      logger_->log_error("FocusArchiveEntry can't read header due to archive error: {}", archive_error_string(inputArchive));
+      logger_->log_error("FocusArchiveEntry can't read header due to archive error: {}", archive_error_string(input_archive.get()));
       return nlen;
     }
 
     if (res < ARCHIVE_WARN) {
-      logger_->log_warn("FocusArchiveEntry got archive warning while reading header: {}", archive_error_string(inputArchive));
+      logger_->log_warn("FocusArchiveEntry got archive warning while reading header: {}", archive_error_string(input_archive.get()));
       return nlen;
     }
 
     auto entryName = archive_entry_pathname(entry);
-    (*_archiveMetadata).archiveFormatName.assign(archive_format_name(inputArchive));
-    (*_archiveMetadata).archiveFormat = archive_format(inputArchive);
+    _archiveMetadata->archiveFormatName.assign(archive_format_name(input_archive.get()));
+    _archiveMetadata->archiveFormat = archive_format(input_archive.get());
 
     // Record entry metadata
     auto entryType = archive_entry_filetype(entry);
@@ -215,20 +216,18 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
 
       if (archive_entry_size(entry) > 0) {
 #ifdef WIN32
-        nlen += archive_read_data_into_fd(inputArchive, _fileno(fd));
+        nlen += archive_read_data_into_fd(input_archive.get(), _fileno(fd));
 #else
-        nlen += archive_read_data_into_fd(inputArchive, fileno(fd));
+        nlen += archive_read_data_into_fd(input_archive.get(), fileno(fd));
 #endif
       }
 
       (void)fclose(fd);
     }
 
-    (*_archiveMetadata).entryMetadata.push_back(metadata);
+    _archiveMetadata->entryMetadata.push_back(metadata);
   }
 
-  archive_read_close(inputArchive);
-  archive_read_free(inputArchive);
   return nlen;
 }
 

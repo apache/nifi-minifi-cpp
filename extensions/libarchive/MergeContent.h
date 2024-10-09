@@ -27,6 +27,7 @@
 #include "BinFiles.h"
 #include "archive_entry.h"
 #include "archive.h"
+#include "SmartArchivePtrs.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
@@ -123,10 +124,10 @@ class ArchiveMerge {
  public:
   class ArchiveWriter : public io::OutputStream {
    public:
-    ArchiveWriter(struct archive *arch, struct archive_entry *entry) : arch_(arch), entry_(entry) {}
-    size_t write(const uint8_t* data, size_t size) override {
+    ArchiveWriter(archive& arch, archive_entry& entry) : arch_(arch), entry_(entry) {}
+    size_t write(const uint8_t* data, const size_t size) override {
       if (!header_emitted_) {
-        if (archive_write_header(arch_, entry_) != ARCHIVE_OK) {
+        if (archive_write_header(&arch_, &entry_) != ARCHIVE_OK) {
           return io::STREAM_ERROR;
         }
         header_emitted_ = true;
@@ -134,7 +135,7 @@ class ArchiveMerge {
       size_t totalWrote = 0;
       size_t remaining = size;
       while (remaining > 0) {
-        const auto ret = archive_write_data(arch_, data + totalWrote, remaining);
+        const auto ret = archive_write_data(&arch_, data + totalWrote, remaining);
         if (ret < 0) {
           return io::STREAM_ERROR;
         }
@@ -149,8 +150,8 @@ class ArchiveMerge {
     }
 
    private:
-    struct archive *arch_;
-    struct archive_entry *entry_;
+    archive& arch_;
+    archive_entry& entry_;
     bool header_emitted_{false};
   };
   // Nest Callback Class for write stream
@@ -160,20 +161,18 @@ class ArchiveMerge {
         : merge_type_(merge_type),
           flows_(flows),
           serializer_(serializer) {
-      size_ = 0;
-      stream_ = nullptr;
     }
 
     std::string merge_type_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
-    std::shared_ptr<io::OutputStream> stream_;
-    size_t size_;
+    std::shared_ptr<io::OutputStream> stream_ = nullptr;
+    size_t size_ = 0;
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ArchiveMerge>::getLogger();
     FlowFileSerializer& serializer_;
 
     static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
-      auto* callback = reinterpret_cast<WriteCallback *>(context);
-      auto* data = reinterpret_cast<uint8_t*>(const_cast<void*>(buff));
+      auto* callback = static_cast<WriteCallback *>(context);
+      const auto* data = static_cast<uint8_t*>(const_cast<void*>(buff));
       la_ssize_t totalWrote = 0;
       size_t remaining = size;
       while (remaining > 0) {
@@ -193,48 +192,42 @@ class ArchiveMerge {
     }
 
     int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) {
-      struct archive *arch;
+      const auto arch = archive_write_unique_ptr{archive_write_new()};
 
-      arch = archive_write_new();
       if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
-        archive_write_set_format_pax_restricted(arch);  // tar format
+        archive_write_set_format_pax_restricted(arch.get());  // tar format
       }
       if (merge_type_ == merge_content_options::MERGE_FORMAT_ZIP_VALUE) {
-        archive_write_set_format_zip(arch);  // zip format
+        archive_write_set_format_zip(arch.get());  // zip format
       }
-      archive_write_set_bytes_per_block(arch, 0);
-      archive_write_add_filter_none(arch);
+      archive_write_set_bytes_per_block(arch.get(), 0);
+      archive_write_add_filter_none(arch.get());
       stream_ = stream;
-      archive_write_open(arch, this, nullptr, archive_write, nullptr);
+      archive_write_open(arch.get(), this, nullptr, archive_write, nullptr);
 
       for (const auto& flow : flows_) {
-        struct archive_entry *entry = archive_entry_new();
+        auto entry = archive_entry_unique_ptr{archive_entry_new()};
         std::string fileName;
         flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
-        archive_entry_set_pathname(entry, fileName.c_str());
-        archive_entry_set_size(entry, gsl::narrow<la_int64_t>(flow->getSize()));
-        archive_entry_set_mode(entry, S_IFREG | 0755);
+        archive_entry_set_pathname(entry.get(), fileName.c_str());
+        archive_entry_set_size(entry.get(), gsl::narrow<la_int64_t>(flow->getSize()));
+        archive_entry_set_mode(entry.get(), S_IFREG | 0755);
         if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
-          std::string perm;
-          int permInt;
-          if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
+          if (std::string perm; flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
             try {
-              permInt = std::stoi(perm);
+              const int perm_int = std::stoi(perm);
               logger_->log_debug("Merge Tar File {} permission {}", fileName, perm);
-              archive_entry_set_perm(entry, (mode_t) permInt);
+              archive_entry_set_perm(entry.get(), static_cast<mode_t>(perm_int));
             } catch (...) {
             }
           }
         }
-        const auto ret = serializer_.serialize(flow, std::make_shared<ArchiveWriter>(arch, entry));
+        const auto ret = serializer_.serialize(flow, std::make_shared<ArchiveWriter>(*arch, *entry));
         if (ret < 0) {
           return ret;
         }
-        archive_entry_free(entry);
       }
 
-      archive_write_close(arch);
-      archive_write_free(arch);
       return gsl::narrow<int64_t>(size_);
     }
   };

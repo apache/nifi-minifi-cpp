@@ -24,9 +24,9 @@
 #include <string>
 #include <utility>
 
-#include <archive.h> // NOLINT
-#include <archive_entry.h> // NOLINT
-#include "ArchiveTests.h"
+#include "archive.h"
+#include "archive_entry.h"
+#include "util/ArchiveTests.h"
 #include "FocusArchiveEntry.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
@@ -40,7 +40,7 @@
 namespace org::apache::nifi::minifi::processors::test {
 
 const std::string TEST_ARCHIVE_NAME = "focus_test_archive.tar";
-const int NUM_FILES = 2;
+constexpr int NUM_FILES = 2;
 const char* FILE_NAMES[NUM_FILES] = {"file1", "file2"};  // NOLINT(cppcoreguidelines-avoid-c-arrays)
 const char* FILE_CONTENT[NUM_FILES] = {"Test file 1\n", "Test file 2\n"};  // NOLINT(cppcoreguidelines-avoid-c-arrays)
 
@@ -115,19 +115,17 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
 
   auto size = gsl::narrow<size_t>(ifs.tellg());
   ifs.seekg(0, std::ios::beg);
-  gsl::owner<char*> content = nullptr;
-  content = new char[size];
-  ifs.read(content, gsl::narrow<std::streamsize>(size));
+  auto content = std::vector<char>(size);
+  ifs.read(content.data(), gsl::narrow<std::streamsize>(size));
 
   REQUIRE(size == strlen(FOCUSED_CONTENT));
-  REQUIRE(memcmp(content, FOCUSED_CONTENT, size) == 0);
+  REQUIRE(memcmp(content.data(), FOCUSED_CONTENT, size) == 0);
 
   plan->runNextProcessor();  // UnfocusArchive
   plan->runNextProcessor();  // PutFile 2 (unfocused)
 
   auto archive_path_2 = dir3 / TEST_ARCHIVE_NAME;
   REQUIRE(check_archive_contents(archive_path_2, test_archive_map));
-  delete[] content;
 }
 
 }  // namespace org::apache::nifi::minifi::processors::test

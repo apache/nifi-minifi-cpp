@@ -56,22 +56,22 @@ void init_file_paths() {
   struct Initializer {
     Initializer() {
       static TestController global_controller;
-      auto tempDir = global_controller.createTempDirectory();
-      FLOW_FILE = (tempDir / "minifi-mergecontent").string();
-      EXPECT_MERGE_CONTENT_FIRST = (tempDir / "minifi-expect-mergecontent1.txt").string();
-      EXPECT_MERGE_CONTENT_SECOND = (tempDir / "minifi-expect-mergecontent2.txt").string();
-      HEADER_FILE = (tempDir / "minifi-mergecontent.header").string();
-      FOOTER_FILE = (tempDir / "minifi-mergecontent.footer").string();
-      DEMARCATOR_FILE = (tempDir / "minifi-mergecontent.demarcator").string();
+      const auto temp_dir = global_controller.createTempDirectory();
+      FLOW_FILE = (temp_dir / "minifi-mergecontent").string();
+      EXPECT_MERGE_CONTENT_FIRST = (temp_dir / "minifi-expect-mergecontent1.txt").string();
+      EXPECT_MERGE_CONTENT_SECOND = (temp_dir / "minifi-expect-mergecontent2.txt").string();
+      HEADER_FILE = (temp_dir / "minifi-mergecontent.header").string();
+      FOOTER_FILE = (temp_dir / "minifi-mergecontent.footer").string();
+      DEMARCATOR_FILE = (temp_dir / "minifi-mergecontent.demarcator").string();
     }
   };
-  static Initializer initializer;
+  [[maybe_unused]] static Initializer initializer;
 }
 
 class FixedBuffer {
  public:
-  explicit FixedBuffer(std::size_t capacity) : capacity_(capacity) {
-    buf_.reset(new uint8_t[capacity_]);  // NOLINT(cppcoreguidelines-owning-memory)
+  explicit FixedBuffer(const std::size_t capacity) : capacity_(capacity) {
+    buf_.resize(capacity_);
   }
   FixedBuffer(FixedBuffer&& other) noexcept : buf_(std::move(other.buf_)), size_(other.size_), capacity_(other.capacity_) {
     other.size_ = 0;
@@ -83,8 +83,10 @@ class FixedBuffer {
   ~FixedBuffer() = default;
   [[nodiscard]] std::size_t size() const { return size_; }
   [[nodiscard]] std::size_t capacity() const { return capacity_; }
-  [[nodiscard]] uint8_t* begin() const { return buf_.get(); }
-  [[nodiscard]] uint8_t* end() const { return buf_.get() + size_; }
+  [[nodiscard]] uint8_t* begin() { return buf_.data(); }
+  [[nodiscard]] uint8_t* end() { return buf_.data() + size_; }
+  [[nodiscard]] const uint8_t* begin() const { return buf_.data(); }
+  [[nodiscard]] const uint8_t* end() const { return buf_.data() + size_; }
 
   [[nodiscard]] std::string to_string() const {
     return {begin(), end()};
@@ -110,7 +112,7 @@ class FixedBuffer {
   }
 
  private:
-  std::unique_ptr<uint8_t[]> buf_;  // NOLINT(cppcoreguidelines-avoid-c-arrays)
+  std::vector<uint8_t> buf_;
   std::size_t size_ = 0;
   std::size_t capacity_ = 0;
 };
@@ -118,26 +120,26 @@ class FixedBuffer {
 std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
   class ArchiveEntryReader {
    public:
-    explicit ArchiveEntryReader(archive* arch) : arch(arch) {}
-    size_t read(std::span<std::byte> out_buffer) {
-      const auto ret = archive_read_data(arch, out_buffer.data(), out_buffer.size());
+    explicit ArchiveEntryReader(archive& arch) : arch(arch) {}
+    [[nodiscard]] size_t read(std::span<std::byte> out_buffer) const {
+      const auto ret = archive_read_data(&arch, out_buffer.data(), out_buffer.size());
       return ret < 0 ? minifi::io::STREAM_ERROR : gsl::narrow<size_t>(ret);
     }
    private:
-    archive* arch;
+    archive& arch;
   };
   std::vector<FixedBuffer> archive_contents;
-  struct archive *a = archive_read_new();
-  archive_read_support_format_all(a);
-  archive_read_support_filter_all(a);
-  archive_read_open_memory(a, input.begin(), input.size());
+  const auto a = minifi::processors::archive_read_unique_ptr{archive_read_new()};
+  archive_read_support_format_all(a.get());
+  archive_read_support_filter_all(a.get());
+  archive_read_open_memory(a.get(), input.begin(), input.size());
   struct archive_entry *ae = nullptr;
 
-  while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
-    int64_t size{archive_entry_size(ae)};
+  while (archive_read_next_header(a.get(), &ae) == ARCHIVE_OK) {
+    const int64_t size{archive_entry_size(ae)};
     FixedBuffer buf(size);
-    ArchiveEntryReader reader(a);
-    auto ret = buf.write(reader, buf.capacity());
+    ArchiveEntryReader reader(*a);
+    const auto ret = buf.write(reader, buf.capacity());
     REQUIRE(ret == size);
     archive_contents.emplace_back(std::move(buf));
   }

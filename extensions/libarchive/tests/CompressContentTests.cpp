@@ -38,7 +38,6 @@
 #include "core/ProcessorNode.h"
 #include "CompressContent.h"
 #include "io/FileStream.h"
-#include "FlowFileRecord.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
@@ -69,8 +68,7 @@ class ReadCallback {
     return total_read;
   }
   void archive_read() {
-    struct archive_read_deleter { void operator()(struct archive* p) const noexcept { archive_read_free(p); } };
-    std::unique_ptr<struct archive, archive_read_deleter> a{archive_read_new()};
+    auto a = minifi::processors::archive_read_unique_ptr{archive_read_new()};
     archive_read_support_format_all(a.get());
     archive_read_support_filter_all(a.get());
     archive_read_open_memory(a.get(), buffer_.data(), read_size_);
@@ -78,9 +76,9 @@ class ReadCallback {
 
     REQUIRE(archive_read_next_header(a.get(), &ae) == ARCHIVE_OK);
     const auto size = [&] {
-      const auto size = archive_entry_size(ae);
-      REQUIRE(size >= 0);
-      return gsl::narrow<size_t>(size);
+      const auto entry_size = archive_entry_size(ae);
+      REQUIRE(entry_size >= 0);
+      return gsl::narrow<size_t>(entry_size);
     }();
     archive_buffer_.resize(size);
     archive_read_data(a.get(), archive_buffer_.data(), size);
@@ -405,7 +403,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
   auto flow = importFlowFile(rawContentPath());
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
     // platform not support LZMA
     LogTestController::getInstance().reset();
     return;
@@ -441,7 +439,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
   flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-lzma");
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
     // platform not support LZMA
     LogTestController::getInstance().reset();
     return;
@@ -471,7 +469,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
   auto flow = importFlowFile(rawContentPath());
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
     // platform not support LZMA
     LogTestController::getInstance().reset();
     return;
@@ -507,7 +505,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
   flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-xz");
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
     // platform not support LZMA
     LogTestController::getInstance().reset();
     return;
@@ -634,7 +632,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
     utils::string::repeat("0", 1000), utils::string::repeat("1", 1000),
     utils::string::repeat("2", 1000), utils::string::repeat("3", 1000),
   };
-  const std::size_t batchSize = 3;
+  constexpr std::size_t batchSize = 3;
 
   context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::compress));
   context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::GZIP));
@@ -710,7 +708,7 @@ TEST_CASE_METHOD(DecompressTestController, "Invalid archive decompression", "[co
   importFlowFileFrom(minifi::io::BufferStream(std::string{"banana bread"}));
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform")) {
+  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
     return;
   }
 
