@@ -18,11 +18,7 @@
 
 verify_enable_platform() {
   feature="$1"
-  if [ "$OS_MAJOR" = "6" ]; then
-    verify_gcc_enable "${feature}"
-  else
-    verify_gcc_enable "${feature}"
-  fi
+  verify_gcc_enable "${feature}"
 }
 
 add_os_flags() {

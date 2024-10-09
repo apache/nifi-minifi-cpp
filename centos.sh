@@ -34,9 +34,7 @@ install_pkgs() {
 
 verify_enable_platform() {
     feature="$1"
-    if [ "$OS_MAJOR" -gt 6 ]; then
-        verify_gcc_enable "$feature"
-    fi
+    verify_gcc_enable "$feature"
 }
 
 add_os_flags() {
