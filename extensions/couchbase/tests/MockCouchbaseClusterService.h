@@ -25,41 +25,10 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::couchbase::test {
 
-struct GetCollectionParameters {
-  std::string bucket_name;
-  std::string scope_name;
-  std::string collection_name;
-};
-
 struct UpsertParameters {
   std::string document_id;
   std::vector<std::byte> buffer;
   ::couchbase::upsert_options options;
-};
-
-class MockCouchbaseCollection : public CouchbaseCollection {
- public:
-  MockCouchbaseCollection(UpsertParameters& parameters, std::error_code& upsert_error_code, std::string_view bucket_name)
-      : parameters_(parameters),
-        upsert_error_code_(upsert_error_code),
-        bucket_name_(bucket_name) {}
-
-  nonstd::expected<CouchbaseUpsertResult, std::error_code> upsert(const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) override {
-    parameters_.document_id = document_id;
-    parameters_.buffer = buffer;
-    parameters_.options = options;
-
-    if (upsert_error_code_) {
-      return nonstd::make_unexpected(upsert_error_code_);
-    } else {
-      return CouchbaseUpsertResult{bucket_name_, 1, 2, 3, 4};
-    }
-  }
-
- private:
-  UpsertParameters& parameters_;
-  std::error_code& upsert_error_code_;
-  std::string bucket_name_;
 };
 
 class MockCouchbaseClusterService : public controllers::CouchbaseClusterService {
@@ -71,41 +40,36 @@ class MockCouchbaseClusterService : public controllers::CouchbaseClusterService 
   void onEnable() override {}
   void notifyStop() override {}
 
-  std::unique_ptr<CouchbaseCollection> getCollection(std::string_view bucket_name, std::string_view scope_name, std::string_view collection_name) override {
-    get_collection_parameters_.bucket_name = bucket_name;
-    get_collection_parameters_.scope_name = scope_name;
-    get_collection_parameters_.collection_name = collection_name;
-    if (!get_collection_succeeds_) {
-      return nullptr;
-    } else {
-      return std::make_unique<MockCouchbaseCollection>(upsert_parameters_, upsert_error_code_, bucket_name);
-    }
-  }
+  nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, const std::string& document_id, const std::vector<std::byte>& buffer,
+      const ::couchbase::upsert_options& options) override {
+    collection_ = collection;
+    upsert_parameters_.document_id = document_id;
+    upsert_parameters_.buffer = buffer;
+    upsert_parameters_.options = options;
 
-  GetCollectionParameters getGetCollectionParameters() const {
-    return get_collection_parameters_;
+    if (upsert_error_) {
+      return nonstd::make_unexpected(*upsert_error_);
+    } else {
+      return CouchbaseUpsertResult{std::string(collection_.bucket_name), 1, 2, 3, 4};
+    }
   }
 
   UpsertParameters getUpsertParameters() const {
     return upsert_parameters_;
   }
 
-  void setUpsertErrorCode(const std::error_code& error) {
-    upsert_error_code_ = error;
+  CouchbaseCollection getCollectionParameter() const {
+    return collection_;
   }
 
-  void setGetCollectionSucceeds(bool succeeds) {
-    get_collection_succeeds_ = succeeds;
-  }
-
-  bool getGetCollectionSucceeds() const {
-    return get_collection_succeeds_;
+  void setUpsertError(const CouchbaseErrorType upsert_error) {
+    upsert_error_ = upsert_error;
   }
 
  private:
-  GetCollectionParameters get_collection_parameters_;
+  CouchbaseCollection collection_;
   UpsertParameters upsert_parameters_;
-  std::error_code upsert_error_code_;
+  std::optional<CouchbaseErrorType> upsert_error_;
   bool get_collection_succeeds_{true};
 };
 }  // namespace org::apache::nifi::minifi::couchbase::test
