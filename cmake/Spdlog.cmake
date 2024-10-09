@@ -17,7 +17,7 @@
 # under the License.
 #
 include(FetchContent)
-include(fmt)
+
 set(SPDLOG_FMT_EXTERNAL ON CACHE STRING "" FORCE)
 FetchContent_Declare(Spdlog
         URL  https://github.com/gabime/spdlog/archive/refs/tags/v1.12.0.tar.gz

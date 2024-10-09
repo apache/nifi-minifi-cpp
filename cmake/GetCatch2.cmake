@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,23 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-if (NOT ENABLE_ROCKSDB)
-    return()
-endif()
-
-include(GetRocksDB)
-get_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-file(GLOB SOURCES  "*.cpp" "controllers/*.cpp" "database/*.cpp" "encryption/*.cpp")
-
-add_minifi_library(minifi-rocksdb-repos SHARED ${SOURCES})
-
-target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-rocksdb-repos RocksDB::RocksDB)
-
-register_extension(minifi-rocksdb-repos "ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/rocksdb-repos/tests")
-register_extension_linter(minifi-rocksdb-repos-linter)
+function(get_catch2)
+    if(MINIFI_CATCH2_SOURCE STREQUAL "CONAN")
+        message("Using Conan to install Catch2")
+        find_package(Catch2 REQUIRED)
+        add_library(Catch2WithMain ALIAS Catch2::Catch2WithMain)
+    elseif(MINIFI_CATCH2_SOURCE STREQUAL "BUILD")
+        message("Using CMake to build Catch2 from source")
+        include(Catch2)
+    endif()
+endfunction(get_catch2)

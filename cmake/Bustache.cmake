@@ -17,7 +17,9 @@
 # under the License.
 #
 include(FetchContent)
-include(fmt)
+include(GetFmt)
+get_fmt()
+
 set(BUSTACHE_USE_FMT ON CACHE STRING "" FORCE)
 FetchContent_Declare(Bustache
         GIT_REPOSITORY  https://github.com/jamboree/bustache.git
