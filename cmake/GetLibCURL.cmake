@@ -17,7 +17,7 @@
 
 function(get_curl SOURCE_DIR BINARY_DIR)
     if(MINIFI_LIBCURL_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to install libcurl")
+        message("Using Conan to install libcurl")
         find_package(CURL REQUIRED)
     elseif(MINIFI_LIBCURL_SOURCE STREQUAL "BUILD")
         message("Using CMake to build libcurl from source")

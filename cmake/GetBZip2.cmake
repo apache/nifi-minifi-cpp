@@ -17,7 +17,7 @@
 
 function(get_bzip2 SOURCE_DIR BINARY_DIR)
     if(MINIFI_BZIP2_SOURCE STREQUAL "CONAN")
-        message("Using Conan Packager to install bzip2")
+        message("Using Conan to install bzip2")
         find_package(BZip2 REQUIRED)
     elseif(MINIFI_BZIP2_SOURCE STREQUAL "BUILD")
         message("Using CMake to build bzip2 from source")
