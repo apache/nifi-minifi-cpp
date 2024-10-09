@@ -74,14 +74,10 @@ class PutCouchbaseKeyTestController : public TestController {
       flow_file = results.at(processors::PutCouchbaseKey::Retry)[0];
     }
 
-    auto get_collection_parameters = mock_couchbase_cluster_service_->getGetCollectionParameters();
+    auto get_collection_parameters = mock_couchbase_cluster_service_->getCollectionParameter();
     CHECK(get_collection_parameters.bucket_name == expected_call_options.bucket_name);
     CHECK(get_collection_parameters.collection_name == expected_call_options.collection_name);
     CHECK(get_collection_parameters.scope_name == expected_call_options.scope_name);
-
-    if (!mock_couchbase_cluster_service_->getGetCollectionSucceeds()) {
-      return;
-    }
 
     auto upsert_parameters = mock_couchbase_cluster_service_->getUpsertParameters();
     std::string expected_doc_id = expected_call_options.doc_id.empty() ? flow_file->getUUID().to_string() : expected_call_options.doc_id;
@@ -144,23 +140,15 @@ TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put succeeeds with optional pro
 
 TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put fails with default properties", "[putcouchbasekey]") {
   proc_->setProperty(processors::PutCouchbaseKey::BucketName, "mybucket");
-  mock_couchbase_cluster_service_->setUpsertErrorCode(std::make_error_code(std::errc::invalid_argument));
+  mock_couchbase_cluster_service_->setUpsertError(CouchbaseErrorType::FATAL);
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
   auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
   verifyResults(results, processors::PutCouchbaseKey::Failure, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none, ""}, input);
 }
 
-TEST_CASE_METHOD(PutCouchbaseKeyTestController, "FlowFile is transferred to retry relationship when get collection fails", "[putcouchbasekey]") {
+TEST_CASE_METHOD(PutCouchbaseKeyTestController, "FlowFile is transferred to retry relationship when temporary error is returned", "[putcouchbasekey]") {
   proc_->setProperty(processors::PutCouchbaseKey::BucketName, "mybucket");
-  mock_couchbase_cluster_service_->setGetCollectionSucceeds(false);
-  const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
-  auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
-  verifyResults(results, processors::PutCouchbaseKey::Retry, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none, ""}, input);
-}
-
-TEST_CASE_METHOD(PutCouchbaseKeyTestController, "FlowFile is transferred to retry relationship when unambiguous timeout is returned", "[putcouchbasekey]") {
-  proc_->setProperty(processors::PutCouchbaseKey::BucketName, "mybucket");
-  mock_couchbase_cluster_service_->setUpsertErrorCode(::couchbase::errc::common::unambiguous_timeout);
+  mock_couchbase_cluster_service_->setUpsertError(CouchbaseErrorType::TEMPORARY);
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
   auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
   verifyResults(results, processors::PutCouchbaseKey::Retry, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none, ""}, input);

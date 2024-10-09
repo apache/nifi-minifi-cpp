@@ -29,28 +29,31 @@
 #include "couchbase/cluster.hxx"
 #include "core/ProcessContext.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "CouchbaseCollection.h"
 #include "couchbase/codec/raw_binary_transcoder.hxx"
+#include "couchbase/error.hxx"
 
 namespace org::apache::nifi::minifi::couchbase {
 
-class CouchBaseClient;
-
-class RemoteCouchbaseCollection : public CouchbaseCollection {
- public:
-  explicit RemoteCouchbaseCollection(::couchbase::collection collection, CouchBaseClient& client)
-      : collection_(std::move(collection)),
-        client_(client) {
-  }
-
-  nonstd::expected<CouchbaseUpsertResult, std::error_code> upsert(const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) override;
-
- private:
-  ::couchbase::collection collection_;
-  CouchBaseClient& client_;
+struct CouchbaseCollection {
+  std::string bucket_name;
+  std::string scope_name;
+  std::string collection_name;
 };
 
-class CouchBaseClient {
+struct CouchbaseUpsertResult {
+  std::string bucket_name;
+  std::uint64_t cas{0};
+  std::uint64_t sequence_number{0};
+  std::uint64_t partition_uuid{0};
+  std::uint16_t partition_id{0};
+};
+
+enum class CouchbaseErrorType {
+  FATAL,
+  TEMPORARY,
+};
+
+class CouchbaseClient {
  public:
   enum class State {
     DISCONNECTED,
@@ -58,16 +61,31 @@ class CouchBaseClient {
     UNKNOWN,
   };
 
-  CouchBaseClient(std::string connection_string, std::string username, std::string password, const std::shared_ptr<core::logging::Logger>& logger)
+  CouchbaseClient(std::string connection_string, std::string username, std::string password, const std::shared_ptr<core::logging::Logger>& logger)
     : connection_string_(std::move(connection_string)), username_(std::move(username)), password_(std::move(password)), logger_(logger) {
   }
 
-  std::unique_ptr<CouchbaseCollection> getCollection(std::string_view bucket_name, std::string_view scope_name, std::string_view collection_name);
-  void setConnectionError();
+  nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, const std::string& document_id, const std::vector<std::byte>& buffer,
+    const ::couchbase::upsert_options& options);
+  std::optional<CouchbaseErrorType> establishConnection();
   void close();
 
  private:
-  bool establishConnection();
+  static constexpr std::array<::couchbase::errc::common, 9> temporary_connection_errors = {
+    ::couchbase::errc::common::temporary_failure,
+    ::couchbase::errc::common::request_canceled,
+    ::couchbase::errc::common::service_not_available,
+    ::couchbase::errc::common::internal_server_failure,
+    ::couchbase::errc::common::cas_mismatch,
+    ::couchbase::errc::common::ambiguous_timeout,
+    ::couchbase::errc::common::unambiguous_timeout,
+    ::couchbase::errc::common::rate_limited,
+    ::couchbase::errc::common::quota_limited
+  };
+
+  static CouchbaseErrorType getErrorType(const std::error_code& error_code);
+  nonstd::expected<::couchbase::collection, CouchbaseErrorType> getCollection(const CouchbaseCollection& collection);
+  void setConnectionError();
 
   std::mutex state_mutex_;
   State state_ = State::DISCONNECTED;
@@ -134,15 +152,16 @@ class CouchbaseClusterService : public core::controller::ControllerService {
     }
   }
 
-  virtual std::unique_ptr<CouchbaseCollection> getCollection(std::string_view bucket_name, std::string_view scope_name, std::string_view collection_name) {
+  virtual nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection,
+      const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
     gsl_Expects(client_);
-    return client_->getCollection(bucket_name, scope_name, collection_name);
+    return client_->upsert(collection, document_id, buffer, options);
   }
 
   static gsl::not_null<std::shared_ptr<CouchbaseClusterService>> getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property);
 
  private:
-  std::unique_ptr<CouchBaseClient> client_;
+  std::unique_ptr<CouchbaseClient> client_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CouchbaseClusterService>::getLogger(uuid_);
 };
 
