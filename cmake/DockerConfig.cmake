@@ -64,7 +64,6 @@ add_custom_target(
              -DENABLE_PROMETHEUS=OFF
              -DENABLE_GRPC_FOR_LOKI=OFF
              -DENABLE_PROCFS=OFF
-             -DENABLE_GPS=OFF
              -DENABLE_OPENCV=OFF
              -DENABLE_BUSTACHE=OFF
              -DENABLE_SFTP=OFF

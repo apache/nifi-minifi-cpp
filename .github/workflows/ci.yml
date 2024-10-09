@@ -30,7 +30,6 @@ jobs:
         -DENABLE_ENCRYPT_CONFIG=ON
         -DENABLE_EXPRESSION_LANGUAGE=ON
         -DENABLE_GCP=ON
-        -DENABLE_GPS=OFF
         -DENABLE_KUBERNETES=ON
         -DENABLE_LIBARCHIVE=ON
         -DENABLE_LIBRDKAFKA=ON
@@ -137,7 +136,6 @@ jobs:
         -DENABLE_ENCRYPT_CONFIG=ON
         -DENABLE_EXPRESSION_LANGUAGE=ON
         -DENABLE_GCP=ON
-        -DENABLE_GPS=OFF
         -DENABLE_GRAFANA_LOKI=ON
         -DENABLE_KUBERNETES=ON
         -DENABLE_LIBARCHIVE=ON
@@ -251,7 +249,6 @@ jobs:
         -DENABLE_ENCRYPT_CONFIG=ON
         -DENABLE_EXPRESSION_LANGUAGE=ON
         -DENABLE_GCP=OFF
-        -DENABLE_GPS=OFF
         -DENABLE_KUBERNETES=OFF
         -DENABLE_LIBARCHIVE=ON
         -DENABLE_LIBRDKAFKA=OFF
@@ -350,7 +347,6 @@ jobs:
         -DENABLE_EXPRESSION_LANGUAGE=ON
         -DENABLE_EXECUTE_PROCESS=ON
         -DENABLE_GCP=ON
-        -DENABLE_GPS=ON
         -DENABLE_GRAFANA_LOKI=ON
         -DENABLE_KUBERNETES=ON
         -DENABLE_LIBARCHIVE=ON
@@ -395,7 +391,7 @@ jobs:
           echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install -y ccache libfl-dev libgps-dev clang-16 clang-tidy-16 libc++-16-dev libc++abi-16-dev libc++1-16 libc++abi1-16 libunwind-16 libsqliteodbc flake8 parallel
+          sudo apt install -y ccache libfl-dev clang-16 clang-tidy-16 libc++-16-dev libc++abi-16-dev libc++1-16 libc++abi1-16 libunwind-16 libsqliteodbc flake8 parallel
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - id: free_disk_space
@@ -507,8 +503,7 @@ jobs:
         run: |
           # rocky build can run out of the github runners' disk space if built with RelWithDebInfo so we keep the Release build here
           mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DMINIFI_FAIL_ON_WARNINGS=OFF -DENABLE_AWS=ON -DENABLE_AZURE=ON \
-              -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_OPC=ON \
-              -DENABLE_OPENCV=ON -DENABLE_OPS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
+              -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_OPC=ON -DENABLE_OPENCV=ON -DENABLE_OPS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
               -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON \
               -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make rocky-test
       - name: cache save

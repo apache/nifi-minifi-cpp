@@ -49,7 +49,6 @@ limitations under the License.
 - [FocusArchiveEntry](#FocusArchiveEntry)
 - [GenerateFlowFile](#GenerateFlowFile)
 - [GetFile](#GetFile)
-- [GetGPS](#GetGPS)
 - [GetTCP](#GetTCP)
 - [HashContent](#HashContent)
 - [InvokeHTTP](#InvokeHTTP)
@@ -1116,29 +1115,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Polling Interval       | 0 sec         |                  | Indicates how long to wait before performing a directory listing                                                                                           |
 | Batch Size             | 10            |                  | The maximum number of files to pull in each iteration                                                                                                      |
 | File Filter            | .*            |                  | Only files whose names match the given regular expression will be picked up                                                                                |
-
-### Relationships
-
-| Name    | Description                     |
-|---------|---------------------------------|
-| success | All files are routed to success |
-
-
-## GetGPS
-
-### Description
-
-Obtains GPS coordinates from the GPSDHost and port.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name           | Default Value | Allowable Values | Description                                               |
-|----------------|---------------|------------------|-----------------------------------------------------------|
-| GPSD Host      | localhost     |                  | The host running the GPSD daemon                          |
-| GPSD Port      | 2947          |                  | The GPSD daemon port                                      |
-| GPSD Wait Time | 50000000      |                  | Timeout value for waiting for data from the GPSD instance |
 
 ### Relationships
 

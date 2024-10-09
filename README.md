@@ -77,7 +77,6 @@ The next table outlines CMAKE flags that correspond with MiNiFi extensions. Exte
 | CivetWeb                         | [ListenHTTP](PROCESSORS.md#listenhttp)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -DENABLE_CIVET=ON            |
 | Elasticsearch                    | [ElasticsearchCredentialsControllerService](CONTROLLERS.md#elasticsearchcredentialscontrollerservice)<br/>[PostElasticsearch](PROCESSORS.md#postelasticsearch)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_ELASTICSEARCH=ON    |
 | ExecuteProcess (Linux and macOS) | [ExecuteProcess](PROCESSORS.md#executeprocess)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_EXECUTE_PROCESS=ON  |
-| GPS (Linux and macOS)            | [GetGPS](PROCESSORS.md#getgps)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_GPS=ON              |
 | Google Cloud Platform            | [DeleteGCSObject](PROCESSORS.md#deletegcsobject)<br>[FetchGCSObject](PROCESSORS.md#fetchgcsobject)<br>[GCPCredentialsControllerService](CONTROLLERS.md#gcpcredentialscontrollerservice)<br>[ListGCSBucket](PROCESSORS.md#listgcsbucket)<br>[PutGCSObject](PROCESSORS.md#putgcsobject)                                                                                                                                                                                                                                                                                                                                                           | -DENABLE_GCP=ON              |
 | Grafana Loki                     | [PushGrafanaLokiREST](PROCESSORS.md#pushgrafanalokirest)<br>[PushGrafanaLokiGrpc](PROCESSORS.md#pushgrafanalokigrpc)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | -DENABLE_GRAFANA_LOKI=ON     |
 | Kafka                            | [PublishKafka](PROCESSORS.md#publishkafka)<br>[ConsumeKafka](PROCESSORS.md#consumekafka)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | -DENABLE_LIBRDKAFKA=ON       |
@@ -138,7 +137,6 @@ and rebuild.
 
 #### System Libraries / Development Headers Required
 * Python 3 and development headers -- Required if Python support is enabled
-* libgps-dev -- Required if building libGPS support
 * perl -- Required for OpenSSL configuration
 * NASM -- Required for OpenSSL only on Windows
 * jom (optional) -- for parallel build of OpenSSL on Windows
@@ -206,8 +204,6 @@ dnf install python36-devel
 dnf install docker
 # (Optional) for system integration tests
 dnf install docker python-virtualenv
-# If building with GPS support
-dnf install gpsd-devel
 ```
 
 ##### Aptitude based Linux Distributions
@@ -235,8 +231,6 @@ apt install libpython3-dev
 apt install docker.io
 # (Optional) for system integration tests
 apt install docker.io python-virtualenv
-# (Optional) If building with GPS support
-apt install libgps-dev
 ```
 
 ##### macOS Using Homebrew (with XCode Command Line Tools installed)
@@ -260,8 +254,6 @@ brew link curl --force
 # (Optional) for building docker image/running system integration tests
 # Install docker using instructions at https://docs.docker.com/docker-for-mac/install/
 sudo pip install virtualenv
-# If building with GPS support
-brew install gpsd
 # It is recommended that you install bison from source as HomeBrew now uses an incompatible version of Bison
 ```
 
@@ -327,7 +319,6 @@ This will set up a virtual environment in the bootstrap folder, and guide you th
     D. Python Scripting support ....Enabled
     E. Expression Language support .Enabled
     F. Kafka support ...............Enabled
-    I. GPS support .................Disabled
     K. Bustache Support ............Disabled
     L. Lua Scripting Support .......Enabled
     M. MQTT Support ................Enabled

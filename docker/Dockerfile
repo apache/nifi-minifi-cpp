@@ -48,7 +48,6 @@ RUN apk --no-cache add gcc \
   cmake \
   git \
   patch \
-  gpsd-dev \
   python3-dev \
   doxygen \
   ccache
@@ -94,7 +93,6 @@ ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
     install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME} && \
     apk add --no-cache libstdc++ tzdata alpine-conf && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_GPS=ON"; then apk add --no-cache gpsd; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then apk add --no-cache python3; fi
 
 # Copy built minifi distribution from builder
