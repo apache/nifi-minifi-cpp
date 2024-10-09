@@ -48,12 +48,12 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
   auto [upsert_err, upsert_resp] = collection_result->upsert<::couchbase::codec::raw_binary_transcoder>(document_id, buffer, options).get();
   if (upsert_err.ec()) {
     setConnectionError();
-    if (upsert_err.ec().value() == static_cast<int>(::couchbase::errc::common::unambiguous_timeout)) {
-      logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to timeout",
-        document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
+    // ambiguous_timeout should not be retried as we do not know if the insert was successful or not
+    if (getErrorType(upsert_err.ec()) == CouchbaseErrorType::TEMPORARY && upsert_err.ec().value() != static_cast<int>(::couchbase::errc::common::ambiguous_timeout)) {
+      logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to temporary issue, error code: '{}', message: '{}'",
+        document_id, collection.bucket_name, collection.scope_name, collection.collection_name, upsert_err.ec(), upsert_err.message());
       return nonstd::make_unexpected(CouchbaseErrorType::TEMPORARY);
     }
-    std::string cause = upsert_err.cause() ? upsert_err.cause()->message() : "";
     logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' with error code: '{}', message: '{}'",
       document_id, collection.bucket_name, collection.scope_name, collection.collection_name, upsert_err.ec(), upsert_err.message());
     return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
@@ -62,7 +62,7 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
     const uint64_t sequence_number = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->sequence_number() : 0);
     const uint16_t partition_id = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_id() : 0);
     return CouchbaseUpsertResult {
-      std::string(collection.bucket_name),
+      collection.bucket_name,
       upsert_resp.cas().value(),
       partition_uuid,
       sequence_number,
@@ -94,6 +94,7 @@ std::optional<CouchbaseErrorType> CouchbaseClient::establishConnection() {
     auto [err, upsert_resp] = cluster_.ping().get();
     if (err.ec()) {
       close();
+      state_ = State::DISCONNECTED;
     } else {
       state_ = State::CONNECTED;
       return std::nullopt;
@@ -103,7 +104,6 @@ std::optional<CouchbaseErrorType> CouchbaseClient::establishConnection() {
   auto options = ::couchbase::cluster_options(username_, password_);
   auto [connect_err, cluster] = ::couchbase::cluster::connect(connection_string_, options).get();
   if (connect_err.ec()) {
-    std::string cause = connect_err.cause() ? connect_err.cause()->message() : "";
     logger_->log_error("Failed to connect to Couchbase cluster with error code: '{}' and message: '{}'", connect_err.ec(), connect_err.message());
     return getErrorType(connect_err.ec());
   }

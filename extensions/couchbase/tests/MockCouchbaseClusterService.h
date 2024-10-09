@@ -70,6 +70,5 @@ class MockCouchbaseClusterService : public controllers::CouchbaseClusterService 
   CouchbaseCollection collection_;
   UpsertParameters upsert_parameters_;
   std::optional<CouchbaseErrorType> upsert_error_;
-  bool get_collection_succeeds_{true};
 };
 }  // namespace org::apache::nifi::minifi::couchbase::test
