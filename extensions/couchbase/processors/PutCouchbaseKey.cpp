@@ -38,21 +38,19 @@ void PutCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
     return;
   }
 
-  std::string bucket_name;
-  if (!context.getProperty(BucketName, bucket_name, flow_file.get()) || bucket_name.empty()) {
-    logger_->log_error("Bucket '{}' is invalid or empty!", bucket_name);
+  CouchbaseCollection collection;
+  if (!context.getProperty(BucketName, collection.bucket_name, flow_file.get()) || collection.bucket_name.empty()) {
+    logger_->log_error("Bucket '{}' is invalid or empty!", collection.bucket_name);
     session.transfer(flow_file, Failure);
     return;
   }
 
-  std::string scope_name;
-  if (!context.getProperty(ScopeName, scope_name, flow_file.get()) || scope_name.empty()) {
-    scope_name = ::couchbase::scope::default_name;
+  if (!context.getProperty(ScopeName, collection.scope_name, flow_file.get()) || collection.scope_name.empty()) {
+    collection.scope_name = ::couchbase::scope::default_name;
   }
 
-  std::string collection_name;
-  if (!context.getProperty(CollectionName, collection_name, flow_file.get()) || collection_name.empty()) {
-    collection_name = ::couchbase::collection::default_name;
+  if (!context.getProperty(CollectionName, collection.collection_name, flow_file.get()) || collection.collection_name.empty()) {
+    collection.collection_name = ::couchbase::collection::default_name;
   }
 
   std::string document_id;
@@ -60,28 +58,24 @@ void PutCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
     document_id = flow_file->getUUIDStr();
   }
 
-  auto collection = couchbase_cluster_service_->getCollection(bucket_name, scope_name, collection_name);
-  if (!collection) {
-    logger_->log_error("Failed to get collection '{}.{}.{}', transferring to retry relationship", bucket_name, scope_name, collection_name);
-    session.transfer(flow_file, Retry);
-    return;
-  }
   ::couchbase::upsert_options options;
   options.durability(persist_to_, replicate_to_);
   auto result = session.readBuffer(flow_file);
-  if (auto upsert_result = collection->upsert(document_id, result.buffer, options)) {
-    session.putAttribute(*flow_file, "couchbase.bucket", upsert_result->bucket_name);
+  if (auto upsert_result = couchbase_cluster_service_->upsert(collection, document_id, result.buffer, options)) {
+    session.putAttribute(*flow_file, "couchbase.bucket", std::string(upsert_result->bucket_name));
     session.putAttribute(*flow_file, "couchbase.doc.id", document_id);
     session.putAttribute(*flow_file, "couchbase.doc.cas", std::to_string(upsert_result->cas));
     session.putAttribute(*flow_file, "couchbase.doc.sequence.number", std::to_string(upsert_result->sequence_number));
     session.putAttribute(*flow_file, "couchbase.partition.uuid", std::to_string(upsert_result->partition_uuid));
     session.putAttribute(*flow_file, "couchbase.partition.id", std::to_string(upsert_result->partition_id));
     session.transfer(flow_file, Success);
-  } else if (upsert_result.error().value() == static_cast<int>(::couchbase::errc::common::unambiguous_timeout)) {
-    logger_->log_error("Failed to upsert document '{}' due to timeout, transferring to retry relationship", document_id);
+  } else if (upsert_result.error() == CouchbaseErrorType::TEMPORARY) {
+    logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to timeout, transferring to retry relationship",
+      document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
     session.transfer(flow_file, Retry);
   } else {
-    logger_->log_error("Failed to upsert document '{}': {}", document_id, upsert_result.error().message());
+    logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}', transferring to failure relationship",
+      document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
     session.transfer(flow_file, Failure);
   }
 }
