@@ -74,7 +74,6 @@ class CouchbaseClient {
   static constexpr std::array<::couchbase::errc::common, 9> temporary_connection_errors = {
     ::couchbase::errc::common::temporary_failure,
     ::couchbase::errc::common::request_canceled,
-    ::couchbase::errc::common::service_not_available,
     ::couchbase::errc::common::internal_server_failure,
     ::couchbase::errc::common::cas_mismatch,
     ::couchbase::errc::common::ambiguous_timeout,
