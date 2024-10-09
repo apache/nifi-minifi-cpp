@@ -1,3 +1,6 @@
+fmt library 11.0.2 requires the implementation of the append function aside
+from push_back method when formatting the bustache specific container
+
 diff --git a/include/bustache/model.hpp b/include/bustache/model.hpp
 index 575969a..6df2cff 100644
 --- a/include/bustache/model.hpp
