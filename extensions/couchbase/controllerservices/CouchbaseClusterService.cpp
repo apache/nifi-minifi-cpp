@@ -35,7 +35,7 @@ nonstd::expected<::couchbase::collection, CouchbaseErrorType> CouchbaseClient::g
   if (auto error_type = establishConnection()) {
     return nonstd::make_unexpected(*error_type);
   }
-  return cluster_.bucket(collection.bucket_name).scope(collection.scope_name).collection(collection.collection_name);
+  return cluster_->bucket(collection.bucket_name).scope(collection.scope_name).collection(collection.collection_name);
 }
 
 nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::upsert(const CouchbaseCollection& collection,
@@ -47,7 +47,6 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
 
   auto [upsert_err, upsert_resp] = collection_result->upsert<::couchbase::codec::raw_binary_transcoder>(document_id, buffer, options).get();
   if (upsert_err.ec()) {
-    setConnectionError();
     // ambiguous_timeout should not be retried as we do not know if the insert was successful or not
     if (getErrorType(upsert_err.ec()) == CouchbaseErrorType::TEMPORARY && upsert_err.ec().value() != static_cast<int>(::couchbase::errc::common::ambiguous_timeout)) {
       logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to temporary issue, error code: '{}', message: '{}'",
@@ -71,34 +70,15 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
   }
 }
 
-void CouchbaseClient::setConnectionError() {
-  std::lock_guard<std::mutex> lock(state_mutex_);
-  state_ = State::UNKNOWN;
-}
-
 void CouchbaseClient::close() {
-  std::lock_guard<std::mutex> lock(state_mutex_);
-  if (state_ == State::CONNECTED || state_ == State::UNKNOWN) {
-    cluster_.close().wait();
-    state_ = State::DISCONNECTED;
+  if (cluster_) {
+    cluster_->close().wait();
   }
 }
 
 std::optional<CouchbaseErrorType> CouchbaseClient::establishConnection() {
-  std::lock_guard<std::mutex> lock(state_mutex_);
-  if (state_ == State::CONNECTED) {
+  if (cluster_) {
     return std::nullopt;
-  }
-
-  if (state_ == State::UNKNOWN) {
-    auto [err, upsert_resp] = cluster_.ping().get();
-    if (err.ec()) {
-      close();
-      state_ = State::DISCONNECTED;
-    } else {
-      state_ = State::CONNECTED;
-      return std::nullopt;
-    }
   }
 
   auto options = ::couchbase::cluster_options(username_, password_);
@@ -108,7 +88,6 @@ std::optional<CouchbaseErrorType> CouchbaseClient::establishConnection() {
     return getErrorType(connect_err.ec());
   }
   cluster_ = std::move(cluster);
-  state_ = State::CONNECTED;
   return std::nullopt;
 }
 
