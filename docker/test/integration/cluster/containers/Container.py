@@ -34,6 +34,7 @@ class Container:
         # Get docker client
         self.client = docker.from_env()
         self.deployed = False
+        self.post_startup_commands_finished = False
 
     def cleanup(self):
         logging.info('Cleaning up container: %s', self.name)
@@ -84,3 +85,6 @@ class Container:
 
     def get_app_log(self):
         raise NotImplementedError()
+
+    def run_post_startup_commands(self):
+        return True
