@@ -55,12 +55,6 @@ enum class CouchbaseErrorType {
 
 class CouchbaseClient {
  public:
-  enum class State {
-    DISCONNECTED,
-    CONNECTED,
-    UNKNOWN,
-  };
-
   CouchbaseClient(std::string connection_string, std::string username, std::string password, const std::shared_ptr<core::logging::Logger>& logger)
     : connection_string_(std::move(connection_string)), username_(std::move(username)), password_(std::move(password)), logger_(logger) {
   }
@@ -84,14 +78,11 @@ class CouchbaseClient {
 
   static CouchbaseErrorType getErrorType(const std::error_code& error_code);
   nonstd::expected<::couchbase::collection, CouchbaseErrorType> getCollection(const CouchbaseCollection& collection);
-  void setConnectionError();
 
-  std::mutex state_mutex_;
-  State state_ = State::DISCONNECTED;
   std::string connection_string_;
   std::string username_;
   std::string password_;
-  ::couchbase::cluster cluster_;
+  std::optional<::couchbase::cluster> cluster_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
