@@ -30,6 +30,16 @@ std::vector<std::byte> createByteVector(Bytes... bytes) {
   return {static_cast<std::byte>(bytes)...};
 }
 
+TEST_CASE("WithoutByteSequence") {
+  const auto split_content = std::make_shared<SplitContent>("SplitContent");
+  minifi::test::SingleProcessorTestController controller{split_content};
+  split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
+  split_content->setProperty(SplitContent::KeepByteSequence, "true");
+  split_content->setProperty(SplitContent::ByteSequenceLocationProperty, magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading));
+
+  REQUIRE_THROWS_WITH(controller.trigger("rub-a-dub-dub"), "General Operation: Required property is empty: Byte Sequence");
+}
+
 TEST_CASE("TextFormatLeadingPosition", "[NiFi]") {
   const auto split_content = std::make_shared<SplitContent>("SplitContent");
   minifi::test::SingleProcessorTestController controller{split_content};
@@ -284,12 +294,13 @@ TEST_CASE("StartsWithSequence", "[NiFi]") {
   CHECK(controller.plan->getContentAsBytes(*splits[0]) == expected_split);
 }
 
-TEST_CASE("StartsWithSequenceAndKeepSequence", "[NiFi]") {
+TEST_CASE("StartsWithSequenceAndKeepTrailingSequence", "[NiFi]") {
   const auto split_content = std::make_shared<SplitContent>("SplitContent");
   minifi::test::SingleProcessorTestController controller{split_content};
 
   split_content->setProperty(SplitContent::KeepByteSequence, "true");
   split_content->setProperty(SplitContent::ByteSequence, "05050505");
+  split_content->setProperty(SplitContent::ByteSequenceLocationProperty, "Trailing");
 
   const auto input_data = createByteVector(5, 5, 5, 5, 1, 2, 3, 4);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -304,6 +315,54 @@ TEST_CASE("StartsWithSequenceAndKeepSequence", "[NiFi]") {
 
   auto expected_split_1 = createByteVector(5, 5, 5, 5);
   auto expected_split_2 = createByteVector(1, 2, 3, 4);
+
+  CHECK(controller.plan->getContentAsBytes(*splits[0]) == expected_split_1);
+  CHECK(controller.plan->getContentAsBytes(*splits[1]) == expected_split_2);
+}
+
+TEST_CASE("StartsWithSequenceAndKeepLeadingSequence") {
+  const auto split_content = std::make_shared<SplitContent>("SplitContent");
+  minifi::test::SingleProcessorTestController controller{split_content};
+
+  split_content->setProperty(SplitContent::KeepByteSequence, "true");
+  split_content->setProperty(SplitContent::ByteSequence, "05050505");
+  split_content->setProperty(SplitContent::ByteSequenceLocationProperty, "Leading");
+
+  const auto input_data = createByteVector(5, 5, 5, 5, 1, 2, 3, 4);
+  std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
+
+  auto trigger_results = controller.trigger(input);
+
+  auto original = trigger_results.at(processors::SplitContent::Original);
+  auto splits = trigger_results.at(processors::SplitContent::Splits);
+
+  REQUIRE(original.size() == 1);
+  REQUIRE(splits.size() == 1);
+
+  CHECK(controller.plan->getContentAsBytes(*splits[0]) == input_data);
+}
+
+TEST_CASE("StartsWithDoubleSequenceAndKeepLeadingSequence") {
+  const auto split_content = std::make_shared<SplitContent>("SplitContent");
+  minifi::test::SingleProcessorTestController controller{split_content};
+
+  split_content->setProperty(SplitContent::KeepByteSequence, "true");
+  split_content->setProperty(SplitContent::ByteSequence, "05050505");
+  split_content->setProperty(SplitContent::ByteSequenceLocationProperty, "Leading");
+
+  const auto input_data = createByteVector(5, 5, 5, 5, 5, 5, 5, 5, 1, 2, 3, 4);
+  std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
+
+  auto trigger_results = controller.trigger(input);
+
+  auto original = trigger_results.at(processors::SplitContent::Original);
+  auto splits = trigger_results.at(processors::SplitContent::Splits);
+
+  auto expected_split_1 = createByteVector(5, 5, 5, 5);
+  auto expected_split_2 = createByteVector(5, 5, 5, 5, 1, 2, 3, 4);
+
+  REQUIRE(original.size() == 1);
+  REQUIRE(splits.size() == 2);
 
   CHECK(controller.plan->getContentAsBytes(*splits[0]) == expected_split_1);
   CHECK(controller.plan->getContentAsBytes(*splits[1]) == expected_split_2);

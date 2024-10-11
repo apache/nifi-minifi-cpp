@@ -45,6 +45,9 @@ void SplitContent::onSchedule(core::ProcessContext& context, core::ProcessSessio
     byte_sequence_.resize(byte_sequence_str.size());
     std::ranges::transform(byte_sequence_str, byte_sequence_.begin(), [](char c) { return static_cast<std::byte>(c); });
   }
+  if (byte_sequence_.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Cannot operate without byte sequence");
+  }
   byte_sequence_location_ = utils::parseEnumProperty<ByteSequenceLocation>(context, ByteSequenceLocationProperty);
   keep_byte_sequence = utils::getRequiredPropertyOrThrow<bool>(context, KeepByteSequence.name);
 }
@@ -106,7 +109,7 @@ void updateSplitAttributesAndTransfer(core::ProcessSession& session, const std::
 }
 
 bool lastSplitIsEmpty(const std::vector<std::shared_ptr<core::FlowFile>>& splits) {
-  return splits.back()->getSize() != 0;
+  return splits.back()->getSize() == 0;
 }
 }  // namespace
 
@@ -133,8 +136,10 @@ void SplitContent::onTrigger(core::ProcessContext& context, core::ProcessSession
     buffer.push_back(*latest_byte);
     if (ended_with_byte_sequence) {
       ended_with_byte_sequence = false;
-      if (lastSplitIsEmpty(splits)) {
+      if (!lastSplitIsEmpty(splits)) {
         splits.push_back(createNewSplit(session));
+      } else if (keep_byte_sequence && byte_sequence_location_ == ByteSequenceLocation::Leading) {
+        session.appendBuffer(splits.back(), byte_sequence_);
       }
     }
     if (latest_byte == byte_sequence_[matching_bytes]) {
