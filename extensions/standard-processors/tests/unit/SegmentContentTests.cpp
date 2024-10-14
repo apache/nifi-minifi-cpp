@@ -30,7 +30,7 @@
 namespace org::apache::nifi::minifi::processors::test {
 
 std::vector<std::byte> generateRandomData(const size_t n) {
-  std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint8_t> rbe{};
+  std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint8_t> rbe{gsl::narrow_cast<uint8_t>(std::chrono::system_clock::now().time_since_epoch().count())};
   std::vector<std::byte> bytes(n);
   ranges::generate(bytes, [&]() { return static_cast<std::byte>(rbe()); });
   return bytes;
