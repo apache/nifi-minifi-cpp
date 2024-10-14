@@ -65,7 +65,7 @@ class CouchbaseClient {
 
   nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id,
     const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options);
-  std::optional<CouchbaseErrorType> establishConnection();
+  nonstd::expected<void, CouchbaseErrorType> establishConnection();
   void close();
 
  private:
