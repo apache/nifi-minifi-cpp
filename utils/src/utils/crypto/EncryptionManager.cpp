@@ -19,7 +19,7 @@
 #include <string>
 
 #include "utils/crypto/EncryptionManager.h"
-#include "properties/Properties.h"
+#include "minifi-cpp/properties/Properties.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::utils::crypto {

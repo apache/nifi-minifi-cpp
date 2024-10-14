@@ -5,21 +5,18 @@ file(GLOB SOURCES
         src/controllers/*.cpp
         src/io/*.cpp
         src/serialization/*.cpp
-        src/utils/crypto/ciphers/*.cpp
-        src/utils/property_encryption/*.cpp
-        src/utils/crypto/*.cpp
         src/utils/file/*.cpp
         src/utils/net/*.cpp
         src/utils/tls/*.cpp
         src/utils/*.cpp)
-add_library(minifi-extension-utils STATIC ${SOURCES})
+add_minifi_library(minifi-extension-utils STATIC ${SOURCES})
 target_include_directories(minifi-extension-utils PUBLIC include)
 target_link_libraries(minifi-extension-utils PUBLIC minifi-core)
 
 include(RangeV3)
 include(Asio)
 include(MagicEnum)
-list(APPEND CORE_LIBRARIES ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite libsodium range-v3 expected-lite date::date date::tz asio magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON)
+list(APPEND CORE_LIBRARIES ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite range-v3 expected-lite date::date date::tz asio magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON)
 if(NOT WIN32)
     list(APPEND CORE_LIBRARIES OSSP::libuuid++)
 endif()
