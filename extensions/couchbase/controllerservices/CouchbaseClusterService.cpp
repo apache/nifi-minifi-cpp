@@ -35,8 +35,9 @@ CouchbaseErrorType CouchbaseClient::getErrorType(const std::error_code& error_co
 }
 
 nonstd::expected<::couchbase::collection, CouchbaseErrorType> CouchbaseClient::getCollection(const CouchbaseCollection& collection) {
-  if (auto error_type = establishConnection()) {
-    return nonstd::make_unexpected(*error_type);
+  auto connection_result = establishConnection();
+  if (!connection_result) {
+    return nonstd::make_unexpected(connection_result.error());
   }
   return cluster_->bucket(collection.bucket_name).scope(collection.scope_name).collection(collection.collection_name);
 }
@@ -88,19 +89,19 @@ void CouchbaseClient::close() {
   }
 }
 
-std::optional<CouchbaseErrorType> CouchbaseClient::establishConnection() {
+nonstd::expected<void, CouchbaseErrorType> CouchbaseClient::establishConnection() {
   if (cluster_) {
-    return std::nullopt;
+    return {};
   }
 
   auto options = ::couchbase::cluster_options(username_, password_);
   auto [connect_err, cluster] = ::couchbase::cluster::connect(connection_string_, options).get();
   if (connect_err.ec()) {
     logger_->log_error("Failed to connect to Couchbase cluster with error code: '{}' and message: '{}'", connect_err.ec(), connect_err.message());
-    return getErrorType(connect_err.ec());
+    return nonstd::make_unexpected(getErrorType(connect_err.ec()));
   }
   cluster_ = std::move(cluster);
-  return std::nullopt;
+  return {};
 }
 
 namespace controllers {
@@ -121,8 +122,9 @@ void CouchbaseClusterService::onEnable() {
   }
 
   client_ = std::make_unique<CouchbaseClient>(connection_string, username, password, logger_);
-  if (auto result = client_->establishConnection()) {
-    if (result == CouchbaseErrorType::FATAL) {
+  auto result = client_->establishConnection();
+  if (!result) {
+    if (result.error() == CouchbaseErrorType::FATAL) {
       throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Failed to connect to Couchbase cluster with fatal error");
     }
     logger_->log_warn("Failed to connect to Couchbase cluster with temporary error, will retry connection when a Couchbase processor is triggered");
