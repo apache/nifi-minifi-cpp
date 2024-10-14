@@ -29,8 +29,6 @@
 #include "couchbase/cluster.hxx"
 #include "core/ProcessContext.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "couchbase/codec/raw_binary_transcoder.hxx"
-#include "couchbase/error.hxx"
 
 namespace org::apache::nifi::minifi::couchbase {
 
@@ -48,6 +46,12 @@ struct CouchbaseUpsertResult {
   std::uint16_t partition_id{0};
 };
 
+enum class CouchbaseValueType {
+  Json,
+  Binary,
+  String
+};
+
 enum class CouchbaseErrorType {
   FATAL,
   TEMPORARY,
@@ -59,8 +63,8 @@ class CouchbaseClient {
     : connection_string_(std::move(connection_string)), username_(std::move(username)), password_(std::move(password)), logger_(logger) {
   }
 
-  nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, const std::string& document_id, const std::vector<std::byte>& buffer,
-    const ::couchbase::upsert_options& options);
+  nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id,
+    const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options);
   std::optional<CouchbaseErrorType> establishConnection();
   void close();
 
@@ -142,10 +146,10 @@ class CouchbaseClusterService : public core::controller::ControllerService {
     }
   }
 
-  virtual nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection,
+  virtual nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type,
       const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
     gsl_Expects(client_);
-    return client_->upsert(collection, document_id, buffer, options);
+    return client_->upsert(collection, document_type, document_id, buffer, options);
   }
 
   static gsl::not_null<std::shared_ptr<CouchbaseClusterService>> getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property);

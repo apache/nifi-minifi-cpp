@@ -31,6 +31,7 @@ const std::uint64_t COUCHBASE_PUT_RESULT_PARTITION_UUID = 7890123456;
 const std::uint16_t COUCHBASE_PUT_RESULT_PARTITION_ID = 1234;
 
 struct UpsertParameters {
+  CouchbaseValueType document_type;
   std::string document_id;
   std::vector<std::byte> buffer;
   ::couchbase::upsert_options options;
@@ -45,9 +46,10 @@ class MockCouchbaseClusterService : public controllers::CouchbaseClusterService 
   void onEnable() override {}
   void notifyStop() override {}
 
-  nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, const std::string& document_id, const std::vector<std::byte>& buffer,
-      const ::couchbase::upsert_options& options) override {
+  nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id,
+      const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) override {
     collection_ = collection;
+    upsert_parameters_.document_type = document_type;
     upsert_parameters_.document_id = document_id;
     upsert_parameters_.buffer = buffer;
     upsert_parameters_.options = options;

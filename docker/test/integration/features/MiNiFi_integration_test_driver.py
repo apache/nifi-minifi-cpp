@@ -448,3 +448,6 @@ class MiNiFi_integration_test:
 
     def enable_ssl_in_nifi(self):
         self.cluster.enable_ssl_in_nifi()
+
+    def check_is_data_present_on_couchbase(self, doc_id: str, bucket_name: str, expected_data: str, expected_data_type: str):
+        assert self.cluster.is_data_present_in_couchbase(doc_id, bucket_name, expected_data, expected_data_type)

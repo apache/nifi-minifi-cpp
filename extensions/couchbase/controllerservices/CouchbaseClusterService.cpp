@@ -17,6 +17,9 @@
  */
 
 #include "CouchbaseClusterService.h"
+#include "couchbase/codec/raw_binary_transcoder.hxx"
+#include "couchbase/codec/raw_string_transcoder.hxx"
+#include "couchbase/codec/raw_json_transcoder.hxx"
 
 #include "core/Resource.h"
 
@@ -39,13 +42,22 @@ nonstd::expected<::couchbase::collection, CouchbaseErrorType> CouchbaseClient::g
 }
 
 nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::upsert(const CouchbaseCollection& collection,
-      const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
+    CouchbaseValueType document_type, const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
   auto collection_result = getCollection(collection);
   if (!collection_result.has_value()) {
     return nonstd::make_unexpected(collection_result.error());
   }
 
-  auto [upsert_err, upsert_resp] = collection_result->upsert<::couchbase::codec::raw_binary_transcoder>(document_id, buffer, options).get();
+  std::pair<::couchbase::error, ::couchbase::mutation_result> result;
+  if (document_type == CouchbaseValueType::Json) {
+    result = collection_result->upsert<::couchbase::codec::raw_json_transcoder>(document_id, buffer, options).get();
+  } else if (document_type == CouchbaseValueType::String) {
+    std::string data_str(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+    result = collection_result->upsert<::couchbase::codec::raw_string_transcoder>(document_id, data_str, options).get();
+  } else {
+    result = collection_result->upsert<::couchbase::codec::raw_binary_transcoder>(document_id, buffer, options).get();
+  }
+  auto& [upsert_err, upsert_resp] = result;
   if (upsert_err.ec()) {
     // ambiguous_timeout should not be retried as we do not know if the insert was successful or not
     if (getErrorType(upsert_err.ec()) == CouchbaseErrorType::TEMPORARY && upsert_err.ec().value() != static_cast<int>(::couchbase::errc::common::ambiguous_timeout)) {

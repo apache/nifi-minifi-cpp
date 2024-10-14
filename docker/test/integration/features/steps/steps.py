@@ -1388,3 +1388,8 @@ def step_impl(context, processor_name, service_name):
     processor = context.test.get_node_by_name(processor_name)
     processor.controller_services.append(couchbase_cluster_controller_service)
     processor.set_property("Couchbase Cluster Controller Service", couchbase_cluster_controller_service.name)
+
+
+@then("a document with id \"{doc_id}\" in bucket \"{bucket_name}\" is present with data '{data}' of type \"{data_type}\" in Couchbase")
+def step_impl(context, doc_id: str, bucket_name: str, data: str, data_type: str):
+    context.test.check_is_data_present_on_couchbase(doc_id, bucket_name, data, data_type)
