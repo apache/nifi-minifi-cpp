@@ -19,11 +19,7 @@
 #include "utils/CallBackTimer.h"
 #include <stdexcept>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 CallBackTimer::CallBackTimer(std::chrono::milliseconds interval, const std::function<void(void)>& func) : execute_(false), func_(func), interval_(interval) {
 }
@@ -85,8 +81,4 @@ bool CallBackTimer::is_running() const {
   return execute_ && thd_.joinable();
 }
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

@@ -23,21 +23,17 @@
 #include "aws/core/auth/AWSCredentialsProviderChain.h"
 #include "properties/Properties.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
+namespace org::apache::nifi::minifi::aws {
 
 AWSCredentialsProvider::AWSCredentialsProvider(
     bool use_default_credentials,
-    const std::string &access_key,
-    const std::string &secret_key,
-    const std::string &credentials_file)
+    std::string access_key,
+    std::string secret_key,
+    std::string credentials_file)
   : use_default_credentials_(use_default_credentials)
-  , access_key_(access_key)
-  , secret_key_(secret_key)
-  , credentials_file_(credentials_file) {
+  , access_key_(std::move(access_key))
+  , secret_key_(std::move(secret_key))
+  , credentials_file_(std::move(credentials_file)) {
 }
 
 void AWSCredentialsProvider::setUseDefaultCredentials(bool use_default_credentials) {
@@ -91,8 +87,4 @@ std::optional<Aws::Auth::AWSCredentials> AWSCredentialsProvider::getAWSCredentia
   return std::nullopt;
 }
 
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws
