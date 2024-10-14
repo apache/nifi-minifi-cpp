@@ -18,7 +18,7 @@
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::http {
-  
+
 REGISTER_RESOURCE(HTTPClient, InternalResource);
 
 }  // namespace org::apache::nifi::minifi::http
