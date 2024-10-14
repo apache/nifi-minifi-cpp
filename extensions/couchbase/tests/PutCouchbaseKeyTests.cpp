@@ -94,10 +94,10 @@ class PutCouchbaseKeyTestController : public TestController {
 
     CHECK(flow_file->getAttribute("couchbase.bucket").value() == expected_call_options.bucket_name);
     CHECK(flow_file->getAttribute("couchbase.doc.id").value() == expected_doc_id);
-    CHECK(flow_file->getAttribute("couchbase.doc.cas").value() == "1");
-    CHECK(flow_file->getAttribute("couchbase.doc.sequence.number").value() == "2");
-    CHECK(flow_file->getAttribute("couchbase.partition.uuid").value() == "3");
-    CHECK(flow_file->getAttribute("couchbase.partition.id").value() == "4");
+    CHECK(flow_file->getAttribute("couchbase.doc.cas").value() == std::to_string(COUCHBASE_PUT_RESULT_CAS));
+    CHECK(flow_file->getAttribute("couchbase.doc.sequence.number").value() == std::to_string(COUCHBASE_PUT_RESULT_SEQUENCE_NUMBER));
+    CHECK(flow_file->getAttribute("couchbase.partition.uuid").value() == std::to_string(COUCHBASE_PUT_RESULT_PARTITION_UUID));
+    CHECK(flow_file->getAttribute("couchbase.partition.id").value() == std::to_string(COUCHBASE_PUT_RESULT_PARTITION_ID));
   }
 
  protected:

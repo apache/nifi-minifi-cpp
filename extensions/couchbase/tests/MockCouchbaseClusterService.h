@@ -25,6 +25,11 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::couchbase::test {
 
+const std::uint64_t COUCHBASE_PUT_RESULT_CAS = 9876;
+const std::uint64_t COUCHBASE_PUT_RESULT_SEQUENCE_NUMBER = 345;
+const std::uint64_t COUCHBASE_PUT_RESULT_PARTITION_UUID = 7890123456;
+const std::uint16_t COUCHBASE_PUT_RESULT_PARTITION_ID = 1234;
+
 struct UpsertParameters {
   std::string document_id;
   std::vector<std::byte> buffer;
@@ -50,7 +55,7 @@ class MockCouchbaseClusterService : public controllers::CouchbaseClusterService 
     if (upsert_error_) {
       return nonstd::make_unexpected(*upsert_error_);
     } else {
-      return CouchbaseUpsertResult{std::string(collection_.bucket_name), 1, 2, 3, 4};
+      return CouchbaseUpsertResult{collection_.bucket_name, COUCHBASE_PUT_RESULT_CAS, COUCHBASE_PUT_RESULT_SEQUENCE_NUMBER, COUCHBASE_PUT_RESULT_PARTITION_UUID, COUCHBASE_PUT_RESULT_PARTITION_ID};
     }
   }
 
