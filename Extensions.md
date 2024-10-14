@@ -62,8 +62,8 @@ nifi.extension.path=../extensions/*
 ### Exlusion
 If you want to exclude some extensions from being loaded, without having to specify the rest, you can do so by prefixing the pattern with `!`.
 ```
-// This loads all extensions but the gps extension. (the exact name differs by platform: dylib, dll, so)
-nifi.extension.path=../extensions/*,!../extensions/libminifi-gps.so
+// This loads all extensions but the azure extension. (the exact name differs by platform: dylib, dll, so)
+nifi.extension.path=../extensions/*,!../extensions/libminifi-azure.so
 ```
 
 You could even exclude some subdirectory and then re-include specific extensions/subdirectories in that.

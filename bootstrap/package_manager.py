@@ -118,8 +118,7 @@ class AptPackageManager(PackageManager):
         return self._install(dependencies=dependencies,
                              install_cmd="sudo apt install -y",
                              replace_dict={"libarchive": {"liblzma-dev"},
-                                           "python": {"libpython3-dev"},
-                                           "gpsd": {"libgps-dev"}})
+                                           "python": {"libpython3-dev"}})
 
     def _get_installed_packages(self) -> Set[str]:
         result = subprocess.run(['dpkg', '--get-selections'], text=True, capture_output=True, check=True)
@@ -150,8 +149,7 @@ class DnfPackageManager(PackageManager):
             install_cmd = "sudo dnf install -y"
         return self._install(dependencies=dependencies,
                              install_cmd=install_cmd,
-                             replace_dict={"gpsd": {"gpsd-devel"},
-                                           "python": {"python3-devel"}})
+                             replace_dict={"python": {"python3-devel"}})
 
     def _get_installed_packages(self) -> Set[str]:
         result = subprocess.run(['dnf', 'list', 'installed'], text=True, capture_output=True, check=True)
@@ -275,7 +273,6 @@ class ChocolateyPackageManager(PackageManager):
                                     "bison": set(),
                                     "flex": set(),
                                     "libarchive": set(),
-                                    "gpsd": set(),
                                     "automake": set(),
                                     "autoconf": set(),
                                     "libtool": set(),

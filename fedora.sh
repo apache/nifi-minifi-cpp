@@ -63,8 +63,6 @@ build_deps(){
                         INSTALLED+=("autoconf")
                     elif [ "$FOUND_VALUE" = "automake" ]; then
                         INSTALLED+=("automake")
-                    elif [ "$FOUND_VALUE" = "gpsd" ]; then
-                        INSTALLED+=("gpsd-devel")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
                         INSTALLED+=("xz-devel")
                     elif [ "$FOUND_VALUE" = "libssh2" ]; then

@@ -34,9 +34,7 @@ install_pkgs() {
 
 verify_enable_platform() {
     feature="$1"
-    if [ "$OS_MAJOR" -gt 6 ]; then
-        verify_gcc_enable "$feature"
-    fi
+    verify_gcc_enable "$feature"
 }
 
 add_os_flags() {
@@ -81,8 +79,6 @@ build_deps() {
                         INSTALLED+=("automake")
                     elif [ "$FOUND_VALUE" = "python" ]; then
                         INSTALLED+=("python36-devel")
-                    elif [ "$FOUND_VALUE" = "gpsd" ]; then
-                        INSTALLED+=("gpsd-devel")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
                         INSTALLED+=("xz-devel")
                         INSTALLED+=("bzip2-devel")
