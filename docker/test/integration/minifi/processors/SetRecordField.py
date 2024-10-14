@@ -12,13 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from ..core.Processor import Processor
 
 
-from ..core.ControllerService import ControllerService
-
-
-class JsonRecordSetWriter(ControllerService):
-    def __init__(self, name=None, output_grouping='One Line Per Object'):
-        super(JsonRecordSetWriter, self).__init__(name=name)
-        self.service_class = 'JsonRecordSetWriter'
-        self.properties['Output Grouping'] = output_grouping
+class SetRecordField(Processor):
+    def __init__(self, context):
+        super(SetRecordField, self).__init__(
+            context=context,
+            clazz='SetRecordField',
+            class_prefix='org.apache.nifi.minifi.processors.nifi_python_processors.',
+            properties={},
+            schedule={'scheduling strategy': 'EVENT_DRIVEN'},
+            auto_terminate=[])
