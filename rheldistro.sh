@@ -22,6 +22,7 @@ verify_enable_platform() {
 }
 
 add_os_flags() {
+  :
 }
 install_bison() {
   INSTALLED+=("bison")
