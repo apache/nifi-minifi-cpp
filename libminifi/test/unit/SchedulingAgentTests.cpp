@@ -71,7 +71,6 @@ class SchedulingAgentTestFixture {
 
 #ifdef WIN32
     minifi::utils::timeutils::dateSetInstall(TZ_DATA_DIR);
-    date::set_install(TZ_DATA_DIR);
 #endif
   }
 

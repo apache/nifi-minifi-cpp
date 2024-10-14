@@ -33,6 +33,7 @@
 #include <memory>
 
 #include "StringUtils.h"
+#include "minifi-cpp/utils/TimeUtil.h"
 
 // libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION)
@@ -75,41 +76,6 @@ inline uint64_t getTimeNano() {
   // The precision is platform dependent (1 ns on libstdc++, 0.1 us on msvc and 1 us on libc++)
   return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
-
-/**
- * Mockable clock classes
- */
-class Clock {
- public:
-  virtual ~Clock() = default;
-  virtual std::chrono::milliseconds timeSinceEpoch() const = 0;
-  virtual bool wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) {
-    return cv.wait_for(lck, time - timeSinceEpoch(), pred);
-  }
-};
-
-class SystemClock : public Clock {
- public:
-  std::chrono::milliseconds timeSinceEpoch() const override {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-  }
-};
-
-class SteadyClock : public Clock {
- public:
-  std::chrono::milliseconds timeSinceEpoch() const override {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch());
-  }
-
-  virtual std::chrono::time_point<std::chrono::steady_clock> now() const {
-    return std::chrono::steady_clock::now();
-  }
-};
-
-std::shared_ptr<SteadyClock> getClock();
-
-// test-only utility to specify what clock to use
-void setClock(std::shared_ptr<SteadyClock> clock);
 
 inline std::string getTimeStr(std::chrono::system_clock::time_point tp) {
   std::ostringstream stream;

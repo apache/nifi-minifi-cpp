@@ -530,6 +530,4 @@ void HTTPClient::CurlMimeFree::operator()(curl_mime* curl_mime) const {
   curl_mime_free(curl_mime);
 }
 
-REGISTER_RESOURCE(HTTPClient, InternalResource);
-
 }  // namespace org::apache::nifi::minifi::http

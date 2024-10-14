@@ -25,19 +25,6 @@
 namespace org::apache::nifi::minifi::utils::timeutils {
 
 using namespace std::literals::chrono_literals;
-static std::mutex global_clock_mtx;
-static std::shared_ptr<SteadyClock> global_clock{std::make_shared<SteadyClock>()};
-
-std::shared_ptr<SteadyClock> getClock() {
-  std::lock_guard lock(global_clock_mtx);
-  return global_clock;
-}
-
-// test-only utility to specify what clock to use
-void setClock(std::shared_ptr<SteadyClock> clock) {
-  std::lock_guard lock(global_clock_mtx);
-  global_clock = std::move(clock);
-}
 
 std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::string& str) {
   std::istringstream stream(str);
@@ -76,6 +63,7 @@ std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::str
 // date::set_install can point to the TZDATA location, but it has to be called from each library/executable that wants to use timezones
 void dateSetInstall(const std::string& install) {
   date::set_install(install);
+  dateSetGlobalInstall(install);
 }
 #endif
 
