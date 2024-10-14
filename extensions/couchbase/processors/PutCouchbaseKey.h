@@ -93,6 +93,12 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
       .withDescription("Collection to use inside the bucket scope. If not specified, the _default collection is used.")
       .supportsExpressionLanguage(true)
       .build();
+  EXTENSIONAPI static constexpr auto DocumentType = core::PropertyDefinitionBuilder<3>::createProperty("Document Type")
+      .withDescription("Content type to store data as.")
+      .isRequired(true)
+      .withDefaultValue(magic_enum::enum_name(CouchbaseValueType::Json))
+      .withAllowedValues(magic_enum::enum_names<CouchbaseValueType>())
+      .build();
   EXTENSIONAPI static constexpr auto DocumentId = core::PropertyDefinitionBuilder<>::createProperty("Document Id")
       .withDescription("A static, fixed Couchbase document id, or an expression to construct the Couchbase document id. If not specified, the FlowFile UUID will be used.")
       .supportsExpressionLanguage(true)
@@ -115,6 +121,7 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
     BucketName,
     ScopeName,
     CollectionName,
+    DocumentType,
     DocumentId,
     PersistTo,
     ReplicateTo
@@ -145,6 +152,7 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
  private:
   std::shared_ptr<controllers::CouchbaseClusterService> couchbase_cluster_service_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutCouchbaseKey>::getLogger(uuid_);
+  CouchbaseValueType document_type_ = CouchbaseValueType::Json;
   ::couchbase::persist_to persist_to_ = ::couchbase::persist_to::none;
   ::couchbase::replicate_to replicate_to_ = ::couchbase::replicate_to::none;
 };

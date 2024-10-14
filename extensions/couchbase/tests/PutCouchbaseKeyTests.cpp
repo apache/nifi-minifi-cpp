@@ -33,6 +33,7 @@ struct ExpectedCallOptions {
   std::string collection_name;
   ::couchbase::persist_to persist_to;
   ::couchbase::replicate_to replicate_to;
+  CouchbaseValueType document_type;
   std::string doc_id;
 };
 
@@ -80,6 +81,7 @@ class PutCouchbaseKeyTestController : public TestController {
     CHECK(get_collection_parameters.scope_name == expected_call_options.scope_name);
 
     auto upsert_parameters = mock_couchbase_cluster_service_->getUpsertParameters();
+    CHECK(upsert_parameters.document_type == expected_call_options.document_type);
     std::string expected_doc_id = expected_call_options.doc_id.empty() ? flow_file->getUUID().to_string() : expected_call_options.doc_id;
     CHECK(upsert_parameters.document_id == expected_doc_id);
     CHECK(upsert_parameters.buffer == stringToByteVector(input));
@@ -122,20 +124,22 @@ TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put succeeeds with default prop
   proc_->setProperty(processors::PutCouchbaseKey::BucketName, "mybucket");
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
   auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
-  verifyResults(results, processors::PutCouchbaseKey::Success, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none, ""}, input);
+  verifyResults(results, processors::PutCouchbaseKey::Success, ExpectedCallOptions{"mybucket", "_default", "_default",
+    ::couchbase::persist_to::none, ::couchbase::replicate_to::none, CouchbaseValueType::Json, ""}, input);
 }
 
 TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put succeeeds with optional properties", "[putcouchbasekey]") {
   proc_->setProperty(processors::PutCouchbaseKey::BucketName, "mybucket");
   proc_->setProperty(processors::PutCouchbaseKey::ScopeName, "scope1");
   proc_->setProperty(processors::PutCouchbaseKey::CollectionName, "collection1");
+  proc_->setProperty(processors::PutCouchbaseKey::DocumentType, "Binary");
   proc_->setProperty(processors::PutCouchbaseKey::DocumentId, "important_doc");
   proc_->setProperty(processors::PutCouchbaseKey::PersistTo, "ACTIVE");
   proc_->setProperty(processors::PutCouchbaseKey::ReplicateTo, "TWO");
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
   auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
   verifyResults(results, processors::PutCouchbaseKey::Success, ExpectedCallOptions{"mybucket", "scope1", "collection1", ::couchbase::persist_to::active,
-    ::couchbase::replicate_to::two, "important_doc"}, input);
+    ::couchbase::replicate_to::two, CouchbaseValueType::Binary, "important_doc"}, input);
 }
 
 TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put fails with default properties", "[putcouchbasekey]") {
@@ -143,7 +147,8 @@ TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put fails with default properti
   mock_couchbase_cluster_service_->setUpsertError(CouchbaseErrorType::FATAL);
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
   auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
-  verifyResults(results, processors::PutCouchbaseKey::Failure, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none, ""}, input);
+  verifyResults(results, processors::PutCouchbaseKey::Failure, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none,
+    CouchbaseValueType::Json, ""}, input);
 }
 
 TEST_CASE_METHOD(PutCouchbaseKeyTestController, "FlowFile is transferred to retry relationship when temporary error is returned", "[putcouchbasekey]") {
@@ -151,7 +156,8 @@ TEST_CASE_METHOD(PutCouchbaseKeyTestController, "FlowFile is transferred to retr
   mock_couchbase_cluster_service_->setUpsertError(CouchbaseErrorType::TEMPORARY);
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
   auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
-  verifyResults(results, processors::PutCouchbaseKey::Retry, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none, ""}, input);
+  verifyResults(results, processors::PutCouchbaseKey::Retry, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none,
+    CouchbaseValueType::Json, ""}, input);
 }
 
 }  // namespace org::apache::nifi::minifi::couchbase::test

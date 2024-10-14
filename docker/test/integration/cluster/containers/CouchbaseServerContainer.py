@@ -51,4 +51,5 @@ class CouchbaseServerContainer(Container):
             detach=True,
             name=self.name,
             network=self.network.name,
+            ports={'11210/tcp': 11210},
             entrypoint=self.command)

@@ -18,12 +18,13 @@ Feature: Executing Couchbase operations from MiNiFi-C++
   Background:
     Given the content of "/tmp/output" is monitored
 
-  Scenario: A MiNiFi instance can insert data to test bucket with PutCouchbaseKey processor
+  Scenario: A MiNiFi instance can insert json data to test bucket with PutCouchbaseKey processor
     Given a Couchbase server is set up
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content '{"field1": "value1", "field2": "value2"}' is present in '/tmp/input'
     And a PutCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the PutCouchbaseKey processor is set to "test_doc_id"
+    And the "Document Type" property of the PutCouchbaseKey processor is set to "Json"
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And a CouchbaseClusterService is setup up for PutCouchbaseKey with the name "CouchbaseClusterService"
 
@@ -39,3 +40,28 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the Minifi logs match the following regex: "key:couchbase.doc.sequence.number value:[1-9][0-9]*" in less than 1 seconds
     And the Minifi logs match the following regex: "key:couchbase.partition.uuid value:[1-9][0-9]*" in less than 1 seconds
     And the Minifi logs match the following regex: "key:couchbase.partition.id value:[1-9][0-9]*" in less than 1 seconds
+    And a document with id "test_doc_id" in bucket "test_bucket" is present with data '{"field1": "value1", "field2": "value2"}' of type "Json" in Couchbase
+
+  Scenario: A MiNiFi instance can insert binary data to test bucket with PutCouchbaseKey processor
+    Given a Couchbase server is set up
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content '{"field1": "value1"}' is present in '/tmp/input'
+    And a PutCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
+    And the "Document Id" property of the PutCouchbaseKey processor is set to "test_doc_id"
+    And the "Document Type" property of the PutCouchbaseKey processor is set to "Binary"
+    And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
+    And a CouchbaseClusterService is setup up for PutCouchbaseKey with the name "CouchbaseClusterService"
+
+    And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "success" relationship of the PutCouchbaseKey processor is connected to the LogAttribute
+
+    When a Couchbase server is started
+    And all instances start up
+
+    Then the Minifi logs contain the following message: "key:couchbase.bucket value:test_bucket" in less than 60 seconds
+    And the Minifi logs contain the following message: "key:couchbase.doc.id value:test_doc_id" in less than 1 seconds
+    And the Minifi logs match the following regex: "key:couchbase.doc.cas value:[1-9][0-9]*" in less than 1 seconds
+    And the Minifi logs match the following regex: "key:couchbase.doc.sequence.number value:[1-9][0-9]*" in less than 1 seconds
+    And the Minifi logs match the following regex: "key:couchbase.partition.uuid value:[1-9][0-9]*" in less than 1 seconds
+    And the Minifi logs match the following regex: "key:couchbase.partition.id value:[1-9][0-9]*" in less than 1 seconds
+    And a document with id "test_doc_id" in bucket "test_bucket" is present with data '{"field1": "value1"}' of type "Binary" in Couchbase
