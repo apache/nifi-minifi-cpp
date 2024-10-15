@@ -20,7 +20,7 @@
 
 #include "LuaScriptExecutor.h"
 #include "range/v3/range/conversion.hpp"
-#include "Resource.h"
+#include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
 

@@ -29,7 +29,7 @@
 #include "core/Property.h"
 #include "core/PropertyDefinition.h"
 #include "AzureBlobStorageProcessorBase.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/AzureEnums.h"
 
 namespace org::apache::nifi::minifi::azure::processors {

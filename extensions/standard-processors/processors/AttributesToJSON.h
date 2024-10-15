@@ -29,7 +29,7 @@
 
 #include "rapidjson/document.h"
 #include "core/FlowFile.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -64,7 +64,7 @@ constexpr customize_t enum_name<WriteDestination>(WriteDestination value) noexce
 
 namespace org::apache::nifi::minifi::processors {
 
-class AttributesToJSON : public core::Processor {
+class AttributesToJSON : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Generates a JSON representation of the input FlowFile Attributes. "
       "The resulting JSON can be written to either a new Attribute 'JSONAttributes' or written to the FlowFile as content.";
@@ -117,7 +117,7 @@ class AttributesToJSON : public core::Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit AttributesToJSON(std::string_view name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+      : core::ProcessorImpl(name, uuid) {
   }
 
   void initialize() override;

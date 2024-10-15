@@ -19,7 +19,7 @@
 #include <string>
 #include <utility>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/gsl.h"
 #include "properties/Configure.h"
 #include "core/extension/Module.h"

@@ -30,7 +30,7 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "RollingWindow.h"
-#include "StateManager.h"
+#include "core/StateManager.h"
 
 namespace org::apache::nifi::minifi::processors {
 

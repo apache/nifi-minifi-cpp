@@ -17,7 +17,6 @@
  */
 #pragma once
 
-#include "PropertyDefinition.h"
 
 #include <memory>
 #include <utility>
@@ -29,6 +28,7 @@
 #include "processors/LogAttribute.h"
 #include "controllers/SSLContextService.h"
 #include "core/state/ProcessorController.h"
+#include "core/PropertyDefinition.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "unit/Catch.h"
 #include "unit/ProvenanceTestHelper.h"
@@ -75,7 +75,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
       const auto processorController = dynamic_cast<minifi::state::ProcessorController*>(&component);
       assert(processorController);
       auto& proc = processorController->getProcessor();
-      proc.setProperty(property, value);
+      proc.setProperty(property, std::string_view{value});
       executed = true;
     });
 

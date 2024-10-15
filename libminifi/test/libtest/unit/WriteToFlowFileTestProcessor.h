@@ -32,14 +32,14 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class WriteToFlowFileTestProcessor : public core::Processor {
+class WriteToFlowFileTestProcessor : public core::ProcessorImpl {
  public:
   static constexpr const char* ON_SCHEDULE_LOG_STR = "WriteToFlowFileTestProcessor::onSchedule executed";
   static constexpr const char* ON_TRIGGER_LOG_STR = "WriteToFlowFileTestProcessor::onTrigger executed";
   static constexpr const char* ON_UNSCHEDULE_LOG_STR = "WriteToFlowFileTestProcessor::onUnSchedule executed";
 
   explicit WriteToFlowFileTestProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
   }
 
   static constexpr const char* Description = "WriteToFlowFileTestProcessor (only for testing purposes)";

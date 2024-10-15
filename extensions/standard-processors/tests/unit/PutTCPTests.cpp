@@ -36,7 +36,7 @@ using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
 
 namespace org::apache::nifi::minifi::processors {
 
-using controllers::SSLContextService;
+using controllers::SSLContextServiceImpl;
 
 namespace {
 
@@ -168,12 +168,12 @@ class PutTCPTestFixture {
   void addSSLContextToPutTCP(const std::filesystem::path& ca_cert, const std::optional<std::filesystem::path>& client_cert, const std::optional<std::filesystem::path>& client_cert_key) {
     const std::filesystem::path ca_dir = minifi::utils::file::FileUtils::get_executable_dir() / "resources";
     auto ssl_context_service_node = controller_.plan->addController("SSLContextService", "SSLContextService");
-    REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::CACertificate, (ca_dir / ca_cert).string()));
+    REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextServiceImpl::CACertificate, (ca_dir / ca_cert).string()));
     if (client_cert) {
-      REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::ClientCertificate, (ca_dir / *client_cert).string()));
+      REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextServiceImpl::ClientCertificate, (ca_dir / *client_cert).string()));
     }
     if (client_cert_key) {
-      REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::PrivateKey, (ca_dir / *client_cert_key).string()));
+      REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextServiceImpl::PrivateKey, (ca_dir / *client_cert_key).string()));
     }
     ssl_context_service_node->enable();
 

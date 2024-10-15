@@ -32,10 +32,10 @@ namespace org::apache::nifi::minifi::c2 {
 /**
  * Defines a protocol to perform state management of the minifi agent.
  */
-class C2Protocol : public core::Connectable {
+class C2Protocol : public core::ConnectableImpl {
  public:
   C2Protocol(std::string_view name, const utils::Identifier &uuid)
-      : core::Connectable(name, uuid),
+      : core::ConnectableImpl(name, uuid),
         running_(true) {
   }
 
@@ -84,6 +84,7 @@ class C2Protocol : public core::Connectable {
     return running_.load();
   }
 
+  using core::ConnectableImpl::waitForWork;
   /**
    * Block until work is available on any input connection, or the given duration elapses
    * @param timeoutMs timeout in milliseconds

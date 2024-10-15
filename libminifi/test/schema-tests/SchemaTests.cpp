@@ -132,6 +132,7 @@ TEST_CASE("The generated JSON schema matches a valid json flow") {
 }
 
 TEST_CASE("The JSON schema detects invalid values in the json flow") {
+  std::ofstream{"/Users/adebreceni/work/minifi-homes/json-schema-test/schema.json"} << minifi::docs::generateJsonSchema();
   const nlohmann::json config_schema = nlohmann::json::parse(minifi::docs::generateJsonSchema());
 
   nlohmann::json_schema::json_validator validator;

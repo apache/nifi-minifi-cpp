@@ -18,7 +18,7 @@
 #
 file(GLOB TEST_BASE_SOURCES "*.cpp")
 add_minifi_library(libminifi-unittest STATIC ${TEST_BASE_SOURCES})
-target_link_libraries(libminifi-unittest core-minifi Catch2)
+target_link_libraries(libminifi-unittest core-minifi minifi-extension-utils Catch2)
 target_include_directories(libminifi-unittest BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/")
 if(WIN32)
     target_include_directories(libminifi-unittest BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/opsys/win")

@@ -27,7 +27,8 @@
 #include "archive.h"
 #include "utils/Enum.h"
 #include "core/Core.h"
-#include "logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
+#include "io/Stream.h"
 
 namespace org::apache::nifi::minifi::io {
 
@@ -61,7 +62,7 @@ constexpr customize_t enum_name<CompressionFormat>(CompressionFormat value) noex
 
 namespace org::apache::nifi::minifi::io {
 
-class WriteArchiveStreamImpl: public WriteArchiveStream {
+class WriteArchiveStreamImpl: public StreamImpl, public WriteArchiveStream {
   struct archive_write_deleter {
     int operator()(struct archive* ptr) const {
       return archive_write_free(ptr);

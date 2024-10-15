@@ -35,9 +35,9 @@
 
 namespace {
 
-class TestProcessor : public minifi::core::Processor {
+class TestProcessor : public minifi::core::ProcessorImpl {
  public:
-  using Processor::Processor;
+  using ProcessorImpl::ProcessorImpl;
 
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
@@ -58,7 +58,7 @@ TEST_CASE("Import null data") {
 
   auto dir = testController.createTempDirectory();
 
-  auto config = std::make_shared<minifi::Configure>();
+  auto config = std::make_shared<minifi::ConfigureImpl>();
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
@@ -82,13 +82,13 @@ TEST_CASE("Import null data") {
 
   auto processor = std::make_shared<TestProcessor>("dummy");
   utils::Identifier uuid = processor->getUUID();
-  auto output = std::make_unique<minifi::Connection>(ff_repository, content_repo, "output");
+  auto output = std::make_unique<minifi::ConnectionImpl>(ff_repository, content_repo, "output");
   output->addRelationship({"out", ""});
   output->setSourceUUID(uuid);
   processor->addConnection(output.get());
-  auto node = std::make_shared<core::ProcessorNode>(processor.get());
-  auto context = std::make_shared<core::ProcessContext>(node, nullptr, prov_repo, ff_repository, content_repo);
-  core::ProcessSession session(context);
+  auto node = std::make_shared<core::ProcessorNodeImpl>(processor.get());
+  auto context = std::make_shared<core::ProcessContextImpl>(node, nullptr, prov_repo, ff_repository, content_repo);
+  core::ProcessSessionImpl session(context);
 
   minifi::io::BufferStream input{};
   auto flowFile = session.create();

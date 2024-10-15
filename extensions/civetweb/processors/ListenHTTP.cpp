@@ -270,7 +270,7 @@ void ListenHTTP::Handler::setHeaderAttributes(const mg_request_info *req_info, c
 }
 
 void ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream> content_buffer) {
-  auto flow_file = std::make_shared<FlowFileRecord>();
+  auto flow_file = std::make_shared<FlowFileRecordImpl>();
   auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
   if (flow_version != nullptr) {
     flow_file->setAttribute(core::SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());

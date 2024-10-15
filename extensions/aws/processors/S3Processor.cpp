@@ -32,12 +32,12 @@
 namespace org::apache::nifi::minifi::aws::processors {
 
 S3Processor::S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-  : core::Processor(name, uuid),
+  : core::ProcessorImpl(name, uuid),
     logger_(std::move(logger)) {
 }
 
 S3Processor::S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-  : core::Processor(name, uuid),
+  : core::ProcessorImpl(name, uuid),
     logger_(std::move(logger)),
     s3_wrapper_(std::move(s3_request_sender)) {
 }
@@ -121,7 +121,7 @@ void S3Processor::onSchedule(core::ProcessContext& context, core::ProcessSession
 
   if (auto communications_timeout = context.getProperty<core::TimePeriodValue>(CommunicationsTimeout)) {
     logger_->log_debug("S3Processor: Communications Timeout {}", communications_timeout->getMilliseconds());
-    client_config_->connectTimeoutMs = gsl::narrow<long>(communications_timeout->getMilliseconds().count());  // NOLINT(runtime/int)
+    client_config_->connectTimeoutMs = gsl::narrow<long>(communications_timeout->getMilliseconds().count());  // NOLINT(runtime/int,google-runtime-int)
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }

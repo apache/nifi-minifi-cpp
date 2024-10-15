@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "core/Processor.h"
+#include "core/ProcessorNode.h"
 #include "core/ProcessContextBuilder.h"
 #include "core/PropertyDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -223,7 +224,7 @@ TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo
   if (!configuration_->get(minifi::Configure::nifi_state_storage_local_path)) {
     configuration_->set(minifi::Configure::nifi_state_storage_local_path, state_dir_->getPath().string());
   }
-  state_storage_ = minifi::core::ProcessContext::getOrCreateDefaultStateStorage(controller_services_provider_.get(), configuration_);
+  state_storage_ = minifi::core::ProcessContextImpl::getOrCreateDefaultStateStorage(controller_services_provider_.get(), configuration_);
 }
 
 TestPlan::~TestPlan() {
@@ -262,7 +263,7 @@ std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::share
     }
     std::stringstream connection_name;
     connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
-    auto connection = std::make_unique<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+    auto connection = std::make_unique<minifi::ConnectionImpl>(flow_repo_, content_repo_, connection_name.str());
     logger_->log_info("Creating {} connection for proc {}", connection_name.str(), processor_queue_.size() + 1);
 
     for (const auto& relationship : relationships) {
@@ -280,7 +281,7 @@ std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::share
     }
     relationships_.push_back(std::move(connection));
   }
-  std::shared_ptr<minifi::core::ProcessorNode> node = std::make_shared<minifi::core::ProcessorNode>(processor.get());
+  std::shared_ptr<minifi::core::ProcessorNode> node = std::make_shared<minifi::core::ProcessorNodeImpl>(processor.get());
   processor_nodes_.push_back(node);
   std::shared_ptr<minifi::core::ProcessContextBuilder> contextBuilder =
     minifi::core::ClassLoader::getDefaultClassLoader().instantiate<minifi::core::ProcessContextBuilder>("ProcessContextBuilder", "ProcessContextBuilder");
@@ -303,7 +304,7 @@ std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::strin
   if (nullptr == ptr) {
     throw std::runtime_error{fmt::format("Failed to instantiate processor name: {0} uuid: {1}", processor_name, uuid.to_string().c_str())};
   }
-  std::shared_ptr<minifi::core::Processor> processor = std::static_pointer_cast<minifi::core::Processor>(ptr);
+  std::shared_ptr<minifi::core::Processor> processor = std::dynamic_pointer_cast<minifi::core::Processor>(ptr);
 
   processor->setName(name);
 
@@ -326,7 +327,7 @@ minifi::Connection* TestPlan::addConnection(const std::shared_ptr<minifi::core::
     << (source_proc ? source_proc->getUUIDStr().c_str() : "none")
     << "-to-"
     << (destination_proc ? destination_proc->getUUIDStr().c_str() : "none");
-  auto connection = std::make_unique<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+  auto connection = std::make_unique<minifi::ConnectionImpl>(flow_repo_, content_repo_, connection_name.str());
 
   connection->addRelationship(source_relationship);
 
@@ -472,7 +473,7 @@ std::shared_ptr<minifi::core::ProcessContext> TestPlan::getProcessContextForProc
 void TestPlan::scheduleProcessor(const std::shared_ptr<minifi::core::Processor>& processor, const std::shared_ptr<minifi::core::ProcessContext>& context) {
   if (std::find(configured_processors_.begin(), configured_processors_.end(), processor) == configured_processors_.end()) {
     // Ordering on factories and list of configured processors do not matter
-    const auto factory = std::make_shared<minifi::core::ProcessSessionFactory>(context);
+    const auto factory = std::make_shared<minifi::core::ProcessSessionFactoryImpl>(context);
     factories_.push_back(factory);
     processor->onSchedule(*context, *factory);
     configured_processors_.push_back(processor);
@@ -496,14 +497,14 @@ bool TestPlan::runProcessor(const std::shared_ptr<minifi::core::Processor>& proc
   return runProcessor(processor_location, verify);
 }
 
-class TestSessionFactory : public minifi::core::ProcessSessionFactory {
+class TestSessionFactory : public minifi::core::ProcessSessionFactoryImpl {
   using SessionCallback = std::function<void(const std::shared_ptr<minifi::core::ProcessSession>&)>;
  public:
   TestSessionFactory(std::shared_ptr<minifi::core::ProcessContext> context, SessionCallback on_new_session)
-    : ProcessSessionFactory(std::move(context)), on_new_session_(std::move(on_new_session)) {}
+    : ProcessSessionFactoryImpl(std::move(context)), on_new_session_(std::move(on_new_session)) {}
 
   std::shared_ptr<minifi::core::ProcessSession> createSession() override {
-    auto session = ProcessSessionFactory::createSession();
+    auto session = ProcessSessionFactoryImpl::createSession();
     on_new_session_(session);
     return session;
   }
@@ -526,7 +527,7 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
   processor->setScheduledState(minifi::core::ScheduledState::RUNNING);
 
   if (verify) {
-    auto current_session = std::make_shared<minifi::core::ProcessSession>(context);
+    auto current_session = std::make_shared<minifi::core::ProcessSessionImpl>(context);
     process_sessions_.push_back(current_session);
     verify(context, current_session);
     current_session->commit();
@@ -630,7 +631,7 @@ std::unique_ptr<minifi::Connection> TestPlan::buildFinalConnection(const std::sh
   gsl_Expects(termination_);
   std::stringstream connection_name;
   connection_name << processor->getUUIDStr() << "-to-" << processor->getUUIDStr();
-  auto connection = std::make_unique<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+  auto connection = std::make_unique<minifi::ConnectionImpl>(flow_repo_, content_repo_, connection_name.str());
   connection->addRelationship(termination_.value());
 
   // link the connections so that we can test results at the end for this
@@ -684,13 +685,13 @@ TestController::TestController()
     : log(LogTestController::getInstance()) {
   minifi::setDefaultDirectory("./");
   log.reset();
-  minifi::utils::IdGenerator::getIdGenerator()->initialize(std::make_shared<minifi::Properties>());
+  minifi::utils::IdGenerator::getIdGenerator()->initialize(minifi::Properties::create());
   flow_version_ = std::make_shared<minifi::state::response::FlowVersion>("test", "test", "test");
 }
 
 std::shared_ptr<TestPlan> TestController::createPlan(PlanConfig config) {
   if (!config.configuration) {
-    config.configuration = std::make_shared<minifi::Configure>();
+    config.configuration = minifi::Configure::create();
     config.configuration->setHome(createTempDirectory());
     config.configuration->set(minifi::Configure::nifi_state_storage_local_class_name, "VolatileMapStateStorage");
     config.configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory().string());

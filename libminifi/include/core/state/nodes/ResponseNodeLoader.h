@@ -28,27 +28,28 @@
 #include "MetricsBase.h"
 #include "core/ProcessGroup.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/FlowConfiguration.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
 #include "utils/expected.h"
 #include "core/RepositoryMetricsSource.h"
 #include "utils/file/AssetManager.h"
+#include "minifi-cpp/core/state/nodes/ResponseNodeLoader.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
-class ResponseNodeLoader {
+class ResponseNodeLoaderImpl : public ResponseNodeLoader {
  public:
-  ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
+  ResponseNodeLoaderImpl(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
     std::shared_ptr<core::FlowConfiguration> flow_configuration, utils::file::AssetManager* asset_manager = nullptr);
 
-  void setNewConfigRoot(core::ProcessGroup* root);
-  void clearConfigRoot();
-  void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
-  void setStateMonitor(state::StateMonitor* update_sink);
-  std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz);
-  state::response::NodeReporter::ReportedNode getAgentManifest() const;
+  void setNewConfigRoot(core::ProcessGroup* root) override;
+  void clearConfigRoot() override;
+  void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) override;
+  void setStateMonitor(state::StateMonitor* update_sink) override;
+  std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz) override;
+  state::response::NodeReporter::ReportedNode getAgentManifest() const override;
 
  private:
   void initializeComponentMetrics();

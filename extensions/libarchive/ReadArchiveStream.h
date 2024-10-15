@@ -23,14 +23,15 @@
 
 #include "io/OutputStream.h"
 #include "io/ArchiveStream.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "io/InputStream.h"
+#include "core/logging/LoggerFactory.h"
 
 #include "archive_entry.h"
 #include "archive.h"
 
 namespace org::apache::nifi::minifi::io {
 
-class ReadArchiveStreamImpl : public ReadArchiveStream {
+class ReadArchiveStreamImpl : public InputStreamImpl, public ReadArchiveStream {
   struct archive_read_deleter {
     int operator()(struct archive* ptr) const {
       return archive_read_free(ptr);

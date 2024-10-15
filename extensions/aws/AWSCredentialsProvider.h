@@ -27,7 +27,7 @@
 #include "aws/core/auth/AWSCredentials.h"
 #include "utils/AWSInitializer.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org {
 namespace apache {
@@ -39,9 +39,9 @@ class AWSCredentialsProvider {
  public:
   explicit AWSCredentialsProvider(
     bool use_default_credentials = false,
-    const std::string &access_key = "",
-    const std::string &secret_key = "",
-    const std::string &credentials_file = "");
+    std::string access_key = "",
+    std::string secret_key = "",
+    std::string credentials_file = "");
   void setUseDefaultCredentials(bool use_default_credentials);
   void setAccessKey(const std::string &access_key);
   void setSecretKey(const std::string &secret_key);

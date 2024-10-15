@@ -16,8 +16,7 @@
  */
 #pragma once
 
-#include "PropertyDefinitionBuilder.h"
-#include "Record.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "controllers/RecordSetWriter.h"
 #include "core/FlowFile.h"
 #include "core/ProcessSession.h"
@@ -47,9 +46,9 @@ constexpr customize_t enum_name<OutputGroupingType>(OutputGroupingType value) no
 
 namespace org::apache::nifi::minifi::standard {
 
-class JsonRecordSetWriter final : public core::RecordSetWriter {
+class JsonRecordSetWriter final : public core::RecordSetWriterImpl {
  public:
-  explicit JsonRecordSetWriter(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetWriter(name, uuid) {}
+  explicit JsonRecordSetWriter(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetWriterImpl(name, uuid) {}
 
   JsonRecordSetWriter(JsonRecordSetWriter&&) = delete;
   JsonRecordSetWriter(const JsonRecordSetWriter&) = delete;

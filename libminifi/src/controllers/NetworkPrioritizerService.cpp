@@ -65,7 +65,7 @@ io::NetworkInterface NetworkPrioritizerService::getInterface(uint32_t size = 0) 
     ifc = get_nearest_interface(controllers);
     if (!ifc.empty()) {
       reduce_tokens(size);
-      io::NetworkInterface newifc(ifc, shared_from_this());
+      io::NetworkInterface newifc(ifc, sharedFromThis<NetworkPrioritizerService>());
       return newifc;
     }
   }
@@ -181,7 +181,7 @@ void NetworkPrioritizerService::onEnable() {
     bool is_default = false;
     if (getProperty(DefaultPrioritizer, is_default)) {
       if (is_default) {
-        if (io::NetworkPrioritizerFactory::getInstance()->setPrioritizer(shared_from_this()) < 0) {
+        if (io::NetworkPrioritizerFactory::getInstance()->setPrioritizer(sharedFromThis<NetworkPrioritizerService>()) < 0) {
           throw std::runtime_error("Can only have one prioritizer");
         }
       }

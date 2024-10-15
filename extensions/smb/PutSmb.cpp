@@ -22,6 +22,7 @@
 #include "utils/OsUtils.h"
 #include "utils/file/FileWriterCallback.h"
 #include "core/Resource.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::smb {
 

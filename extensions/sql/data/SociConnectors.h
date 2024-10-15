@@ -26,7 +26,7 @@
 #include "data/DatabaseConnectors.h"
 #include <soci/soci.h>
 #include <soci/odbc/soci-odbc.h>
-#include "logging/Logger.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::sql {
 

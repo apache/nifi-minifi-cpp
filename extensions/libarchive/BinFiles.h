@@ -32,7 +32,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
 #include "utils/Export.h"
@@ -177,12 +177,12 @@ class BinManager {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinManager>::getLogger()};
 };
 
-class BinFiles : public core::Processor {
+class BinFiles : public core::ProcessorImpl {
  protected:
   static const core::Relationship Self;
 
  public:
-  using core::Processor::Processor;
+  using core::ProcessorImpl::ProcessorImpl;
   ~BinFiles() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Bins flow files into buckets based on the number of entries or size of entries";

@@ -25,14 +25,14 @@
 #include "opc.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "PropertyDefinition.h"
+#include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
 #include "core/Property.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class BaseOPCProcessor : public core::Processor {
+class BaseOPCProcessor : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr auto OPCServerEndPoint = core::PropertyDefinitionBuilder<>::createProperty("OPC server endpoint")
       .withDescription("Specifies the address, port and relative path of an OPC endpoint")
@@ -70,7 +70,7 @@ class BaseOPCProcessor : public core::Processor {
 
 
   explicit BaseOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
-  : Processor(name, uuid) {
+  : ProcessorImpl(name, uuid) {
   }
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;

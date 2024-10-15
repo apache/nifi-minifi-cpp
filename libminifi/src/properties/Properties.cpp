@@ -29,13 +29,13 @@
 
 namespace org::apache::nifi::minifi {
 
-Properties::Properties(std::string name)
+PropertiesImpl::PropertiesImpl(std::string name)
     : logger_(core::logging::LoggerFactory<Properties>::getLogger()),
     name_(std::move(name)) {
 }
 
 // Get the config value
-bool Properties::getString(const std::string &key, std::string &value) const {
+bool PropertiesImpl::getString(const std::string &key, std::string &value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
@@ -47,14 +47,14 @@ bool Properties::getString(const std::string &key, std::string &value) const {
   }
 }
 
-std::optional<std::string> Properties::getString(const std::string& key) const {
+std::optional<std::string> PropertiesImpl::getString(const std::string& key) const {
   if (std::string result; getString(key, result)) {
     return result;
   }
   return std::nullopt;
 }
 
-int Properties::getInt(const std::string &key, int default_value) const {
+int PropertiesImpl::getInt(const std::string &key, int default_value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
@@ -189,7 +189,7 @@ void fixValidatedProperty(const std::string& property_name,
 // Load Configure File
 // If the loaded property is time-period or data-size validated and it has no explicit units ms or B will be appended.
 // If the loaded property is integer validated and it has some explicit unit(time-period or data-size) it will be converted to ms/B and its unit cut off
-void Properties::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
+void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
     logger_->log_error("Configuration file path for {} is empty!", getName());
@@ -232,12 +232,12 @@ void Properties::loadConfigureFile(const std::filesystem::path& configuration_fi
   checksum_calculator_.setFileLocation(properties_file_);
 }
 
-std::filesystem::path Properties::getFilePath() const {
+std::filesystem::path PropertiesImpl::getFilePath() const {
   std::lock_guard<std::mutex> lock(mutex_);
   return properties_file_;
 }
 
-bool Properties::commitChanges() {
+bool PropertiesImpl::commitChanges() {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!dirty_) {
     logger_->log_info("Attempt to persist, but properties are not updated");
@@ -284,13 +284,17 @@ bool Properties::commitChanges() {
   return false;
 }
 
-std::map<std::string, std::string> Properties::getProperties() const {
+std::map<std::string, std::string> PropertiesImpl::getProperties() const {
   std::lock_guard<std::mutex> lock(mutex_);
   std::map<std::string, std::string> properties;
   for (const auto& prop : properties_) {
     properties[prop.first] = prop.second.active_value;
   }
   return properties;
+}
+
+std::shared_ptr<Properties> Properties::create() {
+  return std::make_shared<PropertiesImpl>();
 }
 
 }  // namespace org::apache::nifi::minifi

@@ -28,17 +28,17 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class StandardControllerServiceNode : public ControllerServiceNode {
+class StandardControllerServiceNode : public ControllerServiceNodeImpl {
  public:
   explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::shared_ptr<ControllerServiceProvider> provider, std::string id,
                                          std::shared_ptr<Configure> configuration)
-      : ControllerServiceNode(std::move(service), std::move(id), std::move(configuration)),
+      : ControllerServiceNodeImpl(std::move(service), std::move(id), std::move(configuration)),
         provider(std::move(provider)),
         logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
 
   explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
-      : ControllerServiceNode(std::move(service), std::move(id), std::move(configuration)),
+      : ControllerServiceNodeImpl(std::move(service), std::move(id), std::move(configuration)),
         provider(nullptr),
         logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
@@ -49,12 +49,12 @@ class StandardControllerServiceNode : public ControllerServiceNode {
   /**
    * Initializes the controller service node.
    */
-  virtual void initialize() {
-    ControllerServiceNode::initialize();
+  void initialize() override {
+    ControllerServiceNodeImpl::initialize();
     active = false;
   }
 
-  bool canEnable() {
+  bool canEnable() override {
     if (!active.load()) {
       for (auto linked_service : linked_controller_services_) {
         if (!linked_service->canEnable()) {
@@ -67,9 +67,9 @@ class StandardControllerServiceNode : public ControllerServiceNode {
     }
   }
 
-  bool enable();
+  bool enable() override;
 
-  bool disable() {
+  bool disable() override {
     controller_service_->setState(DISABLED);
     active = false;
     return true;

@@ -27,13 +27,14 @@
 #include "BinFiles.h"
 #include "archive_entry.h"
 #include "archive.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "serialization/FlowFileSerializer.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
+#include "io/Stream.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -121,7 +122,7 @@ class BinaryConcatenationMerge : public MergeBin {
 
 class ArchiveMerge {
  public:
-  class ArchiveWriter : public io::OutputStream {
+  class ArchiveWriter : public io::StreamImpl, public io::OutputStream {
    public:
     ArchiveWriter(struct archive *arch, struct archive_entry *entry) : arch_(arch), entry_(entry) {}
     size_t write(const uint8_t* data, size_t size) override {

@@ -25,6 +25,7 @@
 #include "c2/C2Payload.h"
 #include "c2/HeartbeatJsonSerializer.h"
 #include "utils/gsl.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::c2 {
 

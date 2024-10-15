@@ -295,12 +295,12 @@ uint16_t PublishMQTT::InFlightMessageCounter::getCounter() const {
 }
 
 PublishMQTT::PublishMQTTMetrics::PublishMQTTMetrics(const core::Processor& source_processor, const InFlightMessageCounter& in_flight_message_counter)
-  : core::ProcessorMetrics(source_processor),
+  : core::ProcessorMetricsImpl(source_processor),
     in_flight_message_counter_(&in_flight_message_counter) {
 }
 
 std::vector<state::response::SerializedResponseNode> PublishMQTT::PublishMQTTMetrics::serialize() {
-  auto metrics_vector = core::ProcessorMetrics::serialize();
+  auto metrics_vector = core::ProcessorMetricsImpl::serialize();
   gsl_Expects(!metrics_vector.empty());
   auto& metrics = metrics_vector[0];
 
@@ -311,7 +311,7 @@ std::vector<state::response::SerializedResponseNode> PublishMQTT::PublishMQTTMet
 }
 
 std::vector<state::PublishedMetric> PublishMQTT::PublishMQTTMetrics::calculateMetrics() {
-  auto metrics = core::ProcessorMetrics::calculateMetrics();
+  auto metrics = core::ProcessorMetricsImpl::calculateMetrics();
   metrics.push_back({"in_flight_message_count", static_cast<double>(in_flight_message_counter_->getCounter()), getCommonLabels()});
   return metrics;
 }

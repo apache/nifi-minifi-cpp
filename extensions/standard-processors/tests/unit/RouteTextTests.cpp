@@ -106,7 +106,7 @@ struct RouteTextController : public TestController {
   }
 
   void putFlowFile(const std::map<std::string, std::string>& attributes, const std::string& content) const {
-    auto flow_file = std::make_shared<minifi::FlowFileRecord>();
+    auto flow_file = std::make_shared<minifi::FlowFileRecordImpl>();
     for (const auto& attr : attributes) {
       flow_file->setAttribute(attr.first, attr.second);
     }

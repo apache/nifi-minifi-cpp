@@ -21,6 +21,7 @@
 #include "PythonInterpreter.h"
 #include "PyException.h"
 #include "types/Types.h"
+#include "utils/OptionalUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

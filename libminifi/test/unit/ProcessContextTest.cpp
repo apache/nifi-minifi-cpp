@@ -16,7 +16,7 @@
  */
 #include <memory>
 #include "unit/Catch.h"
-#include "ProcessContext.h"
+#include "core/ProcessContext.h"
 #include "core/FlowFile.h"
 #include "utils/meta/detected.h"
 

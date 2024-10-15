@@ -40,7 +40,7 @@ TestControllerWithFlow::TestControllerWithFlow(const char* yamlConfigContent, bo
   yaml_path_ = home_ / "config.yml";
   std::ofstream{yaml_path_} << yamlConfigContent;
 
-  configuration_ = std::make_shared<minifi::Configure>();
+  configuration_ = minifi::Configure::create();
   configuration_->setHome(home_.string());
   configuration_->set(minifi::Configure::nifi_flow_configuration_file, yaml_path_.string());
   configuration_->set(minifi::Configure::nifi_c2_enable, "true");
