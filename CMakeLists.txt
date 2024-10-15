@@ -670,6 +670,10 @@ include(CPack)
 ### include modules
 
 if (NOT SKIP_TESTS)
+    enable_testing()
+    set(BUILD_TESTING ON)
+    set(CTEST_NEW_FORMAT true)
+    include(CTest)
     include(BuildTests)
 
     add_subdirectory("${TEST_DIR}/libtest")

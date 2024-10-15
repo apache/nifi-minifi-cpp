@@ -1,0 +1,54 @@
+name: "MiNiFi-CPP memcheck"
+on: [workflow_dispatch]
+env:
+  CMAKE_FLAGS: >-
+    -DCMAKE_BUILD_TYPE=Debug
+    -DCI_BUILD=ON
+    -DDOCKER_BUILD_ONLY=OFF
+    -DENABLE_ALL=ON
+    -DMINIFI_FAIL_ON_WARNINGS=ON
+    -DPORTABLE=ON
+    -DUSE_SHARED_LIBS=ON
+  SCCACHE_GHA_ENABLE: true
+  CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
+jobs:
+  ubuntu_24_04:
+    name: "valgrind on ubuntu-24.04"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+      - name: cache restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: memcheck-ccache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            memcheck-ccache-${{github.ref}}-
+            memcheck-ccache-refs/heads/main-
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y ccache libfl-dev python3 python3-venv valgrind
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
+      - name: build
+        run: |
+          python3 -m venv venv && source venv/bin/activate \
+            && pip install -r requirements.txt \
+            && python main.py --noninteractive --minifi-options="${CMAKE_FLAGS}"
+        working-directory: bootstrap
+      - name: cache save
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: memcheck-ccache-${{github.ref}}-${{github.sha}}
+      - name: test
+        id: test
+        run: |
+          # Set core file size limit to unlimited
+          ulimit -c unlimited
+          ctest -j$(nproc) -L memchecked -T memcheck
+        working-directory: build

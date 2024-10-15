@@ -31,6 +31,7 @@ FOREACH(testfile ${EXECUTESCRIPT_LUA_TESTS})
     createTests("${testfilename}")
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties("${testfilename}" PROPERTIES LABELS "lua;memchecked")
 ENDFOREACH()
 
 copyTestResources(${CMAKE_CURRENT_SOURCE_DIR}/test_lua_scripts/ ${CMAKE_BINARY_DIR}/bin/resources/test_lua_scripts/)

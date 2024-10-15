@@ -40,5 +40,6 @@ FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
                 "${CMAKE_SOURCE_DIR}/extensions/civetweb/tests/resources"
                 "$<TARGET_FILE_DIR:${testfilename}>/resources"
         )
+    set_tests_properties("${testfilename}" PROPERTIES LABELS "civetweb")
 ENDFOREACH()
 message("-- Finished building ${CIVETWEB-EXTENSIONS_TEST_COUNT} civetweb related test file(s)...")
