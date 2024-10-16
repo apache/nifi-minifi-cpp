@@ -119,12 +119,7 @@ class Minifi_flow_yaml_serializer:
                     continue
 
                 visited.append(svc)
-                res['Controller Services'].append({
-                    'name': svc.name,
-                    'id': svc.id,
-                    'class': svc.service_class,
-                    'Properties': svc.properties
-                })
+                self._add_controller_service_node(svc, res)
 
         if isinstance(connectable, Funnel):
             res['Funnels'].append({
@@ -160,6 +155,25 @@ class Minifi_flow_yaml_serializer:
 
         return (res, visited)
 
+    def _add_controller_service_node(self, controller, parent):
+        if hasattr(controller, 'name'):
+            connectable_name = controller.name
+        else:
+            connectable_name = str(controller.uuid)
+
+        parent['Controller Services'].append({
+            'name': connectable_name,
+            'id': controller.id,
+            'class': controller.service_class,
+            'Properties': controller.properties
+        })
+
+        if controller.linked_services:
+            if len(controller.linked_services) == 1:
+                parent['Controller Services'][-1]['Properties']['Linked Services'] = controller.linked_services[0].name
+            else:
+                parent['Controller Services'][-1]['Properties']['Linked Services'] = [{"value": service.name} for service in controller.linked_services]
+
     def serialize_controller(self, controller, root=None):
         if root is None:
             res = {
@@ -175,16 +189,6 @@ class Minifi_flow_yaml_serializer:
         else:
             res = root
 
-        if hasattr(controller, 'name'):
-            connectable_name = controller.name
-        else:
-            connectable_name = str(controller.uuid)
-
-        res['Controller Services'].append({
-            'name': connectable_name,
-            'id': controller.id,
-            'class': controller.service_class,
-            'Properties': controller.properties
-        })
+        self._add_controller_service_node(controller, res)
 
         return res

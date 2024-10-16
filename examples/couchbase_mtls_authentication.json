@@ -1,0 +1,74 @@
+{
+    "parameterContexts": [],
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get Couchbase document file from local directory",
+                "identifier": "21b1e56e-e8d5-4543-9f6b-be148f91fb02",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "penaltyDuration": "30 sec",
+                "properties": {
+                    "Input Directory": "/home/user/couchbase/input"
+                },
+                "autoTerminatedRelationships": [],
+                "concurrentlySchedulableTaskCount": 1
+            },
+            {
+                "name": "Insert Couchbase document",
+                "identifier": "df762d53-0f94-4611-be01-e689b8992573",
+                "type": "org.apache.nifi.processors.standard.PutCouchbaseKey",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "penaltyDuration": "30 sec",
+                "properties": {
+                    "Bucket Name": "test_bucket",
+                    "Document Id": "test_doc_id",
+                    "Couchbase Cluster Controller Service": "CouchbaseClusterService for mTLS authentication"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure",
+                    "retry"
+                ]
+            }
+        ],
+        "controllerServices": [
+            {
+                "name": "SSLContextService for Couchbase",
+                "identifier": "33e03d54-9917-494e-8ba0-8caeb3fdf4de",
+                "type": "SSLContextService",
+                "properties": {
+                    "Client Certificate": "/home/user/couchbase/certs/clientuser.crt",
+                    "Private Key": "/home/user/couchbase/certs/clientuser.key",
+                    "CA Certificate": "/home/user/couchbase/certsroot_ca.crt"
+                }
+            },
+            {
+                "name": "CouchbaseClusterService for mTLS authentication",
+                "identifier": "747bae3c-e68e-40af-8933-02179bd6cf85",
+                "type": "CouchbaseClusterService",
+                "properties": {
+                    "Connection String": "couchbases://couchbase-server-hLkYUYq55djwrW5A26XNJD",
+                    "Linked Services": "SSLContextService for Couchbase"
+                }
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "94fdd7b1-7857-44c3-8cf2-d373a5578420",
+                "name": "GetFile/success/PutCouchbaseKey",
+                "source": {
+                    "id": "21b1e56e-e8d5-4543-9f6b-be148f91fb02"
+                },
+                "destination": {
+                    "id": "df762d53-0f94-4611-be01-e689b8992573"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+    }
+}

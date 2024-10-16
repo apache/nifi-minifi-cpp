@@ -23,11 +23,13 @@
 namespace org::apache::nifi::minifi::core::controller {
 
 bool StandardControllerServiceNode::enable() {
-  Property property("Linked Services", "Referenced Controller Services");
-  controller_service_->setState(ENABLED);
   logger_->log_trace("Enabling CSN {}", getName());
+  if (active) {
+    logger_->log_debug("CSN {} is already enabled", getName());
+    return true;
+  }
+  Property property("Linked Services", "Referenced Controller Services");
   if (getProperty(property.getName(), property)) {
-    active = true;
     for (const auto& linked_service : property.getValues()) {
       ControllerServiceNode* csNode = provider->getControllerServiceNode(linked_service, controller_service_->getUUID());
       if (nullptr != csNode) {
@@ -40,13 +42,20 @@ bool StandardControllerServiceNode::enable() {
   if (nullptr != impl) {
     std::lock_guard<std::mutex> lock(mutex_);
     std::vector<std::shared_ptr<ControllerService>> services;
+    std::vector<ControllerServiceNode*> service_nodes;
     services.reserve(linked_controller_services_.size());
     for (const auto& service : linked_controller_services_) {
       services.push_back(service->getControllerServiceImplementation());
+      if (!service->enable()) {
+        logger_->log_debug("Linked Service '{}' could not be enabled", service->getName());
+        return false;
+      }
     }
     impl->setLinkedControllerServices(services);
     impl->onEnable();
   }
+  active = true;
+  controller_service_->setState(ENABLED);
   return true;
 }
 
