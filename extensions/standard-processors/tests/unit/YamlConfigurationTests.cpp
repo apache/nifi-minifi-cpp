@@ -1692,7 +1692,7 @@ Parameter Contexts:
     - name: my_value
       description: ''
       sensitive: true
-      value: {}
+      value: {encrypted_parameter_value}
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: DummyFlowYamlProcessor
@@ -1703,9 +1703,9 @@ Processors:
   auto-terminated relationships list: [success]
   Properties:
     Simple Property: simple
-    Sensitive Property: {}
+    Sensitive Property: {encrypted_sensitive_property_value}
 Parameter Context Name: my-context
-      )", encrypted_parameter_value, encrypted_sensitive_property_value);
+      )", fmt::arg("encrypted_parameter_value", encrypted_parameter_value), fmt::arg("encrypted_sensitive_property_value", encrypted_sensitive_property_value));
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
@@ -1737,11 +1737,11 @@ Parameter Contexts:
     - name: my_value_1
       description: ''
       sensitive: true
-      value: {}
+      value: {encrypted_parameter_value_1}
     - name: my_value_2
       description: ''
       sensitive: true
-      value: {}
+      value: {encrypted_parameter_value_2}
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: DummyFlowYamlProcessor
@@ -1753,10 +1753,11 @@ Processors:
   Properties:
     Simple Property: simple
     Sensitive Property:
-    - value: {}
-    - value: {}
+    - value: {encrypted_sensitive_property_value_1}
+    - value: {encrypted_sensitive_property_value_2}
 Parameter Context Name: my-context
-      )", encrypted_parameter_value_1, encrypted_parameter_value_2, encrypted_sensitive_property_value_1, encrypted_sensitive_property_value_2);
+      )", fmt::arg("encrypted_parameter_value_1", encrypted_parameter_value_1), fmt::arg("encrypted_parameter_value_2", encrypted_parameter_value_2),
+          fmt::arg("encrypted_sensitive_property_value_1", encrypted_sensitive_property_value_1), fmt::arg("encrypted_sensitive_property_value_2", encrypted_sensitive_property_value_2));
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
@@ -1789,7 +1790,7 @@ Parameter Contexts:
     - name: my_value_1
       description: ''
       sensitive: true
-      value: {}
+      value: {encrypted_parameter_value_1}
     - name: my_value_2
       description: ''
       sensitive: false
@@ -1802,11 +1803,11 @@ Controller Services:
   Properties:
     CA Certificate:
     Client Certificate:
-    Passphrase: {}
+    Passphrase: {encrypted_sensitive_property_value_1}
     Private Key: "#{{my_value_2}}"
     Use System Cert Store: 'true'
 Parameter Context Name: my-context
-      )", encrypted_parameter_value_1, encrypted_sensitive_property_value_1);
+      )", fmt::arg("encrypted_parameter_value_1", encrypted_parameter_value_1), fmt::arg("encrypted_sensitive_property_value_1", encrypted_sensitive_property_value_1));
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
@@ -1837,7 +1838,7 @@ Parameter Contexts:
     - name: my_value_1
       description: ''
       sensitive: true
-      value: {}
+      value: {encrypted_parameter_value_1}
     - name: my_value_2
       description: ''
       sensitive: false
@@ -1859,11 +1860,11 @@ Process Groups:
       Properties:
         CA Certificate:
         Client Certificate:
-        Passphrase: {}
+        Passphrase: {encrypted_sensitive_property_value_1}
         Private Key: "#{{my_value_2}}"
         Use System Cert Store: 'true'
     Parameter Context Name: sub-context
-      )", encrypted_parameter_value_1, encrypted_sensitive_property_value_1);
+      )", fmt::arg("encrypted_parameter_value_1", encrypted_parameter_value_1), fmt::arg("encrypted_sensitive_property_value_1", encrypted_sensitive_property_value_1));
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);

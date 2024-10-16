@@ -828,7 +828,7 @@ TEST_CASE("Test sensitive parameters in sensitive properties") {
           "name": "my_value",
           "description": "",
           "sensitive": true,
-          "value": "{}"
+          "value": "{encrypted_parameter_value}"
         }}
       ]
     }}
@@ -842,12 +842,12 @@ TEST_CASE("Test sensitive parameters in sensitive properties") {
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {{
-        "Sensitive Property": "{}"
+        "Sensitive Property": "{encrypted_sensitive_property_value}"
       }}
     }}],
     "parameterContextName": "my-context"
   }}
-}})", encrypted_parameter_value, encrypted_sensitive_property_value);
+}})", fmt::arg("encrypted_parameter_value", encrypted_parameter_value), fmt::arg("encrypted_sensitive_property_value", encrypted_sensitive_property_value));
 
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
@@ -879,13 +879,13 @@ TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
           "name": "first_value",
           "description": "",
           "sensitive": true,
-          "value": "{}"
+          "value": "{encrypted_parameter_value_1}"
         }},
         {{
           "name": "second_value",
           "description": "",
           "sensitive": true,
-          "value": "{}"
+          "value": "{encrypted_parameter_value_2}"
         }}
       ]
     }}
@@ -900,14 +900,15 @@ TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
       "schedulingPeriod": "3 sec",
       "properties": {{
         "Sensitive Property": [
-          {{"value": "{}"}},
-          {{"value": "{}"}}
+          {{"value": "{encrypted_sensitive_property_value_1}"}},
+          {{"value": "{encrypted_sensitive_property_value_2}"}}
         ]
       }}
     }}],
     "parameterContextName": "my-context"
   }}
-}})", encrypted_parameter_value_1, encrypted_parameter_value_2, encrypted_sensitive_property_value_1, encrypted_sensitive_property_value_2);
+}})", fmt::arg("encrypted_parameter_value_1", encrypted_parameter_value_1), fmt::arg("encrypted_parameter_value_2", encrypted_parameter_value_2),
+  fmt::arg("encrypted_sensitive_property_value_1", encrypted_sensitive_property_value_1), fmt::arg("encrypted_sensitive_property_value_2", encrypted_sensitive_property_value_2));
 
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
@@ -1049,7 +1050,7 @@ TEST_CASE("Test parameters in controller services") {
           "name": "my_value_1",
           "description": "",
           "sensitive": true,
-          "value": "{}"
+          "value": "{encrypted_parameter_value}"
         }},
         {{
           "name": "my_value_2",
@@ -1068,14 +1069,14 @@ TEST_CASE("Test parameters in controller services") {
       "name": "SSLContextService",
       "type": "org.apache.nifi.minifi.controllers.SSLContextService",
       "properties": {{
-        "Passphrase": "{}",
+        "Passphrase": "{encrypted_sensitive_property_value}",
         "Private Key": "#{{my_value_2}}",
         "Use System Cert Store": "true"
       }}
     }}],
     "parameterContextName": "my-context"
   }}
-}})", encrypted_parameter_value, encrypted_sensitive_property_value);
+}})", fmt::arg("encrypted_parameter_value", encrypted_parameter_value), fmt::arg("encrypted_sensitive_property_value", encrypted_sensitive_property_value));
 
   std::unique_ptr<core::ProcessGroup> flow = json_config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
@@ -1106,7 +1107,7 @@ TEST_CASE("Parameters can be used in controller services in nested process group
           "name": "my_value_1",
           "description": "",
           "sensitive": true,
-          "value": "{}"
+          "value": "{encrypted_parameter_value}"
         }},
         {{
           "name": "my_value_2",
@@ -1128,7 +1129,7 @@ TEST_CASE("Parameters can be used in controller services in nested process group
         "name": "SSLContextService",
         "type": "org.apache.nifi.minifi.controllers.SSLContextService",
         "properties": {{
-          "Passphrase": "{}",
+          "Passphrase": "{encrypted_sensitive_property_value}",
           "Private Key": "#{{my_value_2}}",
           "Use System Cert Store": "true"
         }}
@@ -1136,7 +1137,7 @@ TEST_CASE("Parameters can be used in controller services in nested process group
       "parameterContextName": "my-context"
     }}]
   }}
-}})", encrypted_parameter_value, encrypted_sensitive_property_value);
+}})", fmt::arg("encrypted_parameter_value", encrypted_parameter_value), fmt::arg("encrypted_sensitive_property_value", encrypted_sensitive_property_value));
 
   std::unique_ptr<core::ProcessGroup> flow = json_config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
