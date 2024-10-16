@@ -36,8 +36,8 @@ class SplitContent final : public core::Processor {
  public:
   explicit SplitContent(const std::string_view name, const utils::Identifier& uuid = {}) : Processor(name, uuid) {}
 
+  using size_type = std::vector<std::byte>::size_type;
   enum class ByteSequenceFormat { Hexadecimal, Text };
-
   enum class ByteSequenceLocation { Trailing, Leading };
 
   EXTENSIONAPI static constexpr auto Description = "Splits incoming FlowFiles by a specified byte sequence";
@@ -96,16 +96,40 @@ class SplitContent final : public core::Processor {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
+  static constexpr size_type BUFFER_TARGET_SIZE = 4096;
+
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
+
 
  private:
   std::shared_ptr<core::FlowFile> createNewSplit(core::ProcessSession& session) const;
   void finalizeLatestSplitContent(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& latest_split, const std::vector<std::byte>& buffer) const;
   void finalizeLastSplitContent(core::ProcessSession& session, std::vector<std::shared_ptr<core::FlowFile>>& splits, const std::vector<std::byte>& buffer, bool ended_with_byte_sequence) const;
+  void endedWithByteSequenceWithMoreDataToCome(core::ProcessSession& session, std::vector<std::shared_ptr<core::FlowFile>>& splits) const;
 
-  std::vector<std::byte> byte_sequence_{};
+  class ByteSequenceMatcher {
+   public:
+    explicit ByteSequenceMatcher(std::vector<std::byte> byte_sequence);
+    size_type getNumberOfMatchingBytes(size_type number_of_currently_matching_bytes, std::byte next_byte);
+    size_type getPreviousMaxMatch(size_type number_of_currently_matching_bytes);
+    [[nodiscard]] std::span<const std::byte> getByteSequence() const { return byte_sequence_; }
+
+   private:
+    struct node {
+      std::byte byte;
+      std::unordered_map<std::byte, size_type> cache;
+      std::optional<size_type> previous_max_match;
+    };
+    std::vector<node> byte_sequence_nodes_;
+    const std::vector<std::byte> byte_sequence_;
+  };
+
+  std::span<const std::byte> getByteSequence() const;
+  size_type getByteSequenceSize() const;
+
+  std::optional<ByteSequenceMatcher> byte_sequence_matcher_;
   bool keep_byte_sequence = false;
   ByteSequenceLocation byte_sequence_location_ = ByteSequenceLocation::Trailing;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SplitContent>::getLogger(uuid_);
