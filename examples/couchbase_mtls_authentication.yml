@@ -1,0 +1,45 @@
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- id: 21b1e56e-e8d5-4543-9f6b-be148f91fb02
+  name: Get Couchbase document file from local directory
+  class: org.apache.nifi.processors.standard.GetFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 2 sec
+  penalization period: 30 sec
+  Properties:
+    Input Directory: /tmp/input
+  auto-terminated relationships list: []
+- id: df762d53-0f94-4611-be01-e689b8992573
+  name: Insert Couchbase document
+  class: org.apache.nifi.processors.standard.PutCouchbaseKey
+  scheduling strategy: EVENT_DRIVEN
+  penalization period: 30 sec
+  Properties:
+    Bucket Name: test_bucket
+    Couchbase Cluster Controller Service: CouchbaseClusterService for mTLS authentication
+    Document Id: test_doc_id
+  auto-terminated relationships list:
+  - success
+  - failure
+  - retry
+Controller Services:
+- id: 33e03d54-9917-494e-8ba0-8caeb3fdf4de
+  name: SSLContextService for Couchbase
+  class: SSLContextService
+  Properties:
+    CA Certificate: /tmp/resources/root_ca.crt
+    Client Certificate: /tmp/resources/clientuser.crt
+    Private Key: /tmp/resources/clientuser.key
+- id: 747bae3c-e68e-40af-8933-02179bd6cf85
+  name: CouchbaseClusterService for mTLS authentication
+  class: CouchbaseClusterService
+  Properties:
+    Connection String: couchbases://couchbase-server-VPQDsPD2pj35q5WzHNt9ER
+    Linked Services: SSLContextService for Couchbase
+Connections:
+- id: 94fdd7b1-7857-44c3-8cf2-d373a5578420
+  destination id: df762d53-0f94-4611-be01-e689b8992573
+  name: GetFile/success/PutCouchbaseKey
+  source id: 21b1e56e-e8d5-4543-9f6b-be148f91fb02
+  source relationship name: success

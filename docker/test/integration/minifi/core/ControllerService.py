@@ -34,3 +34,4 @@ class ControllerService(object):
             properties = {}
 
         self.properties = properties
+        self.linked_services = []

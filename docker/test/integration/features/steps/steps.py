@@ -567,7 +567,7 @@ def step_impl(context):
     minifi_crt_file = '/tmp/resources/minifi_client.crt'
     minifi_key_file = '/tmp/resources/minifi_client.key'
     root_ca_crt_file = '/tmp/resources/root_ca.crt'
-    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
+    ssl_context_service = SSLContextService(name='SSLContextService', cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
 
     splunk_cert, splunk_key = make_server_cert(context.test.get_container_name_with_postfix("splunk"), context.root_ca_cert, context.root_ca_key)
     put_splunk_http = context.test.get_node_by_name("PutSplunkHTTP")
@@ -1373,6 +1373,34 @@ def step_impl(context, service_name):
     container.add_controller(couchbase_cluster_controller_service)
 
 
+@given("a CouchbaseClusterService is setup up with SSL connection with the name \"{service_name}\"")
+def step_impl(context, service_name):
+    ssl_context_service = SSLContextService(name="SSLContextService",
+                                            ca_cert='/tmp/resources/root_ca.crt')
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(ssl_context_service)
+    couchbase_cluster_controller_service = CouchbaseClusterService(
+        name=service_name,
+        connection_string="couchbases://{server_hostname}".format(server_hostname=context.test.get_container_name_with_postfix("couchbase-server")),
+        ssl_context_service=ssl_context_service)
+    container.add_controller(couchbase_cluster_controller_service)
+
+
 @then("a document with id \"{doc_id}\" in bucket \"{bucket_name}\" is present with data '{data}' of type \"{data_type}\" in Couchbase")
 def step_impl(context, doc_id: str, bucket_name: str, data: str, data_type: str):
     context.test.check_is_data_present_on_couchbase(doc_id, bucket_name, data, data_type)
+
+
+@given("a CouchbaseClusterService is setup up using mTLS authentication with the name \"{service_name}\"")
+def step_impl(context, service_name):
+    ssl_context_service = SSLContextService(name="SSLContextService",
+                                            cert='/tmp/resources/clientuser.crt',
+                                            key='/tmp/resources/clientuser.key',
+                                            ca_cert='/tmp/resources/root_ca.crt')
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(ssl_context_service)
+    couchbase_cluster_controller_service = CouchbaseClusterService(
+        name=service_name,
+        connection_string="couchbases://{server_hostname}".format(server_hostname=context.test.get_container_name_with_postfix("couchbase-server")),
+        ssl_context_service=ssl_context_service)
+    container.add_controller(couchbase_cluster_controller_service)
