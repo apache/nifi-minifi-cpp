@@ -39,7 +39,7 @@ class SegmentContent final : public core::Processor {
   EXTENSIONAPI static constexpr auto Description = "Segments a FlowFile into multiple smaller segments on byte boundaries.";
 
   EXTENSIONAPI static constexpr auto SegmentSize =
-      core::PropertyDefinitionBuilder<2>::createProperty("Segment Size")
+      core::PropertyDefinitionBuilder<>::createProperty("Segment Size")
         .withDescription("The maximum data size in bytes for each segment")
         .isRequired(true)
         .supportsExpressionLanguage(true)
@@ -55,7 +55,7 @@ class SegmentContent final : public core::Processor {
   EXTENSIONAPI static constexpr auto FragmentIdentifierOutputAttribute =
       core::OutputAttributeDefinition<0>{"fragment.identifier", {}, "All segments produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute"};
   EXTENSIONAPI static constexpr auto FragmentIndexOutputAttribute =
-      core::OutputAttributeDefinition<0>{"fragment.index", {}, "A one-up number that indicates the ordering of the segments that were created from a single parent FlowFile"};
+      core::OutputAttributeDefinition<0>{"fragment.index", {}, "A sequence number starting with 1 that indicates the ordering of the segments that were created from a single parent FlowFile"};
   EXTENSIONAPI static constexpr auto FragmentCountOutputAttribute = core::OutputAttributeDefinition<0>{"fragment.count", {}, "The number of segments generated from the parent FlowFile"};
   EXTENSIONAPI static constexpr auto SegmentOriginalFilenameOutputAttribute = core::OutputAttributeDefinition<0>{"segment.original.filename", {}, "The filename of the parent FlowFile"};
   EXTENSIONAPI static constexpr auto OutputAttributes =

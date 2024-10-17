@@ -55,6 +55,32 @@ std::vector<std::byte> createByteVector(Bytes... bytes) {
   return {static_cast<std::byte>(bytes)...};
 }
 
+TEST_CASE("Invalid segmentSize tests") {
+  const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
+  minifi::test::SingleProcessorTestController controller{segment_content};
+
+  SECTION("foo") {
+    REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "foo"), "General Operation: Segment Size value validation failed");
+    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Processor Operation: Invalid Segment Size optional(\"foo\")");
+  }
+  SECTION("-1") {
+    REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "-1"), "General Operation: Segment Size value validation failed");
+    REQUIRE_THROWS_WITH(controller.trigger("bar"), "narrowing_error");
+  }
+  SECTION("10 foo") {
+    REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "10 foo"), "General Operation: Segment Size value validation failed");
+    REQUIRE_NOTHROW(controller.trigger("bar"));
+  }
+  SECTION("0") {
+    REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "0"), "General Operation: Segment Size value validation failed");
+    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Processor Operation: Invalid Segment Size optional(\"0\")");
+  }
+  SECTION("10 MB") {
+    REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "10 MB"), "General Operation: Segment Size value validation failed");
+    REQUIRE_NOTHROW(controller.trigger("bar"));
+  }
+}
+
 TEST_CASE("SegmentContent with different sized text input") {
   const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
   minifi::test::SingleProcessorTestController controller{segment_content};
@@ -187,9 +213,7 @@ TEST_CASE("ExpressionLanguageSupport", "[NiFi]") {
   const auto input_data = createByteVector(1, 2, 3, 4, 5, 6, 7, 8, 9);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
 
-  std::unordered_map<std::string, std::string> attributes = {};
-  attributes["segmentSize"] = "4 B";
-  auto trigger_results = controller.trigger(input, std::move(attributes));
+  auto trigger_results = controller.trigger(input, {{"segmentSize", "4 B"}});
 
   auto original = trigger_results.at(processors::SegmentContent::Original);
   auto segments = trigger_results.at(processors::SegmentContent::Segments);

@@ -2821,7 +2821,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name             | Default Value | Allowable Values | Description                                                                                |
 |------------------|---------------|------------------|--------------------------------------------------------------------------------------------|
-| **Segment Size** |               | <br/>            | The maximum data size in bytes for each segment<br/>**Supports Expression Language: true** |
+| **Segment Size** |               |                  | The maximum data size in bytes for each segment<br/>**Supports Expression Language: true** |
 
 ### Relationships
 
@@ -2832,12 +2832,12 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute                 | Relationship | Description                                                                                                             |
-|---------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------|
-| fragment.identifier       |              | All segments produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute |
-| fragment.index            |              | A one-up number that indicates the ordering of the segments that were created from a single parent FlowFile             |
-| fragment.count            |              | The number of segments generated from the parent FlowFile                                                               |
-| segment.original.filename |              | The filename of the parent FlowFile                                                                                     |
+| Attribute                 | Relationship | Description                                                                                                                   |
+|---------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------------|
+| fragment.identifier       |              | All segments produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute       |
+| fragment.index            |              | A sequence number starting with 1 that indicates the ordering of the segments that were created from a single parent FlowFile |
+| fragment.count            |              | The number of segments generated from the parent FlowFile                                                                     |
+| segment.original.filename |              | The filename of the parent FlowFile                                                                                           |
 
 
 ## SplitText
