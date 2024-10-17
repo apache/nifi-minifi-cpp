@@ -22,7 +22,6 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "range/v3/view/split.hpp"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -37,12 +36,6 @@ void SegmentContent::initialize() {
 void SegmentContent::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {}
 
 namespace {
-std::shared_ptr<core::FlowFile> createSegment(core::ProcessSession& session) {
-  auto first_split = session.create();
-  if (!first_split) { throw Exception(PROCESSOR_EXCEPTION, "Couldn't create FlowFile"); }
-  return first_split;
-}
-
 void updateSplitAttributesAndTransfer(core::ProcessSession& session, const std::vector<std::shared_ptr<core::FlowFile>>& splits, const core::FlowFile& original) {
   const std::string fragment_identifier_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
   for (size_t split_i = 0; split_i < splits.size(); ++split_i) {
@@ -93,7 +86,7 @@ void SegmentContent::onTrigger(core::ProcessContext& context, core::ProcessSessi
       break;
     }
     if (needs_new_segment) {
-      segments.push_back(createSegment(session));
+      segments.push_back(session.create());
       needs_new_segment = false;
     }
     buffer.resize(ret);
