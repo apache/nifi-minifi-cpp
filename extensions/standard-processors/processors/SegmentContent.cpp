@@ -78,9 +78,8 @@ void SegmentContent::onTrigger(core::ProcessContext& context, core::ProcessSessi
   std::vector<std::shared_ptr<core::FlowFile>> segments{};
 
   size_t current_segment_size = 0;
-  segments.push_back(createSegment(session));
   size_t ret{};
-  bool needs_new_segment = false;
+  bool needs_new_segment = true;
   while (true) {
     const size_t segment_remaining_size = max_segment_size - current_segment_size;
     const size_t buffer_size = std::min(BUFFER_TARGET_SIZE, segment_remaining_size);
