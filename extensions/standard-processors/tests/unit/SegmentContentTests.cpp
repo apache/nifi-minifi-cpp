@@ -81,6 +81,22 @@ TEST_CASE("Invalid segmentSize tests") {
   }
 }
 
+TEST_CASE("EmptyFlowFile") {
+  const auto split_content = std::make_shared<SegmentContent>("SegmentContent");
+  minifi::test::SingleProcessorTestController controller{split_content};
+  split_content->setProperty(SegmentContent::SegmentSize, "10 B");
+
+
+  auto trigger_results = controller.trigger("");
+  auto original = trigger_results.at(processors::SegmentContent::Original);
+  auto splits = trigger_results.at(processors::SegmentContent::Segments);
+
+  REQUIRE(original.size() == 1);
+  REQUIRE(splits.size() == 0);
+
+  CHECK(controller.plan->getContent(original[0]) == "");
+}
+
 TEST_CASE("SegmentContent with different sized text input") {
   const auto segment_content = std::make_shared<SegmentContent>("SegmentContent");
   minifi::test::SingleProcessorTestController controller{segment_content};
