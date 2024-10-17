@@ -93,7 +93,7 @@ class SplitContent final : public core::Processor {
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr auto InputRequirement = core::annotation::Input::INPUT_REQUIRED;
-  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   static constexpr size_type BUFFER_TARGET_SIZE = 4096;
@@ -102,12 +102,9 @@ class SplitContent final : public core::Processor {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
-
- private:
-  bool keepTrailingByteSequence() const { return keep_byte_sequence && byte_sequence_location_ == ByteSequenceLocation::Trailing; }
-  bool keepLeadingByteSequence() const { return keep_byte_sequence && byte_sequence_location_ == ByteSequenceLocation::Leading; }
   class ByteSequenceMatcher {
    public:
+    using size_type = std::vector<std::byte>::size_type;
     explicit ByteSequenceMatcher(std::vector<std::byte> byte_sequence);
     size_type getNumberOfMatchingBytes(size_type number_of_currently_matching_bytes, std::byte next_byte);
     size_type getPreviousMaxMatch(size_type number_of_currently_matching_bytes);
@@ -123,9 +120,7 @@ class SplitContent final : public core::Processor {
     const std::vector<std::byte> byte_sequence_;
   };
 
-  std::span<const std::byte> getByteSequence() const;
-  size_type getByteSequenceSize() const;
-
+ private:
   std::optional<ByteSequenceMatcher> byte_sequence_matcher_;
   bool keep_byte_sequence = false;
   ByteSequenceLocation byte_sequence_location_ = ByteSequenceLocation::Trailing;

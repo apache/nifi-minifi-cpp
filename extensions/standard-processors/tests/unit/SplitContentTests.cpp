@@ -40,6 +40,24 @@ TEST_CASE("WithoutByteSequence") {
   REQUIRE_THROWS_WITH(controller.trigger("rub-a-dub-dub"), "General Operation: Required property is empty: Byte Sequence");
 }
 
+TEST_CASE("EmptyFlowFile") {
+  const auto split_content = std::make_shared<SplitContent>("SplitContent");
+  minifi::test::SingleProcessorTestController controller{split_content};
+  split_content->setProperty(SplitContent::ByteSequenceFormatProperty, magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text));
+  split_content->setProperty(SplitContent::ByteSequence, "ub");
+  split_content->setProperty(SplitContent::KeepByteSequence, "true");
+  split_content->setProperty(SplitContent::ByteSequenceLocationProperty, magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading));
+
+  auto trigger_results = controller.trigger("");
+  auto original = trigger_results.at(processors::SplitContent::Original);
+  auto splits = trigger_results.at(processors::SplitContent::Splits);
+
+  REQUIRE(original.size() == 1);
+  REQUIRE(splits.empty());
+
+  CHECK(controller.plan->getContent(original[0]).empty());
+}
+
 TEST_CASE("TextFormatLeadingPosition", "[NiFi]") {
   const auto split_content = std::make_shared<SplitContent>("SplitContent");
   minifi::test::SingleProcessorTestController controller{split_content};
@@ -534,7 +552,7 @@ TEST_CASE("OnlyByteSequencesNoKeep", "[NiFi]") {
   auto splits = trigger_results.at(processors::SplitContent::Splits);
 
   REQUIRE(original.size() == 1);
-  REQUIRE(splits.size() == 0);
+  REQUIRE(splits.empty());
 }
 
 TEST_CASE("OnlyByteSequencesTrailing", "[NiFi]") {

@@ -49,33 +49,119 @@ void SplitContent::onSchedule(core::ProcessContext& context, core::ProcessSessio
   keep_byte_sequence = utils::getRequiredPropertyOrThrow<bool>(context, KeepByteSequence.name);
 }
 
-std::span<const std::byte> SplitContent::getByteSequence() const {
-  gsl_Assert(byte_sequence_matcher_);
-  return byte_sequence_matcher_->getByteSequence();
-}
-
-SplitContent::size_type SplitContent::getByteSequenceSize() const {
-  return getByteSequence().size();
-}
-
 namespace {
-void updateSplitAttributesAndTransfer(core::ProcessSession& session, const std::vector<std::shared_ptr<core::FlowFile>>& splits, const core::FlowFile& original) {
-  const std::string fragment_identifier_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
-  for (size_t split_i = 0; split_i < splits.size(); ++split_i) {
-    const auto& split = splits[split_i];
-    split->setAttribute(SplitContent::FragmentCountOutputAttribute.name, std::to_string(splits.size()));
-    split->setAttribute(SplitContent::FragmentIndexOutputAttribute.name, std::to_string(split_i + 1));  // One based indexing
-    split->setAttribute(SplitContent::FragmentIdentifierOutputAttribute.name, fragment_identifier_);
-    split->setAttribute(SplitContent::SegmentOriginalFilenameOutputAttribute.name, original.getAttribute(core::SpecialFlowAttribute::FILENAME).value_or(""));
-    session.transfer(split, SplitContent::Splits);
+class Splitter {
+ public:
+  explicit Splitter(core::ProcessSession& session, std::optional<std::string> original_filename, SplitContent::ByteSequenceMatcher& byte_sequence_matcher, const bool keep_byte_sequence,
+      const SplitContent::ByteSequenceLocation byte_sequence_location)
+      : session_(session),
+        original_filename_(std::move(original_filename)),
+        byte_sequence_matcher_(byte_sequence_matcher),
+        keep_trailing_byte_sequence_(keep_byte_sequence && byte_sequence_location == SplitContent::ByteSequenceLocation::Trailing),
+        keep_leading_byte_sequence_(keep_byte_sequence && byte_sequence_location == SplitContent::ByteSequenceLocation::Leading) {
+    data_before_byte_sequence_.reserve(SplitContent::BUFFER_TARGET_SIZE);
   }
-}
 
-void ensureFlowFile(std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
-  if (!flow_file) {
-    flow_file = session.create();
+  Splitter(const Splitter&) = delete;
+  Splitter& operator=(const Splitter&) = delete;
+  Splitter(Splitter&&) = delete;
+  Splitter& operator=(Splitter&&) = delete;
+
+  ~Splitter() {
+    flushRemainingData();
+    updateSplitAttributesAndTransfer();
   }
-}
+
+  void digest(const std::byte b) {
+    const auto prev_matching_bytes = matching_bytes_;
+    matching_bytes_ = byte_sequence_matcher_.getNumberOfMatchingBytes(matching_bytes_, b);
+    if (matchedByteSequence()) {
+      appendDataBeforeByteSequenceToSplit();
+      if (keep_trailing_byte_sequence_) { appendByteSequenceToSplit(); }
+      closeCurrentSplit();
+
+      // possible new split
+      if (keep_leading_byte_sequence_) { appendByteSequenceToSplit(); }
+      matching_bytes_ = 0;
+      return;
+    }
+    // matching grew, no need to grow data_before_byte_sequence
+    if (matching_bytes_ > prev_matching_bytes) { return; }
+
+    if (matching_bytes_ > 0) {
+      // last byte could be part of the byte_sequence
+      std::copy_n(getByteSequence().begin(), prev_matching_bytes - matching_bytes_ + 1, std::back_inserter(data_before_byte_sequence_));
+    } else {
+      // last byte is not part of the byte_sequence
+      std::copy_n(getByteSequence().begin(), prev_matching_bytes - matching_bytes_, std::back_inserter(data_before_byte_sequence_));
+      data_before_byte_sequence_.push_back(b);
+    }
+  }
+
+  void flushIfBufferTooLarge() {
+    if (data_before_byte_sequence_.size() >= SplitContent::BUFFER_TARGET_SIZE) { appendDataBeforeByteSequenceToSplit(); }
+  }
+
+ private:
+  void closeCurrentSplit() {
+    if (current_split_) {
+      completed_splits_.push_back(current_split_);
+      current_split_.reset();
+    }
+  }
+
+  void appendDataBeforeByteSequenceToSplit() {
+    if (data_before_byte_sequence_.empty()) { return; }
+    ensureCurrentSplit();
+    session_.appendBuffer(current_split_, std::span<const std::byte>(data_before_byte_sequence_.data(), data_before_byte_sequence_.size()));
+    data_before_byte_sequence_.clear();
+  }
+
+  void appendByteSequenceToSplit() {
+    ensureCurrentSplit();
+    session_.appendBuffer(current_split_, getByteSequence());
+  }
+
+  [[nodiscard]] std::span<const std::byte> getByteSequence() const { return byte_sequence_matcher_.getByteSequence(); }
+
+  void ensureCurrentSplit() {
+    if (!current_split_) { current_split_ = session_.create(); }
+  }
+
+  [[nodiscard]] bool matchedByteSequence() const { return matching_bytes_ == byte_sequence_matcher_.getByteSequence().size(); }
+
+  void flushRemainingData() {
+    if (current_split_ || !data_before_byte_sequence_.empty() || matching_bytes_ > 0) {
+      ensureCurrentSplit();
+      session_.appendBuffer(current_split_, std::span<const std::byte>(data_before_byte_sequence_.data(), data_before_byte_sequence_.size()));
+      session_.appendBuffer(current_split_, byte_sequence_matcher_.getByteSequence().subspan(0, matching_bytes_));
+      completed_splits_.push_back(current_split_);
+    }
+  }
+
+  void updateSplitAttributesAndTransfer() const {
+    const std::string fragment_identifier_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
+    for (size_t split_i = 0; split_i < completed_splits_.size(); ++split_i) {
+      const auto& split = completed_splits_[split_i];
+      split->setAttribute(SplitContent::FragmentCountOutputAttribute.name, std::to_string(completed_splits_.size()));
+      split->setAttribute(SplitContent::FragmentIndexOutputAttribute.name, std::to_string(split_i + 1));  // One based indexing
+      split->setAttribute(SplitContent::FragmentIdentifierOutputAttribute.name, fragment_identifier_);
+      split->setAttribute(SplitContent::SegmentOriginalFilenameOutputAttribute.name, original_filename_.value_or(""));
+      session_.transfer(split, SplitContent::Splits);
+    }
+  }
+
+  core::ProcessSession& session_;
+  const std::optional<std::string> original_filename_;
+  SplitContent::ByteSequenceMatcher& byte_sequence_matcher_;
+  std::vector<std::byte> data_before_byte_sequence_;
+  std::shared_ptr<core::FlowFile> current_split_ = nullptr;
+  std::vector<std::shared_ptr<core::FlowFile>> completed_splits_;
+  SplitContent::size_type matching_bytes_ = 0;
+
+  const bool keep_trailing_byte_sequence_ = false;
+  const bool keep_leading_byte_sequence_ = false;
+};
 }  // namespace
 
 SplitContent::ByteSequenceMatcher::ByteSequenceMatcher(std::vector<std::byte> byte_sequence) : byte_sequence_(std::move(byte_sequence)) {
@@ -122,66 +208,14 @@ void SplitContent::onTrigger(core::ProcessContext& context, core::ProcessSession
 
   const auto ff_content_stream = session.getFlowFileContentStream(*original);
   if (!ff_content_stream) { throw Exception(PROCESSOR_EXCEPTION, fmt::format("Couldn't access the ContentStream of {}", original->getUUID().to_string())); }
-  std::vector<std::byte> data_before_byte_sequence;
-  data_before_byte_sequence.reserve(BUFFER_TARGET_SIZE);
-  size_type matching_bytes = 0;
 
-  std::vector<std::shared_ptr<core::FlowFile>> splits{};
-  std::shared_ptr<core::FlowFile> current_split = nullptr;
+  Splitter splitter{session, original->getAttribute(core::SpecialFlowAttribute::FILENAME), *byte_sequence_matcher_, keep_byte_sequence, byte_sequence_location_};
 
   while (auto latest_byte = ff_content_stream->readByte()) {
-    const size_type prev_matching_bytes = matching_bytes;
-    matching_bytes = byte_sequence_matcher_->getNumberOfMatchingBytes(matching_bytes, *latest_byte);
-    if (matching_bytes == getByteSequenceSize()) {
-      if (!data_before_byte_sequence.empty()) {
-        ensureFlowFile(current_split, session);
-        session.appendBuffer(current_split, std::span<const std::byte>(data_before_byte_sequence.data(), data_before_byte_sequence.size()));
-      }
-      if (keepTrailingByteSequence()) {
-        ensureFlowFile(current_split, session);
-        session.appendBuffer(current_split, getByteSequence());
-      }
-      if (current_split && current_split->getSize() > 0) {
-        splits.push_back(current_split);
-        current_split.reset();
-      }
-      data_before_byte_sequence.clear();
-      matching_bytes = 0;
-      if (keepLeadingByteSequence()) {
-        ensureFlowFile(current_split, session);
-        session.appendBuffer(current_split, getByteSequence());
-      }
-      continue;
-    }
-    if (matching_bytes > prev_matching_bytes) {
-      // matching grew, no need to grow data_before_byte_sequence
-      continue;
-    }
-    if (matching_bytes > 0) {
-      // last byte could be part of the byte_sequence
-      std::copy_n(getByteSequence().begin(), prev_matching_bytes - matching_bytes + 1, std::back_inserter(data_before_byte_sequence));
-    } else {
-      // last byte is not part of the byte_sequence
-      std::copy_n(getByteSequence().begin(), prev_matching_bytes - matching_bytes, std::back_inserter(data_before_byte_sequence));
-      data_before_byte_sequence.push_back(*latest_byte);
-    }
-
-    if (data_before_byte_sequence.size() >= BUFFER_TARGET_SIZE) {
-      ensureFlowFile(current_split, session);
-      session.appendBuffer(current_split, std::span<const std::byte>(data_before_byte_sequence.data(), data_before_byte_sequence.size()));
-      data_before_byte_sequence.clear();
-    }
+    splitter.digest(*latest_byte);
+    splitter.flushIfBufferTooLarge();
   }
 
-  // no more data in original, we need to flush the remainder to the last split
-  if (current_split || !data_before_byte_sequence.empty() || matching_bytes > 0) {
-    ensureFlowFile(current_split, session);
-    session.appendBuffer(current_split, std::span<const std::byte>(data_before_byte_sequence.data(), data_before_byte_sequence.size()));
-    session.appendBuffer(current_split, byte_sequence_matcher_->getByteSequence().subspan(0, matching_bytes));
-    splits.push_back(current_split);
-  }
-
-  updateSplitAttributesAndTransfer(session, splits, *original);
   session.transfer(original, Original);
 }
 
