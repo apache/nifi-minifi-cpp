@@ -104,11 +104,8 @@ class SplitContent final : public core::Processor {
 
 
  private:
-  std::shared_ptr<core::FlowFile> createNewSplit(core::ProcessSession& session) const;
-  void finalizeLatestSplitContent(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& latest_split, const std::vector<std::byte>& buffer) const;
-  void finalizeLastSplitContent(core::ProcessSession& session, std::vector<std::shared_ptr<core::FlowFile>>& splits, const std::vector<std::byte>& buffer, bool ended_with_byte_sequence) const;
-  void endedWithByteSequenceWithMoreDataToCome(core::ProcessSession& session, std::vector<std::shared_ptr<core::FlowFile>>& splits) const;
-
+  bool keepTrailingByteSequence() const { return keep_byte_sequence && byte_sequence_location_ == ByteSequenceLocation::Trailing; }
+  bool keepLeadingByteSequence() const { return keep_byte_sequence && byte_sequence_location_ == ByteSequenceLocation::Leading; }
   class ByteSequenceMatcher {
    public:
     explicit ByteSequenceMatcher(std::vector<std::byte> byte_sequence);
