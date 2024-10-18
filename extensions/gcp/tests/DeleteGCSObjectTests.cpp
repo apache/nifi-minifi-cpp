@@ -49,6 +49,7 @@ REGISTER_RESOURCE(DeleteGCSObjectMocked, Processor);
 class DeleteGCSObjectTests : public ::testing::Test {
  public:
   void SetUp() override {
+    delete_gcs_object_ = test_controller_.getProcessor<DeleteGCSObjectMocked>();
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
@@ -57,9 +58,10 @@ class DeleteGCSObjectTests : public ::testing::Test {
                                        DeleteGCSObject::GCPCredentials,
                                        "gcp_credentials_controller_service");
   }
-  std::shared_ptr<DeleteGCSObjectMocked> delete_gcs_object_ = std::make_shared<DeleteGCSObjectMocked>("DeleteGCSObjectMocked");
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{delete_gcs_object_};
+
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{std::make_unique<DeleteGCSObjectMocked>("DeleteGCSObjectMocked")};
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
+  DeleteGCSObjectMocked* delete_gcs_object_ = nullptr;
 };
 
 TEST_F(DeleteGCSObjectTests, MissingBucket) {

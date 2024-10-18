@@ -25,7 +25,11 @@
 #include "ControllerServiceNode.h"
 #include "io/validation.h"
 
-namespace org::apache::nifi::minifi::core::controller {
+namespace org::apache::nifi::minifi::core {
+
+class ProcessGroup;
+
+namespace controller {
 
 class ControllerServiceNodeMap {
  public:
@@ -36,44 +40,20 @@ class ControllerServiceNodeMap {
   ControllerServiceNodeMap(ControllerServiceNodeMap&&) = delete;
   ControllerServiceNodeMap& operator=(ControllerServiceNodeMap&&) = delete;
 
-  ControllerServiceNode* get(const std::string &id) const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto exists = controller_service_nodes_.find(id);
-    if (exists != controller_service_nodes_.end())
-      return exists->second.get();
-    else
-      return nullptr;
-  }
+  ControllerServiceNode* get(const std::string &id) const;
+  ControllerServiceNode* get(const std::string &id, const utils::Identifier &processor_uuid) const;
 
-  bool put(const std::string &id, const std::shared_ptr<ControllerServiceNode> &serviceNode) {
-    if (id.empty() || serviceNode == nullptr)
-      return false;
-    std::lock_guard<std::mutex> lock(mutex_);
-    controller_service_nodes_[id] = serviceNode;
-    return true;
-  }
+  bool put(const std::string &id, const std::shared_ptr<ControllerServiceNode> &serviceNode);
+  bool put(const std::string &id, ProcessGroup* process_group);
 
-  void clear() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    for (const auto& [id, node] : controller_service_nodes_) {
-      node->disable();
-    }
-    controller_service_nodes_.clear();
-  }
-
-  std::vector<std::shared_ptr<ControllerServiceNode>> getAllControllerServices() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    std::vector<std::shared_ptr<ControllerServiceNode>> services;
-    services.reserve(controller_service_nodes_.size());
-    for (const auto& [id, node] : controller_service_nodes_) {
-      services.push_back(node);
-    }
-    return services;
-  }
+  void clear();
+  std::vector<std::shared_ptr<ControllerServiceNode>> getAllControllerServices() const;
 
  protected:
   mutable std::mutex mutex_;
   std::map<std::string, std::shared_ptr<ControllerServiceNode>> controller_service_nodes_;
+  std::map<std::string, gsl::not_null<ProcessGroup*>> process_groups_;
 };
 
-}  // namespace org::apache::nifi::minifi::core::controller
+}  // namespace controller
+}  // namespace org::apache::nifi::minifi::core

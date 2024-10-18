@@ -97,8 +97,10 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
   Node remoteProcessingGroupsNode = node[schema_.remote_process_group];
   Node childProcessGroupNodeSeq = node[schema_.process_groups];
   Node parameterContextNameNode = node[schema_.parameter_context_name];
+  Node controllerServiceNode = node[schema_.controller_services];
 
   parseParameterContext(parameterContextNameNode, *group);
+  parseControllerServices(controllerServiceNode, group.get());
   parseProcessorNode(processorsNode, group.get());
   parseRemoteProcessGroup(remoteProcessingGroupsNode, group.get());
   parseFunnels(funnelsNode, group.get());
@@ -121,20 +123,12 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
     schema_ = std::move(schema);
     uuids_.clear();
     Node parameterContextsNode = root_node[schema_.parameter_contexts];
-    Node controllerServiceNode = root_node[schema_.root_group][schema_.controller_services];
     Node provenanceReportNode = root_node[schema_.provenance_reporting];
 
     parseParameterContexts(parameterContextsNode);
-    parseControllerServices(controllerServiceNode);
     // Create the root process group
     std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
     parseProvenanceReporting(provenanceReportNode, root.get());
-
-    // set the controller services into the root group.
-    for (const auto& controller_service : service_provider_->getAllControllerServices()) {
-      root->addControllerService(controller_service->getName(), controller_service);
-      root->addControllerService(controller_service->getUUIDStr(), controller_service);
-    }
 
     root->verify();
 
@@ -518,7 +512,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
   parent_group->addProcessor(std::move(reportTask));
 }
 
-void StructuredConfiguration::parseControllerServices(const Node& controller_services_node) {
+void StructuredConfiguration::parseControllerServices(const Node& controller_services_node, core::ProcessGroup* parent_group) {
   if (!controller_services_node || !controller_services_node.isSequence()) {
     return;
   }
@@ -546,16 +540,20 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
       controller_service_node->initialize();
       if (Node propertiesNode = service_node[schema_.controller_service_properties]) {
         // we should propagate properties to the node and to the implementation
-        parsePropertiesNode(propertiesNode, *controller_service_node, name, nullptr);
+        parsePropertiesNode(propertiesNode, *controller_service_node, name, parent_group->getParameterContext());
         if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
-          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, nullptr);
+          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, parent_group->getParameterContext());
         }
       }
+
+      service_provider_->putControllerServiceNode(id, controller_service_node, parent_group);
+      service_provider_->putControllerServiceNode(name, controller_service_node, parent_group);
+
+      parent_group->addControllerService(controller_service_node->getName(), controller_service_node);
+      parent_group->addControllerService(controller_service_node->getUUIDStr(), controller_service_node);
     } else {
       logger_->log_debug("Could not locate {}", type);
     }
-    service_provider_->putControllerServiceNode(id, controller_service_node);
-    service_provider_->putControllerServiceNode(name, controller_service_node);
   }
 }
 

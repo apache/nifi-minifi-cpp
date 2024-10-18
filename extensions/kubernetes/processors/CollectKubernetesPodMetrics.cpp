@@ -36,7 +36,7 @@ void CollectKubernetesPodMetrics::onSchedule(core::ProcessContext& context, core
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Missing '", KubernetesControllerService.name, "' property")};
   }
 
-  std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*controller_service_name);
+  std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*controller_service_name, getUUID());
   if (!controller_service) {
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *controller_service_name, "' not found")};
   }

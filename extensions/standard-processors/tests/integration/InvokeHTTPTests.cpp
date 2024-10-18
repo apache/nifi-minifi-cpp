@@ -51,8 +51,8 @@ class TestHTTPServer {
 
  private:
   TestController test_controller_;
-  std::shared_ptr<processors::ListenHTTP> listen_http_;
-  std::shared_ptr<processors::LogAttribute> log_attribute_;
+  processors::ListenHTTP* listen_http_ = nullptr;
+  processors::LogAttribute* log_attribute_ = nullptr;
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan();
 };
 
@@ -60,8 +60,8 @@ TestHTTPServer::TestHTTPServer() {
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::LogAttribute>();
 
-  listen_http_ = std::dynamic_pointer_cast<processors::ListenHTTP>(test_plan_->addProcessor("ListenHTTP", PROCESSOR_NAME));
-  log_attribute_ = std::dynamic_pointer_cast<processors::LogAttribute>(test_plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true));
+  listen_http_ = dynamic_cast<processors::ListenHTTP*>(test_plan_->addProcessor("ListenHTTP", PROCESSOR_NAME));
+  log_attribute_ = dynamic_cast<processors::LogAttribute*>(test_plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true));
   REQUIRE(listen_http_);
   REQUIRE(log_attribute_);
   test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "testytesttest");
@@ -229,7 +229,7 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp");
+  auto invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp");
 
   plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
   plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL, TestHTTPServer::URL);
@@ -261,8 +261,8 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   LogTestController::getInstance().setInfo<minifi::core::ProcessSession>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
-  std::shared_ptr<core::Processor> invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
+  plan->addProcessor("GenerateFlowFile", "genfile");
+  auto invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
 
   plan->setProperty(invokehttp, InvokeHTTP::Method, "GET");
   plan->setProperty(invokehttp, InvokeHTTP::URL, "http://localhost:8681/invalid");
@@ -288,8 +288,8 @@ TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in H
   TestHTTPServer http_server;
 
   LogTestController::getInstance().setDebug<InvokeHTTP>();
-  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invokehttp};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invokehttp = test_controller.getProcessor();
 
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
   invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
@@ -308,8 +308,8 @@ TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that wou
   TestHTTPServer http_server;
 
   LogTestController::getInstance().setDebug<InvokeHTTP>();
-  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invokehttp};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invokehttp = test_controller.getProcessor();
 
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
   invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
@@ -329,8 +329,8 @@ TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]")
   using minifi::processors::InvokeHTTP;
   TestHTTPServer http_server;
 
-  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invokehttp};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invokehttp = test_controller.getProcessor();
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
@@ -350,8 +350,8 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
   using minifi::processors::InvokeHTTP;
   TestHTTPServer http_server;
 
-  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invokehttp};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invokehttp = test_controller.getProcessor();
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
@@ -372,8 +372,8 @@ TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[
   using minifi::processors::InvokeHTTP;
   TestHTTPServer http_server;
 
-  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invokehttp};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invokehttp = test_controller.getProcessor();
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
@@ -394,8 +394,8 @@ TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
   using minifi::processors::InvokeHTTP;
   TestHTTPServer http_server;
 
-  auto invoke_http = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invoke_http};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invoke_http = test_controller.getProcessor();
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
   invoke_http->setProperty(InvokeHTTP::Method, "GET");
@@ -424,8 +424,8 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
   using minifi::processors::InvokeHTTP;
   TestHTTPServer http_server;
 
-  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invokehttp};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invokehttp = test_controller.getProcessor();
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
@@ -446,8 +446,8 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
 TEST_CASE("HTTPTestsResponseBodyinAttribute", "[InvokeHTTP]") {
   using minifi::processors::InvokeHTTP;
 
-  auto invoke_http = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invoke_http};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invoke_http = test_controller.getProcessor();
 
   minifi::test::ConnectionCountingServer connection_counting_server;
 
@@ -471,8 +471,8 @@ TEST_CASE("HTTPTestsResponseBodyinAttribute", "[InvokeHTTP]") {
 TEST_CASE("HTTPTestsResponseBody", "[InvokeHTTP]") {
   using minifi::processors::InvokeHTTP;
 
-  auto invoke_http = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invoke_http};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invoke_http = test_controller.getProcessor();
 
   minifi::test::ConnectionCountingServer connection_counting_server;
 
@@ -494,8 +494,8 @@ TEST_CASE("HTTPTestsResponseBody", "[InvokeHTTP]") {
 TEST_CASE("Test Keepalive", "[InvokeHTTP]") {
   using minifi::processors::InvokeHTTP;
 
-  auto invoke_http = std::make_shared<InvokeHTTP>("InvokeHTTP");
-  test::SingleProcessorTestController test_controller{invoke_http};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  auto invoke_http = test_controller.getProcessor();
 
   minifi::test::ConnectionCountingServer connection_counting_server;
 

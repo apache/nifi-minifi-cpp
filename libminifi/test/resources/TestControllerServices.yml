@@ -17,64 +17,116 @@
 # under the License.
 #
 Flow Controller:
-    name: MiNiFi Flow
-    id: 2438e3c8-015a-1000-79ca-83af40ec1990
-    
-Processors: 
-    - name: MockProcessorIto
-      id: 1438e3c8-015a-1000-79ca-83af40ec1991
-      class: org.apache.nifi.processors.standard.MockProcessor
-      max concurrent tasks: 1
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
-      penalization period: 30 sec
-      yield period: 1 sec
-      run duration nanos: 0
-      auto-terminated relationships list:
-      Properties:
-        linkedService: MockItLikeIts1995
-
-Connections:
-    - name: TransferFilesToRPG
-      id: 1438e3c8-015a-1000-79ca-83af40ec1997
-      source name: MockProcessorIto
-      source id: 1438e3c8-015a-1000-79ca-83af40ec1991
-      source relationship name: success
-      destination name: MockProcessorIto
-      destination id: 1438e3c8-015a-1000-79ca-83af40ec1991
-      destination relationship name: success
-      max work queue size: 0
-      max work queue data size: 1 MB
-      flowfile expiration: 60 sec
-      
-Controller Services:
-    - name: MockItLikeIts1995
-      id: 2438e3c8-015a-1000-79ca-83af40ec1991
-      class: MockControllerService
-      Properties:
-          Linked Services: 
+  name: MiNiFi Flow
+  id: 2438e3c8-015a-1000-79ca-83af40ec1990
+Process Groups:
+  - id: 0a3aaf32-8574-4fa7-b720-84001f8dd71a
+    name: Sub Process Group
+    Processors:
+      - name: SubMockProcessor
+        id: 3458e3c8-015a-1000-79ca-83af40ec1992
+        class: org.apache.nifi.processors.standard.MockProcessor
+        max concurrent tasks: 1
+        scheduling strategy: EVENT_DRIVEN
+        penalization period: 30 sec
+        yield period: 1 sec
+        run duration nanos: 0
+        auto-terminated relationships list:
+            - success
+        Properties:
+          linkedService: ID
+          InSubProcessGroup: true
+    Input Ports:
+      - id: 012fc536-3137-4360-be65-3e3b47e05941
+        name: in
+    Controller Services:
+      - name: SubMockController
+        id: 1248e3c8-015a-1000-79ca-83af40ec1993
+        class: MockControllerService
+        Properties:
+          Linked Services:
+            - value: SubSSLClientServiceTest
             - value: ID
-    - name: SSLClientServiceTest
-      id: 2438e3c8-015a-1000-79ca-83af40ec1994
-      class: SSLContextService
-      Properties:
-        Client Certificate:
+      - name: SubSSLClientServiceTest
+        id: 2438e3c8-015a-1000-79ca-83af40ec1922
+        class: SSLContextService
+        Properties:
+          Client Certificate:
             - value: cn.crt.pem
-        Private Key:
+          Private Key:
             - value: cn.ckey.pem
-        Passphrase:
+          Passphrase:
             - value: cn.pass
-        CA Certificate:
+          CA Certificate:
             - value: nifi-cert.pem
-    - name: ID
-      id: 2438e3c8-015a-1000-79ca-83af40ec1992
-      class: MockControllerService
-      Properties:
-          Linked Services: 
-    - name: MockItLikeItsWrong
-      id: 2438e3c8-015a-1000-79ca-83af40ec1993
-      class: MockControllerSer
-      Properties:
-          Linked Services: 
-            - value: ID
-
+    Connections:
+      - name: Input/success/SubMockProcessor
+        id: 1238e3c8-015a-1000-79ca-83af40ec1997
+        source name: in
+        source id: 012fc536-3137-4360-be65-3e3b47e05941
+        source relationship name: success
+        destination name: SubMockProcessor
+        destination id: 3458e3c8-015a-1000-79ca-83af40ec1992
+        max work queue size: 0
+        max work queue data size: 1 MB
+        flowfile expiration: 60 sec
+Processors:
+  - name: MockProcessorIto
+    id: 1438e3c8-015a-1000-79ca-83af40ec1991
+    class: org.apache.nifi.processors.standard.MockProcessor
+    max concurrent tasks: 1
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 10 sec
+    penalization period: 30 sec
+    yield period: 1 sec
+    run duration nanos: 0
+    auto-terminated relationships list: null
+    Properties:
+      linkedService: MockItLikeIts1995
+Connections:
+  - name: TransferFilesToRPG
+    id: 1438e3c8-015a-1000-79ca-83af40ec1997
+    source name: MockProcessorIto
+    source id: 1438e3c8-015a-1000-79ca-83af40ec1991
+    source relationship name: success
+    destination name: in
+    destination id: 012fc536-3137-4360-be65-3e3b47e05941
+    max work queue size: 0
+    max work queue data size: 1 MB
+    flowfile expiration: 60 sec
+Controller Services:
+  - name: MockItLikeIts1995
+    id: 2438e3c8-015a-1000-79ca-83af40ec1991
+    class: MockControllerService
+    Properties:
+      Linked Services:
+        - value: ID
+        - value: SubSSLClientServiceTest
+  - name: SSLClientServiceTest
+    id: 2438e3c8-015a-1000-79ca-83af40ec1994
+    class: SSLContextService
+    Properties:
+      Client Certificate:
+        - value: cn.crt.pem
+      Private Key:
+        - value: cn.ckey.pem
+      Passphrase:
+        - value: cn.pass
+      CA Certificate:
+        - value: nifi-cert.pem
+  - name: ID
+    id: 2438e3c8-015a-1000-79ca-83af40ec1992
+    class: MockControllerService
+    Properties:
+      Linked Services:
+  - name: MockItLikeItsWrong
+    id: 2438e3c8-015a-1000-79ca-83af40ec1993
+    class: MockControllerSer
+    Properties:
+      Linked Services:
+        - value: ID
+  - name: LinkSubService
+    id: 7538e3c8-015a-1000-79ca-83af40ec1996
+    class: MockControllerService
+    Properties:
+      linkedService: SubSSLClientServiceTest

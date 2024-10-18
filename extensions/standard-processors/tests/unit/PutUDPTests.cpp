@@ -46,9 +46,9 @@ std::optional<utils::net::Message> tryDequeueWithTimeout(utils::net::UdpServer& 
 }  // namespace
 
 TEST_CASE("PutUDP", "[putudp]") {
-  const auto put_udp = std::make_shared<PutUDP>("PutUDP");
+  test::SingleProcessorTestController controller{std::make_unique<PutUDP>("PutUDP")};
+  const auto put_udp = controller.getProcessor();
 
-  test::SingleProcessorTestController controller{put_udp};
   LogTestController::getInstance().setTrace<PutUDP>();
   LogTestController::getInstance().setTrace<core::ProcessContext>();
   put_udp->setProperty(PutUDP::Hostname, "${literal('localhost')}");
