@@ -37,8 +37,8 @@ void SegmentContent::onSchedule(core::ProcessContext&, core::ProcessSessionFacto
 
 namespace {
 void updateSplitAttributesAndTransfer(core::ProcessSession& session, const std::vector<std::shared_ptr<core::FlowFile>>& splits, const core::FlowFile& original) {
-  const std::string fragment_identifier_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
-  auto original_filename_ = original.getAttribute(core::SpecialFlowAttribute::FILENAME).value_or("");
+  const std::string fragment_identifier_ = original.getAttribute(core::SpecialFlowAttribute::UUID).value_or(utils::IdGenerator::getIdGenerator()->generate().to_string());
+  const auto original_filename_ = original.getAttribute(core::SpecialFlowAttribute::FILENAME).value_or("");
   for (size_t split_i = 0; split_i < splits.size(); ++split_i) {
     const auto& split = splits[split_i];
     split->setAttribute(SegmentContent::FragmentCountOutputAttribute.name, std::to_string(splits.size()));
@@ -60,7 +60,7 @@ void SegmentContent::onTrigger(core::ProcessContext& context, core::ProcessSessi
   size_t max_segment_size{};
   const auto segment_size_str = context.getProperty(SegmentSize, original.get());
   if (!segment_size_str || !core::DataSizeValue::StringToInt(*segment_size_str, max_segment_size) || max_segment_size == 0) {
-    throw Exception(PROCESSOR_EXCEPTION, fmt::format("Invalid Segment Size {}", segment_size_str));
+    throw Exception(PROCESSOR_EXCEPTION, fmt::format("Invalid Segment Size: '{}'", segment_size_str.value_or("")));
   }
 
   const auto ff_content_stream = session.getFlowFileContentStream(*original);
