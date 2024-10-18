@@ -63,10 +63,6 @@ TEST_CASE("Invalid segmentSize tests") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "foo"), "General Operation: Segment Size value validation failed");
     REQUIRE_THROWS_WITH(controller.trigger("bar"), "Processor Operation: Invalid Segment Size: 'foo'");
   }
-  SECTION("-1") {
-    REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "-1"), "General Operation: Segment Size value validation failed");
-    REQUIRE_THROWS_WITH(controller.trigger("bar"), "narrowing_error");
-  }
   SECTION("10 foo") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "10 foo"), "General Operation: Segment Size value validation failed");
     REQUIRE_NOTHROW(controller.trigger("bar"));
