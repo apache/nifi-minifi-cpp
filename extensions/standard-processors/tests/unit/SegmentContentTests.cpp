@@ -61,7 +61,7 @@ TEST_CASE("Invalid segmentSize tests") {
 
   SECTION("foo") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "foo"), "General Operation: Segment Size value validation failed");
-    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Processor Operation: Invalid Segment Size optional(\"foo\")");
+    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Processor Operation: Invalid Segment Size: 'foo'");
   }
   SECTION("-1") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "-1"), "General Operation: Segment Size value validation failed");
@@ -73,7 +73,7 @@ TEST_CASE("Invalid segmentSize tests") {
   }
   SECTION("0") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "0"), "General Operation: Segment Size value validation failed");
-    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Processor Operation: Invalid Segment Size optional(\"0\")");
+    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Processor Operation: Invalid Segment Size: '0'");
   }
   SECTION("10 MB") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize, "10 MB"), "General Operation: Segment Size value validation failed");
@@ -86,15 +86,14 @@ TEST_CASE("EmptyFlowFile") {
   minifi::test::SingleProcessorTestController controller{split_content};
   split_content->setProperty(SegmentContent::SegmentSize, "10 B");
 
-
   auto trigger_results = controller.trigger("");
   auto original = trigger_results.at(processors::SegmentContent::Original);
   auto splits = trigger_results.at(processors::SegmentContent::Segments);
 
   REQUIRE(original.size() == 1);
-  REQUIRE(splits.size() == 0);
+  REQUIRE(splits.empty());
 
-  CHECK(controller.plan->getContent(original[0]) == "");
+  CHECK(controller.plan->getContent(original[0]).empty());
 }
 
 TEST_CASE("SegmentContent with different sized text input") {
@@ -181,7 +180,7 @@ TEST_CASE("SimpleTest", "[NiFi]") {
   const auto input_data = createByteVector(1, 2, 3, 4, 5, 6, 7, 8, 9);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
 
-  auto trigger_results = controller.trigger(input);
+  auto trigger_results = controller.trigger(input, {{std::string{core::SpecialFlowAttribute::UUID}, "original_uuid"}});
 
   auto original = trigger_results.at(processors::SegmentContent::Original);
   auto segments = trigger_results.at(processors::SegmentContent::Segments);
@@ -197,6 +196,24 @@ TEST_CASE("SimpleTest", "[NiFi]") {
   CHECK(controller.plan->getContentAsBytes(*segments[0]) == expected_segment_1);
   CHECK(controller.plan->getContentAsBytes(*segments[1]) == expected_segment_2);
   CHECK(controller.plan->getContentAsBytes(*segments[2]) == expected_segment_3);
+
+  auto flowfile_filename = *original[0]->getAttribute(core::SpecialFlowAttribute::FILENAME);
+
+  CHECK(segments[0]->getAttribute(SegmentContent::SegmentOriginalFilenameOutputAttribute.name) == flowfile_filename);
+  CHECK(segments[1]->getAttribute(SegmentContent::SegmentOriginalFilenameOutputAttribute.name) == flowfile_filename);
+  CHECK(segments[2]->getAttribute(SegmentContent::SegmentOriginalFilenameOutputAttribute.name) == flowfile_filename);
+
+  CHECK(segments[0]->getAttribute(SegmentContent::FragmentIdentifierOutputAttribute.name) == "original_uuid");
+  CHECK(segments[1]->getAttribute(SegmentContent::FragmentIdentifierOutputAttribute.name) == "original_uuid");
+  CHECK(segments[2]->getAttribute(SegmentContent::FragmentIdentifierOutputAttribute.name) == "original_uuid");
+
+  CHECK(segments[0]->getAttribute(SegmentContent::FragmentCountOutputAttribute.name) == "3");
+  CHECK(segments[1]->getAttribute(SegmentContent::FragmentCountOutputAttribute.name) == "3");
+  CHECK(segments[2]->getAttribute(SegmentContent::FragmentCountOutputAttribute.name) == "3");
+
+  CHECK(segments[0]->getAttribute(SegmentContent::FragmentIndexOutputAttribute.name) == "1");
+  CHECK(segments[1]->getAttribute(SegmentContent::FragmentIndexOutputAttribute.name) == "2");
+  CHECK(segments[2]->getAttribute(SegmentContent::FragmentIndexOutputAttribute.name) == "3");
 }
 
 TEST_CASE("TransferSmall", "[NiFi]") {
