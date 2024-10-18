@@ -20,16 +20,14 @@
 
 namespace org::apache::nifi::minifi::io {
 
-ReadArchiveStreamImpl::archive_ptr ReadArchiveStreamImpl::createReadArchive() {
-  archive_ptr arch{archive_read_new()};
+processors::archive_read_unique_ptr ReadArchiveStreamImpl::createReadArchive() {
+  auto arch = processors::archive_read_unique_ptr{archive_read_new()};
   if (!arch) {
     logger_->log_error("Failed to create read archive");
     return nullptr;
   }
 
-  int result;
-
-  result = archive_read_support_format_all(arch.get());
+  int result = archive_read_support_format_all(arch.get());
   if (result != ARCHIVE_OK) {
     logger_->log_error("Archive read support format all error {}", archive_error_string(arch.get()));
     return nullptr;
@@ -52,7 +50,7 @@ std::optional<EntryInfo> ReadArchiveStreamImpl::nextEntry() {
     return std::nullopt;
   }
   entry_size_.reset();
-  struct archive_entry *entry;
+  struct archive_entry *entry = nullptr;
   int result = archive_read_next_header(arch_.get(), &entry);
   if (result != ARCHIVE_OK) {
     if (result != ARCHIVE_EOF) {

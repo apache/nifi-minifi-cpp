@@ -23,8 +23,8 @@
 
 namespace org::apache::nifi::minifi::io {
 
-WriteArchiveStreamImpl::archive_ptr WriteArchiveStreamImpl::createWriteArchive() {
-  archive_ptr arch{archive_write_new()};
+processors::archive_write_unique_ptr WriteArchiveStreamImpl::createWriteArchive() const {
+  processors::archive_write_unique_ptr arch{archive_write_new()};
   if (!arch) {
     logger_->log_error("Failed to create write archive");
     return nullptr;
@@ -141,7 +141,7 @@ bool WriteArchiveStreamImpl::finish() {
 }
 
 WriteArchiveStreamImpl::~WriteArchiveStreamImpl() {
-  finish();
+  WriteArchiveStreamImpl::finish();
 }
 
 }  // namespace org::apache::nifi::minifi::io
