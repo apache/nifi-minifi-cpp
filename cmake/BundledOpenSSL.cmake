@@ -148,4 +148,5 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         set_property(TARGET OpenSSL::Crypto APPEND PROPERTY INTERFACE_LINK_LIBRARIES crypt32.lib )
         set_property(TARGET OpenSSL::SSL APPEND PROPERTY INTERFACE_LINK_LIBRARIES crypt32.lib)
     endif()
+
 endfunction(use_openssl)

@@ -15,7 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-include(Catch2)
+include(GetCatch2)
+get_catch2()
 
 ### test functions
 MACRO(GETSOURCEFILES result curdir)
