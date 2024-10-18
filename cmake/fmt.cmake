@@ -18,8 +18,8 @@
 #
 include(FetchContent)
 FetchContent_Declare(Fmt
-        URL  https://github.com/fmtlib/fmt/archive/refs/tags/10.1.0.tar.gz
-        URL_HASH SHA256=deb0a3ad2f5126658f2eefac7bf56a042488292de3d7a313526d667f3240ca0a
+        URL  https://github.com/fmtlib/fmt/archive/refs/tags/11.0.2.tar.gz
+        URL_HASH SHA256=6cb1e6d37bdcb756dbbe59be438790db409cdb4868c66e888d5df9f13f7c027f
         OVERRIDE_FIND_PACKAGE
         )
 FetchContent_MakeAvailable(Fmt)

@@ -401,6 +401,7 @@ show_supported_features() {
   echo "AE. Prometheus Support .........$(print_feature_status PROMETHEUS_ENABLED)"
   echo "AF. Elasticsearch Support ......$(print_feature_status ELASTIC_ENABLED)"
   echo "AG. Grafana Loki Support .......$(print_feature_status GRAFANA_LOKI_ENABLED)"
+  echo "AH. Couchbase Support ..........$(print_feature_status COUCHBASE_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -448,6 +449,7 @@ read_feature_options(){
     ae) ToggleFeature PROMETHEUS_ENABLED ;;
     af) ToggleFeature ELASTIC_ENABLED ;;
     ag) ToggleFeature GRAFANA_LOKI_ENABLED ;;
+    ah) ToggleFeature COUCHBASE_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     4) ToggleFeature USE_SHARED_LIBS;;
