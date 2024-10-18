@@ -129,16 +129,16 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
     archive& arch;
   };
   std::vector<FixedBuffer> archive_contents;
-  const auto a = minifi::processors::archive_read_unique_ptr{archive_read_new()};
-  archive_read_support_format_all(a.get());
-  archive_read_support_filter_all(a.get());
-  archive_read_open_memory(a.get(), input.begin(), input.size());
+  const auto archive = minifi::processors::archive_read_unique_ptr{archive_read_new()};
+  archive_read_support_format_all(archive.get());
+  archive_read_support_filter_all(archive.get());
+  archive_read_open_memory(archive.get(), input.begin(), input.size());
   struct archive_entry *ae = nullptr;
 
-  while (archive_read_next_header(a.get(), &ae) == ARCHIVE_OK) {
+  while (archive_read_next_header(archive.get(), &ae) == ARCHIVE_OK) {
     const int64_t size{archive_entry_size(ae)};
     FixedBuffer buf(size);
-    ArchiveEntryReader reader(*a);
+    ArchiveEntryReader reader(*archive);
     const auto ret = buf.write(reader, buf.capacity());
     REQUIRE(ret == size);
     archive_contents.emplace_back(std::move(buf));

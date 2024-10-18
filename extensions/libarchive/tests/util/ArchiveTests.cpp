@@ -110,20 +110,18 @@ bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& 
   FN_VEC_T read_names;
   FN_VEC_T extra_names;
   bool ok = true;
-  auto a = minifi::processors::archive_read_unique_ptr{archive_read_new()};
+  const auto archive = minifi::processors::archive_read_unique_ptr{archive_read_new()};
   struct archive_entry *entry = nullptr;
 
-  archive_read_support_format_all(a.get());
-  archive_read_support_filter_all(a.get());
+  archive_read_support_format_all(archive.get());
+  archive_read_support_filter_all(archive.get());
 
-  int r = archive_read_open_filename(a.get(), path.string().c_str(), 16384);
-
-  if (r != ARCHIVE_OK) {
+  if (archive_read_open_filename(archive.get(), path.string().c_str(), 16384) != ARCHIVE_OK) {
     std::cout << "Unable to open archive " << path << " for checking!" << std::endl;
     return false;
   }
 
-  while (archive_read_next_header(a.get(), &entry) == ARCHIVE_OK) {
+  while (archive_read_next_header(archive.get(), &entry) == ARCHIVE_OK) {
     std::string name { archive_entry_pathname(entry) };
     auto it = entries.find(name);
     if (it == entries.end()) {
@@ -143,7 +141,7 @@ bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& 
         bool read_ok = true;
 
         for (;;) {
-          const auto rlen = archive_read_data(a.get(), buf.data(), size);
+          const auto rlen = archive_read_data(archive.get(), buf.data(), size);
           if (rlen == 0)
             break;
           if (rlen < 0) {

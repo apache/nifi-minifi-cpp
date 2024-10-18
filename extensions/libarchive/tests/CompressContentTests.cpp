@@ -68,20 +68,20 @@ class ReadCallback {
     return total_read;
   }
   void archive_read() {
-    auto a = minifi::processors::archive_read_unique_ptr{archive_read_new()};
-    archive_read_support_format_all(a.get());
-    archive_read_support_filter_all(a.get());
-    archive_read_open_memory(a.get(), buffer_.data(), read_size_);
+    const auto archive = minifi::processors::archive_read_unique_ptr{archive_read_new()};
+    archive_read_support_format_all(archive.get());
+    archive_read_support_filter_all(archive.get());
+    archive_read_open_memory(archive.get(), buffer_.data(), read_size_);
     struct archive_entry *ae = nullptr;
 
-    REQUIRE(archive_read_next_header(a.get(), &ae) == ARCHIVE_OK);
+    REQUIRE(archive_read_next_header(archive.get(), &ae) == ARCHIVE_OK);
     const auto size = [&] {
       const auto entry_size = archive_entry_size(ae);
       REQUIRE(entry_size >= 0);
       return gsl::narrow<size_t>(entry_size);
     }();
     archive_buffer_.resize(size);
-    archive_read_data(a.get(), archive_buffer_.data(), size);
+    archive_read_data(archive.get(), archive_buffer_.data(), size);
   }
 
   std::vector<std::byte> buffer_;
