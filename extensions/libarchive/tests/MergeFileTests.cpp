@@ -133,10 +133,10 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
   archive_read_support_format_all(archive.get());
   archive_read_support_filter_all(archive.get());
   archive_read_open_memory(archive.get(), input.begin(), input.size());
-  struct archive_entry *ae = nullptr;
+  struct archive_entry *archive_entry = nullptr;
 
-  while (archive_read_next_header(archive.get(), &ae) == ARCHIVE_OK) {
-    const int64_t size{archive_entry_size(ae)};
+  while (archive_read_next_header(archive.get(), &archive_entry) == ARCHIVE_OK) {
+    const int64_t size{archive_entry_size(archive_entry)};
     FixedBuffer buf(size);
     ArchiveEntryReader reader(*archive);
     const auto ret = buf.write(reader, buf.capacity());
