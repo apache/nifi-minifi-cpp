@@ -50,7 +50,7 @@ namespace org::apache::nifi::minifi::processors {
 class ListenHTTP : public core::Processor {
  private:
   static constexpr std::string_view DEFAULT_BUFFER_SIZE_STR = "5";
-  static const core::Relationship Self;
+  static constexpr core::RelationshipDefinition Self{"__self__", "Marks the FlowFile to be owned by this processor"};
 
  public:
   friend struct ::org::apache::nifi::minifi::test::ListenHTTPTestAccessor;

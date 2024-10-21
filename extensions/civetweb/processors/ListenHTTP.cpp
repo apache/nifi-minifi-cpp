@@ -31,8 +31,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship ListenHTTP::Self("__self__", "Marks the FlowFile to be owned by this processor");
-
 void ListenHTTP::initialize() {
   logger_->log_trace("Initializing ListenHTTP");
 
@@ -539,7 +537,7 @@ void ListenHTTP::notifyStop() {
 
 std::set<core::Connectable*> ListenHTTP::getOutGoingConnections(const std::string &relationship) {
   auto result = core::Processor::getOutGoingConnections(relationship);
-  if (relationship == Self.getName()) {
+  if (relationship == Self.name) {
     result.insert(this);
   }
   return result;
