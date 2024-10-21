@@ -1,0 +1,92 @@
+From a0a044836feab9047eed211d37128bc99a25673e Mon Sep 17 00:00:00 2001
+From: Martin Zink <martin.zink@apache.org>
+Date: Tue, 22 Oct 2024 09:20:37 +0200
+Subject: [PATCH] remove findLZ4 and findZSTD
+
+---
+ packaging/cmake/Modules/FindLZ4.cmake  | 38 --------------------------
+ packaging/cmake/Modules/FindZSTD.cmake | 27 ------------------
+ 2 files changed, 65 deletions(-)
+ delete mode 100644 packaging/cmake/Modules/FindLZ4.cmake
+ delete mode 100644 packaging/cmake/Modules/FindZSTD.cmake
+
+diff --git a/packaging/cmake/Modules/FindLZ4.cmake b/packaging/cmake/Modules/FindLZ4.cmake
+deleted file mode 100644
+index 594c4290..00000000
+--- a/packaging/cmake/Modules/FindLZ4.cmake
++++ /dev/null
+@@ -1,38 +0,0 @@
+-find_path(LZ4_INCLUDE_DIR
+-  NAMES lz4.h
+-  DOC "lz4 include directory")
+-mark_as_advanced(LZ4_INCLUDE_DIR)
+-find_library(LZ4_LIBRARY
+-  NAMES lz4
+-  DOC "lz4 library")
+-mark_as_advanced(LZ4_LIBRARY)
+-
+-if (LZ4_INCLUDE_DIR)
+-  file(STRINGS "${LZ4_INCLUDE_DIR}/lz4.h" _lz4_version_lines
+-    REGEX "#define[ \t]+LZ4_VERSION_(MAJOR|MINOR|RELEASE)")
+-  string(REGEX REPLACE ".*LZ4_VERSION_MAJOR *\([0-9]*\).*" "\\1" _lz4_version_major "${_lz4_version_lines}")
+-  string(REGEX REPLACE ".*LZ4_VERSION_MINOR *\([0-9]*\).*" "\\1" _lz4_version_minor "${_lz4_version_lines}")
+-  string(REGEX REPLACE ".*LZ4_VERSION_RELEASE *\([0-9]*\).*" "\\1" _lz4_version_release "${_lz4_version_lines}")
+-  set(LZ4_VERSION "${_lz4_version_major}.${_lz4_version_minor}.${_lz4_version_release}")
+-  unset(_lz4_version_major)
+-  unset(_lz4_version_minor)
+-  unset(_lz4_version_release)
+-  unset(_lz4_version_lines)
+-endif ()
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(LZ4
+-  REQUIRED_VARS LZ4_LIBRARY LZ4_INCLUDE_DIR
+-  VERSION_VAR LZ4_VERSION)
+-
+-if (LZ4_FOUND)
+-  set(LZ4_INCLUDE_DIRS "${LZ4_INCLUDE_DIR}")
+-  set(LZ4_LIBRARIES "${LZ4_LIBRARY}")
+-
+-  if (NOT TARGET LZ4::LZ4)
+-    add_library(LZ4::LZ4 UNKNOWN IMPORTED)
+-    set_target_properties(LZ4::LZ4 PROPERTIES
+-      IMPORTED_LOCATION "${LZ4_LIBRARY}"
+-      INTERFACE_INCLUDE_DIRECTORIES "${LZ4_INCLUDE_DIR}")
+-  endif ()
+-endif ()
+diff --git a/packaging/cmake/Modules/FindZSTD.cmake b/packaging/cmake/Modules/FindZSTD.cmake
+deleted file mode 100644
+index 7de137e0..00000000
+--- a/packaging/cmake/Modules/FindZSTD.cmake
++++ /dev/null
+@@ -1,27 +0,0 @@
+-#
+-# - Try to find Facebook zstd library
+-# This will define
+-# ZSTD_FOUND
+-# ZSTD_INCLUDE_DIR
+-# ZSTD_LIBRARY
+-#
+-
+-find_path(ZSTD_INCLUDE_DIR NAMES zstd.h)
+-
+-find_library(ZSTD_LIBRARY_DEBUG NAMES zstdd zstd_staticd)
+-find_library(ZSTD_LIBRARY_RELEASE NAMES zstd zstd_static)
+-
+-include(SelectLibraryConfigurations)
+-SELECT_LIBRARY_CONFIGURATIONS(ZSTD)
+-
+-include(FindPackageHandleStandardArgs)
+-FIND_PACKAGE_HANDLE_STANDARD_ARGS(
+-    ZSTD DEFAULT_MSG
+-    ZSTD_LIBRARY ZSTD_INCLUDE_DIR
+-)
+-
+-if (ZSTD_FOUND)
+-    message(STATUS "Found Zstd: ${ZSTD_LIBRARY}")
+-endif()
+-
+-mark_as_advanced(ZSTD_INCLUDE_DIR ZSTD_LIBRARY)
+-- 
+2.47.0
+

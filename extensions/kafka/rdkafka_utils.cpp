@@ -34,7 +34,7 @@ void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::strin
   }
 }
 
-void print_topics_list(core::logging::Logger& logger, rd_kafka_topic_partition_list_t& kf_topic_partition_list) {
+void print_topics_list(core::logging::Logger& logger, const rd_kafka_topic_partition_list_t& kf_topic_partition_list) {
   for (int i = 0; i < kf_topic_partition_list.cnt; ++i) {
     logger.log_debug("kf_topic_partition_list: topic: {}, partition: {}, offset: {}.",
     kf_topic_partition_list.elems[i].topic, kf_topic_partition_list.elems[i].partition, kf_topic_partition_list.elems[i].offset);
@@ -75,8 +75,8 @@ void print_kafka_message(const rd_kafka_message_t& rkmessage, core::logging::Log
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, error_msg);
   }
   std::string topicName = rd_kafka_topic_name(rkmessage.rkt);
-  std::string message(reinterpret_cast<char*>(rkmessage.payload), rkmessage.len);
-  const char* key = reinterpret_cast<const char*>(rkmessage.key);
+  std::string message(static_cast<char*>(rkmessage.payload), rkmessage.len);
+  const char* key = static_cast<const char*>(rkmessage.key);
   const std::size_t key_len = rkmessage.key_len;
 
   std::string message_as_string;
@@ -106,7 +106,7 @@ std::optional<std::string> get_encoded_message_key(const rd_kafka_message_t& mes
   if (nullptr == message.key) {
     return {};
   }
-  return get_encoded_string({reinterpret_cast<const char*>(message.key), message.key_len}, encoding);
+  return get_encoded_string({static_cast<const char*>(message.key), message.key_len}, encoding);
 }
 
 }  // namespace org::apache::nifi::minifi::utils

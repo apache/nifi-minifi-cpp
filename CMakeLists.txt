@@ -750,7 +750,7 @@ if (MINIFI_ADVANCED_CODE_COVERAGE)
         NAME coverage
         EXCLUDE "build/*" "cmake/*" "minifi_main/*" "thirdparty/*" "libminifi/test/*" "encrypt-config/tests/*" "extensions/aws/tests/*"
             "extensions/civetweb/tests/*" "extensions/elasticsearch/tests/*" "extensions/expression-language/tests/*" "extensions/gcp/tests/*" "extensions/grafana-loki/tests/*"
-            "extensions/kubernetes/tests/*" "extensions/librdkafka/tests/*" "extensions/lua/tests/*" "extensions/mqtt/tests/*" "extensions/opencv/tests/*" "extensions/procfs/tests/*" "extensions/prometheus/tests/*"
+            "extensions/kubernetes/tests/*" "extensions/kafka/tests/*" "extensions/lua/tests/*" "extensions/mqtt/tests/*" "extensions/opencv/tests/*" "extensions/procfs/tests/*" "extensions/prometheus/tests/*"
             "extensions/script/tests/*" "extensions/sftp/tests/*" "extensions/splunk/tests/*" "extensions/standard-processors/tests/*" "extensions/systemd/tests/*" "extensions/test-processors/*"
             "controller/MiNiFiController.cpp"
     )

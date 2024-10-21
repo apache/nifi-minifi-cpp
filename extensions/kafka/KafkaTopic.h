@@ -15,43 +15,27 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_
-#define EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_
+#pragma once
 
-#include "rdkafka.h"
+#include "rdkafka_utils.h"
 
-#include "utils/gsl.h"
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class KafkaTopic {
  public:
-  explicit KafkaTopic(gsl::owner<rd_kafka_topic_t*> topic_reference)
-      : topic_reference_(topic_reference) {
-  }
+  explicit KafkaTopic(utils::rd_kafka_topic_unique_ptr&& topic_reference) : topic_reference_(std::move(topic_reference)) {}
 
-  ~KafkaTopic() {
-    if (topic_reference_) {
-      rd_kafka_topic_destroy(topic_reference_);
-    }
-  }
+  KafkaTopic(const KafkaTopic&) = delete;
+  KafkaTopic& operator=(const KafkaTopic&) = delete;
+  KafkaTopic(KafkaTopic&&) = delete;
+  KafkaTopic& operator=(KafkaTopic&&) = delete;
 
-  rd_kafka_topic_t *getTopic() const {
-    return topic_reference_;
-  }
+  ~KafkaTopic() = default;
+
+  [[nodiscard]] rd_kafka_topic_t* getTopic() const { return topic_reference_.get(); }
 
  private:
-  gsl::owner<rd_kafka_topic_t*> topic_reference_;
+  utils::rd_kafka_topic_unique_ptr topic_reference_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_LIBRDKAFKA_KAFKATOPIC_H_
+}  // namespace org::apache::nifi::minifi::processors
