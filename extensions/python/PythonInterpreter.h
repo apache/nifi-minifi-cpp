@@ -23,6 +23,8 @@ namespace org::apache::nifi::minifi::extensions::python {
 class GlobalInterpreterLock {
  public:
   GlobalInterpreterLock();
+  GlobalInterpreterLock(const GlobalInterpreterLock &) = delete;
+  GlobalInterpreterLock &operator=(const GlobalInterpreterLock &) = delete;
   ~GlobalInterpreterLock();
 
  private:
@@ -41,7 +43,6 @@ class Interpreter {
   Interpreter& operator=(const Interpreter& other) = delete;
   Interpreter& operator=(Interpreter&& other) = delete;
 
- public:
   PyThreadState* saved_thread_state_ = nullptr;
 };
 
