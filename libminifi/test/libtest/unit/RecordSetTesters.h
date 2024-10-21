@@ -36,7 +36,7 @@ class RecordSetFixture {
   TestController test_controller_{};
   TestController::PlanConfig plan_config_{};
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan(plan_config_);
-  Processor* dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
+  std::shared_ptr<Processor> dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
   std::shared_ptr<ProcessContext> context_ = [this] { test_plan_->runNextProcessor(); return test_plan_->getCurrentContext(); }();
   std::unique_ptr<ProcessSession> process_session_ = std::make_unique<ProcessSession>(context_);
 

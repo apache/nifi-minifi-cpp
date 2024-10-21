@@ -40,7 +40,7 @@ class Fixture {
   TestController test_controller_;
   TestController::PlanConfig plan_config_;
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan(plan_config_);
-  minifi::core::Processor* dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
+  std::shared_ptr<minifi::core::Processor> dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
   std::shared_ptr<minifi::core::ProcessContext> context_ = [this] { test_plan_->runNextProcessor(); return test_plan_->getCurrentContext(); }();
   std::unique_ptr<minifi::core::ProcessSession> process_session_ = std::make_unique<core::ProcessSession>(context_);
 };

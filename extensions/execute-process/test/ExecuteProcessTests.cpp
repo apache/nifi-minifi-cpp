@@ -28,13 +28,13 @@ namespace org::apache::nifi::minifi::test {
 class ExecuteProcessTestsFixture {
  public:
   ExecuteProcessTestsFixture()
-      : controller_(std::make_unique<processors::ExecuteProcess>("ExecuteProcess")),
-        execute_process_(controller_.getProcessor<processors::ExecuteProcess>()) {
+      : execute_process_(std::make_shared<processors::ExecuteProcess>("ExecuteProcess")),
+        controller_(execute_process_) {
     LogTestController::getInstance().setTrace<processors::ExecuteProcess>();
   }
  protected:
+  std::shared_ptr<processors::ExecuteProcess> execute_process_;
   test::SingleProcessorTestController controller_;
-  processors::ExecuteProcess* execute_process_;
 };
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run a single command", "[ExecuteProcess]") {

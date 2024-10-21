@@ -45,12 +45,12 @@ TEST_CASE("ReplaceText can parse its properties", "[onSchedule]") {
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   LogTestController::getInstance().setDebug<minifi::processors::ReplaceText>();
 
-  auto generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
+  std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
   plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "One green bottle is hanging on the wall");
   plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat, "Text");
   plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
 
-  auto replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
+  std::shared_ptr<core::Processor> replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
   plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode, "Entire text");
   plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode, "Except-First-Line");
   plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, "Substitute Variables");
@@ -184,12 +184,12 @@ TEST_CASE("Regex Replace works correctly in ReplaceText in line by line mode", "
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-  auto generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
+  std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
   plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\n pear\n orange\n banana\n");
   plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat, "Text");
   plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
 
-  auto replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
+  std::shared_ptr<core::Processor> replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
   plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode, magic_enum::enum_name(minifi::processors::EvaluationModeType::LINE_BY_LINE));
   plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, magic_enum::enum_name(minifi::processors::ReplacementStrategyType::REGEX_REPLACE));
   plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, "[aeiou]");
@@ -275,7 +275,7 @@ TEST_CASE("Regex Replace works correctly in ReplaceText in line by line mode", "
     expected_output = "fruit\r\nfruit\r\nfruit\r\nfruit";
   }
 
-  auto log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
+  std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
   plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload, "true");
 
   testController.runSession(plan);
@@ -293,15 +293,15 @@ class HandleEmptyIncomingFlowFile {
   void run() {
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-    auto generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
+    std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
     plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::FileSize, "0 B");
 
-    auto replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
+    std::shared_ptr<core::Processor> replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
     plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode, magic_enum::enum_name(evaluation_mode_));
     plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, magic_enum::enum_name(replacement_strategy_));
     plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "hippopotamus");
 
-    auto log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
+    std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
     plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload, "true");
 
     testController.runSession(plan);
@@ -355,22 +355,22 @@ class UseExpressionLanguage {
   void run() {
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-    auto generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
+    std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
     plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\n pear\n orange\n banana\n");
     plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat, "Text");
     plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
 
-    auto update_attribute = plan->addProcessor("UpdateAttribute", "update_attribute", minifi::processors::GenerateFlowFile::Success, true);
+    std::shared_ptr<core::Processor> update_attribute = plan->addProcessor("UpdateAttribute", "update_attribute", minifi::processors::GenerateFlowFile::Success, true);
     plan->setDynamicProperty(update_attribute, "substring", "an");
     plan->setDynamicProperty(update_attribute, "color", "blue");
 
-    auto replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
+    std::shared_ptr<core::Processor> replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
     plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode, magic_enum::enum_name(minifi::processors::EvaluationModeType::ENTIRE_TEXT));
     plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, magic_enum::enum_name(minifi::processors::ReplacementStrategyType::LITERAL_REPLACE));
     plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, search_value_);
     plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, replacement_value_);
 
-    auto log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
+    std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
     plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload, "true");
 
     testController.runSession(plan);

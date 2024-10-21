@@ -38,8 +38,8 @@ void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
 }
 
 TEST_CASE("ListenTCP test multiple messages", "[ListenTCP][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenTCP>("ListenTCP")};
-  const auto listen_tcp = controller.getProcessor<ListenTCP>();
+  const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
+  SingleProcessorTestController controller{listen_tcp};
   LogTestController::getInstance().setTrace<ListenTCP>();
   REQUIRE(listen_tcp->setProperty(ListenTCP::MaxBatchSize, "2"));
   auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
@@ -66,8 +66,8 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP][NetworkListenerProces
 }
 
 TEST_CASE("ListenTCP can be rescheduled", "[ListenTCP][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenTCP>("ListenTCP")};
-  const auto listen_tcp = controller.getProcessor<ListenTCP>();
+  const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
+  SingleProcessorTestController controller{listen_tcp};
   LogTestController::getInstance().setTrace<ListenTCP>();
   REQUIRE(listen_tcp->setProperty(ListenTCP::Port, "0"));
   REQUIRE(listen_tcp->setProperty(ListenTCP::MaxBatchSize, "100"));
@@ -78,8 +78,8 @@ TEST_CASE("ListenTCP can be rescheduled", "[ListenTCP][NetworkListenerProcessor]
 }
 
 TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenTCP>("ListenTCP")};
-  const auto listen_tcp = controller.getProcessor<ListenTCP>();
+  const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
+  SingleProcessorTestController controller{listen_tcp};
   LogTestController::getInstance().setTrace<ListenTCP>();
   REQUIRE(listen_tcp->setProperty(ListenTCP::MaxBatchSize, "10"));
   REQUIRE(listen_tcp->setProperty(ListenTCP::MaxQueueSize, "50"));
@@ -111,9 +111,9 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP][NetworkLis
 }
 
 TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProcessor]") {
+  const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
   uint16_t port = 0;
-  SingleProcessorTestController controller{std::make_unique<ListenTCP>("ListenTCP")};
-  const auto listen_tcp = controller.getProcessor<ListenTCP>();
+  SingleProcessorTestController controller{listen_tcp};
   auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
   LogTestController::getInstance().setTrace<ListenTCP>();
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
@@ -241,8 +241,8 @@ bool isSslMethodAvailable(asio::ssl::context::method method) {
 }  // namespace
 
 TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenTCP>("ListenTCP")};
-  const auto listen_tcp = controller.getProcessor<ListenTCP>();
+  const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
+  SingleProcessorTestController controller{listen_tcp};
   auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
   LogTestController::getInstance().setTrace<ListenTCP>();
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
@@ -288,8 +288,8 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
 }
 
 TEST_CASE("Custom delimiter", "[ListenTCP][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenTCP>("ListenTCP")};
-  const auto listen_tcp = controller.getProcessor<ListenTCP>();
+  const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
+  SingleProcessorTestController controller{listen_tcp};
   LogTestController::getInstance().setTrace<ListenTCP>();
 
   std::string delimiter = GENERATE("\n", "\\n", "foo", "💩", "foo\\nbar");

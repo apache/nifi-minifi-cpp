@@ -52,7 +52,7 @@ class ListFileTestFixture {
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_;
   const std::filesystem::path input_dir_;
-  core::Processor* list_file_processor_;
+  std::shared_ptr<core::Processor> list_file_processor_;
   std::filesystem::path hidden_file_path_;
   std::filesystem::path empty_file_abs_path_;
   std::filesystem::path standard_file_abs_path_;
@@ -227,9 +227,9 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing hidden files", "[testListFil
 TEST_CASE("ListFile sets attributes correctly") {
   using minifi::processors::ListFile;
 
+  const auto list_file = std::make_shared<ListFile>("ListFile");
   LogTestController::getInstance().setTrace<ListFile>();
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<ListFile>("ListFile"));
-  const auto list_file = test_controller.getProcessor();
+  minifi::test::SingleProcessorTestController test_controller(list_file);
   std::filesystem::path dir = test_controller.createTempDirectory();
   list_file->setProperty(ListFile::InputDirectory, dir.string());
   SECTION("File in subdirectory of input directory") {
@@ -256,8 +256,8 @@ TEST_CASE("ListFile sets attributes correctly") {
 TEST_CASE("If a second file with the same modification time shows up later, then it will get listed") {
   using minifi::processors::ListFile;
 
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<ListFile>("ListFile"));
-  const auto list_file = test_controller.getProcessor();
+  const auto list_file = std::make_shared<ListFile>("ListFile");
+  minifi::test::SingleProcessorTestController test_controller(list_file);
 
   const auto input_dir = test_controller.createTempDirectory();
   list_file->setProperty(ListFile::InputDirectory, input_dir.string());

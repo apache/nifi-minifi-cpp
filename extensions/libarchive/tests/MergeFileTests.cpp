@@ -902,16 +902,18 @@ TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testM
 }
 
 TEST_CASE("Empty MergeContent yields") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<minifi::processors::MergeContent>("mergeContent")};
+  const auto merge_content = std::make_shared<minifi::processors::MergeContent>("mergeContent");
+
+  minifi::test::SingleProcessorTestController controller{merge_content};
   controller.trigger();
 
-  auto merge_content = controller.getProcessor();
   CHECK(merge_content->isYield());
 }
 
 TEST_CASE("Empty MergeContent doesnt yield when processing readybins") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<minifi::processors::MergeContent>("mergeContent")};
-  const auto merge_content = controller.getProcessor();
+  const auto merge_content = std::make_shared<minifi::processors::MergeContent>("mergeContent");
+
+  minifi::test::SingleProcessorTestController controller{merge_content};
   controller.plan->setProperty(merge_content, minifi::processors::MergeContent::MaxBinAge, "100ms");
   controller.plan->setProperty(merge_content, minifi::processors::MergeContent::MinEntries, "2");
 

@@ -141,7 +141,7 @@ class ListenHTTPTestsFixture {
     plan->runNextProcessor();  // UpdateAttribute
     plan->runNextProcessor();  // ListenHTTP
 
-    auto raw_ptr = dynamic_cast<org::apache::nifi::minifi::processors::ListenHTTP*>(listen_http);
+    auto raw_ptr = dynamic_cast<org::apache::nifi::minifi::processors::ListenHTTP*>(listen_http.get());
     std::string protocol = std::string("http") + (raw_ptr->isSecure() ? "s" : "");
     std::string portstr = raw_ptr->getPort();
     REQUIRE(LogTestController::getInstance().contains("Listening on port " + portstr));
@@ -228,10 +228,10 @@ class ListenHTTPTestsFixture {
   std::filesystem::path tmp_dir;
   TestController testController;
   std::shared_ptr<TestPlan> plan;
-  core::Processor* get_file = nullptr;
-  core::Processor* update_attribute = nullptr;
-  core::Processor* listen_http = nullptr;
-  core::Processor* log_attribute = nullptr;
+  std::shared_ptr<core::Processor> get_file;
+  std::shared_ptr<core::Processor> update_attribute;
+  std::shared_ptr<core::Processor> listen_http;
+  std::shared_ptr<core::Processor> log_attribute;
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service;
   HttpRequestMethod method = HttpRequestMethod::GET;
@@ -672,8 +672,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
 
 TEST_CASE("ListenHTTP bored yield", "[listenhttp][bored][yield]") {
   using processors::ListenHTTP;
-  SingleProcessorTestController controller{std::make_unique<ListenHTTP>("listenhttp")};
-  auto listen_http = controller.getProcessor();
+  const auto listen_http = std::make_shared<ListenHTTP>("listenhttp");
+  SingleProcessorTestController controller{listen_http};
   listen_http->setProperty(ListenHTTP::Port, "0");
 
   REQUIRE(!listen_http->isYield());

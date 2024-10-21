@@ -65,8 +65,8 @@ class PerformanceDataMonitorTester {
   TestController test_controller_;
   std::filesystem::path dir_;
   std::shared_ptr<TestPlan> plan_;
-  core::Processor* performance_monitor_;
-  core::Processor* putfile_;
+  std::shared_ptr<core::Processor> performance_monitor_;
+  std::shared_ptr<core::Processor> putfile_;
 };
 
 

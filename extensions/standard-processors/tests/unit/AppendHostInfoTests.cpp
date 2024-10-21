@@ -29,9 +29,9 @@ TEST_CASE("AppendHostInfoTest", "[appendhostinfotest]") {
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   LogTestController::getInstance().setTrace<minifi::processors::AppendHostInfo>();
   LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
-  plan->addProcessor("GenerateFlowFile", "generate_flow_file");
-  plan->addProcessor("AppendHostInfo", "append_host_info", core::Relationship("success", "description"), true);
-  plan->addProcessor("LogAttribute", "log_attributes", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
+  std::shared_ptr<core::Processor> append_host_info = plan->addProcessor("AppendHostInfo", "append_host_info", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attributes", core::Relationship("success", "description"), true);
 
   testController.runSession(plan);
 
@@ -44,9 +44,9 @@ TEST_CASE("AppendHostInfoTestWithUnmatchableRegex", "[appendhostinfotestunmatcha
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   LogTestController::getInstance().setTrace<minifi::processors::AppendHostInfo>();
   LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
-  plan->addProcessor("GenerateFlowFile", "generate_flow_file");
-  auto append_host_info = plan->addProcessor("AppendHostInfo", "append_host_info", core::Relationship("success", "description"), true);
-  plan->addProcessor("LogAttribute", "log_attributes", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
+  std::shared_ptr<core::Processor> append_host_info = plan->addProcessor("AppendHostInfo", "append_host_info", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attributes", core::Relationship("success", "description"), true);
 
   plan->setProperty(append_host_info, AppendHostInfo::InterfaceNameFilter, "\b");
 
@@ -62,9 +62,9 @@ TEST_CASE("AppendHostInfoTestCanFilterOutLoopbackInterfacesWithRegex", "[appendh
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   LogTestController::getInstance().setTrace<minifi::processors::AppendHostInfo>();
   LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
-  plan->addProcessor("GenerateFlowFile", "generate_flow_file");
-  auto append_host_info = plan->addProcessor("AppendHostInfo", "append_host_info", core::Relationship("success", "description"), true);
-  plan->addProcessor("LogAttribute", "log_attributes", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
+  std::shared_ptr<core::Processor> append_host_info = plan->addProcessor("AppendHostInfo", "append_host_info", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attributes", core::Relationship("success", "description"), true);
 
   plan->setProperty(append_host_info, AppendHostInfo::InterfaceNameFilter, "(?!Loopback|lo).*?");  // set up the regex to accept everything except interfaces starting with Loopback or lo
 

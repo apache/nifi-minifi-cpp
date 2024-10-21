@@ -31,8 +31,8 @@
 namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Lua: hello world") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+  minifi::test::SingleProcessorTestController controller{execute_script};
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
   execute_script->setProperty(ExecuteScript::ScriptBody, R"(print("Hello world!"))");
@@ -81,8 +81,9 @@ end
 }
 
 TEST_CASE("Lua: Test session get should return None if there are no flowfiles in the incoming connections") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
@@ -103,8 +104,9 @@ end
 
 TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") {
   LogTestController::getInstance().reset();
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
@@ -122,8 +124,9 @@ end
 }
 
 TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
@@ -153,8 +156,9 @@ end
 }
 
 TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
@@ -186,8 +190,9 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
 
 TEST_CASE("Lua: Test Create", "[executescriptLuaCreate]") {
   LogTestController::getInstance().reset();
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
@@ -211,8 +216,9 @@ end
 
 TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") {
   LogTestController::getInstance().reset();
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
@@ -274,8 +280,9 @@ TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") {
 TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirectoryProperty]") {
   using org::apache::nifi::minifi::utils::file::get_executable_dir;
 
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   const auto script_files_directory =  minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "test_lua_scripts";
@@ -292,8 +299,9 @@ TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirecto
 }
 
 TEST_CASE("Lua: Non existent script file should throw", "[executescriptLuaNonExistentScriptFile]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
@@ -303,8 +311,9 @@ TEST_CASE("Lua: Non existent script file should throw", "[executescriptLuaNonExi
 }
 
 TEST_CASE("Lua can remove flowfiles", "[ExecuteScript]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
   execute_script->setProperty(ExecuteScript::ScriptBody,
@@ -320,8 +329,9 @@ TEST_CASE("Lua can remove flowfiles", "[ExecuteScript]") {
 }
 
 TEST_CASE("Lua can store states in StateManager", "[ExecuteScript]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<minifi::processors::ExecuteScript>();
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
   execute_script->setProperty(ExecuteScript::ScriptBody,

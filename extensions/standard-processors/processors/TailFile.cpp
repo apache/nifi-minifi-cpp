@@ -315,7 +315,7 @@ void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& conte
     return;
   }
 
-  std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name, getUUID());
+  std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name);
   if (!controller_service) {
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
   }

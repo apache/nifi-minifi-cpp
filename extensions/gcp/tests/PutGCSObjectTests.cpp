@@ -52,7 +52,6 @@ REGISTER_RESOURCE(PutGCSObjectMocked, Processor);
 class PutGCSObjectTests : public ::testing::Test {
  public:
   void SetUp() override {
-    put_gcs_object_ = test_controller_.getProcessor<PutGCSObjectMocked>();
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
@@ -61,8 +60,8 @@ class PutGCSObjectTests : public ::testing::Test {
                                        PutGCSObject::GCPCredentials,
                                        "gcp_credentials_controller_service");
   }
-  PutGCSObjectMocked* put_gcs_object_ = nullptr;
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{std::make_unique<PutGCSObjectMocked>("PutGCSObjectMocked")};
+  std::shared_ptr<PutGCSObjectMocked> put_gcs_object_ = std::make_shared<PutGCSObjectMocked>("PutGCSObjectMocked");
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{put_gcs_object_};
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
 
   static auto return_upload_done(const ResumableUploadRequest& request) {

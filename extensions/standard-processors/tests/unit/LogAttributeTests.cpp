@@ -29,8 +29,8 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("LogAttribute logs payload", "[LogAttribute]") {
-  SingleProcessorTestController controller{std::make_unique<LogAttribute>("log_attribute")};
-  const auto log_attribute = controller.getProcessor();
+  const auto log_attribute = std::make_shared<LogAttribute>("log_attribute");
+  SingleProcessorTestController controller{log_attribute};
   LogTestController::getInstance().setTrace<LogAttribute>();
 
   const auto [hexencode_payload, expected_payload] = GENERATE(
@@ -54,8 +54,8 @@ TEST_CASE("LogAttribute logs payload", "[LogAttribute]") {
 }
 
 TEST_CASE("LogAttribute LogLevel and LogPrefix", "[LogAttribute]") {
-  SingleProcessorTestController controller{std::make_unique<LogAttribute>("log_attribute")};
-  const auto log_attribute = controller.getProcessor();
+  const auto log_attribute = std::make_shared<LogAttribute>("log_attribute");
+  SingleProcessorTestController controller{log_attribute};
   LogTestController::getInstance().setTrace<LogAttribute>();
 
   const auto [log_level, log_prefix, expected_dash] = GENERATE(
@@ -81,8 +81,8 @@ TEST_CASE("LogAttribute LogLevel and LogPrefix", "[LogAttribute]") {
 }
 
 TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
-  SingleProcessorTestController controller{std::make_unique<LogAttribute>("log_attribute")};
-  const auto log_attribute = controller.getProcessor();
+  const auto log_attribute = std::make_shared<LogAttribute>("log_attribute");
+  SingleProcessorTestController controller{log_attribute};
   LogTestController::getInstance().setTrace<LogAttribute>();
 
   auto attrs_to_log = "";
@@ -128,8 +128,8 @@ TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
 }
 
 TEST_CASE("LogAttribute batch test", "[LogAttribute]") {
-  SingleProcessorTestController controller{std::make_unique<LogAttribute>("log_attribute")};
-  const auto log_attribute = controller.getProcessor();
+  const auto log_attribute = std::make_shared<LogAttribute>("log_attribute");
+  SingleProcessorTestController controller{log_attribute};
 
   const auto [flow_files_to_log, expected_success_flow_files] = GENERATE(
     std::make_tuple("0", 3U),

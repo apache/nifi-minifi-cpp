@@ -39,7 +39,7 @@
 
 TEST_CASE("Test Creation of PutFile", "[getfileCreate]") {
   TestController testController;
-  auto processor = std::make_shared<org::apache::nifi::minifi::processors::PutFile>("processorname");
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::PutFile>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 
@@ -53,9 +53,9 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
-  auto putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
@@ -113,9 +113,9 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
-  auto putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("failure", "description"), true);
 
@@ -172,9 +172,9 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
-  auto putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
@@ -234,9 +234,9 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
-  auto putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
   plan->addProcessor("LogAttribute", "logattribute", { core::Relationship("success", "d"), core::Relationship("failure", "d") }, true);
 
@@ -298,9 +298,9 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate");
 
-  auto putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
   plan->addProcessor("LogAttribute", "logattribute", { core::Relationship("success", "d"), core::Relationship("failure", "d") }, true);
 
@@ -363,9 +363,9 @@ TEST_CASE("PutFileEmptyTest", "[EmptyFilePutTest]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
-  auto putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
   const auto dir = testController.createTempDirectory();
   const auto putfiledir = testController.createTempDirectory();
@@ -396,9 +396,9 @@ TEST_CASE("TestPutFilePermissions", "[PutFilePermissions]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
-  auto putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
   const auto dir = testController.createTempDirectory();
   const auto putfiledir = testController.createTempDirectory() / "test_dir";
@@ -432,8 +432,8 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  auto putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   // Define Directory

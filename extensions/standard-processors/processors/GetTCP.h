@@ -141,7 +141,7 @@ class GetTCP : public core::Processor {
 
   std::vector<utils::net::ConnectionId> parseEndpointList(core::ProcessContext& context);
   static char parseDelimiter(core::ProcessContext& context);
-  std::optional<asio::ssl::context> parseSSLContext(core::ProcessContext& context) const;
+  static std::optional<asio::ssl::context> parseSSLContext(core::ProcessContext& context);
   static uint64_t parseMaxBatchSize(core::ProcessContext& context);
 
   class TcpClient {

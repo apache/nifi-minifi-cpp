@@ -36,8 +36,8 @@ void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
 }
 
 TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenUDP>("ListenUDP")};
-  const auto listen_udp = controller.getProcessor<ListenUDP>();
+  const auto listen_udp = std::make_shared<ListenUDP>("ListenUDP");
+  SingleProcessorTestController controller{listen_udp};
   LogTestController::getInstance().setTrace<ListenUDP>();
 
   REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize, "2"));
@@ -68,8 +68,8 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
 }
 
 TEST_CASE("ListenUDP can be rescheduled", "[ListenUDP][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenUDP>("ListenUDP")};
-  const auto listen_udp = controller.getProcessor<ListenUDP>();
+  const auto listen_udp = std::make_shared<ListenUDP>("ListenUDP");
+  SingleProcessorTestController controller{listen_udp};
   LogTestController::getInstance().setTrace<ListenUDP>();
   REQUIRE(listen_udp->setProperty(ListenUDP::Port, "0"));
   REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize, "100"));
@@ -80,8 +80,8 @@ TEST_CASE("ListenUDP can be rescheduled", "[ListenUDP][NetworkListenerProcessor]
 }
 
 TEST_CASE("ListenUDP max queue and max batch size test", "[ListenUDP][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenUDP>("ListenUDP")};
-  const auto listen_udp = controller.getProcessor<ListenUDP>();
+  const auto listen_udp = std::make_shared<ListenUDP>("ListenUDP");
+  SingleProcessorTestController controller{listen_udp};
   REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize, "10"));
   REQUIRE(listen_udp->setProperty(ListenUDP::MaxQueueSize, "50"));
 

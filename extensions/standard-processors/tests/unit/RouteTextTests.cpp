@@ -54,7 +54,7 @@ struct RouteTextController : public TestController {
 
   RouteTextController() {
     plan_ = createPlan();
-    proc_ = plan_->addProcessor(std::make_unique<processors::RouteText>("RouteText"), "RouteText");
+    plan_->addProcessor(proc_, "RouteText");
     input_ = plan_->addConnection(nullptr, {"success", ""}, proc_);
     createOutput(processors::RouteText::Original);
     createOutput(processors::RouteText::Unmatched);
@@ -124,7 +124,7 @@ struct RouteTextController : public TestController {
   }
 
   std::shared_ptr<TestPlan> plan_ = createPlan();
-  core::Processor* proc_ = nullptr;
+  std::shared_ptr<core::Processor> proc_ = std::make_shared<processors::RouteText>("RouteText");
   std::map<std::string, minifi::Connection*> outputs_;
   minifi::Connection* input_;
 };

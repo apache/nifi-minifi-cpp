@@ -75,7 +75,7 @@ class SQLTestPlan {
     return flow_file;
   }
 
-  core::Processor* getSQLProcessor() {
+  std::shared_ptr<core::Processor> getSQLProcessor() {
     return processor_;
   }
 
@@ -83,7 +83,7 @@ class SQLTestPlan {
     if (reschedule) {
       plan_->reset(reschedule);
     }
-    plan_->runProcessor(static_cast<size_t>(0));  // run the one and only sql processor
+    plan_->runProcessor(0);  // run the one and only sql processor
   }
 
   std::vector<std::shared_ptr<core::FlowFile>> getOutputs(const core::Relationship& relationship) {
@@ -101,7 +101,7 @@ class SQLTestPlan {
 
  private:
   std::shared_ptr<TestPlan> plan_;
-  core::Processor* processor_;
+  std::shared_ptr<core::Processor> processor_;
   minifi::Connection* input_;
   std::map<core::Relationship, minifi::Connection*> outputs_;
 };

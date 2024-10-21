@@ -95,13 +95,13 @@ class RetryFlowFileTest {
     const core::Relationship failure         {RetryFlowFile::Failure};
 
     // Processors
-    auto generate                    = plan_->addProcessor("GenerateFlowFile", "generate", {success}, false);
-    auto update                      = plan_->addProcessor("UpdateAttribute", "update", {success}, false);
-    auto retryflowfile               = plan_->addProcessor("RetryFlowFile", "retryflowfile", {retry, retries_exceeded, failure}, false);
-    auto putfile_on_retry            = plan_->addProcessor("PutFile", "putfile_on_retry", {success}, false);
-    auto putfile_on_retries_exceeded = plan_->addProcessor("PutFile", "putfile_on_retries_exceeded", {success}, false);
-    auto putfile_on_failure          = plan_->addProcessor("PutFile", "putfile_on_failure", {success}, false);
-    auto log_attribute               = plan_->addProcessor("LogAttribute", "log", {success}, false);
+    std::shared_ptr<core::Processor> generate                    = plan_->addProcessor("GenerateFlowFile", "generate", {success}, false);
+    std::shared_ptr<core::Processor> update                      = plan_->addProcessor("UpdateAttribute", "update", {success}, false);
+    std::shared_ptr<core::Processor> retryflowfile               = plan_->addProcessor("RetryFlowFile", "retryflowfile", {retry, retries_exceeded, failure}, false);
+    std::shared_ptr<core::Processor> putfile_on_retry            = plan_->addProcessor("PutFile", "putfile_on_retry", {success}, false);
+    std::shared_ptr<core::Processor> putfile_on_retries_exceeded = plan_->addProcessor("PutFile", "putfile_on_retries_exceeded", {success}, false);
+    std::shared_ptr<core::Processor> putfile_on_failure          = plan_->addProcessor("PutFile", "putfile_on_failure", {success}, false);
+    std::shared_ptr<core::Processor> log_attribute               = plan_->addProcessor("LogAttribute", "log", {success}, false);
 
     retryflowfile->setPenalizationPeriod(std::chrono::milliseconds{0});
 

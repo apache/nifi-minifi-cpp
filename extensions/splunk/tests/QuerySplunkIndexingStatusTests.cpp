@@ -37,13 +37,13 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
 
   TestController test_controller;
   auto plan = test_controller.createPlan();
-  auto write_to_flow_file = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  auto update_attribute = dynamic_cast<UpdateAttribute*>(plan->addProcessor("UpdateAttribute", "update_attribute"));
-  auto query_splunk_indexing_status = dynamic_cast<QuerySplunkIndexingStatus*>(plan->addProcessor("QuerySplunkIndexingStatus", "query_splunk_indexing_status"));
-  auto read_from_acknowledged = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_acknowledged"));
-  auto read_from_undetermined = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_undetermined"));
-  auto read_from_unacknowledged = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_unacknowledged"));
-  auto read_from_failure = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure"));
+  auto write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  auto update_attribute = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute"));
+  auto query_splunk_indexing_status = std::dynamic_pointer_cast<QuerySplunkIndexingStatus>(plan->addProcessor("QuerySplunkIndexingStatus", "query_splunk_indexing_status"));
+  auto read_from_acknowledged = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_acknowledged"));
+  auto read_from_undetermined = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_undetermined"));
+  auto read_from_unacknowledged = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_unacknowledged"));
+  auto read_from_failure = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure"));
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_attribute);
   plan->addConnection(update_attribute, UpdateAttribute ::Success, query_splunk_indexing_status);

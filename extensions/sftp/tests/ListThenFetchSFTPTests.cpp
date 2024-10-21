@@ -188,10 +188,10 @@ class ListThenFetchSFTPTestsFixture {
   std::filesystem::path dst_dir = testController.createTempDirectory();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::unique_ptr<SFTPTestServer> sftp_server;
-  core::Processor* list_sftp;
-  core::Processor* fetch_sftp;
-  core::Processor* log_attribute;
-  core::Processor* put_file;
+  std::shared_ptr<core::Processor> list_sftp;
+  std::shared_ptr<core::Processor> fetch_sftp;
+  std::shared_ptr<core::Processor> log_attribute;
+  std::shared_ptr<core::Processor> put_file;
 };
 
 TEST_CASE_METHOD(ListThenFetchSFTPTestsFixture, "ListSFTP then FetchSFTP one file", "[ListThenFetchSFTP][basic]") {

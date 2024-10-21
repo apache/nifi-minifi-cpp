@@ -134,14 +134,14 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     }
   }
 
-  core::Processor* addGetFileProcessorToPlan(const std::filesystem::path& dir_path) {
-    auto getfile = plan_->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> addGetFileProcessorToPlan(const std::filesystem::path& dir_path) {
+    std::shared_ptr<core::Processor> getfile = plan_->addProcessor("GetFile", "getfileCreate2");
     plan_->setProperty(getfile, minifi::processors::GetFile::Directory, dir_path.string());
     plan_->setProperty(getfile, minifi::processors::GetFile::KeepSourceFile, "true");
     return getfile;
   }
 
-  core::Processor* addExecutePythonProcessorToPlan(const std::filesystem::path& used_as_script_file, const std::string& used_as_script_body) {
+  std::shared_ptr<core::Processor> addExecutePythonProcessorToPlan(const std::filesystem::path& used_as_script_file, const std::string& used_as_script_body) {
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor", core::Relationship("success", "description"), true);
     if (!used_as_script_file.empty()) {
       plan_->setProperty(executePythonProcessor, minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, getScriptFullPath(used_as_script_file).string());
@@ -152,8 +152,8 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     return executePythonProcessor;
   }
 
-  core::Processor* addPutFileProcessorToPlan(const core::Relationship& execute_python_outbound_connection, const std::filesystem::path& dir_path) {
-    auto putfile = plan_->addProcessor("PutFile", "putfile", execute_python_outbound_connection, true);
+  std::shared_ptr<core::Processor> addPutFileProcessorToPlan(const core::Relationship& execute_python_outbound_connection, const std::filesystem::path& dir_path) {
+    std::shared_ptr<core::Processor> putfile = plan_->addProcessor("PutFile", "putfile", execute_python_outbound_connection, true);
     plan_->setProperty(putfile, minifi::processors::PutFile::Directory, dir_path.string());
     return putfile;
   }

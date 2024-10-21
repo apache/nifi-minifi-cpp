@@ -36,8 +36,8 @@ bool checkAttributes(const std::map<std::string, std::string>& expected, const s
 }
 
 TEST_CASE("AttributeRollingWindow properly forwards properties to RollingWindow and sets attributes", "[attributerollingwindow]") {
-  SingleProcessorTestController controller{std::make_unique<AttributeRollingWindow>("AttributeRollingWindow")};
-  const auto proc = controller.getProcessor();
+  const auto proc = std::make_shared<AttributeRollingWindow>("AttributeRollingWindow");
+  SingleProcessorTestController controller{proc};
   proc->setProperty(AttributeRollingWindow::ValueToTrack, "${value}");
   proc->setProperty(AttributeRollingWindow::WindowLength, "3");
   const auto trigger_with_value_and_check_attributes = [&controller](const std::string& value, const std::map<std::string, std::string>& expected_out_attributes) {

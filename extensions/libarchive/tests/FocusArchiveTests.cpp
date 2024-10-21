@@ -49,13 +49,13 @@ const char* FOCUSED_CONTENT = FILE_CONTENT[0];
 
 TEST_CASE("Test Creation of FocusArchiveEntry", "[getfileCreate]") {
   TestController testController;
-  auto processor = std::make_shared<FocusArchiveEntry>("processorname");
+  std::shared_ptr<core::Processor> processor = std::make_shared<FocusArchiveEntry>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 
 TEST_CASE("Test Creation of UnfocusArchiveEntry", "[getfileCreate]") {
   TestController testController;
-  auto processor = std::make_shared<UnfocusArchiveEntry>("processorname");
+  std::shared_ptr<core::Processor> processor = std::make_shared<UnfocusArchiveEntry>("processorname");
   REQUIRE(processor->getName() == "processorname");
   REQUIRE(processor->getUUID());
 }
@@ -83,20 +83,20 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
   REQUIRE(!dir1.empty());
   REQUIRE(!dir2.empty());
   REQUIRE(!dir3.empty());
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
   plan->setProperty(getfile, GetFile::Directory, dir1.string());
   plan->setProperty(getfile, GetFile::KeepSourceFile, "true");
 
-  auto fprocessor = plan->addProcessor("FocusArchiveEntry", "focusarchiveCreate", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> fprocessor = plan->addProcessor("FocusArchiveEntry", "focusarchiveCreate", core::Relationship("success", "description"), true);
   plan->setProperty(fprocessor, FocusArchiveEntry::Path, FOCUSED_FILE);
 
-  auto putfile1 = plan->addProcessor("PutFile", "PutFile1", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile1 = plan->addProcessor("PutFile", "PutFile1", core::Relationship("success", "description"), true);
   plan->setProperty(putfile1, PutFile::Directory, dir2.string());
   plan->setProperty(putfile1, PutFile::ConflictResolution, magic_enum::enum_name(PutFile::FileExistsResolutionStrategy::replace));
 
-  plan->addProcessor("UnfocusArchiveEntry", "unfocusarchiveCreate", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> ufprocessor = plan->addProcessor("UnfocusArchiveEntry", "unfocusarchiveCreate", core::Relationship("success", "description"), true);
 
-  auto putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
   plan->setProperty(putfile2, PutFile::Directory, dir3.string());
   plan->setProperty(putfile2, PutFile::ConflictResolution, magic_enum::enum_name(PutFile::FileExistsResolutionStrategy::replace));
 

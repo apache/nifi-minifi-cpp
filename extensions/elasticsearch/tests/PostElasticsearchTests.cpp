@@ -25,8 +25,9 @@ namespace org::apache::nifi::minifi::extensions::elasticsearch::test {
 
 TEST_CASE("PostElasticsearch", "[elastic]") {
   MockElastic mock_elastic("10433");
-  minifi::test::SingleProcessorTestController test_controller{std::make_unique<PostElasticsearch>("PostElasticsearch")};
-  auto post_elasticsearch_json = test_controller.getProcessor();
+
+  auto post_elasticsearch_json = std::make_shared<PostElasticsearch>("PostElasticsearch");
+  minifi::test::SingleProcessorTestController test_controller{post_elasticsearch_json};
   auto elasticsearch_credentials_controller_service = test_controller.plan->addController("ElasticsearchCredentialsControllerService", "elasticsearch_credentials_controller_service");
   CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
                                      PostElasticsearch::ElasticCredentials,

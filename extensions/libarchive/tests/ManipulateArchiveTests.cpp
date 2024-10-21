@@ -70,17 +70,17 @@ bool run_archive_test(OrderedTestArchive& input_archive, const OrderedTestArchiv
   REQUIRE(!dir1.empty());
   REQUIRE(!dir2.empty());
 
-  auto getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
   plan->setProperty(getfile, GetFile::Directory, dir1.string());
   plan->setProperty(getfile, GetFile::KeepSourceFile, "true");
 
-  auto maprocessor = plan->addProcessor("ManipulateArchive", "testManipulateArchive", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ManipulateArchive", "testManipulateArchive", core::Relationship("success", "description"), true);
 
   for (const auto& [name, value] : properties) {
     plan->setProperty(maprocessor, name, value);
   }
 
-  auto putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
   plan->setProperty(putfile2, PutFile::Directory, dir2.string());
   plan->setProperty(putfile2, PutFile::ConflictResolution, magic_enum::enum_name(PutFile::FileExistsResolutionStrategy::replace));
 
@@ -110,7 +110,7 @@ bool run_archive_test(TAE_MAP_T input_map, TAE_MAP_T output_map, const PROP_MAP_
 
 TEST_CASE("Test creation of ManipulateArchive", "[manipulatearchiveCreate]") {
   TestController testController;
-  auto processor = std::make_shared<ManipulateArchive>("processorname");
+  std::shared_ptr<core::Processor> processor = std::make_shared<ManipulateArchive>("processorname");
   REQUIRE(processor->getName() == "processorname");
   REQUIRE(processor->getUUID());
 }

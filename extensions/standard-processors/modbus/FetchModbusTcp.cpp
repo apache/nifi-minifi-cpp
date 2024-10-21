@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::modbus {
 
 void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   const auto record_set_writer_name = context.getProperty(RecordSetWriter);
-  record_set_writer_ = std::dynamic_pointer_cast<core::RecordSetWriter>(context.getControllerService(record_set_writer_name.value_or(""), getUUID()));
+  record_set_writer_ = std::dynamic_pointer_cast<core::RecordSetWriter>(context.getControllerService(record_set_writer_name.value_or("")));
   if (!record_set_writer_) {
     throw Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Invalid or missing RecordSetWriter"};
   }
@@ -66,7 +66,7 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
 
   ssl_context_.reset();
   if (const auto controller_service_name = context.getProperty(SSLContextService); controller_service_name && !IsNullOrEmpty(*controller_service_name)) {
-    if (auto controller_service = context.getControllerService(*controller_service_name, getUUID())) {
+    if (auto controller_service = context.getControllerService(*controller_service_name)) {
       if (const auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(controller_service)) {
         ssl_context_ = utils::net::getSslContext(*ssl_context_service);
       } else {

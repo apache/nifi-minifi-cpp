@@ -37,10 +37,10 @@ namespace defragment_text = org::apache::nifi::minifi::processors::defragment_te
 TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") {
   TestController testController;
   auto plan = testController.createPlan();
-  auto write_to_flow_file = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  auto defrag_text_flow_files = dynamic_cast<DefragmentText*>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
-  auto read_from_success_relationship = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
-  auto read_from_failure_relationship = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
+  auto write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  auto defrag_text_flow_files = std::dynamic_pointer_cast<DefragmentText>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
+  auto read_from_success_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
+  auto read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, defrag_text_flow_files);
 
@@ -222,13 +222,13 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
 TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
   TestController testController;
   auto plan = testController.createPlan();
-  auto input_1 = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "input_1"));
-  auto input_2 = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "input_2"));
-  auto update_ff_1 = dynamic_cast<UpdateAttribute*>(plan->addProcessor("UpdateAttribute", "update_attribute_1"));
-  auto update_ff_2 = dynamic_cast<UpdateAttribute*>(plan->addProcessor("UpdateAttribute", "update_attribute_2"));
-  auto defrag_text_flow_files = dynamic_cast<DefragmentText*>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
-  auto read_from_failure_relationship = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
-  auto read_from_success_relationship = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
+  auto input_1 = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "input_1"));
+  auto input_2 = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "input_2"));
+  auto update_ff_1 = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute_1"));
+  auto update_ff_2 = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute_2"));
+  auto defrag_text_flow_files = std::dynamic_pointer_cast<DefragmentText>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
+  auto read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
+  auto read_from_success_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
 
   plan->addConnection(input_1, WriteToFlowFileTestProcessor::Success, update_ff_1);
   plan->addConnection(input_2, WriteToFlowFileTestProcessor::Success, update_ff_2);
@@ -370,12 +370,12 @@ REGISTER_RESOURCE(FragmentGenerator, Processor);
 TEST_CASE("DefragmentText with offset attributes", "[defragmenttextoffsetattributes]") {
   TestController testController;
   auto plan = testController.createPlan();
-  auto input_1 = dynamic_cast<FragmentGenerator*>(plan->addProcessor("FragmentGenerator", "input_1"));
-  auto input_2 = dynamic_cast<FragmentGenerator*>(plan->addProcessor("FragmentGenerator", "input_2"));
+  auto input_1 = std::dynamic_pointer_cast<FragmentGenerator>(plan->addProcessor("FragmentGenerator", "input_1"));
+  auto input_2 = std::dynamic_pointer_cast<FragmentGenerator>(plan->addProcessor("FragmentGenerator", "input_2"));
 
-  auto defrag_text_flow_files = dynamic_cast<DefragmentText*>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
-  auto read_from_failure_relationship = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
-  auto read_from_success_relationship = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
+  auto defrag_text_flow_files = std::dynamic_pointer_cast<DefragmentText>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
+  auto read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
+  auto read_from_success_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
 
   plan->addConnection(input_1, FragmentGenerator::Success, defrag_text_flow_files);
   plan->addConnection(input_2, FragmentGenerator::Success, defrag_text_flow_files);

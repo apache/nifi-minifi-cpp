@@ -156,10 +156,10 @@ class FetchSFTPTestsFixture {
   std::filesystem::path dst_dir{testController.createTempDirectory()};
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::unique_ptr<SFTPTestServer> sftp_server;
-  core::Processor* generate_flow_file;
-  core::Processor* update_attribute;
-  core::Processor* fetch_sftp;
-  core::Processor* put_file;
+  std::shared_ptr<core::Processor> generate_flow_file;
+  std::shared_ptr<core::Processor> update_attribute;
+  std::shared_ptr<core::Processor> fetch_sftp;
+  std::shared_ptr<core::Processor> put_file;
 };
 
 TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP fetch one file", "[FetchSFTP][basic]") {

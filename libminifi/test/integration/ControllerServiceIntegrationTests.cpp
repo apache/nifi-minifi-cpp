@@ -77,6 +77,8 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
   });
   const auto controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo);
 
+  disabled = false;
+
   core::YamlConfiguration yaml_config(core::ConfigurationContext{
       .flow_file_repo = test_repo,
       .content_repo = content_repo,
@@ -87,21 +89,12 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
   });
   auto pg = yaml_config.getRoot();
 
+  auto provider = std::make_shared<core::controller::StandardControllerServiceProvider>(std::make_unique<core::controller::ControllerServiceNodeMap>(), std::make_shared<minifi::Configure>());
   auto* mockNode = pg->findControllerService("MockItLikeIts1995");
   REQUIRE(mockNode != nullptr);
   mockNode->enable();
   std::vector<core::controller::ControllerServiceNode*> linkedNodes = mockNode->getLinkedControllerServices();
   REQUIRE(linkedNodes.size() == 1);
-
-  auto* notInProcessGroup = pg->findControllerService("SubMockController");
-  REQUIRE(notInProcessGroup == nullptr);
-  REQUIRE(pg->getChildProcessGroups().size() == 1);
-  auto* cpg = pg->getChildProcessGroups().begin()->get();
-  auto subMockController = cpg->findControllerService("SubMockController");
-  REQUIRE(subMockController != nullptr);
-  subMockController->enable();
-  std::vector<core::controller::ControllerServiceNode*> subMockControllerLinkedNodes = subMockController->getLinkedControllerServices();
-  REQUIRE(subMockControllerLinkedNodes.size() == 2);
 
   core::controller::ControllerServiceNode* notexistNode = pg->findControllerService("MockItLikeItsWrong");
   REQUIRE(notexistNode == nullptr);
@@ -143,8 +136,6 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
 //  }
 //  REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(2), checkCsIdEnabledMatchesDisabledFlag));
 
-  REQUIRE(verifyEventHappenedInPollTime(10s, [&] { return subprocess_controller_service_not_found_correctly.load(); }));
-  REQUIRE(verifyEventHappenedInPollTime(10s, [&] { return subprocess_controller_service_found_correctly.load(); }));
   controller->waitUnload(60s);
 }
 

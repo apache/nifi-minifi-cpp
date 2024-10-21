@@ -1692,7 +1692,7 @@ Parameter Contexts:
     - name: my_value
       description: ''
       sensitive: true
-      value: {encrypted_parameter_value}
+      value: {}
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: DummyFlowYamlProcessor
@@ -1703,9 +1703,9 @@ Processors:
   auto-terminated relationships list: [success]
   Properties:
     Simple Property: simple
-    Sensitive Property: {encrypted_sensitive_property_value}
+    Sensitive Property: {}
 Parameter Context Name: my-context
-      )", fmt::arg("encrypted_parameter_value", encrypted_parameter_value), fmt::arg("encrypted_sensitive_property_value", encrypted_sensitive_property_value));
+      )", encrypted_parameter_value, encrypted_sensitive_property_value);
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
@@ -1737,11 +1737,11 @@ Parameter Contexts:
     - name: my_value_1
       description: ''
       sensitive: true
-      value: {encrypted_parameter_value_1}
+      value: {}
     - name: my_value_2
       description: ''
       sensitive: true
-      value: {encrypted_parameter_value_2}
+      value: {}
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: DummyFlowYamlProcessor
@@ -1753,11 +1753,10 @@ Processors:
   Properties:
     Simple Property: simple
     Sensitive Property:
-    - value: {encrypted_sensitive_property_value_1}
-    - value: {encrypted_sensitive_property_value_2}
+    - value: {}
+    - value: {}
 Parameter Context Name: my-context
-      )", fmt::arg("encrypted_parameter_value_1", encrypted_parameter_value_1), fmt::arg("encrypted_parameter_value_2", encrypted_parameter_value_2),
-          fmt::arg("encrypted_sensitive_property_value_1", encrypted_sensitive_property_value_1), fmt::arg("encrypted_sensitive_property_value_2", encrypted_sensitive_property_value_2));
+      )", encrypted_parameter_value_1, encrypted_parameter_value_2, encrypted_sensitive_property_value_1, encrypted_sensitive_property_value_2);
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
@@ -1768,112 +1767,6 @@ Parameter Context Name: my-context
   REQUIRE(values.size() == 2);
   CHECK(values[0] == "value1");
   CHECK(values[1] == "value2");
-}
-
-TEST_CASE("Test parameters in controller services", "[YamlConfiguration]") {
-  ConfigurationTestController test_controller;
-  auto context = test_controller.getContext();
-  auto encrypted_parameter_value_1 = minifi::utils::crypto::property_encryption::encrypt("secret1!!1!", *context.sensitive_values_encryptor);
-  auto encrypted_sensitive_property_value_1 = minifi::utils::crypto::property_encryption::encrypt("#{my_value_1}", *context.sensitive_values_encryptor);
-  core::YamlConfiguration yaml_config(context);
-
-  static const std::string TEST_CONFIG_YAML =
-      fmt::format(R"(
-MiNiFi Config Version: 3
-Flow Controller:
-  name: flowconfig
-Parameter Contexts:
-  - id: 721e10b7-8e00-3188-9a27-476cca376978
-    name: my-context
-    description: my parameter context
-    Parameters:
-    - name: my_value_1
-      description: ''
-      sensitive: true
-      value: {encrypted_parameter_value_1}
-    - name: my_value_2
-      description: ''
-      sensitive: false
-      value: /opt/secrets/private-key.pem
-Processors: []
-Controller Services:
-- id: a00f8722-2419-44ee-929c-ad68644ad557
-  name: SSLContextService
-  type: org.apache.nifi.minifi.controllers.SSLContextService
-  Properties:
-    CA Certificate:
-    Client Certificate:
-    Passphrase: {encrypted_sensitive_property_value_1}
-    Private Key: "#{{my_value_2}}"
-    Use System Cert Store: 'true'
-Parameter Context Name: my-context
-      )", fmt::arg("encrypted_parameter_value_1", encrypted_parameter_value_1), fmt::arg("encrypted_sensitive_property_value_1", encrypted_sensitive_property_value_1));
-
-  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
-  REQUIRE(flow);
-  auto* controller = flow->findControllerService("SSLContextService");
-  REQUIRE(controller);
-  auto impl = controller->getControllerServiceImplementation();
-  CHECK(impl->getProperty("Passphrase").value() == "secret1!!1!");
-  CHECK(impl->getProperty("Private Key").value() == "/opt/secrets/private-key.pem");
-}
-
-TEST_CASE("Parameters can be used in controller services in nested process groups", "[YamlConfiguration]") {
-  ConfigurationTestController test_controller;
-  auto context = test_controller.getContext();
-  auto encrypted_parameter_value_1 = minifi::utils::crypto::property_encryption::encrypt("secret1!!1!", *context.sensitive_values_encryptor);
-  auto encrypted_sensitive_property_value_1 = minifi::utils::crypto::property_encryption::encrypt("#{my_value_1}", *context.sensitive_values_encryptor);
-  core::YamlConfiguration yaml_config(context);
-
-  static const std::string TEST_CONFIG_YAML =
-      fmt::format(R"(
-MiNiFi Config Version: 3
-Flow Controller:
-  name: Simple TailFile
-Parameter Contexts:
-  - id: 123e10b7-8e00-3188-9a27-476cca376456
-    name: sub-context
-    description: my sub context
-    Parameters:
-    - name: my_value_1
-      description: ''
-      sensitive: true
-      value: {encrypted_parameter_value_1}
-    - name: my_value_2
-      description: ''
-      sensitive: false
-      value: /opt/secrets/private-key.pem
-Processors: []
-Controller Services: []
-Input Ports: []
-Output Ports: []
-Funnels: []
-Connections: []
-Process Groups:
-  - id: 2a3aaf32-8574-4fa7-b720-84001f8dde43
-    name: Sub process group
-    Processors: []
-    Controller Services:
-    - id: a00f8722-2419-44ee-929c-ad68644ad557
-      name: SSLContextService
-      type: org.apache.nifi.minifi.controllers.SSLContextService
-      Properties:
-        CA Certificate:
-        Client Certificate:
-        Passphrase: {encrypted_sensitive_property_value_1}
-        Private Key: "#{{my_value_2}}"
-        Use System Cert Store: 'true'
-    Parameter Context Name: sub-context
-      )", fmt::arg("encrypted_parameter_value_1", encrypted_parameter_value_1), fmt::arg("encrypted_sensitive_property_value_1", encrypted_sensitive_property_value_1));
-
-  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
-  REQUIRE(flow);
-  auto* controller = flow->findControllerService("SSLContextService", core::ProcessGroup::Traverse::IncludeChildren);
-  REQUIRE(controller);
-  auto impl = controller->getControllerServiceImplementation();
-  REQUIRE(impl);
-  CHECK(impl->getProperty("Passphrase").value() == "secret1!!1!");
-  CHECK(impl->getProperty("Private Key").value() == "/opt/secrets/private-key.pem");
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -25,8 +25,8 @@
 namespace org::apache::nifi::minifi::extensions::grafana::loki::test {
 
 TEST_CASE("Url property is required", "[PushGrafanaLokiGrpc]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc"));
-  auto push_grafana_loki_grpc = test_controller.getProcessor();
+  auto push_grafana_loki_grpc = std::make_shared<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc");
+  minifi::test::SingleProcessorTestController test_controller(push_grafana_loki_grpc);
   test_controller.plan->setProperty(push_grafana_loki_grpc, PushGrafanaLokiGrpc::Url, "");
   test_controller.plan->setProperty(push_grafana_loki_grpc, PushGrafanaLokiGrpc::StreamLabels, "job=minifi,directory=/opt/minifi/logs/");
   test_controller.plan->setProperty(push_grafana_loki_grpc, PushGrafanaLokiGrpc::LogLineBatchSize, "1");
@@ -34,8 +34,8 @@ TEST_CASE("Url property is required", "[PushGrafanaLokiGrpc]") {
 }
 
 TEST_CASE("Valid stream labels need to be set", "[PushGrafanaLokiGrpc]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc"));
-  auto push_grafana_loki_grpc = test_controller.getProcessor();
+  auto push_grafana_loki_grpc = std::make_shared<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc");
+  minifi::test::SingleProcessorTestController test_controller(push_grafana_loki_grpc);
   test_controller.plan->setProperty(push_grafana_loki_grpc, PushGrafanaLokiGrpc::Url, "localhost:10991");
   test_controller.plan->setProperty(push_grafana_loki_grpc, PushGrafanaLokiGrpc::LogLineBatchSize, "1");
   SECTION("Stream labels cannot be empty") {
@@ -48,8 +48,8 @@ TEST_CASE("Valid stream labels need to be set", "[PushGrafanaLokiGrpc]") {
 }
 
 TEST_CASE("Log Line Batch Size cannot be 0", "[PushGrafanaLokiGrpc]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc"));
-  auto push_grafana_loki_grpc = test_controller.getProcessor();
+  auto push_grafana_loki_grpc = std::make_shared<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc");
+  minifi::test::SingleProcessorTestController test_controller(push_grafana_loki_grpc);
   CHECK(test_controller.plan->setProperty(push_grafana_loki_grpc, PushGrafanaLokiGrpc::Url, "localhost:10991"));
   CHECK(test_controller.plan->setProperty(push_grafana_loki_grpc, PushGrafanaLokiGrpc::StreamLabels, "job=minifi,directory=/opt/minifi/logs/"));
   test_controller.plan->setProperty(push_grafana_loki_grpc, PushGrafanaLokiGrpc::LogLineBatchSize, "0");
@@ -60,8 +60,8 @@ class PushGrafanaLokiGrpcTestFixture {
  public:
   PushGrafanaLokiGrpcTestFixture()
       : mock_loki_("10991"),
-        test_controller_(std::make_unique<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc")),
-        push_grafana_loki_grpc_(test_controller_.getProcessor<PushGrafanaLokiGrpc>()) {
+        push_grafana_loki_grpc_(std::make_shared<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc")),
+        test_controller_(push_grafana_loki_grpc_) {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
@@ -110,8 +110,8 @@ class PushGrafanaLokiGrpcTestFixture {
 
  protected:
   MockGrafanaLokiGrpc mock_loki_;
+  std::shared_ptr<PushGrafanaLokiGrpc> push_grafana_loki_grpc_;
   minifi::test::SingleProcessorTestController test_controller_;
-  PushGrafanaLokiGrpc* push_grafana_loki_grpc_;
 };
 
 TEST_CASE_METHOD(PushGrafanaLokiGrpcTestFixture, "PushGrafanaLokiGrpc should send 1 log line to Grafana Loki in a trigger", "[PushGrafanaLokiGrpc]") {

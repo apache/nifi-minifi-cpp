@@ -23,8 +23,8 @@
 namespace org::apache::nifi::minifi::extensions::procfs::tests {
 
 TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{std::make_unique<ProcFsMonitor>("ProcFsMonitor")};
-  auto proc_fs_monitor = test_controller_.getProcessor();
+  std::shared_ptr<ProcFsMonitor> proc_fs_monitor = std::make_shared<ProcFsMonitor>("ProcFsMonitor");
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{proc_fs_monitor};
 
   SECTION("Absolute JSON") {
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty, "Absolute");

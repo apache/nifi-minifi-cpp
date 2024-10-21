@@ -52,7 +52,7 @@ class GetFileTestController {
   std::filesystem::path input_file_name_;
   std::filesystem::path large_input_file_name_;
   std::filesystem::path hidden_input_file_name_;
-  core::Processor* get_file_processor_ = nullptr;
+  std::shared_ptr<core::Processor> get_file_processor_;
 };
 
 GetFileTestController::GetFileTestController()
@@ -270,9 +270,9 @@ TEST_CASE("Test if GetFile honors PollInterval property when triggered multiple 
 TEST_CASE("GetFile sets attributes correctly") {
   using minifi::processors::GetFile;
 
+  const auto get_file = std::make_shared<GetFile>("GetFile");
   LogTestController::getInstance().setTrace<GetFile>();
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<GetFile>("GetFile"));
-  const auto get_file = test_controller.getProcessor();
+  minifi::test::SingleProcessorTestController test_controller(get_file);
   std::filesystem::path dir = test_controller.createTempDirectory();
   get_file->setProperty(GetFile::Directory, dir.string());
   SECTION("File in subdirectory of input directory") {
@@ -303,8 +303,8 @@ TEST_CASE("GetFile can use expression language in Directory property") {
   using minifi::processors::GetFile;
   LogTestController::getInstance().setTrace<GetFile>();
 
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<GetFile>("GetFile"));
-  const auto get_file = test_controller.getProcessor();
+  const auto get_file = std::make_shared<GetFile>("GetFile");
+  minifi::test::SingleProcessorTestController test_controller(get_file);
 
   std::filesystem::path base_dir = test_controller.createTempDirectory();
   auto date_str = date::format("%Y-%m-%d", std::chrono::system_clock::now());

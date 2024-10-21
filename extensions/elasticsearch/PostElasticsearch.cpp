@@ -37,17 +37,19 @@ void PostElasticsearch::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-auto PostElasticsearch::getSSLContextService(core::ProcessContext& context) const {
+namespace {
+auto getSSLContextService(core::ProcessContext& context) {
   if (auto ssl_context = context.getProperty(PostElasticsearch::SSLContext))
-    return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*ssl_context, getUUID()));
+    return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*ssl_context));
   return std::shared_ptr<minifi::controllers::SSLContextService>{};
 }
 
-auto PostElasticsearch::getCredentialsService(core::ProcessContext& context) const {
+auto getCredentialsService(core::ProcessContext& context) {
   if (auto credentials = context.getProperty(PostElasticsearch::ElasticCredentials))
-    return std::dynamic_pointer_cast<ElasticsearchCredentialsControllerService>(context.getControllerService(*credentials, getUUID()));
+    return std::dynamic_pointer_cast<ElasticsearchCredentialsControllerService>(context.getControllerService(*credentials));
   return std::shared_ptr<ElasticsearchCredentialsControllerService>{};
 }
+}  // namespace
 
 void PostElasticsearch::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   context.getProperty(MaxBatchSize, max_batch_size_);

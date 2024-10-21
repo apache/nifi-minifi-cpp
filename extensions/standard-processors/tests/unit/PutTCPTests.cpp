@@ -97,9 +97,7 @@ utils::net::SslData createSslDataForServer() {
 
 class PutTCPTestFixture {
  public:
-  PutTCPTestFixture() :
-      controller_(std::make_unique<PutTCP>("PutTCP")),
-      put_tcp_(controller_.getProcessor<PutTCP>()) {
+  PutTCPTestFixture() {
     LogTestController::getInstance().setTrace<PutTCP>();
     LogTestController::getInstance().setInfo<core::ProcessSession>();
     LogTestController::getInstance().setTrace<utils::net::Server>();
@@ -229,8 +227,8 @@ class PutTCPTestFixture {
     return servers_.at(*port).cancellable_server.get();
   }
 
-  test::SingleProcessorTestController controller_;
-  PutTCP* put_tcp_;
+  const std::shared_ptr<PutTCP> put_tcp_ = std::make_shared<PutTCP>("PutTCP");
+  test::SingleProcessorTestController controller_{put_tcp_};
 
   class Server {
    public:

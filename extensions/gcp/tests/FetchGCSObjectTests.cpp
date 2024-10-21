@@ -46,7 +46,6 @@ REGISTER_RESOURCE(FetchGCSObjectMocked, Processor);
 class FetchGCSObjectTests : public ::testing::Test {
  public:
   void SetUp() override {
-    fetch_gcs_object_ = test_controller_.getProcessor<FetchGCSObjectMocked>();
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
@@ -55,8 +54,8 @@ class FetchGCSObjectTests : public ::testing::Test {
                                        FetchGCSObject::GCPCredentials,
                                        "gcp_credentials_controller_service");
   }
-  FetchGCSObjectMocked* fetch_gcs_object_ = nullptr;
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{std::make_unique<FetchGCSObjectMocked>("FetchGCSObjectMocked")};
+  std::shared_ptr<FetchGCSObjectMocked> fetch_gcs_object_ = std::make_shared<FetchGCSObjectMocked>("FetchGCSObjectMocked");
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{fetch_gcs_object_};
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
 };
 

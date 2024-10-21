@@ -65,7 +65,6 @@ auto CreateObject(int index, int generation = 1) {
 class ListGCSBucketTests : public ::testing::Test {
  public:
   void SetUp() override {
-    list_gcs_bucket_ = test_controller_.getProcessor<ListGCSBucketMocked>();
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
@@ -74,8 +73,8 @@ class ListGCSBucketTests : public ::testing::Test {
                                        ListGCSBucket::GCPCredentials,
                                        "gcp_credentials_controller_service");
   }
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{std::make_unique<ListGCSBucketMocked>("ListGCSBucketMocked")};
-  ListGCSBucketMocked* list_gcs_bucket_ = nullptr;
+  std::shared_ptr<ListGCSBucketMocked> list_gcs_bucket_ = std::make_shared<ListGCSBucketMocked>("ListGCSBucketMocked");
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{list_gcs_bucket_};
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
 };
 

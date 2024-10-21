@@ -35,8 +35,8 @@ std::string checkFileContent(const std::filesystem::path& path) {
 }
 
 TEST_CASE("PutSmb invalid network path") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<PutSmb>("PutSmb")};
-  const auto put_smb = controller.getProcessor();
+  const auto put_smb = std::make_shared<PutSmb>("PutSmb");
+  minifi::test::SingleProcessorTestController controller{put_smb};
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
   REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Hostname, utils::OsUtils::getHostName().value_or("localhost")));
   REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Share, "some_share_that_does_not_exists"));
@@ -48,8 +48,8 @@ TEST_CASE("PutSmb invalid network path") {
 }
 
 TEST_CASE("PutSmb conflict resolution test") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<PutSmb>("PutSmb")};
-  const auto put_smb = controller.getProcessor();
+  const auto put_smb = std::make_shared<PutSmb>("PutSmb");
+  minifi::test::SingleProcessorTestController controller{put_smb};
 
   auto temp_directory = controller.createTempDirectory();
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
@@ -133,8 +133,8 @@ TEST_CASE("PutSmb conflict resolution test") {
 }
 
 TEST_CASE("PutSmb create missing dirs test") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<PutSmb>("PutSmb")};
-  const auto put_smb = controller.getProcessor();
+  const auto put_smb = std::make_shared<PutSmb>("PutSmb");
+  minifi::test::SingleProcessorTestController controller{put_smb};
 
   auto temp_directory = controller.createTempDirectory();
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");

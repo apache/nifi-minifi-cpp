@@ -164,8 +164,8 @@ void verifySplitResults(const SingleProcessorTestController& controller, const P
 }
 
 void runSplitTextTest(const std::string& input, const std::vector<ExpectedSplitTextResult>& expected_results, const SplitTextProperties& properties) {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::LineSplitCount, std::to_string(properties.line_split_count));
   if (properties.maximum_fragment_size) {
     split_text->setProperty(processors::SplitText::MaximumFragmentSize, std::to_string(*properties.maximum_fragment_size) + " B");
@@ -188,28 +188,29 @@ void runSplitTextTest(const std::string& input, const std::vector<ExpectedSplitT
 }
 
 TEST_CASE("Line Split Count property is required") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   REQUIRE_THROWS_AS(controller.trigger("", {}), minifi::Exception);
 }
 
 TEST_CASE("Line Split Count property can only be 0 if Maximum Fragment Size is set") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::LineSplitCount, "0");
   REQUIRE_THROWS_AS(controller.trigger("", {}), minifi::Exception);
 }
 
 TEST_CASE("Maximum Fragment Size cannot be set to 0") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::LineSplitCount, "0");
   split_text->setProperty(processors::SplitText::MaximumFragmentSize, "0 B");
   REQUIRE_THROWS_AS(controller.trigger("", {}), minifi::Exception);
 }
 
 TEST_CASE("Header Line Marker Characters size cannot be equal or larger than split text buffer size") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::LineSplitCount, "1");
   std::string header_marker_character(processors::detail::SPLIT_TEXT_BUFFER_SIZE, 'A');
   split_text->setProperty(processors::SplitText::HeaderLineMarkerCharacters, header_marker_character);
@@ -218,8 +219,8 @@ TEST_CASE("Header Line Marker Characters size cannot be equal or larger than spl
 
 
 TEST_CASE("SplitText only forwards empty flowfile") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::LineSplitCount, "1");
   const auto trigger_results = controller.trigger("", {{std::string(core::SpecialFlowAttribute::FILENAME), "a.foo"}});
   CHECK(trigger_results.at(processors::SplitText::Splits).empty());
@@ -403,8 +404,8 @@ TEST_CASE("Endlines are trimmed when Remove Trailing Newlines is set to true and
 }
 
 TEST_CASE("If flowfile is empty after trailing new lines are removed then flow file is not emitted") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   SECTION("Line split count 1") {
     split_text->setProperty(processors::SplitText::LineSplitCount, "1");
   }
@@ -599,8 +600,8 @@ TEST_CASE("If the header defined by the header line count is larger than the flo
   SECTION("Header line count is one line shorter larger than the flow file") {
     input = "header line 1\nheader line 2\nthis is a new line\n";
   }
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::LineSplitCount, "1");
   split_text->setProperty(processors::SplitText::HeaderLineCount, "4");
   const auto trigger_results = controller.trigger(input, {{std::string(core::SpecialFlowAttribute::FILENAME), "a.foo"}});
@@ -613,8 +614,8 @@ TEST_CASE("If the header defined by the header line count is larger than the flo
 TEST_CASE("If the header defined by the header line count is larger than the max fragment size then the processor should fail") {
   std::string input;
   input = "header line 1\nheader line 2\nthis is a new line\n";
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::MaximumFragmentSize, "20 B");
   split_text->setProperty(processors::SplitText::HeaderLineCount, "2");
   split_text->setProperty(processors::SplitText::LineSplitCount, "0");
@@ -627,8 +628,8 @@ TEST_CASE("If the header defined by the header line count is larger than the max
 
 TEST_CASE("If header line count is the same as the flow file line count then no new flow file should be emitted") {
   std::string input = "header line 1\nheader line 2\nthis is a new line\n";
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::LineSplitCount, "1");
   split_text->setProperty(processors::SplitText::HeaderLineCount, "3");
   const auto trigger_results = controller.trigger(input, {{std::string(core::SpecialFlowAttribute::FILENAME), "a.foo"}});
@@ -806,8 +807,8 @@ TEST_CASE("If a split fragment would only consist of new lines then only the tri
 TEST_CASE("If the header defined by header marker characters is larger than the max fragments size then the processor should fail") {
   std::string input;
   input = "header line 1\nheader line 2\nthis is a new line\n";
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::MaximumFragmentSize, "20 B");
   split_text->setProperty(processors::SplitText::HeaderLineMarkerCharacters, "hea");
   split_text->setProperty(processors::SplitText::LineSplitCount, "0");
@@ -821,8 +822,8 @@ TEST_CASE("If the header defined by header marker characters is larger than the 
 TEST_CASE("If the header defined by header marker characters is the only content in the flow file then the processor should not emit new flow files") {
   std::string input;
   input = "header line 1\nheader line 2\n";
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
-  const auto split_text = controller.getProcessor();
+  const auto split_text = std::make_shared<processors::SplitText>("SplitText");
+  SingleProcessorTestController controller{split_text};
   split_text->setProperty(processors::SplitText::MaximumFragmentSize, "40 B");
   split_text->setProperty(processors::SplitText::HeaderLineMarkerCharacters, "hea");
   split_text->setProperty(processors::SplitText::LineSplitCount, "0");

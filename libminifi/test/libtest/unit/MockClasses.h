@@ -31,9 +31,8 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
+std::atomic<bool> disabled;
 std::mutex control_mutex;
-std::atomic<bool> subprocess_controller_service_found_correctly{false};
-std::atomic<bool> subprocess_controller_service_not_found_correctly{false};
 
 class MockControllerService : public minifi::core::controller::ControllerService {
  public:
@@ -97,14 +96,8 @@ class MockProcessor : public minifi::core::Processor {
 
   static constexpr const char* Description = "An example processor";
   static constexpr auto LinkedService = minifi::core::PropertyDefinitionBuilder<>::createProperty("linkedService").withDescription("Linked service").build();
-  static constexpr auto InSubProcessGroup = minifi::core::PropertyDefinitionBuilder<>::createProperty("InSubProcessGroup")
-    .withPropertyType(minifi::core::StandardPropertyTypes::BOOLEAN_TYPE)
-    .withDefaultValue("false")
-    .withDescription("Is in sub process group")
-    .build();
-  static constexpr auto Properties = std::array<minifi::core::PropertyReference, 2>{LinkedService, InSubProcessGroup};
-  static constexpr auto Success = minifi::core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};
-  static constexpr auto Relationships = std::array<minifi::core::RelationshipDefinition, 1>{Success};
+  static constexpr auto Properties = std::array<minifi::core::PropertyReference, 1>{LinkedService};
+  static constexpr auto Relationships = std::array<minifi::core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr minifi::core::annotation::Input InputRequirement = minifi::core::annotation::Input::INPUT_ALLOWED;
@@ -115,33 +108,22 @@ class MockProcessor : public minifi::core::Processor {
     setSupportedProperties(Properties);
   }
 
-  void onTrigger(minifi::core::ProcessContext& context, minifi::core::ProcessSession& session) override {
-    auto flow_file = session.get();
-    if (!flow_file) {
-      flow_file = session.create();
-    }
+  void onTrigger(minifi::core::ProcessContext& context, minifi::core::ProcessSession&) override {
     std::string linked_service;
     getProperty("linkedService", linked_service);
     if (!IsNullOrEmpty(linked_service)) {
-      std::shared_ptr<minifi::core::controller::ControllerService> service = context.getControllerService(linked_service, getUUID());
+      std::shared_ptr<minifi::core::controller::ControllerService> service = context.getControllerService(linked_service);
       std::lock_guard<std::mutex> lock(control_mutex);
-      REQUIRE(nullptr != service);
-      REQUIRE("pushitrealgood" == std::static_pointer_cast<MockControllerService>(service)->doSomething());
+      if (!disabled.load()) {
+        REQUIRE(context.isControllerServiceEnabled(linked_service));
+        REQUIRE(nullptr != service);
+        REQUIRE("pushitrealgood" == std::static_pointer_cast<MockControllerService>(service)->doSomething());
+      } else {
+        REQUIRE_FALSE(context.isControllerServiceEnabled(linked_service));
+      }
       // verify we have access to the controller service
       // and verify that we can execute it.
     }
-
-    bool in_sub_process_group = false;
-    getProperty("InSubProcessGroup", in_sub_process_group);
-    auto sub_service = context.getControllerService("SubMockController", getUUID());
-    if (in_sub_process_group) {
-      REQUIRE(nullptr != sub_service);
-      subprocess_controller_service_found_correctly = true;
-    } else {
-      REQUIRE(nullptr == sub_service);
-      subprocess_controller_service_not_found_correctly = true;
-    }
-    session.transfer(flow_file, Success);
   }
 
   bool isYield() override {

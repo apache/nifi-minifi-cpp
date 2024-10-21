@@ -30,8 +30,8 @@
 namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Python: hello world") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+  minifi::test::SingleProcessorTestController controller{execute_script};
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
   execute_script->setProperty(ExecuteScript::ScriptBody, R"(print("Hello world!"))");
@@ -79,8 +79,9 @@ TEST_CASE("Test both script body and script file set", "[executescriptMisconfigu
 }
 
 TEST_CASE("Python: Test session get should return None if there are no flowfiles in the incoming connections") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
@@ -97,8 +98,9 @@ def onTrigger(context, session):
 }
 
 TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
@@ -126,8 +128,9 @@ def onTrigger(context, session):
 }
 
 TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
@@ -152,8 +155,9 @@ def onTrigger(context, session):
 }
 
 TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
@@ -174,8 +178,9 @@ def onTrigger(context, session):
 }
 
 TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
@@ -199,8 +204,9 @@ def onTrigger(context, session):
 }
 
 TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextProperty]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
@@ -220,8 +226,9 @@ def onTrigger(context, session):
 TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleDirectoryProperty]") {
   using org::apache::nifi::minifi::utils::file::get_executable_dir;
 
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   const auto script_files_directory =  minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "test_python_scripts";
@@ -238,8 +245,9 @@ TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleD
 }
 
 TEST_CASE("Python: Non existent script file should throw", "[executescriptPythonNonExistentScriptFile]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
@@ -249,8 +257,9 @@ TEST_CASE("Python: Non existent script file should throw", "[executescriptPython
 }
 
 TEST_CASE("Python can remove flowfiles", "[ExecuteScript]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
   execute_script->setProperty(ExecuteScript::ScriptBody, R"(
@@ -263,8 +272,9 @@ def onTrigger(context, session):
 }
 
 TEST_CASE("Python can store states in StateManager", "[ExecuteScript]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
-  const auto execute_script = controller.getProcessor();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<minifi::processors::ExecuteScript>();
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
   execute_script->setProperty(ExecuteScript::ScriptBody,

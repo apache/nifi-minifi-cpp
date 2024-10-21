@@ -44,7 +44,7 @@ struct Fixture {
 
   TestController testController_;
   std::shared_ptr<TestPlan> plan_;
-  core::Processor* publishMqttProcessor_ = nullptr;
+  std::shared_ptr<core::Processor> publishMqttProcessor_;
 };
 }  // namespace
 

@@ -46,7 +46,7 @@ TEST_CASE("CaptureRTSPFrame::ValidCapture", "[!mayfail]") {
     LogTestController::getInstance().setDebug<core::ProcessSession>();
 
     std::shared_ptr<TestPlan> plan = testController.createPlan();
-    auto captureRTSP = plan->addProcessor("CaptureRTSPFrame", "CaptureRTSPFrame");
+    std::shared_ptr<core::Processor> captureRTSP = plan->addProcessor("CaptureRTSPFrame", "CaptureRTSPFrame");
     // the RTSP url below comes from a public RTSP stream (hopefully still alive by the time you read this)
     // alternatively, we can set our own server using vlc.
     // vlc -vvv --loop <input video> --sout '#rtp{port=1234,sdp=rtsp://127.0.0.1:port/test}' --sout-keep
@@ -69,7 +69,7 @@ TEST_CASE("CaptureRTSPFrame::InvalidURI", "[opencvtest2]") {
   LogTestController::getInstance().setDebug<core::ProcessSession>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  auto captureRTSP = plan->addProcessor("CaptureRTSPFrame", "CaptureRTSPFrame");
+  std::shared_ptr<core::Processor> captureRTSP = plan->addProcessor("CaptureRTSPFrame", "CaptureRTSPFrame");
 
   plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPHostname, "170.93.143.139");
   plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPURI, "abcd");

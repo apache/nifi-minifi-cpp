@@ -24,16 +24,18 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-std::shared_ptr<google::cloud::storage::oauth2::Credentials> GCSProcessor::getCredentials(core::ProcessContext& context) const {
+namespace {
+std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) {
   std::string service_name;
   if (context.getProperty(GCSProcessor::GCPCredentials, service_name) && !IsNullOrEmpty(service_name)) {
-    auto gcp_credentials_controller_service = std::dynamic_pointer_cast<const GCPCredentialsControllerService>(context.getControllerService(service_name, getUUID()));
+    auto gcp_credentials_controller_service = std::dynamic_pointer_cast<const GCPCredentialsControllerService>(context.getControllerService(service_name));
     if (!gcp_credentials_controller_service)
       return nullptr;
     return gcp_credentials_controller_service->getCredentials();
   }
   return nullptr;
 }
+}  // namespace
 
 void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   if (auto number_of_retries = context.getProperty<uint64_t>(NumberOfRetries)) {
