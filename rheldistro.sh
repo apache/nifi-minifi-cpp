@@ -29,14 +29,7 @@ install_bison() {
 }
 
 bootstrap_cmake(){
-  if [ "$OS_MAJOR" -lt 8 ]; then
-    sudo yum -y install wget patch
-    wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    sudo yum -y install epel-release-latest-7.noarch.rpm
-    sudo yum -y install cmake3
-  else
-    sudo dnf -y install cmake
-  fi
+  sudo dnf -y install cmake
 }
 bootstrap_compiler() {
   sudo yum -y install gcc gcc-c++
@@ -70,7 +63,7 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "libtool" ]; then
             INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "python" ]; then
-            INSTALLED+=("python3-devel")
+            INSTALLED+=("python3.12-devel")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
             INSTALLED+=("xz-devel")
           elif [ "$FOUND_VALUE" = "libssh2" ]; then
