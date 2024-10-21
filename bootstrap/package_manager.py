@@ -149,7 +149,7 @@ class DnfPackageManager(PackageManager):
             install_cmd = "sudo dnf install -y"
         return self._install(dependencies=dependencies,
                              install_cmd=install_cmd,
-                             replace_dict={"python": {"python3.12-devel" if enterprise else "python3-devel"}})
+                             replace_dict={"python": {"python3.12-devel" if self.enterprise else "python3-devel"}})
 
     def _get_installed_packages(self) -> Set[str]:
         result = subprocess.run(['dnf', 'list', 'installed'], text=True, capture_output=True, check=True)
