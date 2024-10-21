@@ -67,17 +67,17 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a document with id "test_doc_id" in bucket "test_bucket" is present with data '{"field1": "value1"}' of type "Binary" in Couchbase
 
   Scenario: A MiNiFi instance can get data from test bucket with GetCouchbaseKey processor
-    Given a Couchbase server is set up
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content '{"field1": "value1", "field2": "value2"}' is present in '/tmp/input'
     And a PutCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the PutCouchbaseKey processor is set to "test_doc_id"
+    And the "Couchbase Cluster Controller Service" property of the PutCouchbaseKey processor is set to "CouchbaseClusterService"
     And a GetCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the GetCouchbaseKey processor is set to "test_doc_id"
+    And the "Couchbase Cluster Controller Service" property of the GetCouchbaseKey processor is set to "CouchbaseClusterService"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
-    And a CouchbaseClusterService is setup up for PutCouchbaseKey with the name "CouchbaseClusterService"
-    And a CouchbaseClusterService is setup up for GetCouchbaseKey with the name "CouchbaseClusterService"
+    And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
@@ -94,19 +94,19 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the Minifi logs match the following regex: "key:couchbase.doc.expiry value:\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}" in less than 1 seconds
 
   Scenario: A MiNiFi instance can get data from test bucket with GetCouchbaseKey processor using binary storage
-    Given a Couchbase server is set up
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content '{"field1": "value1", "field2": "value2"}' is present in '/tmp/input'
     And a PutCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the PutCouchbaseKey processor is set to "test_doc_id"
     And the "Document Type" property of the PutCouchbaseKey processor is set to "Binary"
+    And the "Couchbase Cluster Controller Service" property of the PutCouchbaseKey processor is set to "CouchbaseClusterService"
     And a GetCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the GetCouchbaseKey processor is set to "test_doc_id"
     And the "Document Type" property of the GetCouchbaseKey processor is set to "Binary"
+    And the "Couchbase Cluster Controller Service" property of the GetCouchbaseKey processor is set to "CouchbaseClusterService"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
-    And a CouchbaseClusterService is setup up for PutCouchbaseKey with the name "CouchbaseClusterService"
-    And a CouchbaseClusterService is setup up for GetCouchbaseKey with the name "CouchbaseClusterService"
+    And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
@@ -123,20 +123,20 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the Minifi logs match the following regex: "key:couchbase.doc.expiry value:\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}" in less than 1 seconds
 
   Scenario: A MiNiFi instance can get data from test bucket with GetCouchbaseKey processor and put the result in an attribute
-    Given a Couchbase server is set up
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content '{"field1": "value1", "field2": "value2"}' is present in '/tmp/input'
     And a PutCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the PutCouchbaseKey processor is set to "test_doc_id"
     And the "Document Type" property of the PutCouchbaseKey processor is set to "String"
+    And the "Couchbase Cluster Controller Service" property of the PutCouchbaseKey processor is set to "CouchbaseClusterService"
     And a GetCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the GetCouchbaseKey processor is set to "test_doc_id"
     And the "Document Type" property of the GetCouchbaseKey processor is set to "String"
+    And the "Couchbase Cluster Controller Service" property of the GetCouchbaseKey processor is set to "CouchbaseClusterService"
     And the "Put Value to Attribute" property of the GetCouchbaseKey processor is set to "get_couchbase_result"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
-    And a CouchbaseClusterService is setup up for PutCouchbaseKey with the name "CouchbaseClusterService"
-    And a CouchbaseClusterService is setup up for GetCouchbaseKey with the name "CouchbaseClusterService"
+    And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
@@ -154,17 +154,17 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the Minifi logs contain the following message: 'key:get_couchbase_result value:{"field1": "value1", "field2": "value2"}' in less than 1 seconds
 
   Scenario: GetCouchbaseKey transfers FlowFile to failure relationship on Couchbase value type mismatch
-    Given a Couchbase server is set up
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content '{"field1": "value1", "field2": "value2"}' is present in '/tmp/input'
     And a PutCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the PutCouchbaseKey processor is set to "test_doc_id"
     And the "Document Type" property of the PutCouchbaseKey processor is set to "String"
+    And the "Couchbase Cluster Controller Service" property of the PutCouchbaseKey processor is set to "CouchbaseClusterService"
     And a GetCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And the "Document Id" property of the GetCouchbaseKey processor is set to "test_doc_id"
     And the "Document Type" property of the GetCouchbaseKey processor is set to "Binary"
-    And a CouchbaseClusterService is setup up for PutCouchbaseKey with the name "CouchbaseClusterService"
-    And a CouchbaseClusterService is setup up for GetCouchbaseKey with the name "CouchbaseClusterService"
+    And the "Couchbase Cluster Controller Service" property of the GetCouchbaseKey processor is set to "CouchbaseClusterService"
+    And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
