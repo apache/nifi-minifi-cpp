@@ -51,7 +51,7 @@ add_custom_target(
              -DENABLE_CIVET=OFF
              -DENABLE_SQL=OFF
              -DENABLE_MQTT=OFF
-             -DENABLE_LIBRDKAFKA=OFF
+             -DENABLE_KAFKA=OFF
              -DENABLE_LUA_SCRIPTING=OFF
              -DENABLE_PYTHON_SCRIPTING=OFF
              -DENABLE_AWS=OFF

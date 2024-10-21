@@ -34,4 +34,39 @@ TEST_CASE("Scheduling should fail when batch size is larger than the max queue m
   REQUIRE_THROWS_WITH(test_controller.trigger(""), "Process Schedule Operation: Invalid configuration: Batch Size cannot be larger than Queue Max Message");
 }
 
+TEST_CASE("Compress Codec property") {
+  using processors::PublishKafka;
+  const auto publish_kafka = std::make_shared<PublishKafka>("PublishKafka");
+  SingleProcessorTestController test_controller(publish_kafka);
+  publish_kafka->setProperty(PublishKafka::ClientName, "test_client");
+  publish_kafka->setProperty(PublishKafka::SeedBrokers, "test_seedbroker");
+  publish_kafka->setProperty(PublishKafka::Topic, "test_topic");
+  publish_kafka->setProperty(PublishKafka::MessageTimeOut, "10ms");
+
+  SECTION("none") {
+    REQUIRE_NOTHROW(publish_kafka->setProperty(PublishKafka::CompressCodec, "none"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("gzip") {
+    REQUIRE_NOTHROW(publish_kafka->setProperty(PublishKafka::CompressCodec, "gzip"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("snappy") {
+    REQUIRE_NOTHROW(publish_kafka->setProperty(PublishKafka::CompressCodec, "snappy"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("lz4") {
+    REQUIRE_NOTHROW(publish_kafka->setProperty(PublishKafka::CompressCodec, "lz4"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("zstd") {
+    REQUIRE_NOTHROW(publish_kafka->setProperty(PublishKafka::CompressCodec, "zstd"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("foo") {
+    REQUIRE_NOTHROW(publish_kafka->setProperty(PublishKafka::CompressCodec, "foo"));
+    REQUIRE_THROWS(test_controller.trigger("input"));
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::test
