@@ -25,6 +25,7 @@ from minifi.controllers.ElasticsearchCredentialsService import ElasticsearchCred
 from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
+from minifi.controllers.CouchbaseClusterService import CouchbaseClusterService
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -271,6 +272,7 @@ def step_impl(context):
 
 
 @given("a file with the content \"{content}\" is present in \"{path}\"")
+@given("a file with the content '{content}' is present in '{path}'")
 @then("a file with the content \"{content}\" is placed in \"{path}\"")
 def step_impl(context, content, path):
     context.test.add_test_data(path, content)
@@ -1354,3 +1356,23 @@ def step_impl(context):
 @given(u'PLC register has been set with {modbus_cmd} command')
 def step_impl(context, modbus_cmd):
     context.test.set_value_on_plc_with_modbus(context.test.get_container_name_with_postfix('diag-slave-tcp'), modbus_cmd)
+
+
+# Couchbase
+@when(u'a Couchbase server is started')
+def step_impl(context):
+    context.test.start_couchbase_server(context)
+
+
+@given("a CouchbaseClusterService is setup up with the name \"{service_name}\"")
+def step_impl(context, service_name):
+    couchbase_cluster_controller_service = CouchbaseClusterService(
+        name=service_name,
+        connection_string="couchbase://{server_hostname}".format(server_hostname=context.test.get_container_name_with_postfix("couchbase-server")))
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(couchbase_cluster_controller_service)
+
+
+@then("a document with id \"{doc_id}\" in bucket \"{bucket_name}\" is present with data '{data}' of type \"{data_type}\" in Couchbase")
+def step_impl(context, doc_id: str, bucket_name: str, data: str, data_type: str):
+    context.test.check_is_data_present_on_couchbase(doc_id, bucket_name, data, data_type)

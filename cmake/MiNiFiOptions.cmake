@@ -111,6 +111,7 @@ add_minifi_option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
 add_minifi_option(ENABLE_PROMETHEUS "Enables Prometheus support." ON)
 add_minifi_option(ENABLE_GRAFANA_LOKI "Enable Grafana Loki support" OFF)
 add_minifi_option(ENABLE_GRPC_FOR_LOKI "Enable gRPC for Grafana Loki extension" ON)
+add_minifi_option(ENABLE_COUCHBASE "Enable Couchbase support" OFF)
 add_minifi_option(ENABLE_EXECUTE_PROCESS "Enable ExecuteProcess processor" OFF)
 add_minifi_option(ENABLE_CONTROLLER "Enables the build of MiNiFi controller binary." ON)
 
