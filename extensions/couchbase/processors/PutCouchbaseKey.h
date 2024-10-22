@@ -100,7 +100,8 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
       .withAllowedValues(magic_enum::enum_names<CouchbaseValueType>())
       .build();
   EXTENSIONAPI static constexpr auto DocumentId = core::PropertyDefinitionBuilder<>::createProperty("Document Id")
-      .withDescription("A static, fixed Couchbase document id, or an expression to construct the Couchbase document id. If not specified, the FlowFile UUID will be used.")
+      .withDescription("A static, fixed Couchbase document id, or an expression to construct the Couchbase document id. "
+                       "If not specified, either the FlowFile uuid attribute or if that's not found a generated uuid will be used.")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto PersistTo = core::PropertyDefinitionBuilder<6>::createProperty("Persist To")

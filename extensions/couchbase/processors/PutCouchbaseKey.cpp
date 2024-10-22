@@ -56,7 +56,7 @@ void PutCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
 
   std::string document_id;
   if (!context.getProperty(DocumentId, document_id, flow_file.get()) || document_id.empty()) {
-    document_id = flow_file->getUUIDStr();
+    document_id = flow_file->getAttribute(core::SpecialFlowAttribute::UUID).value_or(utils::IdGenerator::getIdGenerator()->generate().to_string());
   }
 
   ::couchbase::upsert_options options;

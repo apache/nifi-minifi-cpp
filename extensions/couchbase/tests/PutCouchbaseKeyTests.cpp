@@ -27,6 +27,8 @@ namespace org::apache::nifi::minifi::couchbase::test {
 
 REGISTER_RESOURCE(MockCouchbaseClusterService, ControllerService);
 
+const std::string TEST_UUID = "a53f0e78-b91a-4a82-939b-639174edb00b";
+
 struct ExpectedCallOptions {
   std::string bucket_name;
   std::string scope_name;
@@ -40,6 +42,11 @@ struct ExpectedCallOptions {
 class PutCouchbaseKeyTestController : public TestController {
  public:
   PutCouchbaseKeyTestController() {
+    LogTestController::getInstance().setDebug<TestPlan>();
+    LogTestController::getInstance().setDebug<minifi::core::Processor>();
+    LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
+    LogTestController::getInstance().setDebug<controllers::CouchbaseClusterService>();
+    LogTestController::getInstance().setDebug<processors::PutCouchbaseKey>();
     auto controller_service_node = controller_.plan->addController("MockCouchbaseClusterService", "MockCouchbaseClusterService");
     mock_couchbase_cluster_service_ = std::static_pointer_cast<MockCouchbaseClusterService>(controller_service_node->getControllerServiceImplementation());
     proc_->setProperty(processors::PutCouchbaseKey::CouchbaseClusterControllerService, "MockCouchbaseClusterService");
@@ -82,7 +89,7 @@ class PutCouchbaseKeyTestController : public TestController {
 
     auto upsert_parameters = mock_couchbase_cluster_service_->getUpsertParameters();
     CHECK(upsert_parameters.document_type == expected_call_options.document_type);
-    std::string expected_doc_id = expected_call_options.doc_id.empty() ? flow_file->getUUID().to_string() : expected_call_options.doc_id;
+    auto expected_doc_id = expected_call_options.doc_id.empty() ? TEST_UUID : expected_call_options.doc_id;
     CHECK(upsert_parameters.document_id == expected_doc_id);
     CHECK(upsert_parameters.buffer == stringToByteVector(input));
 
@@ -110,12 +117,12 @@ class PutCouchbaseKeyTestController : public TestController {
 
 TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Invalid Couchbase cluster controller service", "[putcouchbasekey]") {
   proc_->setProperty(processors::PutCouchbaseKey::CouchbaseClusterControllerService, "invalid");
-  REQUIRE_THROWS_AS(controller_.trigger({minifi::test::InputFlowFileData{"{\"name\": \"John\"}\n{\"name\": \"Jill\"}"}}), minifi::Exception);
+  REQUIRE_THROWS_AS(controller_.trigger({minifi::test::InputFlowFileData{"{\"name\": \"John\"}\n{\"name\": \"Jill\"}", {{"uuid", TEST_UUID}}}}), minifi::Exception);
 }
 
 TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Invalid bucket name", "[putcouchbasekey]") {
   proc_->setProperty(processors::PutCouchbaseKey::BucketName, "");
-  auto results = controller_.trigger({minifi::test::InputFlowFileData{"{\"name\": \"John\"}\n{\"name\": \"Jill\"}"}});
+  auto results = controller_.trigger({minifi::test::InputFlowFileData{"{\"name\": \"John\"}\n{\"name\": \"Jill\"}", {{"uuid", TEST_UUID}}}});
   REQUIRE(results[processors::PutCouchbaseKey::Failure].size() == 1);
   REQUIRE(LogTestController::getInstance().contains("Bucket '' is invalid or empty!", 1s));
 }
@@ -123,7 +130,7 @@ TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Invalid bucket name", "[putcouc
 TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put succeeeds with default properties", "[putcouchbasekey]") {
   proc_->setProperty(processors::PutCouchbaseKey::BucketName, "mybucket");
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
-  auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
+  auto results = controller_.trigger({minifi::test::InputFlowFileData{input, {{"uuid", TEST_UUID}}}});
   verifyResults(results, processors::PutCouchbaseKey::Success, ExpectedCallOptions{"mybucket", "_default", "_default",
     ::couchbase::persist_to::none, ::couchbase::replicate_to::none, CouchbaseValueType::Json, ""}, input);
 }
@@ -137,7 +144,7 @@ TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put succeeeds with optional pro
   proc_->setProperty(processors::PutCouchbaseKey::PersistTo, "ACTIVE");
   proc_->setProperty(processors::PutCouchbaseKey::ReplicateTo, "TWO");
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
-  auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
+  auto results = controller_.trigger({minifi::test::InputFlowFileData{input, {{"uuid", TEST_UUID}}}});
   verifyResults(results, processors::PutCouchbaseKey::Success, ExpectedCallOptions{"mybucket", "scope1", "collection1", ::couchbase::persist_to::active,
     ::couchbase::replicate_to::two, CouchbaseValueType::Binary, "important_doc"}, input);
 }
@@ -146,7 +153,7 @@ TEST_CASE_METHOD(PutCouchbaseKeyTestController, "Put fails with default properti
   proc_->setProperty(processors::PutCouchbaseKey::BucketName, "mybucket");
   mock_couchbase_cluster_service_->setUpsertError(CouchbaseErrorType::FATAL);
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
-  auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
+  auto results = controller_.trigger({minifi::test::InputFlowFileData{input, {{"uuid", TEST_UUID}}}});
   verifyResults(results, processors::PutCouchbaseKey::Failure, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none,
     CouchbaseValueType::Json, ""}, input);
 }
@@ -155,7 +162,7 @@ TEST_CASE_METHOD(PutCouchbaseKeyTestController, "FlowFile is transferred to retr
   proc_->setProperty(processors::PutCouchbaseKey::BucketName, "mybucket");
   mock_couchbase_cluster_service_->setUpsertError(CouchbaseErrorType::TEMPORARY);
   const std::string input = "{\"name\": \"John\"}\n{\"name\": \"Jill\"}";
-  auto results = controller_.trigger({minifi::test::InputFlowFileData{input}});
+  auto results = controller_.trigger({minifi::test::InputFlowFileData{input, {{"uuid", TEST_UUID}}}});
   verifyResults(results, processors::PutCouchbaseKey::Retry, ExpectedCallOptions{"mybucket", "_default", "_default", ::couchbase::persist_to::none, ::couchbase::replicate_to::none,
     CouchbaseValueType::Json, ""}, input);
 }
