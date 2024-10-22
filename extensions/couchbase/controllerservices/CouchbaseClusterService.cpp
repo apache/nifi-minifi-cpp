@@ -22,6 +22,7 @@
 #include "couchbase/codec/raw_json_transcoder.hxx"
 
 #include "core/Resource.h"
+#include "utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::couchbase {
 
@@ -70,16 +71,57 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
       document_id, collection.bucket_name, collection.scope_name, collection.collection_name, upsert_err.ec(), upsert_err.message());
     return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
   } else {
-    const uint64_t partition_uuid = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_uuid() : 0);
-    const uint64_t sequence_number = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->sequence_number() : 0);
-    const uint16_t partition_id = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_id() : 0);
-    return CouchbaseUpsertResult {
-      collection.bucket_name,
-      upsert_resp.cas().value(),
-      partition_uuid,
-      sequence_number,
-      partition_id
-    };
+    CouchbaseUpsertResult result;
+    result.bucket_name = collection.bucket_name;
+    result.cas = upsert_resp.cas().value();
+    result.partition_uuid = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_uuid() : 0);
+    result.sequence_number = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->sequence_number() : 0);
+    result.partition_id = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_id() : 0);
+    return result;
+  }
+}
+
+nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(const CouchbaseCollection& collection,
+      const std::string& document_id, CouchbaseValueType return_type) {
+  auto collection_result = getCollection(collection);
+  if (!collection_result.has_value()) {
+    return nonstd::make_unexpected(collection_result.error());
+  }
+
+  ::couchbase::get_options options;
+  options.with_expiry(true);
+  auto [get_err, resp] = collection_result->get(document_id, options).get();
+  if (get_err.ec()) {
+    if (get_err.ec().value() == static_cast<int>(::couchbase::errc::common::unambiguous_timeout) || get_err.ec().value() == static_cast<int>(::couchbase::errc::common::ambiguous_timeout)) {
+      logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' due to timeout",
+        document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
+      return nonstd::make_unexpected(CouchbaseErrorType::TEMPORARY);
+    }
+    std::string cause = get_err.cause() ? get_err.cause()->message() : "";
+    logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' with error code: '{}', message: '{}'",
+      document_id, collection.bucket_name, collection.scope_name, collection.collection_name, get_err.ec(), get_err.message());
+    return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
+  } else {
+    try {
+      CouchbaseGetResult result;
+      result.bucket_name = collection.bucket_name;
+      result.cas = resp.cas().value();
+      if (return_type == CouchbaseValueType::Json) {
+        result.value = resp.content_as<::couchbase::codec::binary, ::couchbase::codec::raw_json_transcoder>();
+      } else if (return_type == CouchbaseValueType::String) {
+        result.value = resp.content_as<::couchbase::codec::raw_string_transcoder>();
+      } else {
+        result.value = resp.content_as<::couchbase::codec::raw_binary_transcoder>();
+      }
+      if (resp.expiry_time().has_value()) {
+        result.expiry = utils::timeutils::getTimeStr(*resp.expiry_time());
+      }
+      return result;
+    } catch(const std::exception& ex) {
+      logger_->log_error("Failed to get content for document '{}' from collection '{}.{}.{}' with the following exception: '{}'",
+        document_id, collection.bucket_name, collection.scope_name, collection.collection_name, ex.what());
+      return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
+    }
   }
 }
 

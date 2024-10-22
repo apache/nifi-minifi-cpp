@@ -23,56 +23,18 @@
 
 #include "core/AbstractProcessor.h"
 #include "core/ProcessSession.h"
-#include "utils/Enum.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "CouchbaseClusterService.h"
-#include "couchbase/persist_to.hxx"
-#include "couchbase/replicate_to.hxx"
-
-namespace magic_enum::customize {
-
-template <>
-constexpr customize_t enum_name<::couchbase::persist_to>(::couchbase::persist_to value) noexcept {
-  switch (value) {
-    case ::couchbase::persist_to::none:
-      return "NONE";
-    case ::couchbase::persist_to::active:
-      return "ACTIVE";
-    case ::couchbase::persist_to::one:
-      return "ONE";
-    case ::couchbase::persist_to::two:
-      return "TWO";
-    case ::couchbase::persist_to::three:
-      return "THREE";
-    case ::couchbase::persist_to::four:
-      return "FOUR";
-  }
-  return invalid_tag;
-}
-
-template <>
-constexpr customize_t enum_name<::couchbase::replicate_to>(::couchbase::replicate_to value) noexcept {
-  switch (value) {
-    case ::couchbase::replicate_to::none:
-      return "NONE";
-    case ::couchbase::replicate_to::one:
-      return "ONE";
-    case ::couchbase::replicate_to::two:
-      return "TWO";
-    case ::couchbase::replicate_to::three:
-      return "THREE";
-  }
-  return invalid_tag;
-}
-}  // namespace magic_enum::customize
 
 namespace org::apache::nifi::minifi::couchbase::processors {
 
-class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
+class GetCouchbaseKey final : public core::AbstractProcessor<GetCouchbaseKey> {
  public:
-  using core::AbstractProcessor<PutCouchbaseKey>::AbstractProcessor;
+  using core::AbstractProcessor<GetCouchbaseKey>::AbstractProcessor;
 
-  EXTENSIONAPI static constexpr const char* Description = "Put a document to Couchbase Server via Key/Value access.";
+  EXTENSIONAPI static constexpr const char* Description = "Get a document from Couchbase Server via Key/Value access. The ID of the document to fetch may be supplied by setting the "
+    "<Document Id> property. NOTE: if the Document Id property is not set, the contents of the FlowFile will be read to determine the Document Id, which means that the contents of "
+    "the entire FlowFile will be buffered in memory.";
 
   EXTENSIONAPI static constexpr auto CouchbaseClusterControllerService = core::PropertyDefinitionBuilder<>::createProperty("Couchbase Cluster Controller Service")
       .withDescription("A Couchbase Cluster Controller Service which manages connections to a Couchbase cluster.")
@@ -94,27 +56,19 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto DocumentType = core::PropertyDefinitionBuilder<3>::createProperty("Document Type")
-      .withDescription("Content type to store data as.")
+      .withDescription("Content type of the retrieved value.")
       .isRequired(true)
       .withDefaultValue(magic_enum::enum_name(CouchbaseValueType::Json))
       .withAllowedValues(magic_enum::enum_names<CouchbaseValueType>())
       .build();
   EXTENSIONAPI static constexpr auto DocumentId = core::PropertyDefinitionBuilder<>::createProperty("Document Id")
-      .withDescription("A static, fixed Couchbase document id, or an expression to construct the Couchbase document id. "
-                       "If not specified, either the FlowFile uuid attribute or if that's not found a generated uuid will be used.")
+      .withDescription("A static, fixed Couchbase document id, or an expression to construct the Couchbase document id.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto PersistTo = core::PropertyDefinitionBuilder<6>::createProperty("Persist To")
-      .withDescription("Durability constraint about disk persistence.")
-      .isRequired(true)
-      .withDefaultValue(magic_enum::enum_name(::couchbase::persist_to::none))
-      .withAllowedValues(magic_enum::enum_names<::couchbase::persist_to>())
-      .build();
-  EXTENSIONAPI static constexpr auto ReplicateTo = core::PropertyDefinitionBuilder<4>::createProperty("Replicate To")
-      .withDescription("Durability constraint about replication.")
-      .isRequired(true)
-      .withDefaultValue(magic_enum::enum_name(::couchbase::replicate_to::none))
-      .withAllowedValues(magic_enum::enum_names<::couchbase::replicate_to>())
+  EXTENSIONAPI static constexpr auto PutValueToAttribute = core::PropertyDefinitionBuilder<>::createProperty("Put Value to Attribute")
+      .withDescription("If set, the retrieved value will be put into an attribute of the FlowFile instead of a the content of the FlowFile. "
+                       "The attribute key to put to is determined by evaluating value of this property.")
+      .supportsExpressionLanguage(true)
       .build();
 
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
@@ -124,23 +78,23 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
     CollectionName,
     DocumentType,
     DocumentId,
-    PersistTo,
-    ReplicateTo
+    PutValueToAttribute
   });
 
-  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are written to Couchbase Server are routed to this relationship."};
-  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "All FlowFiles failed to be written to Couchbase Server and not retry-able are routed to this relationship."};
-  EXTENSIONAPI static constexpr auto Retry = core::RelationshipDefinition{"retry", "All FlowFiles failed to be written to Couchbase Server but can be retried are routed to this relationship."};
-  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure, Retry};
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
+    "Values retrieved from Couchbase Server are written as outgoing FlowFiles content or put into an attribute of the incoming FlowFile and routed to this relationship."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "All FlowFiles failed to fetch from Couchbase Server and not retry-able are routed to this relationship."};
+  EXTENSIONAPI static constexpr auto Retry = core::RelationshipDefinition{"retry", "All FlowFiles failed to fetch from Couchbase Server but can be retried are routed to this relationship."};
+  EXTENSIONAPI static constexpr auto Original = core::RelationshipDefinition{"original",
+    "The original input FlowFile is routed to this relationship when the value is retrieved from Couchbase Server and routed to 'success'."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure, Retry, Original};
 
   EXTENSIONAPI static constexpr auto CouchbaseBucket = core::OutputAttributeDefinition<>{"couchbase.bucket", {Success}, "Bucket where the document was stored."};
   EXTENSIONAPI static constexpr auto CouchbaseDocId = core::OutputAttributeDefinition<>{"couchbase.doc.id", {Success}, "Id of the document."};
   EXTENSIONAPI static constexpr auto CouchbaseDocCas = core::OutputAttributeDefinition<>{"couchbase.doc.cas", {Success}, "CAS of the document."};
-  EXTENSIONAPI static constexpr auto CouchbaseDocSequenceNumber = core::OutputAttributeDefinition<>{"couchbase.doc.sequence.number", {Success}, "Sequence number associated with the document."};
-  EXTENSIONAPI static constexpr auto CouchbasePartitionUUID = core::OutputAttributeDefinition<>{"couchbase.partition.uuid", {Success}, "UUID of partition."};
-  EXTENSIONAPI static constexpr auto CouchbasePartitionId = core::OutputAttributeDefinition<>{"couchbase.partition.id", {Success}, "ID of partition (also known as vBucket)."};
-  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 6>{
-      CouchbaseBucket, CouchbaseDocId, CouchbaseDocCas, CouchbaseDocSequenceNumber, CouchbasePartitionUUID, CouchbasePartitionId};
+  EXTENSIONAPI static constexpr auto CouchbaseDocExpiry = core::OutputAttributeDefinition<>{"couchbase.doc.expiry", {Success}, "Expiration of the document."};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 4>{
+      CouchbaseBucket, CouchbaseDocId, CouchbaseDocCas, CouchbaseDocExpiry};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -153,8 +107,6 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
  private:
   std::shared_ptr<controllers::CouchbaseClusterService> couchbase_cluster_service_;
   CouchbaseValueType document_type_ = CouchbaseValueType::Json;
-  ::couchbase::persist_to persist_to_ = ::couchbase::persist_to::none;
-  ::couchbase::replicate_to replicate_to_ = ::couchbase::replicate_to::none;
 };
 
 }  // namespace org::apache::nifi::minifi::couchbase::processors

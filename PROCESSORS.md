@@ -48,6 +48,7 @@ limitations under the License.
 - [FetchSmb](#FetchSmb)
 - [FocusArchiveEntry](#FocusArchiveEntry)
 - [GenerateFlowFile](#GenerateFlowFile)
+- [GetCouchbaseKey](#GetCouchbaseKey)
 - [GetFile](#GetFile)
 - [GetTCP](#GetTCP)
 - [HashContent](#HashContent)
@@ -1091,6 +1092,45 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                            |
 |---------|----------------------------------------|
 | success | success operational on the flow record |
+
+
+## GetCouchbaseKey
+
+### Description
+
+Get a document from Couchbase Server via Key/Value access. The ID of the document to fetch may be supplied by setting the <Document Id> property. NOTE: if the Document Id property is not set, the contents of the FlowFile will be read to determine the Document Id, which means that the contents of the entire FlowFile will be buffered in memory.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                                     | Default Value | Allowable Values           | Description                                                                                                                                                                                                                                    |
+|------------------------------------------|---------------|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Couchbase Cluster Controller Service** |               |                            | A Couchbase Cluster Controller Service which manages connections to a Couchbase cluster.                                                                                                                                                       |
+| **Bucket Name**                          | default       |                            | The name of bucket to access.<br/>**Supports Expression Language: true**                                                                                                                                                                       |
+| Scope Name                               |               |                            | Scope to use inside the bucket. If not specified, the _default scope is used.<br/>**Supports Expression Language: true**                                                                                                                       |
+| Collection Name                          |               |                            | Collection to use inside the bucket scope. If not specified, the _default collection is used.<br/>**Supports Expression Language: true**                                                                                                       |
+| **Document Type**                        | Json          | Json<br/>Binary<br/>String | Content type of the retrieved value.                                                                                                                                                                                                           |
+| Document Id                              |               |                            | A static, fixed Couchbase document id, or an expression to construct the Couchbase document id.<br/>**Supports Expression Language: true**                                                                                                     |
+| Put Value to Attribute                   |               |                            | If set, the retrieved value will be put into an attribute of the FlowFile instead of a the content of the FlowFile. The attribute key to put to is determined by evaluating value of this property.<br/>**Supports Expression Language: true** |
+
+### Relationships
+
+| Name     | Description                                                                                                                                                         |
+|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| success  | Values retrieved from Couchbase Server are written as outgoing FlowFiles content or put into an attribute of the incoming FlowFile and routed to this relationship. |
+| failure  | All FlowFiles failed to fetch from Couchbase Server and not retry-able are routed to this relationship.                                                             |
+| retry    | All FlowFiles failed to fetch from Couchbase Server but can be retried are routed to this relationship.                                                             |
+| original | The original input FlowFile is routed to this relationship when the value is retrieved from Couchbase Server and routed to 'success'.                               |
+
+### Output Attributes
+
+| Attribute            | Relationship | Description                           |
+|----------------------|--------------|---------------------------------------|
+| couchbase.bucket     | success      | Bucket where the document was stored. |
+| couchbase.doc.id     | success      | Id of the document.                   |
+| couchbase.doc.cas    | success      | CAS of the document.                  |
+| couchbase.doc.expiry | success      | Expiration of the document.           |
 
 
 ## GetFile
