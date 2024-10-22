@@ -93,6 +93,7 @@ limitations under the License.
 - [RetryFlowFile](#RetryFlowFile)
 - [RouteOnAttribute](#RouteOnAttribute)
 - [RouteText](#RouteText)
+- [SplitContent](#SplitContent)
 - [SplitText](#SplitText)
 - [TailEventLog](#TailEventLog)
 - [TailFile](#TailFile)
@@ -2807,6 +2808,40 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                             |
 |---------|---------------------------------------------------------|
 | success | All files, containing log events, are routed to success |
+
+
+## SplitContent
+
+### Description
+
+Splits incoming FlowFiles by a specified byte sequence
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                       | Default Value | Allowable Values     | Description                                                                                                                                                                                                           |
+|----------------------------|---------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Byte Sequence Format**   | Hexadecimal   | Hexadecimal<br/>Text | Specifies how the <Byte Sequence> property should be interpreted                                                                                                                                                      |
+| **Byte Sequence**          |               |                      | A representation of bytes to look for and upon which to split the source file into separate files                                                                                                                     |
+| **Keep Byte Sequence**     | false         | true<br/>false       | Determines whether or not the Byte Sequence should be included with each Split                                                                                                                                        |
+| **Byte Sequence Location** | Trailing      | Trailing<br/>Leading | If <Keep Byte Sequence> is set to true, specifies whether the byte sequence should be added to the end of the first split or the beginning of the second; if <Keep Byte Sequence> is false, this property is ignored. |
+
+### Relationships
+
+| Name     | Description                                          |
+|----------|------------------------------------------------------|
+| original | The original file                                    |
+| splits   | All Splits will be routed to the splits relationship |
+
+### Output Attributes
+
+| Attribute                 | Relationship | Description                                                                                                                    |
+|---------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------|
+| fragment.identifier       |              | All split FlowFiles produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute |
+| fragment.index            |              | A one-up number that indicates the ordering of the split FlowFiles that were created from a single parent FlowFile             |
+| fragment.count            |              | The number of split FlowFiles generated from the parent FlowFile                                                               |
+| segment.original.filename |              | The filename of the parent FlowFile                                                                                            |
 
 
 ## SplitText

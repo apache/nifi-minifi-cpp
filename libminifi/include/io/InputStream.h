@@ -81,6 +81,14 @@ class InputStream : public virtual Stream {
 
     return sizeof(Integral);
   }
+
+  std::optional<std::byte> readByte() {
+    std::array<std::byte, 1> buf{};
+    if (read(buf) != 1) {
+      return std::nullopt;
+    }
+    return buf[0];
+  }
 };
 
 }  // namespace org::apache::nifi::minifi::io
