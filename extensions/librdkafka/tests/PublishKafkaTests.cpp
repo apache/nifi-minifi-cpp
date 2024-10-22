@@ -25,8 +25,8 @@ namespace org::apache::nifi::minifi::test {
 TEST_CASE("Scheduling should fail when batch size is larger than the max queue message count", "[testPublishKafka]") {
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setTrace<processors::PublishKafka>();
-  const auto publish_kafka = std::make_shared<processors::PublishKafka>("PublishKafka");
-  SingleProcessorTestController test_controller(publish_kafka);
+  SingleProcessorTestController test_controller(std::make_unique<processors::PublishKafka>("PublishKafka"));
+  const auto publish_kafka = test_controller.getProcessor();
   publish_kafka->setProperty(processors::PublishKafka::ClientName, "test_client");
   publish_kafka->setProperty(processors::PublishKafka::SeedBrokers, "test_seedbroker");
   publish_kafka->setProperty(processors::PublishKafka::QueueBufferMaxMessage, "1000");

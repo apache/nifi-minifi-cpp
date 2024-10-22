@@ -66,6 +66,10 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
     return controller_map_->get(id);
   }
 
+  virtual ControllerServiceNode* getControllerServiceNode(const std::string &id, const utils::Identifier &controller_uuid) const {
+    return controller_map_->get(id, controller_uuid);
+  }
+
   virtual void clearControllerServices() = 0;
 
   virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() {
@@ -73,8 +77,9 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
   }
 
   std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) const override;
+  std::shared_ptr<ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override;
 
-  void putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node);
+  void putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node, ProcessGroup* process_group);
 
   bool isControllerServiceEnabled(const std::string &identifier) override {
     const ControllerServiceNode* const node = getControllerServiceNode(identifier);

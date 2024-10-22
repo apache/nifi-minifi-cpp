@@ -31,7 +31,7 @@ void SQLProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
   std::string controllerService;
   context.getProperty(DBControllerService, controllerService);
 
-  if (auto service = context.getControllerService(controllerService)) {
+  if (auto service = context.getControllerService(controllerService, getUUID())) {
     db_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(service);
     if (!db_service_) {
       throw minifi::Exception(PROCESSOR_EXCEPTION, "'" + controllerService + "' is not a DatabaseService");

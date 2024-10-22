@@ -61,8 +61,9 @@ class AzureBlobStorageTestsFixture {
     plan_ = test_controller_.createPlan();
     auto mock_blob_storage = std::make_unique<MockBlobStorage>();
     mock_blob_storage_ptr_ = mock_blob_storage.get();
-    azure_blob_storage_processor_ = std::shared_ptr<ProcessorType>(
+    auto azure_blob_storage_processor_unique_ptr = std::unique_ptr<ProcessorType>(
       new ProcessorType("AzureBlobStorageProcessor", utils::Identifier(), std::move(mock_blob_storage)));
+    azure_blob_storage_processor_ = azure_blob_storage_processor_unique_ptr.get();
     auto input_dir = test_controller_.createTempDirectory();
     std::ofstream input_file_stream(input_dir / GET_FILE_NAME);
     input_file_stream << TEST_DATA;
@@ -71,7 +72,7 @@ class AzureBlobStorageTestsFixture {
     plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory, input_dir.string());
     plan_->setProperty(get_file_processor_, minifi::processors::GetFile::KeepSourceFile, "false");
     update_attribute_processor_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
-    plan_->addProcessor(azure_blob_storage_processor_, "AzureBlobStorageProcessor", { {"success", "d"} }, true);
+    plan_->addProcessor(std::move(azure_blob_storage_processor_unique_ptr), "AzureBlobStorageProcessor", { {"success", "d"} }, true);
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
     success_putfile_ = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
     plan_->addConnection(logattribute, {"success", "d"}, success_putfile_);
@@ -122,11 +123,11 @@ class AzureBlobStorageTestsFixture {
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_;
   MockBlobStorage* mock_blob_storage_ptr_;
-  std::shared_ptr<core::Processor> azure_blob_storage_processor_;
-  std::shared_ptr<core::Processor> get_file_processor_;
-  std::shared_ptr<core::Processor> update_attribute_processor_;
-  std::shared_ptr<core::Processor> success_putfile_;
-  std::shared_ptr<core::Processor> failure_putfile_;
+  core::Processor* azure_blob_storage_processor_;
+  core::Processor* get_file_processor_;
+  core::Processor* update_attribute_processor_;
+  core::Processor* success_putfile_;
+  core::Processor* failure_putfile_;
   std::filesystem::path failure_output_dir_;
   std::filesystem::path success_output_dir_;
 };

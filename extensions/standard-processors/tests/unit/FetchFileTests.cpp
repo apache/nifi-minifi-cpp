@@ -45,8 +45,8 @@ class FetchFileTestFixture {
  protected:
   [[nodiscard]] std::unordered_multiset<std::string> getDirContents(const std::filesystem::path& dir_path) const;
 
-  std::shared_ptr<minifi::processors::FetchFile> fetch_file_processor_;
   std::shared_ptr<minifi::test::SingleProcessorTestController> test_controller_;
+  minifi::processors::FetchFile* fetch_file_processor_ = nullptr;
   const std::filesystem::path input_dir_;
   const std::filesystem::path permission_denied_file_name_;
   const std::filesystem::path input_file_name_;
@@ -55,8 +55,8 @@ class FetchFileTestFixture {
 };
 
 FetchFileTestFixture::FetchFileTestFixture()
-  : fetch_file_processor_(std::make_shared<minifi::processors::FetchFile>("FetchFile")),
-    test_controller_(std::make_shared<minifi::test::SingleProcessorTestController>(fetch_file_processor_)),
+  : test_controller_(std::make_shared<minifi::test::SingleProcessorTestController>(std::make_unique<minifi::processors::FetchFile>("FetchFile"))),
+    fetch_file_processor_(test_controller_->getProcessor<minifi::processors::FetchFile>()),
     input_dir_(test_controller_->createTempDirectory()),
     permission_denied_file_name_("permission_denied.txt"),
     input_file_name_("test.txt"),
