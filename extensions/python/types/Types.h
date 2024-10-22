@@ -243,6 +243,15 @@ class List : public ReferenceHolder<reference_type> {
       : ReferenceHolder<reference_type>(object) {
   }
 
+  static OwnedList create() requires(reference_type == ReferenceType::OWNED) {
+    return OwnedList(PyList_New(0));
+  }
+
+  template<object::convertible T>
+  void append(T value) {
+    PyList_Append(this->ref_.get(), object::from(std::move(value)).releaseReference());
+  }
+
   size_t length() {
     return PyList_Size(this->ref_.get());
   }

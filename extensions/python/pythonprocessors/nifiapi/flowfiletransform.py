@@ -41,12 +41,6 @@ class FlowFileTransformResult:
 
 
 class FlowFileTransform(ProcessorBase):
-    # These will be added through the python bindings using C API
-    logger = None
-    REL_SUCCESS = None
-    REL_FAILURE = None
-    REL_ORIGINAL = None
-
     def onTrigger(self, context: ProcessContext, session: ProcessSession):
         original_flow_file = session.get()
         if not original_flow_file:
