@@ -22,16 +22,14 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <memory>
+#include <unordered_map>
+#include <unordered_set>
 
+#include "agent/agent_docs.h"
 #include "core/Core.h"
 #include "ObjectFactory.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 #define RESOURCE_FAILURE -1
 
@@ -54,32 +52,22 @@ class ClassLoader {
  public:
   static ClassLoader &getDefaultClassLoader();
 
-  /**
-   * Constructor.
-   */
-  explicit ClassLoader(const std::string& name = "/");
+  explicit ClassLoader(std::string name = "/");
 
-  /**
-   * Retrieves a class loader
-   * @param name name of class loader
-   * @return class loader reference
-   */
   ClassLoader& getClassLoader(const std::string& child_name);
 
-  /**
-   * Register a class with the give ProcessorFactory
-   */
-  void registerClass(const std::string &clazz, std::unique_ptr<ObjectFactory> factory) {
+  void registerClass(const std::string &clazz, std::unique_ptr<ObjectFactory> factory, const ResourceType resource_type) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
-    if (loaded_factories_.find(clazz) != loaded_factories_.end()) {
+    if (loaded_factories_.contains(clazz)) {
       logger_->log_error("Class '{}' is already registered at '{}'", clazz, name_);
       return;
     }
     logger_->log_trace("Registering class '{}' at '{}'", clazz, name_);
     loaded_factories_.insert(std::make_pair(clazz, std::move(factory)));
+    type_map_[resource_type].insert(clazz);
   }
 
-  void unregisterClass(const std::string& clazz) {
+  void unregisterClass(const std::string& clazz, const ResourceType resource_type) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
     if (loaded_factories_.erase(clazz) == 0) {
       logger_->log_error("Could not unregister non-registered class '{}' at '{}'", clazz, name_);
@@ -87,6 +75,7 @@ class ClassLoader {
     } else {
       logger_->log_trace("Unregistered class '{}' at '{}'", clazz, name_);
     }
+    type_map_[resource_type].erase(clazz);
   }
 
   std::optional<std::string> getGroupForClass(const std::string &class_name) const {
@@ -97,17 +86,29 @@ class ClassLoader {
         return group;
       }
     }
-    auto factory = loaded_factories_.find(class_name);
-    if (factory != loaded_factories_.end()) {
+    if (const auto factory = loaded_factories_.find(class_name); factory != loaded_factories_.end()) {
       return factory->second->getGroupName();
     }
     return {};
   }
 
+  std::unordered_set<std::string> getAll(const ResourceType type) {
+    std::unordered_set<std::string> type_map = type_map_[type];
+    for (auto& [_, class_loader] : class_loaders_) {
+      auto class_loader_type_name = class_loader.getAll(type);
+      type_map.insert(class_loader_type_name.begin(), class_loader_type_name.end());
+    }
+    return type_map;
+  }
+
   /**
-   * Return the names of all the registered classes in the group.
+   * Instantiate object based on class_name
+   * @param class_name class to create
+   * @param name name of object
+   * @return nullptr or object created from class_name definition.
    */
-  std::vector<std::string> getClasses(const std::string& group) const;
+  template<class T = CoreComponent>
+  std::unique_ptr<T> instantiate(const std::string& class_name, const std::string& name);
 
   /**
    * Instantiate object based on class_name
@@ -116,25 +117,16 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name);
+  std::unique_ptr<T> instantiate(const std::string& class_name, const utils::Identifier& uuid);
 
   /**
    * Instantiate object based on class_name
    * @param class_name class to create
-   * @param uuid uuid of object
+   * @param name name of object
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  std::unique_ptr<T> instantiate(const std::string &class_name, const utils::Identifier &uuid);
-
-  /**
-   * Instantiate object based on class_name
-   * @param class_name class to create
-   * @param uuid uuid of object
-   * @return nullptr or object created from class_name definition.
-   */
-  template<class T = CoreComponent>
-  T *instantiateRaw(const std::string &class_name, const std::string &name);
+  T *instantiateRaw(const std::string& class_name, const std::string& name);
 
  protected:
   std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
@@ -145,6 +137,7 @@ class ClassLoader {
 
   std::shared_ptr<logging::Logger> logger_;
 
+  std::unordered_map<ResourceType, std::unordered_set<std::string>> type_map_;
   std::string name_;
 };
 
@@ -199,8 +192,4 @@ T *ClassLoader::instantiateRaw(const std::string &class_name, const std::string 
   return nullptr;
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core
