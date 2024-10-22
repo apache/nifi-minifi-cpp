@@ -30,6 +30,7 @@
 #include "couchbase/cluster.hxx"
 #include "core/ProcessContext.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::couchbase {
 
@@ -68,9 +69,8 @@ enum class CouchbaseErrorType {
 
 class CouchbaseClient {
  public:
-  CouchbaseClient(std::string connection_string, std::string username, std::string password, const std::shared_ptr<core::logging::Logger>& logger)
-    : connection_string_(std::move(connection_string)), username_(std::move(username)), password_(std::move(password)), logger_(logger) {
-  }
+  CouchbaseClient(std::string connection_string, std::string username, std::string password, controllers::SSLContextService* ssl_context_service,
+    const std::shared_ptr<core::logging::Logger>& logger);
 
   nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id,
     const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options);
@@ -91,13 +91,13 @@ class CouchbaseClient {
   };
 
   static CouchbaseErrorType getErrorType(const std::error_code& error_code);
+  ::couchbase::cluster_options buildClusterOptions(std::string username, std::string password, minifi::controllers::SSLContextService* ssl_context_service);
   nonstd::expected<::couchbase::collection, CouchbaseErrorType> getCollection(const CouchbaseCollection& collection);
 
   std::string connection_string_;
-  std::string username_;
-  std::string password_;
-  std::optional<::couchbase::cluster> cluster_;
   std::shared_ptr<core::logging::Logger> logger_;
+  ::couchbase::cluster_options cluster_options_;
+  std::optional<::couchbase::cluster> cluster_;
 };
 
 namespace controllers {

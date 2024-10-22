@@ -18,7 +18,7 @@ import shutil
 import hashlib
 import subprocess
 import OpenSSL.crypto
-from ssl_utils.SSL_cert_utils import make_self_signed_cert, make_cert_without_extended_usage, make_server_cert
+from ssl_utils.SSL_cert_utils import make_self_signed_cert, make_cert_without_extended_usage, make_server_cert, make_client_cert
 
 
 class DockerTestDirectoryBindings:
@@ -214,3 +214,11 @@ class DockerTestDirectoryBindings:
             os.path.join(base, "root_ca.crt"),
         ]
         subprocess.run(cmd, check=True)
+
+        clientuser_cert, clientuser_key = make_client_cert("clientuser", ca_cert=self.root_ca_cert, ca_key=self.root_ca_key)
+        self.put_test_resource('clientuser.crt',
+                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                               cert=clientuser_cert))
+        self.put_test_resource('clientuser.key',
+                               OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                              pkey=clientuser_key))

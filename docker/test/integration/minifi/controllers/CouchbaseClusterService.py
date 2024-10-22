@@ -18,10 +18,13 @@ from ..core.ControllerService import ControllerService
 
 
 class CouchbaseClusterService(ControllerService):
-    def __init__(self, name, connection_string):
+    def __init__(self, name, connection_string, ssl_context_service=None):
         super(CouchbaseClusterService, self).__init__(name=name)
 
         self.service_class = 'CouchbaseClusterService'
         self.properties['Connection String'] = connection_string
-        self.properties['User Name'] = "Administrator"
-        self.properties['User Password'] = "password123"
+        if ssl_context_service:
+            self.linked_services.append(ssl_context_service)
+        if not ssl_context_service or ssl_context_service and 'Client Certificate' not in ssl_context_service.properties:
+            self.properties['User Name'] = "Administrator"
+            self.properties['User Password'] = "password123"
