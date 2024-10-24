@@ -28,7 +28,6 @@ KafkaConnection::KafkaConnection(KafkaConnectionKey key)
     : logger_(core::logging::LoggerFactory<KafkaConnection>::getLogger()),
       initialized_(false),
       key_(std::move(key)),
-      kafka_connection_(nullptr),
       poll_(false) {
 }
 
@@ -60,12 +59,12 @@ bool KafkaConnection::initialized() const {
   return initialized_;
 }
 
-void KafkaConnection::setConnection(gsl::owner<rd_kafka_t*> producer) {
+void KafkaConnection::setConnection(utils::rd_kafka_producer_unique_ptr producer) {
   removeConnection();
-  kafka_connection_ = producer;  // kafka_connection_ takes ownership from producer
+  kafka_connection_ = gsl::owner<rd_kafka_t*>{producer.release()};  // kafka_connection_ takes ownership from producer
   initialized_ = true;
   modifyLoggers([&](std::unordered_map<const rd_kafka_t*, std::weak_ptr<core::logging::Logger>>& loggers) {
-    loggers[producer] = logger_;
+    loggers[kafka_connection_] = logger_;
   });
   startPoll();
 }
@@ -79,8 +78,7 @@ bool KafkaConnection::hasTopic(const std::string &topic) const {
 }
 
 std::shared_ptr<KafkaTopic> KafkaConnection::getTopic(const std::string &topic) const {
-  auto topicObj = topics_.find(topic);
-  if (topicObj != topics_.end()) {
+  if (const auto topicObj = topics_.find(topic); topicObj != topics_.end()) {
     return topicObj->second;
   }
   return nullptr;
@@ -94,10 +92,10 @@ void KafkaConnection::putTopic(const std::string &topicName, const std::shared_p
   topics_[topicName] = topic;
 }
 
-void KafkaConnection::logCallback(const rd_kafka_t* rk, int level, const char* /*fac*/, const char* buf) {
+void KafkaConnection::logCallback(const rd_kafka_t* rk, const int level, const char* /*fac*/, const char* buf) {
   std::shared_ptr<core::logging::Logger> logger;
   try {
-    modifyLoggers([&](std::unordered_map<const rd_kafka_t*, std::weak_ptr<core::logging::Logger>>& loggers) {
+    modifyLoggers([&](const std::unordered_map<const rd_kafka_t*, std::weak_ptr<core::logging::Logger>>& loggers) {
       logger = loggers.at(rk).lock();
     });
   } catch (...) {
