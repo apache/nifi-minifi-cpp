@@ -38,13 +38,13 @@ void SegmentContent::onSchedule(core::ProcessContext&, core::ProcessSessionFacto
 namespace {
 void updateSplitAttributesAndTransfer(core::ProcessSession& session, const std::vector<std::shared_ptr<core::FlowFile>>& splits, const core::FlowFile& original) {
   const std::string fragment_identifier_ = original.getAttribute(core::SpecialFlowAttribute::UUID).value_or(utils::IdGenerator::getIdGenerator()->generate().to_string());
-  const auto original_filename_ = original.getAttribute(core::SpecialFlowAttribute::FILENAME).value_or("");
+  const auto original_filename = original.getAttribute(core::SpecialFlowAttribute::FILENAME).value_or("");
   for (size_t split_i = 0; split_i < splits.size(); ++split_i) {
     const auto& split = splits[split_i];
     split->setAttribute(SegmentContent::FragmentCountOutputAttribute.name, std::to_string(splits.size()));
     split->setAttribute(SegmentContent::FragmentIndexOutputAttribute.name, std::to_string(split_i + 1));  // One based indexing
     split->setAttribute(SegmentContent::FragmentIdentifierOutputAttribute.name, fragment_identifier_);
-    split->setAttribute(SegmentContent::SegmentOriginalFilenameOutputAttribute.name, original_filename_);
+    split->setAttribute(SegmentContent::SegmentOriginalFilenameOutputAttribute.name, original_filename);
     session.transfer(split, SegmentContent::Segments);
   }
 }
