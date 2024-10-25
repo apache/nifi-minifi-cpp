@@ -25,9 +25,7 @@ Interpreter* Interpreter::getInterpreter() {
   return &interpreter;
 }
 
-GlobalInterpreterLock::GlobalInterpreterLock()
-    : gil_state_(PyGILState_Ensure()) {
-}
+GlobalInterpreterLock::GlobalInterpreterLock() : gil_state_(PyGILState_Ensure()) {}
 
 GlobalInterpreterLock::~GlobalInterpreterLock() {
   PyGILState_Release(gil_state_);
@@ -40,24 +38,25 @@ namespace {
 // Python >= 3.9: Marked as deprecated (still noop)
 // This can be removed if we drop the support for Python 3.6
 void initThreads() {
-#if defined(__clang__)
-  #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(WIN32)
-  #pragma warning(push)
-#pragma warning(disable: 4996)
-#endif
-  if (!PyEval_ThreadsInitialized())
-    PyEval_InitThreads();
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#elif defined(WIN32)
-#pragma warning(pop)
+#if !defined(__APPLE__)
+  #if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  #elif defined(__GNUC__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  #elif defined(WIN32)
+    #pragma warning(push)
+    #pragma warning(disable : 4996)
+  #endif
+  if (!PyEval_ThreadsInitialized()) { PyEval_InitThreads(); }
+  #if defined(__clang__)
+    #pragma clang diagnostic pop
+  #elif defined(__GNUC__)
+    #pragma GCC diagnostic pop
+  #elif defined(WIN32)
+    #pragma warning(pop)
+  #endif
 #endif
 }
 
