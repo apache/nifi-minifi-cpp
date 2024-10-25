@@ -30,7 +30,7 @@ add_minifi_library(minifi-python-script-extension SHARED ${SOURCES})
 target_link_libraries(minifi-python-script-extension PRIVATE ${LIBMINIFI} Threads::Threads)
 
 include(GenericPython)
-target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03070000)
+target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03060000)
 target_compile_definitions(minifi-python-script-extension PUBLIC PY_SSIZE_T_CLEAN)
 
 target_sources(minifi-python-script-extension PRIVATE ${PY_SOURCES})
