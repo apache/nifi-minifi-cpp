@@ -26,6 +26,8 @@
 #include <dlfcn.h>
 #endif  // !WIN32
 
+#include <regex>
+
 namespace org::apache::nifi::minifi::extensions::python {
 
 Interpreter* Interpreter::getInterpreter() {
@@ -42,6 +44,23 @@ GlobalInterpreterLock::~GlobalInterpreterLock() {
 }
 
 namespace {
+struct version {
+  int major;
+  int minor;
+};
+
+std::optional<version> getPythonVersion() {
+  // example version: "3.0a5+ (py3k:63103M, May 12 2008, 00:53:55) \n[GCC 4.2.3]"
+  //                  "3.12.6 (main, Sep  8 2024, 13:18:56) [GCC 14.2.1 20240805]"
+  std::string ver_str = Py_GetVersion();
+  std::smatch match;
+  if (std::regex_search(ver_str, match, std::regex{"^(\\d+)\\.(\\d+)"})) {
+    return version{std::stoi(match[1]), std::stoi(match[2])};
+  } else {
+    return std::nullopt;
+  }
+}
+
 // PyEval_InitThreads might be marked deprecated (depending on the version of Python.h)
 // Python <= 3.6: This needs to be called manually after Py_Initialize to initialize threads (python < 3.6 is unsupported by us)
 // Python >= 3.7: Noop function since its functionality is included in Py_Initialize
@@ -50,11 +69,9 @@ namespace {
 // This can be removed if we drop the support for Python 3.6
 void initThreads() {
   using namespace std::literals;
-  // ignoring versions 3.60+, hopefully we can remove this hack by the time they are relevant
-  // Example version string: "3.0a5+ (py3k:63103M, May 12 2008, 00:53:55) \n[GCC 4.2.3]"
-  if (const auto version = Py_GetVersion(); std::string_view{version}.starts_with("3.6")) { return; }
+  if (const auto version = getPythonVersion(); version->major == 3 && version->minor <= 6) { return; }
 #if defined(__clang__)
-  #pragma clang diagnostic push
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
