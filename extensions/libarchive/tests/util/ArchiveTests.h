@@ -29,7 +29,7 @@
 
 #include "ArchiveCommon.h"
 
-typedef struct {
+struct TestArchiveEntry {
     const char* content;
     std::string name;
     mode_t type;
@@ -39,16 +39,16 @@ typedef struct {
     time_t mtime;
     uint32_t mtime_nsec;
     size_t size;
-} TestArchiveEntry;
+};
 
 
-typedef std::map<std::string, TestArchiveEntry> TAE_MAP_T;
-typedef std::vector<std::string> FN_VEC_T;
+using TAE_MAP_T = std::map<std::string, TestArchiveEntry>;
+using FN_VEC_T = std::vector<std::string>;
 
-typedef struct {
+struct OrderedTestArchive {
     TAE_MAP_T map;
     FN_VEC_T order;
-} OrderedTestArchive;
+};
 
 TAE_MAP_T build_test_archive_map(int, const char* const*, const char* const*);
 
@@ -57,8 +57,7 @@ FN_VEC_T build_test_archive_order(int, const char* const*);
 OrderedTestArchive build_ordered_test_archive(int, const char* const*, const char* const*);
 
 void build_test_archive(const std::filesystem::path&, const TAE_MAP_T& entries, FN_VEC_T order = FN_VEC_T());
-void build_test_archive(const std::filesystem::path&, OrderedTestArchive&);
+void build_test_archive(const std::filesystem::path&, const OrderedTestArchive&);
 
 bool check_archive_contents(const std::filesystem::path&, const TAE_MAP_T& entries, bool check_attributes = true, const FN_VEC_T& order = FN_VEC_T());
 bool check_archive_contents(const std::filesystem::path&, const OrderedTestArchive&, bool check_attributes = true);
-

@@ -25,8 +25,7 @@
 #include <string>
 #include <system_error>
 
-#include "archive.h"
-#include "archive_entry.h"
+#include "SmartArchivePtrs.h"
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -147,23 +146,22 @@ la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *
 }
 
 int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io::OutputStream>& stream) const {
-  auto outputArchive = archive_write_new();
+  auto output_archive = archive_write_unique_ptr{archive_write_new()};
   int64_t nlen = 0;
 
-  archive_write_set_format(outputArchive, _archiveMetadata->archiveFormat);
+  archive_write_set_format(output_archive.get(), _archiveMetadata->archiveFormat);
 
   UnfocusArchiveEntryWriteData data;
   data.stream = stream;
 
-  archive_write_open(outputArchive, &data, ok_cb, write_cb, ok_cb);
+  archive_write_open(output_archive.get(), &data, ok_cb, write_cb, ok_cb);
 
   // Iterate entries & write from tmp file to archive
   std::array<char, 8192> buf{};
   struct stat st{};
-  struct archive_entry* entry = nullptr;
+  auto entry = archive_entry_unique_ptr{archive_entry_new()};
 
   for (const auto &entryMetadata : _archiveMetadata->entryMetadata) {
-    entry = archive_entry_new();
     logger_->log_info("UnfocusArchiveEntry writing entry {}", entryMetadata.entryName);
 
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
@@ -171,21 +169,21 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
       if (stat_ok != 0) {
         logger_->log_error("Error statting {}: {}", entryMetadata.tmpFileName, std::system_category().default_error_condition(errno).message());
       }
-      archive_entry_copy_stat(entry, &st);
+      archive_entry_copy_stat(entry.get(), &st);
     }
 
-    archive_entry_set_filetype(entry, entryMetadata.entryType);
-    archive_entry_set_pathname(entry, entryMetadata.entryName.c_str());
-    archive_entry_set_perm(entry, entryMetadata.entryPerm);
-    archive_entry_set_size(entry, gsl::narrow<la_int64_t>(entryMetadata.entrySize));
-    archive_entry_set_uid(entry, entryMetadata.entryUID);
-    archive_entry_set_gid(entry, entryMetadata.entryGID);
-    archive_entry_set_mtime(entry, entryMetadata.entryMTime, gsl::narrow<long>(entryMetadata.entryMTimeNsec));  // NOLINT long comes from libarchive API
+    archive_entry_set_filetype(entry.get(), entryMetadata.entryType);
+    archive_entry_set_pathname(entry.get(), entryMetadata.entryName.c_str());
+    archive_entry_set_perm(entry.get(), entryMetadata.entryPerm);
+    archive_entry_set_size(entry.get(), gsl::narrow<la_int64_t>(entryMetadata.entrySize));
+    archive_entry_set_uid(entry.get(), entryMetadata.entryUID);
+    archive_entry_set_gid(entry.get(), entryMetadata.entryGID);
+    archive_entry_set_mtime(entry.get(), entryMetadata.entryMTime, gsl::narrow<long>(entryMetadata.entryMTimeNsec));  // NOLINT long comes from libarchive API
 
     logger_->log_info("Writing {} with type {}, perms {}, size {}, uid {}, gid {}, mtime {},{}", entryMetadata.entryName, entryMetadata.entryType, entryMetadata.entryPerm,
                       entryMetadata.entrySize, entryMetadata.entryUID, entryMetadata.entryGID, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);
 
-    archive_write_header(outputArchive, entry);
+    archive_write_header(output_archive.get(), entry.get());
 
     // If entry is regular file, copy entry contents
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
@@ -197,11 +195,11 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
       while (ifs.good()) {
         ifs.read(buf.data(), buf.size());
         auto len = gsl::narrow<size_t>(ifs.gcount());
-        int64_t written = archive_write_data(outputArchive, buf.data(), len);
+        int64_t written = archive_write_data(output_archive.get(), buf.data(), len);
         if (written < 0) {
           logger_->log_error("UnfocusArchiveEntry failed to write data to "
                              "archive entry %s due to error: %s",
-                             entryMetadata.entryName, archive_error_string(outputArchive));
+                             entryMetadata.entryName, archive_error_string(output_archive.get()));
         } else {
           nlen += written;
         }
@@ -213,12 +211,9 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
       std::filesystem::remove(entryMetadata.tmpFileName);
     }
 
-    archive_entry_clear(entry);
+    archive_entry_clear(entry.get());
   }
 
-  archive_write_close(outputArchive);
-  archive_entry_free(entry);
-  archive_write_free(outputArchive);
   return nlen;
 }
 

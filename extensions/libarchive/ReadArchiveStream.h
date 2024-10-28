@@ -27,23 +27,17 @@
 
 #include "archive_entry.h"
 #include "archive.h"
+#include "SmartArchivePtrs.h"
 
 namespace org::apache::nifi::minifi::io {
 
-class ReadArchiveStreamImpl : public ReadArchiveStream {
-  struct archive_read_deleter {
-    int operator()(struct archive* ptr) const {
-      return archive_read_free(ptr);
-    }
-  };
-  using archive_ptr = std::unique_ptr<struct archive, archive_read_deleter>;
-
+class ReadArchiveStreamImpl final : public ReadArchiveStream {
   class BufferedReader {
    public:
     explicit BufferedReader(std::shared_ptr<InputStream> input) : input_(std::move(input)) {}
 
     std::optional<std::span<const std::byte>> readChunk() {
-      size_t result = input_->read(buffer_);
+      const size_t result = input_->read(buffer_);
       if (io::isError(result)) {
         return std::nullopt;
       }
@@ -55,7 +49,7 @@ class ReadArchiveStreamImpl : public ReadArchiveStream {
     std::array<std::byte, 4096> buffer_{};
   };
 
-  archive_ptr createReadArchive();
+  processors::archive_read_unique_ptr createReadArchive();
 
  public:
   explicit ReadArchiveStreamImpl(std::shared_ptr<InputStream> input) : reader_(std::move(input)) {
@@ -70,8 +64,8 @@ class ReadArchiveStreamImpl : public ReadArchiveStream {
 
  private:
   static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {
-    auto* const input = reinterpret_cast<BufferedReader*>(context);
-    auto opt_buffer = input->readChunk();
+    auto* const input = static_cast<BufferedReader*>(context);
+    const auto opt_buffer = input->readChunk();
     if (!opt_buffer) {
       archive_set_error(archive, EIO, "Error reading archive");
       return -1;
@@ -82,7 +76,7 @@ class ReadArchiveStreamImpl : public ReadArchiveStream {
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadArchiveStream>::getLogger();
   BufferedReader reader_;
-  archive_ptr arch_;
+  processors::archive_read_unique_ptr arch_;
   std::optional<size_t> entry_size_;
 };
 

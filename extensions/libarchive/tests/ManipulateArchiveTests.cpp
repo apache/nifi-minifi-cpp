@@ -23,7 +23,7 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "ArchiveTests.h"
+#include "util/ArchiveTests.h"
 #include "core/PropertyDefinition.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
