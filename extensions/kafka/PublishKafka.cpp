@@ -326,7 +326,7 @@ void PublishKafka::onSchedule(core::ProcessContext& context, core::ProcessSessio
   logger_->log_debug("PublishKafka: Max Flow Segment Size [{}]", max_flow_seg_size_);
 
   // Attributes to Send as Headers
-  if (const auto attribute_name_regex = context.getProperty(AttributeNameRegex)) {
+  if (const auto attribute_name_regex = context.getProperty(AttributeNameRegex); attribute_name_regex && !attribute_name_regex->empty()) {
     attributeNameRegex_ = utils::Regex(*attribute_name_regex);
     logger_->log_debug("PublishKafka: AttributeNameRegex [{}]", *attribute_name_regex);
   }
@@ -337,7 +337,7 @@ void PublishKafka::onSchedule(core::ProcessContext& context, core::ProcessSessio
   conn_ = std::make_unique<KafkaConnection>(key_);
   configureNewConnection(context);
 
-  if (auto message_key_field = context.getProperty(MessageKeyField)) {
+  if (const auto message_key_field = context.getProperty(MessageKeyField); message_key_field && !message_key_field->empty()) {
     logger_->log_error("The {} property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", MessageKeyField.name);
   }
 
@@ -386,7 +386,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
-  if (auto debug_contexts = context.getProperty(DebugContexts)) {
+  if (auto debug_contexts = context.getProperty(DebugContexts); debug_contexts && !debug_contexts->empty()) {
     result = rd_kafka_conf_set(conf_.get(), "debug", debug_contexts->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: debug [{}]", *debug_contexts);
     if (result != RD_KAFKA_CONF_OK) {
@@ -395,7 +395,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (auto max_message_size = context.getProperty(MaxMessageSize)) {
+  if (auto max_message_size = context.getProperty(MaxMessageSize); max_message_size && !max_message_size->empty()) {
     result = rd_kafka_conf_set(conf_.get(), "message.max.bytes", max_message_size->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: message.max.bytes [{}]", max_message_size);
     if (result != RD_KAFKA_CONF_OK) {
@@ -437,7 +437,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (auto batch_size = context.getProperty(BatchSize)) {
+  if (auto batch_size = context.getProperty(BatchSize); batch_size && !batch_size->empty()) {
     result = rd_kafka_conf_set(conf_.get(), "batch.num.messages", batch_size->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: batch.num.messages [{}]", *batch_size);
     if (result != RD_KAFKA_CONF_OK) {

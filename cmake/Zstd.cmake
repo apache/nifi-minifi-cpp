@@ -17,6 +17,8 @@
 
 include(FetchContent)
 
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zstd/dummy")
+
 set(ZSTD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 
 set(PC "")
