@@ -54,7 +54,7 @@ std::optional<version> getPythonVersion() {
   //                  "3.12.6 (main, Sep  8 2024, 13:18:56) [GCC 14.2.1 20240805]"
   std::string ver_str = Py_GetVersion();
   std::smatch match;
-  if (std::regex_search(ver_str, match, std::regex{"^(\\d+)\\.(\\d+)"})) {
+  if (std::regex_search(ver_str, match, std::regex{R"(^(\d+)\.(\d+))"})) {
     return version{std::stoi(match[1]), std::stoi(match[2])};
   } else {
     return std::nullopt;
@@ -69,7 +69,10 @@ std::optional<version> getPythonVersion() {
 // This can be removed if we drop the support for Python 3.6
 void initThreads() {
   using namespace std::literals;
-  if (const auto version = getPythonVersion(); version->major == 3 && version->minor <= 6) { return; }
+  // early return (skip workaround) above Python 3.6
+  if (const auto version = getPythonVersion(); !version || (version->major == 3 && version->minor > 6) || version->major > 3) {
+    return;
+  }
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
