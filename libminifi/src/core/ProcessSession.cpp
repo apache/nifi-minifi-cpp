@@ -333,6 +333,7 @@ void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_fi
   appendBuffer(flow_file, as_bytes(buffer));
 }
 void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer) {
+  if (buffer.empty()) { return; }
   append(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
     const auto write_status = output_stream->write(buffer);
     return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
