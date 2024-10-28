@@ -35,15 +35,14 @@ Interpreter* Interpreter::getInterpreter() {
   return &interpreter;
 }
 
-GlobalInterpreterLock::GlobalInterpreterLock()
-    : gil_state_(PyGILState_Ensure()) {
-}
+GlobalInterpreterLock::GlobalInterpreterLock() : gil_state_(PyGILState_Ensure()) {}
 
 GlobalInterpreterLock::~GlobalInterpreterLock() {
   PyGILState_Release(gil_state_);
 }
 
 namespace {
+#ifndef __APPLE__
 struct version {
   int major;
   int minor;
@@ -60,6 +59,7 @@ std::optional<version> getPythonVersion() {
     return std::nullopt;
   }
 }
+#endif  // !__APPLE__
 
 // PyEval_InitThreads might be marked deprecated (depending on the version of Python.h)
 // Python <= 3.6: This needs to be called manually after Py_Initialize to initialize threads (python < 3.6 is unsupported by us)
@@ -68,19 +68,19 @@ std::optional<version> getPythonVersion() {
 // Python >= 3.11: removed
 // This can be removed if we drop the support for Python 3.6
 void initThreads() {
-  using namespace std::literals;
+#if !defined(__APPLE__)
   // early return (skip workaround) above Python 3.6
   if (const auto version = getPythonVersion(); !version || (version->major == 3 && version->minor > 6) || version->major > 3) {
     return;
   }
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-#ifndef WIN32  // dlsym hack, doesn't work on windows
+  #if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  #elif defined(__GNUC__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  #endif
+  #ifndef WIN32  // dlsym hack, doesn't work on windows
   // dlsym hack: allows us to build with python 3.11+, where these were removed (so no header declarations), and run with python 3.6 (e.g. RHEL8)
   // the dlsym hack doesn't work on Windows, we'll drop python 3.6 support there
   // lowercase, to avoid name conflicts with the header declaration, in case we're using an old enough python to build
@@ -89,12 +89,13 @@ void initThreads() {
   gsl_Assert(pyeval_threads_initialized && pyeval_initthreads && "We're on python 3.6, yet we couldn't load PyEval_ThreadsInitialized and/or PyEval_InitThreads");
   if (!pyeval_threads_initialized())
     pyeval_initthreads();
-#endif  // !WIN32
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+  #endif  // !WIN32
+  #if defined(__clang__)
+    #pragma clang diagnostic pop
+  #elif defined(__GNUC__)
+    #pragma GCC diagnostic pop
+  #endif
+#endif  // !__APPLE__
 }
 
 }  // namespace
