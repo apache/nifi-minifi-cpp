@@ -61,10 +61,7 @@ std::filesystem::path createTempFile(const std::filesystem::path& directory, con
     std::filesystem::create_directories(directory);
   }
   auto full_file_name = directory / file_name;
-  {
-    std::ofstream tmp_file{full_file_name, open_mode};
-    tmp_file << contents;
-  }
+  std::ofstream{full_file_name, open_mode} << contents;
   std::filesystem::last_write_time(full_file_name, std::chrono::file_clock::now() + offset);
 
   return full_file_name;
