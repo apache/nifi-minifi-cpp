@@ -31,6 +31,11 @@ std::optional<Parameter> ParameterContext::getParameter(const std::string &name)
   if (it != parameters_.end()) {
     return it->second;
   }
+  for (const auto& parameter_context : inherited_parameter_contexts_) {
+    if (auto parameter = parameter_context->getParameter(name)) {
+      return parameter;
+    }
+  }
   return std::nullopt;
 }
 
