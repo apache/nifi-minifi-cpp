@@ -66,8 +66,8 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
     return controller_map_->get(id);
   }
 
-  virtual ControllerServiceNode* getControllerServiceNode(const std::string &id, const utils::Identifier &controller_uuid) const {
-    return controller_map_->get(id, controller_uuid);
+  virtual ControllerServiceNode* getControllerServiceNode(const std::string &id, const utils::Identifier &processor_or_controller_uuid) const {
+    return controller_map_->get(id, processor_or_controller_uuid);
   }
 
   virtual void clearControllerServices() = 0;

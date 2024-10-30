@@ -30,7 +30,7 @@ ControllerServiceNode* ControllerServiceNodeMap::get(const std::string &id) cons
     return nullptr;
 }
 
-ControllerServiceNode* ControllerServiceNodeMap::get(const std::string &id, const utils::Identifier& processor_uuid) const {
+ControllerServiceNode* ControllerServiceNodeMap::get(const std::string &id, const utils::Identifier& processor_or_controller_uuid) const {
   std::lock_guard<std::mutex> lock(mutex_);
   ControllerServiceNode* controller = nullptr;
   auto exists = controller_service_nodes_.find(id);
@@ -48,11 +48,11 @@ ControllerServiceNode* ControllerServiceNodeMap::get(const std::string &id, cons
     return nullptr;
   }
 
-  if (process_group->findProcessorById(processor_uuid)) {
+  if (process_group->findProcessorById(processor_or_controller_uuid, ProcessGroup::Traverse::IncludeChildren)) {
     return controller;
   }
 
-  if (process_group->findControllerService(processor_uuid.to_string(), ProcessGroup::Traverse::IncludeChildren)) {
+  if (process_group->findControllerService(processor_or_controller_uuid.to_string(), ProcessGroup::Traverse::IncludeChildren)) {
     return controller;
   }
 

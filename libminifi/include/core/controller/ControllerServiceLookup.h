@@ -46,7 +46,8 @@ class ControllerServiceLookup {
   virtual ~ControllerServiceLookup() = default;
 
   /**
-   * Gets the controller service via the provided identifier.
+   * Gets the controller service via the provided identifier. This overload returns the controller service in a global scope from all
+   * available controller services in the flow.
    * @param identifier reference string for controller service.
    * @return controller service reference.
    */

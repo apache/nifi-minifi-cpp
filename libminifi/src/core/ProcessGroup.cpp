@@ -116,11 +116,11 @@ void ProcessGroup::addProcessGroup(std::unique_ptr<ProcessGroup> child) {
 void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler,
     EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler) {
 
-  std::set<Processor*> processors_to_schedule;
+  std::vector<Processor*> processors_to_schedule;
   {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
     for (const auto& processor : failed_processors_) {
-      processors_to_schedule.insert(processor);
+      processors_to_schedule.push_back(processor);
     }
   }
 

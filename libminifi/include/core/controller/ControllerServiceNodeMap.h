@@ -41,7 +41,7 @@ class ControllerServiceNodeMap {
   ControllerServiceNodeMap& operator=(ControllerServiceNodeMap&&) = delete;
 
   ControllerServiceNode* get(const std::string &id) const;
-  ControllerServiceNode* get(const std::string &id, const utils::Identifier &processor_uuid) const;
+  ControllerServiceNode* get(const std::string &id, const utils::Identifier &processor_or_controller_uuid) const;
 
   bool put(const std::string &id, const std::shared_ptr<ControllerServiceNode> &serviceNode);
   bool put(const std::string &id, ProcessGroup* process_group);
@@ -51,7 +51,9 @@ class ControllerServiceNodeMap {
 
  protected:
   mutable std::mutex mutex_;
+  // Map of controller service id to the controller service node
   std::map<std::string, std::shared_ptr<ControllerServiceNode>> controller_service_nodes_;
+  // Map of controller service id to the process group that contains it
   std::map<std::string, gsl::not_null<ProcessGroup*>> process_groups_;
 };
 
