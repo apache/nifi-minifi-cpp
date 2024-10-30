@@ -156,6 +156,7 @@ class ReadCallback {
 
   static utils::rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file, const std::optional<utils::Regex>& attribute_name_regex) {
     utils::rd_kafka_headers_unique_ptr result{rd_kafka_headers_new(8)};
+    if (!result) { throw std::bad_alloc{}; }
 
     for (const auto& [attribute_key, attribute_value]: flow_file.getAttributes()) {
       if (attribute_name_regex && utils::regexMatch(attribute_key, *attribute_name_regex)) {
