@@ -28,8 +28,7 @@ KafkaConnection::KafkaConnection(KafkaConnectionKey key)
     : logger_(core::logging::LoggerFactory<KafkaConnection>::getLogger()),
       initialized_(false),
       key_(std::move(key)),
-      poll_(false) {
-}
+      poll_(false) {}
 
 KafkaConnection::~KafkaConnection() {
   remove();
@@ -73,14 +72,12 @@ rd_kafka_t* KafkaConnection::getConnection() const {
   return static_cast<rd_kafka_t*>(kafka_connection_);
 }
 
-bool KafkaConnection::hasTopic(const std::string &topic) const {
+bool KafkaConnection::hasTopic(const std::string& topic) const {
   return topics_.contains(topic);
 }
 
-std::shared_ptr<KafkaTopic> KafkaConnection::getTopic(const std::string &topic) const {
-  if (const auto topicObj = topics_.find(topic); topicObj != topics_.end()) {
-    return topicObj->second;
-  }
+std::shared_ptr<KafkaTopic> KafkaConnection::getTopic(const std::string& topic) const {
+  if (const auto topicObj = topics_.find(topic); topicObj != topics_.end()) { return topicObj->second; }
   return nullptr;
 }
 
@@ -88,7 +85,7 @@ KafkaConnectionKey const* KafkaConnection::getKey() const {
   return &key_;
 }
 
-void KafkaConnection::putTopic(const std::string &topicName, const std::shared_ptr<KafkaTopic> &topic) {
+void KafkaConnection::putTopic(const std::string& topicName, const std::shared_ptr<KafkaTopic>& topic) {
   topics_[topicName] = topic;
 }
 
@@ -98,12 +95,9 @@ void KafkaConnection::logCallback(const rd_kafka_t* rk, const int level, const c
     modifyLoggers([&](const std::unordered_map<const rd_kafka_t*, std::weak_ptr<core::logging::Logger>>& loggers) {
       logger = loggers.at(rk).lock();
     });
-  } catch (...) {
-  }
+  } catch (...) {}
 
-  if (!logger) {
-    return;
-  }
+  if (!logger) { return; }
 
   switch (level) {
     case 0:  // LOG_EMERG
@@ -124,8 +118,7 @@ void KafkaConnection::logCallback(const rd_kafka_t* rk, const int level, const c
     case 7:  // LOG_DEBUG
       logger->log_debug("{}", buf);
       break;
-    default:
-      gsl_FailFast();
+    default: gsl_FailFast();
   }
 }
 

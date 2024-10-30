@@ -38,34 +38,60 @@ enum class SASLMechanismOption { GSSAPI, PLAIN };
 class KafkaProcessorBase : public core::Processor {
  public:
   EXTENSIONAPI static constexpr auto SSLContextService =
-      core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service").withDescription("SSL Context Service Name").withAllowedTypes<minifi::controllers::SSLContextService>().build();
+      core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
+          .withDescription("SSL Context Service Name")
+          .withAllowedTypes<minifi::controllers::SSLContextService>()
+          .build();
   EXTENSIONAPI static constexpr auto SecurityProtocol =
-      core::PropertyDefinitionBuilder<magic_enum::enum_count<kafka::SecurityProtocolOption>()>::createProperty("Security Protocol")
-          .withDescription("Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")
+      core::PropertyDefinitionBuilder<magic_enum::enum_count<kafka::SecurityProtocolOption>()>::createProperty(
+          "Security Protocol")
+          .withDescription(
+              "Protocol used to communicate with brokers. Corresponds to "
+              "Kafka's 'security.protocol' property.")
           .withDefaultValue(magic_enum::enum_name(kafka::SecurityProtocolOption::plaintext))
           .withAllowedValues(magic_enum::enum_names<kafka::SecurityProtocolOption>())
           .isRequired(true)
           .build();
-  EXTENSIONAPI static constexpr auto KerberosServiceName = core::PropertyDefinitionBuilder<>::createProperty("Kerberos Service Name").withDescription("Kerberos Service Name").build();
-  EXTENSIONAPI static constexpr auto KerberosPrincipal = core::PropertyDefinitionBuilder<>::createProperty("Kerberos Principal").withDescription("Kerberos Principal").build();
+  EXTENSIONAPI static constexpr auto KerberosServiceName =
+      core::PropertyDefinitionBuilder<>::createProperty("Kerberos Service Name")
+          .withDescription("Kerberos Service Name")
+          .build();
+  EXTENSIONAPI static constexpr auto KerberosPrincipal =
+      core::PropertyDefinitionBuilder<>::createProperty("Kerberos Principal").withDescription("Kerberos Principal").build();
   EXTENSIONAPI static constexpr auto KerberosKeytabPath =
       core::PropertyDefinitionBuilder<>::createProperty("Kerberos Keytab Path")
-          .withDescription("The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.")
+          .withDescription(
+              "The path to the location on the local filesystem where the "
+              "kerberos keytab is located. Read permission on the file is "
+              "required.")
           .build();
   EXTENSIONAPI static constexpr auto SASLMechanism =
       core::PropertyDefinitionBuilder<magic_enum::enum_count<kafka::SASLMechanismOption>()>::createProperty("SASL Mechanism")
-          .withDescription("The SASL mechanism to use for authentication. Corresponds to Kafka's 'sasl.mechanism' property.")
+          .withDescription(
+              "The SASL mechanism to use for authentication. Corresponds to "
+              "Kafka's 'sasl.mechanism' property.")
           .withDefaultValue(magic_enum::enum_name(kafka::SASLMechanismOption::GSSAPI))
           .withAllowedValues(magic_enum::enum_names<kafka::SASLMechanismOption>())
           .isRequired(true)
           .build();
-  EXTENSIONAPI static constexpr auto Username = core::PropertyDefinitionBuilder<>::createProperty("Username").withDescription("The username when the SASL Mechanism is sasl_plaintext").build();
+  EXTENSIONAPI static constexpr auto Username =
+      core::PropertyDefinitionBuilder<>::createProperty("Username")
+          .withDescription("The username when the SASL Mechanism is sasl_plaintext")
+          .build();
   EXTENSIONAPI static constexpr auto Password =
-      core::PropertyDefinitionBuilder<>::createProperty("Password").withDescription("The password for the given username when the SASL Mechanism is sasl_plaintext").isSensitive(true).build();
-  EXTENSIONAPI static constexpr auto Properties =
-      std::to_array<core::PropertyReference>({SSLContextService, SecurityProtocol, KerberosServiceName, KerberosPrincipal, KerberosKeytabPath, SASLMechanism, Username, Password});
+      core::PropertyDefinitionBuilder<>::createProperty("Password")
+          .withDescription(
+              "The password for the given username when the SASL Mechanism is "
+              "sasl_plaintext")
+          .isSensitive(true)
+          .build();
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({SSLContextService,
+      SecurityProtocol, KerberosServiceName, KerberosPrincipal, KerberosKeytabPath, SASLMechanism, Username, Password});
 
-  KafkaProcessorBase(const std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger) : core::Processor(name, uuid), logger_(std::move(logger)) {}
+  KafkaProcessorBase(
+      const std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
+      : core::Processor(name, uuid),
+        logger_(std::move(logger)) {}
 
   KafkaProcessorBase(const KafkaProcessorBase&) = delete;
   KafkaProcessorBase(KafkaProcessorBase&&) = delete;

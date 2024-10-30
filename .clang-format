@@ -4,6 +4,7 @@ AlignAfterOpenBracket: DontAlign
 AlignConsecutiveAssignments: None
 AlignOperands: DontAlign
 AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: false
 AllowShortBlocksOnASingleLine: Always
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
@@ -17,7 +18,7 @@ BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
-ColumnLimit: 200
+ColumnLimit: 125
 CompactNamespaces: false
 ContinuationIndentWidth: 4
 IndentCaseLabels: true
@@ -32,7 +33,7 @@ ObjCSpaceBeforeProtocolList: false
 PenaltyIndentedWhitespace: 1
 PointerAlignment: Left
 ReferenceAlignment: Left
-ReflowComments: false
+ReflowComments: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: false

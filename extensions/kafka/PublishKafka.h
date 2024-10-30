@@ -50,31 +50,44 @@ class PublishKafka final : public KafkaProcessorBase {
   enum class CompressionCodecEnum { none, gzip, snappy, lz4, zstd };
 
   EXTENSIONAPI static constexpr const char* Description =
-      "This Processor puts the contents of a FlowFile to a Topic in Apache Kafka. "
+      "This Processor puts the contents of a FlowFile to a Topic in Apache "
+      "Kafka. "
       "The content of a FlowFile becomes the contents of a Kafka message. "
-      "This message is optionally assigned a key by using the <Kafka Key> Property.";
+      "This message is optionally assigned a key by using the <Kafka Key> "
+      "Property.";
 
   EXTENSIONAPI static constexpr auto SeedBrokers =
       core::PropertyDefinitionBuilder<>::createProperty("Known Brokers")
-          .withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>")
+          .withDescription(
+              "A comma-separated list of known Kafka Brokers in the format "
+              "<host>:<port>")
           .isRequired(true)
           .supportsExpressionLanguage(true)
           .build();
   EXTENSIONAPI static constexpr auto Topic =
-      core::PropertyDefinitionBuilder<>::createProperty("Topic Name").withDescription("The Kafka Topic of interest").isRequired(true).supportsExpressionLanguage(true).build();
+      core::PropertyDefinitionBuilder<>::createProperty("Topic Name")
+          .withDescription("The Kafka Topic of interest")
+          .isRequired(true)
+          .supportsExpressionLanguage(true)
+          .build();
   EXTENSIONAPI static constexpr auto DeliveryGuarantee =
       core::PropertyDefinitionBuilder<>::createProperty("Delivery Guarantee")
           .withDescription(
-              "Specifies the requirement for guaranteeing that a message is sent to Kafka. "
+              "Specifies the requirement for guaranteeing that a message is "
+              "sent to Kafka. "
               "Valid values are 0 (do not wait for acks), "
-              "-1 or all (block until message is committed by all in sync replicas) "
+              "-1 or all (block until message is committed by all in sync "
+              "replicas) "
               "or any concrete number of nodes.")
           .isRequired(false)
           .supportsExpressionLanguage(true)
           .withDefaultValue("1")
           .build();
   EXTENSIONAPI static constexpr auto MaxMessageSize =
-      core::PropertyDefinitionBuilder<>::createProperty("Max Request Size").withDescription("Maximum Kafka protocol request message size").isRequired(false).build();
+      core::PropertyDefinitionBuilder<>::createProperty("Max Request Size")
+          .withDescription("Maximum Kafka protocol request message size")
+          .isRequired(false)
+          .build();
   EXTENSIONAPI static constexpr auto RequestTimeOut =
       core::PropertyDefinitionBuilder<>::createProperty("Request Timeout")
           .withDescription("The ack timeout of the producer request")
@@ -90,7 +103,11 @@ class PublishKafka final : public KafkaProcessorBase {
           .withDefaultValue("30 sec")
           .build();
   EXTENSIONAPI static constexpr auto ClientName =
-      core::PropertyDefinitionBuilder<>::createProperty("Client Name").withDescription("Client Name to use when communicating with Kafka").isRequired(true).supportsExpressionLanguage(true).build();
+      core::PropertyDefinitionBuilder<>::createProperty("Client Name")
+          .withDescription("Client Name to use when communicating with Kafka")
+          .isRequired(true)
+          .supportsExpressionLanguage(true)
+          .build();
   EXTENSIONAPI static constexpr auto BatchSize =
       core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
           .withDescription("Maximum number of messages batched in one MessageSet")
@@ -100,18 +117,24 @@ class PublishKafka final : public KafkaProcessorBase {
           .build();
   EXTENSIONAPI static constexpr auto TargetBatchPayloadSize =
       core::PropertyDefinitionBuilder<>::createProperty("Target Batch Payload Size")
-          .withDescription("The target total payload size for a batch. 0 B means unlimited (Batch Size is still applied).")
+          .withDescription(
+              "The target total payload size for a batch. 0 B means unlimited "
+              "(Batch Size is still applied).")
           .isRequired(false)
           .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
           .withDefaultValue("512 KB")
           .build();
   EXTENSIONAPI static constexpr auto AttributeNameRegex =
       core::PropertyDefinitionBuilder<>::createProperty("Attributes to Send as Headers")
-          .withDescription("Any attribute whose name matches the regex will be added to the Kafka messages as a Header")
+          .withDescription(
+              "Any attribute whose name matches the regex will be added to the "
+              "Kafka messages as a Header")
           .build();
   EXTENSIONAPI static constexpr auto QueueBufferMaxTime =
       core::PropertyDefinitionBuilder<>::createProperty("Queue Buffering Max Time")
-          .withDescription("Delay to wait for messages in the producer queue to accumulate before constructing message batches")
+          .withDescription(
+              "Delay to wait for messages in the producer queue to accumulate "
+              "before constructing message batches")
           .isRequired(false)
           .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
           .withDefaultValue("5 millis")
@@ -139,54 +162,82 @@ class PublishKafka final : public KafkaProcessorBase {
           .build();
   EXTENSIONAPI static constexpr auto MaxFlowSegSize =
       core::PropertyDefinitionBuilder<>::createProperty("Max Flow Segment Size")
-          .withDescription("Maximum flow content payload segment size for the kafka record. 0 B means unlimited.")
+          .withDescription(
+              "Maximum flow content payload segment size for the kafka record. "
+              "0 B means unlimited.")
           .isRequired(false)
           .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
           .withDefaultValue("0 B")
           .build();
   EXTENSIONAPI static constexpr auto SecurityCA =
       core::PropertyDefinitionBuilder<>::createProperty("Security CA")
-          .withDescription("DEPRECATED in favor of SSL Context Service. File or directory path to CA certificate(s) for verifying the broker's key")
+          .withDescription(
+              "DEPRECATED in favor of SSL Context Service. File or directory "
+              "path to CA certificate(s) for verifying the broker's key")
           .build();
   EXTENSIONAPI static constexpr auto SecurityCert =
       core::PropertyDefinitionBuilder<>::createProperty("Security Cert")
-          .withDescription("DEPRECATED in favor of SSL Context Service.Path to client's public key (PEM) used for authentication")
+          .withDescription(
+              "DEPRECATED in favor of SSL Context Service.Path to client's "
+              "public key (PEM) used for authentication")
           .build();
   EXTENSIONAPI static constexpr auto SecurityPrivateKey =
       core::PropertyDefinitionBuilder<>::createProperty("Security Private Key")
-          .withDescription("DEPRECATED in favor of SSL Context Service.Path to client's private key (PEM) used for authentication")
+          .withDescription(
+              "DEPRECATED in favor of SSL Context Service.Path to client's "
+              "private key (PEM) used for authentication")
           .build();
   EXTENSIONAPI static constexpr auto SecurityPrivateKeyPassWord =
-      core::PropertyDefinitionBuilder<>::createProperty("Security Pass Phrase").withDescription("DEPRECATED in favor of SSL Context Service.Private key passphrase").isSensitive(true).build();
+      core::PropertyDefinitionBuilder<>::createProperty("Security Pass Phrase")
+          .withDescription(
+              "DEPRECATED in favor of SSL Context Service.Private key "
+              "passphrase")
+          .isSensitive(true)
+          .build();
   EXTENSIONAPI static constexpr auto KafkaKey =
       core::PropertyDefinitionBuilder<>::createProperty("Kafka Key")
-          .withDescription("The key to use for the message. If not specified, the UUID of the flow file is used as the message key.")
+          .withDescription(
+              "The key to use for the message. If not specified, the UUID of "
+              "the flow file is used as the message key.")
           .supportsExpressionLanguage(true)
           .build();
   EXTENSIONAPI static constexpr auto MessageKeyField =
-      core::PropertyDefinitionBuilder<>::createProperty("Message Key Field").withDescription("DEPRECATED, does not work -- use Kafka Key instead").build();
+      core::PropertyDefinitionBuilder<>::createProperty("Message Key Field")
+          .withDescription("DEPRECATED, does not work -- use Kafka Key instead")
+          .build();
   EXTENSIONAPI static constexpr auto DebugContexts =
       core::PropertyDefinitionBuilder<>::createProperty("Debug contexts")
           .withDescription(
               "A comma-separated list of debug contexts to enable."
-              "Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all")
+              "Including: generic, broker, topic, metadata, feature, queue, "
+              "msg, protocol, cgrp, security, fetch, interceptor, plugin, "
+              "consumer, "
+              "admin, eos, all")
           .build();
   EXTENSIONAPI static constexpr auto FailEmptyFlowFiles =
       core::PropertyDefinitionBuilder<>::createProperty("Fail empty flow files")
           .withDescription(
-              "Keep backwards compatibility with <=0.7.0 bug which caused flow files with empty content to not be published to Kafka and forwarded to failure. The old behavior is "
+              "Keep backwards compatibility with <=0.7.0 bug which caused flow "
+              "files with empty content to not be published to Kafka and "
+              "forwarded "
+              "to failure. The old behavior is "
               "deprecated. Use connections to drop empty flow files!")
           .isRequired(false)
           .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
           .withDefaultValue("true")
           .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(KafkaProcessorBase::Properties,
-      std::to_array<core::PropertyReference>({SeedBrokers, Topic, DeliveryGuarantee, MaxMessageSize, RequestTimeOut, MessageTimeOut, ClientName, BatchSize, TargetBatchPayloadSize, AttributeNameRegex,
-          QueueBufferMaxTime, QueueBufferMaxSize, QueueBufferMaxMessage, CompressCodec, MaxFlowSegSize, SecurityCA, SecurityCert, SecurityPrivateKey, SecurityPrivateKeyPassWord, KafkaKey,
-          MessageKeyField, DebugContexts, FailEmptyFlowFiles}));
+      std::to_array<core::PropertyReference>({SeedBrokers, Topic, DeliveryGuarantee, MaxMessageSize, RequestTimeOut,
+          MessageTimeOut, ClientName, BatchSize, TargetBatchPayloadSize, AttributeNameRegex, QueueBufferMaxTime,
+          QueueBufferMaxSize, QueueBufferMaxMessage, CompressCodec, MaxFlowSegSize, SecurityCA, SecurityCert,
+          SecurityPrivateKey, SecurityPrivateKeyPassWord, KafkaKey, MessageKeyField, DebugContexts, FailEmptyFlowFiles}));
 
-  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Any FlowFile that is successfully sent to Kafka will be routed to this Relationship"};
-  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Any FlowFile that cannot be sent to Kafka will be routed to this Relationship"};
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
+      "Any FlowFile that is successfully sent to Kafka will be routed to "
+      "this Relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure",
+      "Any FlowFile that cannot be sent to Kafka will be routed to this "
+      "Relationship"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
@@ -196,7 +247,8 @@ class PublishKafka final : public KafkaProcessorBase {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PublishKafka(const std::string_view name, const utils::Identifier& uuid = {}) : KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<PublishKafka>::getLogger(uuid)) {}
+  explicit PublishKafka(const std::string_view name, const utils::Identifier& uuid = {})
+      : KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<PublishKafka>::getLogger(uuid)) {}
 
   PublishKafka(const PublishKafka&) = delete;
   PublishKafka(PublishKafka&&) = delete;
@@ -213,7 +265,8 @@ class PublishKafka final : public KafkaProcessorBase {
 
  protected:
   bool configureNewConnection(core::ProcessContext& context);
-  bool createNewTopic(core::ProcessContext& context, const std::string& topic_name, const std::shared_ptr<core::FlowFile>& flow_file) const;
+  bool createNewTopic(
+      core::ProcessContext& context, const std::string& topic_name, const std::shared_ptr<core::FlowFile>& flow_file) const;
   std::optional<utils::net::SslData> getSslData(core::ProcessContext& context) const override;
 
  private:
@@ -227,7 +280,8 @@ class PublishKafka final : public KafkaProcessorBase {
   std::optional<utils::Regex> attributeNameRegex_;
 
   std::atomic<bool> interrupted_{false};
-  std::mutex messages_mutex_;  // If both connection_mutex_ and messages_mutex_ are needed, always take connection_mutex_ first to avoid deadlock
+  std::mutex messages_mutex_;  // If both connection_mutex_ and messages_mutex_ are needed, always take connection_mutex_
+                               // first to avoid deadlock
   std::set<std::shared_ptr<Messages>> messages_set_;
 };
 

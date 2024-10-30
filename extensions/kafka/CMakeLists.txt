@@ -19,13 +19,13 @@
 
 if (NOT (ENABLE_ALL OR ENABLE_KAFKA))
     return()
-endif()
+endif ()
 
 include(Fetchlibrdkafka)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-file(GLOB SOURCES  "*.cpp")
+file(GLOB SOURCES "*.cpp")
 
 add_minifi_library(minifi-rdkafka-extensions SHARED ${SOURCES})
 
