@@ -1025,7 +1025,7 @@ void StructuredConfiguration::migrate(Node& root_node, const FlowSchema& schema)
         logger_->log_error("Caught Exception during flow {}::migration, type: {}, what: {}", flow_migrator->getName(), typeid(exception).name(), exception.what());
       }
     } else {
-      logger_->log_error("ResourceType::FlowMigrator is not a core::flow::FlowMigrator");
+      logger_->log_critical("{} is registered as a flow migrator, but it is not a subclass of core::flow::FlowMigrator", flow_migrator_class);
     }
   }
 }

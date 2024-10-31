@@ -650,13 +650,6 @@ bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::stri
   return true;
 }
 
-std::optional<utils::net::SslData> PublishKafka::getSslData(core::ProcessContext& context) const {
-  if (auto result = KafkaProcessorBase::getSslData(context); result) { return result; }
-
-  utils::net::SslData ssl_data;
-  return ssl_data;
-}
-
 void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   // Check whether we have been interrupted
   if (interrupted_) {

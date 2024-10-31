@@ -37,9 +37,9 @@ void migrateKafkaPropertyToSSLContextService(
     const std::string_view ssl_context_service_property,
     core::flow::Node& publish_kafka_properties,
     core::flow::Node& ssl_controller_service_properties) {
-  const auto security_ca = publish_kafka_properties.getMember(deprecated_publish_kafka_property);
-  if (const auto security_ca_str = security_ca ? security_ca.getString() : std::nullopt) {
-    ssl_controller_service_properties.addMember(ssl_context_service_property, *security_ca_str);
+  const auto property_value = publish_kafka_properties.getMember(deprecated_publish_kafka_property);
+  if (const auto property_value_str = property_value ? property_value.getString() : std::nullopt) {
+    ssl_controller_service_properties.addMember(ssl_context_service_property, *property_value_str);
   }
 
   std::ignore = publish_kafka_properties.remove(deprecated_publish_kafka_property);
@@ -57,8 +57,11 @@ void PublishKafkaMigrator::migrate(core::flow::Node& root_node, const core::flow
         publish_kafka_properties.contains(DEPRECATED_SECURITY_CERT) ||
         publish_kafka_properties.contains(DEPRECATED_SECURITY_PRIVATE_KEY) ||
         publish_kafka_properties.contains(DEPRECATED_SECURITY_PASS_PHRASE)) {
-      std::string publish_kafka_id_str = publish_kafka_processor[schema.identifier].getString().value_or(std::string{utils::IdGenerator::getIdGenerator()->generate().to_string()});
-      auto ssl_context_service_name = fmt::format("GeneratedSSLContextServiceFor_{}", publish_kafka_id_str);
+      auto publish_kafka_id_str = publish_kafka_processor[schema.identifier].getString();
+      if (!publish_kafka_id_str) {
+        throw Exception(PROCESSOR_EXCEPTION, "Missing identifier for PublishKafka");
+      }
+      auto ssl_context_service_name = fmt::format("GeneratedSSLContextServiceFor_{}", *publish_kafka_id_str);
       auto root_group = root_node[schema.root_group];
       auto controller_services = root_group[schema.controller_services];
       auto ssl_controller_service = *controller_services.pushBack();
@@ -74,7 +77,7 @@ void PublishKafkaMigrator::migrate(core::flow::Node& root_node, const core::flow
       migrateKafkaPropertyToSSLContextService(DEPRECATED_SECURITY_PRIVATE_KEY, controllers::SSLContextService::PrivateKey.name, publish_kafka_properties, *ssl_controller_service_properties);
       migrateKafkaPropertyToSSLContextService(DEPRECATED_SECURITY_PASS_PHRASE, controllers::SSLContextService::Passphrase.name, publish_kafka_properties, *ssl_controller_service_properties);
 
-      logger_->log_warn("Removed deprecated Security Properties from {} and replaced them with SSLContextService", *publish_kafka_processor[schema.identifier].getString());
+      logger_->log_warn("Removed deprecated Security Properties from {} and replaced them with SSLContextService", *publish_kafka_id_str);
     }
   }
 }

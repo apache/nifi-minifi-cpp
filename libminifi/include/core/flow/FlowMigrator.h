@@ -30,7 +30,7 @@ class FlowMigrator : public CoreComponent {
   virtual void migrate(Node& flow_root, const FlowSchema& schema) = 0;
 
  protected:
-  void doOnProcessGroup(Node& process_group, const FlowSchema& schema, auto func) const {
+  void doOnProcessGroup(const Node& process_group, const FlowSchema& schema, auto func) const {
     func(process_group, schema);
     const auto process_group_children = process_group[schema.process_groups];
     if (process_group.isSequence()) {
@@ -42,11 +42,10 @@ class FlowMigrator : public CoreComponent {
 
   [[nodiscard]] std::vector<Node> getProcessors(const Node& root_node, const FlowSchema& schema, const std::string_view processor_to_get) const {
     std::vector<Node> processors;
-    auto root_group = root_node[schema.root_group];
-    doOnProcessGroup(root_group, schema, [&processors, processor_to_get](auto process_group, const FlowSchema& schema) {
-      for (auto processor_node : process_group[schema.processors]) {
-        auto processor_type_str = processor_node[schema.type].getString();
-        if (auto processor_type = processor_node[schema.type].getString(); processor_type && processor_type->find(processor_to_get) != std::string::npos) {
+    const Node& root_group = root_node[schema.root_group];
+    doOnProcessGroup(root_group, schema, [&processors, processor_to_get](const Node& process_group, const FlowSchema& flow_schema) {
+      for (const auto& processor_node : process_group[flow_schema.processors]) {
+        if (const auto processor_type_str = processor_node[flow_schema.type].getString(); processor_type_str && processor_type_str->find(processor_to_get) != std::string::npos) {
           processors.push_back(processor_node);
         }
       }

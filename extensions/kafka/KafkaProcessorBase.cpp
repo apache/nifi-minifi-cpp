@@ -22,16 +22,13 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-std::optional<utils::net::SslData> KafkaProcessorBase::getSslData(core::ProcessContext& context) const {
-  return utils::net::getSslData(context, SSLContextService, logger_);
-}
 
 void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config) {
   security_protocol_ = utils::parseEnumProperty<kafka::SecurityProtocolOption>(context, SecurityProtocol);
   utils::setKafkaConfigurationField(*config, "security.protocol", std::string{magic_enum::enum_name(security_protocol_)});
   logger_->log_debug("Kafka security.protocol [{}]", magic_enum::enum_name(security_protocol_));
   if (security_protocol_ == kafka::SecurityProtocolOption::ssl || security_protocol_ == kafka::SecurityProtocolOption::sasl_ssl) {
-    if (auto ssl_data = getSslData(context)) {
+    if (auto ssl_data = utils::net::getSslData(context, SSLContextService, logger_)) {
       if (ssl_data->ca_loc.empty() && ssl_data->cert_loc.empty() && ssl_data->key_loc.empty() && ssl_data->key_pw.empty()) {
         logger_->log_warn("Security protocol is set to {}, but no valid security parameters are set in the properties or in the SSL Context Service.",
             magic_enum::enum_name(security_protocol_));

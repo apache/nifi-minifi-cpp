@@ -20,10 +20,13 @@
 #include "PublishKafka.h"
 #include "unit/ConfigurationTestController.h"
 #include "core/flow/AdaptiveConfiguration.h"
+#include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 
 #include "yaml-cpp/yaml.h"
 
 namespace org::apache::nifi::minifi::test {
+
+using minifi::utils::crypto::property_encryption::decrypt;
 
 TEST_CASE("PublishKafkaMigratorTest yaml") {
   static constexpr std::string_view ORIGINAL_YAML = R"(
@@ -91,14 +94,14 @@ Remote Processing Groups: []
   CHECK(migrated_flow["Controller Services"][0]["Properties"]["CA Certificate"].as<std::string>() == "/tmp/resources/certs/ca-cert");
   CHECK(migrated_flow["Controller Services"][0]["Properties"]["Client Certificate"].as<std::string>() == "/tmp/resources/certs/client_test_client_client.pem");
   CHECK(migrated_flow["Controller Services"][0]["Properties"]["Private Key"].as<std::string>() == "/tmp/resources/certs/client_test_client_client.key");
-  CHECK(migrated_flow["Controller Services"][0]["Properties"]["CA Certificate"].as<std::string>() == "/tmp/resources/certs/ca-cert");
+  CHECK(decrypt(migrated_flow["Controller Services"][0]["Properties"]["Passphrase"].as<std::string>(), test_controller.sensitive_values_encryptor_) == "abcdefgh");
 
-  CHECK(!migrated_flow["Processors"][1]["Properties"]["Message Key Field"].IsDefined());
+  CHECK_FALSE(migrated_flow["Processors"][1]["Properties"]["Message Key Field"].IsDefined());
 
-  CHECK(!migrated_flow["Processors"][1]["Properties"]["Security CA"].IsDefined());
-  CHECK(!migrated_flow["Processors"][1]["Properties"]["Security Cert"].IsDefined());
-  CHECK(!migrated_flow["Processors"][1]["Properties"]["Security Pass Phrase"].IsDefined());
-  CHECK(!migrated_flow["Processors"][1]["Properties"]["Security Private Key"].IsDefined());
+  CHECK_FALSE(migrated_flow["Processors"][1]["Properties"]["Security CA"].IsDefined());
+  CHECK_FALSE(migrated_flow["Processors"][1]["Properties"]["Security Cert"].IsDefined());
+  CHECK_FALSE(migrated_flow["Processors"][1]["Properties"]["Security Pass Phrase"].IsDefined());
+  CHECK_FALSE(migrated_flow["Processors"][1]["Properties"]["Security Private Key"].IsDefined());
 
   CHECK(migrated_flow["Processors"][1]["Properties"]["SSL Context Service"].as<std::string>() == "GeneratedSSLContextServiceFor_8a534b4a-2b4a-4e1e-ab07-8a09fa08f848");
 }
@@ -181,14 +184,14 @@ TEST_CASE("PublishKafkaMigratorTest json") {
   CHECK(migrated_flow["rootGroup"]["controllerServices"][0]["properties"]["CA Certificate"] == "/tmp/resources/certs/ca-cert");
   CHECK(migrated_flow["rootGroup"]["controllerServices"][0]["properties"]["Client Certificate"] == "/tmp/resources/certs/client_test_client_client.pem");
   CHECK(migrated_flow["rootGroup"]["controllerServices"][0]["properties"]["Private Key"] == "/tmp/resources/certs/client_test_client_client.key");
-  CHECK(migrated_flow["rootGroup"]["controllerServices"][0]["properties"]["CA Certificate"] == "/tmp/resources/certs/ca-cert");
+  CHECK(decrypt(migrated_flow["rootGroup"]["controllerServices"][0]["properties"]["Passphrase"].GetString(), test_controller.sensitive_values_encryptor_) == "abcdefgh");
 
-  CHECK(!migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Message Key Field"));
+  CHECK_FALSE(migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Message Key Field"));
 
-  CHECK(!migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Security CA"));
-  CHECK(!migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Security Cert"));
-  CHECK(!migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Security Pass Phrase"));
-  CHECK(!migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Security Private Key"));
+  CHECK_FALSE(migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Security CA"));
+  CHECK_FALSE(migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Security Cert"));
+  CHECK_FALSE(migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Security Pass Phrase"));
+  CHECK_FALSE(migrated_flow["rootGroup"]["processors"][1]["properties"].HasMember("Security Private Key"));
 
   CHECK(migrated_flow["rootGroup"]["processors"][1]["properties"]["SSL Context Service"] == "GeneratedSSLContextServiceFor_8a534b4a-2b4a-4e1e-ab07-8a09fa08f848");
 }
