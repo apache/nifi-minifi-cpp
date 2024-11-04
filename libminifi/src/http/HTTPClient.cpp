@@ -121,21 +121,6 @@ void HTTPClient::initialize(http::HttpRequestMethod method, std::string url, std
   if (isSecure(url_))
     configure_secure_connection();
 }
-
-void HTTPClient::setPeerVerification(bool peer_verification) {
-  if (peer_verification) {
-    logger_->log_debug("Enabling peer verification");
-  } else {
-    logger_->log_warn("Disabling peer verification: the authenticity of https servers will not be verified!");
-  }
-  curl_easy_setopt(http_session_.get(), CURLOPT_SSL_VERIFYPEER, peer_verification);
-}
-
-void HTTPClient::setHostVerification(bool host_verification) {
-  logger_->log_debug("{} host verification", host_verification ? "Enabling" : "Disabling");
-  curl_easy_setopt(http_session_.get(), CURLOPT_SSL_VERIFYHOST, host_verification);
-}
-
 void HTTPClient::setBasicAuth(const std::string& username, const std::string& password) {
   curl_easy_setopt(http_session_.get(), CURLOPT_USERNAME, username.c_str());
   curl_easy_setopt(http_session_.get(), CURLOPT_PASSWORD, password.c_str());

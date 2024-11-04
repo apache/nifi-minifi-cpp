@@ -127,7 +127,6 @@ std::unique_ptr<minifi::http::HTTPClient> InvokeHTTP::createHTTPClientFromMember
   setupClientTimeouts(*client, connect_timeout_, read_timeout_);
   client->setHTTPProxy(proxy_);
   client->setFollowRedirects(follow_redirects_);
-  client->setPeerVerification(true);
   if (send_message_body_ && content_type_)
     client->setContentType(*content_type_);
   setupClientTransferEncoding(*client, use_chunked_encoding_);

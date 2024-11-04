@@ -216,9 +216,6 @@ class BaseHTTPClient {
 
   virtual void set_request_method(HttpRequestMethod method) = 0;
 
-  virtual void setPeerVerification(bool peer_verification) = 0;
-  virtual void setHostVerification(bool host_verification) = 0;
-
   virtual void setHTTPProxy(const HTTPProxy &proxy) = 0;
 
   virtual void setBasicAuth(const std::string& username, const std::string& password) = 0;
