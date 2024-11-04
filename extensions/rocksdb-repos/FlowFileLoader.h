@@ -39,7 +39,7 @@ class FlowFileLoader {
   static constexpr size_t thread_count_ = 1;
 
  public:
-  FlowFileLoader(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo);
+  FlowFileLoader(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo, bool verify_checksums_in_rocksdb_reads);
 
   ~FlowFileLoader();
 
@@ -60,6 +60,7 @@ class FlowFileLoader {
   //    this ownership could be removed if that changes
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::shared_ptr<core::logging::Logger> logger_;
+  bool verify_checksums_in_rocksdb_reads_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi

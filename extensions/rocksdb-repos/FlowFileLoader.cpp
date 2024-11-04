@@ -29,10 +29,11 @@
 
 namespace org::apache::nifi::minifi {
 
-FlowFileLoader::FlowFileLoader(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo)
+FlowFileLoader::FlowFileLoader(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo, bool verify_checksums_in_rocksdb_reads)
   : db_(db),
     content_repo_(std::move(content_repo)),
-    logger_(core::logging::LoggerFactory<FlowFileLoader>::getLogger()) {}
+    logger_(core::logging::LoggerFactory<FlowFileLoader>::getLogger()),
+    verify_checksums_in_rocksdb_reads_(verify_checksums_in_rocksdb_reads) {}
 
 FlowFileLoader::~FlowFileLoader() {
   stop();
@@ -74,6 +75,7 @@ utils::TaskRescheduleInfo FlowFileLoader::loadImpl(const std::vector<SwappedFlow
     FlowFilePtrVec result;
     result.reserve(flow_files.size());
     rocksdb::ReadOptions read_options;
+    read_options.verify_checksums = verify_checksums_in_rocksdb_reads_;
     std::vector<utils::SmallString<36>> serialized_keys;
     serialized_keys.reserve(flow_files.size());
     for (const auto& item : flow_files) {

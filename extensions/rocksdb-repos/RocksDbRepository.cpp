@@ -79,7 +79,9 @@ bool RocksDbRepository::Get(const std::string &key, std::string &value) {
   if (!opendb) {
     return false;
   }
-  return opendb->Get(rocksdb::ReadOptions(), key, &value).ok();
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  return opendb->Get(options, key, &value).ok();
 }
 
 uint64_t RocksDbRepository::getRepositorySize() const {

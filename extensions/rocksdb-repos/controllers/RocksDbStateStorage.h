@@ -93,6 +93,7 @@ class RocksDbStateStorage : public KeyValueStateStorage {
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   rocksdb::WriteOptions default_write_options;
   AutoPersistor auto_persistor_;
+  bool verify_checksums_in_rocksdb_reads_ = false;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbStateStorage>::getLogger();
 };

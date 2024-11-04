@@ -28,14 +28,17 @@
 
 namespace org::apache::nifi::minifi::io {
 
-RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable, minifi::internal::WriteBatch* batch, bool use_synchronous_writes)
+RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable, minifi::internal::WriteBatch* batch,
+  bool use_synchronous_writes, bool verify_checksums)
     : BaseStream(),
       path_(std::move(path)),
       write_enable_(write_enable),
       db_(db),
-      exists_([this] {
+      exists_([this, verify_checksums] {
         auto opendb = db_->open();
-        return opendb && opendb->Get(rocksdb::ReadOptions(), path_, &value_).ok();
+        rocksdb::ReadOptions options;
+        options.verify_checksums = verify_checksums;
+        return opendb && opendb->Get(options, path_, &value_).ok();
       }()),
       offset_(0),
       batch_(batch),

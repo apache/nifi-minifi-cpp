@@ -59,6 +59,7 @@ class RocksDbRepository : public ThreadedRepository {
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::shared_ptr<logging::Logger> logger_;
   std::thread thread_;
+  bool verify_checksums_in_rocksdb_reads_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository
