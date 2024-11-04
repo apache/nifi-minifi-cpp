@@ -201,3 +201,5 @@ By default the `python3` command is used on Unix systems and `python` command is
 
     # in minifi.properties
     nifi.python.env.setup.binary=python3
+
+On Linux the python binary set in the property is also used to find the associated libpython library that will be dynamically loaded and used by the MiNiFi C++ python bindings.

@@ -41,6 +41,8 @@ endif()
 target_compile_definitions(minifi-python-script-extension PUBLIC PY_SSIZE_T_CLEAN)
 
 target_sources(minifi-python-script-extension PRIVATE ${PY_SOURCES})
+
+# On Linux the python library is loaded dynamically in the minifi-python-loader extension before the python script extension is loaded
 if (WIN32 OR APPLE)
     target_link_libraries(minifi-python-script-extension PUBLIC ${Python_LIBRARIES})
 endif()
