@@ -122,9 +122,6 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void set_request_method(http::HttpRequestMethod method) override;
 
-  void setPeerVerification(bool peer_verification) override;
-  void setHostVerification(bool host_verification) override;
-
   void setBasicAuth(const std::string& username, const std::string& password) override;
   void clearBasicAuth() override;
 
