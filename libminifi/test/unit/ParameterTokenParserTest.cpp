@@ -102,8 +102,8 @@ TEST_CASE("Test invalid token names") {
 TEST_CASE("Test token replacement") {
   core::NonSensitiveParameterTokenParser parser("## What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more ##");
   core::ParameterContext context("test_context");
-  context.addParameter(core::Parameter{"what", "", false, "love"});
-  context.addParameter(core::Parameter{"who", "", false, "me"});
+  context.addParameter(core::Parameter{"what", "", false, false, "love"});
+  context.addParameter(core::Parameter{"who", "", false, false, "me"});
   REQUIRE(parser.replaceParameters(&context) == "## What is love, baby don't hurt me, don't hurt me, no more ##");
 }
 
@@ -111,15 +111,15 @@ TEST_CASE("Test replacement with escaped tokens") {
   core::NonSensitiveParameterTokenParser parser("### What is #####{what}, baby don't hurt ###{who}, don't hurt ###{who}, no ####{more} ##{");
   REQUIRE(parser.getTokens().size() == 4);
   core::ParameterContext context("test_context");
-  context.addParameter(core::Parameter{"what", "", false, "love"});
-  context.addParameter(core::Parameter{"who", "", false, "me"});
+  context.addParameter(core::Parameter{"what", "", false, false, "love"});
+  context.addParameter(core::Parameter{"who", "", false, false, "me"});
   REQUIRE(parser.replaceParameters(&context) == "### What is ##love, baby don't hurt #me, don't hurt #me, no ##{more} ##{");
 }
 
 TEST_CASE("Test replacement with missing token in context") {
   core::NonSensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more");
   core::ParameterContext context("test_context");
-  context.addParameter(core::Parameter{"what", "", false, "love"});
+  context.addParameter(core::Parameter{"what", "", false, false, "love"});
   REQUIRE_THROWS_WITH(parser.replaceParameters(&context), "Parameter Operation: Parameter 'who' not found");
 }
 
@@ -128,8 +128,8 @@ TEST_CASE("Sensitive property parameter replacement is not supported") {
   utils::crypto::EncryptionProvider encryption_provider{secret_key};
   core::SensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more", encryption_provider);
   core::ParameterContext context("test_context");
-  context.addParameter(core::Parameter{"what", "", false, "love"});
-  context.addParameter(core::Parameter{"who", "", false, "me"});
+  context.addParameter(core::Parameter{"what", "", false, false, "love"});
+  context.addParameter(core::Parameter{"who", "", false, false, "me"});
   REQUIRE_THROWS_WITH(parser.replaceParameters(&context), "Parameter Operation: Non-sensitive parameter 'what' cannot be referenced in a sensitive property");
 }
 
@@ -154,8 +154,8 @@ TEST_CASE("Test sensitive token replacement") {
   core::SensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more", encryption_provider);
   auto value1 = utils::crypto::property_encryption::encrypt("love", encryption_provider);
   auto value2 = utils::crypto::property_encryption::encrypt("me", encryption_provider);
-  context.addParameter(core::Parameter{"what", "", true, value1});
-  context.addParameter(core::Parameter{"who", "", true, value2});
+  context.addParameter(core::Parameter{"what", "", true, false, value1});
+  context.addParameter(core::Parameter{"who", "", true, false, value2});
   REQUIRE(parser.replaceParameters(&context) == "What is love, baby don't hurt me, don't hurt me, no more");
 }
 

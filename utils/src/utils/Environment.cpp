@@ -27,8 +27,15 @@
 #include <mutex>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 #include "utils/gsl.h"
+
+// Apple doesn't provide the environ global variable
+#if defined(__APPLE__) && !defined(environ)
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
+#endif
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -121,6 +128,51 @@ bool Environment::isRunningAsService() {
   });
 
   return runningAsService;
+}
+
+std::unordered_map<std::string, std::string> Environment::getEnvironmentVariables() {
+  std::unordered_map<std::string, std::string> env_var_map;
+
+#ifdef WIN32
+  LPWCH env_strings = GetEnvironmentStringsW();
+  if (!env_strings) {
+    return env_var_map;
+  }
+
+  LPWCH env = env_strings;
+
+  while (*env) {
+    std::wstring wstring_variable_key_value_pair(env);
+
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstring_variable_key_value_pair.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    std::vector<char> buffer(size_needed);
+    WideCharToMultiByte(CP_UTF8, 0, wstring_variable_key_value_pair.c_str(), -1, buffer.data(), size_needed, nullptr, nullptr);
+
+    std::string variable_key_value_pair(buffer.data());
+    size_t pos = variable_key_value_pair.find('=');
+    if (pos != std::string::npos) {
+      std::string key = variable_key_value_pair.substr(0, pos);
+      std::string value = variable_key_value_pair.substr(pos + 1);
+      env_var_map[key] = value;
+    }
+
+    env += wcslen(env) + 1;
+  }
+
+  FreeEnvironmentStringsW(env_strings);
+#else
+  for (char **env = environ; *env != nullptr; ++env) {
+    std::string variable_key_value_pair(*env);
+    size_t pos = variable_key_value_pair.find('=');
+    if (pos != std::string::npos) {
+      std::string key = variable_key_value_pair.substr(0, pos);
+      std::string value = variable_key_value_pair.substr(pos + 1);
+      env_var_map[key] = value;
+    }
+  }
+#endif
+
+  return env_var_map;
 }
 
 }  // namespace org::apache::nifi::minifi::utils

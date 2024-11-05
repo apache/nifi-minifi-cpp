@@ -83,7 +83,11 @@ FlowSchema FlowSchema::getDefault() {
       .value = {"value"},
       .parameter_context_name = {"Parameter Context Name"},
       .sensitive = {"sensitive"},
-      .inherited_parameter_contexts = {"Inherited Parameter Contexts"}
+      .provided = {"provided"},
+      .inherited_parameter_contexts = {"Inherited Parameter Contexts"},
+      .parameter_providers = {"Parameter Providers"},
+      .parameter_provider_properties = {"Properties"},
+      .parameter_provider{"Parameter Provider"}
   };
 }
 
@@ -151,7 +155,11 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .value = {"value"},
       .parameter_context_name = {"parameterContextName"},
       .sensitive = {"sensitive"},
-      .inherited_parameter_contexts = {"inheritedParameterContexts"}
+      .provided = {"provided"},
+      .inherited_parameter_contexts = {"inheritedParameterContexts"},
+      .parameter_providers = {"parameterProviders"},
+      .parameter_provider_properties = {"properties"},
+      .parameter_provider{"parameterProvider"}
   };
 }
 

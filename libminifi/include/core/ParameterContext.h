@@ -36,6 +36,7 @@ struct Parameter {
   std::string name;
   std::string description;
   bool sensitive = false;
+  bool provided = false;
   std::string value;
 };
 
@@ -66,10 +67,19 @@ class ParameterContext : public CoreComponentImpl {
     return inherited_parameter_contexts_;
   }
 
+  void setParameterProvider(const std::string &parameter_provider) {
+    parameter_provider_ = parameter_provider;
+  }
+
+  std::string getParameterProvider() const {
+    return parameter_provider_;
+  }
+
  private:
   std::string description_;
   std::unordered_map<std::string, Parameter> parameters_;
   std::vector<gsl::not_null<ParameterContext*>> inherited_parameter_contexts_;
+  std::string parameter_provider_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

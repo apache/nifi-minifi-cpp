@@ -96,6 +96,7 @@ std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> FlowConfigur
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const std::string& url, const std::string& yamlConfigPayload, const std::optional<std::string>& flow_id) {
   auto old_provider = service_provider_;
   auto old_parameter_contexts = std::move(parameter_contexts_);
+  auto old_parameter_providers = std::move(parameter_providers_);
   service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(std::make_unique<core::controller::ControllerServiceNodeMap>(), configuration_);
   auto payload = getRootFromPayload(yamlConfigPayload);
   if (!url.empty() && payload != nullptr) {
@@ -113,6 +114,7 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   } else {
     service_provider_ = old_provider;
     parameter_contexts_ = std::move(old_parameter_contexts);
+    parameter_providers_ = std::move(old_parameter_providers);
   }
   return payload;
 }
@@ -178,6 +180,24 @@ std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::crea
   if (nullptr != controllerServicesNode)
     controllerServicesNode->setUUID(uuid);
   return controllerServicesNode;
+}
+
+std::unique_ptr<core::ParameterProvider> FlowConfiguration::createParameterProvider(const std::string &class_name, const std::string &full_class_name, const utils::Identifier& uuid) {
+  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(class_name, uuid);
+  if (ptr == nullptr) {
+    ptr = core::ClassLoader::getDefaultClassLoader().instantiate(full_class_name, uuid);
+  }
+  if (ptr == nullptr) {
+    return nullptr;
+  }
+
+  auto returnPtr = utils::dynamic_unique_cast<core::ParameterProvider>(std::move(ptr));
+  if (!returnPtr) {
+    throw std::runtime_error("Invalid return from the classloader");
+  }
+
+  returnPtr->initialize();
+  return returnPtr;
 }
 
 }  // namespace org::apache::nifi::minifi::core
