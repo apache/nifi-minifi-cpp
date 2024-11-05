@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_
-#define LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_
+#pragma once
 
 #include <utility>
 #include <functional>
@@ -31,11 +30,6 @@ namespace org::apache::nifi::minifi::utils {
  * functions are called natively, and not through this class), then this class can't guarantee thread safety.
  */
 class Environment {
- private:
-  static bool runningAsService_;
-
-  static void accessEnvironment(const std::function<void(void)>& func);
-
  public:
   /**
    * Gets an environment variable using the native OS API
@@ -72,8 +66,13 @@ class Environment {
    * @return true if the current process is running as a service
    */
   static bool isRunningAsService();
+
+  static std::unordered_map<std::string, std::string> getEnvironmentVariables();
+
+ private:
+  static void accessEnvironment(const std::function<void(void)>& func);
+
+  static bool runningAsService_;
 };
 
 }  // namespace org::apache::nifi::minifi::utils
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_

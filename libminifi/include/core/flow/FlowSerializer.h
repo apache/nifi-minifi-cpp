@@ -23,6 +23,7 @@
 #include "core/ProcessGroup.h"
 #include "utils/crypto/EncryptionProvider.h"
 #include "utils/Id.h"
+#include "core/ParameterContext.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -52,7 +53,7 @@ class FlowSerializer {
   FlowSerializer& operator=(FlowSerializer&&) = delete;
 
   [[nodiscard]] virtual std::string serialize(const core::ProcessGroup& process_group, const FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-      const std::unordered_map<utils::Identifier, Overrides>& overrides) const = 0;
+      const std::unordered_map<utils::Identifier, Overrides>& overrides, const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::flow

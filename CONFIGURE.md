@@ -20,6 +20,7 @@
 - [Table of Contents](#table-of-contents)
 - [Configuring](#configuring)
   - [Parameter Contexts](#parameter-contexts)
+  - [Parameter Providers](#parameter-providers)
   - [Configuring flow configuration format](#configuring-flow-configuration-format)
   - [Scheduling strategies](#scheduling-strategies)
   - [Configuring encryption for flow configuration](#configuring-encryption-for-flow-configuration)
@@ -79,49 +80,50 @@ MiNiFi Toolkit Converter (version 0.0.1 - schema version 1) is considered as dep
 
 It's recommended to create your configuration in YAML format or configure the agent via Command and Control protocol (see below)
 
+```yaml
+Flow Controller:
+  id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+  name: MiNiFi Flow
 
-    Flow Controller:
-        id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
-        name: MiNiFi Flow
+Processors:
+  - name: GetFile
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+    class: org.apache.nifi.processors.standard.GetFile
+    max concurrent tasks: 1
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 1 sec
+    penalization period: 30 sec
+    yield period: 1 sec
+    run duration nanos: 0
+    auto-terminated relationships list:
+    Properties:
+      Input Directory: /tmp/getfile
+      Keep Source File: true
 
-    Processors:
-        - name: GetFile
-          id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
-          class: org.apache.nifi.processors.standard.GetFile
-          max concurrent tasks: 1
-          scheduling strategy: TIMER_DRIVEN
-          scheduling period: 1 sec
-          penalization period: 30 sec
-          yield period: 1 sec
-          run duration nanos: 0
-          auto-terminated relationships list:
-          Properties:
-              Input Directory: /tmp/getfile
-              Keep Source File: true
+Connections:
+  - name: TransferFilesToRPG
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
+    source name: GetFile
+    source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+    source relationship name: success
+    destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+    max work queue size: 0
+    max work queue data size: 1 MB
+    flowfile expiration: 60 sec
+    drop empty: false
 
-    Connections:
-        - name: TransferFilesToRPG
-          id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
-          source name: GetFile
-          source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
-          source relationship name: success
-          destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
-          max work queue size: 0
-          max work queue data size: 1 MB
-          flowfile expiration: 60 sec
-          drop empty: false
-
-    Remote Processing Groups:
-        - name: NiFi Flow
-          id: 471deef6-2a6e-4a7d-912a-81cc17e3a208
-          url: http://localhost:8080/nifi
-          timeout: 30 secs
-          yield period: 10 sec
-          Input Ports:
-              - id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
-                name: From Node A
-                max concurrent tasks: 1
-                Properties:
+Remote Processing Groups:
+  - name: NiFi Flow
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a208
+    url: http://localhost:8080/nifi
+    timeout: 30 secs
+    yield period: 10 sec
+    Input Ports:
+      - id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+        name: From Node A
+        max concurrent tasks: 1
+        Properties:
+```
 
 Besides YAML configuration format, MiNiFi C++ also supports JSON configuration. To see different uses cases in both formats, please refer to the [examples page](examples/README.md) for flow config examples.
 
@@ -206,45 +208,169 @@ An example for using parameters in a JSON configuration file:
 An example for using parameters in a YAML configuration file:
 
 ```yaml
-    MiNiFi Config Version: 3
-    Flow Controller:
-      name: MiNiFi Flow
-    Parameter Contexts:
-      - id: 235e6b47-ea22-45cd-a472-545801db98e6
-        name: common-parameter-context
-        description: Common parameter context
-        Parameters:
-        - name: common_timeout
-          description: 'Common timeout seconds'
-          sensitive: false
-          value: 30
-      - id: 804e6b47-ea22-45cd-a472-545801db98e6
-        name: root-process-group-context
-        description: Root process group parameter context
-        Parameters:
-        - name: tail_base_dir
-          description: 'Base dir of tailed files'
-          sensitive: false
-          value: /tmp/tail/file/path
-        Inherited Parameter Contexts:
-        - common-parameter-context
-    Processors:
-    - name: Tail test_file1.log
-      id: 83b58f9f-e661-4634-96fb-0e82b92becdf
-      class: org.apache.nifi.minifi.processors.TailFile
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1000 ms
-      Properties:
-        File to Tail: "#{tail_base_dir}/test_file1.log"
-    - name: Tail test_file2.log
-      id: 8a772a10-7c34-48e7-b152-b1a32c5db83e
-      class: org.apache.nifi.minifi.processors.TailFile
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1000 ms
-      Properties:
-        File to Tail: "#{tail_base_dir}/test_file2.log"
-    Parameter Context Name: root-process-group-context
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Parameter Contexts:
+  - id: 235e6b47-ea22-45cd-a472-545801db98e6
+    name: common-parameter-context
+    description: Common parameter context
+    Parameters:
+    - name: common_timeout
+      description: 'Common timeout seconds'
+      sensitive: false
+      value: 30
+  - id: 804e6b47-ea22-45cd-a472-545801db98e6
+    name: root-process-group-context
+    description: Root process group parameter context
+    Parameters:
+    - name: tail_base_dir
+      description: 'Base dir of tailed files'
+      sensitive: false
+      value: /tmp/tail/file/path
+    Inherited Parameter Contexts:
+    - common-parameter-context
+Processors:
+- name: Tail test_file1.log
+  id: 83b58f9f-e661-4634-96fb-0e82b92becdf
+  class: org.apache.nifi.minifi.processors.TailFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  Properties:
+    File to Tail: "#{tail_base_dir}/test_file1.log"
+- name: Tail test_file2.log
+  id: 8a772a10-7c34-48e7-b152-b1a32c5db83e
+  class: org.apache.nifi.minifi.processors.TailFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  Properties:
+    File to Tail: "#{tail_base_dir}/test_file2.log"
+Parameter Context Name: root-process-group-context
 ```
+
+### Parameter Providers
+
+Parameter contexts can be generated by Parameter Providers. Parameter Providers can be added to the flow configuration, after which parameter contexts and parameters generated by these providers can be referenced in the properties. The parameter contexts generated are persisted in the flow configuration file and are only regenerated on MiNiFi C++ restart if the context is removed from the flow configuration. Other parameter contexts can be also inherited from provider generated parameter contexts.
+
+There are two properties that can be set for all parameter providers for selecting which properties should be sensitive parameters:
+
+- `Sensitive Parameter Scope`: This property can be set to `none`, `selected` or `all`. If set to `All`, all parameters generated by the provider will be marked as sensitive. If set to `none`, all parameters generated by the provider will be marked as non-sensitive. If set to `selected`, the `Sensitive Parameter List` property should be set to a list of parameter names that should be marked as sensitive.
+- `Sensitive Parameter List`: This property should be set to a comma-separated list of parameter names that should be marked as sensitive. This property is only used if the `Sensitive Parameter Scope` property is set to `selected`.
+
+An example for using parameter providers in a JSON configuration file:
+
+```json
+{
+    "parameterProviders": [
+        {
+            "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+            "name": "EnvironmentVariableParameterProvider",
+            "type": "EnvironmentVariableParameterProvider",
+            "properties": {
+                "Parameter Group Name": "environment-variable-parameter-context",
+                "Environment Variable Inclusion Strategy": "Regular Expression",
+                "Include Environment Variables": "INPUT_.*"
+            }
+        }
+    ],
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "identifier": "00000000-0000-0000-0000-000000000001",
+                "name": "MyProcessor",
+                "type": "org.apache.nifi.processors.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "3 sec",
+                "properties": {
+                    "Input Directory": "#{INPUT_DIR}"
+                }
+            }
+        ],
+        "parameterContextName": "environment-variable-parameter-context"
+    }
+}
+```
+
+The same example in YAML configuration file:
+
+```yaml
+MiNiFi Config Version: 3
+Flow Controller:
+name: MiNiFi Flow
+Parameter Providers:
+  - id: d26ee5f5-0192-1000-0482-4e333725e089
+    name: EnvironmentVariableParameterProvider
+    type: EnvironmentVariableParameterProvider
+    Properties:
+    Parameter Group Name: environment-variable-parameter-context
+    Environment Variable Inclusion Strategy: Regular Expression
+    Include Environment Variables: INPUT_.*
+Processors:
+  - name: MyProcessor
+    id: 00000000-0000-0000-0000-000000000001
+    class: org.apache.nifi.processors.GetFile
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 3 sec
+    Properties:
+    Input Directory: "#{INPUT_DIR}"
+Parameter Context Name: environment-variable-parameter-context
+```
+
+In the above example, the `EnvironmentVariableParameterProvider` is used to generate a parameter context with the name `environment-variable-parameter-context` that includes all environment variables starting with `INPUT_`. The generated parameter context is assigned to the root process group and the `INPUT_DIR` environment variable is used in the `Input Directory` property of the `MyProcessor` processor which is a generated parameter in the `environment-variable-parameter-context` parameter context.
+
+After the parameter contexts are generated successfully, the parameter contexts are persisted in the flow configuration file, which looks like this for the above example:
+
+```json
+{
+    "parameterProviders": [
+        {
+            "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+            "name": "EnvironmentVariableParameterProvider",
+            "type": "EnvironmentVariableParameterProvider",
+            "properties": {
+                "Parameter Group Name": "environment-variable-parameter-context",
+                "Environment Variable Inclusion Strategy": "Regular Expression",
+                "Include Environment Variables": "INPUT_.*"
+            }
+        }
+    ],
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "identifier": "00000000-0000-0000-0000-000000000001",
+                "name": "MyProcessor",
+                "type": "org.apache.nifi.processors.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "3 sec",
+                "properties": {
+                    "Input Directory": "#{INPUT_DIR}"
+                }
+            }
+        ],
+        "parameterContextName": "environment-variable-parameter-context"
+    },
+    "parameterContexts": [
+        {
+            "identifier": "a48df754-a0f4-11ef-ae56-10f60a596f64",
+            "name": "environment-variable-parameter-context",
+            "parameterProvider": "d26ee5f5-0192-1000-0482-4e333725e089",
+            "parameters": [
+                {
+                    "name": "INPUT_DIR",
+                    "description": "",
+                    "sensitive": false,
+                    "provided": true,
+                    "value": "/tmp/input/"
+                }
+            ]
+        }
+    ]
+}
+```
+
+To see the full list of available parameter providers and their properties, please refer to the [Parameter Providers documentation](PARAMETER_PROVIDERS.md).
 
 ### Configuring flow configuration format
 

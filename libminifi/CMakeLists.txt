@@ -49,7 +49,8 @@ file(GLOB SOURCES
     "src/c2/*.cpp" "src/io/*.cpp" ${SOCKET_SOURCES} ${TLS_SOURCES} "src/core/controller/*.cpp"
     "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/flow/*.cpp"
     "src/core/json/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp" "src/core/extension/*.cpp"
-    "src/serialization/*.cpp" "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp" "src/http/*.cpp")
+    "src/serialization/*.cpp" "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp" "src/http/*.cpp"
+    "src/parameter-providers/*.cpp")
 # manually add this as it might not yet be present when this executes
 list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/agent_version.cpp")
 
