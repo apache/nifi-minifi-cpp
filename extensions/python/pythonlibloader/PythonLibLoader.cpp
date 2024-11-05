@@ -50,6 +50,13 @@ class PythonLibLoader {
       throw std::runtime_error("Failed to load libpython");
     }
     logger_->log_info("Loaded libpython from path '{}'", lib_python_path);
+
+    command = python_command + " -c \"import sys; print(sys.version_info.major << 24 | sys.version_info.minor << 16)\"";
+    auto loaded_version = std::stoi(execCommand(command));
+    if (loaded_version < Py_LIMITED_API) {
+      logger_->log_error("Loaded python version is not compatible with minimum python version, loaded version: {:#08X}, minimum python version: {:#08X}", loaded_version, Py_LIMITED_API);
+      throw std::runtime_error("Loaded python version is not compatible with minimum python version");
+    }
   }
 
   PythonLibLoader(PythonLibLoader&&) = delete;
@@ -82,11 +89,9 @@ class PythonLibLoader {
 };
 #endif
 
-static bool init(const std::shared_ptr<minifi::Configure>& config) {
+static bool init([[maybe_unused]] const std::shared_ptr<minifi::Configure>& config) {
 #if !defined(WIN32) && !defined(__APPLE__)
   static PythonLibLoader python_lib_loader(config);
-#else
-  (void)config;
 #endif
   return true;
 }

@@ -34,8 +34,10 @@ target_link_libraries(minifi-python-script-extension PRIVATE ${LIBMINIFI} Thread
 
 include(GenericPython)
 if(APPLE)
+    target_compile_definitions(minifi-python-lib-loader-extension PUBLIC Py_LIMITED_API=0x03090000)
     target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03090000)
 else()
+    target_compile_definitions(minifi-python-lib-loader-extension PUBLIC Py_LIMITED_API=0x03060000)
     target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03060000)
 endif()
 target_compile_definitions(minifi-python-script-extension PUBLIC PY_SSIZE_T_CLEAN)
