@@ -81,7 +81,7 @@ class PythonScriptEngine {
     if (auto item = bindings_[fn_name]) {
       auto result = BorrowedCallable(*item)(std::forward<Args>(args)...);
       if (!result) {
-        throw PyException();
+        throw PythonScriptException(PyException().what());
       }
       return result;
     } else {
@@ -136,7 +136,7 @@ class PythonScriptEngine {
 
     auto result = callable_method(std::forward<Args>(args)...);
     if (!result) {
-      throw PyException();
+      throw PythonScriptException(PyException().what());
     }
     return result;
   }
