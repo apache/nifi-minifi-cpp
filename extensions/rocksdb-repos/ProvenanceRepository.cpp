@@ -39,7 +39,7 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
   }
   logger_->log_debug("MiNiFi Provenance Max Storage Time: [{}]", max_partition_millis_);
 
-  verify_checksums_in_rocksdb_reads_ = config->get(Configure::nifi_rocksdb_read_verify_checksums).value_or("false") == "true";
+  verify_checksums_in_rocksdb_reads_ = config->get(Configure::nifi_provenance_repository_rocksdb_read_verify_checksums).value_or("false") == "true";
   logger_->log_debug("{} checksum verification in ProvenanceRepository", verify_checksums_in_rocksdb_reads_ ? "Using" : "Not using");
 
   auto db_options = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
