@@ -1042,6 +1042,11 @@ def step_impl(context, metric_class, timeout_seconds, processor_name):
     context.test.check_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
 
 
+@then("all Prometheus metric types are only defined once")
+def step_impl(context):
+    context.test.check_all_prometheus_metric_types_are_defined_once()
+
+
 @then("Elasticsearch is empty")
 def step_impl(context):
     context.test.check_empty_elastic(context.test.get_container_name_with_postfix("elasticsearch"))

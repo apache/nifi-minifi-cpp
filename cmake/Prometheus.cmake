@@ -28,8 +28,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
 
 FetchContent_Declare(
     prometheus-cpp
-    URL "https://github.com/jupp0r/prometheus-cpp/archive/refs/tags/v1.0.1.tar.gz"
-    URL_HASH "SHA256=593e028d401d3298eada804d252bc38d8cab3ea1c9e88bcd72095281f85e6d16"
+    URL "https://github.com/jupp0r/prometheus-cpp/archive/refs/tags/v1.3.0.tar.gz"
+    URL_HASH "SHA256=ac6e958405a29fbbea9db70b00fa3c420e16ad32e1baf941ab233ba031dd72ee"
     PATCH_COMMAND "${PC}"
 )
 

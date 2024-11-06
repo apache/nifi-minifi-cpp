@@ -43,11 +43,11 @@ class PrometheusMetricsPublisher : public state::MetricsPublisher {
 
  private:
   PrometheusExposerConfig readExposerConfig() const;
-  std::vector<state::response::SharedResponseNode> getMetricNodes() const;
+  std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> getMetricProviders() const;
   void loadAgentIdentifier();
 
   std::mutex registered_metrics_mutex_;
-  std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> gauge_collections_;
+  std::shared_ptr<PublishedMetricGaugeCollection> gauge_collection_;
   std::unique_ptr<MetricsExposer> exposer_;
   std::string agent_identifier_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusMetricsPublisher>::getLogger()};

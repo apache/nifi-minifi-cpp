@@ -34,6 +34,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And "FlowInformation" is published to the Prometheus server in less than 60 seconds
     And "DeviceInfoNode" is published to the Prometheus server in less than 60 seconds
     And "AgentStatus" is published to the Prometheus server in less than 60 seconds
+    And all Prometheus metric types are only defined once
 
   Scenario: Published metrics are scraped by Prometheus server through SSL connection
     Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "/tmp/input"

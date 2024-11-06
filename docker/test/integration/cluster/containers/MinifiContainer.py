@@ -191,11 +191,16 @@ class MinifiContainer(FlowContainer):
         if self.options.use_flow_config_from_url:
             self.command = ["/bin/sh", "-c", "rm " + MinifiContainer.MINIFI_ROOT + "/conf/config.yml && ./bin/minifi.sh run"]
 
+        ports = {}
+        if self.options.enable_prometheus or self.options.enable_prometheus_with_ssl:
+            ports = {'9936/tcp': 9936}
+
         self.client.containers.run(
             image,
             detach=True,
             name=self.name,
             network=self.network.name,
             entrypoint=self.command,
+            ports=ports,
             volumes=self.vols)
         logging.info('Added container \'%s\'', self.name)

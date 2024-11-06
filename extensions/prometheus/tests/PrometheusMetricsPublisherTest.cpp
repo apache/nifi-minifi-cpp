@@ -31,19 +31,19 @@ namespace org::apache::nifi::minifi::extensions::prometheus::test {
 
 class DummyMetricsExposer : public MetricsExposer {
  public:
-  void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override {
-    metrics_.push_back(metric);
+  void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metrics) override {
+    metrics_ = metrics;
   }
 
   void removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>&) override {
   }
 
-  [[nodiscard]] std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> getMetrics() const {
+  [[nodiscard]] std::shared_ptr<PublishedMetricGaugeCollection> getMetrics() const {
     return metrics_;
   }
 
  private:
-  std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> metrics_;
+  std::shared_ptr<PublishedMetricGaugeCollection> metrics_;
 };
 
 class PrometheusPublisherTestFixture {
@@ -114,18 +114,16 @@ TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithDummyExposer, "Test adding me
   publisher_->loadMetricNodes();
   auto stored_metrics = exposer_->getMetrics();
   std::vector<std::string> valid_metrics_without_flow = {"QueueMetrics", "RepositoryMetrics", "DeviceInfoNode", "FlowInformation", "AgentInformation"};
-  REQUIRE(stored_metrics.size() == valid_metrics_without_flow.size());
-  for (const auto& stored_metric : stored_metrics) {
-    auto collection = stored_metric->Collect();
-    for (const auto& metric_family : collection) {
-      for (const auto& prometheus_metric : metric_family.metric) {
-        auto metric_class_label_it = ranges::find_if(prometheus_metric.label, [](const auto& label) { return label.name == "metric_class"; });
-        REQUIRE(metric_class_label_it != ranges::end(prometheus_metric.label));
-        REQUIRE(ranges::contains(valid_metrics_without_flow, metric_class_label_it->value));
-        auto agent_identifier_label_it = ranges::find_if(prometheus_metric.label, [](const auto& label) { return label.name == "agent_identifier"; });
-        REQUIRE(agent_identifier_label_it != ranges::end(prometheus_metric.label));
-        REQUIRE(agent_identifier_label_it->value == "AgentId-1");
-      }
+  REQUIRE(stored_metrics);
+  auto collection = stored_metrics->Collect();
+  for (const auto& metric_family : collection) {
+    for (const auto& prometheus_metric : metric_family.metric) {
+      auto metric_class_label_it = ranges::find_if(prometheus_metric.label, [](const auto& label) { return label.name == "metric_class"; });
+      REQUIRE(metric_class_label_it != ranges::end(prometheus_metric.label));
+      REQUIRE(ranges::contains(valid_metrics_without_flow, metric_class_label_it->value));
+      auto agent_identifier_label_it = ranges::find_if(prometheus_metric.label, [](const auto& label) { return label.name == "agent_identifier"; });
+      REQUIRE(agent_identifier_label_it != ranges::end(prometheus_metric.label));
+      REQUIRE(agent_identifier_label_it->value == "AgentId-1");
     }
   }
 }

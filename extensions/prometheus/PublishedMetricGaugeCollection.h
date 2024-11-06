@@ -23,16 +23,18 @@
 #include "state/PublishedMetricProvider.h"
 #include "prometheus/collectable.h"
 #include "prometheus/metric_family.h"
+#include "utils/gsl.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
 class PublishedMetricGaugeCollection : public ::prometheus::Collectable {
  public:
-  explicit PublishedMetricGaugeCollection(std::shared_ptr<state::PublishedMetricProvider> metric, std::string agent_identifier);
+  explicit PublishedMetricGaugeCollection(std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>>&& metric_providers, std::string agent_identifier);
   std::vector<::prometheus::MetricFamily> Collect() const override;
 
  private:
-  std::shared_ptr<state::PublishedMetricProvider> metric_;
+  std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> metric_providers_;
   std::string agent_identifier_;
 };
 

@@ -327,6 +327,9 @@ class MiNiFi_integration_test:
     def check_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
         assert self.cluster.wait_for_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name) or self.cluster.log_app_output()
 
+    def check_all_prometheus_metric_types_are_defined_once(self):
+        assert self.cluster.verify_all_metric_types_are_defined_once() or self.cluster.log_app_output()
+
     def check_if_peak_memory_usage_exceeded(self, minimum_peak_memory_usage: int, timeout_seconds: int) -> None:
         assert self.cluster.wait_for_peak_memory_usage_to_exceed(minimum_peak_memory_usage, timeout_seconds) or self.cluster.log_app_output()
 
