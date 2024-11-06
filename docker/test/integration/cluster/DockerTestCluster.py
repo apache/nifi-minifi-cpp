@@ -278,6 +278,9 @@ class DockerTestCluster:
     def wait_for_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
         return self.prometheus_checker.wait_for_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
 
+    def verify_all_metric_types_are_defined_once(self):
+        return self.prometheus_checker.verify_all_metric_types_are_defined_once()
+
     def check_minifi_log_matches_regex(self, regex, timeout_seconds=60, count=1):
         for container_name in self.container_store.get_container_names("minifi-cpp"):
             line_found = self.wait_for_app_logs_regex(container_name, regex, timeout_seconds, count)

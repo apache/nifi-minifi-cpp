@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import requests
 from prometheus_api_client import PrometheusConnect
 from utils import wait_for
 
@@ -113,3 +114,18 @@ class PrometheusChecker:
 
     def verify_metrics_larger_than_zero(self, metric_names, metric_class, labels={}):
         return all((self.verify_metric_larger_than_zero(metric_name, metric_class, labels) for metric_name in metric_names))
+
+    def verify_all_metric_types_are_defined_once(self):
+        response = requests.get("http://127.0.0.1:9936/metrics")
+        if response.status_code < 200 or response.status_code >= 300:
+            return False
+
+        metric_types = set()
+        for line in response.text.split("\n"):
+            if line.startswith("# TYPE"):
+                metric_type = line.split(" ")[2]
+                if metric_type in metric_types:
+                    return False
+                metric_types.add(metric_type)
+
+        return True
