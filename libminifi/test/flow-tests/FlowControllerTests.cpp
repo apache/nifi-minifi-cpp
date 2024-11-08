@@ -283,7 +283,7 @@ Controller Services: []
   REQUIRE(LogTestController::getInstance().countOccurrences("Creating scheduling agent") == 3);
   LogTestController::getInstance().clear();
 
-  bool update_successful = controller.controller_->applyConfiguration("/flows/1", empty_flow);
+  bool update_successful = controller.controller_->applyConfiguration("/flows/1", empty_flow).has_value();
   REQUIRE(update_successful);
 
   REQUIRE(LogTestController::getInstance().countOccurrences("Creating scheduling agent") == 3);

@@ -26,6 +26,7 @@
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
 #include "io/InputStream.h"
+#include "utils/expected.h"
 
 namespace org {
 namespace apache {
@@ -162,18 +163,9 @@ class StateMonitor : public StateController {
 
   /**
    * Apply an update with the provided string.
-   *
-   * < 0 is an error code
-   * 0 is success
    */
-  virtual int16_t applyUpdate(const std::string & source, const std::string &configuration, bool persist = false, const std::optional<std::string>& flow_id = std::nullopt) = 0;
-
-  /**
-   * Apply an update that the agent must decode. This is useful for certain operations
-   * that can't be encapsulated within these definitions.
-   */
-  virtual int16_t applyUpdate(const std::string &source, const std::shared_ptr<Update> &updateController) = 0;
-
+  virtual nonstd::expected<void, std::string> applyUpdate(const std::string & source, const std::string &configuration,
+                                                          bool persist = false, const std::optional<std::string>& flow_id = std::nullopt) = 0;
   /**
    * Returns uptime for this module.
    * @return uptime for the current state monitor.

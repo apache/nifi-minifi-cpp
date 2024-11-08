@@ -1043,11 +1043,11 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     return utils::string::equalsIgnoreCase(persist->second.to_string(), "true");
   }();
 
-  int16_t err = {update_sink_->applyUpdate(file_uri, configuration_str, should_persist, getFlowIdFromConfigUpdate(resp))};
-  if (err != 0) {
-    logger_->log_error("Flow configuration update failed with error code {}", err);
+  auto update_result = update_sink_->applyUpdate(file_uri, configuration_str, should_persist, getFlowIdFromConfigUpdate(resp));
+  if (!update_result) {
+    logger_->log_error("Flow configuration update failed: {}", update_result.error());
     C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
-    response.setRawData("Error while applying flow. Likely missing processors");
+    response.setRawData(fmt::format("Error while applying flow: {}", update_result.error()));
     enqueue_c2_response(std::move(response));
     return false;
   }

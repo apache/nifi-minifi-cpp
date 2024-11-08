@@ -106,23 +106,23 @@ FlowController::~FlowController() {
   logger_->log_trace("Destroying FlowController");
 }
 
-bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id) {
+nonstd::expected<void, std::string> FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
     newRoot = updateFromPayload(source, configurePayload, flow_id);
   } catch (const std::exception& ex) {
     logger_->log_error("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what());
-    return false;
+    return nonstd::make_unexpected(fmt::format("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what()));
   } catch (...) {
     logger_->log_error("Invalid configuration payload, type: {}", getCurrentExceptionTypeName());
-    return false;
+    return nonstd::make_unexpected(fmt::format("Invalid configuration payload, type: {}", getCurrentExceptionTypeName()));
   }
 
   if (newRoot == nullptr)
-    return false;
+    return nonstd::make_unexpected("Could not create root process group");
 
   if (!isRunning())
-    return false;
+    return nonstd::make_unexpected("FlowController is not running");
 
   logger_->log_info("Starting to reload Flow Controller with flow control name {}, version {}", newRoot->getName(), newRoot->getVersion());
 
@@ -164,7 +164,10 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     }
   }
 
-  return started;
+  if (!started) {
+    return nonstd::make_unexpected("Failed to start flow");
+  }
+  return {};
 }
 
 int16_t FlowController::stop() {
@@ -382,17 +385,16 @@ std::vector<std::string> FlowController::getSupportedConfigurationFormats() cons
   return flow_configuration_->getSupportedFormats();
 }
 
-int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) {
-  if (applyConfiguration(source, configuration, flow_id)) {
+nonstd::expected<void, std::string> FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) {
+  auto result = applyConfiguration(source, configuration, flow_id);
+  if (result) {
     if (persist) {
       const auto* process_group = root_wrapper_.getRoot();
       gsl_Expects(process_group);
       flow_configuration_->persist(*process_group);
     }
-    return 0;
-  } else {
-    return -1;
   }
+  return result;
 }
 
 int16_t FlowController::clearConnection(const std::string &connection) {
