@@ -164,14 +164,9 @@ class TestUpdateSink : public minifi::state::StateMonitor {
     return {};
   }
 
-  int16_t applyUpdate(const std::string& /*source*/, const std::string& /*configuration*/, bool /*persist*/ = false, const std::optional<std::string>& /*flow_id*/ = std::nullopt) override {
+  nonstd::expected<void, std::string> applyUpdate(const std::string& /*source*/, const std::string& /*configuration*/, bool /*persist*/ = false, const std::optional<std::string>& /*flow_id*/ = std::nullopt) override {
     update_calls++;
-    return 0;
-  }
-
-  int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<minifi::state::Update>& /*updateController*/) override {
-    update_calls++;
-    return 0;
+    return {};
   }
 
   uint64_t getUptime() override {

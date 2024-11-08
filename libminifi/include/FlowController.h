@@ -102,7 +102,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   int16_t resume() override;
   // Unload the current flow, clean the root process group and all its children
   int16_t stop() override;
-  int16_t applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) override;
+  nonstd::expected<void, std::string> applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) override;
   int16_t drainRepositories() override {
     return -1;
   }
@@ -114,7 +114,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   std::vector<std::string> getSupportedConfigurationFormats() const override;
 
-  int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<state::Update>&) override { return -1; }
   // Asynchronous function trigger unloading and wait for a period of time
   virtual void waitUnload(const std::chrono::milliseconds time_to_wait);
   void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
@@ -125,7 +124,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   // first it will validate the payload with the current root node config for flowController
   // like FlowController id/name is the same and new version is greater than the current version
   // after that, it will apply the configuration
-  bool applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id = std::nullopt);
+  nonstd::expected<void, std::string> applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id = std::nullopt);
 
   std::string getName() const override {
     return root_wrapper_.getName();
