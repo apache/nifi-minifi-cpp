@@ -20,8 +20,8 @@
 #include <string>
 #include <memory>
 
-#include <Windows.h>
-#include <winnetwk.h>
+#include "Windows.h"
+#include "winnetwk.h"
 
 #include "core/ProcessContext.h"
 #include "core/PropertyDefinition.h"
