@@ -32,9 +32,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class SplitContent final : public core::Processor {
+class SplitContent final : public core::ProcessorImpl {
  public:
-  explicit SplitContent(const std::string_view name, const utils::Identifier& uuid = {}) : Processor(name, uuid) {}
+  explicit SplitContent(const std::string_view name, const utils::Identifier& uuid = {}) : ProcessorImpl(name, uuid) {}
 
   using size_type = std::vector<std::byte>::size_type;
   enum class ByteSequenceFormat { Hexadecimal, Text };
