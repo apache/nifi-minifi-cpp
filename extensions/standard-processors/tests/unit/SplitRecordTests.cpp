@@ -70,7 +70,7 @@ TEST_CASE_METHOD(SplitRecordTestController, "Records Per Split property should b
   proc_->setProperty(processors::SplitRecord::RecordsPerSplit, "${id}");
   auto results = controller_.trigger({InputFlowFileData{"{\"name\": \"John\"}\n{\"name\": \"Jill\"}", {{"id", "0"}}}});
   REQUIRE(results[processors::SplitRecord::Failure].size() == 1);
-  REQUIRE(LogTestController::getInstance().contains("Records per split should be set to a number larger than 0", 1s));
+  REQUIRE(LogTestController::getInstance().contains("Records Per Split should be set to a number larger than 0", 1s));
 }
 
 TEST_CASE_METHOD(SplitRecordTestController, "Invalid records in flow file result in zero splits", "[splitrecord]") {

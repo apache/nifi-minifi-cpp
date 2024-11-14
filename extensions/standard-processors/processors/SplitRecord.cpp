@@ -38,11 +38,11 @@ std::shared_ptr<RecordSetIO> getRecordSetIO(core::ProcessContext& context, const
 void SplitRecord::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   record_set_reader_ = getRecordSetIO<core::RecordSetReader>(context, RecordReader);
   if (!record_set_reader_) {
-    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Reader set is missing or invalid");
+    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Reader property is missing or invalid");
   }
   record_set_writer_ = getRecordSetIO<core::RecordSetWriter>(context, RecordWriter);
   if (!record_set_writer_) {
-    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Writer set is missing or invalid");
+    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Writer property is missing or invalid");
   }
 }
 
@@ -53,10 +53,10 @@ nonstd::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core
     if (!core::Property::StringToInt(value, records_per_split)) {
       return nonstd::make_unexpected("Failed to convert Records Per Split property to an integer");
     } else if (records_per_split < 1) {
-      return nonstd::make_unexpected("Records per split should be set to a number larger than 0");
+      return nonstd::make_unexpected("Records Per Split should be set to a number larger than 0");
     }
   } else {
-    return nonstd::make_unexpected("Records per split should be set to a valid number larger than 0");
+    return nonstd::make_unexpected("Records Per Split should be set to a valid number larger than 0");
   }
   return records_per_split;
 }
@@ -83,7 +83,7 @@ void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession&
   }
 
   std::size_t current_index = 0;
-  const auto fragment_identifier = utils::IdGenerator::getIdGenerator()->generate().to_string();
+  const auto fragment_identifier = original_flow_file->getAttribute(core::SpecialFlowAttribute::UUID).value_or(utils::IdGenerator::getIdGenerator()->generate().to_string());
   std::size_t fragment_index = 0;
   const auto fragment_count = utils::intdiv_ceil(record_set->size(), records_per_split.value());
   while (current_index < record_set->size()) {
