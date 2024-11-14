@@ -93,7 +93,7 @@ void RocksDbStateStorage::onEnable() {
     default_write_options.sync = true;
   }
 
-  verify_checksums_in_rocksdb_reads_ = configuration_->get(Configure::nifi_rocksdb_state_storage_read_verify_checksums).value_or("false") == "true";
+  verify_checksums_in_rocksdb_reads_ = (configuration_->get(Configure::nifi_rocksdb_state_storage_read_verify_checksums) | utils::andThen(&utils::string::toBool)).value_or(false);
 
   logger_->log_trace("Enabled RocksDbStateStorage");
 }

@@ -82,7 +82,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   }
 
   use_synchronous_writes_ = configuration->get(Configure::nifi_content_repository_rocksdb_use_synchronous_writes).value_or("true") != "false";
-  verify_checksums_in_rocksdb_reads_ = configuration->get(Configure::nifi_content_repository_rocksdb_read_verify_checksums).value_or("false") == "true";
+  verify_checksums_in_rocksdb_reads_ = (configuration->get(Configure::nifi_content_repository_rocksdb_read_verify_checksums) | utils::andThen(&utils::string::toBool)).value_or(false);
   logger_->log_debug("{} checksum verification in DatabaseContentRepository", verify_checksums_in_rocksdb_reads_ ? "Using" : "Not using");
   return is_valid_;
 }
