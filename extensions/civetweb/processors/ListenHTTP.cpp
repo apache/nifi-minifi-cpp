@@ -269,8 +269,8 @@ class MgConnectionInputStream : public io::InputStream {
 
  private:
   struct mg_connection* conn_;
-  size_t offset_{0};
-  std::optional<size_t> size_;
+  size_t netstream_offset_{0};  // how much has been read from conn_
+  std::optional<size_t> netstream_size_limit_;  // how much can we read from conn_
 };
 
 class MgConnectionOutputStream : public io::OutputStream {
