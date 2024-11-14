@@ -404,19 +404,9 @@ def step_impl(context, processor_name):
 
 
 # Record set reader and writer
-@given("a JsonRecordSetWriter controller service is set up for {processor_name}")
-def step_impl(context, processor_name):
-    json_record_set_writer = JsonRecordSetWriter()
-
-    processor = context.test.get_node_by_name(processor_name)
-    processor.controller_services.append(json_record_set_writer)
-    processor.set_property('Record Set Writer', json_record_set_writer.name)
-    processor.set_property('Record Writer', json_record_set_writer.name)
-
-
-@given("a JsonRecordSetWriter controller service is set up")
-def step_impl(context):
-    json_record_set_writer = JsonRecordSetWriter(name="JsonRecordSetWriter", output_grouping="Array")
+@given("a JsonRecordSetWriter controller service is set up with \"{}\" output grouping")
+def step_impl(context, output_grouping: str):
+    json_record_set_writer = JsonRecordSetWriter(name="JsonRecordSetWriter", output_grouping=output_grouping)
     container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
     container.add_controller(json_record_set_writer)
 

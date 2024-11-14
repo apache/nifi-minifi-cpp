@@ -231,7 +231,7 @@ Feature: MiNiFi can use python processors in its flows
     And a SetRecordField processor with the "Record Reader" property set to "JsonRecordSetReader"
     And the "Record Writer" property of the SetRecordField processor is set to "JsonRecordSetWriter"
     And a JsonRecordSetReader controller service is set up
-    And a JsonRecordSetWriter controller service is set up
+    And a JsonRecordSetWriter controller service is set up with "Array" output grouping
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "Log Payload" property of the LogAttribute processor is set to "true"
     And python is installed on the MiNiFi agent with a pre-created virtualenv

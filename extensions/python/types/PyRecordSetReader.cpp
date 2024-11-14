@@ -64,7 +64,7 @@ PyObject* PyRecordSetReader::read(PyRecordSetReader* self, PyObject* args) {
   gsl_Expects(self && args);
   auto record_set_reader = self->record_set_reader_.lock();
   if (!record_set_reader) {
-    PyErr_SetString(PyExc_AttributeError, "tried reading ssl context service outside 'on_trigger'");
+    PyErr_SetString(PyExc_AttributeError, "tried reading record set reader outside 'on_trigger'");
     return nullptr;
   }
 

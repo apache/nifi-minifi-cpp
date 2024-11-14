@@ -130,10 +130,10 @@ class RecordTransform(ProcessorBase):
             if result.getRecordJson() is None:
                 continue
             record_partition = result.getPartition()
-            try:
+            if record_partition in partitions:
                 partition_index = partitions.index(record_partition)
                 partitioned_results_list[partition_index].append(result)
-            except ValueError:
+            else:
                 partitions.append(record_partition)
                 partitioned_results_list.append([result])
 
@@ -148,5 +148,5 @@ class RecordTransform(ProcessorBase):
         session.transfer(flow_file, self.REL_ORIGINAL)
 
     @abstractmethod
-    def transform(self, context: ProcessContextProxy, flowFile: FlowFileProxy) -> RecordTransformResult:
+    def transform(self, context: ProcessContextProxy, record_json, schema, flowFile: FlowFileProxy) -> RecordTransformResult:
         pass

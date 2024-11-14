@@ -21,9 +21,10 @@ Feature: Minifi C++ can act as a modbus tcp master
 
   Scenario: MiNiFi can fetch data from a modbus slave
     Given a FetchModbusTcp processor
-    And a JsonRecordSetWriter controller service is set up for FetchModbusTcp
+    And a JsonRecordSetWriter controller service is set up with "One Line Per Object" output grouping
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "Unit Identifier" property of the FetchModbusTcp processor is set to "255"
+    And the "Record Set Writer" property of the FetchModbusTcp processor is set to "JsonRecordSetWriter"
     And there is an accessible PLC with modbus enabled
     And PLC register has been set with h@52=123 command
     And PLC register has been set with h@5678/f=1.75 command
