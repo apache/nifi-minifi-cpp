@@ -25,7 +25,20 @@
 
 namespace org::apache::nifi::minifi::couchbase {
 
-CouchbaseErrorType CouchbaseClient::getErrorType(const std::error_code& error_code) {
+namespace {
+
+constexpr std::array<::couchbase::errc::common, 9> temporary_connection_errors = {
+  ::couchbase::errc::common::temporary_failure,
+  ::couchbase::errc::common::request_canceled,
+  ::couchbase::errc::common::internal_server_failure,
+  ::couchbase::errc::common::cas_mismatch,
+  ::couchbase::errc::common::ambiguous_timeout,
+  ::couchbase::errc::common::unambiguous_timeout,
+  ::couchbase::errc::common::rate_limited,
+  ::couchbase::errc::common::quota_limited
+};
+
+CouchbaseErrorType getErrorType(const std::error_code& error_code) {
   for (const auto& temporary_error : temporary_connection_errors) {
     if (static_cast<int>(temporary_error) == error_code.value()) {
       return CouchbaseErrorType::TEMPORARY;
@@ -34,11 +47,14 @@ CouchbaseErrorType CouchbaseClient::getErrorType(const std::error_code& error_co
   return CouchbaseErrorType::FATAL;
 }
 
+}  // namespace
+
 nonstd::expected<::couchbase::collection, CouchbaseErrorType> CouchbaseClient::getCollection(const CouchbaseCollection& collection) {
   auto connection_result = establishConnection();
   if (!connection_result) {
     return nonstd::make_unexpected(connection_result.error());
   }
+  std::lock_guard<std::mutex> lock(cluster_mutex_);
   return cluster_->bucket(collection.bucket_name).scope(collection.scope_name).collection(collection.collection_name);
 }
 
@@ -84,14 +100,18 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
 }
 
 void CouchbaseClient::close() {
+  std::lock_guard<std::mutex> lock(cluster_mutex_);
   if (cluster_) {
     cluster_->close().wait();
   }
 }
 
 nonstd::expected<void, CouchbaseErrorType> CouchbaseClient::establishConnection() {
-  if (cluster_) {
-    return {};
+  {
+    std::lock_guard<std::mutex> lock(cluster_mutex_);
+    if (cluster_) {
+      return {};
+    }
   }
 
   auto options = ::couchbase::cluster_options(username_, password_);
@@ -100,6 +120,8 @@ nonstd::expected<void, CouchbaseErrorType> CouchbaseClient::establishConnection(
     logger_->log_error("Failed to connect to Couchbase cluster with error code: '{}' and message: '{}'", connect_err.ec(), connect_err.message());
     return nonstd::make_unexpected(getErrorType(connect_err.ec()));
   }
+
+  std::lock_guard<std::mutex> lock(cluster_mutex_);
   cluster_ = std::move(cluster);
   return {};
 }

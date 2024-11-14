@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <mutex>
 
 #include "core/controller/ControllerService.h"
 #include "core/PropertyDefinition.h"
@@ -63,29 +64,27 @@ class CouchbaseClient {
     : connection_string_(std::move(connection_string)), username_(std::move(username)), password_(std::move(password)), logger_(logger) {
   }
 
+  ~CouchbaseClient() {
+    close();
+  }
+
+  CouchbaseClient(const CouchbaseClient&) = delete;
+  CouchbaseClient(CouchbaseClient&&) = delete;
+  CouchbaseClient& operator=(CouchbaseClient&&) = delete;
+  CouchbaseClient& operator=(const CouchbaseClient&) = delete;
+
   nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id,
     const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options);
   nonstd::expected<void, CouchbaseErrorType> establishConnection();
   void close();
 
  private:
-  static constexpr std::array<::couchbase::errc::common, 9> temporary_connection_errors = {
-    ::couchbase::errc::common::temporary_failure,
-    ::couchbase::errc::common::request_canceled,
-    ::couchbase::errc::common::internal_server_failure,
-    ::couchbase::errc::common::cas_mismatch,
-    ::couchbase::errc::common::ambiguous_timeout,
-    ::couchbase::errc::common::unambiguous_timeout,
-    ::couchbase::errc::common::rate_limited,
-    ::couchbase::errc::common::quota_limited
-  };
-
-  static CouchbaseErrorType getErrorType(const std::error_code& error_code);
   nonstd::expected<::couchbase::collection, CouchbaseErrorType> getCollection(const CouchbaseCollection& collection);
 
   std::string connection_string_;
   std::string username_;
   std::string password_;
+  std::mutex cluster_mutex_;
   std::optional<::couchbase::cluster> cluster_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
