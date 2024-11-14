@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#if !defined(WIN32) && !defined(__APPLE__)
 #include <dlfcn.h>
 #include <cstdio>
 #include <iostream>
@@ -23,12 +22,14 @@
 #include <array>
 #include "utils/StringUtils.h"
 #include "core/logging/LoggerConfiguration.h"
-#endif
 #include "core/extension/Extension.h"
+
+#if defined(WIN32) || defined(__APPLE__)
+static_assert(false, "The Python library loader should only be used on Linux.");
+#endif
 
 namespace minifi = org::apache::nifi::minifi;
 
-#if !defined(WIN32) && !defined(__APPLE__)
 class PythonLibLoader {
  public:
   explicit PythonLibLoader(const std::shared_ptr<minifi::Configure>& config) {
@@ -87,12 +88,9 @@ class PythonLibLoader {
   void* lib_python_handle_ = nullptr;
   std::shared_ptr<minifi::core::logging::Logger> logger_ = minifi::core::logging::LoggerFactory<PythonLibLoader>::getLogger();
 };
-#endif
 
 static bool init([[maybe_unused]] const std::shared_ptr<minifi::Configure>& config) {
-#if !defined(WIN32) && !defined(__APPLE__)
   static PythonLibLoader python_lib_loader(config);
-#endif
   return true;
 }
 
