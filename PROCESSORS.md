@@ -2835,12 +2835,12 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute                 | Relationship | Description                                                                                                                   |
-|---------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------------|
-| fragment.identifier       |              | All segments produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute       |
-| fragment.index            |              | A sequence number starting with 1 that indicates the ordering of the segments that were created from a single parent FlowFile |
-| fragment.count            |              | The number of segments generated from the parent FlowFile                                                                     |
-| segment.original.filename |              | The filename of the parent FlowFile                                                                                           |
+| Attribute                 | Relationship | Description                                                                                                                                                |
+|---------------------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| fragment.identifier       |              | All segments produced from the same parent FlowFile will have this attribute set to the same UUID (which is the UUID of the parent FlowFile, if available) |
+| fragment.index            |              | A sequence number starting with 1 that indicates the ordering of the segments that were created from a single parent FlowFile                              |
+| fragment.count            |              | The number of segments generated from the parent FlowFile                                                                                                  |
+| segment.original.filename |              | The filename of the parent FlowFile                                                                                                                        |
 
 
 ## SplitContent
@@ -2903,13 +2903,13 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute                 | Relationship | Description                                                                                                                    |
-|---------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------|
-| record.count              | splits       | The number of records in the FlowFile. This is added to FlowFiles that are routed to the 'splits' Relationship.                |
-| fragment.identifier       | splits       | All split FlowFiles produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute |
-| fragment.index            | splits       | A one-up number that indicates the ordering of the split FlowFiles that were created from a single parent FlowFile             |
-| fragment.count            | splits       | The number of split FlowFiles generated from the parent FlowFile                                                               |
-| segment.original.filename | splits       | The filename of the parent FlowFile                                                                                            |
+| Attribute                 | Relationship | Description                                                                                                                                                       |
+|---------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| record.count              | splits       | The number of records in the FlowFile. This is added to FlowFiles that are routed to the 'splits' Relationship.                                                   |
+| fragment.identifier       | splits       | All split FlowFiles produced from the same parent FlowFile will have this attribute set to the same UUID (which is the UUID of the parent FlowFile, if available) |
+| fragment.index            | splits       | A one-up number that indicates the ordering of the split FlowFiles that were created from a single parent FlowFile                                                |
+| fragment.count            | splits       | The number of split FlowFiles generated from the parent FlowFile                                                                                                  |
+| segment.original.filename | splits       | The filename of the parent FlowFile                                                                                                                               |
 
 
 ## SplitText

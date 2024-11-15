@@ -69,7 +69,7 @@ class SplitRecord final : public core::AbstractProcessor<SplitRecord> {
   EXTENSIONAPI static constexpr auto RecordCount = core::OutputAttributeDefinition<1>{"record.count", {Splits},
     "The number of records in the FlowFile. This is added to FlowFiles that are routed to the 'splits' Relationship."};
   EXTENSIONAPI static constexpr auto FragmentIdentifier = core::OutputAttributeDefinition<1>{"fragment.identifier", {Splits},
-    "All split FlowFiles produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute"};
+    "All split FlowFiles produced from the same parent FlowFile will have this attribute set to the same UUID (which is the UUID of the parent FlowFile, if available)"};
   EXTENSIONAPI static constexpr auto FragmentIndex = core::OutputAttributeDefinition<1>{"fragment.index", {Splits},
     "A one-up number that indicates the ordering of the split FlowFiles that were created from a single parent FlowFile"};
   EXTENSIONAPI static constexpr auto FragmentCount = core::OutputAttributeDefinition<1>{"fragment.count", {Splits}, "The number of split FlowFiles generated from the parent FlowFile"};
