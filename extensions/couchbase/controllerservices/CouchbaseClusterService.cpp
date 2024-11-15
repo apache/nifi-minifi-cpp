@@ -107,11 +107,9 @@ void CouchbaseClient::close() {
 }
 
 nonstd::expected<void, CouchbaseErrorType> CouchbaseClient::establishConnection() {
-  {
-    std::lock_guard<std::mutex> lock(cluster_mutex_);
-    if (cluster_) {
-      return {};
-    }
+  std::lock_guard<std::mutex> lock(cluster_mutex_);
+  if (cluster_) {
+    return {};
   }
 
   auto options = ::couchbase::cluster_options(username_, password_);
@@ -121,7 +119,6 @@ nonstd::expected<void, CouchbaseErrorType> CouchbaseClient::establishConnection(
     return nonstd::make_unexpected(getErrorType(connect_err.ec()));
   }
 
-  std::lock_guard<std::mutex> lock(cluster_mutex_);
   cluster_ = std::move(cluster);
   return {};
 }
