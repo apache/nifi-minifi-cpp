@@ -256,7 +256,7 @@ namespace {
 
 class MgConnectionInputStream : public io::InputStream {
  public:
-  MgConnectionInputStream(struct mg_connection* conn, std::optional<size_t> size): conn_(conn), size_(size) {}
+  MgConnectionInputStream(struct mg_connection* conn, std::optional<size_t> size): conn_(conn), netstream_size_limit_(size) {}
 
   size_t read(std::span<std::byte> out_buffer) override {
     const auto read_size_limit = netstream_size_limit_.value_or(std::numeric_limits<size_t>::max()) - netstream_offset_;
@@ -265,7 +265,7 @@ class MgConnectionInputStream : public io::InputStream {
     if (mg_read_return < 0) {
       return io::STREAM_ERROR;
     }
-    offset_ += gsl::narrow<size_t>(mg_read_return);
+    netstream_offset_ += gsl::narrow<size_t>(mg_read_return);
     return gsl::narrow<size_t>(mg_read_return);
   }
 
