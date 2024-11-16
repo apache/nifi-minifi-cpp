@@ -52,13 +52,13 @@ class TestHTTPServer {
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "testytesttest");
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::Port, "8681");
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::HeadersAsAttributesRegex, ".*");
-    test_plan_->runProcessor(0);
-    test_plan_->runProcessor(1);
+    test_plan_->runProcessor(listen_http_);
+    test_plan_->runProcessor(log_attribute_);
     thread_ = std::thread{[this] {
       while (running_) {
         if (listen_http_->isWorkAvailable()) {
-          test_plan_->runProcessor(0);
-          test_plan_->runProcessor(1);
+          test_plan_->runProcessor(listen_http_);
+          test_plan_->runProcessor(log_attribute_);
         }
       }
     }};
@@ -182,7 +182,7 @@ TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]")
 TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
 
-  atest::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
   TestHTTPServer http_server(test_controller);
 
