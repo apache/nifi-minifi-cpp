@@ -1,8 +1,8 @@
 diff --git a/CMake/AbseilDll.cmake b/CMake/AbseilDll.cmake
-index f0d984ae..6e6dc40b 100644
+index 32cc28fb..8e9dc702 100644
 --- a/CMake/AbseilDll.cmake
 +++ b/CMake/AbseilDll.cmake
-@@ -474,7 +474,7 @@ set(ABSL_INTERNAL_DLL_TARGETS
+@@ -521,7 +521,7 @@ set(ABSL_INTERNAL_DLL_TARGETS
    "crc_cord_state"
    "crc_cpu_detect"
    "crc_internal"
@@ -12,10 +12,10 @@ index f0d984ae..6e6dc40b 100644
    "debugging_internal"
    "demangle_internal"
 diff --git a/absl/crc/BUILD.bazel b/absl/crc/BUILD.bazel
-index cdbaa9b2..78dac82e 100644
+index 890d637c..8d680c22 100644
 --- a/absl/crc/BUILD.bazel
 +++ b/absl/crc/BUILD.bazel
-@@ -67,7 +67,7 @@ cc_library(
+@@ -72,7 +72,7 @@ cc_library(
  )
  
  cc_library(
@@ -25,10 +25,10 @@ index cdbaa9b2..78dac82e 100644
          "crc32c.cc",
          "internal/crc32c_inline.h",
 diff --git a/absl/crc/CMakeLists.txt b/absl/crc/CMakeLists.txt
-index 21247160..f72b6cb3 100644
+index d52a1bc4..3cec9dcb 100644
 --- a/absl/crc/CMakeLists.txt
 +++ b/absl/crc/CMakeLists.txt
-@@ -55,7 +55,7 @@ absl_cc_library(
+@@ -53,7 +53,7 @@ absl_cc_library(
  
  absl_cc_library(
    NAME
@@ -37,7 +37,7 @@ index 21247160..f72b6cb3 100644
    HDRS
      "crc32c.h"
      "internal/crc32c.h"
-@@ -89,7 +89,7 @@ absl_cc_test(
+@@ -86,7 +86,7 @@ absl_cc_test(
    COPTS
      ${ABSL_DEFAULT_COPTS}
    DEPS
@@ -46,7 +46,7 @@ index 21247160..f72b6cb3 100644
      absl::strings
      absl::str_format
      GTest::gtest_main
-@@ -129,7 +129,7 @@ absl_cc_test(
+@@ -126,7 +126,7 @@ absl_cc_test(
    COPTS
      ${ABSL_DEFAULT_COPTS}
    DEPS
@@ -55,7 +55,7 @@ index 21247160..f72b6cb3 100644
      absl::memory
      absl::random_random
      absl::random_distributions
-@@ -159,7 +159,7 @@ absl_cc_library(
+@@ -156,7 +156,7 @@ absl_cc_library(
    COPTS
      ${ABSL_DEFAULT_COPTS}
    DEPS
@@ -63,8 +63,8 @@ index 21247160..f72b6cb3 100644
 +    absl::crc32c_internal
      absl::config
      absl::strings
- )
-@@ -173,6 +173,6 @@ absl_cc_test(
+     absl::no_destructor
+@@ -171,6 +171,6 @@ absl_cc_test(
      ${ABSL_DEFAULT_COPTS}
    DEPS
      absl::crc_cord_state
@@ -72,3 +72,16 @@ index 21247160..f72b6cb3 100644
 +    absl::crc32c_internal
      GTest::gtest_main
  )
+diff --git a/absl/strings/CMakeLists.txt b/absl/strings/CMakeLists.txt
+index 3a1619e8..2c368cf2 100644
+--- a/absl/strings/CMakeLists.txt
++++ b/absl/strings/CMakeLists.txt
+@@ -987,7 +987,7 @@ absl_cc_library(
+     absl::cordz_update_scope
+     absl::cordz_update_tracker
+     absl::core_headers
+-    absl::crc32c
++    absl::crc32c_internal
+     absl::crc_cord_state
+     absl::endian
+     absl::function_ref

@@ -29,11 +29,16 @@ set(gRPC_SSL_PROVIDER "package" CACHE STRING "" FORCE)
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(protobuf_ABSL_PROVIDER "package" CACHE STRING "" FORCE)
 
+set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/grpc/remove-custom-commands-for-unused-dependencies.patch")
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+
 FetchContent_Declare(
   grpc
   GIT_REPOSITORY https://github.com/grpc/grpc
-  GIT_TAG        v1.59.2
+  GIT_TAG        v1.68.0
   GIT_SUBMODULES "third_party/cares/cares third_party/protobuf third_party/re2"
+  PATCH_COMMAND "${PC}"
 )
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_MakeAvailable(grpc)

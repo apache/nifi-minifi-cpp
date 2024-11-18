@@ -114,10 +114,10 @@ common:
 
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
+    - from: 2020-05-15
+      store: tsdb
       object_store: filesystem
-      schema: v11
+      schema: v13
       index:
         prefix: index_
         period: 24h
@@ -167,7 +167,7 @@ analytics:
             ))
 
         self.client.containers.run(
-            image="grafana/loki:2.9.2",
+            image="grafana/loki:3.2.1",
             detach=True,
             name=self.name,
             network=self.network.name,
