@@ -41,7 +41,9 @@ struct ExpectedCallOptions {
 
 class PutCouchbaseKeyTestController : public TestController {
  public:
-  PutCouchbaseKeyTestController() {
+  PutCouchbaseKeyTestController()
+      : controller_(std::make_unique<processors::PutCouchbaseKey>("PutCouchbaseKey")),
+        proc_(controller_.getProcessor()) {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
@@ -110,8 +112,8 @@ class PutCouchbaseKeyTestController : public TestController {
   }
 
  protected:
-  std::shared_ptr<core::Processor> proc_ = std::make_shared<processors::PutCouchbaseKey>("PutCouchbaseKey");
-  minifi::test::SingleProcessorTestController controller_{proc_};
+  minifi::test::SingleProcessorTestController controller_;
+  core::Processor* proc_ = nullptr;
   std::shared_ptr<MockCouchbaseClusterService> mock_couchbase_cluster_service_;
 };
 

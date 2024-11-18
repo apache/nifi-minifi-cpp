@@ -153,7 +153,7 @@ void CouchbaseClusterService::onEnable() {
 gsl::not_null<std::shared_ptr<CouchbaseClusterService>> CouchbaseClusterService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
   std::shared_ptr<CouchbaseClusterService> couchbase_cluster_service;
   if (auto connection_controller_name = context.getProperty(property)) {
-    couchbase_cluster_service = std::dynamic_pointer_cast<CouchbaseClusterService>(context.getControllerService(*connection_controller_name));
+    couchbase_cluster_service = std::dynamic_pointer_cast<CouchbaseClusterService>(context.getControllerService(*connection_controller_name, context.getProcessorNode()->getUUID()));
   }
   if (!couchbase_cluster_service) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing Couchbase Cluster Service");
