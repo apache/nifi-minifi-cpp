@@ -262,8 +262,8 @@ class MgConnectionInputStream : public io::InputStream {
     const auto read_size_limit = netstream_size_limit_.value_or(std::numeric_limits<size_t>::max()) - netstream_offset_;
     const auto limited_out_buf = out_buffer.subspan(0, std::min(out_buffer.size(), read_size_limit));
     const auto mg_read_return = mg_read(conn_, limited_out_buf.data(), limited_out_buf.size());
-    if (mg_read_return < 0) {
-      return io::STREAM_ERROR;
+    if (mg_read_return <= 0) {
+      return 0;
     }
     netstream_offset_ += gsl::narrow<size_t>(mg_read_return);
     return gsl::narrow<size_t>(mg_read_return);
