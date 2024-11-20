@@ -25,7 +25,6 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
-#include "core/Property.h"
 #include "utils/Enum.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/LogUtils.h"
@@ -83,9 +82,9 @@ constexpr customize_t enum_name<MoveConflictStrategyOption>(MoveConflictStrategy
 
 namespace org::apache::nifi::minifi::processors {
 
-class FetchFile : public core::Processor {
+class FetchFile final : public core::Processor {
  public:
-  explicit FetchFile(std::string_view name, const utils::Identifier& uuid = {})
+  explicit FetchFile(const std::string_view name, const utils::Identifier& uuid = {})
     : core::Processor(name, uuid) {
   }
 
@@ -166,17 +165,17 @@ class FetchFile : public core::Processor {
 
  private:
   static std::filesystem::path getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
-  std::filesystem::path getMoveAbsolutePath(const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const;
-  bool moveDestinationConflicts(const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const;
+  static std::filesystem::path getMoveAbsolutePath(const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name);
+  static bool moveDestinationConflicts(const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name);
   bool moveWouldFailWithDestinationConflict(const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const;
-  void executeMoveConflictStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name);
-  void processMoveCompletion(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name);
-  void executeCompletionStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name);
+  void executeMoveConflictStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const;
+  void processMoveCompletion(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const;
+  void executeCompletionStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const;
 
-  fetch_file::CompletionStrategyOption completion_strategy_;
-  fetch_file::MoveConflictStrategyOption move_confict_strategy_;
-  utils::LogUtils::LogLevelOption log_level_when_file_not_found_;
-  utils::LogUtils::LogLevelOption log_level_when_permission_denied_;
+  fetch_file::CompletionStrategyOption completion_strategy_{};
+  fetch_file::MoveConflictStrategyOption move_conflict_strategy_{};
+  utils::LogUtils::LogLevelOption log_level_when_file_not_found_{};
+  utils::LogUtils::LogLevelOption log_level_when_permission_denied_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchFile>::getLogger(uuid_);
 };
 
