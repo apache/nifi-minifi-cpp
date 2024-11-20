@@ -76,9 +76,7 @@ void appendTempFile(const std::filesystem::path& directory, const std::filesyste
 
 TEST_CASE("TailFile reads the file until the first delimiter then picks up the second line if a delimiter is written between runs", "[simple]") {
   // Create and write to the test file
-  auto tail_file = std::make_shared<minifi::processors::TailFile>("TailFile");
-
-  minifi::test::SingleProcessorTestController test_controller(tail_file);
+  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
 
   auto dir = test_controller.createTempDirectory();
   auto temp_file_path = dir / TMP_FILE;
@@ -89,8 +87,8 @@ TEST_CASE("TailFile reads the file until the first delimiter then picks up the s
     tmp_file << NEWLINE_FILE;
   }
 
-  test_controller.plan->setProperty(tail_file, minifi::processors::TailFile::FileName, temp_file_path.string());
-  test_controller.plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, "\n");
+  test_controller.plan->setProperty(test_controller.getProcessor(), minifi::processors::TailFile::FileName, temp_file_path.string());
+  test_controller.plan->setProperty(test_controller.getProcessor(), minifi::processors::TailFile::Delimiter, "\n");
 
   {
     auto trigger_res = test_controller.trigger();
@@ -746,9 +744,7 @@ TEST_CASE("TailFile onSchedule throws in Multiple mode if the Base Directory doe
 }
 
 TEST_CASE("TailFile finds and finishes the renamed file and continues with the new log file", "[rotation]") {
-  auto tail_file = std::make_shared<minifi::processors::TailFile>("TailFile");
-
-  minifi::test::SingleProcessorTestController test_controller(tail_file);
+  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
 
   constexpr char DELIM = ',';
   constexpr size_t expected_pieces = std::ranges::count(NEWLINE_FILE, DELIM);  // The last piece is left as considered unfinished
@@ -767,16 +763,16 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   std::filesystem::last_write_time(in_file, std::chrono::file_clock::now() - 200ms);
 
   // Build MiNiFi processing graph
-  test_controller.plan->setProperty(tail_file, minifi::processors::TailFile::Delimiter, std::string(1, DELIM));
+  test_controller.plan->setProperty(test_controller.getProcessor(), minifi::processors::TailFile::Delimiter, std::string(1, DELIM));
 
   SECTION("single") {
-    test_controller.plan->setProperty(tail_file, minifi::processors::TailFile::FileName, in_file.string());
+    test_controller.plan->setProperty(test_controller.getProcessor(), minifi::processors::TailFile::FileName, in_file.string());
   }
   SECTION("Multiple") {
-    test_controller.plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName, "testfifo.txt");
-    test_controller.plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::TailMode, "Multiple file");
-    test_controller.plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::BaseDirectory, dir.string());
-    test_controller.plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::LookupFrequency, "0 sec");
+    test_controller.plan->setProperty(test_controller.getProcessor(), org::apache::nifi::minifi::processors::TailFile::FileName, "testfifo.txt");
+    test_controller.plan->setProperty(test_controller.getProcessor(), org::apache::nifi::minifi::processors::TailFile::TailMode, "Multiple file");
+    test_controller.plan->setProperty(test_controller.getProcessor(), org::apache::nifi::minifi::processors::TailFile::BaseDirectory, dir.string());
+    test_controller.plan->setProperty(test_controller.getProcessor(), org::apache::nifi::minifi::processors::TailFile::LookupFrequency, "0 sec");
   }
   {
     auto res = test_controller.trigger();
@@ -815,8 +811,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
 }
 
 TEST_CASE("TailFile finds and finishes multiple rotated files and continues with the new log file", "[rotation]") {
-  auto tailfile = std::make_shared<minifi::processors::TailFile>("TailFile");
-  minifi::test::SingleProcessorTestController test_controller(tailfile);
+  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
 
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
 
@@ -825,8 +820,8 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   auto dir = test_controller.createTempDirectory();
   auto fruits_log_path = dir / "fruits.log";
 
-  tailfile->setProperty(minifi::processors::TailFile::FileName, fruits_log_path.string());
-  tailfile->setProperty(minifi::processors::TailFile::Delimiter, std::string(1, DELIM));
+  test_controller.getProcessor()->setProperty(minifi::processors::TailFile::FileName, fruits_log_path.string());
+  test_controller.getProcessor()->setProperty(minifi::processors::TailFile::Delimiter, std::string(1, DELIM));
 
   const auto file_modi_time_t0 = std::chrono::file_clock::now();
   {
