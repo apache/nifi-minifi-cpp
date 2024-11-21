@@ -68,7 +68,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     Given a Grafana Loki server is set up
     And a TailFile processor with the "File to Tail" property set to "/tmp/input/test_file.log"
     And a file with filename "test_file.log" and content "log line 1\nlog line 2\nlog line 3\n" is present in "/tmp/input"
-    And a PushGrafanaLokiGrpc processor with the "Url" property set to "grafana-loki-server-${feature_id}:9095/"
+    And a PushGrafanaLokiGrpc processor with the "Url" property set to "grafana-loki-server-${feature_id}:9095"
     And the "Stream Labels" property of the PushGrafanaLokiGrpc processor is set to "job=minifi,id=docker-test"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiGrpc
     When all instances start up
@@ -78,7 +78,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     Given a Grafana Loki server is set up with multi-tenancy enabled
     And a TailFile processor with the "File to Tail" property set to "/tmp/input/test_file.log"
     And a file with filename "test_file.log" and content "log line 1\nlog line 2\nlog line 3\n" is present in "/tmp/input"
-    And a PushGrafanaLokiGrpc processor with the "Url" property set to "grafana-loki-server-${feature_id}:9095/"
+    And a PushGrafanaLokiGrpc processor with the "Url" property set to "grafana-loki-server-${feature_id}:9095"
     And the "Stream Labels" property of the PushGrafanaLokiGrpc processor is set to "job=minifi,id=docker-test"
     And the "Tenant ID" property of the PushGrafanaLokiGrpc processor is set to "mytenant"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiGrpc
@@ -89,7 +89,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     Given a Grafana Loki server with SSL is set up
     And a TailFile processor with the "File to Tail" property set to "/tmp/input/test_file.log"
     And a file with filename "test_file.log" and content "log line 1\nlog line 2\nlog line 3\n" is present in "/tmp/input"
-    And a PushGrafanaLokiGrpc processor with the "Url" property set to "grafana-loki-server-${feature_id}:9095/"
+    And a PushGrafanaLokiGrpc processor with the "Url" property set to "grafana-loki-server-${feature_id}:9095"
     And the "Stream Labels" property of the PushGrafanaLokiGrpc processor is set to "job=minifi,id=docker-test"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiGrpc
     And a SSL context service is set up for Grafana Loki processor "PushGrafanaLokiGrpc"

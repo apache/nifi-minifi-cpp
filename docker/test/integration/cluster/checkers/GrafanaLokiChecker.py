@@ -19,7 +19,7 @@ from utils import wait_for
 
 class GrafanaLokiChecker:
     def __init__(self):
-        self.url = "localhost:3100/loki/api/v1/query"
+        self.url = "localhost:3100/loki/api/v1/query_range"
 
     def veify_log_lines_on_grafana_loki(self, lines: List[str], ssl: bool, tenant_id: str):
         labels = '{job="minifi"}'

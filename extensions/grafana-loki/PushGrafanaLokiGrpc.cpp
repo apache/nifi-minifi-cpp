@@ -133,7 +133,7 @@ nonstd::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std
   }
 
   if (!push_channel_->WaitForConnected(std::chrono::system_clock::now() + connection_timeout_ms_)) {
-    return nonstd::make_unexpected("Timeout waiting for connection to Grafana Loki gRPC server");
+    return nonstd::make_unexpected("Timeout waiting for connection to Grafana Loki gRPC server. Please check if the server is running and reachable and the Url value is correct.");
   }
 
   logproto::PushResponse response;
