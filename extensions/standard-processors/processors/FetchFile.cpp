@@ -39,7 +39,7 @@ void FetchFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   if (completion_strategy_ == fetch_file::CompletionStrategyOption::MOVE_FILE && move_destination_dir.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Move Destination Directory is required when Completion Strategy is set to Move File");
   }
-  move_confict_strategy_ = utils::parseEnumProperty<fetch_file::MoveConflictStrategyOption>(context, MoveConflictStrategy);
+  move_conflict_strategy_ = utils::parseEnumProperty<fetch_file::MoveConflictStrategyOption>(context, MoveConflictStrategy);
   log_level_when_file_not_found_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(context, LogLevelWhenFileNotFound);
   log_level_when_permission_denied_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(context, LogLevelWhenPermissionDenied);
 }
@@ -57,55 +57,55 @@ std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, c
   return std::filesystem::path(file_to_fetch_path) / filename;
 }
 
-std::filesystem::path FetchFile::getMoveAbsolutePath(const std::filesystem::path& file_name) const {
-  return move_destination_directory_ / file_name;
+std::filesystem::path FetchFile::getMoveAbsolutePath(const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) {
+  return move_destination_dir / file_name;
 }
 
-bool FetchFile::moveDestinationConflicts(const std::filesystem::path& file_name) const {
-  return utils::file::FileUtils::exists(getMoveAbsolutePath(file_name));
+bool FetchFile::moveDestinationConflicts(const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) {
+  return utils::file::FileUtils::exists(getMoveAbsolutePath(move_destination_dir, file_name));
 }
 
-bool FetchFile::moveWouldFailWithDestinationConflict(const std::filesystem::path& file_name) const {
-  if (completion_strategy_ != fetch_file::CompletionStrategyOption::MOVE_FILE || move_confict_strategy_ != fetch_file::MoveConflictStrategyOption::FAIL) {
+bool FetchFile::moveWouldFailWithDestinationConflict(const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const {
+  if (completion_strategy_ != fetch_file::CompletionStrategyOption::MOVE_FILE || move_conflict_strategy_ != fetch_file::MoveConflictStrategyOption::FAIL) {
     return false;
   }
 
-  return moveDestinationConflicts(file_name);
+  return moveDestinationConflicts(move_destination_dir, file_name);
 }
 
-void FetchFile::executeMoveConflictStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name) {
-  if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::REPLACE_FILE) {
-    auto moved_path = getMoveAbsolutePath(file_name);
+void FetchFile::executeMoveConflictStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const {
+  if (move_conflict_strategy_ == fetch_file::MoveConflictStrategyOption::REPLACE_FILE) {
+    auto moved_path = getMoveAbsolutePath(move_destination_dir, file_name);
     logger_->log_debug("Due to conflict replacing file '{}' by the Move Completion Strategy", moved_path);
     std::filesystem::rename(file_to_fetch_path, moved_path);
-  } else if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::RENAME) {
+  } else if (move_conflict_strategy_ == fetch_file::MoveConflictStrategyOption::RENAME) {
     std::filesystem::path generated_filename{utils::IdGenerator::getIdGenerator()->generate().to_string().view()};
     logger_->log_debug("Due to conflict file '{}' is moved with generated name '{}' by the Move Completion Strategy", file_to_fetch_path, generated_filename);
-    std::filesystem::rename(file_to_fetch_path, getMoveAbsolutePath(generated_filename));
-  } else if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::KEEP_EXISTING) {
+    std::filesystem::rename(file_to_fetch_path, getMoveAbsolutePath(move_destination_dir, generated_filename));
+  } else if (move_conflict_strategy_ == fetch_file::MoveConflictStrategyOption::KEEP_EXISTING) {
     logger_->log_debug("Due to conflict file '{}' is deleted by the Move Completion Strategy", file_to_fetch_path);
     std::filesystem::remove(file_to_fetch_path);
   }
 }
 
-void FetchFile::processMoveCompletion(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name) {
-  if (!moveDestinationConflicts(file_name)) {
-    if (!utils::file::FileUtils::exists(move_destination_directory_)) {
-      std::filesystem::create_directories(move_destination_directory_);
+void FetchFile::processMoveCompletion(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const {
+  if (!moveDestinationConflicts(move_destination_dir, file_name)) {
+    if (!utils::file::FileUtils::exists(move_destination_dir)) {
+      std::filesystem::create_directories(move_destination_dir);
     }
-    auto moved_path = getMoveAbsolutePath(file_name);
+    auto moved_path = getMoveAbsolutePath(move_destination_dir, file_name);
     logger_->log_debug("'{}' is moved to '{}' by the Move Completion Strategy", file_to_fetch_path, moved_path);
     std::filesystem::rename(file_to_fetch_path, moved_path);
     return;
   }
 
-  executeMoveConflictStrategy(file_to_fetch_path, file_name);
+  executeMoveConflictStrategy(file_to_fetch_path, move_destination_dir, file_name);
 }
 
-void FetchFile::executeCompletionStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name) {
+void FetchFile::executeCompletionStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& move_destination_dir, const std::filesystem::path& file_name) const {
   try {
     if (completion_strategy_ == fetch_file::CompletionStrategyOption::MOVE_FILE) {
-      processMoveCompletion(file_to_fetch_path, file_name);
+      processMoveCompletion(file_to_fetch_path, move_destination_dir, file_name);
     } else if (completion_strategy_ == fetch_file::CompletionStrategyOption::DELETE_FILE) {
       logger_->log_debug("File '{}' is deleted by the Delete Completion Strategy", file_to_fetch_path);
       std::filesystem::remove(file_to_fetch_path);
@@ -117,7 +117,7 @@ void FetchFile::executeCompletionStrategy(const std::filesystem::path& file_to_f
 
 void FetchFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("FetchFile onTrigger");
-  auto flow_file = session.get();
+  const auto flow_file = session.get();
   if (!flow_file) {
     context.yield();
     return;
@@ -132,11 +132,11 @@ void FetchFile::onTrigger(core::ProcessContext& context, core::ProcessSession& s
 
   auto file_name = file_to_fetch_path.filename();
 
-  std::string move_destination_directory;
-  context.getProperty(MoveDestinationDirectory, move_destination_directory, flow_file.get());
-  move_destination_directory_ = move_destination_directory;
-  if (moveWouldFailWithDestinationConflict(file_name)) {
-    logger_->log_error("Move destination ({}) conflicts with an already existing file!", move_destination_directory_);
+  std::string move_destination_directory_str;
+  context.getProperty(MoveDestinationDirectory, move_destination_directory_str, flow_file.get());
+  std::filesystem::path move_destination_directory = move_destination_directory_str;
+  if (moveWouldFailWithDestinationConflict(move_destination_directory, file_name)) {
+    logger_->log_error("Move destination ({}) conflicts with an already existing file!", move_destination_directory);
     session.transfer(flow_file, Failure);
     return;
   }
@@ -157,7 +157,7 @@ void FetchFile::onTrigger(core::ProcessContext& context, core::ProcessSession& s
     return;
   }
 
-  executeCompletionStrategy(file_to_fetch_path, file_name);
+  executeCompletionStrategy(file_to_fetch_path, move_destination_directory, file_name);
 }
 
 REGISTER_RESOURCE(FetchFile, Processor);
