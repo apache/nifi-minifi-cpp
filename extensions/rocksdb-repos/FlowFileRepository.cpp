@@ -89,7 +89,9 @@ void FlowFileRepository::deserializeFlowFilesWithNoContentClaim(minifi::internal
     return;
   }
   std::vector<std::string> values;
-  auto multistatus = opendb.MultiGet(rocksdb::ReadOptions{}, keys, &values);
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  auto multistatus = opendb.MultiGet(options, keys, &values);
   gsl_Expects(keys.size() == values.size() && values.size() == multistatus.size());
 
   for (size_t i = 0; i < keys.size(); ++i) {
@@ -142,7 +144,9 @@ void FlowFileRepository::initialize_repository() {
   }
   logger_->log_info("Reading existing flow files from database");
 
-  const auto it = opendb->NewIterator(rocksdb::ReadOptions());
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  const auto it = opendb->NewIterator(options);
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     utils::Identifier container_id;
     auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>(), content_repo_, container_id);
@@ -180,7 +184,7 @@ void FlowFileRepository::initialize_repository() {
 
 void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
   content_repo_ = content_repo;
-  swap_loader_ = std::make_unique<FlowFileLoader>(gsl::make_not_null(db_.get()), content_repo_);
+  swap_loader_ = std::make_unique<FlowFileLoader>(gsl::make_not_null(db_.get()), content_repo_, verify_checksums_in_rocksdb_reads_);
 
   initialize_repository();
 }
@@ -207,6 +211,9 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
 
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using {} FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
+
+  verify_checksums_in_rocksdb_reads_ = (configure->get(Configure::nifi_flowfile_repository_rocksdb_read_verify_checksums) | utils::andThen(&utils::string::toBool)).value_or(false);
+  logger_->log_debug("{} checksum verification in FlowFileRepository", verify_checksums_in_rocksdb_reads_ ? "Using" : "Not using");
 
   auto db_options = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& options) {
     minifi::internal::setCommonRocksDbOptions(options);

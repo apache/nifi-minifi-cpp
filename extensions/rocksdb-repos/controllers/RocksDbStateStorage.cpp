@@ -93,6 +93,8 @@ void RocksDbStateStorage::onEnable() {
     default_write_options.sync = true;
   }
 
+  verify_checksums_in_rocksdb_reads_ = (configuration_->get(Configure::nifi_rocksdb_state_storage_read_verify_checksums) | utils::andThen(&utils::string::toBool)).value_or(false);
+
   logger_->log_trace("Enabled RocksDbStateStorage");
 }
 
@@ -125,7 +127,9 @@ bool RocksDbStateStorage::get(const std::string& key, std::string& value) {
   if (!opendb) {
     return false;
   }
-  rocksdb::Status status = opendb->Get(rocksdb::ReadOptions(), key, &value);
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  rocksdb::Status status = opendb->Get(options, key, &value);
   if (!status.ok()) {
     if (status.getState() != nullptr) {
       logger_->log_error("Failed to Get key {} from RocksDB database at {}, error: {}", key.c_str(), directory_.c_str(), status.getState());
@@ -146,7 +150,9 @@ bool RocksDbStateStorage::get(std::unordered_map<std::string, std::string>& kvs)
     return false;
   }
   kvs.clear();
-  auto it = opendb->NewIterator(rocksdb::ReadOptions());
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  auto it = opendb->NewIterator(options);
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     kvs.emplace(it->key().ToString(), it->value().ToString());
   }
@@ -181,7 +187,9 @@ bool RocksDbStateStorage::clear() {
   if (!opendb) {
     return false;
   }
-  auto it = opendb->NewIterator(rocksdb::ReadOptions());
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  auto it = opendb->NewIterator(options);
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     rocksdb::Status status = opendb->Delete(default_write_options, it->key());
     if (!status.ok()) {

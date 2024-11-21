@@ -82,6 +82,8 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   }
 
   use_synchronous_writes_ = configuration->get(Configure::nifi_content_repository_rocksdb_use_synchronous_writes).value_or("true") != "false";
+  verify_checksums_in_rocksdb_reads_ = (configuration->get(Configure::nifi_content_repository_rocksdb_read_verify_checksums) | utils::andThen(&utils::string::toBool)).value_or(false);
+  logger_->log_debug("{} checksum verification in DatabaseContentRepository", verify_checksums_in_rocksdb_reads_ ? "Using" : "Not using");
   return is_valid_;
 }
 
@@ -195,7 +197,7 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::read(const minifi::Re
   // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
   if (!is_valid_ || !db_)
     return nullptr;
-  return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), false);
+  return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), false, nullptr, true, verify_checksums_in_rocksdb_reads_);
 }
 
 bool DatabaseContentRepository::exists(const minifi::ResourceClaim &streamId) {
@@ -205,7 +207,9 @@ bool DatabaseContentRepository::exists(const minifi::ResourceClaim &streamId) {
   }
   std::string value;
   rocksdb::Status status;
-  status = opendb->Get(rocksdb::ReadOptions(), streamId.getContentFullPath(), &value);
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  status = opendb->Get(options, streamId.getContentFullPath(), &value);
   if (status.ok()) {
     logger_->log_debug("{} exists", streamId.getContentFullPath());
     return true;
@@ -288,7 +292,7 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::R
   if (!is_valid_ || !db_)
     return nullptr;
   // append is already supported in all modes
-  return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch);
+  return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch, true, verify_checksums_in_rocksdb_reads_);
 }
 
 void DatabaseContentRepository::clearOrphans() {
@@ -302,7 +306,9 @@ void DatabaseContentRepository::clearOrphans() {
     return;
   }
   std::vector<std::string> keys_to_be_deleted;
-  auto it = opendb->NewIterator(rocksdb::ReadOptions());
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  auto it = opendb->NewIterator(options);
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     auto key = it->key().ToString();
     std::lock_guard<std::mutex> lock(count_map_mutex_);

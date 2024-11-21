@@ -533,6 +533,16 @@ RocksDB has an option to set synchronous writes for its database, ensuring that 
     # in minifi.properties
     nifi.content.repository.rocksdb.use.synchronous.writes=true
 
+### Configuring checksum verification for RocksDB reads
+
+RocksDB has an option to verify checksums for its database reads. This option is set to false by default for better performance. If you prefer to enable checksum verification you can set this option to true.
+
+    # in minifi.properties
+    nifi.content.repository.rocksdb.read.verify.checksums=false
+    nifi.flowfile.repository.rocksdb.read.verify.checksums=false
+    nifi.provenance.repository.rocksdb.read.verify.checksums=false
+    nifi.rocksdb.state.storage.read.verify.checksums=false
+
 ### Global RocksDB options
 
 There are a few options for RocksDB that are set for all used RocksDB databases in MiNiFi:

@@ -106,6 +106,7 @@ class DatabaseContentRepository : public core::ContentRepository {
   std::vector<std::string> keys_to_delete_;
   std::unique_ptr<utils::StoppableThread> gc_thread_;
   bool use_synchronous_writes_ = true;
+  bool verify_checksums_in_rocksdb_reads_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

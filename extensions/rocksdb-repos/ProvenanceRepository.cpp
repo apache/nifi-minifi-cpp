@@ -39,6 +39,9 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
   }
   logger_->log_debug("MiNiFi Provenance Max Storage Time: [{}]", max_partition_millis_);
 
+  verify_checksums_in_rocksdb_reads_ = (config->get(Configure::nifi_provenance_repository_rocksdb_read_verify_checksums) | utils::andThen(&utils::string::toBool)).value_or(false);
+  logger_->log_debug("{} checksum verification in ProvenanceRepository", verify_checksums_in_rocksdb_reads_ ? "Using" : "Not using");
+
   auto db_options = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     minifi::internal::setCommonRocksDbOptions(db_opts);
   };
@@ -75,7 +78,9 @@ bool ProvenanceRepository::getElements(std::vector<std::shared_ptr<core::Seriali
   if (!opendb) {
     return false;
   }
-  std::unique_ptr<rocksdb::Iterator> it(opendb->NewIterator(rocksdb::ReadOptions()));
+  rocksdb::ReadOptions options;
+  options.verify_checksums = verify_checksums_in_rocksdb_reads_;
+  std::unique_ptr<rocksdb::Iterator> it(opendb->NewIterator(options));
   size_t requested_batch = max_size;
   max_size = 0;
   for (it->SeekToFirst(); it->Valid(); it->Next()) {

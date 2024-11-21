@@ -45,7 +45,7 @@ class RocksDbStream : public io::BaseStream {
    * It must already be initialized for read and write.
    */
   explicit RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable = false,
-    minifi::internal::WriteBatch* batch = nullptr, bool use_synchronous_writes = true);
+    minifi::internal::WriteBatch* batch = nullptr, bool use_synchronous_writes = true, bool verify_checksums = false);
 
   ~RocksDbStream() override {
     close();
