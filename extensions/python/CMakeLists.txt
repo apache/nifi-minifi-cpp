@@ -23,6 +23,11 @@ endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
+if (NOT WIN32 AND NOT APPLE)
+    add_minifi_library(minifi-python-lib-loader-extension SHARED pythonlibloader/PythonLibLoader.cpp)
+    target_link_libraries(minifi-python-lib-loader-extension PRIVATE ${LIBMINIFI})
+endif()
+
 file(GLOB SOURCES "*.cpp" "types/*.cpp" "pythonloader/PyProcLoader.cpp")
 
 add_minifi_library(minifi-python-script-extension SHARED ${SOURCES})
@@ -32,15 +37,18 @@ target_link_libraries(minifi-python-script-extension PRIVATE ${LIBMINIFI} Thread
 include(GenericPython)
 if(APPLE)
     target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03090000)
+elseif(WIN32)
+    target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03060000)
 else()
+    target_compile_definitions(minifi-python-lib-loader-extension PUBLIC Py_LIMITED_API=0x03060000)
     target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03060000)
 endif()
 target_compile_definitions(minifi-python-script-extension PUBLIC PY_SSIZE_T_CLEAN)
 
 target_sources(minifi-python-script-extension PRIVATE ${PY_SOURCES})
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_link_libraries(minifi-python-script-extension PUBLIC -Wl,--no-as-needed ${Python_LIBRARIES} -Wl,--as-needed)
-else()
+
+# On Linux the python library is loaded dynamically in the minifi-python-loader extension before the python script extension is loaded
+if (WIN32 OR APPLE)
     target_link_libraries(minifi-python-script-extension PUBLIC ${Python_LIBRARIES})
 endif()
 
@@ -81,5 +89,8 @@ else()
     )
 endif()
 
+if (NOT WIN32 AND NOT APPLE)
+    register_extension(minifi-python-lib-loader-extension "PYTHON LIB LOADER" PYTHON-LIB-LOADER-EXTENSIONS "This enables library that loads python library for python symbols")
+endif()
 register_extension(minifi-python-script-extension "PYTHON SCRIPTING ENGINE" PYTHON-SCRIPTING-EXTENSIONS "This enables python script engine" "extensions/python/tests")
 register_extension_linter(minifi-python-script-extension-linter)
