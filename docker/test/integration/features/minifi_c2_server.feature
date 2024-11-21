@@ -54,3 +54,15 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
     When all instances start up
     Then the MiNiFi C2 SSL server logs contain the following message: "acknowledged with a state of FULLY_APPLIED(DONE)" in less than 60 seconds
     And a flowfile with the content "test" is placed in the monitored directory in less than 10 seconds
+
+  Scenario: MiNiFi flow config is updated from MiNiFi C2 server with overriden parameter context
+    Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "${INPUT_DIR}"
+    And parameter context name is set to 'my-context'
+    And a non-sensitive parameter in the flow config called 'INPUT_DIR' with the value '/tmp/non-existent' in the parameter context 'my-context'
+    And C2 is enabled in MiNiFi
+    And a file with the content "test" is present in "/tmp/input"
+    And a MiNiFi C2 server is set up
+    When all instances start up
+    Then the MiNiFi C2 server logs contain the following message: "acknowledged with a state of FULLY_APPLIED(DONE)" in less than 30 seconds
+    And a flowfile with the content "test" is placed in the monitored directory in less than 10 seconds
+    And the Minifi logs do not contain the following message: "Failed to parse json response: The document is empty. at 0" after 0 seconds

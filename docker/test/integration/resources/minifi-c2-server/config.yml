@@ -1,6 +1,15 @@
 MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: INPUT_DIR
+      description: ''
+      sensitive: false
+      value: /tmp/input
 Processors:
 - name: Get files from /tmp/input
   id: 2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27
@@ -8,7 +17,7 @@ Processors:
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1000 ms
   Properties:
-    Input Directory: /tmp/input
+    Input Directory: "#{INPUT_DIR}"
 - name: Put files to /tmp/output
   id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
   class: org.apache.nifi.minifi.processors.PutFile
@@ -27,5 +36,6 @@ Connections:
   source relationship names:
   - success
   destination id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
+Parameter Context Name: my-context
 Controller Services: []
 Remote Process Groups: []
