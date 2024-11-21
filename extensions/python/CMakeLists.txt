@@ -90,7 +90,7 @@ else()
 endif()
 
 if (NOT WIN32 AND NOT APPLE)
-    register_extension(minifi-python-lib-loader-extension "PYTHON LIB LOADER" PYTHON-LIB-LOADER-EXTENSIONS "This enables library that loads python library for python symbols")
+    register_extension(minifi-python-lib-loader-extension "PYTHON LIB LOADER" PYTHON-LIB-LOADER-EXTENSION "This enables library that loads python library for python symbols")
 endif()
 register_extension(minifi-python-script-extension "PYTHON SCRIPTING ENGINE" PYTHON-SCRIPTING-EXTENSIONS "This enables python script engine" "extensions/python/tests")
 register_extension_linter(minifi-python-script-extension-linter)
