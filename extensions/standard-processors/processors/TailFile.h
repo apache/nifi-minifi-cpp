@@ -25,7 +25,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <set>
 #include <optional>
 
 #include "controllers/AttributeProviderService.h"
@@ -73,12 +72,12 @@ namespace org::apache::nifi::minifi::processors {
 
 struct TailState {
   TailState(std::filesystem::path path, std::filesystem::path file_name, uint64_t position,
-            std::chrono::file_clock::time_point last_read_time,
-            uint64_t checksum)
-      : path_(std::move(path)), file_name_(std::move(file_name)), position_(position), last_read_time_(last_read_time), checksum_(checksum) {}
+            const std::chrono::file_clock::time_point last_read_time,
+            const uint64_t checksum, const bool is_rotated = false)
+      : path_(std::move(path)), file_name_(std::move(file_name)), position_(position), last_read_time_(last_read_time), checksum_(checksum), is_rotated_(is_rotated) {}
 
-  TailState(std::filesystem::path path, std::filesystem::path file_name)
-      : TailState{std::move(path), std::move(file_name), 0, std::chrono::file_clock::time_point{}, 0} {}
+  TailState(std::filesystem::path path, std::filesystem::path file_name, const bool is_rotated = false)
+      : TailState{std::move(path), std::move(file_name), 0, std::chrono::file_clock::time_point{}, 0, is_rotated} {}
 
   TailState() = default;
 
@@ -95,6 +94,7 @@ struct TailState {
   uint64_t position_ = 0;
   std::chrono::file_clock::time_point last_read_time_;
   uint64_t checksum_ = 0;
+  bool is_rotated_ = false;
 };
 
 std::ostream& operator<<(std::ostream &os, const TailState &tail_state);
@@ -221,9 +221,9 @@ class TailFile : public core::Processor {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
-  bool recoverState(core::ProcessContext& context);
+  bool recoverState(const core::ProcessContext& context);
   void logState();
-  bool storeState();
+  bool storeState() const;
   std::chrono::milliseconds getLookupFrequency() const;
 
  private:
@@ -237,7 +237,7 @@ class TailFile : public core::Processor {
     TimePoint mtime_;
   };
 
-  void parseAttributeProviderServiceProperty(core::ProcessContext& context);
+  void parseAttributeProviderServiceProperty(const core::ProcessContext& context);
   void parseStateFileLine(char *buf, std::map<std::filesystem::path, TailState> &state) const;
   void processAllRotatedFiles(core::ProcessSession& session, TailState &state);
   void processRotatedFiles(core::ProcessSession& session, TailState &state, std::vector<TailState> &rotated_file_states);
@@ -253,7 +253,7 @@ class TailFile : public core::Processor {
                          const std::filesystem::path& full_file_name,
                          TailState &state);
   bool getStateFromStateManager(std::map<std::filesystem::path, TailState> &new_tail_states) const;
-  bool getStateFromLegacyStateFile(core::ProcessContext& context,
+  bool getStateFromLegacyStateFile(const core::ProcessContext& context,
                                    std::map<std::filesystem::path, TailState> &new_tail_states) const;
   void doMultifileLookup(core::ProcessContext& context);
   void checkForRemovedFiles();
@@ -261,13 +261,13 @@ class TailFile : public core::Processor {
   static std::string baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context);
   void updateFlowFileAttributes(const std::filesystem::path& full_file_name, const TailState &state, const std::filesystem::path& fileName,
                                 const std::string &baseName, const std::string &extension,
-                                std::shared_ptr<core::FlowFile> &flow_file) const;
+                                core::FlowFile& flow_file) const;
   static void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum);
-  bool isOldFileInitiallyRead(TailState &state) const;
+  bool isOldFileInitiallyRead(const TailState &state) const;
 
   static const char *CURRENT_STR;
   static const char *POSITION_STR;
-  static const int BUFFER_SIZE = 512;
+  static constexpr int BUFFER_SIZE = 512;
 
   std::optional<char> delimiter_;  // Delimiter for the data incoming from the tailed file.
   core::StateManager* state_manager_ = nullptr;
