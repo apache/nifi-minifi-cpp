@@ -30,6 +30,7 @@
 #include "core/Resource.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "unit/TestUtils.h"
+#include "unit/DummyParameterProvider.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -334,31 +335,6 @@ TEST_CASE("Cannot use the same parameter name within a parameter context twice")
   REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Parameter name 'file_size' already exists, parameter names must be unique within a parameter context!");
 }
 
-class DummyFlowJsonProcessor : public core::Processor {
- public:
-  using core::Processor::Processor;
-
-  static constexpr const char* Description = "A processor that does nothing.";
-  static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")
-      .withDescription("Just a simple string property")
-      .build();
-  static constexpr auto SensitiveProperty = core::PropertyDefinitionBuilder<>::createProperty("Sensitive Property")
-      .withDescription("Sensitive property")
-      .isSensitive(true)
-      .build();
-  static constexpr auto Properties = std::to_array<core::PropertyReference>({SimpleProperty, SensitiveProperty});
-  static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
-  static constexpr bool SupportsDynamicProperties = true;
-  static constexpr bool SupportsDynamicRelationships = true;
-  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
-  static constexpr bool IsSingleThreaded = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  void initialize() override { setSupportedProperties(Properties); }
-};
-
-REGISTER_RESOURCE(DummyFlowJsonProcessor, Processor);
-
 TEST_CASE("Cannot use non-sensitive parameter in sensitive property") {
   ConfigurationTestController test_controller;
 
@@ -387,7 +363,7 @@ TEST_CASE("Cannot use non-sensitive parameter in sensitive property") {
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyGenFF",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -430,7 +406,7 @@ TEST_CASE("Cannot use non-sensitive parameter in sensitive property value sequen
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyGenFF",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -641,7 +617,7 @@ TEST_CASE("Cannot use parameters if no parameter context is defined") {
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyGenFF",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -667,7 +643,7 @@ TEST_CASE("Cannot use parameters in property value sequences if no parameter con
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyGenFF",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -717,7 +693,7 @@ TEST_CASE("Property value sequences can use parameters") {
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -778,7 +754,7 @@ TEST_CASE("Dynamic properties can use parameters") {
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -839,7 +815,7 @@ TEST_CASE("Test sensitive parameters in sensitive properties") {
     "processors": [{{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {{
@@ -896,7 +872,7 @@ TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
     "processors": [{{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {{
@@ -1193,7 +1169,7 @@ TEST_CASE("Test parameter context inheritance") {
     "processors": [{{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {{
@@ -1243,7 +1219,7 @@ TEST_CASE("Parameter context can not inherit from a itself") {
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -1286,7 +1262,7 @@ TEST_CASE("Parameter context can not inherit from non-existing parameter context
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -1371,7 +1347,7 @@ TEST_CASE("Cycles are not allowed in parameter context inheritance") {
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -1452,7 +1428,7 @@ TEST_CASE("Parameter context inheritance order is respected") {
     "processors": [{
       "identifier": "00000000-0000-0000-0000-000000000001",
       "name": "MyProcessor",
-      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
       "schedulingStrategy": "TIMER_DRIVEN",
       "schedulingPeriod": "3 sec",
       "properties": {
@@ -1476,6 +1452,265 @@ TEST_CASE("Parameter context inheritance order is respected") {
   CHECK(value == "3");
   REQUIRE(proc->getDynamicProperty("My C Property", value));
   CHECK(value == "5");
+}
+
+TEST_CASE("Parameter providers can be used for parameter values") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "parameterProviders": [
+    {
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "DummyParameterProvider",
+        "type": "DummyParameterProvider",
+        "properties": {
+          "Dummy1 Value": "value1",
+          "Dummy2 Value": "value2",
+          "Dummy3 Value": "value3"
+        }
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {
+        "Simple Property": "#{dummy1}",
+        "My Dynamic Property Sequence": [
+          {"value": "#{dummy2}"},
+          {"value": "#{dummy3}"}
+        ]
+      }
+    }],
+    "parameterContextName": "dummycontext"
+  }
+})";
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Simple Property") == "value1");
+  core::Property property("My Dynamic Property Sequence", "");
+  proc->getDynamicProperty("My Dynamic Property Sequence", property);
+  auto values = property.getValues();
+  REQUIRE(values.size() == 2);
+  CHECK(values[0] == "value2");
+  CHECK(values[1] == "value3");
+}
+
+TEST_CASE("Parameter providers can be configured to select which parameters to be sensitive") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{dummy1}", *context.sensitive_values_encryptor);
+  core::flow::AdaptiveConfiguration config(context);
+
+  static const std::string CONFIG_JSON =
+      fmt::format(R"(
+{{
+  "parameterProviders": [
+    {{
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "DummyParameterProvider",
+        "type": "DummyParameterProvider",
+        "properties": {{
+          "Sensitive Parameter Scope": "selected",
+          "Sensitive Parameter List": "dummy1",
+          "Dummy1 Value": "value1",
+          "Dummy3 Value": "value3"
+        }}
+    }}
+  ],
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [{{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {{
+        "Simple Property": "#{{dummy3}}",
+        "Sensitive Property": "{}"
+      }}
+    }}],
+    "parameterContextName": "dummycontext"
+  }}
+}})", encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+  REQUIRE(proc->getProperty("Simple Property") == "value3");
+}
+
+TEST_CASE("Parameter providers can be configured to make all parameters sensitive") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{dummy1}", *context.sensitive_values_encryptor);
+  core::flow::AdaptiveConfiguration config(context);
+
+  static const std::string CONFIG_JSON =
+      fmt::format(R"(
+{{
+  "parameterProviders": [
+    {{
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "DummyParameterProvider",
+        "type": "DummyParameterProvider",
+        "properties": {{
+          "Sensitive Parameter Scope": "all",
+          "Dummy1 Value": "value1",
+          "Dummy3 Value": "value3"
+        }}
+    }}
+  ],
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [{{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {{
+        "Sensitive Property": "{}"
+      }}
+    }}],
+    "parameterContextName": "dummycontext"
+  }}
+}})", encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+}
+
+TEST_CASE("Parameter context can be inherited from parameter provider generated parameter context") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "parameterProviders": [
+    {
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "DummyParameterProvider",
+        "type": "DummyParameterProvider",
+        "properties": {
+          "Dummy1 Value": "value1",
+          "Dummy2 Value": "value2",
+          "Dummy3 Value": "value3"
+        }
+    }
+  ],
+  "parameterContexts": [
+    {
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "my-context",
+      "description": "my parameter context",
+      "parameters": [
+        {
+          "name": "file_size",
+          "description": "",
+          "sensitive": false,
+          "value": "10 B"
+        }
+      ],
+      "inheritedParameterContexts": ["dummycontext"]
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {
+        "Simple Property": "#{dummy1}"
+      }
+    }],
+    "parameterContextName": "my-context"
+  }
+})";
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Simple Property") == "value1");
+}
+
+TEST_CASE("Parameter context names cannot conflict with parameter provider generated parameter context names") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "parameterProviders": [
+    {
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "DummyParameterProvider",
+        "type": "DummyParameterProvider",
+        "properties": {
+          "Dummy1 Value": "value1",
+          "Dummy2 Value": "value2",
+          "Dummy3 Value": "value3"
+        }
+    }
+  ],
+  "parameterContexts": [
+    {
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "dummycontext",
+      "description": "my parameter context",
+      "parameters": [
+        {
+          "name": "file_size",
+          "description": "",
+          "sensitive": false,
+          "value": "10 B"
+        }
+      ]
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {
+        "Simple Property": "#{dummy1}"
+      }
+    }],
+    "parameterContextName": "dummycontext"
+  }
+})";
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter provider 'DummyParameterProvider' cannot create parameter context 'dummycontext' because parameter context already exists "
+    "with no parameter provider or generated by other parameter provider");
 }
 
 }  // namespace org::apache::nifi::minifi::test

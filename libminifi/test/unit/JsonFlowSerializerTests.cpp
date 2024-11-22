@@ -26,9 +26,10 @@
 #include "utils/crypto/EncryptionProvider.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
+#include "utils/Environment.h"
 
-namespace core = org::apache::nifi::minifi::core;
-namespace utils = org::apache::nifi::minifi::utils;
+namespace org::apache::nifi::minifi::test {
 
 constexpr std::string_view config_json_with_default_schema = R"({
   "MiNiFi Config Version": 3,
@@ -553,10 +554,10 @@ constexpr std::string_view config_json_with_nifi_schema_part_2 = R"(
 }
 )";
 
-const utils::crypto::Bytes secret_key = utils::string::from_hex("75536923a75928a970077f9dae2c2b166a5413e020cb5190de4fb8edce1a38c7");
-const utils::crypto::EncryptionProvider encryption_provider{secret_key};
+const minifi::utils::crypto::Bytes secret_key = minifi::utils::string::from_hex("75536923a75928a970077f9dae2c2b166a5413e020cb5190de4fb8edce1a38c7");
+const minifi::utils::crypto::EncryptionProvider encryption_provider{secret_key};
 
-using OverridesMap = std::unordered_map<utils::Identifier, core::flow::Overrides>;
+using OverridesMap = std::unordered_map<minifi::utils::Identifier, core::flow::Overrides>;
 
 TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   ConfigurationTestController test_controller;
@@ -564,7 +565,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
 
   const auto [schema, flow_definition] = GENERATE(
       std::make_tuple(core::flow::FlowSchema::getDefault(), std::string{config_json_with_default_schema}),
-      std::make_tuple(core::flow::FlowSchema::getNiFiFlowJson(), utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2)));
+      std::make_tuple(core::flow::FlowSchema::getNiFiFlowJson(), minifi::utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2)));
 
   const auto process_group = json_configuration.getRootFromPayload(flow_definition);
   REQUIRE(process_group);
@@ -574,9 +575,9 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   REQUIRE(res);
   const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
 
-  const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
-  const auto controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
-  const auto parameter_id = utils::Identifier::parse("721e10b7-8e00-3188-9a27-476cca376978").value();
+  const auto processor_id = minifi::utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
+  const auto controller_service_id = minifi::utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
+  const auto parameter_id = minifi::utils::Identifier::parse("721e10b7-8e00-3188-9a27-476cca376978").value();
 
   const auto [overrides, expected_results] = GENERATE_REF(
       std::make_tuple(OverridesMap{},
@@ -591,7 +592,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
       std::make_tuple(OverridesMap{{parameter_id, core::flow::Overrides{}.add("secret_parameter", "param_value_2")}},
           std::array{"very_secure_password", "very_secure_passphrase", "param_value_2"}));
 
-  std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
+  std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides, {});
 
   {
     std::regex regex{R"_("invokehttp-proxy-password": "(.*)",)_"};
@@ -600,7 +601,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
 
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
-    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[0]);
+    CHECK(minifi::utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[0]);
   }
 
   {
@@ -610,7 +611,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
 
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
-    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[1]);
+    CHECK(minifi::utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[1]);
   }
 
   {
@@ -620,7 +621,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
 
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
-    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[2]);
+    CHECK(minifi::utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == expected_results[2]);
   }
 }
 
@@ -629,7 +630,7 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
   core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
 
   const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
-  const auto config_json_with_nifi_schema = utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
+  const auto config_json_with_nifi_schema = minifi::utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
   const auto process_group = json_configuration.getRootFromPayload(config_json_with_nifi_schema);
   REQUIRE(process_group);
 
@@ -638,12 +639,12 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
   REQUIRE(res);
   const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
 
-  const auto second_controller_service_id = utils::Identifier::parse("b418f4ff-e598-4ea2-921f-14f9dd864482").value();
+  const auto second_controller_service_id = minifi::utils::Identifier::parse("b418f4ff-e598-4ea2-921f-14f9dd864482").value();
 
   SECTION("with required overrides") {
     const OverridesMap overrides{{second_controller_service_id, core::flow::Overrides{}.add("Passphrase", "new passphrase")}};
 
-    std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
+    std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides, {});
 
     std::regex regex{R"_("Passphrase": "(.*)")_"};
     std::smatch match_results;
@@ -655,15 +656,15 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
     REQUIRE(std::regex_search(match_results.suffix().first, config_json_encrypted.cend(), match_results, regex));
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
-    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "new passphrase");
+    CHECK(minifi::utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "new passphrase");
   }
 
   SECTION("with optional overrides: the override is only used if the property is already in the flow config") {
-    const auto first_controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
+    const auto first_controller_service_id = minifi::utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
     const OverridesMap overrides{{first_controller_service_id, core::flow::Overrides{}.addOptional("Passphrase", "first new passphrase")},
                                  {second_controller_service_id, core::flow::Overrides{}.addOptional("Passphrase", "second new passphrase")}};
 
-    std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
+    std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides, {});
 
     std::regex regex{R"_("Passphrase": "(.*)")_"};
     std::smatch match_results;
@@ -672,7 +673,7 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
     REQUIRE(std::regex_search(config_json_encrypted.cbegin(), config_json_encrypted.cend(), match_results, regex));
     REQUIRE(match_results.size() == 2);
     std::string encrypted_value = match_results[1];
-    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "first new passphrase");
+    CHECK(minifi::utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "first new passphrase");
 
     // check that there is no second match
     CHECK_FALSE(std::regex_search(match_results.suffix().first, config_json_encrypted.cend(), match_results, regex));
@@ -686,7 +687,7 @@ TEST_CASE("The encrypted flow configuration can be decrypted with the correct ke
   core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
 
   const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
-  const auto config_json_with_nifi_schema = utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
+  const auto config_json_with_nifi_schema = minifi::utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
   const auto process_group_before = json_configuration_before.getRootFromPayload(config_json_with_nifi_schema);
   REQUIRE(process_group_before);
 
@@ -694,13 +695,13 @@ TEST_CASE("The encrypted flow configuration can be decrypted with the correct ke
   rapidjson::ParseResult res = doc.Parse(config_json_with_nifi_schema.data(), config_json_with_nifi_schema.size());
   REQUIRE(res);
   const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
-  std::string config_json_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {});
+  std::string config_json_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {}, {});
 
   core::flow::AdaptiveConfiguration json_configuration_after{configuration_context};
   const auto process_group_after = json_configuration_after.getRootFromPayload(config_json_encrypted);
   REQUIRE(process_group_after);
 
-  const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
+  const auto processor_id = minifi::utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
   const auto* processor_before = process_group_before->findProcessorById(processor_id);
   REQUIRE(processor_before);
   const auto* processor_after = process_group_after->findProcessorById(processor_id);
@@ -731,7 +732,7 @@ TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrec
   core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
 
   const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
-  const auto config_json_with_nifi_schema = utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
+  const auto config_json_with_nifi_schema = minifi::utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
   const auto process_group_before = json_configuration_before.getRootFromPayload(config_json_with_nifi_schema);
   REQUIRE(process_group_before);
 
@@ -739,11 +740,165 @@ TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrec
   rapidjson::ParseResult res = doc.Parse(config_json_with_nifi_schema.data(), config_json_with_nifi_schema.size());
   REQUIRE(res);
   const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
-  std::string config_json_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {});
+  std::string config_json_encrypted = flow_serializer.serialize(*process_group_before, schema, encryption_provider, {}, {});
 
-  const utils::crypto::Bytes different_secret_key = utils::string::from_hex("ea55b7d0edc22280c9547e4d89712b3fae74f96d82f240a004fb9fbd0640eec7");
-  configuration_context.sensitive_values_encryptor = utils::crypto::EncryptionProvider{different_secret_key};
+  const minifi::utils::crypto::Bytes different_secret_key = minifi::utils::string::from_hex("ea55b7d0edc22280c9547e4d89712b3fae74f96d82f240a004fb9fbd0640eec7");
+  configuration_context.sensitive_values_encryptor = minifi::utils::crypto::EncryptionProvider{different_secret_key};
 
   core::flow::AdaptiveConfiguration json_configuration_after{configuration_context};
-  REQUIRE_THROWS_AS(json_configuration_after.getRootFromPayload(config_json_encrypted), utils::crypto::EncryptionError);
+  REQUIRE_THROWS_AS(json_configuration_after.getRootFromPayload(config_json_encrypted), minifi::utils::crypto::EncryptionError);
 }
+
+TEST_CASE("Parameter provider generated parameter context is serialized correctly") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_values_encryptor = encryption_provider;
+  core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
+
+  const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
+  static const std::string config_json_with_nifi_schema =
+      R"(
+{
+  "parameterProviders": [
+    {
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "EnvironmentVariableParameterProvider",
+        "type": "EnvironmentVariableParameterProvider",
+        "properties": {
+          "Environment Variable Inclusion Strategy": "Comma-Separated",
+          "Include Environment Variables": "MINIFI_DATA,SECRET_MINIFI_DATA",
+          "Sensitive Parameter Scope": "selected",
+          "Sensitive Parameter List": "SECRET_MINIFI_DATA",
+          "Parameter Group Name": "environment-variable-parameter-context"
+        }
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "name": "DummyProcessor",
+      "identifier": "aabb6d26-8a8d-4338-92c9-1b8c67ec18e0",
+      "type": "DummyProcessor",
+      "scheduling strategy": "TIMER_DRIVEN",
+      "scheduling period": "15 sec",
+      "properties": {
+        "Simple Property": "#{MINIFI_DATA}",
+        "Sensitive Property": "#{SECRET_MINIFI_DATA}"
+      }
+    }],
+    "parameterContextName": "environment-variable-parameter-context"
+  }
+})";
+
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("SECRET_MINIFI_DATA", "secret_minifi_data_value");
+  const auto process_group_before = json_configuration_before.getRootFromPayload(config_json_with_nifi_schema);
+  REQUIRE(process_group_before);
+
+  std::string reserialized_config = json_configuration_before.serialize(*process_group_before);
+  rapidjson::Document result_doc;
+  rapidjson::ParseResult res = result_doc.Parse(reserialized_config.data(), reserialized_config.size());
+  REQUIRE(res);
+  REQUIRE(result_doc.HasMember("parameterContexts"));
+  auto parameters = result_doc["parameterContexts"].GetArray()[0]["parameters"].GetArray();
+  REQUIRE(parameters.Size() == 2);
+  for (const auto& parameter : parameters) {
+    std::string name = parameter["name"].GetString();
+    std::string value = parameter["value"].GetString();
+    if (name == "MINIFI_DATA") {
+      REQUIRE(value == "minifi_data_value");
+    } else if (name == "SECRET_MINIFI_DATA") {
+      REQUIRE(minifi::utils::crypto::property_encryption::decrypt(value, encryption_provider) == "secret_minifi_data_value");
+    }
+  }
+}
+
+TEST_CASE("Parameter provider generated parameter context is not serialized if parameter context already exists") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_values_encryptor = encryption_provider;
+  core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
+
+  const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
+  static const std::string config_json_with_nifi_schema =
+      R"(
+{
+  "parameterProviders": [
+    {
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "EnvironmentVariableParameterProvider",
+        "type": "EnvironmentVariableParameterProvider",
+        "properties": {
+          "Environment Variable Inclusion Strategy": "Comma-Separated",
+          "Include Environment Variables": "MINIFI_DATA,SECRET_MINIFI_DATA",
+          "Sensitive Parameter Scope": "selected",
+          "Sensitive Parameter List": "SECRET_MINIFI_DATA",
+          "Parameter Group Name": "environment-variable-parameter-context"
+        }
+    }
+  ],
+  "parameterContexts": [
+    {
+        "identifier": "123ee5f5-0192-1000-0482-4e333725e345",
+        "name": "environment-variable-parameter-context",
+        "description": "my parameter context",
+        "parameters": [
+            {
+                "name": "SECRET_MINIFI_DATA",
+                "description": "",
+                "sensitive": true,
+                "provided": true,
+                "value": "old_secret_minifi_data_value"
+            },
+            {
+                "name": "MINIFI_DATA",
+                "description": "",
+                "sensitive": false,
+                "provided": true,
+                "value": "old_minifi_data_value"
+            }
+        ],
+        "parameterProvider": "d26ee5f5-0192-1000-0482-4e333725e089"
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "name": "DummyProcessor",
+      "identifier": "aabb6d26-8a8d-4338-92c9-1b8c67ec18e0",
+      "type": "DummyProcessor",
+      "scheduling strategy": "TIMER_DRIVEN",
+      "scheduling period": "15 sec",
+      "properties": {
+        "Simple Property": "#{MINIFI_DATA}",
+        "Sensitive Property": "#{SECRET_MINIFI_DATA}"
+      }
+    }],
+    "parameterContextName": "environment-variable-parameter-context"
+  }
+})";
+
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("SECRET_MINIFI_DATA", "secret_minifi_data_value");
+  const auto process_group_before = json_configuration_before.getRootFromPayload(config_json_with_nifi_schema);
+  REQUIRE(process_group_before);
+
+  std::string reserialized_config = json_configuration_before.serialize(*process_group_before);
+  rapidjson::Document result_doc;
+  rapidjson::ParseResult res = result_doc.Parse(reserialized_config.data(), reserialized_config.size());
+  REQUIRE(res);
+  REQUIRE(result_doc.HasMember("parameterContexts"));
+  auto parameters = result_doc["parameterContexts"].GetArray()[0]["parameters"].GetArray();
+  REQUIRE(parameters.Size() == 2);
+  for (const auto& parameter : parameters) {
+    std::string name = parameter["name"].GetString();
+    std::string value = parameter["value"].GetString();
+    if (name == "MINIFI_DATA") {
+      REQUIRE(value == "old_minifi_data_value");
+    } else if (name == "SECRET_MINIFI_DATA") {
+      REQUIRE(minifi::utils::crypto::property_encryption::decrypt(value, encryption_provider) == "old_secret_minifi_data_value");
+    }
+  }
+}
+
+}  // namespace org::apache::nifi::minifi::test

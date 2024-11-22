@@ -31,6 +31,7 @@
 #include "unit/TestUtils.h"
 #include "core/Resource.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
+#include "unit/DummyProcessor.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -1261,31 +1262,6 @@ NiFi Properties Overrides: {}
     "Parameter Operation: Parameter name 'lookup.frequency' already exists, parameter names must be unique within a parameter context!");
 }
 
-class DummyFlowYamlProcessor : public core::Processor {
- public:
-  using core::Processor::Processor;
-
-  static constexpr const char* Description = "A processor that does nothing.";
-  static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")
-      .withDescription("Just a simple string property")
-      .build();
-  static constexpr auto SensitiveProperty = core::PropertyDefinitionBuilder<>::createProperty("Sensitive Property")
-      .withDescription("Sensitive property")
-      .isSensitive(true)
-      .build();
-  static constexpr auto Properties = std::to_array<core::PropertyReference>({SimpleProperty, SensitiveProperty});
-  static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
-  static constexpr bool SupportsDynamicProperties = true;
-  static constexpr bool SupportsDynamicRelationships = true;
-  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
-  static constexpr bool IsSingleThreaded = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  void initialize() override { setSupportedProperties(Properties); }
-};
-
-REGISTER_RESOURCE(DummyFlowYamlProcessor, Processor);
-
 TEST_CASE("Cannot use non-sensitive parameter in sensitive property", "[YamlConfiguration]") {
   ConfigurationTestController test_controller;
   core::YamlConfiguration yaml_config(test_controller.getContext());
@@ -1307,7 +1283,7 @@ Parameter Contexts:
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: TailFile
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1349,7 +1325,7 @@ Parameter Contexts:
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: TailFile
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1531,7 +1507,7 @@ Flow Controller:
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: TailFile
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1555,7 +1531,7 @@ Flow Controller:
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: TailFile
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1594,7 +1570,7 @@ Parameter Contexts:
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: DummyProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1643,7 +1619,7 @@ Parameter Contexts:
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
   name: DummyProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1695,8 +1671,8 @@ Parameter Contexts:
       value: {encrypted_parameter_value}
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
-  name: DummyFlowYamlProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1709,7 +1685,7 @@ Parameter Context Name: my-context
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
-  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
+  auto* proc = flow->findProcessorByName("DummyProcessor");
   REQUIRE(proc);
   REQUIRE(proc->getProperty("Simple Property") == "simple");
   REQUIRE(proc->getProperty("Sensitive Property") == "value1");
@@ -1744,8 +1720,8 @@ Parameter Contexts:
       value: {encrypted_parameter_value_2}
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
-  name: DummyFlowYamlProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1761,7 +1737,7 @@ Parameter Context Name: my-context
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
-  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
+  auto* proc = flow->findProcessorByName("DummyProcessor");
   core::Property property("Sensitive Property", "");
   proc->getProperty("Sensitive Property", property);
   auto values = property.getValues();
@@ -1908,8 +1884,8 @@ Parameter Contexts:
       value: old_value
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
-  name: DummyFlowYamlProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1922,7 +1898,7 @@ Parameter Context Name: inherited-context
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
-  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
+  auto* proc = flow->findProcessorByName("DummyProcessor");
   REQUIRE(proc);
   REQUIRE(proc->getProperty("Simple Property") == "old_value");
   REQUIRE(proc->getProperty("Sensitive Property") == "value1");
@@ -1950,8 +1926,8 @@ Parameter Contexts:
     - base-context
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
-  name: DummyFlowYamlProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -1985,8 +1961,8 @@ Parameter Contexts:
     Inherited Parameter Contexts: [unknown]
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
-  name: DummyFlowYamlProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -2051,8 +2027,8 @@ Parameter Contexts:
     Inherited Parameter Contexts: []
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
-  name: DummyFlowYamlProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -2114,8 +2090,8 @@ Parameter Contexts:
     - a-context
 Processors:
 - id: b0c04f28-0158-1000-0000-000000000000
-  name: DummyFlowYamlProcessor
-  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
@@ -2129,7 +2105,7 @@ Parameter Context Name: c-context
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
-  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
+  auto* proc = flow->findProcessorByName("DummyProcessor");
   REQUIRE(proc);
   std::string value;
   REQUIRE(proc->getDynamicProperty("My A Property", value));
@@ -2138,6 +2114,226 @@ Parameter Context Name: c-context
   CHECK(value == "3");
   REQUIRE(proc->getDynamicProperty("My C Property", value));
   CHECK(value == "5");
+}
+
+TEST_CASE("Parameter providers can be used for parameter values", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flow
+Parameter Providers:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: DummyParameterProvider
+    type: DummyParameterProvider
+    Properties:
+      Dummy1 Value: value1
+      Dummy2 Value: value2
+      Dummy3 Value: value3
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{dummy1}"
+    My Dynamic Property Sequence:
+    - value: "#{dummy2}"
+    - value: "#{dummy3}"
+Parameter Context Name: dummycontext
+      )";
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("DummyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Simple Property") == "value1");
+  core::Property property("My Dynamic Property Sequence", "");
+  proc->getDynamicProperty("My Dynamic Property Sequence", property);
+  auto values = property.getValues();
+  REQUIRE(values.size() == 2);
+  CHECK(values[0] == "value2");
+  CHECK(values[1] == "value3");
+}
+
+TEST_CASE("Parameter providers can be configured to select which parameters to be sensitive", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{dummy1}", *context.sensitive_values_encryptor);
+  core::YamlConfiguration yaml_config(context);
+
+  static const std::string TEST_CONFIG_YAML =
+      fmt::format(R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Providers:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: DummyParameterProvider
+    type: DummyParameterProvider
+    Properties:
+      Sensitive Parameter Scope: selected
+      Sensitive Parameter List: dummy1
+      Dummy1 Value: value1
+      Dummy3 Value: value3
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{{dummy3}}"
+    Sensitive Property: {}
+Parameter Context Name: dummycontext
+      )", encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("DummyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+  REQUIRE(proc->getProperty("Simple Property") == "value3");
+}
+
+TEST_CASE("Parameter providers can be configured to make all parameters sensitive", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{dummy1}", *context.sensitive_values_encryptor);
+  core::YamlConfiguration yaml_config(context);
+
+  static const std::string TEST_CONFIG_YAML =
+      fmt::format(R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Providers:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: DummyParameterProvider
+    type: DummyParameterProvider
+    Properties:
+      Sensitive Parameter Scope: all
+      Dummy1 Value: value1
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Sensitive Property: {}
+Parameter Context Name: dummycontext
+      )", encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("DummyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+}
+
+TEST_CASE("Parameter context can be inherited from parameter provider generated parameter context", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flow
+Parameter Providers:
+  - id: d26ee5f5-0192-1000-0482-4e333725e089
+    name: DummyParameterProvider
+    type: DummyParameterProvider
+    Properties:
+      Dummy1 Value: value1
+      Dummy2 Value: value2
+      Dummy3 Value: value3
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: my-context
+    description: my parameter context
+    Parameters:
+    - name: file_size
+      description: ''
+      sensitive: false
+      value: 10 B
+    Inherited Parameter Contexts: [dummycontext]
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{dummy1}"
+Parameter Context Name: my-context
+      )";
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("DummyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Simple Property") == "value1");
+}
+
+TEST_CASE("Parameter context names cannot conflict with parameter provider generated parameter context names", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flow
+Parameter Providers:
+  - id: d26ee5f5-0192-1000-0482-4e333725e089
+    name: DummyParameterProvider
+    type: DummyParameterProvider
+    Properties:
+      Dummy1 Value: value1
+      Dummy2 Value: value2
+      Dummy3 Value: value3
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: dummycontext
+    description: my parameter context
+    Parameters:
+    - name: file_size
+      description: ''
+      sensitive: false
+      value: 10 B
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{dummy1}"
+Parameter Context Name: dummycontext
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter provider 'DummyParameterProvider' cannot create parameter context 'dummycontext' because parameter context already "
+    "exists with no parameter provider or generated by other parameter provider");
 }
 
 }  // namespace org::apache::nifi::minifi::test

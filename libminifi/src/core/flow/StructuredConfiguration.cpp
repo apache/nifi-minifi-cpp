@@ -123,9 +123,10 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
     schema_ = std::move(schema);
     uuids_.clear();
     Node parameterContextsNode = root_node[schema_.parameter_contexts];
+    Node parameterProvidersNode = root_node[schema_.parameter_providers];
     Node provenanceReportNode = root_node[schema_.provenance_reporting];
 
-    parseParameterContexts(parameterContextsNode);
+    parseParameterContexts(parameterContextsNode, parameterProvidersNode);
     // Create the root process group
     std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
     parseProvenanceReporting(provenanceReportNode, root.get());
@@ -174,7 +175,7 @@ void StructuredConfiguration::verifyNoInheritanceCycles() const {
   }
 }
 
-void StructuredConfiguration::parseParameterContexts(const Node& parameter_contexts_node) {
+void StructuredConfiguration::parseParameterContextsNode(const Node& parameter_contexts_node) {
   if (!parameter_contexts_node || !parameter_contexts_node.isSequence()) {
     return;
   }
@@ -182,7 +183,7 @@ void StructuredConfiguration::parseParameterContexts(const Node& parameter_conte
     checkRequiredField(parameter_context_node, schema_.name);
 
     auto name = parameter_context_node[schema_.name].getString().value();
-    if (parameter_contexts_.find(name) != parameter_contexts_.end()) {
+    if (parameter_contexts_.contains(name)) {
       throw std::invalid_argument("Parameter context name '" + name + "' already exists, parameter context names must be unique!");
     }
     auto id = getRequiredIdField(parameter_context_node);
@@ -191,6 +192,7 @@ void StructuredConfiguration::parseParameterContexts(const Node& parameter_conte
     uuid = id;
     auto parameter_context = std::make_unique<ParameterContext>(name, uuid);
     parameter_context->setDescription(getOptionalField(parameter_context_node, schema_.description, ""));
+    parameter_context->setParameterProvider(getOptionalField(parameter_context_node, schema_.parameter_provider, ""));
     for (const auto& parameter_node : parameter_context_node[schema_.parameters]) {
       checkRequiredField(parameter_node, schema_.name);
       checkRequiredField(parameter_node, schema_.value);
@@ -198,16 +200,72 @@ void StructuredConfiguration::parseParameterContexts(const Node& parameter_conte
       auto parameter_name = parameter_node[schema_.name].getString().value();
       auto parameter_value = parameter_node[schema_.value].getString().value();
       auto sensitive = parameter_node[schema_.sensitive].getBool().value();
+      auto provided = parameter_node[schema_.provided].getBool().value_or(false);
       auto parameter_description = getOptionalField(parameter_node, schema_.description, "");
       if (sensitive) {
         parameter_value = utils::crypto::property_encryption::decrypt(parameter_value, sensitive_values_encryptor_);
       }
-      parameter_context->addParameter(Parameter{parameter_name, parameter_description, sensitive, parameter_value});
+      parameter_context->addParameter(Parameter{
+        .name = parameter_name,
+        .description = parameter_description,
+        .sensitive = sensitive,
+        .provided = provided,
+        .value = parameter_value});
     }
 
     parameter_contexts_.emplace(name, gsl::make_not_null(std::move(parameter_context)));
   }
+}
 
+void StructuredConfiguration::parseParameterProvidersNode(const Node& parameter_providers_node) {
+  if (!parameter_providers_node || !parameter_providers_node.isSequence()) {
+    return;
+  }
+  for (const auto& parameter_provider_node : parameter_providers_node) {
+    checkRequiredField(parameter_provider_node, schema_.name);
+
+    auto type = getRequiredField(parameter_provider_node, schema_.type);
+    logger_->log_debug("Using type {} for parameter provider node", type);
+
+    std::string fullType = type;
+    auto lastOfIdx = type.find_last_of('.');
+    if (lastOfIdx != std::string::npos) {
+      lastOfIdx++;  // if a value is found, increment to move beyond the .
+      type = type.substr(lastOfIdx);
+    }
+
+    auto name = parameter_provider_node[schema_.name].getString().value();
+    auto id = getRequiredIdField(parameter_provider_node);
+
+    utils::Identifier uuid;
+    uuid = id;
+    auto parameter_provider = createParameterProvider(type, fullType, uuid);
+    if (nullptr != parameter_provider) {
+      logger_->log_debug("Created Parameter Provider with UUID {} and name {}", id, name);
+      if (Node propertiesNode = parameter_provider_node[schema_.parameter_provider_properties]) {
+        parsePropertiesNode(propertiesNode, *parameter_provider, name, nullptr);
+      }
+    } else {
+      logger_->log_debug("Could not locate {}", type);
+    }
+    parameter_provider->setName(name);
+    auto parameter_contexts = parameter_provider->createParameterContexts();
+    for (auto& parameter_context : parameter_contexts) {
+      if (!parameter_contexts_.contains(parameter_context->getName())) {
+        parameter_contexts_.emplace(parameter_context->getName(), std::move(parameter_context));
+      } else if (parameter_contexts_.at(parameter_context->getName())->getParameterProvider() != parameter_provider->getUUIDStr()) {
+        throw std::invalid_argument(fmt::format("Parameter provider '{}' cannot create parameter context '{}' because parameter context already exists "
+          "with no parameter provider or generated by other parameter provider", parameter_provider->getName(), parameter_context->getName()));
+      }
+    }
+    parameter_providers_.push_back(gsl::make_not_null(std::move(parameter_provider)));
+  }
+}
+
+void StructuredConfiguration::parseParameterContextInheritance(const Node& parameter_contexts_node) {
+  if (!parameter_contexts_node || !parameter_contexts_node.isSequence()) {
+    return;
+  }
   for (const auto& parameter_context_node : parameter_contexts_node) {
     if (!isFieldPresent(parameter_context_node, schema_.inherited_parameter_contexts[0])) {
       continue;
@@ -228,6 +286,12 @@ void StructuredConfiguration::parseParameterContexts(const Node& parameter_conte
     }
   }
   verifyNoInheritanceCycles();
+}
+
+void StructuredConfiguration::parseParameterContexts(const Node& parameter_contexts_node, const Node& parameter_providers_node) {
+  parseParameterContextsNode(parameter_contexts_node);
+  parseParameterProvidersNode(parameter_providers_node);
+  parseParameterContextInheritance(parameter_contexts_node);
 }
 
 void StructuredConfiguration::parseProcessorNode(const Node& processors_node, core::ProcessGroup* parentGroup) {
@@ -1065,7 +1129,7 @@ void StructuredConfiguration::addNewId(const std::string& uuid) {
 
 std::string StructuredConfiguration::serialize(const core::ProcessGroup& process_group) {
   gsl_Expects(flow_serializer_);
-  return flow_serializer_->serialize(process_group, schema_, sensitive_values_encryptor_, {});
+  return flow_serializer_->serialize(process_group, schema_, sensitive_values_encryptor_, {}, parameter_contexts_);
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow
