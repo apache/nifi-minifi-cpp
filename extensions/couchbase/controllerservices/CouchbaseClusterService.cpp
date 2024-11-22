@@ -61,7 +61,7 @@ CouchbaseClient::CouchbaseClient(std::string connection_string, std::string user
   }
 
   if (!username.empty() && ssl_context_service && !ssl_context_service->getCertificateFile().empty()) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Username and password authentication or mTLS authentication using certificate defined in SSLConextService "
+    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Username and password authentication or mTLS authentication using certificate defined in SSLContextService "
       "linked service should be provided exclusively for Couchbase");
   }
 
@@ -227,7 +227,7 @@ void CouchbaseClusterService::onEnable() {
   }
 
   if ((username.empty() || password.empty()) && linked_services_.empty()) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing username and password or SSLConextService as a linked service");
+    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing username and password or SSLContextService as a linked service");
   }
 
   minifi::controllers::SSLContextService* ssl_context_service_ptr = nullptr;
