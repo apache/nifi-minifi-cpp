@@ -87,13 +87,13 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
       document_id, collection.bucket_name, collection.scope_name, collection.collection_name, upsert_err.ec(), upsert_err.message());
     return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
   } else {
-    CouchbaseUpsertResult result;
-    result.bucket_name = collection.bucket_name;
-    result.cas = upsert_resp.cas().value();
-    result.partition_uuid = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_uuid() : 0);
-    result.sequence_number = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->sequence_number() : 0);
-    result.partition_id = (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_id() : 0);
-    return result;
+    return CouchbaseUpsertResult {
+      collection.bucket_name,
+      upsert_resp.cas().value(),
+      (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->sequence_number() : 0),
+      (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_uuid() : 0),
+      gsl::narrow<uint16_t>(upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_id() : 0)
+    };
   }
 }
 
@@ -108,7 +108,7 @@ nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(co
   options.with_expiry(true);
   auto [get_err, resp] = collection_result->get(document_id, options).get();
   if (get_err.ec()) {
-    if (get_err.ec().value() == static_cast<int>(::couchbase::errc::common::unambiguous_timeout) || get_err.ec().value() == static_cast<int>(::couchbase::errc::common::ambiguous_timeout)) {
+    if (getErrorType(get_err.ec()) == CouchbaseErrorType::TEMPORARY) {
       logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' due to timeout",
         document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
       return nonstd::make_unexpected(CouchbaseErrorType::TEMPORARY);
