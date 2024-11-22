@@ -214,7 +214,7 @@ This product bundles 'Kubernetes Client Library for C' (kubernetes-client/c), wh
 This project bundles a configuration file from 'Kubernetes Metrics Server' (kubernetes-sigs/metrics-server), which is available under an ALv2 license
 This project bundles 'OpenSSL' which is available under an ALv2 license
 This project bundles 'gRPC' which is available under an ALv2 license
-This project bundles 'couchbase-cxx-clien' which is available under an ALv2 license
+This project bundles 'couchbase-cxx-client' which is available under an ALv2 license
 
 The Apache NiFi - MiNiFi C++ project contains subcomponents with separate copyright
 notices and license terms. Your use of the source code for the these

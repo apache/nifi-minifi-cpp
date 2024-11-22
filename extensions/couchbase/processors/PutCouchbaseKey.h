@@ -93,7 +93,7 @@ class PutCouchbaseKey final : public core::AbstractProcessor<PutCouchbaseKey> {
       .withDescription("Collection to use inside the bucket scope. If not specified, the _default collection is used.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto DocumentType = core::PropertyDefinitionBuilder<3>::createProperty("Document Type")
+  EXTENSIONAPI static constexpr auto DocumentType = core::PropertyDefinitionBuilder<magic_enum::enum_count<CouchbaseValueType>()>::createProperty("Document Type")
       .withDescription("Content type to store data as.")
       .isRequired(true)
       .withDefaultValue(magic_enum::enum_name(CouchbaseValueType::Json))

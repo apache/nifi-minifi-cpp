@@ -27,7 +27,7 @@ namespace org::apache::nifi::minifi::couchbase {
 
 namespace {
 
-constexpr std::array<::couchbase::errc::common, 9> temporary_connection_errors = {
+constexpr auto temporary_connection_errors = std::to_array<::couchbase::errc::common>({
   ::couchbase::errc::common::temporary_failure,
   ::couchbase::errc::common::request_canceled,
   ::couchbase::errc::common::internal_server_failure,
@@ -36,7 +36,7 @@ constexpr std::array<::couchbase::errc::common, 9> temporary_connection_errors =
   ::couchbase::errc::common::unambiguous_timeout,
   ::couchbase::errc::common::rate_limited,
   ::couchbase::errc::common::quota_limited
-};
+});
 
 CouchbaseErrorType getErrorType(const std::error_code& error_code) {
   for (const auto& temporary_error : temporary_connection_errors) {
@@ -104,6 +104,7 @@ void CouchbaseClient::close() {
   if (cluster_) {
     cluster_->close().wait();
   }
+  cluster_ = std::nullopt;
 }
 
 nonstd::expected<void, CouchbaseErrorType> CouchbaseClient::establishConnection() {

@@ -84,7 +84,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                  | Default Value | Allowable Values | Description                                                                                                                                                      |
 |-----------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Connection String** |               |                  | The hostnames or ip addresses of the bootstraping nodes and optional parameters. Syntax) couchbase://node1,node2,nodeN?param1=value1&param2=value2&paramN=valueN |
+| **Connection String** |               |                  | The hostnames or ip addresses of the bootstraping nodes and optional parameters. Syntax: couchbase://node1,node2,nodeN?param1=value1&param2=value2&paramN=valueN |
 | User Name             |               |                  | The user name to authenticate MiNiFi as a Couchbase client.                                                                                                      |
 | User Password         |               |                  | The user password to authenticate MiNiFi as a Couchbase client.<br/>**Sensitive Property: true**                                                                 |
 

@@ -1,42 +1,18 @@
-fmt library 11.0.2 requires the implementation of the append function aside
-from push_back method when formatting the bustache specific container
-
 diff --git a/include/bustache/model.hpp b/include/bustache/model.hpp
-index 575969a..6df2cff 100644
+index 575969a..07bc89d 100644
 --- a/include/bustache/model.hpp
 +++ b/include/bustache/model.hpp
-@@ -8,7 +8,7 @@
- #define BUSTACHE_MODEL_HPP_INCLUDED
- 
- #include <bustache/format.hpp>
--#include <version> 
-+#include <version>
- #include <vector>
- #include <cstring>
- #include <concepts>
-@@ -330,6 +330,16 @@ namespace bustache::detail
+@@ -330,6 +330,13 @@ namespace bustache::detail
              buf[count++] = c;
          }
  
-+        template <typename U>
-+        void append(const U* begin, const U* end)
++        void append(const char* const begin, const char* const end)
 +        {
-+            size_t content_count = end - begin;
-+            for (size_t i = 0; i < content_count; ++i) {
-+                push_back(begin[i]);
++            for (const char* it = begin; it != end; ++it) {
++                push_back(*it);
 +            }
-+            begin += content_count;
 +        }
 +
          void flush() { os(buf, count); }
  
          std::size_t count = 0;
-@@ -592,7 +602,7 @@ namespace bustache
-     {
-         static constexpr model kind = model::atom;
-     };
--    
-+
-     template<String T>
-     struct impl_test<T>
-     {
