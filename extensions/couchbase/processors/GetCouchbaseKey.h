@@ -82,11 +82,11 @@ class GetCouchbaseKey final : public core::AbstractProcessor<GetCouchbaseKey> {
   });
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
-    "Values retrieved from Couchbase Server are written as outgoing FlowFiles content or put into an attribute of the incoming FlowFile and routed to this relationship."};
+      "Values retrieved from Couchbase Server are written as outgoing FlowFiles content or put into an attribute of the incoming FlowFile and routed to this relationship."};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "All FlowFiles failed to fetch from Couchbase Server and not retry-able are routed to this relationship."};
   EXTENSIONAPI static constexpr auto Retry = core::RelationshipDefinition{"retry", "All FlowFiles failed to fetch from Couchbase Server but can be retried are routed to this relationship."};
   EXTENSIONAPI static constexpr auto Original = core::RelationshipDefinition{"original",
-    "The original input FlowFile is routed to this relationship when the value is retrieved from Couchbase Server and routed to 'success'."};
+      "The original input FlowFile is routed to this relationship when the value is retrieved from Couchbase Server and routed to 'success'."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure, Retry, Original};
 
   EXTENSIONAPI static constexpr auto CouchbaseBucket = core::OutputAttributeDefinition<>{"couchbase.bucket", {Success}, "Bucket where the document was stored."};

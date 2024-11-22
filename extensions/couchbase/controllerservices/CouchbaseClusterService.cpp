@@ -17,11 +17,11 @@
  */
 
 #include "CouchbaseClusterService.h"
-#include "couchbase/codec/raw_binary_transcoder.hxx"
-#include "couchbase/codec/raw_string_transcoder.hxx"
-#include "couchbase/codec/raw_json_transcoder.hxx"
 
 #include "core/Resource.h"
+#include "couchbase/codec/raw_binary_transcoder.hxx"
+#include "couchbase/codec/raw_json_transcoder.hxx"
+#include "couchbase/codec/raw_string_transcoder.hxx"
 #include "utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::couchbase {
@@ -59,8 +59,8 @@ nonstd::expected<::couchbase::collection, CouchbaseErrorType> CouchbaseClient::g
   return cluster_->bucket(collection.bucket_name).scope(collection.scope_name).collection(collection.collection_name);
 }
 
-nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::upsert(const CouchbaseCollection& collection,
-    CouchbaseValueType document_type, const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
+nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::upsert(
+    const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
   auto collection_result = getCollection(collection);
   if (!collection_result.has_value()) {
     return nonstd::make_unexpected(collection_result.error());
@@ -79,17 +79,19 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
   if (upsert_err.ec()) {
     // ambiguous_timeout should not be retried as we do not know if the insert was successful or not
     if (getErrorType(upsert_err.ec()) == CouchbaseErrorType::TEMPORARY && upsert_err.ec().value() != static_cast<int>(::couchbase::errc::common::ambiguous_timeout)) {
-      logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to temporary issue, error code: '{}', message: '{}'",
-        document_id, collection.bucket_name, collection.scope_name, collection.collection_name, upsert_err.ec(), upsert_err.message());
+      logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to temporary issue, error code: '{}', message: '{}'", document_id, collection.bucket_name, collection.scope_name,
+          collection.collection_name, upsert_err.ec(), upsert_err.message());
       return nonstd::make_unexpected(CouchbaseErrorType::TEMPORARY);
     }
-    logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' with error code: '{}', message: '{}'",
-      document_id, collection.bucket_name, collection.scope_name, collection.collection_name, upsert_err.ec(), upsert_err.message());
+    logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' with error code: '{}', message: '{}'", document_id, collection.bucket_name, collection.scope_name,
+        collection.collection_name, upsert_err.ec(), upsert_err.message());
     return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
   } else {
     return CouchbaseUpsertResult {
-      collection.bucket_name,
-      upsert_resp.cas().value(),
+      {
+        collection.bucket_name,
+        upsert_resp.cas().value(),
+      },
       (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->sequence_number() : 0),
       (upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_uuid() : 0),
       gsl::narrow<uint16_t>(upsert_resp.mutation_token().has_value() ? upsert_resp.mutation_token()->partition_id() : 0)
@@ -97,8 +99,7 @@ nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::ups
   }
 }
 
-nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(const CouchbaseCollection& collection,
-      const std::string& document_id, CouchbaseValueType return_type) {
+nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(const CouchbaseCollection& collection, const std::string& document_id, CouchbaseValueType return_type) {
   auto collection_result = getCollection(collection);
   if (!collection_result.has_value()) {
     return nonstd::make_unexpected(collection_result.error());
@@ -109,13 +110,12 @@ nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(co
   auto [get_err, resp] = collection_result->get(document_id, options).get();
   if (get_err.ec()) {
     if (getErrorType(get_err.ec()) == CouchbaseErrorType::TEMPORARY) {
-      logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' due to timeout",
-        document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
+      logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' due to timeout", document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
       return nonstd::make_unexpected(CouchbaseErrorType::TEMPORARY);
     }
     std::string cause = get_err.cause() ? get_err.cause()->message() : "";
-    logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' with error code: '{}', message: '{}'",
-      document_id, collection.bucket_name, collection.scope_name, collection.collection_name, get_err.ec(), get_err.message());
+    logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' with error code: '{}', message: '{}'", document_id, collection.bucket_name, collection.scope_name,
+        collection.collection_name, get_err.ec(), get_err.message());
     return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
   } else {
     try {
@@ -133,9 +133,9 @@ nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(co
         result.expiry = utils::timeutils::getTimeStr(*resp.expiry_time());
       }
       return result;
-    } catch(const std::exception& ex) {
-      logger_->log_error("Failed to get content for document '{}' from collection '{}.{}.{}' with the following exception: '{}'",
-        document_id, collection.bucket_name, collection.scope_name, collection.collection_name, ex.what());
+    } catch (const std::exception& ex) {
+      logger_->log_error("Failed to get content for document '{}' from collection '{}.{}.{}' with the following exception: '{}'", document_id, collection.bucket_name, collection.scope_name,
+          collection.collection_name, ex.what());
       return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
     }
   }
