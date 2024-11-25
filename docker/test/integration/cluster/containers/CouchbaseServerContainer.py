@@ -25,7 +25,7 @@ from ssl_utils.SSL_cert_utils import make_server_cert
 
 
 class CouchbaseServerContainer(Container):
-    def __init__(self, feature_context, name, vols, network, image_store, command=None, ssl=False):
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
         super().__init__(feature_context, name, "couchbase-server", vols, network, image_store, command)
         couchbase_cert, couchbase_key = make_server_cert(f"couchbase-server-{feature_context.id}", feature_context.root_ca_cert, feature_context.root_ca_key)
 
@@ -59,7 +59,7 @@ class CouchbaseServerContainer(Container):
     def _run_couchbase_cli_commands(self, commands):
         return all(self._run_couchbase_cli_command(command) for command in commands)
 
-    @retry_check(15, 2)
+    @retry_check(max_tries=15, retry_interval=2)
     def _load_couchbase_certs(self):
         response = requests.post("http://localhost:8091/node/controller/loadTrustedCAs", auth=HTTPBasicAuth("Administrator", "password123"))
         if response.status_code != 200:
