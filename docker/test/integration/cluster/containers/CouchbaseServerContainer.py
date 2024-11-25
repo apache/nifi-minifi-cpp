@@ -26,9 +26,7 @@ from ssl_utils.SSL_cert_utils import make_server_cert
 
 class CouchbaseServerContainer(Container):
     def __init__(self, feature_context, name, vols, network, image_store, command=None, ssl=False):
-        self.ssl = ssl
-        engine = "couchbase-server" if not ssl else "couchbase-server-ssl"
-        super().__init__(feature_context, name, engine, vols, network, image_store, command)
+        super().__init__(feature_context, name, "couchbase-server", vols, network, image_store, command)
         couchbase_cert, couchbase_key = make_server_cert(f"couchbase-server-{feature_context.id}", feature_context.root_ca_cert, feature_context.root_ca_key)
 
         self.root_ca_file = tempfile.NamedTemporaryFile(delete=False)
@@ -50,7 +48,7 @@ class CouchbaseServerContainer(Container):
         # after startup the logs are only available in the container, only this message is shown
         return "logs available in"
 
-    @retry_check(12, 5)
+    @retry_check(max_tries=12, retry_interval=5)
     def _run_couchbase_cli_command(self, command):
         (code, _) = self.client.containers.get(self.name).exec_run(command)
         if code != 0:
@@ -59,10 +57,7 @@ class CouchbaseServerContainer(Container):
         return True
 
     def _run_couchbase_cli_commands(self, commands):
-        for command in commands:
-            if not self._run_couchbase_cli_command(command):
-                return False
-        return True
+        return all(self._run_couchbase_cli_command(command) for command in commands)
 
     @retry_check(15, 2)
     def _load_couchbase_certs(self):

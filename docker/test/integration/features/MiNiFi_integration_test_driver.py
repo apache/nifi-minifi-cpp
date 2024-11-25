@@ -86,9 +86,8 @@ class MiNiFi_integration_test:
         self.cluster.deploy_container('minifi-c2-server')
         assert self.cluster.wait_for_container_startup_to_finish('minifi-c2-server') or self.cluster.log_app_output()
 
-    def start_couchbase_server(self, context, ssl=False):
-        engine = 'couchbase-server-ssl' if ssl else 'couchbase-server'
-        self.cluster.acquire_container(context=context, name='couchbase-server', engine=engine)
+    def start_couchbase_server(self, context):
+        self.cluster.acquire_container(context=context, name='couchbase-server', engine='couchbase-server')
         self.cluster.deploy_container('couchbase-server')
         assert self.cluster.wait_for_container_startup_to_finish('couchbase-server') or self.cluster.log_app_output()
 

@@ -61,8 +61,8 @@ CouchbaseClient::CouchbaseClient(std::string connection_string, std::string user
   }
 
   if (!username.empty() && ssl_context_service && !ssl_context_service->getCertificateFile().empty()) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Username and password authentication or mTLS authentication using certificate defined in SSLContextService "
-      "linked service should be provided exclusively for Couchbase");
+    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Either username and password or mTLS certificate authentication should be used in the SSLContextService for Couchbase, "
+      "but not both");
   }
 
   if (!username.empty()) {

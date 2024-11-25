@@ -1384,7 +1384,7 @@ def step_impl(context, service_name):
     container.add_controller(couchbase_cluster_controller_service)
 
 
-@given("a CouchbaseClusterService is setup up with SSL connection with the name \"{service_name}\"")
+@given("a CouchbaseClusterService is set up up with SSL connection with the name \"{service_name}\"")
 def step_impl(context, service_name):
     ssl_context_service = SSLContextService(name="SSLContextService",
                                             ca_cert='/tmp/resources/root_ca.crt')
