@@ -125,16 +125,11 @@ class ConsumeKafka final : public KafkaProcessorBase {
       core::PropertyDefinitionBuilder<>::createProperty("Honor Transactions")
           .withDescription(
               "Specifies whether or not MiNiFi should honor transactional guarantees when communicating with Kafka. If "
-              "false, the Processor will use "
-              "an \"isolation level\" of "
-              "read_uncomitted. This means that messages will be received as soon as they are written to Kafka but will be "
-              "pulled, even if the "
-              "producer cancels the transactions. "
-              "If this value is true, MiNiFi will not receive any messages for which the producer's transaction was "
-              "canceled, but this can result in "
-              "some latency since the consumer "
-              "must wait for the producer to finish its entire transaction instead of pulling as the messages become "
-              "available.")
+              "false, the Processor will use an \"isolation level\" of read_uncomitted. This means that messages will be "
+              "received as soon as they are written to Kafka but will be pulled, even if the producer cancels the "
+              "transactions. If this value is true, MiNiFi will not receive any messages for which the producer's "
+              "transaction was canceled, but this can result in some latency since the consumer must wait for the producer "
+              "to finish its entire transaction instead of pulling as the messages become available.")
           .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
           .withDefaultValue("true")
           .isRequired(true)
@@ -151,9 +146,8 @@ class ConsumeKafka final : public KafkaProcessorBase {
       core::PropertyDefinitionBuilder<3>::createProperty("Offset Reset")
           .withDescription(
               "Allows you to manage the condition when there is no initial offset in Kafka or if the current offset does "
-              "not exist any more on the "
-              "server (e.g. because that "
-              "data has been deleted). Corresponds to Kafka's 'auto.offset.reset' property.")
+              "not exist any more on the server (e.g. because that data has been deleted). Corresponds to Kafka's "
+              "'auto.offset.reset' property.")
           .withAllowedValues({OFFSET_RESET_EARLIEST, OFFSET_RESET_LATEST, OFFSET_RESET_NONE})
           .withDefaultValue(OFFSET_RESET_LATEST)
           .isRequired(true)
@@ -162,8 +156,7 @@ class ConsumeKafka final : public KafkaProcessorBase {
       core::PropertyDefinitionBuilder<2>::createProperty("Key Attribute Encoding")
           .withDescription(
               "FlowFiles that are emitted have an attribute named 'kafka.key'. This property dictates how the value of the "
-              "attribute should be "
-              "encoded.")
+              "attribute should be encoded.")
           .withAllowedValues({KEY_ATTR_ENCODING_UTF_8, KEY_ATTR_ENCODING_HEX})
           .withDefaultValue(KEY_ATTR_ENCODING_UTF_8)
           .isRequired(true)
@@ -172,13 +165,9 @@ class ConsumeKafka final : public KafkaProcessorBase {
       core::PropertyDefinitionBuilder<>::createProperty("Message Demarcator")
           .withDescription(
               "Since KafkaConsumer receives messages in batches, you have an option to output FlowFiles which contains all "
-              "Kafka messages in a "
-              "single batch "
-              "for a given topic and partition and this property allows you to provide a string (interpreted as UTF-8) to "
-              "use for demarcating apart "
-              "multiple Kafka messages. "
-              "This is an optional property and if not provided each Kafka message received will result in a single "
-              "FlowFile which time it is "
+              "Kafka messages in a single batch for a given topic and partition and this property allows you to provide a "
+              "string (interpreted as UTF-8) to use for demarcating apart multiple Kafka messages. This is an optional "
+              "property and if not provided each Kafka message received will result in a single FlowFile which time it is "
               "triggered. ")
           .supportsExpressionLanguage(true)
           .build();
@@ -186,9 +175,7 @@ class ConsumeKafka final : public KafkaProcessorBase {
       core::PropertyDefinitionBuilder<2>::createProperty("Message Header Encoding")
           .withDescription(
               "Any message header that is found on a Kafka message will be added to the outbound FlowFile as an attribute. "
-              "This property indicates "
-              "the Character Encoding "
-              "to use for deserializing the headers.")
+              "This property indicates the Character Encoding to use for deserializing the headers.")
           .withAllowedValues({MSG_HEADER_ENCODING_UTF_8, MSG_HEADER_ENCODING_HEX})
           .withDefaultValue(MSG_HEADER_ENCODING_UTF_8)
           .build();
@@ -196,26 +183,18 @@ class ConsumeKafka final : public KafkaProcessorBase {
       core::PropertyDefinitionBuilder<>::createProperty("Headers To Add As Attributes")
           .withDescription(
               "A comma separated list to match against all message headers. Any message header whose name matches an item "
-              "from the list will be "
-              "added to the FlowFile "
-              "as an Attribute. If not specified, no Header values will be added as FlowFile attributes. The behaviour on "
-              "when multiple headers of "
-              "the same name are present is set using "
-              "the Duplicate Header Handling attribute.")
+              "from the list will be added to the FlowFile as an Attribute. If not specified, no Header values will be "
+              "added as FlowFile attributes. The behaviour on when multiple headers of the same name are present is set "
+              "using the Duplicate Header Handling attribute.")
           .build();
   EXTENSIONAPI static constexpr auto DuplicateHeaderHandling =
       core::PropertyDefinitionBuilder<3>::createProperty("Duplicate Header Handling")
           .withDescription(
               "For headers to be added as attributes, this option specifies how to handle cases where multiple headers are "
-              "present with the same "
-              "key. "
-              "For example in case of receiving these two headers: \"Accept: text/html\" and \"Accept: application/xml\" "
-              "and we want to attach the "
-              "value of \"Accept\" "
-              "as a FlowFile attribute:\n"
-              " - \"Keep First\" attaches: \"Accept -> text/html\"\n"
-              " - \"Keep Latest\" attaches: \"Accept -> application/xml\"\n"
-              " - \"Comma-separated Merge\" attaches: \"Accept -> text/html, application/xml\"\n")
+              "present with the same key. For example in case of receiving these two headers: \"Accept: text/html\" and "
+              "\"Accept: application/xml\" and we want to attach the value of \"Accept\" as a FlowFile attribute:\n - "
+              "\"Keep First\" attaches: \"Accept -> text/html\"\n - \"Keep Latest\" attaches: \"Accept -> "
+              "application/xml\"\n - \"Comma-separated Merge\" attaches: \"Accept -> text/html, application/xml\"\n")
           .withAllowedValues({MSG_HEADER_KEEP_FIRST, MSG_HEADER_KEEP_LATEST, MSG_HEADER_COMMA_SEPARATED_MERGE})
           .withDefaultValue(MSG_HEADER_KEEP_LATEST)  // Mirroring NiFi behaviour
           .build();
@@ -230,8 +209,8 @@ class ConsumeKafka final : public KafkaProcessorBase {
   EXTENSIONAPI static constexpr auto MaxPollTime =
       core::PropertyDefinitionBuilder<>::createProperty("Max Poll Time")
           .withDescription(
-              "Specifies the maximum amount of time the consumer can use for polling data from the brokers. "
-              "Polling is a blocking operation, so the upper limit of this value is specified in 4 seconds.")
+              "Specifies the maximum amount of time the consumer can use for polling data from the brokers. Polling is a "
+              "blocking operation, so the upper limit of this value is specified in 4 seconds.")
           .withPropertyType(core::CONSUME_KAFKA_MAX_POLL_TIME_TYPE)
           .withDefaultValue(DEFAULT_MAX_POLL_TIME)
           .isRequired(true)
@@ -239,18 +218,29 @@ class ConsumeKafka final : public KafkaProcessorBase {
   EXTENSIONAPI static constexpr auto SessionTimeout =
       core::PropertyDefinitionBuilder<>::createProperty("Session Timeout")
           .withDescription(
-              "Client group session and failure detection timeout. The consumer sends periodic heartbeats "
-              "to indicate its liveness to the broker. If no hearts are received by the broker for a group member within "
-              "the session timeout, the broker will remove the consumer from the group and trigger a rebalance. "
-              "The allowed range is configured with the broker configuration properties group.min.session.timeout.ms and "
+              "Client group session and failure detection timeout. The consumer sends periodic heartbeats to indicate its "
+              "liveness to the broker. If no hearts are received by the broker for a group member within the session "
+              "timeout, the broker will remove the consumer from the group and trigger a rebalance. The allowed range is "
+              "configured with the broker configuration properties group.min.session.timeout.ms and "
               "group.max.session.timeout.ms.")
           .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
           .withDefaultValue("60 seconds")
           .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(KafkaProcessorBase::Properties,
-      std::to_array<core::PropertyReference>({KafkaBrokers, TopicNames, TopicNameFormat, HonorTransactions, GroupID,
-          OffsetReset, KeyAttributeEncoding, MessageDemarcator, MessageHeaderEncoding, HeadersToAddAsAttributes,
-          DuplicateHeaderHandling, MaxPollRecords, MaxPollTime, SessionTimeout}));
+      std::to_array<core::PropertyReference>({KafkaBrokers,
+          TopicNames,
+          TopicNameFormat,
+          HonorTransactions,
+          GroupID,
+          OffsetReset,
+          KeyAttributeEncoding,
+          MessageDemarcator,
+          MessageHeaderEncoding,
+          HeadersToAddAsAttributes,
+          DuplicateHeaderHandling,
+          MaxPollRecords,
+          MaxPollTime,
+          SessionTimeout}));
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
       "Incoming Kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles "
