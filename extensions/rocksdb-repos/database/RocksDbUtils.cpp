@@ -20,6 +20,7 @@
 #include <string>
 
 #include "Exception.h"
+#include "utils/Literals.h"
 
 namespace org::apache::nifi::minifi::internal {
 
@@ -56,7 +57,8 @@ void setCommonRocksDbOptions(Writable<rocksdb::DBOptions>& db_opts) {
   db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
   db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
   db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
-  db_opts.set(&rocksdb::DBOptions::keep_log_file_num, 5);
+  db_opts.set(&rocksdb::DBOptions::keep_log_file_num, 1);
+  db_opts.set(&rocksdb::DBOptions::max_log_file_size, 1_MiB);
 }
 
 std::unordered_map<std::string, std::string> getRocksDbOptionsToOverride(const std::shared_ptr<Configure> &configuration, std::string_view custom_db_prefix) {
