@@ -20,7 +20,9 @@
 #include "core/Processor.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
+#pragma push_macro("DEPRECATED")
 #include "llama.h"
+#pragma pop_macro("DEPRECATED")
 
 namespace org::apache::nifi::minifi::processors {
 
