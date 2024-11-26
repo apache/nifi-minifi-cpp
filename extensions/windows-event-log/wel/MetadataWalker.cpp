@@ -16,12 +16,8 @@
  * limitations under the License.
  */
 
-#include <strsafe.h>
-
 #include <map>
 #include <functional>
-#include <codecvt>
-#include <regex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -90,10 +86,11 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
     if (it != formatFlagMap.end()) {
       std::function<std::string(const std::string &)> updateFunc = [&](const std::string &input) -> std::string {
         if (resolve_) {
-          auto resolved = windows_event_log_metadata_.getEventData(it->second);
-          if (!resolved.empty()) {
-            return resolved;
+          const auto resolved = windows_event_log_metadata_.getEventData(it->second);
+          if (resolved && !resolved->empty()) {
+            return *resolved;
           }
+          // TODO(szaszm): add error logging
         }
         return input;
       };
@@ -123,40 +120,25 @@ std::vector<std::string> MetadataWalker::getIdentifiers(const std::string &text)
   return found_strings;
 }
 
-std::string MetadataWalker::getMetadata(METADATA metadata) const {
-    switch (metadata) {
-      case LOG_NAME:
-        return log_name_;
-      case SOURCE:
-        return getString(metadata_, "Provider");
-      case TIME_CREATED:
-        return windows_event_log_metadata_.getEventTimestamp();
-      case EVENTID:
-        return getString(metadata_, "EventID");
-      case EVENT_RECORDID:
-        return getString(metadata_, "EventRecordID");
-      case OPCODE:
-        return getString(metadata_, "Opcode");
-      case TASK_CATEGORY:
-        return getString(metadata_, "Task");
-      case LEVEL:
-        return getString(metadata_, "Level");
-      case KEYWORDS:
-        return getString(metadata_, "Keywords");
-      case EVENT_TYPE:
-        return std::to_string(windows_event_log_metadata_.getEventTypeIndex());
-      case COMPUTER:
-        return WindowsEventLogMetadata::getComputerName();
-    }
-    return "N/A";
-}
-
-std::map<std::string, std::string> MetadataWalker::getFieldValues() const {
-  return fields_values_;
-}
-
-std::map<std::string, std::string> MetadataWalker::getIdentifiers() const {
-  return replaced_identifiers_;
+std::string MetadataWalker::getMetadata(Metadata metadata) const {
+  using enum Metadata;
+  switch (metadata) {
+    case LOG_NAME: return log_name_;
+    case SOURCE: return getString(metadata_, "Provider");
+    case TIME_CREATED: return windows_event_log_metadata_.getEventTimestamp();
+    case EVENTID: return getString(metadata_, "EventID");
+    case EVENT_RECORDID: return getString(metadata_, "EventRecordID");
+    case OPCODE: return getString(metadata_, "Opcode");
+    case TASK_CATEGORY: return getString(metadata_, "Task");
+    case LEVEL: return getString(metadata_, "Level");
+    case KEYWORDS: return getString(metadata_, "Keywords");
+    case EVENT_TYPE: return std::to_string(windows_event_log_metadata_.getEventTypeIndex());
+    case COMPUTER: return WindowsEventLogMetadata::getComputerName();
+    case USER: // TODO(szaszm): unhandled before refactoring
+    case UNKNOWN: // TODO(szaszm): unhandled before refactoring
+      ;
+  }
+  return "N/A";
 }
 
 template<typename Fn>

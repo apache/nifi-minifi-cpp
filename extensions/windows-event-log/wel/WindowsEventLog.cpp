@@ -108,69 +108,58 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   }
 }
 
-std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const {
-  WCHAR stack_buffer[4096];
-  DWORD num_chars_in_buffer = sizeof(stack_buffer) / sizeof(stack_buffer[0]);
-  using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
-  std::unique_ptr<WCHAR, Deleter> buffer{stack_buffer, Deleter{stack_buffer}};
-  DWORD num_chars_used = 0;
-
-  std::string event_data;
-
-  if (!metadata_ptr_ || !event_ptr_) {
-    return event_data;
-  }
-
-  if (!EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, nullptr, flags, num_chars_in_buffer, buffer.get(), &num_chars_used)) {
-    auto last_error = GetLastError();
-    if (ERROR_INSUFFICIENT_BUFFER == last_error) {
-      num_chars_in_buffer = num_chars_used;
-
-      buffer.reset((LPWSTR) malloc(num_chars_in_buffer * sizeof(WCHAR)));
-      if (!buffer) {
-        return event_data;
-      }
-
-      EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, nullptr, flags, num_chars_in_buffer, buffer.get(), &num_chars_used);
+nonstd::expected<std::string, std::error_code> formatEvent(EVT_HANDLE metadata, EVT_HANDLE event, EVT_FORMAT_MESSAGE_FLAGS flags) noexcept try {
+  gsl_Expects(metadata && event);
+  // first EvtFormatMessage call with no buffer to determine the required buffer size.
+  DWORD buffer_size_in_number_of_WCHARs = 0;
+  {
+    const bool size_check_result = EvtFormatMessage(metadata, event, 0, 0, nullptr, flags, 0, nullptr, &buffer_size_in_number_of_WCHARs);
+    if (size_check_result) {
+      // format succeeded with no buffer, this has to be an empty result
+      return std::string{};
+    }
+    const auto last_error = GetLastError();
+    if (last_error != ERROR_INSUFFICIENT_BUFFER) {
+      return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(last_error));
     }
   }
 
-  if (num_chars_used == 0) {
-    return event_data;
-  }
+  // second EvtFormatMessage call: format and convert/narrow to std::string
+  {
+    static_assert(std::is_same_v<std::wstring, std::basic_string<WCHAR>>, "assuming that a string of WCHAR is wstring");
+    DWORD out_buffer_size = buffer_size_in_number_of_WCHARs;
+    std::wstring out_buffer;
+    out_buffer.resize(out_buffer_size);
+    const bool format_result = EvtFormatMessage(metadata, event, 0, 0, nullptr, flags, gsl::narrow<DWORD>(out_buffer.size()), out_buffer.data(), &out_buffer_size);
+    if (!format_result) {
+      const auto last_error = GetLastError();
+      return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(last_error));
+    }
 
-  if (EvtFormatMessageKeyword == flags) {
-    buffer.get()[num_chars_used - 1] = L'\0';
+    gsl_Assert(buffer_size_in_number_of_WCHARs == out_buffer_size && "message size shouldn't change between invocations of EvtFormatMessage");
+
+    // fixing up keyword lists based on the example at https://learn.microsoft.com/en-us/windows/win32/wes/formatting-event-messages
+    if (EvtFormatMessageKeyword == flags) {
+      out_buffer[buffer_size_in_number_of_WCHARs - 1] = L'\0';
+    }
+
+    return utils::to_string(out_buffer);
   }
-  return utils::to_string(std::wstring{buffer.get()});
+} catch (const std::bad_alloc&) {
+  return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(ERROR_OUTOFMEMORY));
 }
 
-nonstd::expected<std::string, std::error_code> WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const {
-  std::string returnValue;
-  WCHAR stack_buffer[4096];
-  DWORD num_chars_in_buffer = sizeof(stack_buffer) / sizeof(stack_buffer[0]);
-  using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
-  std::unique_ptr<WCHAR, Deleter> buffer{stack_buffer, Deleter{stack_buffer}};
-  DWORD num_chars_used = 0;
+nonstd::expected<std::string, std::error_code> WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const noexcept {
+  if (!metadata_ptr_ || !event_ptr_) {
+    // nothing to format, keep old behavior of returning an empty string
+    return std::string{};
+  }
 
-  bool evt_format_succeeded = EvtFormatMessage(metadata_provider_.get(), eventHandle, 0, 0, nullptr, EvtFormatMessageEvent, num_chars_in_buffer, buffer.get(), &num_chars_used);
-  if (evt_format_succeeded)
-    return utils::to_string(std::wstring{buffer.get()});
+  return formatEvent(metadata_ptr_, event_ptr_, flags);
+}
 
-  DWORD status = GetLastError();
-
-  if (status != ERROR_INSUFFICIENT_BUFFER)
-    return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(status));
-
-  num_chars_in_buffer = num_chars_used;
-  buffer.reset((LPWSTR) malloc(num_chars_in_buffer * sizeof(WCHAR)));
-  if (!buffer)
-    return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(ERROR_OUTOFMEMORY));
-  if (EvtFormatMessage(metadata_provider_.get(), eventHandle, 0, 0, nullptr,
-                       EvtFormatMessageEvent, num_chars_in_buffer,
-                       buffer.get(), &num_chars_used))
-    return utils::to_string(std::wstring{buffer.get()});
-  return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(GetLastError()));
+nonstd::expected<std::string, std::error_code> WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const noexcept {
+  return formatEvent(metadata_provider_.get(), eventHandle, EvtFormatMessageEvent);
 }
 
 namespace {
@@ -201,10 +190,6 @@ std::string WindowsEventLogHeader::createDefaultDelimiter(size_t length) const {
   } else {
     return ": ";
   }
-}
-
-EVT_HANDLE WindowsEventLogHandler::getMetadata() const {
-  return metadata_provider_.get();
 }
 
 }  // namespace org::apache::nifi::minifi::wel

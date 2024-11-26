@@ -31,7 +31,6 @@
 #include <vector>
 
 #include "core/Core.h"
-#include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "utils/OsUtils.h"
@@ -43,7 +42,8 @@
 
 namespace org::apache::nifi::minifi::wel {
 
-enum METADATA {
+// enum names are part of the API
+enum class Metadata {
   LOG_NAME,
   SOURCE,
   TIME_CREATED,
@@ -59,22 +59,19 @@ enum METADATA {
   UNKNOWN
 };
 
+using METADATA_NAMES = std::vector<std::pair<Metadata, std::string>>;
 
-// this is a continuous enum, so we can rely on the array
-
-using METADATA_NAMES = std::vector<std::pair<METADATA, std::string>>;
+nonstd::expected<std::string, std::error_code> formatEvent(EVT_HANDLE metadata, EVT_HANDLE event, EVT_FORMAT_MESSAGE_FLAGS flags) noexcept;
 
 class WindowsEventLogHandler {
  public:
-  WindowsEventLogHandler() : metadata_provider_(nullptr) {
-  }
+  WindowsEventLogHandler() = default;
+  explicit WindowsEventLogHandler(EVT_HANDLE metadataProvider)
+      : metadata_provider_(metadataProvider)
+  { }
 
-  explicit WindowsEventLogHandler(EVT_HANDLE metadataProvider) : metadata_provider_(metadataProvider) {
-  }
-
-  nonstd::expected<std::string, std::error_code> getEventMessage(EVT_HANDLE eventHandle) const;
-
-  [[nodiscard]] EVT_HANDLE getMetadata() const;
+  [[nodiscard]] nonstd::expected<std::string, std::error_code> getEventMessage(EVT_HANDLE eventHandle) const noexcept;
+  [[nodiscard]] EVT_HANDLE getMetadata() const noexcept { return metadata_provider_.get(); }
 
  private:
   unique_evt_handle metadata_provider_;
@@ -83,76 +80,50 @@ class WindowsEventLogHandler {
 class WindowsEventLogMetadata {
  public:
   virtual ~WindowsEventLogMetadata() = default;
-  [[nodiscard]] virtual std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const = 0;
+  [[nodiscard]] virtual nonstd::expected<std::string, std::error_code> getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const noexcept = 0;
   [[nodiscard]] virtual std::string getEventTimestamp() const = 0;
   virtual short getEventTypeIndex() const = 0;  // NOLINT short comes from WINDOWS API
 
-  static std::string getMetadataString(METADATA val) {
-    static std::map<METADATA, std::string> map = {
-        {LOG_NAME, "LOG_NAME"},
-        {SOURCE, "SOURCE"},
-        {TIME_CREATED, "TIME_CREATED"},
-        {EVENTID, "EVENTID"},
-        {OPCODE, "OPCODE"},
-        {EVENT_RECORDID, "EVENT_RECORDID"},
-        {EVENT_TYPE, "EVENT_TYPE"},
-        {TASK_CATEGORY, "TASK_CATEGORY"},
-        {LEVEL, "LEVEL"},
-        {KEYWORDS, "KEYWORDS"},
-        {USER, "USER"},
-        {COMPUTER, "COMPUTER"}
-    };
-
-    return map[val];
-  }
-
-  static METADATA getMetadataFromString(const std::string& val) {
-    static std::map<std::string, METADATA> map = {
-        {"LOG_NAME", LOG_NAME},
-        {"SOURCE", SOURCE},
-        {"TIME_CREATED", TIME_CREATED},
-        {"EVENTID", EVENTID},
-        {"OPCODE", OPCODE},
-        {"EVENT_RECORDID", EVENT_RECORDID},
-        {"TASK_CATEGORY", TASK_CATEGORY},
-        {"EVENT_TYPE", EVENT_TYPE},
-        {"LEVEL", LEVEL},
-        {"KEYWORDS", KEYWORDS},
-        {"USER", USER},
-        {"COMPUTER", COMPUTER}
-    };
-
-    auto enumVal = map.find(val);
-    if (enumVal != std::end(map)) {
-      return enumVal->second;
-    } else {
-      return METADATA::UNKNOWN;
-    }
+  static Metadata getMetadataFromString(std::string_view val) {
+    using enum Metadata;
+    if (val == "LOG_NAME") { return LOG_NAME; }
+    else if (val == "SOURCE") { return SOURCE; }
+    else if (val == "TIME_CREATED") { return TIME_CREATED; }
+    else if (val == "EVENTID") { return EVENTID; }
+    else if (val == "OPCODE") { return OPCODE; }
+    else if (val == "EVENT_RECORDID") { return EVENT_RECORDID; }
+    else if (val == "EVENT_TYPE") { return EVENT_TYPE; }
+    else if (val == "TASK_CATEGORY") { return TASK_CATEGORY; }
+    else if (val == "LEVEL") { return LEVEL; }
+    else if (val == "KEYWORDS") { return KEYWORDS; }
+    else if (val == "USER") { return USER; }
+    else if (val == "COMPUTER") { return COMPUTER; }
+    else { return UNKNOWN; }
   }
 
   static std::string getComputerName() {
-    static std::string computer_name;
-    if (computer_name.empty()) {
-      char buff[10248];
+    static std::string computer_name = []() -> std::string {
+      char buff[256] = {0};
       DWORD size = sizeof(buff);
-      if (GetComputerNameExA(ComputerNameDnsFullyQualified, buff, &size)) {
-        computer_name = buff;
+      if (GetComputerNameExA(ComputerNameDnsFullyQualified, buff, &size) || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+        buff[255] = '\0';  // It's not clear from the MSDN docs whether the terminating null byte is written
+        return buff;
       } else {
-        computer_name = "N/A";
+        return "N/A";
       }
-    }
+    }();
     return computer_name;
   }
 };
 
 class WindowsEventLogMetadataImpl : public WindowsEventLogMetadata {
  public:
-  WindowsEventLogMetadataImpl(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr) : metadata_ptr_(metadataProvider), event_ptr_(event_ptr) {
+  WindowsEventLogMetadataImpl(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr)
+      : metadata_ptr_(metadataProvider), event_ptr_(event_ptr) {
     renderMetadata();
   }
 
-  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const override;
-
+  [[nodiscard]] nonstd::expected<std::string, std::error_code> getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const noexcept override;
   [[nodiscard]] std::string getEventTimestamp() const override { return event_timestamp_str_; }
 
   short getEventTypeIndex() const override { return event_type_index_; }  // NOLINT short comes from WINDOWS API
@@ -186,17 +157,16 @@ class WindowsEventLogHeader {
 template<typename MetadataCollection>
 std::string WindowsEventLogHeader::getEventHeader(const MetadataCollection& metadata_collection) const {
   std::stringstream eventHeader;
-
   for (const auto& option : header_names_) {
-    auto name = option.second;
+    const auto& name = option.second;
     eventHeader << name;
-    if (custom_delimiter_)
+    if (custom_delimiter_) {
       eventHeader << *custom_delimiter_;
-    else
+    } else {
       eventHeader << createDefaultDelimiter(name.size());
-    eventHeader << utils::string::trim(metadata_collection(option.first)) << std::endl;
+    }
+    eventHeader << utils::string::trim(metadata_collection(option.first)) << '\n';
   }
-
   return eventHeader.str();
 }
 
