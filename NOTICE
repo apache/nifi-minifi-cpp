@@ -77,6 +77,7 @@ This software includes third party software subject to the following copyrights:
 - snappy - Copyright 2011, Google Inc.
 - llhttp - Copyright Fedor Indutny, 2018.
 - benchmark - Copyright 2015 Google Inc.
+- llama.cpp - Copyright (c) 2023-2024 The ggml authors
 
 The licenses for these third party components are included in LICENSE.txt
 

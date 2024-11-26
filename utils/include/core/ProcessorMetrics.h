@@ -25,6 +25,7 @@
 
 #include "core/state/nodes/ResponseNode.h"
 #include "minifi-cpp/core/ProcessorMetrics.h"
+#include "core/state/Value.h"
 
 namespace org::apache::nifi::minifi::core {
 

@@ -404,6 +404,9 @@ class MiNiFi_integration_test:
     def set_controller_socket_properties_in_minifi(self):
         self.cluster.set_controller_socket_properties_in_minifi()
 
+    def llama_model_is_downloaded_in_minifi(self):
+        self.cluster.llama_model_is_downloaded_in_minifi()
+
     def update_flow_config_through_controller(self, container_name: str):
         self.cluster.update_flow_config_through_controller(container_name)
 
