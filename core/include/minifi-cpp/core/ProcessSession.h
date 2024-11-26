@@ -32,7 +32,6 @@
 
 #include "ProcessContext.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/Deprecated.h"
 #include "FlowFile.h"
 #include "WeakReference.h"
 #include "minifi-cpp/provenance/Provenance.h"

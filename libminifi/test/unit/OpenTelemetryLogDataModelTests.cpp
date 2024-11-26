@@ -21,6 +21,8 @@
 
 namespace utils = org::apache::nifi::minifi::utils;
 
+// TODO(mzink) move to extension-utils-tests
+
 TEST_CASE("OpenTelemetryLogDataModel tests", "[testnetworkadapter]") {
   rapidjson::Document document(rapidjson::kObjectType);
   utils::OpenTelemetryLogDataModel::appendEventInformation(document, "testevent");

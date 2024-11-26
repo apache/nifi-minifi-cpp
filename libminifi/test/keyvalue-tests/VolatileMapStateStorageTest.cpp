@@ -22,7 +22,7 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "catch2/catch_session.hpp"
-#include "controllers/keyvalue/AutoPersistor.h"
+#include "utils/AutoPersistor.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"

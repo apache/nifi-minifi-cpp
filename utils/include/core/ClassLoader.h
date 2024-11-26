@@ -44,4 +44,5 @@ T *ClassLoader::instantiateRaw(const std::string &class_name, const std::string 
   }));
 }
 
+
 }  // namespace org::apache::nifi::minifi::core

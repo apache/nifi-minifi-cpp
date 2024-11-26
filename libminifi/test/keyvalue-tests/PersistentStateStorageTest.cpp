@@ -28,7 +28,7 @@
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
-#include "controllers/keyvalue/AutoPersistor.h"
+#include "utils/AutoPersistor.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
 #include "utils/file/FileUtils.h"

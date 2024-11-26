@@ -22,7 +22,7 @@
 #include <memory>
 #include <utility>
 
-#include "controllers/keyvalue/AutoPersistor.h"
+#include "utils/AutoPersistor.h"
 #include "core/Core.h"
 #include "properties/Configure.h"
 #include "InMemoryKeyValueStorage.h"

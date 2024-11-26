@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "utils/NetworkInterfaceInfo.h"
+#include "utils/net/NetworkInterfaceInfo.h"
 #include "utils/net/Socket.h"
 #include "core/logging/LoggerFactory.h"
 #ifdef WIN32
