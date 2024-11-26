@@ -32,7 +32,6 @@ add_minifi_library(minifi-ai-processors SHARED ${SOURCES})
 target_include_directories(minifi-ai-processors PUBLIC "${CMAKE_SOURCE_DIR}/extensions/ai")
 
 target_link_libraries(minifi-ai-processors ${LIBMINIFI} llamacpp)
-add_dependencies(minifi-ai-processors llamacpp-external)
 
 register_extension(minifi-ai-processors "AI PROCESSORS" AI-PROCESSORS "Provides AI processors")
 
