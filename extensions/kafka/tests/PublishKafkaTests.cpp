@@ -37,7 +37,6 @@ TEST_CASE("Scheduling should fail when batch size is larger than the max queue m
 TEST_CASE("Compress Codec property") {
   using processors::PublishKafka;
   SingleProcessorTestController test_controller(std::make_unique<PublishKafka>("PublishKafka"));
-  SingleProcessorTestController test_controller(std::make_unique<PublishKafka>("PublishKafka"));
   test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::ClientName, "test_client");
   test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::SeedBrokers, "test_seedbroker");
   test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::Topic, "test_topic");

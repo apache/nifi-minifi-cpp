@@ -94,8 +94,7 @@ class ConsumeKafka final : public KafkaProcessorBase {
   EXTENSIONAPI static constexpr const char* Description =
       "Consumes messages from Apache Kafka and transform them into MiNiFi FlowFiles. "
       "The application should make sure that the processor is triggered at regular intervals, even if no messages are "
-      "expected, "
-      "to serve any queued callbacks waiting to be called. Rebalancing can also only happen on trigger.";
+      "expected, to serve any queued callbacks waiting to be called. Rebalancing can also only happen on trigger.";
 
   EXTENSIONAPI static constexpr auto KafkaBrokers =
       core::PropertyDefinitionBuilder<>::createProperty("Kafka Brokers")
