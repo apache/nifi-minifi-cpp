@@ -34,7 +34,6 @@
 #include "FlowFileRecord.h"
 #include "Exception.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/Deprecated.h"
 #include "FlowFile.h"
 #include "WeakReference.h"
 #include "provenance/Provenance.h"

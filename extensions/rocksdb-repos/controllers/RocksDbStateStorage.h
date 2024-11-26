@@ -20,7 +20,7 @@
 #include <string>
 #include <memory>
 
-#include "controllers/keyvalue/AutoPersistor.h"
+#include "utils/AutoPersistor.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"

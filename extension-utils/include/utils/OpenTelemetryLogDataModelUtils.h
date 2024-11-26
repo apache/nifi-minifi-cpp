@@ -20,7 +20,7 @@
 #include <string>
 
 #include "rapidjson/document.h"
-#include "NetworkInterfaceInfo.h"
+#include "utils/net/NetworkInterfaceInfo.h"
 #include "utils/net/DNS.h"
 
 namespace org::apache::nifi::minifi::utils {

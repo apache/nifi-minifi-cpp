@@ -31,7 +31,7 @@
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
 #include "core/Resource.h"
-#include "utils/NetworkInterfaceInfo.h"
+#include "utils/net/NetworkInterfaceInfo.h"
 #include "utils/net/DNS.h"
 
 namespace org::apache::nifi::minifi::processors {
