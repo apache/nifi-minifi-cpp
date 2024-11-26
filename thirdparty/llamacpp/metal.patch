@@ -1,0 +1,14 @@
+diff --color=auto -rupN llama.cpp-b4174/ggml/src/ggml-metal/ggml-metal.m llama.cpp-b4174-patched/ggml/src/ggml-metal/ggml-metal.m
+--- llama.cpp-b4174/ggml/src/ggml-metal/ggml-metal.m	2024-11-26 02:47:20
++++ llama.cpp-b4174-patched/ggml/src/ggml-metal/ggml-metal.m	2024-11-26 09:54:33
+@@ -58,7 +58,9 @@ static id<MTLDevice> ggml_backend_metal_device_acq(str
+     assert(ctx != NULL);
+
+     if (ctx->mtl_device == nil) {
+-        ctx->mtl_device = MTLCreateSystemDefaultDevice();
++        NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
++        assert(devices.count != 0);
++        ctx->mtl_device = devices.firstObject;
+
+         ctx->has_simdgroup_reduction  = [ctx->mtl_device supportsFamily:MTLGPUFamilyApple7];
+         ctx->has_simdgroup_reduction |= [ctx->mtl_device supportsFamily:MTLGPUFamilyMetal3_GGML];

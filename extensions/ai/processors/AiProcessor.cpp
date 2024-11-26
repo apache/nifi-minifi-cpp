@@ -207,8 +207,7 @@ void AiProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession&
   }();
 
 
-  llama_batch batch = llama_batch_get_one(enc_input.data(), enc_input.size(), 0, 0);
-  int n_pos = 0;
+  llama_batch batch = llama_batch_get_one(enc_input.data(), enc_input.size());
 
   llama_token new_token_id;
 
@@ -218,7 +217,6 @@ void AiProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession&
     if (int32_t res = llama_decode(llama_ctx_, batch); res < 0) {
       throw std::logic_error("failed to execute decode");
     }
-    n_pos += batch.n_tokens;
 
     new_token_id = llama_sampler_sample(llama_sampler_, llama_ctx_, -1);
 
@@ -239,7 +237,7 @@ void AiProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession&
     std::cout << token_str << std::flush;
     text += token_str;
 
-    batch = llama_batch_get_one(&new_token_id, 1, n_pos, 0);
+    batch = llama_batch_get_one(&new_token_id, 1);
   }
 
   logger_->log_debug("AI model output: {}", text);
