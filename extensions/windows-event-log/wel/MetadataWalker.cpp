@@ -134,9 +134,9 @@ std::string MetadataWalker::getMetadata(Metadata metadata) const {
     case KEYWORDS: return getString(metadata_, "Keywords");
     case EVENT_TYPE: return std::to_string(windows_event_log_metadata_.getEventTypeIndex());
     case COMPUTER: return WindowsEventLogMetadata::getComputerName();
-    case USER: // TODO(szaszm): unhandled before refactoring
-    case UNKNOWN: // TODO(szaszm): unhandled before refactoring
-      ;
+    case USER:  // TODO(szaszm): unhandled before refactoring
+    case UNKNOWN:  // TODO(szaszm): unhandled before refactoring
+      break;
   }
   return "N/A";
 }
