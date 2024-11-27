@@ -4,6 +4,7 @@ AlignAfterOpenBracket: DontAlign
 AlignConsecutiveAssignments: None
 AlignOperands: DontAlign
 AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: false
 AllowShortBlocksOnASingleLine: Always
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
@@ -12,12 +13,13 @@ AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
+AllowAllArgumentsOnNextLine: false
 BreakBeforeBraces: Attach
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
-ColumnLimit: 200
+ColumnLimit: 150
 CompactNamespaces: false
 ContinuationIndentWidth: 4
 IndentCaseLabels: true
@@ -32,7 +34,7 @@ ObjCSpaceBeforeProtocolList: false
 PenaltyIndentedWhitespace: 1
 PointerAlignment: Left
 ReferenceAlignment: Left
-ReflowComments: false
+ReflowComments: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: false
@@ -52,3 +54,7 @@ SpacesInSquareBrackets: false
 Standard: c++20
 TabWidth: 2
 UseTab: Never
+BinPackArguments: false  # Prevents arguments from being packed onto the same line
+PenaltyBreakAssignment: 200
+PenaltyBreakOpenParenthesis: 200
+PenaltyReturnTypeOnItsOwnLine: 200

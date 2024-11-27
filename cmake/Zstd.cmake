@@ -17,6 +17,8 @@
 
 include(FetchContent)
 
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zstd/dummy")
+
 set(ZSTD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 
 set(PC "")
@@ -34,15 +36,19 @@ FetchContent_Declare(zstd
 
 FetchContent_MakeAvailable(zstd)
 
-add_library(zstd::zstd ALIAS libzstd_static)
+if (NOT TARGET zstd::zstd)
+    add_library(zstd::zstd ALIAS libzstd_static)
+endif()
 
 # Set variables
 set(ZSTD_FOUND "YES" CACHE STRING "" FORCE)
 set(ZSTD_INCLUDE_DIRS "${zstd_SOURCE_DIR}/lib" CACHE STRING "" FORCE)
 if (WIN32)
     set(ZSTD_LIBRARIES "${zstd_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE}/zstd_static.lib" CACHE STRING "" FORCE)
+    set(ZSTD_LIBRARY "${zstd_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE}/zstd_static.lib" CACHE STRING "" FORCE)
 else()
     set(ZSTD_LIBRARIES "${zstd_BINARY_DIR}/lib/libzstd.a" CACHE STRING "" FORCE)
+    set(ZSTD_LIBRARY "${zstd_BINARY_DIR}/lib/libzstd.a" CACHE STRING "" FORCE)
 endif()
 
 # Set exported variables for FindPackage.cmake

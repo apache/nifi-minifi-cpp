@@ -17,13 +17,13 @@
 # under the License.
 #
 
-file(GLOB KAFKA_INTEGRATION_TESTS  "*.cpp")
+file(GLOB KAFKA_INTEGRATION_TESTS "*.cpp")
 
 SET(EXTENSIONS_TEST_COUNT 0)
-FOREACH(testfile ${KAFKA_INTEGRATION_TESTS})
+FOREACH (testfile ${KAFKA_INTEGRATION_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
     add_minifi_executable("${testfilename}" "${testfile}")
-    target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/librdkafka")
+    target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/kafka")
     createTests("${testfilename}")
     target_link_libraries(${testfilename} Catch2WithMain)
     target_link_libraries(${testfilename} minifi-rdkafka-extensions)

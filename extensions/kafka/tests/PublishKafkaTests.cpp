@@ -34,4 +34,38 @@ TEST_CASE("Scheduling should fail when batch size is larger than the max queue m
   REQUIRE_THROWS_WITH(test_controller.trigger(""), "Process Schedule Operation: Invalid configuration: Batch Size cannot be larger than Queue Max Message");
 }
 
+TEST_CASE("Compress Codec property") {
+  using processors::PublishKafka;
+  SingleProcessorTestController test_controller(std::make_unique<PublishKafka>("PublishKafka"));
+  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::ClientName, "test_client");
+  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::SeedBrokers, "test_seedbroker");
+  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::Topic, "test_topic");
+  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::MessageTimeOut, "10ms");
+
+  SECTION("none") {
+    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "none"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("gzip") {
+    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "gzip"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("snappy") {
+    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "snappy"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("lz4") {
+    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "lz4"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("zstd") {
+    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "zstd"));
+    REQUIRE_NOTHROW(test_controller.trigger("input"));
+  }
+  SECTION("foo") {
+    REQUIRE_NOTHROW(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec, "foo"));
+    REQUIRE_THROWS(test_controller.trigger("input"));
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::test
