@@ -47,7 +47,7 @@ enum ExceptionType {
 };
 
 static const char *ExceptionStr[MAX_EXCEPTION] = { "File Operation", "Flow File Operation", "Processor Operation", "Process Session Operation", "Process Schedule Operation", "Site2Site Protocol",
-    "General Operation", "Regex Operation", "Repository Operation", "Parameter Operation"};
+    "General Operation", "Regex Operation", "Repository Operation", "Parameter Operation" };
 
 inline const char *ExceptionTypeToString(ExceptionType type) {
   if (type < MAX_EXCEPTION)

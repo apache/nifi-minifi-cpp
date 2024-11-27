@@ -35,6 +35,7 @@ from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.SplunkChecker import SplunkChecker
 from .checkers.GrafanaLokiChecker import GrafanaLokiChecker
 from .checkers.ModbusChecker import ModbusChecker
+from .checkers.CouchbaseChecker import CouchbaseChecker
 from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage, retry_check
 
 
@@ -54,6 +55,7 @@ class DockerTestCluster:
         self.grafana_loki_checker = GrafanaLokiChecker()
         self.minifi_controller_executor = MinifiControllerExecutor(self.container_communicator)
         self.modbus_checker = ModbusChecker(self.container_communicator)
+        self.couchbase_checker = CouchbaseChecker()
 
     def cleanup(self):
         self.container_store.cleanup()
@@ -308,8 +310,11 @@ class DockerTestCluster:
         startup_success = self.wait_for_startup_log(container_name, 300)
         if not startup_success:
             logging.error("Cluster startup failed for %s", container_name)
-            self.log_app_output()
-        return startup_success
+            return False
+        if not self.container_store.run_post_startup_commands(container_name):
+            logging.error("Failed to run post startup commands for container %s", container_name)
+            return False
+        return True
 
     def wait_for_all_containers_to_finish_startup(self):
         for container_name in self.container_store.get_container_names():
@@ -424,3 +429,6 @@ class DockerTestCluster:
 
     def enable_ssl_in_nifi(self):
         self.container_store.enable_ssl_in_nifi()
+
+    def is_data_present_in_couchbase(self, doc_id: str, bucket_name: str, expected_data: str, expected_data_type: str):
+        return self.couchbase_checker.is_data_present_in_couchbase(doc_id, bucket_name, expected_data, expected_data_type)

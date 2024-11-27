@@ -45,6 +45,7 @@ set enable_prometheus=ON
 set enable_gcp=ON
 set enable_elastic=ON
 set enable_grafana_loki=OFF
+set enable_couchbase=OFF
 set test_custom_wel_provider=OFF
 set generator="Visual Studio 17 2022"
 set cpack=OFF
@@ -83,6 +84,7 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NO_OPS]           set enable_ops=OFF
     if [%%~x] EQU [/NO_PYTHON_SCRIPTING] set enable_python_scripting=OFF
     if [%%~x] EQU [/LOKI]             set enable_grafana_loki=ON
+    if [%%~x] EQU [/COUCHBASE]        set enable_couchbase=ON
     if [%%~x] EQU [/32]               set build_platform=Win32
     if [%%~x] EQU [/D]                set cmake_build_type=RelWithDebInfo
     if [%%~x] EQU [/DD]               set cmake_build_type=Debug
@@ -111,7 +113,7 @@ cmake -G %generator% %build_platform_cmd% -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODUL
         -DENABLE_OPENCV=%enable_opencv% -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% -DENABLE_SMB=%enable_smb% ^
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPS=%enable_ops% ^
-        -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% ^
+        -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% -DENABLE_COUCHBASE=%enable_couchbase% ^
         -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% -DMINIFI_INCLUDE_VC_REDIST_DLLS=%vc_redist% ^
         %strict_gsl_checks% -DMINIFI_INCLUDE_UCRT_DLLS=%ucrt% %sccache_arg% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
