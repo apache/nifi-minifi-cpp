@@ -238,6 +238,8 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   std::string cron_period_;
   gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
 
+  std::shared_ptr<logging::Logger> logger_;
+
  private:
   mutable std::mutex mutex_;
   std::atomic<std::chrono::steady_clock::time_point> yield_expiration_{};
@@ -254,8 +256,6 @@ class Processor : public Connectable, public ConfigurableComponent, public state
 
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<Connection*, std::unordered_set<Processor*>> reachable_processors_;
-
-  std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace core
