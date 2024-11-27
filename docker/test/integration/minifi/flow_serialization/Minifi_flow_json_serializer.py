@@ -118,12 +118,7 @@ class Minifi_flow_json_serializer:
                     continue
 
                 visited.append(svc)
-                root['controllerServices'].append({
-                    'name': svc.name,
-                    'identifier': svc.id,
-                    'type': svc.service_class,
-                    'properties': svc.properties
-                })
+                self.serialize_controller(svc, root)
 
         if isinstance(connectable, Funnel):
             root['funnels'].append({
@@ -159,3 +154,9 @@ class Minifi_flow_json_serializer:
             'type': controller.service_class,
             'properties': controller.properties
         })
+
+        if controller.linked_services:
+            if len(controller.linked_services) == 1:
+                root['controllerServices'][-1]['properties']['Linked Services'] = controller.linked_services[0].name
+            else:
+                root['controllerServices'][-1]['properties']['Linked Services'] = [{"value": service.name} for service in controller.linked_services]
