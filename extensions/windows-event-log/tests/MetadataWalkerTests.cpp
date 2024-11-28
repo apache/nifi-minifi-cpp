@@ -27,7 +27,7 @@
 #include "wel/XMLString.h"
 #include "pugixml.hpp"
 
-using METADATA = org::apache::nifi::minifi::wel::METADATA;
+using Metadata = org::apache::nifi::minifi::wel::Metadata;
 using MetadataWalker = org::apache::nifi::minifi::wel::MetadataWalker;
 using WindowsEventLogMetadata = org::apache::nifi::minifi::wel::WindowsEventLogMetadata;
 using WindowsEventLogMetadataImpl = org::apache::nifi::minifi::wel::WindowsEventLogMetadataImpl;
@@ -74,7 +74,7 @@ const short event_type_index = 178;  // NOLINT short comes from WINDOWS API
 
 class FakeWindowsEventLogMetadata : public WindowsEventLogMetadata {
  public:
-  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const override { return "event_data_for_flag_" + std::to_string(flags); }
+  [[nodiscard]] nonstd::expected<std::string, std::error_code> getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const noexcept override { return "event_data_for_flag_" + std::to_string(flags); }
   [[nodiscard]] std::string getEventTimestamp() const override { return "event_timestamp"; }
   short getEventTypeIndex() const override { return event_type_index; }  // NOLINT short comes from WINDOWS API
 };
@@ -149,7 +149,7 @@ void extractMappingsTestHelper(const std::string &file_name,
                                bool update_xml,
                                bool resolve,
                                const std::map<std::string, std::string>& expected_identifiers,
-                               const std::map<METADATA, std::string>& expected_metadata,
+                               const std::map<Metadata, std::string>& expected_metadata,
                                const std::map<std::string, std::string>& expected_field_values) {
   std::string input_xml = readFile(file_name);
   REQUIRE(!input_xml.empty());
@@ -175,12 +175,12 @@ TEST_CASE("MetadataWalker extracts mappings correctly when there is a single Sid
 
   const std::map<std::string, std::string> expected_identifiers{{"S-1-0-0", "S-1-0-0"}};
 
-  using org::apache::nifi::minifi::wel::METADATA;
-  const std::map<METADATA, std::string> expected_metadata{
-      {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
-      {METADATA::TIME_CREATED, "event_timestamp"},
-      {METADATA::EVENTID, "4672"},
-      {METADATA::EVENT_RECORDID, "2575952"}};
+  using org::apache::nifi::minifi::wel::Metadata;
+  const std::map<Metadata, std::string> expected_metadata{
+      {Metadata::SOURCE, "Microsoft-Windows-Security-Auditing"},
+      {Metadata::TIME_CREATED, "event_timestamp"},
+      {Metadata::EVENTID, "4672"},
+      {Metadata::EVENT_RECORDID, "2575952"}};
 
   const std::map<std::string, std::string> expected_field_values{};
 
@@ -198,18 +198,18 @@ TEST_CASE("MetadataWalker extracts mappings correctly when there is a single Sid
 
   const std::map<std::string, std::string> expected_identifiers{{"S-1-0-0", "Nobody"}};
 
-  using org::apache::nifi::minifi::wel::METADATA;
-  const std::map<METADATA, std::string> expected_metadata{
-      {METADATA::LOG_NAME, "MetadataWalkerTests"},
-      {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
-      {METADATA::TIME_CREATED, "event_timestamp"},
-      {METADATA::EVENTID, "4672"},
-      {METADATA::OPCODE, "event_data_for_flag_4"},
-      {METADATA::EVENT_RECORDID, "2575952"},
-      {METADATA::EVENT_TYPE, "178"},
-      {METADATA::TASK_CATEGORY, "event_data_for_flag_3"},
-      {METADATA::LEVEL, "event_data_for_flag_2"},
-      {METADATA::KEYWORDS, "event_data_for_flag_5"}};
+  using org::apache::nifi::minifi::wel::Metadata;
+  const std::map<Metadata, std::string> expected_metadata{
+      {Metadata::LOG_NAME, "MetadataWalkerTests"},
+      {Metadata::SOURCE, "Microsoft-Windows-Security-Auditing"},
+      {Metadata::TIME_CREATED, "event_timestamp"},
+      {Metadata::EVENTID, "4672"},
+      {Metadata::OPCODE, "event_data_for_flag_4"},
+      {Metadata::EVENT_RECORDID, "2575952"},
+      {Metadata::EVENT_TYPE, "178"},
+      {Metadata::TASK_CATEGORY, "event_data_for_flag_3"},
+      {Metadata::LEVEL, "event_data_for_flag_2"},
+      {Metadata::KEYWORDS, "event_data_for_flag_5"}};
 
   SECTION("update_xml is false => fields are collected into walker.getFieldValues()") {
     const std::map<std::string, std::string> expected_field_values{
@@ -235,12 +235,12 @@ TEST_CASE("MetadataWalker extracts mappings correctly when there are multiple Si
 
   const std::map<std::string, std::string> expected_identifiers{{"S-1-0-0", "S-1-0-0"}};
 
-  using org::apache::nifi::minifi::wel::METADATA;
-  const std::map<METADATA, std::string> expected_metadata{
-      {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
-      {METADATA::TIME_CREATED, "event_timestamp"},
-      {METADATA::EVENTID, "4672"},
-      {METADATA::EVENT_RECORDID, "2575952"}};
+  using org::apache::nifi::minifi::wel::Metadata;
+  const std::map<Metadata, std::string> expected_metadata{
+      {Metadata::SOURCE, "Microsoft-Windows-Security-Auditing"},
+      {Metadata::TIME_CREATED, "event_timestamp"},
+      {Metadata::EVENTID, "4672"},
+      {Metadata::EVENT_RECORDID, "2575952"}};
 
   const std::map<std::string, std::string> expected_field_values{};
 
@@ -264,18 +264,18 @@ TEST_CASE("MetadataWalker extracts mappings correctly when there are multiple Si
       {"S-1-0-0", "Nobody"},
       {"S-1-1-0", "Everyone"}};
 
-  using org::apache::nifi::minifi::wel::METADATA;
-  const std::map<METADATA, std::string> expected_metadata{
-      {METADATA::LOG_NAME, "MetadataWalkerTests"},
-      {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
-      {METADATA::TIME_CREATED, "event_timestamp"},
-      {METADATA::EVENTID, "4672"},
-      {METADATA::OPCODE, "event_data_for_flag_4"},
-      {METADATA::EVENT_RECORDID, "2575952"},
-      {METADATA::EVENT_TYPE, "178"},
-      {METADATA::TASK_CATEGORY, "event_data_for_flag_3"},
-      {METADATA::LEVEL, "event_data_for_flag_2"},
-      {METADATA::KEYWORDS, "event_data_for_flag_5"}};
+  using org::apache::nifi::minifi::wel::Metadata;
+  const std::map<Metadata, std::string> expected_metadata{
+      {Metadata::LOG_NAME, "MetadataWalkerTests"},
+      {Metadata::SOURCE, "Microsoft-Windows-Security-Auditing"},
+      {Metadata::TIME_CREATED, "event_timestamp"},
+      {Metadata::EVENTID, "4672"},
+      {Metadata::OPCODE, "event_data_for_flag_4"},
+      {Metadata::EVENT_RECORDID, "2575952"},
+      {Metadata::EVENT_TYPE, "178"},
+      {Metadata::TASK_CATEGORY, "event_data_for_flag_3"},
+      {Metadata::LEVEL, "event_data_for_flag_2"},
+      {Metadata::KEYWORDS, "event_data_for_flag_5"}};
 
   SECTION("update_xml is false => fields are collected into walker.getFieldValues()") {
     const std::map<std::string, std::string> expected_field_values{
@@ -301,12 +301,12 @@ TEST_CASE("MetadataWalker extracts mappings correctly when the Sid is unknown an
 
   const std::map<std::string, std::string> expected_identifiers{{"S-1-8-6-5-3-0-9", "S-1-8-6-5-3-0-9"}};
 
-  using org::apache::nifi::minifi::wel::METADATA;
-  const std::map<METADATA, std::string> expected_metadata{
-      {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
-      {METADATA::TIME_CREATED, "event_timestamp"},
-      {METADATA::EVENTID, "4672"},
-      {METADATA::EVENT_RECORDID, "2575952"}};
+  using org::apache::nifi::minifi::wel::Metadata;
+  const std::map<Metadata, std::string> expected_metadata{
+      {Metadata::SOURCE, "Microsoft-Windows-Security-Auditing"},
+      {Metadata::TIME_CREATED, "event_timestamp"},
+      {Metadata::EVENTID, "4672"},
+      {Metadata::EVENT_RECORDID, "2575952"}};
 
   const std::map<std::string, std::string> expected_field_values{};
 
@@ -324,18 +324,18 @@ TEST_CASE("MetadataWalker extracts mappings correctly when the Sid is unknown an
 
   const std::map<std::string, std::string> expected_identifiers{{"S-1-8-6-5-3-0-9", "S-1-8-6-5-3-0-9"}};
 
-  using org::apache::nifi::minifi::wel::METADATA;
-  const std::map<METADATA, std::string> expected_metadata{
-      {METADATA::LOG_NAME, "MetadataWalkerTests"},
-      {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
-      {METADATA::TIME_CREATED, "event_timestamp"},
-      {METADATA::EVENTID, "4672"},
-      {METADATA::OPCODE, "event_data_for_flag_4"},
-      {METADATA::EVENT_RECORDID, "2575952"},
-      {METADATA::EVENT_TYPE, "178"},
-      {METADATA::TASK_CATEGORY, "event_data_for_flag_3"},
-      {METADATA::LEVEL, "event_data_for_flag_2"},
-      {METADATA::KEYWORDS, "event_data_for_flag_5"}};
+  using org::apache::nifi::minifi::wel::Metadata;
+  const std::map<Metadata, std::string> expected_metadata{
+      {Metadata::LOG_NAME, "MetadataWalkerTests"},
+      {Metadata::SOURCE, "Microsoft-Windows-Security-Auditing"},
+      {Metadata::TIME_CREATED, "event_timestamp"},
+      {Metadata::EVENTID, "4672"},
+      {Metadata::OPCODE, "event_data_for_flag_4"},
+      {Metadata::EVENT_RECORDID, "2575952"},
+      {Metadata::EVENT_TYPE, "178"},
+      {Metadata::TASK_CATEGORY, "event_data_for_flag_3"},
+      {Metadata::LEVEL, "event_data_for_flag_2"},
+      {Metadata::KEYWORDS, "event_data_for_flag_5"}};
 
   SECTION("update_xml is false => fields are collected into walker.getFieldValues()") {
     const std::map<std::string, std::string> expected_field_values{
