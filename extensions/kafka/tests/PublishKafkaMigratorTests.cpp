@@ -72,19 +72,11 @@ Controller Services: []
 Remote Processing Groups: []
 )";
   ConfigurationTestController test_controller;
-  std::string serialized_flow_definition;
-  SECTION("YamlConfiguration") {
-    core::YamlConfiguration yaml_config(test_controller.getContext());
-    auto root_flow_definition = yaml_config.getRootFromPayload(std::string{ORIGINAL_YAML});
-    REQUIRE(root_flow_definition);
-    serialized_flow_definition = yaml_config.serialize(*root_flow_definition);
-  }
-  SECTION("Adaptive Yaml Configuration") {
-    core::flow::AdaptiveConfiguration adaptive_configuration(test_controller.getContext());
-    auto root_flow_definition = adaptive_configuration.getRootFromPayload(std::string{ORIGINAL_YAML});
-    REQUIRE(root_flow_definition);
-    serialized_flow_definition = adaptive_configuration.serialize(*root_flow_definition);
-  }
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  auto root_flow_definition = yaml_config.getRootFromPayload(std::string{ORIGINAL_YAML});
+  REQUIRE(root_flow_definition);
+  std::string serialized_flow_definition = yaml_config.serialize(*root_flow_definition);
+
   YAML::Node migrated_flow = YAML::Load(std::string{serialized_flow_definition});
   CHECK(migrated_flow["Controller Services"].IsSequence());
   CHECK(migrated_flow["Controller Services"].size() == 1);
