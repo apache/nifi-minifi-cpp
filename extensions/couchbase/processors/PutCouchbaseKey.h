@@ -24,7 +24,7 @@
 #include "core/AbstractProcessor.h"
 #include "core/ProcessSession.h"
 #include "utils/Enum.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "CouchbaseClusterService.h"
 #include "couchbase/persist_to.hxx"
 #include "couchbase/replicate_to.hxx"
