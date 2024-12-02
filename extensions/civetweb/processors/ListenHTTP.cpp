@@ -361,7 +361,9 @@ void ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_i
 
   if (write_body) {
     session.get().write(flow_file, [&] (auto& out) {
-      MgConnectionInputStream mg_body{conn, req_info->content_length};
+      std::optional<size_t> request_size = std::nullopt;
+      if (req_info->content_length > 0) { request_size = gsl::narrow<size_t>(req_info->content_length); }
+      MgConnectionInputStream mg_body{conn, request_size};
       return minifi::internal::pipe(mg_body, *out);
     });
   }
