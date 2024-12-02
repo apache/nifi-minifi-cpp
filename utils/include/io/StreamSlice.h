@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <memory>
 
-#include "StreamCallback.h"
+#include "minifi-cpp/io/StreamCallback.h"
 #include "InputStream.h"
 
 namespace org::apache::nifi::minifi::io {
