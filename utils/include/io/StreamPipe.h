@@ -25,7 +25,7 @@
 #include <utility>
 #include "InputStream.h"
 #include "OutputStream.h"
-#include "StreamCallback.h"
+#include "minifi-cpp/io/StreamCallback.h"
 
 namespace org::apache::nifi::minifi {
 namespace internal {

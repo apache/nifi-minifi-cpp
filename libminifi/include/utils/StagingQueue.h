@@ -20,7 +20,7 @@
 #include <mutex>
 #include <atomic>
 #include <utility>
-#include "MinifiConcurrentQueue.h"
+#include "utils/MinifiConcurrentQueue.h"
 
 namespace org {
 namespace apache {

@@ -21,7 +21,7 @@
 #include <memory>
 #include <utility>
 #include <functional>
-#include "io/StreamCallback.h"
+#include "minifi-cpp/io/StreamCallback.h"
 
 namespace org {
 namespace apache {
