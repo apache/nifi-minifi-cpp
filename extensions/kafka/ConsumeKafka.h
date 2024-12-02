@@ -29,7 +29,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "io/StreamPipe.h"
 #include "rdkafka.h"
 #include "rdkafka_utils.h"
