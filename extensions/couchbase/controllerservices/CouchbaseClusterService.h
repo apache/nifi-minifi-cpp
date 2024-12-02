@@ -30,7 +30,7 @@
 #include "core/PropertyType.h"
 #include "couchbase/cluster.hxx"
 #include "core/ProcessContext.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::couchbase {
