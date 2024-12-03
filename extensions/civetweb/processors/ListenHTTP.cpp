@@ -343,7 +343,15 @@ void ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_i
   Request req;
   auto req_triggered = req.get_future();
 
-  request_buffer_.enqueue(std::move(req));
+  {
+    std::lock_guard lock(request_mtx_);
+    if (!running_) {
+      sendHttp503(conn);
+      return;
+    }
+
+    request_buffer_.enqueue(std::move(req));
+  }
 
   auto req_result = req_triggered.get();
   if (!req_result) {

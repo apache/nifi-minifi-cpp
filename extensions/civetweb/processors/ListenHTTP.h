@@ -205,7 +205,8 @@ class ListenHTTP : public core::Processor {
     }
 
     void stop() {
-      request_buffer_.stop();
+      std::lock_guard lock(request_mtx_);
+      running_ = false;
       Request req;
       while (dequeueRequest(req)) {
         std::promise<void> req_done_promise;
@@ -223,26 +224,6 @@ class ListenHTTP : public core::Processor {
     void writeBody(core::ProcessSession* payload_reader, mg_connection *conn, const mg_request_info *req_info);
     void enqueueRequest(mg_connection *conn, const mg_request_info *req_info, bool write_body);
 
-    class RequestBuffer : public utils::ConcurrentQueue<Request> {
-     public:
-      void stop() {
-        std::lock_guard lock{mtx_};
-        running_ = false;
-      }
-
-     protected:
-      void enqueueImpl(Request req) override {
-        if (!running_) {
-          req.set_value(nonstd::make_unexpected(FailureValue{FailureReason::PROCESSOR_SHUTDOWN, std::promise<void>{}}));
-        } else {
-          utils::ConcurrentQueue<Request>::enqueueImpl(std::move(req));
-        }
-      }
-
-     private:
-      bool running_{true};
-    };
-
     std::string base_uri_;
     std::optional<std::string> flow_id_;
     utils::Regex auth_dn_regex_;
@@ -251,7 +232,9 @@ class ListenHTTP : public core::Processor {
     std::map<std::string, ResponseBody> response_uri_map_;
     std::mutex uri_map_mutex_;
     uint64_t buffer_size_{0};
-    RequestBuffer request_buffer_;
+    std::mutex request_mtx_;
+    bool running_{true};
+    utils::ConcurrentQueue<Request> request_buffer_;
   };
 
   static int logMessage(const struct mg_connection *conn, const char *message) {

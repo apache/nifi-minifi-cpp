@@ -93,8 +93,8 @@ class ConcurrentQueue {
 
   template <typename... Args>
   void enqueue(Args&&... args) {
-    std::lock_guard<std::mutex> lck(mtx_);
-    enqueueImpl(T{std::forward<Args>(args)...});
+    std::lock_guard<std::mutex> guard(mtx_);
+    queue_.emplace_back(std::forward<Args>(args)...);
   }
 
  private:
@@ -137,10 +137,6 @@ class ConcurrentQueue {
   bool emptyImpl(std::unique_lock<std::mutex>& lck) const {
     checkLock(lck);
     return queue_.empty();
-  }
-
-  virtual void enqueueImpl(T item) {
-    queue_.push_back(std::move(item));
   }
 
   mutable std::mutex mtx_;
