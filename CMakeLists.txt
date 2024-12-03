@@ -339,7 +339,7 @@ endfunction()
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 include(Extensions)
 
-add_subdirectory(core)
+add_subdirectory(minifi-api)
 add_subdirectory(utils)
 add_subdirectory(extension-utils)
 add_subdirectory(libminifi)
