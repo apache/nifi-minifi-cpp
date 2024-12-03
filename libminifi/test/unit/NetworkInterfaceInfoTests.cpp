@@ -17,7 +17,7 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "utils/NetworkInterfaceInfo.h"
+#include "utils/net/NetworkInterfaceInfo.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 

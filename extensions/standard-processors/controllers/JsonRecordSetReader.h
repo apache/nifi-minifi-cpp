@@ -16,16 +16,15 @@
  */
 #pragma once
 
-#include "Record.h"
 #include "controllers/RecordSetReader.h"
 #include "core/FlowFile.h"
 #include "core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi::standard {
 
-class JsonRecordSetReader final : public core::RecordSetReader {
+class JsonRecordSetReader final : public core::RecordSetReaderImpl {
  public:
-  explicit JsonRecordSetReader(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetReader(name, uuid) {}
+  explicit JsonRecordSetReader(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetReaderImpl(name, uuid) {}
 
   JsonRecordSetReader(JsonRecordSetReader&&) = delete;
   JsonRecordSetReader(const JsonRecordSetReader&) = delete;

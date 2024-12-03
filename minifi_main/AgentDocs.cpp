@@ -33,6 +33,7 @@
 #include "agent/agent_version.h"
 #include "core/Core.h"
 #include "core/PropertyValue.h"
+#include "core/PropertyType.h"
 #include "core/Relationship.h"
 #include "TableFormatter.h"
 #include "utils/file/FileUtils.h"

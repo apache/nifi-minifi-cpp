@@ -32,13 +32,13 @@ namespace org::apache::nifi::minifi::core::expressions {
  *   effectively core functionality. To eliminate this awkward linking and help with disabling EL entirely
  *   on some platforms, this builder was placed into the class loader.
  */
-class ExpressionContextBuilder : public core::ProcessContextBuilder {
+class ExpressionContextBuilder : public core::ProcessContextBuilderImpl {
  public:
   ExpressionContextBuilder(std::string_view name, const minifi::utils::Identifier &uuid);
 
   explicit ExpressionContextBuilder(std::string_view name);
 
-  virtual ~ExpressionContextBuilder();
+  ~ExpressionContextBuilder() override;
 
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

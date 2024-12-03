@@ -23,7 +23,7 @@
 #include <memory>
 #include "database/RocksDatabase.h"
 #include "io/BaseStream.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org {
 namespace apache {
@@ -38,7 +38,7 @@ namespace io {
  * Design: Simply extends BaseStream and overrides readData/writeData to allow a sink to the
  * fstream object.
  */
-class RocksDbStream : public io::BaseStream {
+class RocksDbStream : public io::BaseStreamImpl {
  public:
   /**
    * File Stream constructor that accepts an fstream shared pointer.

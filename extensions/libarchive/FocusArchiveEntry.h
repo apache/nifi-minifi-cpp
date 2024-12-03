@@ -30,16 +30,16 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/file/FileManager.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class FocusArchiveEntry : public core::Processor {
+class FocusArchiveEntry : public core::ProcessorImpl {
  public:
   explicit FocusArchiveEntry(std::string_view name, const utils::Identifier& uuid = {})
-  : core::Processor(name, uuid) {
+  : core::ProcessorImpl(name, uuid) {
   }
   ~FocusArchiveEntry()   override = default;
 

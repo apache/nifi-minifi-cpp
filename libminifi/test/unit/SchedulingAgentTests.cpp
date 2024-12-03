@@ -22,6 +22,7 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/TestUtils.h"
 #include "utils/TimeUtil.h"
+#include "core/ProcessorNode.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -29,9 +30,9 @@ namespace org::apache::nifi::minifi::testing {
 
 using minifi::core::controller::StandardControllerServiceProvider;
 
-class CountOnTriggersProcessor : public minifi::core::Processor {
+class CountOnTriggersProcessor : public minifi::core::ProcessorImpl {
  public:
-  using minifi::core::Processor::Processor;
+  using minifi::core::ProcessorImpl::ProcessorImpl;
 
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
@@ -57,6 +58,11 @@ class CountOnTriggersProcessor : public minifi::core::Processor {
   std::atomic<size_t> number_of_triggers = 0;
 };
 
+#ifdef __GNUC__
+// array-bounds warnings in GCC produce a lot of false positives: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56456
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
 class SchedulingAgentTestFixture {
  public:
   SchedulingAgentTestFixture() {
@@ -65,7 +71,6 @@ class SchedulingAgentTestFixture {
 
 #ifdef WIN32
     minifi::utils::timeutils::dateSetInstall(TZ_DATA_DIR);
-    date::set_install(TZ_DATA_DIR);
 #endif
   }
 
@@ -76,16 +81,19 @@ class SchedulingAgentTestFixture {
 
   TestController test_controller_;
   std::shared_ptr<TestPlan> test_plan = test_controller_.createPlan();
-  std::shared_ptr<minifi::Configure> configuration_ = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration_ = std::make_shared<minifi::ConfigureImpl>();
   std::shared_ptr<StandardControllerServiceProvider> controller_services_provider_ = std::make_shared<StandardControllerServiceProvider>(
       std::make_unique<minifi::core::controller::ControllerServiceNodeMap>(), configuration_);
   utils::ThreadPool thread_pool_;
 
   std::shared_ptr<CountOnTriggersProcessor> count_proc_ = std::make_shared<CountOnTriggersProcessor>("count_proc");
-  std::shared_ptr<core::ProcessorNode> node_ = std::make_shared<core::ProcessorNode>(count_proc_.get());
-  std::shared_ptr<core::ProcessContext> context_ = std::make_shared<core::ProcessContext>(node_, nullptr, test_repo_, test_repo_, content_repo_);
-  std::shared_ptr<core::ProcessSessionFactory> factory_ = std::make_shared<core::ProcessSessionFactory>(context_);
+  std::shared_ptr<core::ProcessorNode> node_ = std::make_shared<core::ProcessorNodeImpl>(count_proc_.get());
+  std::shared_ptr<core::ProcessContext> context_ = std::make_shared<core::ProcessContextImpl>(node_, nullptr, test_repo_, test_repo_, content_repo_);
+  std::shared_ptr<core::ProcessSessionFactory> factory_ = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
 };
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 
 TEST_CASE_METHOD(SchedulingAgentTestFixture, "TimerDrivenSchedulingAgent") {

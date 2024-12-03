@@ -20,6 +20,7 @@
 #include "AWSSdkLogger.h"
 
 #include <cstdio>
+#include <cstdarg>
 
 #include "aws/core/utils/logging/LogLevel.h"
 #include "utils/gsl.h"

@@ -26,11 +26,11 @@
 namespace org::apache::nifi::minifi::core::expressions {
 
 ExpressionContextBuilder::ExpressionContextBuilder(std::string_view name, const minifi::utils::Identifier &uuid)
-    : core::ProcessContextBuilder(name, uuid) {
+    : core::ProcessContextBuilderImpl(name, uuid) {
 }
 
 ExpressionContextBuilder::ExpressionContextBuilder(std::string_view name)
-    : core::ProcessContextBuilder(name) {
+    : core::ProcessContextBuilderImpl(name) {
 }
 
 ExpressionContextBuilder::~ExpressionContextBuilder() = default;

@@ -35,7 +35,7 @@
 
 #include <utility>
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -46,10 +46,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class ExecuteProcess : public core::Processor {
+class ExecuteProcess final : public core::ProcessorImpl {
  public:
   explicit ExecuteProcess(const std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
+      : ProcessorImpl(name, uuid),
         working_dir_(".") {
   }
   ~ExecuteProcess() override {

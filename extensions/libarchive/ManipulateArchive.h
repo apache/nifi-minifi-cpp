@@ -36,10 +36,10 @@ namespace org::apache::nifi::minifi::processors {
 
 using core::logging::Logger;
 
-class ManipulateArchive : public core::Processor {
+class ManipulateArchive : public core::ProcessorImpl {
  public:
   explicit ManipulateArchive(std::string_view name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+      : core::ProcessorImpl(name, uuid) {
   }
   ~ManipulateArchive() override = default;
 

@@ -38,7 +38,7 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "rdkafka.h"
 #include "utils/ArrayUtils.h"
 #include "utils/RegexUtils.h"
