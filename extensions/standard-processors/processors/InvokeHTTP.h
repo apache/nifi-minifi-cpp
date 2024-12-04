@@ -23,6 +23,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <optional>
 
 #include "Core.h"
 #include "FlowFileRecord.h"
@@ -41,9 +42,60 @@
 #include "utils/Enum.h"
 #include "utils/RegexUtils.h"
 
+namespace org::apache::nifi::minifi::test {
+class HttpClientStoreTestAccessor;
+}
+
 namespace org::apache::nifi::minifi::processors {
 
 namespace invoke_http {
+class HttpClientStore {
+ public:
+  HttpClientStore(const size_t size, std::function<gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>>(const std::string&)> create_client_function)
+      : max_size_(size),
+        create_client_function_(std::move(create_client_function)) {
+    clients_.resize(size);
+  }
+  HttpClientStore(const HttpClientStore&) = delete;
+  HttpClientStore& operator=(const HttpClientStore&) = delete;
+  HttpClientStore(HttpClientStore&&) = delete;
+  HttpClientStore& operator=(HttpClientStore&&) = delete;
+  ~HttpClientStore() = default;
+
+  class HttpClientWrapper {
+   public:
+    HttpClientWrapper(HttpClientStore& client_store, minifi::http::HTTPClient& client) : client_(client), client_store_(client_store) {
+    }
+    HttpClientWrapper(HttpClientWrapper&& src) = default;
+    HttpClientWrapper(const HttpClientWrapper&) = delete;
+    ~HttpClientWrapper() {
+      client_store_.returnClient(client_);
+    }
+
+    minifi::http::HTTPClient& get() const {
+      return client_;
+    }
+
+   private:
+    minifi::http::HTTPClient& client_;
+    HttpClientStore& client_store_;
+  };
+
+  [[nodiscard]] HttpClientWrapper getClient(const std::string& url);
+
+ private:
+  friend class ::org::apache::nifi::minifi::test::HttpClientStoreTestAccessor;
+  void returnClient(minifi::http::HTTPClient& client);
+
+  std::mutex clients_mutex_;
+  std::condition_variable cv_;
+  const size_t max_size_;
+  size_t clients_created_{0};
+  std::vector<std::pair<std::unique_ptr<minifi::http::HTTPClient>, bool>> clients_;
+  std::function<gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>>(const std::string&)> create_client_function_;
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HttpClientWrapper>::getLogger()};
+};
+
 enum class InvalidHTTPHeaderFieldHandlingOption {
     fail,
     transform,
@@ -276,7 +328,7 @@ class InvokeHTTP : public core::Processor {
 
 
   void setupMembersFromProperties(const core::ProcessContext& context);
-  std::unique_ptr<minifi::http::HTTPClient> createHTTPClientFromMembers() const;
+  gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>> createHTTPClientFromMembers(const std::string& url) const;
 
   http::HttpRequestMethod method_{};
   std::optional<utils::Regex> attributes_to_send_;
@@ -289,7 +341,6 @@ class InvokeHTTP : public core::Processor {
   core::DataTransferSpeedValue maximum_upload_speed_{0};
   core::DataTransferSpeedValue maximum_download_speed_{0};
 
-  std::string url_;
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
   std::chrono::milliseconds connect_timeout_{std::chrono::seconds(30)};
@@ -303,7 +354,8 @@ class InvokeHTTP : public core::Processor {
   invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_{};
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger(uuid_)};
-  std::shared_ptr<utils::ResourceQueue<http::HTTPClient>> client_queue_;
+
+  std::unique_ptr<invoke_http::HttpClientStore> client_queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
