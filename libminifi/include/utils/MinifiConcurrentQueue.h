@@ -57,6 +57,8 @@ class ConcurrentQueue {
     return *this;
   }
 
+  virtual ~ConcurrentQueue() = default;
+
   bool tryDequeue(T& out) {
     std::unique_lock<std::mutex> lck(mtx_);
     return tryDequeueImpl(lck, out);
