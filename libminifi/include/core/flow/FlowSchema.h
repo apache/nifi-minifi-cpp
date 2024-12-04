@@ -86,6 +86,7 @@ struct FlowSchema {
   Keys value;
   Keys parameter_context_name;
   Keys sensitive;
+  Keys inherited_parameter_contexts;
 
   static FlowSchema getDefault();
   static FlowSchema getNiFiFlowJson();

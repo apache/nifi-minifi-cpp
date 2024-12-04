@@ -139,12 +139,25 @@ Processor properties in flow configurations can be parameterized using parameter
  - `#` character can be used to escape the parameter syntax. E.g. if the `parameterName` parameter's value is `xxx` then `#{parameterName}` will be replaced with `xxx`, `##{parameterName}` will be replaced with `#{parameterName}`, and `#####{parameterName}` will be replaced with `##xxx`.
  - Sensitive parameters can only be assigned to sensitive properties and non-sensitive parameters can only be assigned to non-sensitive properties.
 
+Parameter contexts can be inherited from multiple other parameter contexts. The order of the parameter inheritance matters in the way that if a parameter is present in multiple parameter contexts, the parameter value assigned to the first parameter in the inheritance order will be used. No circular inheritance is allowed.
+
 An example for using parameters in a JSON configuration file:
 
 ```json
 {
     "parameterContexts": [
         {
+            "identifier": "235e6b47-ea22-45cd-a472-545801db98e6",
+            "name": "common-parameter-context",
+            "description": "Common parameter context",
+            "parameters": [
+                {
+                    "name": "common_timeout",
+                    "description": "Common timeout seconds",
+                    "sensitive": false,
+                    "value": "30"
+                }
+            ],
             "identifier": "804e6b47-ea22-45cd-a472-545801db98e6",
             "name": "root-process-group-context",
             "description": "Root process group parameter context",
@@ -155,7 +168,8 @@ An example for using parameters in a JSON configuration file:
                     "sensitive": false,
                     "value": "/tmp/tail/file/path"
                 }
-            ]
+            ],
+            "inheritedParameterContexts": ["common-parameter-context"]
         }
     ],
     "rootGroup": {
@@ -194,6 +208,14 @@ An example for using parameters in a YAML configuration file:
     Flow Controller:
       name: MiNiFi Flow
     Parameter Contexts:
+      - id: 235e6b47-ea22-45cd-a472-545801db98e6
+        name: common-parameter-context
+        description: Common parameter context
+        Parameters:
+        - name: common_timeout
+          description: 'Common timeout seconds'
+          sensitive: false
+          value: 30
       - id: 804e6b47-ea22-45cd-a472-545801db98e6
         name: root-process-group-context
         description: Root process group parameter context
@@ -202,6 +224,8 @@ An example for using parameters in a YAML configuration file:
           description: 'Base dir of tailed files'
           sensitive: false
           value: /tmp/tail/file/path
+        Inherited Parameter Contexts:
+        - common-parameter-context
     Processors:
     - name: Tail test_file1.log
       id: 83b58f9f-e661-4634-96fb-0e82b92becdf
