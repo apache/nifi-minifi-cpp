@@ -1,0 +1,12 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6c69b32..497e2f6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -58,7 +58,6 @@ include(cmake/Sanitizers.cmake)
+ # allow for static analysis options
+ include(cmake/StaticAnalyzers.cmake)
+ 
+-include(cmake/Backtrace.cmake)
+ enable_sanitizers(project_options)
+ 
+ if(COUCHBASE_CXX_CLIENT_MASTER_PROJECT)
