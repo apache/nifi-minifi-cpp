@@ -22,14 +22,12 @@
 
 #include <Windows.h>
 #include <winevt.h>
-#include <codecvt>
 #include <functional>
 #include <map>
-#include <sstream>
 #include <string>
 #include <vector>
-#include <optional>
 #include <utility>
+#include <type_traits>
 
 #include "core/Core.h"
 #include "core/Processor.h"
@@ -37,7 +35,6 @@
 #include "FlowFileRecord.h"
 #include "WindowsEventLog.h"
 
-#include "concurrentqueue.h"
 #include "pugixml.hpp"
 #include "utils/RegexUtils.h"
 
@@ -45,7 +42,6 @@ namespace org::apache::nifi::minifi::wel {
 
 /**
  * Defines a tree walker for the XML input
- *
  */
 class MetadataWalker : public pugi::xml_tree_walker {
  public:
@@ -65,11 +61,9 @@ class MetadataWalker : public pugi::xml_tree_walker {
    */
   bool for_each(pugi::xml_node &node) override;
 
-  [[nodiscard]] std::map<std::string, std::string> getFieldValues() const;
-
-  [[nodiscard]] std::map<std::string, std::string> getIdentifiers() const;
-
-  [[nodiscard]] std::string getMetadata(METADATA metadata) const;
+  [[nodiscard]] std::map<std::string, std::string> getFieldValues() const { return fields_values_; }
+  [[nodiscard]] std::map<std::string, std::string> getIdentifiers() const { return replaced_identifiers_; }
+  [[nodiscard]] std::string getMetadata(Metadata metadata) const;
 
  private:
   static std::vector<std::string> getIdentifiers(const std::string &text);

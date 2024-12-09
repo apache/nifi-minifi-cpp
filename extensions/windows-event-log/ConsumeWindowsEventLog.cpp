@@ -100,9 +100,9 @@ void ConsumeWindowsEventLog::initialize() {
 }
 
 bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) {
-  wel::METADATA name = wel::WindowsEventLogMetadata::getMetadataFromString(key);
+  wel::Metadata name = wel::WindowsEventLogMetadata::getMetadataFromString(key);
 
-  if (name != wel::METADATA::UNKNOWN) {
+  if (name != wel::Metadata::UNKNOWN) {
     header.emplace_back(std::make_pair(name, value));
     return true;
   }
@@ -488,7 +488,7 @@ nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createE
     std::string_view payload_name = event_message ? "Message" : "Error";
 
     wel::WindowsEventLogHeader log_header(header_names_, header_delimiter_, payload_name.size());
-    result.plaintext = log_header.getEventHeader([&walker](wel::METADATA metadata) { return walker.getMetadata(metadata); });
+    result.plaintext = log_header.getEventHeader([&walker](wel::Metadata metadata) { return walker.getMetadata(metadata); });
     result.plaintext += payload_name;
     result.plaintext += log_header.getDelimiterFor(payload_name.size());
     result.plaintext += event_message.has_value() ? *event_message : event_message.error().message();
