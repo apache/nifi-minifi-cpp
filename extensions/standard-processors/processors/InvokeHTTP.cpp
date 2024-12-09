@@ -35,6 +35,66 @@
 #include "range/v3/algorithm/any_of.hpp"
 
 namespace org::apache::nifi::minifi::processors {
+namespace invoke_http {
+
+namespace {
+template<class ForwardIt>
+void rotateRight(ForwardIt first, ForwardIt last, size_t n) {
+  if (first == last) return;
+  auto size = std::distance(first, last);
+  n = n % size;
+  std::rotate(first, std::prev(last, n), last);
+}
+}  // namespace
+
+HttpClientStore::HttpClientWrapper HttpClientStore::getClient(const std::string& url) {
+  std::unique_lock<std::mutex> lock(clients_mutex_);
+  for (size_t i = 0; i < clients_created_; ++i) {
+    gsl_Assert(clients_[i].first);
+    auto& [client, in_use] = clients_[i];
+    if (client->getURL() == url && !in_use) {
+      in_use = true;
+      std::rotate(clients_.begin() + gsl::narrow<int64_t>(i), clients_.begin() + gsl::narrow<int64_t>(i + 1), clients_.begin() + gsl::narrow<int64_t>(clients_created_));
+      return {*this, *client};
+    }
+  }
+
+  if (clients_created_ < max_size_) {
+    gsl_Assert(!clients_[clients_created_].first);
+    auto client = create_client_function_(url);
+    clients_[clients_created_] = std::make_pair(std::move(client), true);
+    ++clients_created_;
+    return {*this, *clients_[clients_created_ - 1].first};
+  } else {
+    cv_.wait(lock, [this] { return !clients_[0].second; });
+    gsl_Assert(!clients_[0].second);
+    auto client = create_client_function_(url);
+    clients_[0] = std::make_pair(std::move(client), true);
+    std::rotate(clients_.begin(), clients_.begin() + 1, clients_.begin() + gsl::narrow<int64_t>(clients_created_));
+    return {*this, *clients_[clients_created_ - 1].first};
+  }
+}
+
+void HttpClientStore::returnClient(minifi::http::HTTPClient& client) {
+  std::unique_lock<std::mutex> lock(clients_mutex_);
+  int64_t last_unused = -1;
+  for (size_t i = 0; i < clients_created_; ++i) {
+    if (clients_[i].first.get() != &client) {
+      if (!clients_[i].second) {
+        last_unused = gsl::narrow<int64_t>(i);
+      }
+      continue;
+    }
+    clients_[i].second = false;
+    rotateRight(clients_.begin() + last_unused + 1, clients_.begin() + gsl::narrow<int64_t>(i) + 1, 1);
+    lock.unlock();
+    cv_.notify_one();
+    return;
+  }
+  logger_->log_error("Couldn't find HTTP client in client store to be returned");
+}
+
+}  // namespace invoke_http
 
 std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
 
@@ -64,8 +124,9 @@ void setupClientTransferEncoding(http::HTTPClient& client, bool use_chunked_enco
 }  // namespace
 
 void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context) {
-  if (!context.getProperty(URL, url_))
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "URL property missing or invalid");
+  std::string url;
+  if (!context.getProperty(URL, url) || url.empty())
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "URL property missing or empty");
 
   method_ = utils::parseEnumProperty<http::HttpRequestMethod>(context, Method);
 
@@ -121,9 +182,9 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
   }
 }
 
-std::unique_ptr<minifi::http::HTTPClient> InvokeHTTP::createHTTPClientFromMembers() const {
+gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>> InvokeHTTP::createHTTPClientFromMembers(const std::string& url) const {
   auto client = std::make_unique<minifi::http::HTTPClient>();
-  client->initialize(method_, url_, ssl_context_service_);
+  client->initialize(method_, url, ssl_context_service_);
   setupClientTimeouts(*client, connect_timeout_, read_timeout_);
   client->setHTTPProxy(proxy_);
   client->setFollowRedirects(follow_redirects_);
@@ -133,18 +194,18 @@ std::unique_ptr<minifi::http::HTTPClient> InvokeHTTP::createHTTPClientFromMember
   client->setMaximumUploadSpeed(maximum_upload_speed_.getValue());
   client->setMaximumDownloadSpeed(maximum_download_speed_.getValue());
 
-  return client;
+  return gsl::make_not_null(std::move(client));
 }
 
 
 void InvokeHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   setupMembersFromProperties(context);
 
-  auto create_client = [this]() -> std::unique_ptr<minifi::http::HTTPClient> {
-    return createHTTPClientFromMembers();
+  auto create_client = [this](const std::string& url) -> gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>> {
+    return createHTTPClientFromMembers(url);
   };
 
-  client_queue_ = utils::ResourceQueue<http::HTTPClient>::create(create_client, getMaxConcurrentTasks(), std::nullopt, logger_);
+  client_queue_ = std::make_unique<invoke_http::HttpClientStore>(getMaxConcurrentTasks() * 2, create_client);
 }
 
 bool InvokeHTTP::shouldEmitFlowFile() const {
@@ -202,9 +263,15 @@ void InvokeHTTP::onTrigger(core::ProcessContext& context, core::ProcessSession& 
     logger_->log_debug("InvokeHTTP -- Received flowfile");
   }
 
-  auto client = client_queue_->getResource();
+  auto url = context.getProperty(URL, flow_file.get());
+  if (!url || url->empty()) {
+    logger_->log_error("InvokeHTTP -- URL is empty, transferring to failure");
+    session.transfer(flow_file, RelFailure);
+    return;
+  }
 
-  onTriggerWithClient(context, session, flow_file, *client);
+  auto client = client_queue_->getClient(*url);
+  onTriggerWithClient(context, session, flow_file, client.get());
 }
 
 void InvokeHTTP::onTriggerWithClient(core::ProcessContext& context, core::ProcessSession& session,
