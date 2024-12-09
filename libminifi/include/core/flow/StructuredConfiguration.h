@@ -234,6 +234,7 @@ class StructuredConfiguration : public FlowConfiguration {
    * @param reason
    */
   void raiseComponentError(const std::string &component_name, const std::string &section, const std::string &reason) const;
+  void verifyNoInheritanceCycles() const;
 };
 
 }  // namespace org::apache::nifi::minifi::core::flow

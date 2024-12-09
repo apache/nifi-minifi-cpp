@@ -139,6 +139,41 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
   }
 }
 
+namespace {
+bool hasInheritanceCycle(const ParameterContext& parameter_context, std::unordered_set<std::string>& visited_parameter_contexts, std::unordered_set<std::string>& current_stack) {
+  if (current_stack.contains(parameter_context.getName())) {
+    return true;
+  }
+
+  if (visited_parameter_contexts.contains(parameter_context.getName())) {
+    return false;
+  }
+
+  current_stack.insert(parameter_context.getName());
+  visited_parameter_contexts.insert(parameter_context.getName());
+
+  for (const auto& inherited_parameter_context : parameter_context.getInheritedParameterContexts()) {
+    if (hasInheritanceCycle(*inherited_parameter_context, visited_parameter_contexts, current_stack)) {
+      return true;
+    }
+  }
+
+  current_stack.erase(parameter_context.getName());
+
+  return false;
+}
+}  // namespace
+
+void StructuredConfiguration::verifyNoInheritanceCycles() const {
+  std::unordered_set<std::string> visited_parameter_contexts;
+  std::unordered_set<std::string> current_stack;
+  for (const auto& [parameter_context_name, parameter_context] : parameter_contexts_) {
+    if (hasInheritanceCycle(*parameter_context, visited_parameter_contexts, current_stack)) {
+      throw std::invalid_argument("Circular references in Parameter Context inheritance are not allowed. Inheritance cycle was detected in parameter context '" + parameter_context->getName() + "'");
+    }
+  }
+}
+
 void StructuredConfiguration::parseParameterContexts(const Node& parameter_contexts_node) {
   if (!parameter_contexts_node || !parameter_contexts_node.isSequence()) {
     return;
@@ -172,6 +207,27 @@ void StructuredConfiguration::parseParameterContexts(const Node& parameter_conte
 
     parameter_contexts_.emplace(name, gsl::make_not_null(std::move(parameter_context)));
   }
+
+  for (const auto& parameter_context_node : parameter_contexts_node) {
+    if (!isFieldPresent(parameter_context_node, schema_.inherited_parameter_contexts[0])) {
+      continue;
+    }
+    auto inherited_parameters_node = parameter_context_node[schema_.inherited_parameter_contexts];
+    for (const auto& inherited_parameter_context_name : inherited_parameters_node) {
+      auto name = inherited_parameter_context_name.getString().value();
+      if (parameter_contexts_.find(name) == parameter_contexts_.end()) {
+        throw std::invalid_argument("Inherited parameter context '" + name + "' does not exist!");
+      }
+
+      auto parameter_context_name = parameter_context_node[schema_.name].getString().value();
+      if (parameter_context_name == name) {
+        throw std::invalid_argument("Inherited parameter context '" + name + "' cannot be the same as the parameter context!");
+      }
+      gsl::not_null<ParameterContext*> context = gsl::make_not_null(parameter_contexts_.at(name).get());
+      parameter_contexts_.at(parameter_context_name)->addInheritedParameterContext(context);
+    }
+  }
+  verifyNoInheritanceCycles();
 }
 
 void StructuredConfiguration::parseProcessorNode(const Node& processors_node, core::ProcessGroup* parentGroup) {

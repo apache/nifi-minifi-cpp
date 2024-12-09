@@ -1876,4 +1876,268 @@ Process Groups:
   CHECK(impl->getProperty("Private Key").value() == "/opt/secrets/private-key.pem");
 }
 
+TEST_CASE("Test parameter context inheritance", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_parameter_value = minifi::utils::crypto::property_encryption::encrypt("value1", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{my_new_parameter}", *context.sensitive_values_encryptor);
+  core::YamlConfiguration yaml_config(context);
+
+  static const std::string TEST_CONFIG_YAML =
+      fmt::format(R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: inherited-context
+    description: my parameter context
+    Parameters:
+    - name: my_new_parameter
+      description: inherited parameter context
+      sensitive: true
+      value: {}
+    Inherited Parameter Contexts: [base-context]
+  - id: 521e10b7-8e00-3188-9a27-476cca376351
+    name: base-context
+    description: my base parameter context
+    Parameters:
+    - name: my_old_parameter
+      description: ''
+      sensitive: false
+      value: old_value
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{{my_old_parameter}}"
+    Sensitive Property: {}
+Parameter Context Name: inherited-context
+      )", encrypted_parameter_value, encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Simple Property") == "old_value");
+  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+}
+
+TEST_CASE("Parameter context can not inherit from a itself", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 521e10b7-8e00-3188-9a27-476cca376351
+    name: base-context
+    description: my base parameter context
+    Parameters:
+    - name: my_old_parameter
+      description: ''
+      sensitive: false
+      value: old_value
+    Inherited Parameter Contexts:
+    - base-context
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{my_old_parameter}"
+Parameter Context Name: inherited-context
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Inherited parameter context 'base-context' cannot be the same as the parameter context!");
+}
+
+TEST_CASE("Parameter context can not inherit from non-existing parameter context", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 521e10b7-8e00-3188-9a27-476cca376351
+    name: base-context
+    description: my base parameter context
+    Parameters:
+    - name: my_old_parameter
+      description: ''
+      sensitive: false
+      value: old_value
+    Inherited Parameter Contexts: [unknown]
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{my_old_parameter}"
+Parameter Context Name: inherited-context
+      )";
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Inherited parameter context 'unknown' does not exist!");
+}
+
+TEST_CASE("Cycles are not allowed in parameter context inheritance", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 123e10b7-8e00-3188-9a27-476cca376351
+    name: a-context
+    description: ''
+    Parameters:
+    - name: a_parameter
+      description: ''
+      sensitive: false
+      value: a_value
+    Inherited Parameter Contexts:
+    - c-context
+  - id: 456e10b7-8e00-3188-9a27-476cca376351
+    name: b-context
+    description: ''
+    Parameters:
+    - name: b_parameter
+      description: ''
+      sensitive: false
+      value: b_value
+    Inherited Parameter Contexts:
+    - a-context
+  - id: 789e10b7-8e00-3188-9a27-476cca376351
+    name: c-context
+    description: ''
+    Parameters:
+    - name: c_parameter
+      description: ''
+      sensitive: false
+      value: c_value
+    Inherited Parameter Contexts:
+    - d-context
+    - b-context
+  - id: 101e10b7-8e00-3188-9a27-476cca376351
+    name: d-context
+    description: ''
+    Parameters:
+    - name: d_parameter
+      description: ''
+      sensitive: false
+      value: d_value
+    Inherited Parameter Contexts: []
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{{my_old_parameter}}"
+    Sensitive Property: {}
+Parameter Context Name: inherited-context
+      )";
+
+  REQUIRE_THROWS_AS(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), std::invalid_argument);
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Circular references in Parameter Context inheritance are not allowed. Inheritance cycle was detected in parameter context"));
+}
+
+TEST_CASE("Parameter context inheritance order is respected", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Contexts:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: a-context
+    description: ''
+    Parameters:
+    - name: a_parameter
+      description: ''
+      sensitive: false
+      value: 1
+    - name: b_parameter
+      description: ''
+      sensitive: false
+      value: 2
+  - id: 521e10b7-8e00-3188-9a27-476cca376351
+    name: b-context
+    description: ''
+    Parameters:
+    - name: b_parameter
+      description: ''
+      sensitive: false
+      value: 3
+    - name: c_parameter
+      description: ''
+      sensitive: false
+      value: 4
+  - id: 123e10b7-8e00-3188-9a27-476cca376351
+    name: c-context
+    description: ''
+    Parameters:
+    - name: c_parameter
+      description: ''
+      sensitive: false
+      value: 5
+    Inherited Parameter Contexts:
+    - b-context
+    - a-context
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyFlowYamlProcessor
+  class: org.apache.nifi.processors.DummyFlowYamlProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    My A Property: "#{a_parameter}"
+    My B Property: "#{b_parameter}"
+    My C Property: "#{c_parameter}"
+Parameter Context Name: c-context
+      )";
+
+  std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
+  REQUIRE(flow);
+  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
+  REQUIRE(proc);
+  std::string value;
+  REQUIRE(proc->getDynamicProperty("My A Property", value));
+  CHECK(value == "1");
+  REQUIRE(proc->getDynamicProperty("My B Property", value));
+  CHECK(value == "3");
+  REQUIRE(proc->getDynamicProperty("My C Property", value));
+  CHECK(value == "5");
+}
+
 }  // namespace org::apache::nifi::minifi::test
