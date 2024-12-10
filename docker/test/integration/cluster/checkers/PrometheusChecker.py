@@ -60,8 +60,12 @@ class PrometheusChecker:
     def verify_general_processor_metrics(self, metric_class, processor_name):
         labels = {'processor_name': processor_name}
         return self.verify_metrics_exist(['minifi_average_onTrigger_runtime_milliseconds', 'minifi_last_onTrigger_runtime_milliseconds',
-                                          'minifi_average_session_commit_runtime_milliseconds', 'minifi_last_session_commit_runtime_milliseconds'], metric_class, labels) and \
-            self.verify_metrics_larger_than_zero(['minifi_onTrigger_invocations', 'minifi_transferred_flow_files', 'minifi_transferred_to_success', 'minifi_transferred_bytes'], metric_class, labels)
+                                          'minifi_average_session_commit_runtime_milliseconds', 'minifi_last_session_commit_runtime_milliseconds',
+                                          'minifi_incoming_flow_files', 'minifi_incoming_bytes', 'minifi_bytes_read', 'minifi_bytes_written',
+                                          'minifi_processing_nanos'], metric_class, labels) and \
+            self.verify_metrics_larger_than_zero(['minifi_onTrigger_invocations', 'minifi_transferred_flow_files', 'minifi_transferred_to_success',
+                                                  'minifi_transferred_bytes', 'minifi_processing_nanos'],
+                                                 metric_class, labels)
 
     def verify_getfile_metrics(self, metric_class, processor_name):
         labels = {'processor_name': processor_name}
@@ -69,7 +73,9 @@ class PrometheusChecker:
             self.verify_metrics_exist(['minifi_input_bytes', 'minifi_accepted_files'], metric_class, labels)
 
     def verify_flow_information_metrics(self):
-        return self.verify_metrics_exist(['minifi_queue_data_size', 'minifi_queue_data_size_max', 'minifi_queue_size', 'minifi_queue_size_max'], 'FlowInformation') and \
+        return self.verify_metrics_exist(['minifi_queue_data_size', 'minifi_queue_data_size_max', 'minifi_queue_size', 'minifi_queue_size_max',
+                                          'minifi_bytes_read', 'minifi_bytes_written', 'minifi_flow_files_in', 'minifi_flow_files_out', 'minifi_bytes_in', 'minifi_bytes_out',
+                                          'minifi_invocations', 'minifi_processing_nanos'], 'FlowInformation') and \
             self.verify_metric_exists('minifi_is_running', 'FlowInformation', {'component_name': 'FlowController'})
 
     def verify_device_info_node_metrics(self):

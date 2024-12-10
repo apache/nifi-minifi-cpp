@@ -44,13 +44,18 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize
   state::response::SerializedResponseNode root_node {
     .name = source_processor_.getUUIDStr(),
     .children = {
-      {.name = "OnTriggerInvocations", .value = static_cast<uint32_t>(iterations.load())},
+      {.name = "OnTriggerInvocations", .value = static_cast<uint32_t>(invocations.load())},
       {.name = "AverageOnTriggerRunTime", .value = static_cast<uint64_t>(getAverageOnTriggerRuntime().count())},
       {.name = "LastOnTriggerRunTime", .value = static_cast<uint64_t>(getLastOnTriggerRuntime().count())},
       {.name = "AverageSessionCommitRunTime", .value = static_cast<uint64_t>(getAverageSessionCommitRuntime().count())},
       {.name = "LastSessionCommitRunTime", .value = static_cast<uint64_t>(getLastSessionCommitRuntime().count())},
       {.name = "TransferredFlowFiles", .value = static_cast<uint32_t>(transferred_flow_files.load())},
-      {.name = "TransferredBytes", .value = transferred_bytes.load()}
+      {.name = "TransferredBytes", .value = static_cast<uint64_t>(transferred_bytes.load())},
+      {.name = "IncomingFlowFiles", .value = static_cast<uint32_t>(incoming_flow_files.load())},
+      {.name = "IncomingBytes", .value = static_cast<uint64_t>(incoming_bytes.load())},
+      {.name = "BytesRead", .value = static_cast<uint64_t>(bytes_read.load())},
+      {.name = "BytesWritten", .value = static_cast<uint64_t>(bytes_written.load())},
+      {.name = "ProcessingNanos", .value = static_cast<uint64_t>(processing_nanos.load())}
     }
   };
 
@@ -59,7 +64,7 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize
     for (const auto& [relationship, count] : transferred_relationships_) {
       gsl_Expects(!relationship.empty());
       state::response::SerializedResponseNode transferred_to_relationship_node;
-      transferred_to_relationship_node.name = std::string("TransferredTo").append(1, toupper(relationship[0])).append(relationship.substr(1));
+      transferred_to_relationship_node.name = std::string("TransferredTo").append(1, gsl::narrow<char>(toupper(relationship[0]))).append(relationship.substr(1));
       transferred_to_relationship_node.value = static_cast<uint32_t>(count);
 
       root_node.children.push_back(transferred_to_relationship_node);
@@ -73,13 +78,18 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize
 
 std::vector<state::PublishedMetric> ProcessorMetrics::calculateMetrics() {
   std::vector<state::PublishedMetric> metrics = {
-    {"onTrigger_invocations", static_cast<double>(iterations.load()), getCommonLabels()},
+    {"onTrigger_invocations", static_cast<double>(invocations.load()), getCommonLabels()},
     {"average_onTrigger_runtime_milliseconds", static_cast<double>(getAverageOnTriggerRuntime().count()), getCommonLabels()},
     {"last_onTrigger_runtime_milliseconds", static_cast<double>(getLastOnTriggerRuntime().count()), getCommonLabels()},
     {"average_session_commit_runtime_milliseconds", static_cast<double>(getAverageSessionCommitRuntime().count()), getCommonLabels()},
     {"last_session_commit_runtime_milliseconds", static_cast<double>(getLastSessionCommitRuntime().count()), getCommonLabels()},
     {"transferred_flow_files", static_cast<double>(transferred_flow_files.load()), getCommonLabels()},
-    {"transferred_bytes", static_cast<double>(transferred_bytes.load()), getCommonLabels()}
+    {"transferred_bytes", static_cast<double>(transferred_bytes.load()), getCommonLabels()},
+    {"incoming_flow_files", static_cast<double>(incoming_flow_files.load()), getCommonLabels()},
+    {"incoming_bytes", static_cast<double>(incoming_bytes.load()), getCommonLabels()},
+    {"bytes_read", static_cast<double>(bytes_read.load()), getCommonLabels()},
+    {"bytes_written", static_cast<double>(bytes_written.load()), getCommonLabels()},
+    {"processing_nanos", static_cast<double>(processing_nanos.load()), getCommonLabels()}
   };
 
   {
@@ -120,6 +130,14 @@ void ProcessorMetrics::addLastSessionCommitRuntime(std::chrono::milliseconds run
 
 std::chrono::milliseconds ProcessorMetrics::getLastSessionCommitRuntime() const {
   return session_commit_runtime_averager_.getLastValue();
+}
+
+std::optional<size_t> ProcessorMetrics::getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const {
+  std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
+  if (transferred_relationships_.contains(relationship)) {
+    return transferred_relationships_.at(relationship);
+  }
+  return {};
 }
 
 template<typename ValueType>

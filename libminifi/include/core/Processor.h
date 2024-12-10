@@ -165,6 +165,14 @@ class Processor : public Connectable, public ConfigurableComponent, public state
     active_tasks_ = 0;
   }
 
+  std::string getProcessGroupUUIDStr() const {
+    return process_group_uuid_;
+  }
+
+  void setProcessGroupUUIDStr(const std::string &uuid) {
+    process_group_uuid_ = uuid;
+  }
+
   void yield() override;
 
   void yield(std::chrono::steady_clock::duration delta_time);
@@ -256,6 +264,8 @@ class Processor : public Connectable, public ConfigurableComponent, public state
 
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<Connection*, std::unordered_set<Processor*>> reachable_processors_;
+
+  std::string process_group_uuid_;
 };
 
 }  // namespace core
