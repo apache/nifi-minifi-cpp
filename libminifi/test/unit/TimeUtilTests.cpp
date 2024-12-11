@@ -342,3 +342,15 @@ TEST_CASE("Parse RFC3339", "[parseRfc3339]") {
   CHECK_FALSE(parseRfc3339(" 2023-03-01T19:04:55Z"));
   CHECK_FALSE(parseRfc3339("2023-03-01"));
 }
+
+TEST_CASE("Test human readable parser") {
+  using utils::timeutils::humanReadableDuration;
+  CHECK(humanReadableDuration(1234567us) == "1.23s");
+  CHECK(humanReadableDuration(52ms) == "52.00ms");
+
+  CHECK(humanReadableDuration(1000s) == "00:16:40");
+  CHECK(humanReadableDuration(10000s) == "02:46:40");
+  CHECK(humanReadableDuration(2222222222ms) == "25 days, 17:17:02");
+  CHECK(humanReadableDuration(24h) == "1 day, 00:00:00");
+  CHECK(humanReadableDuration(23h + 12min + 1233ms) == "23:12:01");
+}
