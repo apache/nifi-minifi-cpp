@@ -43,6 +43,10 @@ ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration,
 
 void ResponseNodeLoader::clearConfigRoot() {
   {
+    std::lock_guard<std::mutex> guard(initialization_mutex_);
+    initialized_metrics_.clear();
+  }
+  {
     std::lock_guard<std::mutex> guard(system_metrics_mutex_);
     system_metrics_.clear();
   }
@@ -238,6 +242,10 @@ std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std:
   }
 
   for (const auto& response_node : response_nodes) {
+    std::lock_guard<std::mutex> guard(initialization_mutex_);
+    if (initialized_metrics_.contains(response_node->getName())) {
+      continue;
+    }
     initializeRepositoryMetrics(response_node);
     initializeQueueMetrics(response_node);
     initializeAgentIdentifier(response_node);
@@ -247,6 +255,7 @@ std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std:
     initializeConfigurationChecksums(response_node);
     initializeFlowMonitor(response_node);
     initializeAssetInformation(response_node);
+    initialized_metrics_.insert(response_node->getName());
   }
   return response_nodes;
 }
