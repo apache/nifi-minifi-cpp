@@ -96,9 +96,9 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs"
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
   using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-  std::string expected_log = R"([info] {
-    "LogMetrics": {
-        "RepositoryMetrics": {
+  std::string expected_log_1 = R"([info] {
+    "LogMetrics": {)";
+  std::string expected_log_2 = R"("RepositoryMetrics": {
             "provenancerepository": {
                 "running": "false",
                 "full": "false",
@@ -117,10 +117,12 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs"
                 "rocksDbTableReadersSize": "0",
                 "rocksDbAllMemoryTablesSize": "2048"
             }
-        },
-        "deviceInfo": {
+        })";
+  std::string expected_log_3 = R"("deviceInfo": {
             "identifier":)";
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log));
+  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log_1));
+  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log_2));
+  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log_3));
 }
 
 TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", "[LogMetricsPublisher]") {
@@ -218,7 +220,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify changing log level property fo
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
   using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-  std::string expected_log = R"([debug] {
+  std::string expected_log = R"([info] {
     "LogMetrics": {
         "RepositoryMetrics": {
             "provenancerepository": {

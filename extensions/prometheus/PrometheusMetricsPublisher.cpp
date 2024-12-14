@@ -85,8 +85,9 @@ std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> Prom
     metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics);
   }
   if (metric_classes_str && !metric_classes_str->empty()) {
-    auto metric_classes = utils::string::split(*metric_classes_str, ",");
-    for (const std::string& clazz : metric_classes) {
+    auto metric_classes = utils::string::splitAndTrimRemovingEmpty(*metric_classes_str, ",");
+    std::unordered_set<std::string> unique_metric_classes{metric_classes.begin(), metric_classes.end()};
+    for (const std::string& clazz : unique_metric_classes) {
       auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
       if (response_nodes.empty()) {
         logger_->log_warn("Metric class '{}' could not be loaded.", clazz);

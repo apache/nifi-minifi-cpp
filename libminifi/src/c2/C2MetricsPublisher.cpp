@@ -41,8 +41,9 @@ namespace org::apache::nifi::minifi::c2 {
 
 void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, const state::response::SharedResponseNode& new_node) {
   gsl_Expects(response_node_loader_);
-  auto classes = utils::string::split(class_definitions, ",");
-  for (const std::string& clazz : classes) {
+  auto classes = utils::string::splitAndTrimRemovingEmpty(class_definitions, ",");
+  std::unordered_set<std::string> unique_classes{classes.begin(), classes.end()};
+  for (const std::string& clazz : unique_classes) {
     auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
     if (response_nodes.empty()) {
       continue;
@@ -60,9 +61,10 @@ void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) 
     return;
   }
 
-  std::vector<std::string> classes = utils::string::split(class_definitions, ",");
+  auto classes = utils::string::splitAndTrimRemovingEmpty(class_definitions, ",");
+  std::unordered_set<std::string> unique_classes{classes.begin(), classes.end()};
 
-  for (const std::string& metricsClass : classes) {
+  for (const std::string& metricsClass : unique_classes) {
     try {
       std::string option = utils::string::join_pack(prefix, ".", metricsClass);
       std::string classOption = option + ".classes";
@@ -97,9 +99,10 @@ state::response::SharedResponseNode C2MetricsPublisher::loadC2ResponseConfigurat
   if (!configuration_->get(prefix, class_definitions)) {
     return prev_node;
   }
-  std::vector<std::string> classes = utils::string::split(class_definitions, ",");
+  auto classes = utils::string::splitAndTrimRemovingEmpty(class_definitions, ",");
+  std::unordered_set<std::string> unique_classes{classes.begin(), classes.end()};
 
-  for (const std::string& metricsClass : classes) {
+  for (const std::string& metricsClass : unique_classes) {
     try {
       std::string option = utils::string::join_pack(prefix, ".", metricsClass);
       std::string classOption = option + ".classes";
@@ -111,8 +114,9 @@ state::response::SharedResponseNode C2MetricsPublisher::loadC2ResponseConfigurat
       }
       state::response::SharedResponseNode new_node = gsl::make_not_null(std::make_shared<state::response::ObjectNode>(name));
       if (name.find(',') != std::string::npos) {
-        std::vector<std::string> sub_classes = utils::string::split(name, ",");
-        for (const std::string& subClassStr : classes) {
+        auto sub_classes = utils::string::splitAndTrimRemovingEmpty(name, ",");
+        std::unordered_set<std::string> unique_sub_classes{sub_classes.begin(), sub_classes.end()};
+        for (const std::string& subClassStr : unique_sub_classes) {
           auto node = loadC2ResponseConfiguration(subClassStr, prev_node);
           static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(node);
         }
@@ -198,9 +202,10 @@ void C2MetricsPublisher::loadMetricNodes() {
   std::string class_csv;
   std::lock_guard<std::mutex> guard{metrics_mutex_};
   if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
-    std::vector<std::string> classes = utils::string::split(class_csv, ",");
+    auto classes = utils::string::splitAndTrimRemovingEmpty(class_csv, ",");
+    std::unordered_set<std::string> unique_classes{classes.begin(), classes.end()};
 
-    for (const std::string& clazz : classes) {
+    for (const std::string& clazz : unique_classes) {
       auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
       if (response_nodes.empty()) {
         continue;

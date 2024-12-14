@@ -69,9 +69,11 @@ class ResponseNodeLoader {
   mutable std::mutex root_mutex_;
   mutable std::mutex component_metrics_mutex_;
   mutable std::mutex system_metrics_mutex_;
+  mutable std::mutex initialization_mutex_;
   core::ProcessGroup* root_{};
   std::unordered_map<std::string, std::vector<SharedResponseNode>> component_metrics_;
   std::unordered_map<std::string, SharedResponseNode> system_metrics_;
+  std::unordered_set<std::string> initialized_metrics_;
   std::shared_ptr<Configure> configuration_;
   std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources_;
   std::shared_ptr<core::FlowConfiguration> flow_configuration_;
