@@ -33,7 +33,7 @@ class LineByLineInputOutputStreamCallback {
  public:
   using CallbackType = std::function<std::string(const std::string& input_line, bool is_first_line, bool is_last_line)>;
   explicit LineByLineInputOutputStreamCallback(CallbackType callback);
-  int64_t operator()(const std::shared_ptr<io::InputStream>& input, const std::shared_ptr<io::OutputStream>& output);
+  io::ReadWriteResult operator()(const std::shared_ptr<io::InputStream>& input, const std::shared_ptr<io::OutputStream>& output);
 
  private:
   int64_t readInput(io::InputStream& stream);

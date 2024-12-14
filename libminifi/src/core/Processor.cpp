@@ -198,7 +198,7 @@ void Processor::triggerAndCommit(const std::shared_ptr<ProcessContext>& context,
 }
 
 void Processor::trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session) {
-  ++metrics_->iterations;
+  ++metrics_->invocations;
   const auto start = std::chrono::steady_clock::now();
   onTrigger(*context, *process_session);
   metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));

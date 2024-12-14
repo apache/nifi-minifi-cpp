@@ -39,7 +39,7 @@ class SingleProcessorTestController : public TestController {
  public:
   explicit SingleProcessorTestController(std::unique_ptr<core::Processor> processor) {
     auto name = processor->getName();
-    processor_ = plan->addProcessor(std::move(processor), name);
+    processor_ = plan->addProcessor(std::move(processor), name, {});
     input_ = plan->addConnection(nullptr, core::Relationship{"success", "success"}, processor_);
     outgoing_connections_ = [this] {
       std::unordered_map<core::Relationship, Connection*> result;

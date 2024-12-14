@@ -268,6 +268,9 @@ void ProcessSession::write(core::FlowFile &flow, const io::OutputStreamCallback&
     std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow.getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(flow, details, duration);
+    if (metrics_) {
+      metrics_->bytes_written += stream->size();
+    }
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception during process session write, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
@@ -280,6 +283,7 @@ void ProcessSession::write(core::FlowFile &flow, const io::OutputStreamCallback&
 void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer) {
   writeBuffer(flow_file, as_bytes(buffer));
 }
+
 void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer) {
   write(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
     const auto write_status = output_stream->write(buffer);
@@ -316,6 +320,9 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, const i
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
     flow->setSize(flow_file_size + (stream->size() - stream_size_before_callback));
+    if (metrics_) {
+      metrics_->bytes_written += stream->size() - stream_size_before_callback;
+    }
 
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
@@ -373,6 +380,9 @@ int64_t ProcessSession::read(const core::FlowFile& flow_file, const io::InputStr
     if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
+    if (metrics_) {
+      metrics_->bytes_read += ret;
+    }
     return ret;
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception {}", exception.what());
@@ -382,7 +392,6 @@ int64_t ProcessSession::read(const core::FlowFile& flow_file, const io::InputStr
     throw;
   }
 }
-
 
 int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, const io::InputOutputStreamCallback& callback) {
   gsl_Expects(callback);
@@ -409,19 +418,23 @@ int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, c
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
     }
 
-    int64_t bytes_written = callback(input_stream, output_stream);
-    if (bytes_written < 0) {
+    auto read_write_result = callback(input_stream, output_stream);
+    if (read_write_result.bytes_written < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 
     input_stream->close();
     output_stream->close();
 
-    flow->setSize(gsl::narrow<uint64_t>(bytes_written));
+    flow->setSize(gsl::narrow<uint64_t>(read_write_result.bytes_written));
     flow->setOffset(0);
     flow->setResourceClaim(output_claim);
+    if (metrics_) {
+      metrics_->bytes_written += read_write_result.bytes_written;
+      metrics_->bytes_read += read_write_result.bytes_read;
+    }
 
-    return bytes_written;
+    return read_write_result.bytes_written;
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught exception during process session readWrite, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
@@ -486,6 +499,9 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
         flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath(), flow->getUUIDStr());
 
     content_stream->close();
+    if (metrics_) {
+      metrics_->bytes_written += content_stream->size();
+    }
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
@@ -547,6 +563,9 @@ void ProcessSession::import(const std::string& source, const std::shared_ptr<Flo
                            flow->getUUIDStr());
 
         stream->close();
+        if (metrics_) {
+          metrics_->bytes_written += stream->size();
+        }
         input.close();
         if (!keepSource) {
           (void)std::remove(source.c_str());
@@ -649,6 +668,9 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         logger_->log_debug("Import offset {} length {} into content {}, FlowFile UUID {}",
             flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath(), flowFile->getUUIDStr());
         stream->close();
+        if (metrics_) {
+          metrics_->bytes_written += stream->size();
+        }
         std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
         provenance_report_->modifyContent(*flowFile, details, duration);
@@ -819,7 +841,7 @@ void ProcessSession::commit() {
   const auto commit_start_time = std::chrono::steady_clock::now();
   try {
     std::unordered_map<std::string, TransferMetrics> transfers;
-      auto increaseTransferMetrics = [&](const FlowFile& record, const Relationship& relationship) {
+    auto increaseTransferMetrics = [&](const FlowFile& record, const Relationship& relationship) {
       ++transfers[relationship.getName()].transfer_count;
       transfers[relationship.getName()].transfer_size += record.getSize();
     };
@@ -930,8 +952,11 @@ void ProcessSession::commit() {
     // persistent the provenance report
     this->provenance_report_->commit();
     logger_->log_debug("ProcessSession committed for {}", process_context_->getProcessorNode()->getName());
-    if (metrics_)
-      metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - commit_start_time));
+    if (metrics_) {
+      auto time_delta = std::chrono::steady_clock::now() - commit_start_time;
+      metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(time_delta));
+      metrics_->processing_nanos += std::chrono::duration_cast<std::chrono::nanoseconds>(time_delta).count();
+    }
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception during process session commit, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
@@ -1140,6 +1165,10 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
       auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
       if (flow_version != nullptr) {
         ret->setAttribute(SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());
+      }
+      if (metrics_) {
+        metrics_->incoming_bytes += ret->getSize();
+        ++metrics_->incoming_flow_files;
       }
       return ret;
     }

@@ -27,6 +27,7 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/DummyProcessor.h"
 #include "range/v3/algorithm/find_if.hpp"
+#include "unit/SingleProcessorTestController.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -284,5 +285,77 @@ TEST_CASE("Test commit runtime processor metrics", "[ProcessorMetrics]") {
   REQUIRE(metrics.getLastSessionCommitRuntime() == 10ms);
   REQUIRE(metrics.getAverageSessionCommitRuntime() == 37ms);
 }
+
+class DuplicateContentProcessor : public minifi::core::Processor {
+  using minifi::core::Processor::Processor;
+
+ public:
+  DuplicateContentProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : Processor(name, uuid) {}
+  explicit DuplicateContentProcessor(std::string_view name) : Processor(name) {}
+  static constexpr const char* Description = "A processor that creates two more of the same flow file.";
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr auto Success = core::RelationshipDefinition{"success", "Newly created FlowFiles"};
+  static constexpr auto Original = core::RelationshipDefinition{"original", "Original FlowFile"};
+  static constexpr auto Relationships = std::array{Success, Original};
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  static constexpr bool IsSingleThreaded = false;
+  void initialize() override {
+    setSupportedRelationships(Relationships);
+  }
+  void onTrigger(core::ProcessContext& /*context*/, core::ProcessSession& session) override {
+    auto flow_file = session.get();
+    if (!flow_file) {
+      return;
+    }
+
+    auto flow_file_copy = session.create();
+    std::vector<std::byte> buffer;
+    session.read(flow_file, [&](const std::shared_ptr<io::InputStream>& stream) -> int64_t {
+      buffer.resize(stream->size());
+      return gsl::narrow<int64_t>(stream->read(buffer));
+    });
+    session.write(flow_file_copy, [&](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+      return gsl::narrow<int64_t>(stream->write(buffer));
+    });
+    session.append(flow_file_copy, [&](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+      return gsl::narrow<int64_t>(stream->write(buffer));
+    });
+    session.transfer(flow_file_copy, Success);
+    session.transfer(flow_file, Original);
+  }
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+};
+
+TEST_CASE("Test processor metrics change after trigger", "[ProcessorMetrics]") {
+  minifi::test::SingleProcessorTestController test_controller(std::make_unique<DuplicateContentProcessor>("DuplicateContentProcessor"));
+  test_controller.trigger({minifi::test::InputFlowFileData{"log line 1", {}}});
+  auto metrics = test_controller.getProcessor()->getMetrics();
+  CHECK(metrics->invocations == 1);
+  CHECK(metrics->incoming_flow_files == 1);
+  CHECK(metrics->transferred_flow_files == 2);
+  CHECK(metrics->getTransferredFlowFilesToRelationshipCount("success") == 1);
+  CHECK(metrics->getTransferredFlowFilesToRelationshipCount("original") == 1);
+  CHECK(metrics->incoming_bytes == 10);
+  CHECK(metrics->transferred_bytes == 30);
+  CHECK(metrics->bytes_read == 10);
+  CHECK(metrics->bytes_written == 20);
+  auto old_nanos = metrics->processing_nanos.load();
+  CHECK(metrics->processing_nanos > 0);
+
+  test_controller.trigger({minifi::test::InputFlowFileData{"new log line 2", {}}});
+  CHECK(metrics->invocations == 2);
+  CHECK(metrics->incoming_flow_files == 2);
+  CHECK(metrics->transferred_flow_files == 4);
+  CHECK(metrics->getTransferredFlowFilesToRelationshipCount("success") == 2);
+  CHECK(metrics->getTransferredFlowFilesToRelationshipCount("original") == 2);
+  CHECK(metrics->incoming_bytes == 24);
+  CHECK(metrics->transferred_bytes == 72);
+  CHECK(metrics->bytes_read == 24);
+  CHECK(metrics->bytes_written == 48);
+  CHECK(metrics->processing_nanos > old_nanos);
+}
+
 
 }  // namespace org::apache::nifi::minifi::test

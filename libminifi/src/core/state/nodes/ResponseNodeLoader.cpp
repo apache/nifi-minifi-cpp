@@ -209,9 +209,9 @@ void ResponseNodeLoader::initializeAssetInformation(const SharedResponseNode& re
   }
 }
 
-void ResponseNodeLoader::initializeFlowMonitor(const SharedResponseNode& response_node) const {
-  auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
-  if (flowMonitor == nullptr) {
+void ResponseNodeLoader::initializeFlowInformation(const SharedResponseNode& response_node) const {
+  auto flow_information = dynamic_cast<state::response::FlowInformation*>(response_node.get());
+  if (flow_information == nullptr) {
     return;
   }
 
@@ -222,11 +222,17 @@ void ResponseNodeLoader::initializeFlowMonitor(const SharedResponseNode& respons
   }
 
   for (auto &con : connections) {
-    flowMonitor->updateConnection(con.second);
+    flow_information->updateConnection(con.second);
   }
-  flowMonitor->setStateMonitor(update_sink_);
+  flow_information->setStateMonitor(update_sink_);
   if (flow_configuration_) {
-    flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
+    flow_information->setFlowVersion(flow_configuration_->getFlowVersion());
+  }
+
+  if (root_) {
+    std::vector<core::Processor*> processors;
+    root_->getAllProcessors(processors);
+    flow_information->setProcessors(processors);
   }
 }
 
@@ -245,7 +251,7 @@ std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std:
     initializeAgentNode(response_node);
     initializeAgentStatus(response_node);
     initializeConfigurationChecksums(response_node);
-    initializeFlowMonitor(response_node);
+    initializeFlowInformation(response_node);
     initializeAssetInformation(response_node);
   }
   return response_nodes;

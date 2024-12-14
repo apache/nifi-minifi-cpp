@@ -26,6 +26,7 @@
 #include "core/state/nodes/StateMonitor.h"
 #include "Connection.h"
 #include "core/state/ConnectionStore.h"
+#include "core/Processor.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -92,14 +93,20 @@ class FlowVersion : public DeviceInformation {
   std::shared_ptr<FlowIdentifier> identifier;
 };
 
-class FlowMonitor : public StateMonitorNode {
+class FlowInformation : public StateMonitorNode {
  public:
-  FlowMonitor(std::string_view name, const utils::Identifier &uuid)
+  FlowInformation(std::string_view name, const utils::Identifier &uuid)
       : StateMonitorNode(name, uuid) {
   }
 
-  explicit FlowMonitor(std::string_view name)
+  explicit FlowInformation(std::string_view name)
       : StateMonitorNode(name) {
+  }
+
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines the flow ID and flow URL deployed to this agent";
+
+  std::string getName() const override {
+    return "flowInfo";
   }
 
   void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
@@ -110,32 +117,17 @@ class FlowMonitor : public StateMonitorNode {
     connection_store_.updateConnection(connection);
   }
 
- protected:
-  std::shared_ptr<state::response::FlowVersion> flow_version_;
-  ConnectionStore connection_store_;
-};
-
-/**
- * Justification and Purpose: Provides flow version Information
- */
-class FlowInformation : public FlowMonitor {
- public:
-  FlowInformation(std::string_view name, const utils::Identifier &uuid)
-      : FlowMonitor(name, uuid) {
-  }
-
-  explicit FlowInformation(std::string_view name)
-      : FlowMonitor(name) {
-  }
-
-  MINIFIAPI static constexpr const char* Description = "Metric node that defines the flow ID and flow URL deployed to this agent";
-
-  std::string getName() const override {
-    return "flowInfo";
+  void setProcessors(std::vector<core::Processor*> processors) {
+    processors_ = std::move(processors);
   }
 
   std::vector<SerializedResponseNode> serialize() override;
   std::vector<PublishedMetric> calculateMetrics() override;
+
+ private:
+  std::shared_ptr<state::response::FlowVersion> flow_version_;
+  ConnectionStore connection_store_;
+  std::vector<core::Processor*> processors_;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response
