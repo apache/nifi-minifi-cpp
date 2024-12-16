@@ -223,7 +223,9 @@ int main(int argc, char **argv) {
   auto& logger_configuration = core::logging::LoggerConfiguration::getConfiguration();
   const auto logger = logger_configuration.getLogger("main");
   auto startup_timepoint = std::chrono::system_clock::now();
-  auto log_runtime = gsl::finally([&](){logger->log_info("Runtime was {}", std::chrono::system_clock::now()-startup_timepoint);});
+  auto log_runtime = gsl::finally([&]() {
+    logger->log_info("Runtime was {}", utils::timeutils::humanReadableDuration(std::chrono::system_clock::now()-startup_timepoint));
+  });
 #ifdef WIN32
   if (isStartedByService) {
     if (!CreateServiceTerminationThread(logger, terminationEventHandler)) {
