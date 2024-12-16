@@ -150,8 +150,8 @@ class SchedulingAgent {
   };
 
   std::shared_ptr<core::logging::Logger> logger_;
-  mutable std::mutex watchdog_mtx_;  // used to protect the set below
-  std::set<SchedulingInfo> scheduled_processors_;  // set was chosen to avoid iterator invalidation
+  mutable std::mutex watchdog_mtx_;  // used to protect the vector below
+  std::vector<gsl::not_null<SchedulingInfo*>> scheduled_processors_;
   std::unique_ptr<utils::CallBackTimer> watchDogTimer_;
   std::chrono::milliseconds alert_time_;
 };
