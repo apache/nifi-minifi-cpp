@@ -346,6 +346,8 @@ TEST_CASE("Parse RFC3339", "[parseRfc3339]") {
 TEST_CASE("Test human readable parser") {
   using utils::timeutils::humanReadableDuration;
   CHECK(humanReadableDuration(1234567us) == "1.23s");
+  const auto nine_hundred_forty_five_microseconds = humanReadableDuration(945us);
+  CHECK((nine_hundred_forty_five_microseconds == "945.00µs" || nine_hundred_forty_five_microseconds == "945.00us"));
   CHECK(humanReadableDuration(52ms) == "52.00ms");
 
   CHECK(humanReadableDuration(1000s) == "00:16:40");
