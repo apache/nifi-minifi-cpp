@@ -162,8 +162,8 @@ RepositoryMetrics is a system level metric that reports metrics for the register
 | rocksdb_table_readers_size_bytes     | repository_name | RocksDB's estimated memory used for reading SST tables (only present if repository uses RocksDB)                 |
 | rocksdb_all_memory_tables_size_bytes | repository_name | RocksDB's approximate size of active and unflushed immutable memtables (only present if repository uses RocksDB) |
 
-| Label                    | Description                                                                                                                           |
-|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| Label                    | Description                                                                                                                            |
+|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
 | repository_name          | Name of the reported repository. There are three repositories present with the following names: `flowfile`, `content` and `provenance` |
 
 ### DeviceInfoNode
@@ -181,13 +181,22 @@ DeviceInfoNode is a system level metric that reports metrics about the system re
 
 FlowInformation is a system level metric that reports component and queue related metrics.
 
-| Metric name          | Labels                           | Description                                |
-|----------------------|----------------------------------|--------------------------------------------|
-| queue_data_size      | connection_uuid, connection_name | Current queue data size                    |
-| queue_data_size_max  | connection_uuid, connection_name | Max queue data size to apply back pressure |
-| queue_size           | connection_uuid, connection_name | Current queue size                         |
-| queue_size_max       | connection_uuid, connection_name | Max queue size to apply back pressure      |
-| is_running           | component_uuid, component_name   | Check if the component is running (1 or 0) |
+| Metric name          | Labels                           | Description                                                                |
+|----------------------|----------------------------------|----------------------------------------------------------------------------|
+| queue_data_size      | connection_uuid, connection_name | Current queue data size                                                    |
+| queue_data_size_max  | connection_uuid, connection_name | Max queue data size to apply back pressure                                 |
+| queue_size           | connection_uuid, connection_name | Current queue size                                                         |
+| queue_size_max       | connection_uuid, connection_name | Max queue size to apply back pressure                                      |
+| is_running           | component_uuid, component_name   | Check if the component is running (1 or 0)                                 |
+| bytes_read           | processor_uuid, processor_name   | Number of bytes read by the processor                                      |
+| bytes_written        | processor_uuid, processor_name   | Number of bytes written by the processor                                   |
+| flow_files_in        | processor_uuid, processor_name   | Number of flow files from the incoming queue processed by the processor    |
+| flow_files_out       | processor_uuid, processor_name   | Number of flow files transferred to outgoing relationship by the processor |
+| bytes_in             | processor_uuid, processor_name   | Sum of data from the incoming queue processed by the processor             |
+| bytes_out            | processor_uuid, processor_name   | Sum of data transferred to outgoing relationship by the processor          |
+| invocations          | processor_uuid, processor_name   | Number of times the processor was triggered                                |
+| processing_nanos     | processor_uuid, processor_name   | Sum of the runtime spent in the processor in nanoseconds                   |
+
 
 | Label           | Description                                                  |
 |-----------------|--------------------------------------------------------------|
@@ -195,6 +204,8 @@ FlowInformation is a system level metric that reports component and queue relate
 | connection_name | Name of the connection defined in the flow configuration     |
 | component_uuid  | UUID of the component                                        |
 | component_name  | Name of the component                                        |
+| processor_uuid  | UUID of the processor                                        |
+| processor_name  | Name of the processor                                        |
 
 ### AgentStatus
 
@@ -251,6 +262,11 @@ There are general metrics that are available for all processors. Besides these m
 | transferred_flow_files                      | metric_class, processor_name, processor_uuid | Number of flow files transferred to a relationship                                       |
 | transferred_bytes                           | metric_class, processor_name, processor_uuid | Number of bytes transferred to a relationship                                            |
 | transferred_to_\<relationship\>             | metric_class, processor_name, processor_uuid | Number of flow files transferred to a specific relationship                              |
+| incoming_flow_files                         | metric_class, processor_name, processor_uuid | Number of flow files from the incoming queue processed by the processor                  |
+| incoming_bytes                              | metric_class, processor_name, processor_uuid | Sum of data from the incoming queue processed by the processor                           |
+| bytes_read                                  | metric_class, processor_name, processor_uuid | Number of bytes read by the processor                                                    |
+| bytes_written                               | metric_class, processor_name, processor_uuid | Number of bytes written by the processor                                                 |
+| processing_nanos                            | metric_class, processor_name, processor_uuid | Sum of the runtime spent in the processor in nanoseconds                                 |
 
 | Label          | Description                                                            |
 |----------------|------------------------------------------------------------------------|

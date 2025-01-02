@@ -62,7 +62,7 @@ class ResponseNodeLoader {
   void initializeAgentNode(const SharedResponseNode& response_node) const;
   void initializeAgentStatus(const SharedResponseNode& response_node) const;
   void initializeConfigurationChecksums(const SharedResponseNode& response_node) const;
-  void initializeFlowMonitor(const SharedResponseNode& response_node) const;
+  void initializeFlowInformation(const SharedResponseNode& response_node) const;
   void initializeAssetInformation(const SharedResponseNode& response_node) const;
   std::vector<SharedResponseNode> getMatchingComponentMetricsNodes(const std::string& regex_str) const;
 

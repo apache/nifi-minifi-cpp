@@ -24,10 +24,15 @@ namespace org::apache::nifi::minifi::io {
 class InputStream;
 class OutputStream;
 
+struct ReadWriteResult {
+  int64_t bytes_written = 0;
+  int64_t bytes_read = 0;
+};
+
 // FlowFile IO Callback functions for input and output
 // throw exception for error
 using InputStreamCallback = std::function<int64_t(const std::shared_ptr<InputStream>& input_stream)>;
 using OutputStreamCallback = std::function<int64_t(const std::shared_ptr<OutputStream>& output_stream)>;
-using InputOutputStreamCallback = std::function<int64_t(const std::shared_ptr<InputStream>& input_stream, const std::shared_ptr<OutputStream>& output_stream)>;
+using InputOutputStreamCallback = std::function<ReadWriteResult(const std::shared_ptr<InputStream>& input_stream, const std::shared_ptr<OutputStream>& output_stream)>;
 
 }  // namespace org::apache::nifi::minifi::io
