@@ -53,13 +53,23 @@ class ParameterContext : public CoreComponent {
 
   void addParameter(const Parameter &parameter);
   std::optional<Parameter> getParameter(const std::string &name) const;
+
   const std::unordered_map<std::string, Parameter>& getParameters() const {
     return parameters_;
+  }
+
+  void addInheritedParameterContext(gsl::not_null<ParameterContext*> parameter_context) {
+    inherited_parameter_contexts_.push_back(parameter_context);
+  }
+
+  const std::vector<gsl::not_null<ParameterContext*>>& getInheritedParameterContexts() const {
+    return inherited_parameter_contexts_;
   }
 
  private:
   std::string description_;
   std::unordered_map<std::string, Parameter> parameters_;
+  std::vector<gsl::not_null<ParameterContext*>> inherited_parameter_contexts_;
 };
 
 }  // namespace org::apache::nifi::minifi::core
