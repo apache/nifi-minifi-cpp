@@ -241,8 +241,8 @@ std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std:
     return {};
   }
 
+  std::lock_guard<std::mutex> guard(initialization_mutex_);
   for (const auto& response_node : response_nodes) {
-    std::lock_guard<std::mutex> guard(initialization_mutex_);
     if (initialized_metrics_.contains(response_node->getName())) {
       continue;
     }
