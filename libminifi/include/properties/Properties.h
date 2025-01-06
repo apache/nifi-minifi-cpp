@@ -49,7 +49,6 @@ class PropertiesImpl : public virtual Properties {
     return name_;
   }
 
-  // Clear the load config
   void clear() override {
     std::lock_guard<std::mutex> lock(mutex_);
     properties_.clear();
@@ -57,7 +56,6 @@ class PropertiesImpl : public virtual Properties {
   void set(const std::string& key, const std::string& value) override {
     set(key, value, PropertyChangeLifetime::PERSISTENT);
   }
-  // Set the config value
   void set(const std::string &key, const std::string &value, PropertyChangeLifetime lifetime) override {
     auto active_value = utils::string::replaceEnvironmentVariables(value);
     std::lock_guard<std::mutex> lock(mutex_);
@@ -78,7 +76,6 @@ class PropertiesImpl : public virtual Properties {
       dirty_ = true;
     }
   }
-  // Check whether the config value existed
   bool has(const std::string& key) const override {
     std::lock_guard<std::mutex> lock(mutex_);
     return properties_.count(key) > 0;
@@ -148,7 +145,6 @@ class PropertiesImpl : public virtual Properties {
 
   // Mutex for protection
   mutable std::mutex mutex_;
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_;
   // Home location for this executable
   std::filesystem::path minifi_home_;

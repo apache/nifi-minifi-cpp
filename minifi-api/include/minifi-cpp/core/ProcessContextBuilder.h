@@ -16,24 +16,14 @@
  */
 #pragma once
 
-#include <string>
-#include <vector>
-#include <queue>
-#include <map>
-#include <mutex>
-#include <atomic>
-#include <algorithm>
 #include <memory>
-#include "Property.h"
 #include "minifi-cpp/core/Core.h"
-#include "utils/Id.h"
 #include "core/ContentRepository.h"
 #include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "ProcessContext.h"
 #include "ProcessorNode.h"
 #include "minifi-cpp/core/Repository.h"
-#include "VariableRegistry.h"
 
 namespace org::apache::nifi::minifi::core {
 /**

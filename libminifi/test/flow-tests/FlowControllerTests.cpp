@@ -110,6 +110,7 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
   testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, "100 ms");
 
   auto sinkProc = dynamic_cast<minifi::processors::TestProcessor*>(root->findProcessorByName("TestProcessor"));
+  gsl_Assert(sinkProc);
   // prevent execution of the consumer processor
   sinkProc->yield(10s);
 

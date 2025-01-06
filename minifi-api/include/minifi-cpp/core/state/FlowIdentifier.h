@@ -20,12 +20,7 @@
 
 #include <string>
 
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
+namespace org::apache::nifi::minifi::state {
 
 /**
  * Purpose: Represents a flow identifier for a given flow update or instance.
@@ -41,8 +36,4 @@ class FlowIdentifier {
 };
 
 
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::state

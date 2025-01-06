@@ -99,7 +99,9 @@ TEST_CASE("Flow with two loops", "[MultiLoopFlow]") {
   auto root = testController.root_;
 
   auto procGenerator = dynamic_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator*>(root->findProcessorByName("Generator"));
+  gsl_Assert(procGenerator);
   auto procA = dynamic_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("A"));
+  gsl_Assert(procA);
 
   int tryCount = 0;
   while (tryCount++ < 10 && procA->trigger_count.load() <= 15) {

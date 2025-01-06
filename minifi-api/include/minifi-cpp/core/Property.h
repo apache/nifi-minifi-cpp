@@ -120,14 +120,11 @@ class Property {
 
   void setAllowedValues(gsl::span<const std::string_view> allowed_values, const core::PropertyParser& property_parser);
 
-  /**
-   * Add value to the collection of values.
-   */
   void addValue(const std::string &value);
   Property &operator=(const Property &other) = default;
   Property &operator=(Property &&other) = default;
-// Compare
-  bool operator <(const Property & right) const;
+
+  bool operator<(const Property & right) const;
 
   static bool StringToPermissions(const std::string& input, uint32_t& output) {
     uint32_t temp = 0U;
@@ -169,7 +166,6 @@ class Property {
     return true;
   }
 
-  // Convert String to Integer
   template<typename T>
   static bool StringToInt(std::string input, T &output);
 
@@ -177,7 +173,6 @@ class Property {
     return StringToInt<int64_t>(input, output);
   }
 
-// Convert String to Integer
   static bool StringToInt(std::string input, uint64_t &output) {
     return StringToInt<uint64_t>(input, output);
   }
@@ -186,15 +181,11 @@ class Property {
     return StringToInt<int32_t>(input, output);
   }
 
-// Convert String to Integer
   static bool StringToInt(std::string input, uint32_t &output) {
     return StringToInt<uint32_t>(input, output);
   }
 
  protected:
-  /**
-   * Coerce default values at construction.
-   */
   PropertyValue coerceDefaultValue(const std::string &value);
 
   std::string name_;

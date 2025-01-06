@@ -37,12 +37,6 @@ namespace org::apache::nifi::minifi::core::controller {
 
 class ControllerServiceNodeImpl : public CoreComponentImpl, public ConfigurableComponentImpl, public virtual ControllerServiceNode {
  public:
-  /**
-   * Constructor for the controller service node.
-   * @param service controller service reference
-   * @param id identifier for this node.
-   * @param configuration shared pointer configuration.
-   */
   explicit ControllerServiceNodeImpl(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
       : CoreComponentImpl(std::move(id)),
         active(false),
@@ -105,9 +99,7 @@ class ControllerServiceNodeImpl : public CoreComponentImpl, public ConfigurableC
 
   std::atomic<bool> active;
   std::shared_ptr<Configure> configuration_;
-  // controller service.
   std::shared_ptr<ControllerService> controller_service_;
-  // linked controller services.
   std::vector<ControllerServiceNode*> linked_controller_services_;
 };
 

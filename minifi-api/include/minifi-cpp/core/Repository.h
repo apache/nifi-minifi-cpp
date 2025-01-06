@@ -19,32 +19,18 @@
  */
 #pragma once
 
-#include <atomic>
 #include <cstdint>
-#include <cstring>
 #include <map>
 #include <memory>
-#include <set>
 #include <string>
-#include <string_view>
-#include <utility>
 #include <vector>
 
-#include "minifi-cpp/ResourceClaim.h"
 #include "Connectable.h"
 #include "ContentRepository.h"
-#include "Property.h"
 #include "SerializableComponent.h"
-#include "core/logging/LoggerFactory.h"
 #include "RepositoryMetricsSource.h"
 #include "minifi-cpp/properties/Configure.h"
-#include "utils/BackTrace.h"
-#include "minifi-cpp/SwapManager.h"
 #include "core/Core.h"
-
-#ifndef WIN32
-#include <sys/stat.h>
-#endif
 
 namespace org::apache::nifi::minifi::core {
 

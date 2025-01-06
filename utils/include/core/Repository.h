@@ -123,8 +123,6 @@ class RepositoryImpl : public core::CoreComponentImpl, public core::RepositoryMe
     return getName();
   }
 
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
   RepositoryImpl(const RepositoryImpl &parent) = delete;
   RepositoryImpl &operator=(const RepositoryImpl &parent) = delete;
 

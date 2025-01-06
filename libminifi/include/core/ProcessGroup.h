@@ -268,8 +268,7 @@ class ProcessGroup : public CoreComponentImpl {
   mutable std::recursive_mutex mutex_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
+
   ProcessGroup(const ProcessGroup &parent);
   ProcessGroup &operator=(const ProcessGroup &parent);
   static std::shared_ptr<utils::IdGenerator> id_generator_;

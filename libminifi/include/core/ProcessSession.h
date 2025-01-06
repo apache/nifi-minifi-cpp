@@ -49,29 +49,20 @@ std::string to_string(const ReadBufferResult& read_buffer_result);
 
 namespace org::apache::nifi::minifi::core {
 
-// ProcessSession Class
 class ProcessSessionImpl : public ReferenceContainerImpl, public virtual ProcessSession {
  public:
-  // Constructor
-  /*!
-   * Create a new process session
-   */
   explicit ProcessSessionImpl(std::shared_ptr<ProcessContext> processContext);
 
-  // Destructor
   ~ProcessSessionImpl() override;
-
-  // Commit the session
   void commit() override;
-  // Roll Back the session
   void rollback() override;
 
   nonstd::expected<void, std::exception_ptr> rollbackNoThrow() noexcept override;
-  // Get Provenance Report
+
   std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() override {
     return provenance_report_;
   }
-  // writes the created contents to the underlying repository
+
   void flushContent() override;
 
   std::shared_ptr<core::FlowFile> get() override;
@@ -80,7 +71,7 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
   void add(const std::shared_ptr<core::FlowFile> &record) override;
   std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent) override;
   std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent, int64_t offset, int64_t size) override;
-  // Transfer the FlowFile to the relationship
+
   void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) override;
   void transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name) override;
 
@@ -88,57 +79,44 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
   void removeAttribute(core::FlowFile& flow, std::string_view key) override;
 
   void remove(const std::shared_ptr<core::FlowFile> &flow) override;
-  // Access the contents of the flow file as an input stream; returns null if the flow file has no content claim
+
   std::shared_ptr<io::InputStream> getFlowFileContentStream(const core::FlowFile& flow_file) override;
-  // Execute the given read callback against the content
+
   int64_t read(const std::shared_ptr<core::FlowFile>& flow_file, const io::InputStreamCallback& callback) override;
 
   int64_t read(const core::FlowFile& flow_file, const io::InputStreamCallback& callback) override;
-  // Read content into buffer
+
   detail::ReadBufferResult readBuffer(const std::shared_ptr<core::FlowFile>& flow) override;
-  // Execute the given write callback against the content
+
   void write(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) override;
 
   void write(core::FlowFile& flow, const io::OutputStreamCallback& callback) override;
   // Read and write the flow file at the same time (eg. for processing it line by line)
   int64_t readWrite(const std::shared_ptr<core::FlowFile> &flow, const io::InputOutputStreamCallback& callback) override;
-  // Replace content with buffer
+
   void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer) override;
   void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer) override;
-  // Execute the given write/append callback against the content
+
   void append(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) override;
-  // Append buffer to content
+
   void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, std::span<const char> buffer) override;
   void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, std::span<const std::byte> buffer) override;
-  // Penalize the flow
+
   void penalize(const std::shared_ptr<core::FlowFile> &flow) override;
 
   bool outgoingConnectionsFull(const std::string& relationship) override;
 
-  /**
-   * Imports a file from the data stream
-   * @param stream incoming data stream that contains the data to store into a file
-   * @param flow flow file
-   */
   void importFrom(io::InputStream &stream, const std::shared_ptr<core::FlowFile> &flow) override;
   void importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow) override;
 
-  // import from the data source.
   void import(const std::string& source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource = true, uint64_t offset = 0) override;
 
-  /**
-   * Exports the data stream to a file
-   * @param string file to export stream to
-   * @param flow flow file
-   * @param bool whether or not to keep the content in the flow file
-   */
   bool exportContent(const std::string &destination, const std::shared_ptr<core::FlowFile> &flow, bool keepContent) override;
 
   bool exportContent(const std::string &destination, const std::string &tmpFileName, const std::shared_ptr<core::FlowFile> &flow, bool keepContent) override;
 
-  // Stash the content to a key
   void stash(const std::string &key, const std::shared_ptr<core::FlowFile> &flow) override;
-  // Restore content previously stashed to a key
+
   void restore(const std::string &key, const std::shared_ptr<core::FlowFile> &flow) override;
 
   bool existsFlowFileInRelationship(const Relationship &relationship) override;
@@ -149,8 +127,6 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
 
   bool hasBeenTransferred(const core::FlowFile &flow) const override;
 
-// Prevent default copy constructor and assignment operation
-// Only support pass by reference or pointer
   ProcessSessionImpl(const ProcessSessionImpl &parent) = delete;
   ProcessSessionImpl &operator=(const ProcessSessionImpl &parent) = delete;
 
@@ -202,17 +178,11 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
   void ensureNonNullResourceClaim(
       const std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap);
 
-  // Clone the flow file during transfer to multiple connections for a relationship
   std::shared_ptr<core::FlowFile> cloneDuringTransfer(const core::FlowFile& parent);
-  // ProcessContext
   std::shared_ptr<ProcessContext> process_context_;
-  // Logger
   std::shared_ptr<logging::Logger> logger_;
-  // Provenance Report
   std::shared_ptr<provenance::ProvenanceReporter> provenance_report_;
-
   std::shared_ptr<ContentSession> content_session_;
-
   StateManager* stateManager_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;

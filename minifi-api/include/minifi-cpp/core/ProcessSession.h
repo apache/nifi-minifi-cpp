@@ -19,23 +19,10 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
-#include <queue>
-#include <map>
-#include <mutex>
-#include <atomic>
-#include <algorithm>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
 
-#include "ProcessContext.h"
-#include "core/logging/LoggerFactory.h"
 #include "FlowFile.h"
-#include "WeakReference.h"
 #include "minifi-cpp/provenance/Provenance.h"
-#include "utils/gsl.h"
 #include "ProcessorMetrics.h"
 #include "minifi-cpp/io/StreamCallback.h"
 

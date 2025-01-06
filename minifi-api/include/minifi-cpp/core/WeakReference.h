@@ -18,16 +18,10 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
 
-#include  <type_traits>
-#include <vector>
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /*
  * An homage to weak references in java, this acts as a class
@@ -55,8 +49,4 @@ class ReferenceContainer {
   virtual void removeReferences() = 0;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

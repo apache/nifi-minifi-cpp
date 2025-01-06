@@ -33,9 +33,6 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-/**
- * Purpose: Defines a metric that
- */
 class DeviceInformation : public ResponseNodeImpl {
  public:
   DeviceInformation(std::string_view name, const utils::Identifier& uuid)
@@ -47,9 +44,6 @@ class DeviceInformation : public ResponseNodeImpl {
   }
 };
 
-/**
- * Purpose: Defines a metric that
- */
 class ObjectNode : public ResponseNodeImpl {
  public:
   explicit ObjectNode(const std::string_view name, const utils::Identifier& uuid = {})

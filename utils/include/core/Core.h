@@ -99,30 +99,14 @@ class CoreComponentImpl : public virtual CoreComponent {
 
   ~CoreComponentImpl() override = default;
 
-  // Get component name
   [[nodiscard]] std::string getName() const override;
 
-  /**
-   * Set name.
-   * @param name
-   */
   void setName(std::string name) override;
 
-  /**
-   * Set UUID in this instance
-   * @param uuid uuid to apply to the internal representation.
-   */
   void setUUID(const utils::Identifier& uuid) override;
 
-  /**
-   * Returns the UUID.
-   * @return the uuid of the component
-   */
   [[nodiscard]] utils::Identifier getUUID() const override;
 
-  /**
-   * Return the UUID string
-   */
   [[nodiscard]] utils::SmallString<36> getUUIDStr() const override {
     return uuid_.to_string();
   }
@@ -133,8 +117,6 @@ class CoreComponentImpl : public virtual CoreComponent {
  protected:
   // A global unique identifier
   utils::Identifier uuid_;
-
-  // CoreComponent's name
   std::string name_;
 };
 

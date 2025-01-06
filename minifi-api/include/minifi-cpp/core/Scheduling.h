@@ -15,14 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_SCHEDULING_H_
-#define LIBMINIFI_INCLUDE_CORE_SCHEDULING_H_
+#pragma once
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /*
  * Indicates the valid values for the state of a entity
@@ -49,9 +44,4 @@ enum SchedulingStrategy {
   CRON_DRIVEN
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CORE_SCHEDULING_H_
+}  // namespace org::apache::nifi::minifi::core

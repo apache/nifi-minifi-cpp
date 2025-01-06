@@ -19,12 +19,8 @@
 #include <string>
 #include <chrono>
 #include <atomic>
-#include <unordered_map>
-#include <mutex>
-#include <vector>
 
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
-#include "minifi-cpp/core/state/PublishedMetricProvider.h"
 
 namespace org::apache::nifi::minifi::core {
 

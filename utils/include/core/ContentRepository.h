@@ -33,9 +33,6 @@
 
 namespace org::apache::nifi::minifi::core {
 
-/**
- * Content repository definition that extends StreamManager.
- */
 class ContentRepositoryImpl : public CoreComponentImpl, public StreamManagerImpl<minifi::ResourceClaim>, public RepositoryMetricsSourceImpl, public virtual ContentRepository {
   class ContentStreamAppendLock : public StreamAppendLock {
    public:
@@ -50,8 +47,6 @@ class ContentRepositoryImpl : public CoreComponentImpl, public StreamManagerImpl
   explicit ContentRepositoryImpl(std::string_view name, const utils::Identifier& uuid = {}) : core::CoreComponentImpl(name, uuid) {}
   ~ContentRepositoryImpl() override = default;
 
-  bool initialize(const std::shared_ptr<Configure> &configure) override = 0;
-
   std::string getStoragePath() const override;
   std::shared_ptr<ContentSession> createSession() override;
   void reset() override;
@@ -59,8 +54,6 @@ class ContentRepositoryImpl : public CoreComponentImpl, public StreamManagerImpl
   uint32_t getStreamCount(const minifi::ResourceClaim &streamId) override;
   void incrementStreamCount(const minifi::ResourceClaim &streamId) override;
   StreamState decrementStreamCount(const minifi::ResourceClaim &streamId) override;
-
-  void clearOrphans() override = 0;
 
   void start() override {}
   void stop() override {}

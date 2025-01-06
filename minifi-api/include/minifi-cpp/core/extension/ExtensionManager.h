@@ -17,10 +17,6 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-
 #include "Extension.h"
 
 namespace org::apache::nifi::minifi::core::extension {

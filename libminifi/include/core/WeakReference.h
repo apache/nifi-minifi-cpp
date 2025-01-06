@@ -25,11 +25,7 @@
 
 #include "minifi-cpp/core/WeakReference.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Reference container is a vector of weak references that enables
@@ -69,8 +65,4 @@ class ReferenceContainerImpl : public virtual ReferenceContainer {
   std::vector<std::shared_ptr<WeakReference> > references;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

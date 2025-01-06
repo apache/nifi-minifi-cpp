@@ -81,25 +81,15 @@ class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer
   static std::shared_ptr<FlowFile> create();
 };
 
-// FlowFile Attribute
 struct SpecialFlowAttribute {
-  // The flowfile's path indicates the relative directory to which a FlowFile belongs and does not contain the filename
   MINIFIAPI static constexpr std::string_view PATH = "path";
-  // The flowfile's absolute path indicates the absolute directory to which a FlowFile belongs and does not contain the filename
   MINIFIAPI static constexpr std::string_view ABSOLUTE_PATH = "absolute.path";
-  // The filename of the FlowFile. The filename should not contain any directory structure.
   MINIFIAPI static constexpr std::string_view FILENAME = "filename";
-  // A unique UUID assigned to this FlowFile.
   MINIFIAPI static constexpr std::string_view UUID = "uuid";
-  // A numeric value indicating the FlowFile priority
   MINIFIAPI static constexpr std::string_view priority = "priority";
-  // The MIME Type of this FlowFile
   MINIFIAPI static constexpr std::string_view MIME_TYPE = "mime.type";
-  // Specifies the reason that a FlowFile is being discarded
   MINIFIAPI static constexpr std::string_view DISCARD_REASON = "discard.reason";
-  // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
   MINIFIAPI static constexpr std::string_view ALTERNATE_IDENTIFIER = "alternate.identifier";
-  // Flow identifier
   MINIFIAPI static constexpr std::string_view FLOW_ID = "flow.id";
 
   static constexpr std::array<std::string_view, 9> getSpecialFlowAttributes() {

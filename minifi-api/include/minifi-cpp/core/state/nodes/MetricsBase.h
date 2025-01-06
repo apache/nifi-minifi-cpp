@@ -22,7 +22,6 @@
 #include <memory>
 #include <string>
 #include <optional>
-#include <unordered_map>
 
 #include "../Value.h"
 #include "../PublishedMetricProvider.h"
@@ -34,9 +33,6 @@ namespace org::apache::nifi::minifi::state::response {
 class ResponseNode;
 using SharedResponseNode = gsl::not_null<std::shared_ptr<ResponseNode>>;
 
-/**
- * Purpose: Defines a metric. Serialization is intended to be thread safe.
- */
 class ResponseNode : public virtual core::Connectable, public virtual PublishedMetricProvider {
  public:
   ~ResponseNode() override = default;
@@ -48,10 +44,6 @@ class ResponseNode : public virtual core::Connectable, public virtual PublishedM
   virtual bool isEmpty() = 0;
 };
 
-/**
- * Purpose: Retrieves Metrics from the defined class. The current Metric, which is a consumable for any reader of Metrics must have the ability to set metrics.
- *
- */
 class ResponseNodeSource {
  public:
   virtual ~ResponseNodeSource() = default;
@@ -70,23 +62,10 @@ class NodeReporter {
 
   virtual ~NodeReporter() = default;
 
-  /**
-   * Retrieves metrics node
-   * @return metrics response node
-   */
   virtual std::optional<ReportedNode> getMetricsNode(const std::string& metricsClass) const = 0;
 
-  /**
-   * Retrieves root nodes configured to be included in heartbeat
-   * @param includeManifest -- determines if manifest is to be included
-   * @return a list of response nodes
-   */
   virtual std::vector<ReportedNode> getHeartbeatNodes(bool includeManifest) const = 0;
 
-  /**
-   * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
-   * @return the agent manifest response node
-   */
   virtual ReportedNode getAgentManifest() = 0;
 };
 

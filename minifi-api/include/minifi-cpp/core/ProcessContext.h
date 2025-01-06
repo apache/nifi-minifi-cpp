@@ -16,21 +16,14 @@
  */
 #pragma once
 
-#include <algorithm>
-#include <atomic>
-#include <concepts>
-#include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
-#include <queue>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "minifi-cpp/core/Core.h"
 #include "minifi-cpp/core/ContentRepository.h"
-#include "minifi-cpp/core/controller/ControllerServiceLookup.h"
+#include "minifi-cpp/core/controller/ControllerService.h"
 #include "minifi-cpp/core/ProcessorNode.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Repository.h"

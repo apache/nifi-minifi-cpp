@@ -76,8 +76,6 @@ class ProvenanceRepository : public core::repository::RocksDbRepository {
 
   void destroy();
 
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
   ProvenanceRepository(const ProvenanceRepository &parent) = delete;
 
   ProvenanceRepository &operator=(const ProvenanceRepository &parent) = delete;

@@ -29,9 +29,6 @@
 
 namespace org::apache::nifi::minifi::core {
 
-/**
- * Processor node functions as a pass through to the implementing Connectables
- */
 class ProcessorNode : public virtual ConfigurableComponent, public virtual Connectable {
  public:
   virtual Connectable* getProcessor() const = 0;

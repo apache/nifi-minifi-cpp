@@ -21,11 +21,7 @@
 #include "minifi-cpp/core/state/FlowIdentifier.h"
 
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
+namespace org::apache::nifi::minifi::state {
 
 /**
  * Purpose: Represents a flow identifier for a given flow update or instance.
@@ -36,9 +32,6 @@ class FlowIdentifierImpl : public virtual FlowIdentifier {
  public:
   FlowIdentifierImpl() = delete;
 
-  /**
-   * Constructor accepts the url, bucket id, and flow id.
-   */
   explicit FlowIdentifierImpl(const std::string &url, const std::string &bucket_id, const std::string &flow_id) {
     registry_url_ = url;
     bucket_id_ = bucket_id;
@@ -74,8 +67,4 @@ class FlowIdentifierImpl : public virtual FlowIdentifier {
 };
 
 
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::state

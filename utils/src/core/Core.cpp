@@ -25,28 +25,24 @@ namespace org::apache::nifi::minifi::core {
 CoreComponentImpl::CoreComponentImpl(std::string_view name, const utils::Identifier& uuid, const std::shared_ptr<utils::IdGenerator>& idGenerator)
     : name_(name) {
   if (uuid.isNil()) {
-    // Generate the global UUID for the flow record
     uuid_ = idGenerator->generate();
   } else {
     uuid_ = uuid;
   }
 }
 
-// Set UUID
 void CoreComponentImpl::setUUID(const utils::Identifier& uuid) {
   uuid_ = uuid;
 }
 
-// Get UUID
 utils::Identifier CoreComponentImpl::getUUID() const {
   return uuid_;
 }
 
-// Set Processor Name
 void CoreComponentImpl::setName(std::string name) {
   name_ = std::move(name);
 }
-// Get Process Name
+
 std::string CoreComponentImpl::getName() const {
   return name_;
 }

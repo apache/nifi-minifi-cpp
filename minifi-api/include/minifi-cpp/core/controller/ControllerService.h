@@ -23,28 +23,15 @@
 #include <vector>
 
 #include "minifi-cpp/properties/Configure.h"
-#include "minifi-cpp/core/Core.h"
 #include "minifi-cpp/core/ConfigurableComponent.h"
 #include "minifi-cpp/core/Connectable.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
 enum ControllerServiceState {
-  /**
-   * Controller Service is disabled and cannot be used.
-   */
   DISABLED,
-  /**
-   * Controller Service is in the process of being disabled.
-   */
   DISABLING,
-  /**
-   * Controller Service is being enabled.
-   */
   ENABLING,
-  /**
-   * Controller Service is enabled.
-   */
   ENABLED
 };
 

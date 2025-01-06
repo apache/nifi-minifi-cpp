@@ -25,40 +25,23 @@
 #include "ProcessSession.h"
 #include "minifi-cpp/core/ProcessSessionFactory.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-// ProcessSessionFactory Class
 class ProcessSessionFactoryImpl : public virtual ProcessSessionFactory {
  public:
-  // Constructor
-  /*!
-   * Create a new process session factory
-   */
   explicit ProcessSessionFactoryImpl(std::shared_ptr<ProcessContext> processContext)
       : process_context_(processContext) {
   }
 
-  // Create the session
   std::shared_ptr<ProcessSession> createSession() override;
 
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
   ProcessSessionFactoryImpl(const ProcessSessionFactoryImpl &parent) = delete;
   ProcessSessionFactoryImpl &operator=(const ProcessSessionFactoryImpl &parent) = delete;
 
   ~ProcessSessionFactoryImpl() override = default;
 
  private:
-  // ProcessContext
   std::shared_ptr<ProcessContext> process_context_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

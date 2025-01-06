@@ -22,24 +22,14 @@
 
 #include <memory>
 
-#include "ProcessContext.h"
 #include "ProcessSession.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-// ProcessSessionFactory Class
 class ProcessSessionFactory {
  public:
   virtual std::shared_ptr<ProcessSession> createSession() = 0;
   virtual ~ProcessSessionFactory() = default;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

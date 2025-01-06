@@ -16,29 +16,17 @@
  */
 #pragma once
 
-#include <utils/Id.h>
-
-#include <algorithm>
-#include <atomic>
 #include <chrono>
-#include <condition_variable>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <string_view>
 #include <unordered_set>
 #include <unordered_map>
-#include <utility>
-#include <vector>
 
 #include "ConfigurableComponent.h"
 #include "Connectable.h"
-#include "Core.h"
 #include "minifi-cpp/core/Annotation.h"
-#include "DynamicProperty.h"
 #include "Scheduling.h"
-#include "utils/TimeUtil.h"
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "ProcessorMetrics.h"
 #include "utils/gsl.h"

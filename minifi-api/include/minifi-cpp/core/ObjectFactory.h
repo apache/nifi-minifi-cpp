@@ -22,16 +22,8 @@
 #include <utility>
 #include "Core.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-/**
- * Factory that is used as an interface for
- * creating processors from shared objects.
- */
 class ObjectFactory {
  public:
   virtual std::unique_ptr<CoreComponent> create(const std::string& /*name*/) = 0;
@@ -44,8 +36,4 @@ class ObjectFactory {
   virtual ~ObjectFactory() = default;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

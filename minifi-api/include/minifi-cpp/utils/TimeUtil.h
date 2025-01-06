@@ -22,9 +22,6 @@
 
 namespace org::apache::nifi::minifi::utils::timeutils {
 
-/**
- * Mockable clock classes
- */
 class Clock {
  public:
   virtual ~Clock() = default;

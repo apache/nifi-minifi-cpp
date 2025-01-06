@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICELOOKUP_H_
-#define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICELOOKUP_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -25,12 +24,7 @@
 #include "minifi-cpp/core/ConfigurableComponent.h"
 #include "ControllerService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 /**
  * Controller Service Lookup pure virtual class.
@@ -82,11 +76,4 @@ class ControllerServiceLookup {
   virtual const std::string getControllerServiceName(const std::string &identifier) const = 0;
 };
 
-}  // namespace controller
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICELOOKUP_H_
+}  // namespace org::apache::nifi::minifi::core::controller

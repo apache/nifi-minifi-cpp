@@ -90,8 +90,7 @@ class ResourceClaimImpl : public ResourceClaim {
  private:
   // Logger
   std::shared_ptr<core::logging::Logger> logger_;
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
+
   ResourceClaimImpl(const ResourceClaimImpl &parent);
   ResourceClaimImpl &operator=(const ResourceClaimImpl &parent);
 

@@ -264,8 +264,6 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
   std::string _alternateIdentifierUri;
 
  private:
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
   ProvenanceEventRecordImpl(const ProvenanceEventRecordImpl &parent);
   ProvenanceEventRecordImpl &operator=(const ProvenanceEventRecordImpl &parent);
   static std::shared_ptr<core::logging::Logger> logger_;
@@ -337,8 +335,6 @@ class ProvenanceReporterImpl : public virtual ProvenanceReporter {
   std::set<std::shared_ptr<ProvenanceEventRecord>> _events;
   std::shared_ptr<core::Repository> repo_;
 
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
   ProvenanceReporterImpl(const ProvenanceReporterImpl &parent);
   ProvenanceReporterImpl &operator=(const ProvenanceReporterImpl &parent);
 };

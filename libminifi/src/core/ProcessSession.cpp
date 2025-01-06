@@ -933,8 +933,8 @@ void ProcessSessionImpl::commit() {
 
     if (metrics_) {
       for (const auto& [relationship_name, transfer_metrics] : transfers) {
-        metrics_->transferred_bytes() += transfer_metrics.transfer_size;
-        metrics_->transferred_flow_files() += transfer_metrics.transfer_count;
+        metrics_->transferredBytes() += transfer_metrics.transfer_size;
+        metrics_->transferredFlowFiles() += transfer_metrics.transfer_count;
         metrics_->increaseRelationshipTransferCount(relationship_name, transfer_metrics.transfer_count);
       }
     }

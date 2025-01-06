@@ -48,9 +48,6 @@ namespace org::apache::nifi::minifi::core {
 
 class ProcessContextImpl : public core::VariableRegistryImpl, public virtual ProcessContext {
  public:
-  /*!
-   * Create a new process context associated with the processor/controller service/state manager
-   */
   ProcessContextImpl(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository> &repo,
                  const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo = repository::createFileSystemRepository())
       : VariableRegistryImpl(Configure::create()),
@@ -65,9 +62,6 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
     state_storage_ = getStateStorage(logger_, controller_service_provider_, nullptr);
   }
 
-  /*!
-   * Create a new process context associated with the processor/controller service/state manager
-   */
   ProcessContextImpl(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository> &repo,
                  const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration, const std::shared_ptr<core::ContentRepository> &content_repo = repository::createFileSystemRepository())
       : VariableRegistryImpl(configuration),
@@ -114,29 +108,24 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   std::vector<std::string> getDynamicPropertyKeys() const override {
     return processor_node_->getDynamicPropertyKeys();
   }
-  // Sets the property value using the property's string name
   bool setProperty(const std::string &name, std::string value) override {
     return processor_node_->setProperty(name, value);
-  }  // Sets the dynamic property value using the property's string name
+  }
   bool setDynamicProperty(const std::string &name, std::string value) override {
     return processor_node_->setDynamicProperty(name, value);
   }
-  // Sets the property value using the Property object
   bool setProperty(const Property& property, std::string value) override {
     return setProperty(property.getName(), value);
   }
   bool setProperty(const PropertyReference& property, std::string_view value) override {
     return setProperty(std::string{property.name}, std::string{value});
   }
-  // Check whether the relationship is auto terminated
   bool isAutoTerminated(Relationship relationship) const override {
     return processor_node_->isAutoTerminated(relationship);
   }
-  // Get ProcessContext Maximum Concurrent Tasks
   uint8_t getMaxConcurrentTasks() const override {
     return processor_node_->getMaxConcurrentTasks();
   }
-  // Yield based on the yield period
   void yield() override {
     processor_node_->yield();
   }
@@ -145,10 +134,6 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
     return repo_;
   }
 
-  /**
-   * Returns a reference to the content repository for the running instance.
-   * @return content repository shared pointer.
-   */
   std::shared_ptr<core::ContentRepository> getContentRepository() const override {
     return content_repo_;
   }
@@ -157,8 +142,6 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
     return flow_repo_;
   }
 
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
   ProcessContextImpl(const ProcessContextImpl &parent) = delete;
   ProcessContextImpl &operator=(const ProcessContextImpl &parent) = delete;
 
