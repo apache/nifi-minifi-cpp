@@ -28,16 +28,12 @@ namespace org::apache::nifi::minifi::test {
 
 class HttpClientStoreTestAccessor {
  public:
-  static const std::vector<std::pair<std::unique_ptr<minifi::http::HTTPClient>, bool>>& getClients(minifi::processors::invoke_http::HttpClientStore& store) {
+  static const std::list<std::pair<std::unique_ptr<minifi::http::HTTPClient>, bool>>& getClients(minifi::processors::invoke_http::HttpClientStore& store) {
     return store.clients_;
   }
 
   static size_t getMaxSize(minifi::processors::invoke_http::HttpClientStore& store) {
     return store.max_size_;
-  }
-
-  static size_t getClientsCreated(minifi::processors::invoke_http::HttpClientStore& store) {
-    return store.clients_created_;
   }
 };
 
@@ -48,17 +44,16 @@ TEST_CASE("HttpClientStore can create new client for a url and is returned after
     return gsl::make_not_null(std::move(client));
   });
   REQUIRE(HttpClientStoreTestAccessor::getMaxSize(store) == 2);
-  REQUIRE(HttpClientStoreTestAccessor::getClientsCreated(store) == 0);
+  const auto& clients = HttpClientStoreTestAccessor::getClients(store);
+  REQUIRE(clients.size() == 0);
   {
     [[maybe_unused]] auto client = store.getClient("http://localhost:8080");
-    const auto& clients = HttpClientStoreTestAccessor::getClients(store);
-    REQUIRE(HttpClientStoreTestAccessor::getClientsCreated(store) == 1);
-    REQUIRE(clients[0].second == true);
+    REQUIRE(clients.size() == 1);
+    REQUIRE(clients.front().second == true);
   }
 
-  const auto& clients = HttpClientStoreTestAccessor::getClients(store);
-  REQUIRE(HttpClientStoreTestAccessor::getClientsCreated(store) == 1);
-  REQUIRE(clients[0].second == false);
+  REQUIRE(clients.size() == 1);
+  REQUIRE(clients.front().second == false);
 }
 
 TEST_CASE("A http client can be reused") {
@@ -77,10 +72,10 @@ TEST_CASE("A http client can be reused") {
   {
     auto client = store.getClient("http://localhost:8080");
     REQUIRE(&client.get() == client_ptr);
-    REQUIRE(HttpClientStoreTestAccessor::getClientsCreated(store) == 1);
-    REQUIRE(clients[0].second);
+    REQUIRE(clients.size() == 1);
+    REQUIRE(clients.front().second);
   }
-  REQUIRE_FALSE(clients[0].second);
+  REQUIRE_FALSE(clients.front().second);
 }
 
 TEST_CASE("A new url always creates a new client") {
@@ -94,14 +89,14 @@ TEST_CASE("A new url always creates a new client") {
     [[maybe_unused]] auto client1 = store.getClient("http://localhost:8080");
     [[maybe_unused]] auto client2 = store.getClient("http://localhost:8081");
     [[maybe_unused]] auto client3 = store.getClient("http://localhost:8082");
-    REQUIRE(HttpClientStoreTestAccessor::getClientsCreated(store) == 3);
-    REQUIRE(clients[0].first->getURL() == "http://localhost:8080");
-    REQUIRE(clients[1].first->getURL() == "http://localhost:8081");
-    REQUIRE(clients[2].first->getURL() == "http://localhost:8082");
+    REQUIRE(clients.size() == 3);
+    CHECK(clients.front().first->getURL() == "http://localhost:8080");
+    CHECK(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8081");
+    CHECK(std::next(clients.begin(), 2)->first->getURL() == "http://localhost:8082");
   }
-  REQUIRE(clients[0].first->getURL() == "http://localhost:8082");
-  REQUIRE(clients[1].first->getURL() == "http://localhost:8081");
-  REQUIRE(clients[2].first->getURL() == "http://localhost:8080");
+  CHECK(clients.front().first->getURL() == "http://localhost:8082");
+  CHECK(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8081");
+  CHECK(std::next(clients.begin(), 2)->first->getURL() == "http://localhost:8080");
 }
 
 TEST_CASE("If a store is full, the first unused client is replaced by the newly requested one") {
@@ -117,28 +112,28 @@ TEST_CASE("If a store is full, the first unused client is replaced by the newly 
       [[maybe_unused]] auto client2 = store.getClient("http://localhost:8081");
     }
     [[maybe_unused]] auto client3 = store.getClient("http://localhost:8082");
-    REQUIRE(HttpClientStoreTestAccessor::getClientsCreated(store) == 3);
-    REQUIRE(clients[0].first->getURL() == "http://localhost:8081");
-    REQUIRE_FALSE(clients[0].second);
-    REQUIRE(clients[1].first->getURL() == "http://localhost:8080");
-    REQUIRE(clients[1].second);
-    REQUIRE(clients[2].first->getURL() == "http://localhost:8082");
-    REQUIRE(clients[2].second);
+    REQUIRE(clients.size() == 3);
+    CHECK(clients.front().first->getURL() == "http://localhost:8081");
+    CHECK_FALSE(clients.front().second);
+    CHECK(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8080");
+    CHECK(std::next(clients.begin(), 1)->second);
+    CHECK(std::next(clients.begin(), 2)->first->getURL() == "http://localhost:8082");
+    CHECK(std::next(clients.begin(), 2)->second);
 
     [[maybe_unused]] auto client4 = store.getClient("http://localhost:8083");
-    REQUIRE(clients[0].first->getURL() == "http://localhost:8080");
-    REQUIRE(clients[0].second);
-    REQUIRE(clients[1].first->getURL() == "http://localhost:8082");
-    REQUIRE(clients[1].second);
-    REQUIRE(clients[2].first->getURL() == "http://localhost:8083");
-    REQUIRE(clients[2].second);
+    CHECK(clients.front().first->getURL() == "http://localhost:8080");
+    CHECK(clients.front().second);
+    CHECK(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8082");
+    CHECK(std::next(clients.begin(), 1)->second);
+    CHECK(std::next(clients.begin(), 2)->first->getURL() == "http://localhost:8083");
+    CHECK(std::next(clients.begin(), 2)->second);
   }
-  REQUIRE(clients[0].first->getURL() == "http://localhost:8083");
-  REQUIRE_FALSE(clients[0].second);
-  REQUIRE(clients[1].first->getURL() == "http://localhost:8082");
-  REQUIRE_FALSE(clients[1].second);
-  REQUIRE(clients[2].first->getURL() == "http://localhost:8080");
-  REQUIRE_FALSE(clients[2].second);
+  CHECK(clients.front().first->getURL() == "http://localhost:8083");
+  CHECK_FALSE(clients.front().second);
+  CHECK(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8082");
+  CHECK_FALSE(std::next(clients.begin(), 1)->second);
+  CHECK(std::next(clients.begin(), 2)->first->getURL() == "http://localhost:8080");
+  CHECK_FALSE(std::next(clients.begin(), 2)->second);
 }
 
 TEST_CASE("Multiple unused clients are present the oldest one is replaced") {
@@ -155,34 +150,34 @@ TEST_CASE("Multiple unused clients are present the oldest one is replaced") {
       [[maybe_unused]] auto client3 = store.getClient("http://localhost:8082");
     }
     [[maybe_unused]] auto client4 = store.getClient("http://localhost:8083");
-    REQUIRE(HttpClientStoreTestAccessor::getClientsCreated(store) == 4);
-    REQUIRE(clients[0].first->getURL() == "http://localhost:8082");
-    REQUIRE_FALSE(clients[0].second);
-    REQUIRE(clients[1].first->getURL() == "http://localhost:8081");
-    REQUIRE_FALSE(clients[1].second);
-    REQUIRE(clients[2].first->getURL() == "http://localhost:8080");
-    REQUIRE(clients[2].second);
-    REQUIRE(clients[3].first->getURL() == "http://localhost:8083");
-    REQUIRE(clients[3].second);
+    REQUIRE(clients.size() == 4);
+    CHECK(clients.front().first->getURL() == "http://localhost:8082");
+    CHECK_FALSE(clients.front().second);
+    CHECK(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8081");
+    CHECK_FALSE(std::next(clients.begin(), 1)->second);
+    CHECK(std::next(clients.begin(), 2)->first->getURL() == "http://localhost:8080");
+    CHECK(std::next(clients.begin(), 2)->second);
+    CHECK(std::next(clients.begin(), 3)->first->getURL() == "http://localhost:8083");
+    CHECK(std::next(clients.begin(), 3)->second);
 
     [[maybe_unused]] auto client5 = store.getClient("http://localhost:8084");
-    REQUIRE(clients[0].first->getURL() == "http://localhost:8081");
-    REQUIRE_FALSE(clients[0].second);
-    REQUIRE(clients[1].first->getURL() == "http://localhost:8080");
-    REQUIRE(clients[1].second);
-    REQUIRE(clients[2].first->getURL() == "http://localhost:8083");
-    REQUIRE(clients[2].second);
-    REQUIRE(clients[3].first->getURL() == "http://localhost:8084");
-    REQUIRE(clients[3].second);
+    CHECK(clients.front().first->getURL() == "http://localhost:8081");
+    CHECK_FALSE(clients.front().second);
+    CHECK(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8080");
+    CHECK(std::next(clients.begin(), 1)->second);
+    CHECK(std::next(clients.begin(), 2)->first->getURL() == "http://localhost:8083");
+    CHECK(std::next(clients.begin(), 2)->second);
+    CHECK(std::next(clients.begin(), 3)->first->getURL() == "http://localhost:8084");
+    CHECK(std::next(clients.begin(), 3)->second);
   }
-  REQUIRE(clients[0].first->getURL() == "http://localhost:8081");
-  REQUIRE_FALSE(clients[0].second);
-  REQUIRE(clients[1].first->getURL() == "http://localhost:8084");
-  REQUIRE_FALSE(clients[1].second);
-  REQUIRE(clients[2].first->getURL() == "http://localhost:8083");
-  REQUIRE_FALSE(clients[2].second);
-  REQUIRE(clients[3].first->getURL() == "http://localhost:8080");
-  REQUIRE_FALSE(clients[3].second);
+  CHECK(clients.front().first->getURL() == "http://localhost:8081");
+  CHECK_FALSE(clients.front().second);
+  CHECK(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8084");
+  CHECK_FALSE(std::next(clients.begin(), 1)->second);
+  CHECK(std::next(clients.begin(), 2)->first->getURL() == "http://localhost:8083");
+  CHECK_FALSE(std::next(clients.begin(), 2)->second);
+  CHECK(std::next(clients.begin(), 3)->first->getURL() == "http://localhost:8080");
+  CHECK_FALSE(std::next(clients.begin(), 3)->second);
 }
 
 TEST_CASE("If all clients are in use, the call will block until a client is returned") {
@@ -210,10 +205,10 @@ TEST_CASE("If all clients are in use, the call will block until a client is retu
     client2_created_cv.wait(lock, [&client2_created] { return client2_created; });
     [[maybe_unused]] auto client3 = store.getClient("http://localhost:8082");
     auto& clients = HttpClientStoreTestAccessor::getClients(store);
-    REQUIRE(clients[0].first->getURL() == "http://localhost:8080");
-    REQUIRE(clients[0].second);
-    REQUIRE(clients[1].first->getURL() == "http://localhost:8082");
-    REQUIRE(clients[1].second);
+    REQUIRE(clients.front().first->getURL() == "http://localhost:8080");
+    REQUIRE(clients.front().second);
+    REQUIRE(std::next(clients.begin(), 1)->first->getURL() == "http://localhost:8082");
+    REQUIRE(std::next(clients.begin(), 1)->second);
   });
 
   thread1.join();

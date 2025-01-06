@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <utility>
 #include <optional>
+#include <list>
 
 #include "Core.h"
 #include "FlowFileRecord.h"
@@ -54,7 +55,6 @@ class HttpClientStore {
   HttpClientStore(const size_t size, std::function<gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>>(const std::string&)> create_client_function)
       : max_size_(size),
         create_client_function_(std::move(create_client_function)) {
-    clients_.resize(size);
   }
   HttpClientStore(const HttpClientStore&) = delete;
   HttpClientStore& operator=(const HttpClientStore&) = delete;
@@ -90,8 +90,7 @@ class HttpClientStore {
   std::mutex clients_mutex_;
   std::condition_variable cv_;
   const size_t max_size_;
-  size_t clients_created_{0};
-  std::vector<std::pair<std::unique_ptr<minifi::http::HTTPClient>, bool>> clients_;
+  std::list<std::pair<std::unique_ptr<minifi::http::HTTPClient>, bool>> clients_;
   std::function<gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>>(const std::string&)> create_client_function_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HttpClientWrapper>::getLogger()};
 };

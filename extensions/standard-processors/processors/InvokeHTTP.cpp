@@ -37,56 +37,45 @@
 namespace org::apache::nifi::minifi::processors {
 namespace invoke_http {
 
-namespace {
-template<class ForwardIt>
-void rotateRight(ForwardIt first, ForwardIt last, size_t n) {
-  if (first == last) return;
-  auto size = std::distance(first, last);
-  n = n % size;
-  std::rotate(first, std::prev(last, n), last);
-}
-}  // namespace
-
 HttpClientStore::HttpClientWrapper HttpClientStore::getClient(const std::string& url) {
   std::unique_lock<std::mutex> lock(clients_mutex_);
-  for (size_t i = 0; i < clients_created_; ++i) {
-    gsl_Assert(clients_[i].first);
-    auto& [client, in_use] = clients_[i];
+  for (auto it = clients_.begin(); it != clients_.end(); ++it) {
+    gsl_Assert(it->first);
+    auto& [client, in_use] = *it;
     if (client->getURL() == url && !in_use) {
       in_use = true;
-      std::rotate(clients_.begin() + gsl::narrow<int64_t>(i), clients_.begin() + gsl::narrow<int64_t>(i + 1), clients_.begin() + gsl::narrow<int64_t>(clients_created_));
+      clients_.splice(clients_.end(), clients_, it);
       return {*this, *client};
     }
   }
 
-  if (clients_created_ < max_size_) {
-    gsl_Assert(!clients_[clients_created_].first);
+  if (clients_.size() < max_size_) {
     auto client = create_client_function_(url);
-    clients_[clients_created_] = std::make_pair(std::move(client), true);
-    ++clients_created_;
-    return {*this, *clients_[clients_created_ - 1].first};
+    clients_.push_back(std::make_pair(std::move(client), true));
+    return {*this, *clients_.back().first};
   } else {
-    cv_.wait(lock, [this] { return !clients_[0].second; });
-    gsl_Assert(!clients_[0].second);
+    cv_.wait(lock, [this] { return !clients_.front().second; });
+    gsl_Assert(!clients_.front().second);
     auto client = create_client_function_(url);
-    clients_[0] = std::make_pair(std::move(client), true);
-    std::rotate(clients_.begin(), clients_.begin() + 1, clients_.begin() + gsl::narrow<int64_t>(clients_created_));
-    return {*this, *clients_[clients_created_ - 1].first};
+    clients_.front() = std::make_pair(std::move(client), true);
+    clients_.splice(clients_.end(), clients_, clients_.begin());
+    return {*this, *clients_.back().first};
   }
 }
 
 void HttpClientStore::returnClient(minifi::http::HTTPClient& client) {
   std::unique_lock<std::mutex> lock(clients_mutex_);
-  int64_t last_unused = -1;
-  for (size_t i = 0; i < clients_created_; ++i) {
-    if (clients_[i].first.get() != &client) {
-      if (!clients_[i].second) {
-        last_unused = gsl::narrow<int64_t>(i);
+  auto last_unused = clients_.end();
+  for (auto it = clients_.begin(); it != clients_.end(); ++it) {
+    if (it->first.get() != &client) {
+      if (!it->second) {
+        last_unused = it;
       }
       continue;
     }
-    clients_[i].second = false;
-    rotateRight(clients_.begin() + last_unused + 1, clients_.begin() + gsl::narrow<int64_t>(i) + 1, 1);
+    it->second = false;
+    auto insert_point = last_unused == clients_.end() ? clients_.begin() : std::next(last_unused, 1);
+    clients_.splice(insert_point, clients_, it);
     lock.unlock();
     cv_.notify_one();
     return;
