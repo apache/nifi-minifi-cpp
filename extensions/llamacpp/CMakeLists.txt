@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT (ENABLE_ALL OR ENABLE_AI))
+if (NOT (ENABLE_ALL OR ENABLE_LLAMACPP))
     return()
 endif()
 
@@ -28,11 +28,11 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "processors/*.cpp")
 
-add_minifi_library(minifi-ai-processors SHARED ${SOURCES})
-target_include_directories(minifi-ai-processors PUBLIC "${CMAKE_SOURCE_DIR}/extensions/ai")
+add_minifi_library(minifi-llamacpp SHARED ${SOURCES})
+target_include_directories(minifi-llamacpp PUBLIC "${CMAKE_SOURCE_DIR}/extensions/llamacpp")
 
-target_link_libraries(minifi-ai-processors ${LIBMINIFI} llamacpp)
+target_link_libraries(minifi-llamacpp ${LIBMINIFI} llamacpp)
 
-register_extension(minifi-ai-processors "AI PROCESSORS" AI-PROCESSORS "Provides AI processors")
+register_extension(minifi-llamacpp "AI PROCESSORS" AI-PROCESSORS "Provides AI processors")
 
-register_extension_linter(minifi-ai-processors-linter)
+register_extension_linter(minifi-llamacpp-linter)

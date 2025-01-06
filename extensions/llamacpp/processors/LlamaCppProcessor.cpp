@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "AiProcessor.h"
+#include "LlamaCppProcessor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Resource.h"
@@ -49,12 +49,12 @@ struct LlamaChatMessage {
 
 }  // namespace
 
-void AiProcessor::initialize() {
+void LlamaCppProcessor::initialize() {
   setSupportedProperties(Properties);
   setSupportedRelationships(Relationships);
 }
 
-void AiProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+void LlamaCppProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   context.getProperty(ModelName, model_name_);
   context.getProperty(SystemPrompt, system_prompt_);
   context.getProperty(Prompt, prompt_);
@@ -150,12 +150,15 @@ void AiProcessor::onSchedule(core::ProcessContext& context, core::ProcessSession
   llama_sampler_chain_add(llama_sampler_, llama_sampler_init_dist(1234));
 }
 
-void AiProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+void LlamaCppProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto input_ff = session.get();
   if (!input_ff) {
     context.yield();
     return;
   }
+  auto ff_guard = gsl::finally([&] {
+    session.remove(input_ff);
+  });
 
   auto read_result = session.readBuffer(input_ff);
   std::string input_content{reinterpret_cast<const char*>(read_result.buffer.data()), read_result.buffer.size()};
@@ -312,7 +315,7 @@ void AiProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession&
   }
 }
 
-void AiProcessor::notifyStop() {
+void LlamaCppProcessor::notifyStop() {
   llama_sampler_free(llama_sampler_);
   llama_sampler_ = nullptr;
   llama_free(llama_ctx_);
@@ -322,6 +325,6 @@ void AiProcessor::notifyStop() {
   llama_backend_free();
 }
 
-REGISTER_RESOURCE(AiProcessor, Processor);
+REGISTER_RESOURCE(LlamaCppProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors
