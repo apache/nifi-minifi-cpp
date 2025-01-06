@@ -254,7 +254,7 @@ bool ListenHTTP::processRequestBuffer(core::ProcessSession& session) {
 
 namespace {
 
-class MgConnectionInputStream : public io::InputStream {
+class MgConnectionInputStream : public io::InputStreamImpl {
  public:
   MgConnectionInputStream(struct mg_connection* conn, std::optional<size_t> size): conn_(conn), netstream_size_limit_(size) {}
 
@@ -275,7 +275,7 @@ class MgConnectionInputStream : public io::InputStream {
   std::optional<size_t> netstream_size_limit_;  // how much can we read from conn_
 };
 
-class MgConnectionOutputStream : public io::OutputStream {
+class MgConnectionOutputStream : public io::StreamImpl, public virtual io::OutputStreamImpl {
  public:
   explicit MgConnectionOutputStream(struct mg_connection* conn): conn_(conn) {}
 
@@ -548,7 +548,7 @@ void ListenHTTP::notifyStop() {
 }
 
 std::set<core::Connectable*> ListenHTTP::getOutGoingConnections(const std::string &relationship) {
-  auto result = core::Processor::getOutGoingConnections(relationship);
+  auto result = core::ProcessorImpl::getOutGoingConnections(relationship);
   if (relationship == Self.name) {
     result.insert(this);
   }
