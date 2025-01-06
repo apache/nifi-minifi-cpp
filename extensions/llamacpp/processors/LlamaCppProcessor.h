@@ -26,7 +26,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class AiProcessor : public core::Processor {
+class LlamaCppProcessor : public core::Processor {
     static constexpr const char* DEFAULT_SYSTEM_PROMPT = R"(You are a helpful assistant or otherwise called an AI processor.
 You are part of a flow based pipeline helping the user transforming and routing data (encapsulated in what is called flowfiles).
 The user will provide the data, it will have attributes (name and value) and a content.
@@ -49,12 +49,12 @@ What now follows is a description of how the user would like you to transform/ro
 
 
  public:
-  explicit AiProcessor(std::string_view name, const utils::Identifier& uuid = {})
+  explicit LlamaCppProcessor(std::string_view name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid) {
   }
-  ~AiProcessor() override = default;
+  ~LlamaCppProcessor() override = default;
 
-  EXTENSIONAPI static constexpr const char* Description = "AI processor";
+  EXTENSIONAPI static constexpr const char* Description = "LlamaCpp processor";
 
   EXTENSIONAPI static constexpr auto ModelName = core::PropertyDefinitionBuilder<>::createProperty("Model Name")
       .withDescription("The name of the model")
@@ -103,7 +103,7 @@ What now follows is a description of how the user would like you to transform/ro
   void notifyStop() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AiProcessor>::getLogger(uuid_);
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LlamaCppProcessor>::getLogger(uuid_);
 
   double temperature_{0};
   std::string model_name_;
