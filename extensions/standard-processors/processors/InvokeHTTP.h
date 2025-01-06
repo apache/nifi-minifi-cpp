@@ -90,7 +90,8 @@ class HttpClientStore {
   std::mutex clients_mutex_;
   std::condition_variable cv_;
   const size_t max_size_;
-  std::list<std::pair<std::unique_ptr<minifi::http::HTTPClient>, bool>> clients_;
+  std::list<gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>>> used_clients_;
+  std::list<gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>>> unused_clients_;
   std::function<gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>>(const std::string&)> create_client_function_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HttpClientWrapper>::getLogger()};
 };

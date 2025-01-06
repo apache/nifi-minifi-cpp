@@ -39,43 +39,33 @@ namespace invoke_http {
 
 HttpClientStore::HttpClientWrapper HttpClientStore::getClient(const std::string& url) {
   std::unique_lock<std::mutex> lock(clients_mutex_);
-  for (auto it = clients_.begin(); it != clients_.end(); ++it) {
-    gsl_Assert(it->first);
-    auto& [client, in_use] = *it;
-    if (client->getURL() == url && !in_use) {
-      in_use = true;
-      clients_.splice(clients_.end(), clients_, it);
-      return {*this, *client};
+  for (auto it = unused_clients_.begin(); it != unused_clients_.end(); ++it) {
+    if ((*it)->getURL() == url) {
+      used_clients_.splice(used_clients_.end(), unused_clients_, it);
+      return {*this, **it};
     }
   }
 
-  if (clients_.size() < max_size_) {
+  if (used_clients_.size() + unused_clients_.size() < max_size_) {
     auto client = create_client_function_(url);
-    clients_.push_back(std::make_pair(std::move(client), true));
-    return {*this, *clients_.back().first};
+    used_clients_.push_back(std::move(client));
+    return {*this, *used_clients_.back()};
   } else {
-    cv_.wait(lock, [this] { return !clients_.front().second; });
-    gsl_Assert(!clients_.front().second);
+    cv_.wait(lock, [this] { return !unused_clients_.empty(); });
     auto client = create_client_function_(url);
-    clients_.front() = std::make_pair(std::move(client), true);
-    clients_.splice(clients_.end(), clients_, clients_.begin());
-    return {*this, *clients_.back().first};
+    unused_clients_.front() = std::move(client);
+    used_clients_.splice(used_clients_.end(), unused_clients_, unused_clients_.begin());
+    return {*this, *used_clients_.back()};
   }
 }
 
 void HttpClientStore::returnClient(minifi::http::HTTPClient& client) {
   std::unique_lock<std::mutex> lock(clients_mutex_);
-  auto last_unused = clients_.end();
-  for (auto it = clients_.begin(); it != clients_.end(); ++it) {
-    if (it->first.get() != &client) {
-      if (!it->second) {
-        last_unused = it;
-      }
+  for (auto it = used_clients_.begin(); it != used_clients_.end(); ++it) {
+    if (it->get() != &client) {
       continue;
     }
-    it->second = false;
-    auto insert_point = last_unused == clients_.end() ? clients_.begin() : std::next(last_unused, 1);
-    clients_.splice(insert_point, clients_, it);
+    unused_clients_.splice(unused_clients_.end(), used_clients_, it);
     lock.unlock();
     cv_.notify_one();
     return;
