@@ -359,6 +359,11 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
       logger_->log_debug("parseProcessorNode: yield period => [{}]", procCfg.yieldPeriod);
     }
 
+    if (auto bulletin_level_node = procNode[schema_.bulletin_level]) {
+      procCfg.bulletinLevel = bulletin_level_node.getString().value();
+      logger_->log_debug("parseProcessorNode: bulletin level => [{}]", procCfg.bulletinLevel);
+    }
+
     if (auto runNode = procNode[schema_.runduration_nanos]) {
       procCfg.runDurationNanos = runNode.getIntegerAsString().value();
       logger_->log_debug("parseProcessorNode: run duration nanos => [{}]", procCfg.runDurationNanos);
@@ -400,6 +405,18 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
       logger_->log_debug("convert: parseProcessorNode: yieldPeriod => [{}]", yield_period);
       processor->setYieldPeriodMsec(yield_period.value());
     }
+
+    if (!procCfg.bulletinLevel.empty()) {
+      processor->setLogBulletinLevel(core::logging::mapStringToLogLevel(procCfg.bulletinLevel));
+    }
+    processor->setLoggerCallback([this, processor = processor.get()](core::logging::LOG_LEVEL level, const std::string& message) {
+      if (level < processor->getLogBulletinLevel()) {
+        return;
+      }
+      if (bulletin_store_) {
+        bulletin_store_->addProcessorBulletin(*processor, level, message);
+      }
+    });
 
     // Default to running
     processor->setScheduledState(core::RUNNING);

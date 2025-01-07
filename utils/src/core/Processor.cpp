@@ -37,7 +37,6 @@
 #include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
 #include "Exception.h"
-#include "core/Processor.h"
 #include "core/ProcessorMetrics.h"
 
 using namespace std::literals::chrono_literals;
@@ -368,6 +367,10 @@ void ProcessorImpl::clearYield() {
 
 std::chrono::steady_clock::duration ProcessorImpl::getYieldTime() const {
   return std::max(yield_expiration_.load()-std::chrono::steady_clock::now(), std::chrono::steady_clock::duration{0});
+}
+
+void ProcessorImpl::setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) {
+  logger_->addLogCallback(callback);
 }
 
 }  // namespace org::apache::nifi::minifi::core

@@ -73,17 +73,13 @@ class ProcessGroup : public CoreComponentImpl {
   ProcessGroup(ProcessGroupType type, std::string_view name);
   ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid);
   ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version);
-  // Destructor
   ~ProcessGroup() override;
-  // Set URL
   void setURL(std::string url) {
     url_ = std::move(url);
   }
-  // Get URL
   std::string getURL() {
     return (url_);
   }
-  // SetTransmitting
   void setTransmitting(bool val) {
     transmitting_ = val;
   }
@@ -93,7 +89,6 @@ class ProcessGroup : public CoreComponentImpl {
   uint64_t getTimeout() {
     return timeout_;
   }
-  // setInterface
   void setInterface(std::string &ifc) {
     local_network_interface_ = ifc;
   }
@@ -124,11 +119,9 @@ class ProcessGroup : public CoreComponentImpl {
   http::HTTPProxy getHTTPProxy() {
     return proxy_;
   }
-  // Set Processor yield period in MilliSecond
   void setYieldPeriodMsec(std::chrono::milliseconds period) {
     yield_period_msec_ = period;
   }
-  // Get Processor yield period in MilliSecond
   std::chrono::milliseconds getYieldPeriodMsec() {
     return (yield_period_msec_);
   }
@@ -147,13 +140,11 @@ class ProcessGroup : public CoreComponentImpl {
                       const std::function<bool(const Processor*)>& filter = nullptr);
 
   bool isRemoteProcessGroup();
-  // set parent process group
   void setParent(ProcessGroup *parent) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     parent_process_group_ = parent;
   }
-  // get parent process group
-  ProcessGroup *getParent() {
+  ProcessGroup *getParent() const {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     return parent_process_group_;
   }
@@ -185,25 +176,17 @@ class ProcessGroup : public CoreComponentImpl {
     }
     return nullptr;
   }
-  // findProcessor based on UUID
   Processor* findProcessorById(const utils::Identifier& uuid, Traverse traverse = Traverse::IncludeChildren) const;
-  // findProcessor based on name
   Processor* findProcessorByName(const std::string &processorName, Traverse traverse = Traverse::IncludeChildren) const;
 
   void getAllProcessors(std::vector<Processor*>& processor_vec) const;
 
-  /**
-   * Add controller service
-   * @param nodeId node identifier
-   * @param node controller service node.
-   */
   void addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node);
 
   core::controller::ControllerServiceNode* findControllerService(const std::string &nodeId, Traverse traverse = Traverse::ExcludeChildren) const;
 
   std::vector<const core::controller::ControllerServiceNode*> getAllControllerServices() const;
 
-  // update property value
   void updatePropertyValue(const std::string& processorName, const std::string& propertyName, const std::string& propertyValue);
 
   void getConnections(std::map<std::string, Connection*>& connectionMap);
@@ -228,45 +211,29 @@ class ProcessGroup : public CoreComponentImpl {
  protected:
   void startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler);
 
-  // version
   int config_version_;
-  // Process Group Type
   const ProcessGroupType type_;
-  // Processors (ProcessNode) inside this process group which include Remote Process Group input/Output port
   std::set<std::unique_ptr<Processor>> processors_;
   std::set<Processor*> failed_processors_;
   std::set<Port*> ports_;
   std::set<std::unique_ptr<ProcessGroup>> child_process_groups_;
-  // Connections between the processor inside the group;
   std::set<std::unique_ptr<Connection>> connections_;
-  // Parent Process Group
   ProcessGroup* parent_process_group_;
-  // Yield Period in Milliseconds
   std::atomic<std::chrono::milliseconds> yield_period_msec_;
   std::atomic<uint64_t> timeout_;
-
-  // URL
   std::string url_;
-  // local network interface
   std::string local_network_interface_;
-  // Transmitting
   std::atomic<bool> transmitting_;
-  // http proxy
   http::HTTPProxy proxy_;
   std::string transport_protocol_;
-
-  // controller services
-
   core::controller::ControllerServiceNodeMap controller_service_map_;
-
   ParameterContext* parameter_context_ = nullptr;
 
  private:
   static Port* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid);
+  std::string buildGroupPath() const;
 
-  // Mutex for protection
   mutable std::recursive_mutex mutex_;
-  // Logger
   std::shared_ptr<logging::Logger> logger_;
 
   ProcessGroup(const ProcessGroup &parent);

@@ -99,6 +99,8 @@ class Logger {
 
   virtual ~Logger() = default;
 
+  virtual void addLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback) = 0;
+
  protected:
   virtual int getMaxLogSize() = 0;
 
@@ -124,7 +126,8 @@ class Logger {
     if (!should_log(level)) {
       return;
     }
-    log_string(level, stringify(std::move(fmt), map_args(std::forward<Args>(args))...));
+    auto message = stringify(std::move(fmt), map_args(std::forward<Args>(args))...);
+    log_string(level, message);
   }
 };
 

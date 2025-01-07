@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -23,12 +22,7 @@
 #include "core/Core.h"
 #include "core/Property.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-
+namespace org::apache::nifi::minifi::core {
 
 constexpr const char* DEFAULT_SCHEDULING_STRATEGY{"TIMER_DRIVEN"};
 constexpr const char* DEFAULT_SCHEDULING_PERIOD_STR{"1 sec"};
@@ -47,16 +41,11 @@ struct ProcessorConfig {
   std::string schedulingPeriod;
   std::string penalizationPeriod;
   std::string yieldPeriod;
+  std::string bulletinLevel;
   std::string runDurationNanos;
   std::vector<std::string> autoTerminatedRelationships;
   std::vector<core::Property> properties;
   std::string parameterContextName;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_
+}  // namespace org::apache::nifi::minifi::core

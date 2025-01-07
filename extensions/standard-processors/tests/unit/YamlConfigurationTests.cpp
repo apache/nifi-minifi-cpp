@@ -102,6 +102,7 @@ Processors:
       scheduling period: 1 sec
       penalization period: 30 sec
       yield period: 1 sec
+      bulletin level: ERROR
       run duration nanos: 0
       auto-terminated relationships list:
       Properties:
@@ -159,6 +160,7 @@ Provenance Reporting:
     REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriod());
     REQUIRE(30s == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
     REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriod());
+    REQUIRE(rootFlowConfig->findProcessorByName("TailFile")->getLogBulletinLevel() == logging::LOG_LEVEL::err);
     REQUIRE(0s == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
     std::map<std::string, minifi::Connection*> connectionMap;

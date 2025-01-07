@@ -158,10 +158,7 @@ void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
 
 std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine() {
   auto engine = std::make_unique<PythonScriptEngine>();
-
-  python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
   engine->initialize(Success, Failure, Original, python_logger_);
-
   return engine;
 }
 
@@ -281,6 +278,12 @@ std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships()
   relationships.reserve(relationships.size() + std::distance(custom_relationships.begin(), custom_relationships.end()));
   relationships.insert(relationships.end(), custom_relationships.begin(), custom_relationships.end());
   return relationships;
+}
+
+void ExecutePythonProcessor::setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) {
+  gsl_Expects(logger_ && python_logger_);
+  logger_->addLogCallback(callback);
+  python_logger_->addLogCallback(callback);
 }
 
 REGISTER_RESOURCE(ExecutePythonProcessor, Processor);

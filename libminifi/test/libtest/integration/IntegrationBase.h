@@ -30,6 +30,7 @@
 #include "properties/Configure.h"
 #include "utils/file/AssetManager.h"
 #include "utils/file/FileUtils.h"
+#include "core/BulletinStore.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -110,6 +111,7 @@ class IntegrationBase {
   void configureSecurity();
   std::shared_ptr<minifi::Configure> configuration;
   std::unique_ptr<minifi::utils::file::AssetManager> asset_manager_;
+  std::unique_ptr<core::BulletinStore> bulletin_store_;
   std::unique_ptr<minifi::state::response::ResponseNodeLoader> response_node_loader_;
   std::unique_ptr<minifi::FlowController> flowController_;
   std::chrono::milliseconds wait_time_;

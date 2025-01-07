@@ -81,6 +81,36 @@ inline LOG_LEVEL mapFromSpdLogLevel(spdlog::level::level_enum level) {
   throw std::invalid_argument(fmt::format("Invalid spdlog::level::level_enum {}", magic_enum::enum_underlying(level)));
 }
 
+inline std::string mapLogLevelToString(LOG_LEVEL level) {
+  switch (level) {
+    case trace: return "TRACE";
+    case debug: return "DEBUG";
+    case info: return "INFO";
+    case warn: return "WARN";
+    case err: return "ERROR";
+    case critical: return "CRITICAL";
+    case off: return "OFF";
+  }
+  throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
+}
+
+inline LOG_LEVEL mapStringToLogLevel(const std::string& level_str) {
+  if (level_str == "TRACE") {
+    return trace;
+  } else if (level_str == "DEBUG") {
+    return debug;
+  } else if (level_str == "INFO") {
+    return info;
+  } else if (level_str == "WARN") {
+    return warn;
+  } else if (level_str == "ERROR") {
+    return err;
+  } else if (level_str == "CRITICAL") {
+    return critical;
+  }
+  throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", level_str));
+}
+
 class LoggerBase : public Logger {
  public:
   LoggerBase(LoggerBase const&) = delete;
@@ -93,6 +123,7 @@ class LoggerBase : public Logger {
   bool should_log(LOG_LEVEL level) override;
   void log_string(LOG_LEVEL level, std::string str) override;
   LOG_LEVEL level() const override;
+  void addLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback) override;
 
  protected:
   LoggerBase(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller);
@@ -110,6 +141,7 @@ class LoggerBase : public Logger {
 
  private:
   std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
+  std::vector<std::function<void(LOG_LEVEL level, const std::string&)>> log_callbacks_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::logging

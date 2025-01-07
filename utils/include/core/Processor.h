@@ -173,6 +173,22 @@ class ProcessorImpl : public virtual Processor, public ConnectableImpl, public C
     process_group_uuid_ = uuid;
   }
 
+  std::string getProcessGroupName() const override {
+    return process_group_name_;
+  }
+
+  void setProcessGroupName(const std::string &name) override {
+    process_group_name_ = name;
+  }
+
+  std::string getProcessGroupPath() const override {
+    return process_group_path_;
+  }
+
+  void setProcessGroupPath(const std::string &path) override {
+    process_group_path_ = path;
+  }
+
   void yield() override;
 
   void yield(std::chrono::steady_clock::duration delta_time) override;
@@ -226,6 +242,16 @@ class ProcessorImpl : public virtual Processor, public ConnectableImpl, public C
     return metrics_;
   }
 
+  logging::LOG_LEVEL getLogBulletinLevel() const override {
+    return log_bulletin_level_;
+  }
+
+  void setLogBulletinLevel(logging::LOG_LEVEL level) override {
+    log_bulletin_level_ = level;
+  }
+
+  void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) override;
+
   static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
 
   static constexpr auto OutputAttributes = std::array<OutputAttributeReference, 0>{};
@@ -247,6 +273,7 @@ class ProcessorImpl : public virtual Processor, public ConnectableImpl, public C
   gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
 
   std::shared_ptr<logging::Logger> logger_;
+  logging::LOG_LEVEL log_bulletin_level_ = logging::LOG_LEVEL::warn;
 
  private:
   mutable std::mutex mutex_;
@@ -270,6 +297,8 @@ class ProcessorImpl : public virtual Processor, public ConnectableImpl, public C
   std::unordered_map<Connection*, std::unordered_set<Processor*>> reachable_processors_;
 
   std::string process_group_uuid_;
+  std::string process_group_name_;
+  std::string process_group_path_;
 };
 
 }  // namespace core

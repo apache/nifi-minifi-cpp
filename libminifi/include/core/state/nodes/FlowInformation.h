@@ -27,6 +27,7 @@
 #include "Connection.h"
 #include "core/state/ConnectionStore.h"
 #include "core/Processor.h"
+#include "core/BulletinStore.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -121,6 +122,10 @@ class FlowInformation : public StateMonitorNode {
     processors_ = std::move(processors);
   }
 
+  void setBulletinStore(core::BulletinStore* bulletin_store) {
+    bulletin_store_ = bulletin_store;
+  }
+
   std::vector<SerializedResponseNode> serialize() override;
   std::vector<PublishedMetric> calculateMetrics() override;
 
@@ -128,6 +133,7 @@ class FlowInformation : public StateMonitorNode {
   std::shared_ptr<state::response::FlowVersion> flow_version_;
   ConnectionStore connection_store_;
   std::vector<core::Processor*> processors_;
+  core::BulletinStore* bulletin_store_ = nullptr;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response
