@@ -87,6 +87,8 @@ std::tuple<Processor*, bool> ProcessGroup::addProcessor(std::unique_ptr<Processo
   const auto name = processor->getName();
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   processor->setProcessGroupUUIDStr(getUUIDStr());
+  processor->setProcessGroupName(getName());
+  processor->setProcessGroupPath(buildGroupPath());
   const auto [iter, inserted] = processors_.insert(std::move(processor));
   if (inserted) {
     logger_->log_debug("Add processor {} into process group {}", name, name_);
@@ -483,6 +485,17 @@ void ProcessGroup::setParameterContext(ParameterContext* parameter_context) {
 
 ParameterContext* ProcessGroup::getParameterContext() const {
   return parameter_context_;
+}
+
+std::string ProcessGroup::buildGroupPath() const {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::string path = name_;
+  auto parent = parent_process_group_;
+  while (parent != nullptr) {
+    path.insert(0, parent->getName() + " / ");
+    parent = parent->getParent();
+  }
+  return path;
 }
 
 }  // namespace org::apache::nifi::minifi::core
