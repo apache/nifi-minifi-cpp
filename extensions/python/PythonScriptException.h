@@ -25,8 +25,15 @@
 #include <stdexcept>
 
 namespace org::apache::nifi::minifi::extensions::python {
+
+class PythonScriptWarning : public std::runtime_error {
+ public:
+  explicit PythonScriptWarning(const std::string& error) : std::runtime_error(error) {}
+};
+
 class PythonScriptException : public std::runtime_error {
  public:
   explicit PythonScriptException(const std::string& error) : std::runtime_error(error) {}
 };
+
 }  // namespace org::apache::nifi::minifi::extensions::python

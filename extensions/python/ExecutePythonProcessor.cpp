@@ -69,6 +69,8 @@ void ExecutePythonProcessor::initalizeThroughScriptEngine() {
     python_script_engine_->describe(this);
     python_script_engine_->onInitialize(this);
     processor_initialized_ = true;
+  } catch (const PythonScriptWarning&) {
+    throw;
   } catch (const std::exception& e) {
     std::string python_processor_name = python_class_name_ ? *python_class_name_ : script_file_path_;
     logger_->log_error("Failed to initialize python processor '{}' due to error: {}", python_processor_name, e.what());
