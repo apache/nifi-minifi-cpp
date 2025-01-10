@@ -169,7 +169,7 @@ void StructuredConfiguration::verifyNoInheritanceCycles() const {
   std::unordered_set<std::string> current_stack;
   for (const auto& [parameter_context_name, parameter_context] : parameter_contexts_) {
     if (hasInheritanceCycle(*parameter_context, visited_parameter_contexts, current_stack)) {
-      throw std::invalid_argument("Circular references in Parameter Context inheritance are not allowed. Inheritance cycle was detected in parameter context '" + parameter_context->getName() + "'");
+      throw std::invalid_argument("Circular references in Parameter Context inheritance are not allowed. Inheritance cycle was detected in parameter context '" + parameter_context_name + "'");
     }
   }
 }
