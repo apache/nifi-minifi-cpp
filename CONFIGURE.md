@@ -158,6 +158,8 @@ An example for using parameters in a JSON configuration file:
                     "value": "30"
                 }
             ],
+        },
+        {
             "identifier": "804e6b47-ea22-45cd-a472-545801db98e6",
             "name": "root-process-group-context",
             "description": "Root process group parameter context",
