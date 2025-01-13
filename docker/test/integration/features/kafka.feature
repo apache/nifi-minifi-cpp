@@ -83,7 +83,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     Then a flowfile with the content "no broker" is placed in the monitored directory in less than 60 seconds
 
   Scenario: PublishKafka sends can use SSL connect with security properties
-    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given OpenSSL FIPS mode is enabled in MiNiFi
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
     And a PublishKafka processor set up to communicate with a kafka broker instance
     And these processor properties are set:
@@ -139,7 +140,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
   Scenario: PublishKafka sends can use SASL SSL connect with security properties
-    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given OpenSSL FIPS mode is enabled in MiNiFi
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
     And a PublishKafka processor set up to communicate with a kafka broker instance
     And these processor properties are set:
@@ -170,7 +172,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
   Scenario: PublishKafka sends can use SASL SSL connect with SSL Context
-    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given OpenSSL FIPS mode is enabled in MiNiFi
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
     And a PublishKafka processor set up to communicate with a kafka broker instance
     And these processor properties are set:
@@ -199,7 +202,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
   Scenario: PublishKafka sends can use SSL connect with SSL Context Service
-    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given OpenSSL FIPS mode is enabled in MiNiFi
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
     And a PublishKafka processor set up to communicate with a kafka broker instance
     And these processor properties are set:
@@ -423,7 +427,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | Shogun           | James Clavell  | Message Header Encoding | UTF-32         |
 
   Scenario: ConsumeKafka receives data via SSL
-    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    Given OpenSSL FIPS mode is enabled in MiNiFi
+    And a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And these processor properties are set:
       | processor name | property name     | property value                  |
       | ConsumeKafka   | Kafka Brokers     | kafka-broker-${feature_id}:9093 |
@@ -441,7 +446,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     Then two flowfiles with the contents "Alice's Adventures in Wonderland" and "Lewis Carroll" are placed in the monitored directory in less than 60 seconds
 
   Scenario: ConsumeKafka receives data via SASL SSL
-    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    Given OpenSSL FIPS mode is enabled in MiNiFi
+    And a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And these processor properties are set:
       | processor name | property name     | property value                  |
       | ConsumeKafka   | Kafka Brokers     | kafka-broker-${feature_id}:9095 |

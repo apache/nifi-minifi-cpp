@@ -1,0 +1,9 @@
+openssl_conf = openssl_init
+
+.include ${MINIFI_HOME}/fips/fipsmodule.cnf
+
+[openssl_init]
+providers = prov
+
+[prov]
+fips = fips_sect

@@ -138,6 +138,9 @@ class DockerTestCluster:
     def enable_example_minifi_python_processors(self):
         self.container_store.enable_example_minifi_python_processors()
 
+    def enable_openssl_fips_mode_in_minifi(self):
+        self.container_store.enable_openssl_fips_mode_in_minifi()
+
     def get_app_log(self, container_name):
         container_name = self.container_store.get_container_name_with_postfix(container_name)
         log_source = self.container_store.log_source(container_name)

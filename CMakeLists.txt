@@ -431,6 +431,7 @@ if(WIN32)
     set(CPACK_WIX_UI_DIALOG "${CMAKE_CURRENT_SOURCE_DIR}/msi/bgr.png")
 
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conf/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/conf/")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/fips/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/fips/")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/NOTICE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     file(GLOB markdown_docs "${CMAKE_CURRENT_SOURCE_DIR}/*.md")
@@ -550,6 +551,10 @@ set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;${CMAKE_SOURCE_DIR}/build/;~$;${
 if (NOT WIN32)
     install(FILES conf/minifi.properties conf/minifi-log.properties conf/minifi-uid.properties conf/config.yml
         DESTINATION conf
+        COMPONENT bin)
+
+    install(FILES fips/openssl.cnf
+        DESTINATION fips
         COMPONENT bin)
 
     install(DIRECTORY extensions/python/pythonprocessors/
