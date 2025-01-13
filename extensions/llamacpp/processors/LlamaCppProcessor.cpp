@@ -23,31 +23,9 @@
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
+#include "LlamaContext.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-namespace {
-
-struct LlamaChatMessage {
-  std::string role;
-  std::string content;
-
-  operator llama_chat_message() const {
-    return llama_chat_message{
-      .role = role.c_str(),
-      .content = content.c_str()
-    };
-  }
-};
-
-//constexpr const char* relationship_prompt = R"(You are a helpful assistant helping to analyze the user's description of a data transformation and routing algorithm.
-//The data consists of attributes and a content encapsulated in what is called a flowfile.
-//The routing targets are called relationships.
-//You have to extract the comma separated list of all possible relationships one can route to based on the user's description.
-//Output only the list and nothing else.
-//)";
-
-}  // namespace
 
 void LlamaCppProcessor::initialize() {
   setSupportedProperties(Properties);
@@ -129,25 +107,7 @@ void LlamaCppProcessor::onSchedule(core::ProcessContext& context, core::ProcessS
     examples_.push_back(LLMExample{.input = std::move(input), .output = std::move(output)});
   }
 
-  llama_backend_init();
-
-  llama_model_params model_params = llama_model_default_params();
-  llama_model_ = llama_load_model_from_file(model_name_.c_str(), model_params);
-  if (!llama_model_) {
-    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load model from '{}'", model_name_));
-  }
-
-  llama_context_params ctx_params = llama_context_default_params();
-  ctx_params.n_ctx = 0;
-  llama_ctx_ = llama_new_context_with_model(llama_model_, ctx_params);
-
-  auto sparams = llama_sampler_chain_default_params();
-  llama_sampler_ = llama_sampler_chain_init(sparams);
-
-  llama_sampler_chain_add(llama_sampler_, llama_sampler_init_top_k(50));
-  llama_sampler_chain_add(llama_sampler_, llama_sampler_init_top_p(0.9, 1));
-  llama_sampler_chain_add(llama_sampler_, llama_sampler_init_temp(gsl::narrow_cast<float>(temperature_)));
-  llama_sampler_chain_add(llama_sampler_, llama_sampler_init_dist(1234));
+  llama_ctx_ = llamacpp::LlamaContext::create(model_name_, gsl::narrow_cast<float>(temperature_));
 }
 
 void LlamaCppProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
@@ -172,76 +132,24 @@ void LlamaCppProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
 
 
   std::string input = [&] {
-    std::vector<llama_chat_message> msgs;
-    msgs.push_back(llama_chat_message{.role = "system", .content = full_prompt_.c_str()});
+    std::vector<llamacpp::LlamaChatMessage> msgs;
+    msgs.push_back({.role = "system", .content = full_prompt_.c_str()});
     for (auto& ex : examples_) {
-      msgs.push_back(llama_chat_message{.role = "user", .content = ex.input.c_str()});
-      msgs.push_back(llama_chat_message{.role = "assistant", .content = ex.output.c_str()});
+      msgs.push_back({.role = "user", .content = ex.input.c_str()});
+      msgs.push_back({.role = "assistant", .content = ex.output.c_str()});
     }
-    msgs.push_back(llama_chat_message{.role = "user", .content = msg.c_str()});
+    msgs.push_back({.role = "user", .content = msg.c_str()});
 
-    std::string text;
-    int32_t res_size = llama_chat_apply_template(llama_model_, nullptr, msgs.data(), msgs.size(), true, text.data(), text.size());
-    if (res_size > gsl::narrow<int32_t>(text.size())) {
-      text.resize(res_size);
-      llama_chat_apply_template(llama_model_, nullptr, msgs.data(), msgs.size(), true, text.data(), text.size());
-    }
-    text.resize(res_size);
-
-//    utils::string::replaceAll(text, "<NEWLINE_CHAR>", "\n");
-
-    return text;
+    return llama_ctx_->applyTemplate(msgs);
   }();
 
   logger_->log_debug("AI model input: {}", input);
 
-  std::vector<llama_token> enc_input = [&] {
-    int32_t n_tokens = input.length() + 2;
-    std::vector<llama_token> enc_input(n_tokens);
-    n_tokens = llama_tokenize(llama_model_, input.data(), input.length(), enc_input.data(), enc_input.size(), true, true);
-    if (n_tokens < 0) {
-      enc_input.resize(-n_tokens);
-      int check = llama_tokenize(llama_model_, input.data(), input.length(), enc_input.data(), enc_input.size(), true, true);
-      gsl_Assert(check == -n_tokens);
-    } else {
-      enc_input.resize(n_tokens);
-    }
-    return enc_input;
-  }();
-
-
-  llama_batch batch = llama_batch_get_one(enc_input.data(), enc_input.size());
-
-  llama_token new_token_id;
-
   std::string text;
-
-  while (true) {
-    if (int32_t res = llama_decode(llama_ctx_, batch); res < 0) {
-      throw std::logic_error("failed to execute decode");
-    }
-
-    new_token_id = llama_sampler_sample(llama_sampler_, llama_ctx_, -1);
-
-    if (llama_token_is_eog(llama_model_, new_token_id)) {
-      break;
-    }
-
-    llama_sampler_accept(llama_sampler_, new_token_id);
-
-    std::array<char, 128> buf;
-    int32_t len = llama_token_to_piece(llama_model_, new_token_id, buf.data(), buf.size(), 0, true);
-    if (len < 0) {
-      throw std::logic_error("failed to convert to text");
-    }
-    gsl_Assert(len < 128);
-
-    std::string_view token_str{buf.data(), gsl::narrow<std::string_view::size_type>(len)};
-    std::cout << token_str << std::flush;
-    text += token_str;
-
-    batch = llama_batch_get_one(&new_token_id, 1);
-  }
+  llama_ctx_->generate(input, [&] (std::string_view token) {
+    text += token;
+    return true;
+  });
 
   logger_->log_debug("AI model output: {}", text);
 
@@ -316,13 +224,7 @@ void LlamaCppProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
 }
 
 void LlamaCppProcessor::notifyStop() {
-  llama_sampler_free(llama_sampler_);
-  llama_sampler_ = nullptr;
-  llama_free(llama_ctx_);
-  llama_ctx_ = nullptr;
-  llama_free_model(llama_model_);
-  llama_model_ = nullptr;
-  llama_backend_free();
+  llama_ctx_.reset();
 }
 
 REGISTER_RESOURCE(LlamaCppProcessor, Processor);
