@@ -33,6 +33,6 @@ target_include_directories(minifi-llamacpp PUBLIC "${CMAKE_SOURCE_DIR}/extension
 
 target_link_libraries(minifi-llamacpp ${LIBMINIFI} llamacpp)
 
-register_extension(minifi-llamacpp "AI PROCESSORS" AI-PROCESSORS "Provides AI processors")
+register_extension(minifi-llamacpp "LLAMACPP EXTENSION" LLAMACPP-EXTENSION "Provides LlamaCpp support" "extensions/llamacpp/tests")
 
 register_extension_linter(minifi-llamacpp-linter)
