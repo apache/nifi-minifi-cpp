@@ -38,12 +38,13 @@ namespace org::apache::nifi::minifi::processors {
 namespace invoke_http {
 
 HttpClientStore::HttpClientWrapper HttpClientStore::getClient(const std::string& url) {
-  std::unique_lock<std::mutex> lock(clients_mutex_);
-  for (auto it = unused_clients_.begin(); it != unused_clients_.end(); ++it) {
-    if ((*it)->getURL() == url) {
-      used_clients_.splice(used_clients_.end(), unused_clients_, it);
-      return {*this, **it};
-    }
+  std::unique_lock lock(clients_mutex_);
+  const auto it = std::find_if(std::begin(unused_clients_), std::end(unused_clients_), [&url](const auto& client) {
+    return client->getURL() == url;
+  });
+  if (it != std::end(unused_clients_)) {
+    used_clients_.splice(used_clients_.end(), unused_clients_, it);
+    return {*this, **it};
   }
 
   if (used_clients_.size() + unused_clients_.size() < max_size_) {
@@ -59,18 +60,16 @@ HttpClientStore::HttpClientWrapper HttpClientStore::getClient(const std::string&
   }
 }
 
-void HttpClientStore::returnClient(minifi::http::HTTPClient& client) {
-  std::unique_lock<std::mutex> lock(clients_mutex_);
-  for (auto it = used_clients_.begin(); it != used_clients_.end(); ++it) {
-    if (it->get() != &client) {
-      continue;
-    }
-    unused_clients_.splice(unused_clients_.end(), used_clients_, it);
-    lock.unlock();
-    cv_.notify_one();
-    return;
+void HttpClientStore::returnClient(http::HTTPClient& client) {
+  std::unique_lock lock(clients_mutex_);
+  const auto it = std::find_if(std::begin(used_clients_), std::end(used_clients_),
+    [&client](const auto& elem) { return &client == elem.get(); });
+  if (it == std::end(used_clients_)) {
+    logger_->log_error("Couldn't find HTTP client in client store to be returned");
   }
-  logger_->log_error("Couldn't find HTTP client in client store to be returned");
+  unused_clients_.splice(unused_clients_.end(), used_clients_, it);
+  lock.unlock();
+  cv_.notify_one();
 }
 
 }  // namespace invoke_http
@@ -161,8 +160,8 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
   }
 }
 
-gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>> InvokeHTTP::createHTTPClientFromMembers(const std::string& url) const {
-  auto client = std::make_unique<minifi::http::HTTPClient>();
+gsl::not_null<std::unique_ptr<http::HTTPClient>> InvokeHTTP::createHTTPClientFromMembers(const std::string& url) const {
+  auto client = std::make_unique<http::HTTPClient>();
   client->initialize(method_, url, ssl_context_service_);
   setupClientTimeouts(*client, connect_timeout_, read_timeout_);
   client->setHTTPProxy(proxy_);
