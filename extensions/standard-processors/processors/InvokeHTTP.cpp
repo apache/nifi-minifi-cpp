@@ -66,6 +66,7 @@ void HttpClientStore::returnClient(http::HTTPClient& client) {
     [&client](const auto& elem) { return &client == elem.get(); });
   if (it == std::end(used_clients_)) {
     logger_->log_error("Couldn't find HTTP client in client store to be returned");
+    return;
   }
   unused_clients_.splice(unused_clients_.end(), used_clients_, it);
   lock.unlock();
