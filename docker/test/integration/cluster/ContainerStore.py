@@ -397,6 +397,9 @@ class ContainerStore:
     def enable_example_minifi_python_processors(self):
         self.minifi_options.enable_example_minifi_python_processors = True
 
+    def enable_openssl_fips_mode_in_minifi(self):
+        self.minifi_options.enable_openssl_fips_mode = True
+
     def get_startup_finished_log_entry(self, container_name):
         container_name = self.get_container_name_with_postfix(container_name)
         return self.containers[container_name].get_startup_finished_log_entry()
