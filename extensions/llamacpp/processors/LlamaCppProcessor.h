@@ -20,9 +20,7 @@
 #include "core/Processor.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
-#pragma push_macro("DEPRECATED")
-#include "llama.h"
-#pragma pop_macro("DEPRECATED")
+#include "LlamaContext.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -112,9 +110,7 @@ What now follows is a description of how the user would like you to transform/ro
   std::string full_prompt_;
   std::vector<LLMExample> examples_;
 
-  llama_sampler* llama_sampler_{nullptr};
-  llama_model* llama_model_{nullptr};
-  llama_context* llama_ctx_{nullptr};
+  std::unique_ptr<llamacpp::LlamaContext> llama_ctx_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
