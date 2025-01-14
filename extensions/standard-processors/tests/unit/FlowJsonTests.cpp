@@ -1555,6 +1555,47 @@ TEST_CASE("Parameter providers can be configured to select which parameters to b
   REQUIRE(proc->getProperty("Simple Property") == "value3");
 }
 
+TEST_CASE("If sensitive parameter scope is set to selected sensitive parameter list is required") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{dummy1}", *context.sensitive_values_encryptor);
+  core::flow::AdaptiveConfiguration config(context);
+
+  static const std::string CONFIG_JSON =
+      fmt::format(R"(
+{{
+  "parameterProviders": [
+    {{
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "DummyParameterProvider",
+        "type": "DummyParameterProvider",
+        "properties": {{
+          "Sensitive Parameter Scope": "selected",
+          "Dummy1 Value": "value1",
+          "Dummy3 Value": "value3"
+        }}
+    }}
+  ],
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [{{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {{
+        "Simple Property": "#{{dummy3}}",
+        "Sensitive Property": "{}"
+      }}
+    }}],
+    "parameterContextName": "dummycontext"
+  }}
+}})", encrypted_sensitive_property_value);
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Parameter Operation: Sensitive Parameter Scope is set to 'selected' but Sensitive Parameter List is empty");
+}
+
 TEST_CASE("Parameter providers can be configured to make all parameters sensitive") {
   ConfigurationTestController test_controller;
   auto context = test_controller.getContext();

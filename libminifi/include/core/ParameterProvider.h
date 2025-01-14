@@ -43,6 +43,11 @@ enum class SensitiveParameterScopeOptions {
 struct ParameterProviderConfig {
   SensitiveParameterScopeOptions sensitive_parameter_scope = SensitiveParameterScopeOptions::none;
   std::unordered_set<std::string> sensitive_parameters;
+
+  bool isSensitive(const std::string &name) const {
+    return sensitive_parameter_scope == SensitiveParameterScopeOptions::all ||
+           (sensitive_parameter_scope == SensitiveParameterScopeOptions::selected && sensitive_parameters.contains(name));
+  }
 };
 
 class ParameterProvider : public ConfigurableComponent, public CoreComponent {

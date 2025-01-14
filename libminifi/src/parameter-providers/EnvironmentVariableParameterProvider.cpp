@@ -48,7 +48,7 @@ EnvironmentVariableInclusionStrategyOptions EnvironmentVariableParameterProvider
 void EnvironmentVariableParameterProvider::filterEnvironmentVariablesByCommaSeparatedList(std::unordered_map<std::string, std::string>& environment_variables) const {
   std::unordered_set<std::string> included_environment_variables;
   if (auto incuded_environment_variables_str = getProperty(IncludeEnvironmentVariables)) {
-    for (const auto& included_environment_variable : minifi::utils::string::split(*incuded_environment_variables_str, ",")) {
+    for (const auto& included_environment_variable : minifi::utils::string::splitAndTrimRemovingEmpty(*incuded_environment_variables_str, ",")) {
       included_environment_variables.insert(included_environment_variable);
     }
     logger_->log_debug("Filtering environment variables by comma separated list: {}", *incuded_environment_variables_str);
