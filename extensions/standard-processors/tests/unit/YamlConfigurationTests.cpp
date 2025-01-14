@@ -2206,6 +2206,43 @@ Parameter Context Name: dummycontext
   REQUIRE(proc->getProperty("Simple Property") == "value3");
 }
 
+TEST_CASE("If sensitive parameter scope is set to selected sensitive parameter list is required", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{dummy1}", *context.sensitive_values_encryptor);
+  core::YamlConfiguration yaml_config(context);
+
+  static const std::string TEST_CONFIG_YAML =
+      fmt::format(R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: flowconfig
+Parameter Providers:
+  - id: 721e10b7-8e00-3188-9a27-476cca376978
+    name: DummyParameterProvider
+    type: DummyParameterProvider
+    Properties:
+      Sensitive Parameter Scope: selected
+      Sensitive Parameter List:
+      Dummy1 Value: value1
+      Dummy3 Value: value3
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: DummyProcessor
+  class: org.apache.nifi.processors.DummyProcessor
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list: [success]
+  Properties:
+    Simple Property: "#{{dummy3}}"
+    Sensitive Property: {}
+Parameter Context Name: dummycontext
+      )", encrypted_sensitive_property_value);
+
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(TEST_CONFIG_YAML), "Parameter Operation: Sensitive Parameter Scope is set to 'selected' but Sensitive Parameter List is empty");
+}
+
 TEST_CASE("Parameter providers can be configured to make all parameters sensitive", "[YamlConfiguration]") {
   ConfigurationTestController test_controller;
   auto context = test_controller.getContext();

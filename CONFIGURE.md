@@ -301,9 +301,9 @@ Parameter Providers:
     name: EnvironmentVariableParameterProvider
     type: EnvironmentVariableParameterProvider
     Properties:
-    Parameter Group Name: environment-variable-parameter-context
-    Environment Variable Inclusion Strategy: Regular Expression
-    Include Environment Variables: INPUT_.*
+      Parameter Group Name: environment-variable-parameter-context
+      Environment Variable Inclusion Strategy: Regular Expression
+      Include Environment Variables: INPUT_.*
 Processors:
   - name: MyProcessor
     id: 00000000-0000-0000-0000-000000000001
@@ -311,7 +311,7 @@ Processors:
     scheduling strategy: TIMER_DRIVEN
     scheduling period: 3 sec
     Properties:
-    Input Directory: "#{INPUT_DIR}"
+      Input Directory: "#{INPUT_DIR}"
 Parameter Context Name: environment-variable-parameter-context
 ```
 

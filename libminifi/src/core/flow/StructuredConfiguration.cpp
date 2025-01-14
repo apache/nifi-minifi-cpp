@@ -228,10 +228,8 @@ void StructuredConfiguration::parseParameterProvidersNode(const Node& parameter_
     logger_->log_debug("Using type {} for parameter provider node", type);
 
     std::string fullType = type;
-    auto lastOfIdx = type.find_last_of('.');
-    if (lastOfIdx != std::string::npos) {
-      lastOfIdx++;  // if a value is found, increment to move beyond the .
-      type = type.substr(lastOfIdx);
+    if (auto short_type = utils::string::partAfterLastOccurrenceOf(type, '.')) {
+      type = *short_type;
     }
 
     auto name = parameter_provider_node[schema_.name].getString().value();
@@ -326,14 +324,10 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     logger_->log_debug("parseProcessorNode: class => [{}]", procCfg.javaClass);
 
     // Determine the processor name only from the Java class
-    auto lastOfIdx = procCfg.javaClass.find_last_of('.');
-    if (lastOfIdx != std::string::npos) {
-      lastOfIdx++;  // if a value is found, increment to move beyond the .
-      std::string processorName = procCfg.javaClass.substr(lastOfIdx);
-      processor = this->createProcessor(processorName, procCfg.javaClass, uuid);
+    if (auto short_processor_name = utils::string::partAfterLastOccurrenceOf(procCfg.javaClass, '.')) {
+      processor = createProcessor(*short_processor_name, procCfg.javaClass, uuid);
     } else {
-      // Allow unqualified class names for core processors
-      processor = this->createProcessor(procCfg.javaClass, uuid);
+      processor = createProcessor(procCfg.javaClass, uuid);
     }
 
     if (!processor) {
@@ -643,10 +637,8 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
     logger_->log_debug("Using type {} for controller service node", type);
 
     std::string fullType = type;
-    auto lastOfIdx = type.find_last_of('.');
-    if (lastOfIdx != std::string::npos) {
-      lastOfIdx++;  // if a value is found, increment to move beyond the .
-      type = type.substr(lastOfIdx);
+    if (auto short_type = utils::string::partAfterLastOccurrenceOf(type, '.')) {
+      type = *short_type;
     }
 
     auto name = service_node[schema_.name].getString().value();

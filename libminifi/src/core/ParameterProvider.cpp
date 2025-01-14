@@ -34,9 +34,12 @@ ParameterProviderConfig ParameterProvider::readParameterProviderConfig() const {
 
   if (config.sensitive_parameter_scope == SensitiveParameterScopeOptions::selected) {
     if (auto sensitive_parameter_list = getProperty(SensitiveParameterList)) {
-      for (const auto& sensitive_parameter : minifi::utils::string::split(*sensitive_parameter_list, ",")) {
+      for (const auto& sensitive_parameter : minifi::utils::string::splitAndTrimRemovingEmpty(*sensitive_parameter_list, ",")) {
         config.sensitive_parameters.insert(sensitive_parameter);
       }
+    }
+    if (config.sensitive_parameters.empty()) {
+      throw ParameterException("Sensitive Parameter Scope is set to 'selected' but Sensitive Parameter List is empty");
     }
   }
 
@@ -52,12 +55,10 @@ std::vector<gsl::not_null<std::unique_ptr<ParameterContext>>> ParameterProvider:
     auto parameter_context = std::make_unique<ParameterContext>(parameter_group.name);
     parameter_context->setParameterProvider(getUUIDStr());
     for (const auto& [name, value] : parameter_group.parameters) {
-      bool sensitive = config.sensitive_parameter_scope == SensitiveParameterScopeOptions::all ||
-                      (config.sensitive_parameter_scope == SensitiveParameterScopeOptions::selected && config.sensitive_parameters.contains(name));
       parameter_context->addParameter(Parameter{
         .name = name,
         .description = "",
-        .sensitive = sensitive,
+        .sensitive = config.isSensitive(name),
         .provided = true,
         .value = value
       });

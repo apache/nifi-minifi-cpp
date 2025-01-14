@@ -192,7 +192,7 @@ std::unique_ptr<core::ParameterProvider> FlowConfiguration::createParameterProvi
 
   auto returnPtr = utils::dynamic_unique_cast<core::ParameterProvider>(std::move(ptr));
   if (!returnPtr) {
-    throw std::runtime_error("Invalid return from the classloader");
+    throw std::runtime_error("Invalid parameter provider type: " + full_class_name + " is not a subclass of ParameterProvider");
   }
 
   returnPtr->initialize();

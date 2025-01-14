@@ -25,6 +25,7 @@
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/RelationshipDefinition.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::core {
 template<typename ProcessorT>
@@ -48,11 +49,10 @@ class AbstractProcessor : public Processor {
   bool isSingleThreaded() const noexcept final { return ProcessorT::IsSingleThreaded; }
   std::string getProcessorType() const final {
     constexpr auto class_name = className<ProcessorT>();
-    constexpr auto last_colon_index = class_name.find_last_of(':');
-    if constexpr (last_colon_index == std::string_view::npos) {
-      return std::string{class_name};
+    if (auto short_name = utils::string::partAfterLastOccurrenceOf(class_name, ':')) {
+      return *short_name;
     }
-    return std::string{class_name.substr(last_colon_index + 1)};
+    return std::string{class_name};
   }
 };
 }  // namespace org::apache::nifi::minifi::core
