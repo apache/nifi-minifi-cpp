@@ -29,6 +29,7 @@
 #include "sitetosite/Peer.h"
 #include "io/validation.h"
 #include "core/Resource.h"
+#include "utils/StringUtils.h"
 
 #undef DELETE  // macro on windows
 
@@ -37,12 +38,10 @@ namespace org::apache::nifi::minifi::sitetosite {
 std::shared_ptr<utils::IdGenerator> HttpSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 std::optional<utils::Identifier> HttpSiteToSiteClient::parseTransactionId(const std::string &uri) {
-  const size_t last_slash_pos = uri.find_last_of('/');
-  size_t id_start_pos = 0;
-  if (last_slash_pos != std::string::npos) {
-    id_start_pos = last_slash_pos + 1;
+  if (auto last_uri_part = utils::string::partAfterLastOccurrenceOf(uri, '/')) {
+    return utils::Identifier::parse(*last_uri_part);
   }
-  return utils::Identifier::parse(uri.substr(id_start_pos));
+  return utils::Identifier::parse(uri);
 }
 
 std::shared_ptr<sitetosite::Transaction> HttpSiteToSiteClient::createTransaction(sitetosite::TransferDirection direction) {
