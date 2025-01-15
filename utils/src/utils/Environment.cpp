@@ -34,7 +34,7 @@
 // Apple doesn't provide the environ global variable
 #if defined(__APPLE__) && !defined(environ)
 #include <crt_externs.h>
-static auto environ = *_NSGetEnviron();
+#define environ (*_NSGetEnviron())
 #endif
 
 namespace org::apache::nifi::minifi::utils {

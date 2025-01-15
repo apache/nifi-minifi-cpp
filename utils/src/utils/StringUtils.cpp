@@ -183,7 +183,7 @@ std::string replaceOne(const std::string &input, const std::string &from, const 
 
 std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string) {
   std::size_t loc = 0;
-  std::size_t lastFound;
+  std::size_t lastFound = 0;
   while ((lastFound = source_string.find(from_string, loc)) != std::string::npos) {
     source_string.replace(lastFound, from_string.size(), to_string);
     loc = lastFound + to_string.size();
@@ -221,13 +221,13 @@ std::string replaceMap(std::string source_string, const std::map<std::string, st
 namespace {
 char nibble_to_hex(uint8_t nibble, bool uppercase) {
   if (nibble < 10) {
-    return '0' + nibble;
+    return gsl::narrow<char>('0' + nibble);
   } else {
-    return (uppercase ? 'A' : 'a') + nibble - 10;
+    return gsl::narrow<char>((uppercase ? 'A' : 'a') + nibble - 10);
   }
 }
 
-void base64_digits_to_bytes(const uint8_t digits[4], std::byte* const bytes) {
+void base64_digits_to_bytes(const std::array<uint8_t, 4> digits, std::byte* const bytes) {
   bytes[0] = static_cast<std::byte>(digits[0] << 2 | digits[1] >> 4);
   bytes[1] = static_cast<std::byte>((digits[1] & 0x0f) << 4 | digits[2] >> 2);
   bytes[2] = static_cast<std::byte>((digits[2] & 0x03) << 6 | digits[3]);
@@ -236,7 +236,7 @@ void base64_digits_to_bytes(const uint8_t digits[4], std::byte* const bytes) {
 constexpr uint8_t SKIP = 0xff;
 constexpr uint8_t ILGL = 0xfe;
 constexpr uint8_t PDNG = 0xfd;
-constexpr uint8_t hex_lut[128] =
+constexpr std::array<uint8_t, 128> hex_lut =
     {SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
      SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
      SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
@@ -254,9 +254,9 @@ constexpr uint8_t hex_lut[128] =
      SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
      SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP};
 
-constexpr const char base64_enc_lut[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-constexpr const char base64_url_enc_lut[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-constexpr uint8_t base64_dec_lut[128] =
+constexpr const char base64_enc_lut[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";  // NOLINT(cppcoreguidelines-avoid-c-arrays)
+constexpr const char base64_url_enc_lut[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";  // NOLINT(cppcoreguidelines-avoid-c-arrays)
+constexpr std::array<uint8_t, 128> base64_dec_lut =
     {ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
      ILGL, ILGL, SKIP, ILGL, ILGL, SKIP, ILGL, ILGL,
      ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
@@ -287,7 +287,7 @@ bool from_hex(std::byte* data, size_t* data_length, std::string_view hex) {
   if (*data_length < hex.size() / 2) {
     return false;
   }
-  uint8_t n1;
+  uint8_t n1 = 0;
   bool found_first_nibble = false;
   *data_length = 0;
   for (char c : hex) {
@@ -346,11 +346,11 @@ bool from_base64(std::byte* const data, size_t* const data_length, const std::st
     return false;
   }
 
-  uint8_t digits[4];
+  std::array<uint8_t, 4> digits{};
   size_t digit_counter = 0U;
   size_t decoded_size = 0U;
   size_t padding_counter = 0U;
-  size_t i;
+  size_t i = 0;
   for (i = 0U; i < base64.size(); i++) {
     const auto byte = static_cast<uint8_t>(base64[i]);
     if (byte > 127) {
@@ -394,10 +394,10 @@ bool from_base64(std::byte* const data, size_t* const data_length, const std::st
     case 3: {
       digits[3] = 0x00;
 
-      std::byte bytes_temp[3];
-      base64_digits_to_bytes(digits, bytes_temp);
+      std::array<std::byte, 3> bytes_temp{};
+      base64_digits_to_bytes(digits, bytes_temp.data());
       const size_t num_bytes = digit_counter - 1;
-      memcpy(data + decoded_size, bytes_temp, num_bytes);
+      memcpy(data + decoded_size, bytes_temp.data(), num_bytes);
       decoded_size += num_bytes;
       break;
     }
@@ -428,7 +428,7 @@ size_t to_base64(char* base64, const std::span<const std::byte> raw_data, bool u
 
   const char* enc_lut = url ? base64_url_enc_lut : base64_enc_lut;
   size_t base64_length = 0U;
-  std::byte bytes[3];
+  std::array<std::byte, 3> bytes{};
   for (size_t i = 0U; i < raw_data.size(); i += 3U) {
     const bool b1_present = i + 1 < raw_data.size();
     const bool b2_present = i + 2 < raw_data.size();
