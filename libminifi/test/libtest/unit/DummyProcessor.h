@@ -22,6 +22,7 @@
 
 #include "core/Processor.h"
 #include "agent/agent_docs.h"
+#include "core/PropertyDefinitionBuilder.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -32,13 +33,22 @@ class DummyProcessor : public minifi::core::Processor {
   DummyProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : Processor(name, uuid) {}
   explicit DummyProcessor(std::string_view name) : Processor(name) {}
   static constexpr const char* Description = "A processor that does nothing.";
-  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")
+      .withDescription("Just a simple string property")
+      .build();
+  static constexpr auto SensitiveProperty = core::PropertyDefinitionBuilder<>::createProperty("Sensitive Property")
+      .withDescription("Sensitive property")
+      .isSensitive(true)
+      .build();
+  static constexpr auto Properties = std::array<core::PropertyReference, 2>{SimpleProperty, SensitiveProperty};
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
-  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicProperties = true;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void initialize() override { setSupportedProperties(Properties); }
 };
 
 }  // namespace org::apache::nifi::minifi::test
