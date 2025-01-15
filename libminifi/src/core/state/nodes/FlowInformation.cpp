@@ -61,19 +61,11 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
     serialized.push_back(queues);
   }
 
+  std::unordered_map<std::string, bool> processors_running;
   if (nullptr != monitor_) {
-    SerializedResponseNode componentsNode{.name = "components", .collapsible = false};
-    monitor_->executeOnAllComponents([&componentsNode](StateController& component){
-      componentsNode.children.push_back({
-        .name = component.getComponentName(),
-        .collapsible = false,
-        .children = {
-          {.name = "running", .value = component.isRunning()},
-          {.name = "uuid", .value = std::string{component.getComponentUUID().to_string()}}
-        }
-      });
+    monitor_->executeOnAllComponents([&processors_running](StateController& component){
+      processors_running[component.getComponentUUID().to_string()] = component.isRunning();
     });
-    serialized.push_back(componentsNode);
   }
 
   if (!processors_.empty()) {
@@ -99,7 +91,8 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
           {.name = "invocations", .value = metrics->invocations.load()},
           {.name = "processingNanos", .value = metrics->processing_nanos.load()},
           {.name = "activeThreadCount", .value = -1},
-          {.name = "terminatedThreadCount", .value = -1}
+          {.name = "terminatedThreadCount", .value = -1},
+          {.name = "running", .value = (processors_running.contains(processor->getUUIDStr()) ? processors_running[processor->getUUIDStr()] : false)}
         }
       });
     }

@@ -136,11 +136,7 @@ class MetricsHandler: public HeartbeatHandler {
       runtime_metrics.HasMember("flowInfo") &&
       runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
       runtime_metrics["flowInfo"].HasMember("queues") &&
-      runtime_metrics["flowInfo"].HasMember("components") &&
       runtime_metrics["flowInfo"]["queues"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1997") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("FlowController") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("GetTCP") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute") &&
       runtime_metrics.HasMember("agentInfo") &&
       runtime_metrics["agentInfo"]["status"]["repositories"]["ff"].HasMember("size") &&
       runtime_metrics["flowInfo"].HasMember("processorStatuses") &&
@@ -162,7 +158,8 @@ class MetricsHandler: public HeartbeatHandler {
               processor["invocations"].GetInt() < 0 ||
               processor["processingNanos"].GetInt() < 0 ||
               processor["activeThreadCount"].GetInt() != -1 ||
-              processor["terminatedThreadCount"].GetInt() != -1) {
+              processor["terminatedThreadCount"].GetInt() != -1 ||
+              !processor["running"].GetBool()) {
             return false;
           }
         }
@@ -177,11 +174,7 @@ class MetricsHandler: public HeartbeatHandler {
       runtime_metrics.HasMember("flowInfo") &&
       runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
       runtime_metrics["flowInfo"].HasMember("queues") &&
-      runtime_metrics["flowInfo"].HasMember("components") &&
       runtime_metrics["flowInfo"]["queues"].HasMember("8368e3c8-015a-1003-52ca-83af40ec1332") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("FlowController") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("GenerateFlowFile") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute") &&
       runtime_metrics.HasMember("agentInfo") &&
       runtime_metrics["agentInfo"]["status"]["repositories"]["ff"].HasMember("size") &&
       runtime_metrics["flowInfo"].HasMember("processorStatuses") &&
@@ -203,7 +196,8 @@ class MetricsHandler: public HeartbeatHandler {
               processor["invocations"].GetInt() < 0 ||
               processor["processingNanos"].GetInt() < 0 ||
               processor["activeThreadCount"].GetInt() != -1 ||
-              processor["terminatedThreadCount"].GetInt() != -1) {
+              processor["terminatedThreadCount"].GetInt() != -1 ||
+              !processor["running"].GetBool()) {
             return false;
           }
         }
