@@ -61,13 +61,6 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
     serialized.push_back(queues);
   }
 
-  std::unordered_map<std::string, bool> processors_running;
-  if (nullptr != monitor_) {
-    monitor_->executeOnAllComponents([&processors_running](StateController& component){
-      processors_running[component.getComponentUUID().to_string()] = component.isRunning();
-    });
-  }
-
   if (!processors_.empty()) {
     SerializedResponseNode processorsStatusesNode{.name = "processorStatuses", .array = true, .collapsible = false};
     for (const auto processor : processors_) {
@@ -92,7 +85,7 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
           {.name = "processingNanos", .value = metrics->processing_nanos.load()},
           {.name = "activeThreadCount", .value = -1},
           {.name = "terminatedThreadCount", .value = -1},
-          {.name = "running", .value = (processors_running.contains(processor->getUUIDStr()) ? processors_running[processor->getUUIDStr()] : false)}
+          {.name = "running", .value = processor->isRunning()}
         }
       });
     }
@@ -104,13 +97,6 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
 
 std::vector<PublishedMetric> FlowInformation::calculateMetrics() {
   std::vector<PublishedMetric> metrics = connection_store_.calculateConnectionMetrics("FlowInformation");
-
-  if (nullptr != monitor_) {
-    monitor_->executeOnAllComponents([&metrics](StateController& component){
-      metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0),
-        {{"component_uuid", component.getComponentUUID().to_string()}, {"component_name", component.getComponentName()}, {"metric_class", "FlowInformation"}}});
-    });
-  }
 
   for (const auto& processor : processors_) {
     if (!processor) {
@@ -132,6 +118,8 @@ std::vector<PublishedMetric> FlowInformation::calculateMetrics() {
     metrics.push_back({"invocations", gsl::narrow<double>(processor_metrics->invocations.load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
     metrics.push_back({"processing_nanos", gsl::narrow<double>(processor_metrics->processing_nanos.load()),
+        {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
+    metrics.push_back({"is_running", (processor->isRunning() ? 1.0 : 0.0),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
   }
 

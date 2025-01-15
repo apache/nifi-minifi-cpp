@@ -93,14 +93,14 @@ class FlowVersion : public DeviceInformation {
   std::shared_ptr<FlowIdentifier> identifier;
 };
 
-class FlowInformation : public StateMonitorNode {
+class FlowInformation : public ResponseNode {
  public:
   FlowInformation(std::string_view name, const utils::Identifier &uuid)
-      : StateMonitorNode(name, uuid) {
+      : ResponseNode(name, uuid) {
   }
 
   explicit FlowInformation(std::string_view name)
-      : StateMonitorNode(name) {
+      : ResponseNode(name) {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines the flow ID and flow URL deployed to this agent";
