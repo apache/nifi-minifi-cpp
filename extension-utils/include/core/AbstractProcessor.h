@@ -48,11 +48,7 @@ class AbstractProcessor : public ProcessorImpl {
   minifi::core::annotation::Input getInputRequirement() const noexcept final { return ProcessorT::InputRequirement; }
   bool isSingleThreaded() const noexcept final { return ProcessorT::IsSingleThreaded; }
   std::string getProcessorType() const final {
-    constexpr auto class_name = className<ProcessorT>();
-    if (auto short_name = utils::string::partAfterLastOccurrenceOf(class_name, ':')) {
-      return *short_name;
-    }
-    return std::string{class_name};
+    return utils::string::partAfterLastOccurrenceOf(className<ProcessorT>(), ':');
   }
 };
 }  // namespace org::apache::nifi::minifi::core
