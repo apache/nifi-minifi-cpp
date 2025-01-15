@@ -602,10 +602,10 @@ std::string repeat(std::string_view str, size_t count) {
   return result;
 }
 
-std::optional<std::string> partAfterLastOccurrenceOf(std::string_view input, char delimiter) {
+std::string partAfterLastOccurrenceOf(std::string_view input, char delimiter) {
   const size_t last_pos = input.find_last_of(delimiter);
   if (last_pos == std::string::npos) {
-    return std::nullopt;
+    return std::string{input};
   }
   return std::string{input.substr(last_pos + 1)};
 }

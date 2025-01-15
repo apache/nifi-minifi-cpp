@@ -38,10 +38,7 @@ namespace org::apache::nifi::minifi::sitetosite {
 std::shared_ptr<utils::IdGenerator> HttpSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 std::optional<utils::Identifier> HttpSiteToSiteClient::parseTransactionId(const std::string &uri) {
-  if (auto last_uri_part = utils::string::partAfterLastOccurrenceOf(uri, '/')) {
-    return utils::Identifier::parse(*last_uri_part);
-  }
-  return utils::Identifier::parse(uri);
+  return utils::Identifier::parse(utils::string::partAfterLastOccurrenceOf(uri, '/'));
 }
 
 std::shared_ptr<sitetosite::Transaction> HttpSiteToSiteClient::createTransaction(sitetosite::TransferDirection direction) {

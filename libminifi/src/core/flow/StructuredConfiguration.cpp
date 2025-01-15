@@ -228,9 +228,7 @@ void StructuredConfiguration::parseParameterProvidersNode(const Node& parameter_
     logger_->log_debug("Using type {} for parameter provider node", type);
 
     std::string fullType = type;
-    if (auto short_type = utils::string::partAfterLastOccurrenceOf(type, '.')) {
-      type = *short_type;
-    }
+    type = utils::string::partAfterLastOccurrenceOf(type, '.');
 
     auto name = parameter_provider_node[schema_.name].getString().value();
     auto id = getRequiredIdField(parameter_provider_node);
@@ -324,12 +322,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     logger_->log_debug("parseProcessorNode: class => [{}]", procCfg.javaClass);
 
     // Determine the processor name only from the Java class
-    if (auto short_processor_name = utils::string::partAfterLastOccurrenceOf(procCfg.javaClass, '.')) {
-      processor = createProcessor(*short_processor_name, procCfg.javaClass, uuid);
-    } else {
-      processor = createProcessor(procCfg.javaClass, uuid);
-    }
-
+    processor = createProcessor(utils::string::partAfterLastOccurrenceOf(procCfg.javaClass, '.'), procCfg.javaClass, uuid);
     if (!processor) {
       logger_->log_error("Could not create a processor {} with id {}", procCfg.name, procCfg.id);
       throw std::invalid_argument("Could not create processor " + procCfg.name);
@@ -637,9 +630,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
     logger_->log_debug("Using type {} for controller service node", type);
 
     std::string fullType = type;
-    if (auto short_type = utils::string::partAfterLastOccurrenceOf(type, '.')) {
-      type = *short_type;
-    }
+    type = utils::string::partAfterLastOccurrenceOf(type, '.');
 
     auto name = service_node[schema_.name].getString().value();
     auto id = getRequiredIdField(service_node);

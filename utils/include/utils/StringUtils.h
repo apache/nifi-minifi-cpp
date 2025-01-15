@@ -450,7 +450,7 @@ nonstd::expected<T, ParseError> parseNumber(std::string_view input) {
   return t;
 }
 
-std::optional<std::string> partAfterLastOccurrenceOf(std::string_view input, char delimiter);
+std::string partAfterLastOccurrenceOf(std::string_view input, char delimiter);
 
 }  // namespace string
 
