@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace org::apache::nifi::minifi::io {
 
@@ -33,6 +34,6 @@ struct ReadWriteResult {
 // throw exception for error
 using InputStreamCallback = std::function<int64_t(const std::shared_ptr<InputStream>& input_stream)>;
 using OutputStreamCallback = std::function<int64_t(const std::shared_ptr<OutputStream>& output_stream)>;
-using InputOutputStreamCallback = std::function<ReadWriteResult(const std::shared_ptr<InputStream>& input_stream, const std::shared_ptr<OutputStream>& output_stream)>;
+using InputOutputStreamCallback = std::function<std::optional<ReadWriteResult>(const std::shared_ptr<InputStream>& input_stream, const std::shared_ptr<OutputStream>& output_stream)>;
 
 }  // namespace org::apache::nifi::minifi::io

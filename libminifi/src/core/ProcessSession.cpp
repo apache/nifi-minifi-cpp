@@ -419,22 +419,22 @@ int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, c
     }
 
     auto read_write_result = callback(input_stream, output_stream);
-    if (read_write_result.bytes_written < 0) {
+    if (!read_write_result) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 
     input_stream->close();
     output_stream->close();
 
-    flow->setSize(gsl::narrow<uint64_t>(read_write_result.bytes_written));
+    flow->setSize(gsl::narrow<uint64_t>(read_write_result->bytes_written));
     flow->setOffset(0);
     flow->setResourceClaim(output_claim);
     if (metrics_) {
-      metrics_->bytes_written += read_write_result.bytes_written;
-      metrics_->bytes_read += read_write_result.bytes_read;
+      metrics_->bytes_written += read_write_result->bytes_written;
+      metrics_->bytes_read += read_write_result->bytes_read;
     }
 
-    return read_write_result.bytes_written;
+    return read_write_result->bytes_written;
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught exception during process session readWrite, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;

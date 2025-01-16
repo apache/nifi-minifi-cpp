@@ -26,14 +26,16 @@ LineByLineInputOutputStreamCallback::LineByLineInputOutputStreamCallback(Callbac
   : callback_(std::move(callback)) {
 }
 
-io::ReadWriteResult LineByLineInputOutputStreamCallback::operator()(const std::shared_ptr<io::InputStream>& input, const std::shared_ptr<io::OutputStream>& output) {
+std::optional<io::ReadWriteResult> LineByLineInputOutputStreamCallback::operator()(const std::shared_ptr<io::InputStream>& input, const std::shared_ptr<io::OutputStream>& output) {
   gsl_Expects(input);
   gsl_Expects(output);
 
   io::ReadWriteResult result;
 
   if (int64_t status = readInput(*input); status <= 0) {
-    result.bytes_read = status;
+    if (status < 0) {
+      return std::nullopt;
+    }
     return result;
   }
 
@@ -47,8 +49,7 @@ io::ReadWriteResult LineByLineInputOutputStreamCallback::operator()(const std::s
     std::string output_line = callback_(*current_line_, is_first_line, isLastLine());
     const auto bytes_written = output->write(reinterpret_cast<const uint8_t *>(output_line.data()), output_line.size());
     if (io::isError(bytes_written)) {
-      result.bytes_written = gsl::narrow<int64_t>(bytes_written);
-      return result;
+      return std::nullopt;
     }
     total_bytes_written += bytes_written;
     is_first_line = false;

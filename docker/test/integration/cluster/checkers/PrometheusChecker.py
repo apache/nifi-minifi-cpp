@@ -76,7 +76,7 @@ class PrometheusChecker:
         return self.verify_metrics_exist(['minifi_queue_data_size', 'minifi_queue_data_size_max', 'minifi_queue_size', 'minifi_queue_size_max',
                                           'minifi_bytes_read', 'minifi_bytes_written', 'minifi_flow_files_in', 'minifi_flow_files_out', 'minifi_bytes_in', 'minifi_bytes_out',
                                           'minifi_invocations', 'minifi_processing_nanos'], 'FlowInformation') and \
-            self.verify_metric_exists('minifi_is_running', 'FlowInformation', {'processor_name': 'FlowController'})
+            self.verify_metric_exists('minifi_is_running', 'FlowInformation', {'component_name': 'FlowController'})
 
     def verify_device_info_node_metrics(self):
         return self.verify_metrics_exist(['minifi_physical_mem', 'minifi_memory_usage', 'minifi_cpu_utilization', 'minifi_cpu_load_average'], 'DeviceInfoNode')
