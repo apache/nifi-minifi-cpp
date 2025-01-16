@@ -34,6 +34,12 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
     {.name = "flowId", .value = flow_version_->getFlowId()}
   };
 
+  if (nullptr != monitor_) {
+    monitor_->executeOnComponent("FlowController", [&serialized](StateController& component) {
+      serialized.push_back({.name = "running", .value = component.isRunning()});
+    });
+  }
+
   SerializedResponseNode uri;
   uri.name = "versionedFlowSnapshotURI";
   for (auto &entry : flow_version_->serialize()) {
@@ -97,6 +103,12 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
 
 std::vector<PublishedMetric> FlowInformation::calculateMetrics() {
   std::vector<PublishedMetric> metrics = connection_store_.calculateConnectionMetrics("FlowInformation");
+  if (nullptr != monitor_) {
+    monitor_->executeOnComponent("FlowController", [&metrics](StateController& component) {
+      metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0),
+        {{"component_uuid", component.getComponentUUID().to_string()}, {"component_name", component.getComponentName()}, {"metric_class", "FlowInformation"}}});
+    });
+  }
 
   for (const auto& processor : processors_) {
     if (!processor) {

@@ -228,7 +228,7 @@ void ResponseNodeLoader::initializeFlowInformation(const SharedResponseNode& res
   for (auto &con : connections) {
     flow_information->updateConnection(con.second);
   }
-
+  flow_information->setStateMonitor(update_sink_);
   if (flow_configuration_) {
     flow_information->setFlowVersion(flow_configuration_->getFlowVersion());
   }

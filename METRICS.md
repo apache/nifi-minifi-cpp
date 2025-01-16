@@ -187,7 +187,7 @@ FlowInformation is a system level metric that reports component and queue relate
 | queue_data_size_max  | connection_uuid, connection_name | Max queue data size to apply back pressure                                 |
 | queue_size           | connection_uuid, connection_name | Current queue size                                                         |
 | queue_size_max       | connection_uuid, connection_name | Max queue size to apply back pressure                                      |
-| is_running           | processor_uuid, processor_name   | Check if the component is running (1 or 0)                                 |
+| is_running           | component_uuid, component_name   | Check if the component is running (1 or 0)                                 |
 | bytes_read           | processor_uuid, processor_name   | Number of bytes read by the processor                                      |
 | bytes_written        | processor_uuid, processor_name   | Number of bytes written by the processor                                   |
 | flow_files_in        | processor_uuid, processor_name   | Number of flow files from the incoming queue processed by the processor    |
@@ -202,6 +202,8 @@ FlowInformation is a system level metric that reports component and queue relate
 |-----------------|--------------------------------------------------------------|
 | connection_uuid | UUID of the connection defined in the flow configuration     |
 | connection_name | Name of the connection defined in the flow configuration     |
+| component_uuid  | UUID of the component                                        |
+| component_name  | Name of the component                                        |
 | processor_uuid  | UUID of the processor                                        |
 | processor_name  | Name of the processor                                        |
 
