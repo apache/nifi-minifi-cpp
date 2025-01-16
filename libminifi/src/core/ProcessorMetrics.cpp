@@ -134,8 +134,9 @@ std::chrono::milliseconds ProcessorMetrics::getLastSessionCommitRuntime() const 
 
 std::optional<size_t> ProcessorMetrics::getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const {
   std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
-  if (transferred_relationships_.contains(relationship)) {
-    return transferred_relationships_.at(relationship);
+  const auto relationship_it = transferred_relationships_.find(relationship);
+  if (relationship_it != std::end(transferred_relationships_)) {
+    return relationship_it->second;
   }
   return {};
 }

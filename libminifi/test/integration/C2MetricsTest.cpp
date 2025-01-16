@@ -18,6 +18,7 @@
 #include <string>
 #include <iostream>
 #include <filesystem>
+#include <algorithm>
 
 #include "unit/TestBase.h"
 #include "integration/HTTPIntegrationBase.h"
@@ -129,6 +130,20 @@ class MetricsHandler: public HeartbeatHandler {
     }
   }
 
+  static bool processorMetricsAreValid(const auto& processor) {
+    return processor["bytesRead"].GetInt() >= 0 &&
+      processor["bytesWritten"].GetInt() >= 0 &&
+      processor["flowFilesIn"].GetInt() >= 0 &&
+      processor["flowFilesOut"].GetInt() >= 0 &&
+      processor["bytesIn"].GetInt() >= 0 &&
+      processor["bytesOut"].GetInt() >= 0 &&
+      processor["invocations"].GetInt() >= 0 &&
+      processor["processingNanos"].GetInt() >= 0 &&
+      processor["activeThreadCount"].GetInt() == -1 &&
+      processor["terminatedThreadCount"].GetInt() == -1 &&
+      processor["running"].GetBool();
+  }
+
   static bool verifyRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
     return runtime_metrics.HasMember("deviceInfo") &&
       runtime_metrics["deviceInfo"]["systemInfo"].HasMember("operatingSystem") &&
@@ -144,26 +159,13 @@ class MetricsHandler: public HeartbeatHandler {
         if (runtime_metrics["flowInfo"]["processorStatuses"].GetArray().Size() != 2) {
           return false;
         }
-        for (const auto& processor : runtime_metrics["flowInfo"]["processorStatuses"].GetArray()) {  // NOLINT(readability-use-anyofallof)
+        const auto processor_statuses = runtime_metrics["flowInfo"]["processorStatuses"].GetArray();
+        return std::all_of(processor_statuses.begin(), processor_statuses.end(), [&](const auto& processor) {
           if (processor["id"].GetString() != std::string(GETTCP_UUID) && processor["id"].GetString() != std::string(LOGATTRIBUTE1_UUID)) {
             throw std::runtime_error(std::string("Unexpected processor id in processorStatuses: ") + processor["id"].GetString());
           }
-
-          if (processor["bytesRead"].GetInt() < 0 ||
-              processor["bytesWritten"].GetInt() < 0 ||
-              processor["flowFilesIn"].GetInt() < 0 ||
-              processor["flowFilesOut"].GetInt() < 0 ||
-              processor["bytesIn"].GetInt() < 0 ||
-              processor["bytesOut"].GetInt() < 0 ||
-              processor["invocations"].GetInt() < 0 ||
-              processor["processingNanos"].GetInt() < 0 ||
-              processor["activeThreadCount"].GetInt() != -1 ||
-              processor["terminatedThreadCount"].GetInt() != -1 ||
-              !processor["running"].GetBool()) {
-            return false;
-          }
-        }
-        return true;
+          return processorMetricsAreValid(processor);
+        });
       }();
   }
 
@@ -182,26 +184,13 @@ class MetricsHandler: public HeartbeatHandler {
         if (runtime_metrics["flowInfo"]["processorStatuses"].GetArray().Size() != 2) {
           return false;
         }
-        for (const auto& processor : runtime_metrics["flowInfo"]["processorStatuses"].GetArray()) {  // NOLINT(readability-use-anyofallof)
+        const auto processor_statuses = runtime_metrics["flowInfo"]["processorStatuses"].GetArray();
+        return std::all_of(processor_statuses.begin(), processor_statuses.end(), [&](const auto& processor) {
           if (processor["id"].GetString() != std::string(GENERATE_FLOWFILE_UUID) && processor["id"].GetString() != std::string(LOGATTRIBUTE2_UUID)) {
             throw std::runtime_error(std::string("Unexpected processor id in processorStatuses: ") + processor["id"].GetString());
           }
-
-          if (processor["bytesRead"].GetInt() < 0 ||
-              processor["bytesWritten"].GetInt() < 0 ||
-              processor["flowFilesIn"].GetInt() < 0 ||
-              processor["flowFilesOut"].GetInt() < 0 ||
-              processor["bytesIn"].GetInt() < 0 ||
-              processor["bytesOut"].GetInt() < 0 ||
-              processor["invocations"].GetInt() < 0 ||
-              processor["processingNanos"].GetInt() < 0 ||
-              processor["activeThreadCount"].GetInt() != -1 ||
-              processor["terminatedThreadCount"].GetInt() != -1 ||
-              !processor["running"].GetBool()) {
-            return false;
-          }
-        }
-        return true;
+          return processorMetricsAreValid(processor);
+        });
       }();
   }
 
