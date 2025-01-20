@@ -61,8 +61,7 @@ class PrometheusChecker:
         labels = {'processor_name': processor_name}
         return self.verify_metrics_exist(['minifi_average_onTrigger_runtime_milliseconds', 'minifi_last_onTrigger_runtime_milliseconds',
                                           'minifi_average_session_commit_runtime_milliseconds', 'minifi_last_session_commit_runtime_milliseconds',
-                                          'minifi_incoming_flow_files', 'minifi_incoming_bytes', 'minifi_bytes_read', 'minifi_bytes_written',
-                                          'minifi_processing_nanos'], metric_class, labels) and \
+                                          'minifi_incoming_flow_files', 'minifi_incoming_bytes', 'minifi_bytes_read', 'minifi_bytes_written'], metric_class, labels) and \
             self.verify_metrics_larger_than_zero(['minifi_onTrigger_invocations', 'minifi_transferred_flow_files', 'minifi_transferred_to_success',
                                                   'minifi_transferred_bytes', 'minifi_processing_nanos'],
                                                  metric_class, labels)
