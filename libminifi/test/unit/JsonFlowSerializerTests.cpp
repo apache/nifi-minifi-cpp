@@ -901,4 +901,93 @@ TEST_CASE("Parameter provider generated parameter context is not serialized if p
   }
 }
 
+TEST_CASE("Parameter provider generated parameter context is reserialized if Reload Values On Restart is set to true") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_values_encryptor = encryption_provider;
+  core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
+
+  const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
+  static const std::string config_json_with_nifi_schema =
+      R"(
+{
+  "parameterProviders": [
+    {
+        "identifier": "d26ee5f5-0192-1000-0482-4e333725e089",
+        "name": "EnvironmentVariableParameterProvider",
+        "type": "EnvironmentVariableParameterProvider",
+        "properties": {
+          "Environment Variable Inclusion Strategy": "Comma-Separated",
+          "Include Environment Variables": "MINIFI_DATA,SECRET_MINIFI_DATA",
+          "Sensitive Parameter Scope": "selected",
+          "Sensitive Parameter List": "SECRET_MINIFI_DATA",
+          "Parameter Group Name": "environment-variable-parameter-context",
+          "Reload Values On Restart": "true"
+        }
+    }
+  ],
+  "parameterContexts": [
+    {
+        "identifier": "123ee5f5-0192-1000-0482-4e333725e345",
+        "name": "environment-variable-parameter-context",
+        "description": "my parameter context",
+        "parameters": [
+            {
+                "name": "SECRET_MINIFI_DATA",
+                "description": "",
+                "sensitive": true,
+                "provided": true,
+                "value": "old_secret_minifi_data_value"
+            },
+            {
+                "name": "MINIFI_DATA",
+                "description": "",
+                "sensitive": false,
+                "provided": true,
+                "value": "old_minifi_data_value"
+            }
+        ],
+        "parameterProvider": "d26ee5f5-0192-1000-0482-4e333725e089"
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "name": "DummyProcessor",
+      "identifier": "aabb6d26-8a8d-4338-92c9-1b8c67ec18e0",
+      "type": "DummyProcessor",
+      "scheduling strategy": "TIMER_DRIVEN",
+      "scheduling period": "15 sec",
+      "properties": {
+        "Simple Property": "#{MINIFI_DATA}",
+        "Sensitive Property": "#{SECRET_MINIFI_DATA}"
+      }
+    }],
+    "parameterContextName": "environment-variable-parameter-context"
+  }
+})";
+
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("SECRET_MINIFI_DATA", "secret_minifi_data_value");
+  const auto process_group_before = json_configuration_before.getRootFromPayload(config_json_with_nifi_schema);
+  REQUIRE(process_group_before);
+
+  std::string reserialized_config = json_configuration_before.serialize(*process_group_before);
+  rapidjson::Document result_doc;
+  rapidjson::ParseResult res = result_doc.Parse(reserialized_config.data(), reserialized_config.size());
+  REQUIRE(res);
+  REQUIRE(result_doc.HasMember("parameterContexts"));
+  auto parameters = result_doc["parameterContexts"].GetArray()[0]["parameters"].GetArray();
+  REQUIRE(parameters.Size() == 2);
+  for (const auto& parameter : parameters) {
+    std::string name = parameter["name"].GetString();
+    std::string value = parameter["value"].GetString();
+    if (name == "MINIFI_DATA") {
+      CHECK(value == "minifi_data_value");
+    } else if (name == "SECRET_MINIFI_DATA") {
+      CHECK(minifi::utils::crypto::property_encryption::decrypt(value, encryption_provider) == "secret_minifi_data_value");
+    }
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::test
