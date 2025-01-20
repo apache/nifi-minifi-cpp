@@ -128,6 +128,8 @@ class MetricsHandler: public HeartbeatHandler {
 
   static bool verifyRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
     return runtime_metrics.HasMember("deviceInfo") &&
+      runtime_metrics["deviceInfo"]["systemInfo"].HasMember("operatingSystem") &&
+      runtime_metrics["deviceInfo"]["networkInfo"].HasMember("hostname") &&
       runtime_metrics.HasMember("flowInfo") &&
       runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
       runtime_metrics["flowInfo"].HasMember("queues") &&
@@ -135,11 +137,15 @@ class MetricsHandler: public HeartbeatHandler {
       runtime_metrics["flowInfo"]["queues"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1997") &&
       runtime_metrics["flowInfo"]["components"].HasMember("FlowController") &&
       runtime_metrics["flowInfo"]["components"].HasMember("GetTCP") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute");
+      runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute") &&
+      runtime_metrics.HasMember("agentInfo") &&
+      runtime_metrics["agentInfo"]["status"]["repositories"]["ff"].HasMember("size");
   }
 
   static bool verifyUpdatedRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
     return runtime_metrics.HasMember("deviceInfo") &&
+      runtime_metrics["deviceInfo"]["systemInfo"].HasMember("operatingSystem") &&
+      runtime_metrics["deviceInfo"]["networkInfo"].HasMember("hostname") &&
       runtime_metrics.HasMember("flowInfo") &&
       runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
       runtime_metrics["flowInfo"].HasMember("queues") &&
@@ -147,7 +153,9 @@ class MetricsHandler: public HeartbeatHandler {
       runtime_metrics["flowInfo"]["queues"].HasMember("8368e3c8-015a-1003-52ca-83af40ec1332") &&
       runtime_metrics["flowInfo"]["components"].HasMember("FlowController") &&
       runtime_metrics["flowInfo"]["components"].HasMember("GenerateFlowFile") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute");
+      runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute") &&
+      runtime_metrics.HasMember("agentInfo") &&
+      runtime_metrics["agentInfo"]["status"]["repositories"]["ff"].HasMember("size");
   }
 
   static bool verifyLoadMetrics(const rapidjson::Value& load_metrics) {
@@ -186,11 +194,12 @@ class MetricsHandler: public HeartbeatHandler {
 TEST_CASE("C2MetricsTest", "[c2test]") {
   std::atomic_bool metrics_updated_successfully{false};
   VerifyC2Metrics harness(metrics_updated_successfully);
+  harness.getConfiguration()->set("nifi.c2.root.classes", "FlowInformation,AgentInformation");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions", "metrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.name", "metrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics", "runtimemetrics,loadmetrics,processorMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.runtimemetrics.name", "RuntimeMetrics");
-  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.runtimemetrics.classes", "DeviceInfoNode,FlowInformation");
+  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.runtimemetrics.classes", "DeviceInfoNode,FlowInformation,AssetInformation,DeviceInfoNode,AgentInformation");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.loadmetrics.name", "LoadMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.loadmetrics.classes", "QueueMetrics,RepositoryMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processorMetrics.name", "ProcessorMetrics");
