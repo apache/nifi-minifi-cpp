@@ -40,7 +40,7 @@ rapidjson::Value& getMember(rapidjson::Value& node, const std::string& member_na
 }
 
 void JsonFlowSerializer::addProviderCreatedParameterContexts(rapidjson::Value& flow_definition_json, rapidjson::Document::AllocatorType& alloc, const core::flow::FlowSchema& schema,
-    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const {
+    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) {
   std::vector<gsl::not_null<ParameterContext*>> provided_parameter_contexts;
   for (const auto& [parameter_context_name, parameter_context] : parameter_contexts) {
     if (!parameter_context->getParameterProvider().empty()) {
@@ -53,20 +53,11 @@ void JsonFlowSerializer::addProviderCreatedParameterContexts(rapidjson::Value& f
   }
 
   std::unordered_set<std::string> parameter_context_names;
-  if (flow_definition_json.HasMember(schema.parameter_contexts[0])) {
-    auto parameter_contexts_node = getMember(flow_definition_json, schema.parameter_contexts[0]).GetArray();
-    for (auto& parameter_context : parameter_contexts_node) {
-      parameter_context_names.insert(getMember(parameter_context, schema.name[0]).GetString());
-    }
-  } else {
+  if (!flow_definition_json.HasMember(schema.parameter_contexts[0])) {
     flow_definition_json.AddMember(rapidjson::Value(schema.parameter_contexts[0].c_str(), alloc), rapidjson::Value(rapidjson::kArrayType), alloc);
   }
 
   for (const auto& parameter_context : provided_parameter_contexts) {
-    if (parameter_context_names.contains(parameter_context->getName())) {
-      logger_->log_warn("Parameter context '{}' already exists in the flow definition, will not be updated!", parameter_context->getName());
-      continue;
-    }
     rapidjson::Value parameter_context_json(rapidjson::kObjectType);
     parameter_context_json.AddMember(rapidjson::Value(schema.identifier[0], alloc), rapidjson::Value(parameter_context->getUUIDStr(), alloc), alloc);
     parameter_context_json.AddMember(rapidjson::Value(schema.name[0], alloc), rapidjson::Value(parameter_context->getName(), alloc), alloc);
@@ -85,7 +76,15 @@ void JsonFlowSerializer::addProviderCreatedParameterContexts(rapidjson::Value& f
     parameter_context_json.AddMember(rapidjson::Value(schema.parameters[0], alloc), parameters_json, alloc);
 
     auto& parameter_contexts_node = getMember(flow_definition_json, schema.parameter_contexts[0]);
-    parameter_contexts_node.PushBack(parameter_context_json, alloc);
+    auto it = std::find_if(parameter_contexts_node.Begin(), parameter_contexts_node.End(), [&](rapidjson::Value& node) {
+      return getMember(node, schema.name[0]).GetString() == parameter_context->getName();
+    });
+
+    if (it != parameter_contexts_node.End()) {
+      *it = parameter_context_json;
+    } else {
+      parameter_contexts_node.PushBack(parameter_context_json, alloc);
+    }
   }
 }
 
