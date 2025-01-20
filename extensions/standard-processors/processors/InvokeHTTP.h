@@ -23,6 +23,8 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <optional>
+#include <list>
 
 #include "Core.h"
 #include "FlowFileRecord.h"
@@ -41,9 +43,62 @@
 #include "utils/Enum.h"
 #include "utils/RegexUtils.h"
 
+namespace org::apache::nifi::minifi::test {
+class HttpClientStoreTestAccessor;
+}
+
 namespace org::apache::nifi::minifi::processors {
 
 namespace invoke_http {
+class HttpClientStore {
+ public:
+  HttpClientStore(const size_t size, std::function<gsl::not_null<std::unique_ptr<http::HTTPClient>>(const std::string&)> create_client_function)
+      : max_size_(size),
+        create_client_function_(std::move(create_client_function)) {
+  }
+  HttpClientStore(const HttpClientStore&) = delete;
+  HttpClientStore& operator=(const HttpClientStore&) = delete;
+  HttpClientStore(HttpClientStore&&) = delete;
+  HttpClientStore& operator=(HttpClientStore&&) = delete;
+  ~HttpClientStore() = default;
+
+  class HttpClientWrapper {
+   public:
+    HttpClientWrapper(HttpClientStore& client_store, http::HTTPClient& client)
+      :client_(client), client_store_(client_store) { }
+
+    HttpClientWrapper(const HttpClientWrapper&) = delete;
+    HttpClientWrapper& operator=(const HttpClientWrapper&) = delete;
+    HttpClientWrapper(HttpClientWrapper&& src) = delete;
+    HttpClientWrapper& operator=(HttpClientWrapper&& src) = delete;
+    ~HttpClientWrapper() {
+      client_store_.returnClient(client_);
+    }
+
+    [[nodiscard]] http::HTTPClient& get() const {
+      return client_;
+    }
+
+   private:
+    http::HTTPClient& client_;
+    HttpClientStore& client_store_;
+  };
+
+  [[nodiscard]] HttpClientWrapper getClient(const std::string& url);
+
+ private:
+  friend class test::HttpClientStoreTestAccessor;
+  void returnClient(http::HTTPClient& client);
+
+  std::mutex clients_mutex_;
+  std::condition_variable cv_;
+  const size_t max_size_;
+  std::list<gsl::not_null<std::unique_ptr<http::HTTPClient>>> used_clients_;
+  std::list<gsl::not_null<std::unique_ptr<http::HTTPClient>>> unused_clients_;
+  std::function<gsl::not_null<std::unique_ptr<http::HTTPClient>>(const std::string&)> create_client_function_;
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HttpClientWrapper>::getLogger()};
+};
+
 enum class InvalidHTTPHeaderFieldHandlingOption {
     fail,
     transform,
@@ -64,8 +119,8 @@ class InvokeHTTP : public core::Processor {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
-                                                          "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
-                                                          "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).";
+      "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
+      "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).";
 
   EXTENSIONAPI static constexpr auto Method = core::PropertyDefinitionBuilder<magic_enum::enum_count<http::HttpRequestMethod>()>::createProperty("HTTP Method")
       .withDescription("HTTP request method. Methods other than POST, PUT and PATCH will be sent without a message body.")
@@ -106,7 +161,7 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("SSL Context Service")
       .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
       .isRequired(false)
-      .withAllowedTypes<minifi::controllers::SSLContextService>()
+      .withAllowedTypes<controllers::SSLContextService>()
       .withExclusiveOfProperties({{{"Remote URL", "^http:.*$"}}})
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
@@ -268,15 +323,15 @@ class InvokeHTTP : public core::Processor {
 
  private:
   void route(const std::shared_ptr<core::FlowFile>& request, const std::shared_ptr<core::FlowFile>& response, core::ProcessSession& session,
-             core::ProcessContext& context, bool is_success, int64_t status_code);
+      core::ProcessContext& context, bool is_success, int64_t status_code);
   [[nodiscard]] bool shouldEmitFlowFile() const;
   void onTriggerWithClient(core::ProcessContext& context, core::ProcessSession& session,
-                           const std::shared_ptr<core::FlowFile>& flow_file, minifi::http::HTTPClient& client);
+      const std::shared_ptr<core::FlowFile>& flow_file, http::HTTPClient& client);
   [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header);
 
 
   void setupMembersFromProperties(const core::ProcessContext& context);
-  std::unique_ptr<minifi::http::HTTPClient> createHTTPClientFromMembers() const;
+  gsl::not_null<std::unique_ptr<http::HTTPClient>> createHTTPClientFromMembers(const std::string& url) const;
 
   http::HttpRequestMethod method_{};
   std::optional<utils::Regex> attributes_to_send_;
@@ -289,7 +344,6 @@ class InvokeHTTP : public core::Processor {
   core::DataTransferSpeedValue maximum_upload_speed_{0};
   core::DataTransferSpeedValue maximum_download_speed_{0};
 
-  std::string url_;
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
   std::chrono::milliseconds connect_timeout_{std::chrono::seconds(30)};
@@ -303,7 +357,8 @@ class InvokeHTTP : public core::Processor {
   invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_{};
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger(uuid_)};
-  std::shared_ptr<utils::ResourceQueue<http::HTTPClient>> client_queue_;
+
+  std::unique_ptr<invoke_http::HttpClientStore> client_queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
