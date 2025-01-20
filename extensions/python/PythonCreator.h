@@ -97,8 +97,10 @@ class PythonCreator : public minifi::core::CoreComponent {
       registered_classes_.push_back(class_name);
       try {
         registerScriptDescription(class_name, full_name, path, script_name.string());
+      } catch (const PythonScriptWarning &warning) {
+        logger_->log_info("Could not process {}.py: {} -- if this is a helper file, then this is OK", script_name, warning.what());
       } catch (const std::exception &err) {
-        logger_->log_error("Cannot load {}: {}", script_name, err.what());
+        logger_->log_error("Could not process {}.py: {}", script_name, err.what());
       }
     }
   }

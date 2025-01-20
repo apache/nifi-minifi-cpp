@@ -200,7 +200,7 @@ void PythonScriptEngine::initializeProcessorObject(const std::string& python_cla
       throw PythonScriptException("Could not bind 'REL_ORIGINAL' object to '" + python_class_name + "' python processor object");
     }
   } else {
-    throw PythonScriptException("No python class '" + python_class_name + "' was found!");
+    throw PythonScriptWarning("No Python class '" + python_class_name + "' was found");
   }
 }
 
