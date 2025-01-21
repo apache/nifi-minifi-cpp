@@ -145,8 +145,7 @@ class ConsumeJournald final : public core::ProcessorImpl {
   std::string getCursor() const;
 
   std::atomic<bool> running_{false};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger(uuid_);
-  core::StateManager* state_manager_;
+  core::StateManager* state_manager_ = nullptr;
   std::unique_ptr<libwrapper::LibWrapper> libwrapper_;
   std::unique_ptr<utils::FifoExecutor> worker_;
   std::unique_ptr<libwrapper::Journal> journal_;

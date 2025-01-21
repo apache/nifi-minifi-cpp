@@ -83,9 +83,10 @@ class GetFileMetrics : public core::ProcessorMetricsImpl {
 
 class GetFile : public core::ProcessorImpl {
  public:
-  explicit GetFile(std::string_view name, const utils::Identifier& uuid = {})
+  explicit GetFile(const std::string_view name, const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid) {
     metrics_ = gsl::make_not_null(std::make_shared<GetFileMetrics>(*this));
+    logger_ = core::logging::LoggerFactory<GetFile>::getLogger(uuid_);
   }
   ~GetFile() override = default;
 
@@ -193,7 +194,6 @@ class GetFile : public core::ProcessorImpl {
   std::queue<std::filesystem::path> directory_listing_;
   mutable std::mutex directory_listing_mutex_;
   std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_listing_time_{};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetFile>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

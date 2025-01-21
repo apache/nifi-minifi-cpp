@@ -286,7 +286,6 @@ class BinFiles : public core::ProcessorImpl {
   BinManager binManager_;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinFiles>::getLogger(uuid_)};
   uint32_t batchSize_{1};
   uint32_t maxBinCount_{100};
   core::FlowFileStore file_store_;
