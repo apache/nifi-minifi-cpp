@@ -39,9 +39,10 @@ namespace org::apache::nifi::minifi::processors {
 
 class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
-  explicit PublishMQTT(std::string_view name, const utils::Identifier& uuid = {})
+  explicit PublishMQTT(const std::string_view name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid) {
     metrics_ = gsl::make_not_null(std::make_shared<PublishMQTTMetrics>(*this, in_flight_message_counter_));
+    logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
@@ -191,7 +192,6 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   bool retain_ = false;
   std::optional<std::chrono::seconds> message_expiry_interval_;
   InFlightMessageCounter in_flight_message_counter_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors
