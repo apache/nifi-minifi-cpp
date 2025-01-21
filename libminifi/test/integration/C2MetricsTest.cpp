@@ -141,7 +141,7 @@ class MetricsHandler: public HeartbeatHandler {
       processor["processingNanos"].GetInt() >= 0 &&
       processor["activeThreadCount"].GetInt() == -1 &&
       processor["terminatedThreadCount"].GetInt() == -1 &&
-      processor["running"].GetBool();
+      processor["runningState"].GetString() == std::string("RUNNING");
   }
 
   static bool verifyCommonRuntimeMetricNodes(const rapidjson::Value& runtime_metrics, const std::string& queue_id) {
@@ -150,7 +150,8 @@ class MetricsHandler: public HeartbeatHandler {
       runtime_metrics["deviceInfo"]["networkInfo"].HasMember("hostname") &&
       runtime_metrics.HasMember("flowInfo") &&
       runtime_metrics["flowInfo"].HasMember("flowId") &&
-      runtime_metrics["flowInfo"].HasMember("running") &&
+      runtime_metrics["flowInfo"].HasMember("runningState") &&
+      runtime_metrics["flowInfo"]["runningState"].GetString() == std::string("RUNNING") &&
       runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
       runtime_metrics["flowInfo"].HasMember("queues") &&
       runtime_metrics["flowInfo"]["queues"].HasMember(queue_id) &&
