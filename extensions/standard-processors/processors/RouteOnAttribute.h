@@ -35,8 +35,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class RouteOnAttribute : public core::ProcessorImpl {
  public:
-  explicit RouteOnAttribute(std::string_view name, const utils::Identifier& uuid = {})
+  explicit RouteOnAttribute(const std::string_view name, const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<RouteOnAttribute>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Routes FlowFiles based on their Attributes using the Attribute Expression Language.\n\n"
@@ -62,7 +63,6 @@ class RouteOnAttribute : public core::ProcessorImpl {
   void initialize() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RouteOnAttribute>::getLogger(uuid_);
   std::map<std::string, std::string> route_properties_;
   std::map<std::string, core::Relationship> route_rels_;
 };

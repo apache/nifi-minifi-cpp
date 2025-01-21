@@ -41,6 +41,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
   explicit ConsumeMQTT(std::string_view name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid) {
+    logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
@@ -207,7 +208,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   std::unordered_map<uint16_t, std::string> alias_to_topic_;
 
   moodycamel::ConcurrentQueue<SmartMessage> queue_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

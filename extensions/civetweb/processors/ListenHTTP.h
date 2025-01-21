@@ -55,8 +55,9 @@ class ListenHTTP : public core::ProcessorImpl {
  public:
   friend struct ::org::apache::nifi::minifi::test::ListenHTTPTestAccessor;
 
-  explicit ListenHTTP(std::string_view name, const utils::Identifier& uuid = {})
+  explicit ListenHTTP(const std::string_view name, const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger(uuid_);
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }
@@ -285,7 +286,6 @@ class ListenHTTP : public core::ProcessorImpl {
     return handler_ ? handler_->requestCount() : 0;
   }
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger(uuid_);
   CivetCallbacks callbacks_;
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;

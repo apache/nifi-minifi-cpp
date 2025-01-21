@@ -57,6 +57,7 @@ class ProcFsMonitor final : public core::ProcessorImpl {
  public:
   explicit ProcFsMonitor(const std::string_view name, utils::Identifier uuid = utils::Identifier())
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<ProcFsMonitor>::getLogger(uuid_);
   }
   ~ProcFsMonitor() override = default;
 
@@ -140,7 +141,6 @@ class ProcFsMonitor final : public core::ProcessorImpl {
   ResultRelativeness result_relativeness_ = ResultRelativeness::Absolute;
 
   std::optional<uint8_t> decimal_places_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ProcFsMonitor>::getLogger(uuid_);
 
   ProcFs proc_fs_;
 

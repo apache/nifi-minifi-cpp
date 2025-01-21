@@ -38,8 +38,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class ExtractText : public core::ProcessorImpl {
  public:
-  explicit ExtractText(std::string_view name,  const utils::Identifier& uuid = {})
+  explicit ExtractText(const std::string_view name,  const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<ExtractText>::getLogger(uuid_);
   }
 
   // Default maximum bytes to read into an attribute
@@ -118,9 +119,6 @@ class ExtractText : public core::ProcessorImpl {
     gsl::not_null<core::ProcessContext*> ctx_;
     std::shared_ptr<core::logging::Logger> logger_;
   };
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExtractText>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -40,8 +40,9 @@ class ReadFromFlowFileTestProcessor : public core::ProcessorImpl {
   static constexpr const char* ON_TRIGGER_LOG_STR = "ReadFromFlowFileTestProcessor::onTrigger executed";
   static constexpr const char* ON_UNSCHEDULE_LOG_STR = "ReadFromFlowFileTestProcessor::onUnSchedule executed";
 
-  explicit ReadFromFlowFileTestProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
+  explicit ReadFromFlowFileTestProcessor(const std::string_view name, const utils::Identifier& uuid = utils::Identifier())
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger(uuid_);
   }
 
   static constexpr const char* Description = "ReadFromFlowFileTestProcessor (only for testing purposes)";
@@ -90,7 +91,6 @@ class ReadFromFlowFileTestProcessor : public core::ProcessorImpl {
     std::map<std::string, std::string> attributes_;
   };
   bool clear_on_trigger_ = true;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger(uuid_);
   std::vector<FlowFileData> flow_files_read_;
 };
 

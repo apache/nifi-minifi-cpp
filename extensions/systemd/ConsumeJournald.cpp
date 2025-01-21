@@ -34,8 +34,9 @@ namespace org::apache::nifi::minifi::extensions::systemd {
 namespace chr = std::chrono;
 
 ConsumeJournald::ConsumeJournald(const std::string_view name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
-    :core::ProcessorImpl{name, id}, libwrapper_{std::move(libwrapper)}
-{}
+    : core::ProcessorImpl{name, id}, libwrapper_{std::move(libwrapper)} {
+  logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger(uuid_);
+}
 
 void ConsumeJournald::initialize() {
   setSupportedProperties(Properties);
@@ -95,6 +96,7 @@ void ConsumeJournald::onSchedule(core::ProcessContext& context, core::ProcessSes
 }
 
 void ConsumeJournald::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  gsl_Expects(state_manager_);
   if (!running_.load(std::memory_order_acquire)) return;
   auto cursor_and_messages = getCursorAndMessageBatch().get();
   auto messages = std::move(cursor_and_messages.second);

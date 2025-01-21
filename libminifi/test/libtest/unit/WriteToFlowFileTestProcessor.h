@@ -38,8 +38,9 @@ class WriteToFlowFileTestProcessor : public core::ProcessorImpl {
   static constexpr const char* ON_TRIGGER_LOG_STR = "WriteToFlowFileTestProcessor::onTrigger executed";
   static constexpr const char* ON_UNSCHEDULE_LOG_STR = "WriteToFlowFileTestProcessor::onUnSchedule executed";
 
-  explicit WriteToFlowFileTestProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
+  explicit WriteToFlowFileTestProcessor(const std::string_view name, const utils::Identifier& uuid = utils::Identifier())
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger(uuid_);
   }
 
   static constexpr const char* Description = "WriteToFlowFileTestProcessor (only for testing purposes)";
@@ -67,7 +68,6 @@ class WriteToFlowFileTestProcessor : public core::ProcessorImpl {
   }
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger(uuid_);
   std::string content_;
 };
 

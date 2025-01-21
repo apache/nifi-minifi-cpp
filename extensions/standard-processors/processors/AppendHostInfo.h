@@ -42,8 +42,9 @@ class AppendHostInfo : public core::ProcessorImpl {
   static constexpr const char* REFRESH_POLICY_ON_TRIGGER = "On every trigger";
   static constexpr const char* REFRESH_POLICY_ON_SCHEDULE = "On schedule";
 
-  explicit AppendHostInfo(std::string_view name, const utils::Identifier& uuid = {})
+  explicit AppendHostInfo(const std::string_view name, const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<AppendHostInfo>::getLogger(uuid_);
   }
   ~AppendHostInfo() override = default;
 
@@ -94,7 +95,6 @@ class AppendHostInfo : public core::ProcessorImpl {
 
  private:
   std::shared_mutex shared_mutex_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AppendHostInfo>::getLogger(uuid_);
   std::string hostname_attribute_name_;
   std::string ipaddress_attribute_name_;
   std::optional<std::regex> interface_name_filter_;

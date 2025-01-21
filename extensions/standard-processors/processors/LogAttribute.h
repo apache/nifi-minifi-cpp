@@ -41,6 +41,7 @@ class LogAttribute : public core::ProcessorImpl {
  public:
   explicit LogAttribute(const std::string_view name, const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<LogAttribute>::getLogger(uuid_);
     logger_->set_max_log_size(-1);
   }
   ~LogAttribute() override = default;
@@ -115,7 +116,6 @@ class LogAttribute : public core::ProcessorImpl {
   uint64_t flowfiles_to_log_{1};
   bool hexencode_{false};
   uint64_t max_line_length_{80};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LogAttribute>::getLogger(uuid_);
   core::logging::LOG_LEVEL log_level_{core::logging::LOG_LEVEL::info};
   std::string dash_line_ = "--------------------------------------------------";
   bool log_payload_ = false;

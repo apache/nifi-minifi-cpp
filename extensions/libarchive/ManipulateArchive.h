@@ -38,8 +38,9 @@ using core::logging::Logger;
 
 class ManipulateArchive : public core::ProcessorImpl {
  public:
-  explicit ManipulateArchive(std::string_view name, const utils::Identifier& uuid = {})
+  explicit ManipulateArchive(const std::string_view name, const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<ManipulateArchive>::getLogger(uuid_);
   }
   ~ManipulateArchive() override = default;
 
@@ -91,7 +92,6 @@ class ManipulateArchive : public core::ProcessorImpl {
   void initialize() override;
 
  private:
-  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<ManipulateArchive>::getLogger(uuid_);
   std::string before_, after_, operation_, destination_, targetEntry_;
 };
 
