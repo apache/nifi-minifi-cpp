@@ -86,6 +86,7 @@ std::tuple<Processor*, bool> ProcessGroup::addProcessor(std::unique_ptr<Processo
   gsl_Expects(processor);
   const auto name = processor->getName();
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+  processor->setProcessGroupUUIDStr(getUUIDStr());
   const auto [iter, inserted] = processors_.insert(std::move(processor));
   if (inserted) {
     logger_->log_debug("Add processor {} into process group {}", name, name_);

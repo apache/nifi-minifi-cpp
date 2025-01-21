@@ -18,6 +18,7 @@
 #include <string>
 #include <iostream>
 #include <filesystem>
+#include <algorithm>
 
 #include "unit/TestBase.h"
 #include "integration/HTTPIntegrationBase.h"
@@ -92,7 +93,10 @@ class MetricsHandler: public HeartbeatHandler {
     VERIFY_UPDATED_METRICS
   };
 
-  static constexpr const char* GETTCP1_UUID = "2438e3c8-015a-1000-79ca-83af40ec1991";
+  static constexpr const char* GETTCP_UUID = "2438e3c8-015a-1000-79ca-83af40ec1991";
+  static constexpr const char* LOGATTRIBUTE1_UUID = "2438e3c8-015a-1000-79ca-83af40ec1992";
+  static constexpr const char* LOGATTRIBUTE2_UUID = "5128e3c8-015a-1000-79ca-83af40ec1990";
+  static constexpr const char* GENERATE_FLOWFILE_UUID = "4fe2d51d-076a-49b0-88de-5cf5adf52b8f";
 
   static void sendEmptyHeartbeatResponse(struct mg_connection* conn) {
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
@@ -126,36 +130,67 @@ class MetricsHandler: public HeartbeatHandler {
     }
   }
 
-  static bool verifyRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
+  static bool processorMetricsAreValid(const auto& processor) {
+    return processor["bytesRead"].GetInt() >= 0 &&
+      processor["bytesWritten"].GetInt() >= 0 &&
+      processor["flowFilesIn"].GetInt() >= 0 &&
+      processor["flowFilesOut"].GetInt() >= 0 &&
+      processor["bytesIn"].GetInt() >= 0 &&
+      processor["bytesOut"].GetInt() >= 0 &&
+      processor["invocations"].GetInt() >= 0 &&
+      processor["processingNanos"].GetInt() >= 0 &&
+      processor["activeThreadCount"].GetInt() == -1 &&
+      processor["terminatedThreadCount"].GetInt() == -1 &&
+      processor["runStatus"].GetString() == std::string("Running");
+  }
+
+  static bool verifyCommonRuntimeMetricNodes(const rapidjson::Value& runtime_metrics, const std::string& queue_id) {
     return runtime_metrics.HasMember("deviceInfo") &&
       runtime_metrics["deviceInfo"]["systemInfo"].HasMember("operatingSystem") &&
       runtime_metrics["deviceInfo"]["networkInfo"].HasMember("hostname") &&
       runtime_metrics.HasMember("flowInfo") &&
+      runtime_metrics["flowInfo"].HasMember("flowId") &&
+      runtime_metrics["flowInfo"].HasMember("runStatus") &&
+      runtime_metrics["flowInfo"]["runStatus"].GetString() == std::string("Running") &&
       runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
       runtime_metrics["flowInfo"].HasMember("queues") &&
-      runtime_metrics["flowInfo"].HasMember("components") &&
-      runtime_metrics["flowInfo"]["queues"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1997") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("FlowController") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("GetTCP") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute") &&
+      runtime_metrics["flowInfo"]["queues"].HasMember(queue_id) &&
       runtime_metrics.HasMember("agentInfo") &&
-      runtime_metrics["agentInfo"]["status"]["repositories"]["ff"].HasMember("size");
+      runtime_metrics["agentInfo"]["status"]["repositories"]["ff"].HasMember("size") &&
+      runtime_metrics["flowInfo"].HasMember("processorStatuses");
+  }
+
+  static bool verifyRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
+    return verifyCommonRuntimeMetricNodes(runtime_metrics, "2438e3c8-015a-1000-79ca-83af40ec1997") &&
+      [&]() {
+        const auto processor_statuses = runtime_metrics["flowInfo"]["processorStatuses"].GetArray();
+        if (processor_statuses.Size() != 2) {
+          return false;
+        }
+        return std::all_of(processor_statuses.begin(), processor_statuses.end(), [&](const auto& processor) {
+          if (processor["id"].GetString() != std::string(GETTCP_UUID) && processor["id"].GetString() != std::string(LOGATTRIBUTE1_UUID)) {
+            throw std::runtime_error(std::string("Unexpected processor id in processorStatuses: ") + processor["id"].GetString());
+          }
+          return processorMetricsAreValid(processor);
+        });
+      }();
   }
 
   static bool verifyUpdatedRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
-    return runtime_metrics.HasMember("deviceInfo") &&
-      runtime_metrics["deviceInfo"]["systemInfo"].HasMember("operatingSystem") &&
-      runtime_metrics["deviceInfo"]["networkInfo"].HasMember("hostname") &&
-      runtime_metrics.HasMember("flowInfo") &&
-      runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
-      runtime_metrics["flowInfo"].HasMember("queues") &&
-      runtime_metrics["flowInfo"].HasMember("components") &&
-      runtime_metrics["flowInfo"]["queues"].HasMember("8368e3c8-015a-1003-52ca-83af40ec1332") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("FlowController") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("GenerateFlowFile") &&
-      runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute") &&
-      runtime_metrics.HasMember("agentInfo") &&
-      runtime_metrics["agentInfo"]["status"]["repositories"]["ff"].HasMember("size");
+    return verifyCommonRuntimeMetricNodes(runtime_metrics, "8368e3c8-015a-1003-52ca-83af40ec1332") &&
+      runtime_metrics["flowInfo"].HasMember("processorStatuses") &&
+      [&]() {
+        const auto processor_statuses = runtime_metrics["flowInfo"]["processorStatuses"].GetArray();
+        if (processor_statuses.Size() != 2) {
+          return false;
+        }
+        return std::all_of(processor_statuses.begin(), processor_statuses.end(), [&](const auto& processor) {
+          if (processor["id"].GetString() != std::string(GENERATE_FLOWFILE_UUID) && processor["id"].GetString() != std::string(LOGATTRIBUTE2_UUID)) {
+            throw std::runtime_error(std::string("Unexpected processor id in processorStatuses: ") + processor["id"].GetString());
+          }
+          return processorMetricsAreValid(processor);
+        });
+      }();
   }
 
   static bool verifyLoadMetrics(const rapidjson::Value& load_metrics) {
@@ -177,13 +212,18 @@ class MetricsHandler: public HeartbeatHandler {
 
   static bool verifyProcessorMetrics(const rapidjson::Value& processor_metrics) {
     return processor_metrics.HasMember("GetTCPMetrics") &&
-      processor_metrics["GetTCPMetrics"].HasMember(GETTCP1_UUID) &&
-      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("OnTriggerInvocations") &&
-      processor_metrics["GetTCPMetrics"][GETTCP1_UUID]["OnTriggerInvocations"].GetUint() > 0 &&
-      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("TransferredFlowFiles") &&
-      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("AverageOnTriggerRunTime") &&
-      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("LastOnTriggerRunTime") &&
-      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("TransferredBytes");
+      processor_metrics["GetTCPMetrics"].HasMember(GETTCP_UUID) &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("OnTriggerInvocations") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID]["OnTriggerInvocations"].GetUint() > 0 &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("TransferredFlowFiles") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("AverageOnTriggerRunTime") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("LastOnTriggerRunTime") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("TransferredBytes") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("IncomingFlowFiles") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("IncomingBytes") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("BytesRead") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("BytesWritten") &&
+      processor_metrics["GetTCPMetrics"][GETTCP_UUID].HasMember("ProcessingNanos");
   }
 
   std::atomic_bool& metrics_updated_successfully_;
