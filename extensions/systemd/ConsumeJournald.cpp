@@ -33,8 +33,9 @@ namespace org::apache::nifi::minifi::extensions::systemd {
 namespace chr = std::chrono;
 
 ConsumeJournald::ConsumeJournald(const std::string_view name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
-    :core::ProcessorImpl{name, id}, libwrapper_{std::move(libwrapper)}
-{}
+    : core::ProcessorImpl{name, id}, libwrapper_{std::move(libwrapper)} {
+  logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger(uuid_);
+}
 
 void ConsumeJournald::initialize() {
   setSupportedProperties(Properties);
@@ -109,6 +110,7 @@ void ConsumeJournald::onSchedule(core::ProcessContext& context, core::ProcessSes
 }
 
 void ConsumeJournald::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  gsl_Expects(state_manager_);
   if (!running_.load(std::memory_order_acquire)) return;
   auto cursor_and_messages = getCursorAndMessageBatch().get();
   auto messages = std::move(cursor_and_messages.second);
@@ -216,7 +218,7 @@ std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) con
 
 std::string ConsumeJournald::getCursor() const {
   const auto cursor = [this] {
-    gsl::owner<char*> cursor_out;
+    gsl::owner<char*> cursor_out = nullptr;
     const auto err_code = journal_->getCursor(&cursor_out);
     if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
     gsl_Ensures(cursor_out);

@@ -39,8 +39,9 @@ class KamikazeProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static const std::string OnTriggerLogStr;
   EXTENSIONAPI static const std::string OnUnScheduleLogStr;
 
-  explicit KamikazeProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
+  explicit KamikazeProcessor(const std::string_view name, const utils::Identifier& uuid = utils::Identifier())
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<KamikazeProcessor>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This processor can throw exceptions in onTrigger and onSchedule calls based on configuration. Only for testing purposes.";
@@ -79,7 +80,6 @@ class KamikazeProcessor : public core::ProcessorImpl {
 
  private:
   bool _throwInOnTrigger = false;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<KamikazeProcessor>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

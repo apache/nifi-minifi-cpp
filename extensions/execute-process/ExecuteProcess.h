@@ -51,6 +51,7 @@ class ExecuteProcess final : public core::ProcessorImpl {
   explicit ExecuteProcess(const std::string_view name, const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid),
         working_dir_(".") {
+    logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger(uuid_);
   }
   ~ExecuteProcess() override {
     if (pid_ > 0) {
@@ -113,7 +114,6 @@ class ExecuteProcess final : public core::ProcessorImpl {
   void readOutput(core::ProcessSession& session) const;
   bool writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer) const;
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger(uuid_);
   std::string command_;
   std::string command_argument_;
   std::filesystem::path working_dir_;
