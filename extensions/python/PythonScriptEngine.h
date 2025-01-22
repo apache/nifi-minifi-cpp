@@ -68,7 +68,6 @@ class PythonScriptEngine {
         }
         return result;
       }
-      Py_INCREF(Py_None);
       return OwnedReference(Py_None);
     } catch (const std::exception& e) {
       throw PythonScriptException(e.what());
@@ -98,13 +97,11 @@ class PythonScriptEngine {
 
     try {
       if (PyObject_HasAttrString(processor_instance_.get(), fn_name.c_str()) == 0) {
-        Py_INCREF(Py_None);
         return OwnedReference(Py_None);
       }
 
       auto callable_method = OwnedCallable(PyObject_GetAttrString(processor_instance_.get(), fn_name.c_str()));
       if (callable_method.get() == nullptr) {
-        Py_INCREF(Py_None);
         return OwnedReference(Py_None);
       }
 

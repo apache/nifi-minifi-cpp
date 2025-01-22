@@ -60,10 +60,8 @@ template<>
 struct Converter<bool> {
   OwnedObject from(bool value) {
     if (value) {
-      Py_INCREF(Py_True);
       return OwnedObject(Py_True);
     }
-    Py_INCREF(Py_False);
     return OwnedObject(Py_False);
   }
 };
@@ -71,7 +69,6 @@ struct Converter<bool> {
 template<>
 struct Converter<std::nullptr_t> {
   OwnedObject from(std::nullptr_t) {
-    Py_INCREF(Py_None);
     return OwnedObject(Py_None);
   }
 };
