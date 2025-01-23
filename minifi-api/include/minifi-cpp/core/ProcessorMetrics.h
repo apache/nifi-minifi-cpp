@@ -34,23 +34,24 @@ class ProcessorMetrics : public virtual state::response::ResponseNode {
   virtual std::chrono::milliseconds getAverageSessionCommitRuntime() const = 0;
   virtual std::chrono::milliseconds getLastSessionCommitRuntime() const = 0;
   virtual void addLastSessionCommitRuntime(std::chrono::milliseconds runtime) = 0;
+  virtual std::optional<size_t> getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const = 0;
 
   virtual std::atomic<size_t>& invocations() = 0;
   virtual const std::atomic<size_t>& invocations() const = 0;
-  virtual std::atomic<size_t>& incoming_flow_files() = 0;
-  virtual const std::atomic<size_t>& incoming_flow_files() const = 0;
-  virtual std::atomic<size_t>& transferred_flow_files() = 0;
-  virtual const std::atomic<size_t>& transferred_flow_files() const = 0;
-  virtual std::atomic<uint64_t>& incoming_bytes() = 0;
-  virtual const std::atomic<uint64_t>& incoming_bytes() const = 0;
-  virtual std::atomic<uint64_t>& transferred_bytes() = 0;
-  virtual const std::atomic<uint64_t>& transferred_bytes() const = 0;
-  virtual std::atomic<uint64_t>& bytes_read() = 0;
-  virtual const std::atomic<uint64_t>& bytes_read() const = 0;
-  virtual std::atomic<uint64_t>& bytes_written() = 0;
-  virtual const std::atomic<uint64_t>& bytes_written() const = 0;
-  virtual std::atomic<uint64_t>& processing_nanos() = 0;
-  virtual const std::atomic<uint64_t>& processing_nanos() const = 0;
+  virtual std::atomic<size_t>& incomingFlowFiles() = 0;
+  virtual const std::atomic<size_t>& incomingFlowFiles() const = 0;
+  virtual std::atomic<size_t>& transferredFlowFiles() = 0;
+  virtual const std::atomic<size_t>& transferredFlowFiles() const = 0;
+  virtual std::atomic<uint64_t>& incomingBytes() = 0;
+  virtual const std::atomic<uint64_t>& incomingBytes() const = 0;
+  virtual std::atomic<uint64_t>& transferredBytes() = 0;
+  virtual const std::atomic<uint64_t>& transferredBytes() const = 0;
+  virtual std::atomic<uint64_t>& bytesRead() = 0;
+  virtual const std::atomic<uint64_t>& bytesRead() const = 0;
+  virtual std::atomic<uint64_t>& bytesWritten() = 0;
+  virtual const std::atomic<uint64_t>& bytesWritten() const = 0;
+  virtual std::atomic<uint64_t>& processingNanos() = 0;
+  virtual const std::atomic<uint64_t>& processingNanos() const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

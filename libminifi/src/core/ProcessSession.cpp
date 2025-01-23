@@ -267,7 +267,7 @@ void ProcessSessionImpl::write(core::FlowFile &flow, const io::OutputStreamCallb
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(flow, details, duration);
     if (metrics_) {
-      metrics_->bytes_written += stream->size();
+      metrics_->bytesWritten() += stream->size();
     }
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception during process session write, type: {}, what: {}", typeid(exception).name(), exception.what());
@@ -319,7 +319,7 @@ void ProcessSessionImpl::append(const std::shared_ptr<core::FlowFile> &flow, con
     }
     flow->setSize(flow_file_size + (stream->size() - stream_size_before_callback));
     if (metrics_) {
-      metrics_->bytes_written += stream->size() - stream_size_before_callback;
+      metrics_->bytesWritten() += stream->size() - stream_size_before_callback;
     }
 
     std::stringstream details;
@@ -379,7 +379,7 @@ int64_t ProcessSessionImpl::read(const core::FlowFile& flow_file, const io::Inpu
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
     if (metrics_) {
-      metrics_->bytes_read += ret;
+      metrics_->bytesRead() += ret;
     }
     return ret;
   } catch (const std::exception& exception) {
@@ -428,8 +428,8 @@ int64_t ProcessSessionImpl::readWrite(const std::shared_ptr<core::FlowFile> &flo
     flow->setOffset(0);
     flow->setResourceClaim(output_claim);
     if (metrics_) {
-      metrics_->bytes_written += read_write_result->bytes_written;
-      metrics_->bytes_read += read_write_result->bytes_read;
+      metrics_->bytesWritten() += read_write_result->bytes_written;
+      metrics_->bytesRead() += read_write_result->bytes_read;
     }
 
     return read_write_result->bytes_written;
@@ -498,7 +498,7 @@ void ProcessSessionImpl::importFrom(io::InputStream &stream, const std::shared_p
 
     content_stream->close();
     if (metrics_) {
-      metrics_->bytes_written += content_stream->size();
+      metrics_->bytesWritten() += content_stream->size();
     }
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
@@ -562,7 +562,7 @@ void ProcessSessionImpl::import(const std::string& source, const std::shared_ptr
 
         stream->close();
         if (metrics_) {
-          metrics_->bytes_written += stream->size();
+          metrics_->bytesWritten() += stream->size();
         }
         input.close();
         if (!keepSource) {
@@ -667,7 +667,7 @@ void ProcessSessionImpl::import(const std::string& source, std::vector<std::shar
             flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath(), flowFile->getUUIDStr());
         stream->close();
         if (metrics_) {
-          metrics_->bytes_written += stream->size();
+          metrics_->bytesWritten() += stream->size();
         }
         std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
@@ -953,7 +953,7 @@ void ProcessSessionImpl::commit() {
     if (metrics_) {
       auto time_delta = std::chrono::steady_clock::now() - commit_start_time;
       metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(time_delta));
-      metrics_->processing_nanos += std::chrono::duration_cast<std::chrono::nanoseconds>(time_delta).count();
+      metrics_->processingNanos() += std::chrono::duration_cast<std::chrono::nanoseconds>(time_delta).count();
     }
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception during process session commit, type: {}, what: {}", typeid(exception).name(), exception.what());
@@ -1165,8 +1165,8 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::get() {
         ret->setAttribute(SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());
       }
       if (metrics_) {
-        metrics_->incoming_bytes += ret->getSize();
-        ++metrics_->incoming_flow_files;
+        metrics_->incomingBytes() += ret->getSize();
+        ++metrics_->incomingFlowFiles();
       }
       return ret;
     }

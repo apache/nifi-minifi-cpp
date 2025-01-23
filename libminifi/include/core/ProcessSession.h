@@ -110,6 +110,8 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
   void importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow) override;
 
   void import(const std::string& source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource = true, uint64_t offset = 0) override;
+  void import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, uint64_t offset, char inputDelimiter) override;
+  void import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) override;
 
   bool exportContent(const std::string &destination, const std::shared_ptr<core::FlowFile> &flow, bool keepContent) override;
 

@@ -81,14 +81,14 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
         .children = {
           {.name = "id", .value = std::string{processor->getUUIDStr()}},
           {.name = "groupId", .value = processor->getProcessGroupUUIDStr()},
-          {.name = "bytesRead", .value = metrics->bytes_read.load()},
-          {.name = "bytesWritten", .value = metrics->bytes_written.load()},
-          {.name = "flowFilesIn", .value = metrics->incoming_flow_files.load()},
-          {.name = "flowFilesOut", .value = metrics->transferred_flow_files.load()},
-          {.name = "bytesIn", .value = metrics->incoming_bytes.load()},
-          {.name = "bytesOut", .value = metrics->transferred_bytes.load()},
-          {.name = "invocations", .value = metrics->invocations.load()},
-          {.name = "processingNanos", .value = metrics->processing_nanos.load()},
+          {.name = "bytesRead", .value = metrics->bytesRead().load()},
+          {.name = "bytesWritten", .value = metrics->bytesWritten().load()},
+          {.name = "flowFilesIn", .value = metrics->incomingFlowFiles().load()},
+          {.name = "flowFilesOut", .value = metrics->transferredFlowFiles().load()},
+          {.name = "bytesIn", .value = metrics->incomingBytes().load()},
+          {.name = "bytesOut", .value = metrics->transferredBytes().load()},
+          {.name = "invocations", .value = metrics->invocations().load()},
+          {.name = "processingNanos", .value = metrics->processingNanos().load()},
           {.name = "activeThreadCount", .value = -1},
           {.name = "terminatedThreadCount", .value = -1},
           {.name = "runStatus", .value = (processor->isRunning() ? "Running" : "Stopped")}
@@ -115,21 +115,21 @@ std::vector<PublishedMetric> FlowInformation::calculateMetrics() {
       continue;
     }
     auto processor_metrics = processor->getMetrics();
-    metrics.push_back({"bytes_read", gsl::narrow<double>(processor_metrics->bytes_read.load()),
+    metrics.push_back({"bytes_read", gsl::narrow<double>(processor_metrics->bytesRead().load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
-    metrics.push_back({"bytes_written", gsl::narrow<double>(processor_metrics->bytes_written.load()),
+    metrics.push_back({"bytes_written", gsl::narrow<double>(processor_metrics->bytesWritten().load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
-    metrics.push_back({"flow_files_in", gsl::narrow<double>(processor_metrics->incoming_flow_files.load()),
+    metrics.push_back({"flow_files_in", gsl::narrow<double>(processor_metrics->incomingFlowFiles().load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
-    metrics.push_back({"flow_files_out", gsl::narrow<double>(processor_metrics->transferred_flow_files.load()),
+    metrics.push_back({"flow_files_out", gsl::narrow<double>(processor_metrics->transferredFlowFiles().load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
-    metrics.push_back({"bytes_in", gsl::narrow<double>(processor_metrics->incoming_bytes.load()),
+    metrics.push_back({"bytes_in", gsl::narrow<double>(processor_metrics->incomingBytes().load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
-    metrics.push_back({"bytes_out", gsl::narrow<double>(processor_metrics->transferred_bytes.load()),
+    metrics.push_back({"bytes_out", gsl::narrow<double>(processor_metrics->transferredBytes().load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
-    metrics.push_back({"invocations", gsl::narrow<double>(processor_metrics->invocations.load()),
+    metrics.push_back({"invocations", gsl::narrow<double>(processor_metrics->invocations().load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
-    metrics.push_back({"processing_nanos", gsl::narrow<double>(processor_metrics->processing_nanos.load()),
+    metrics.push_back({"processing_nanos", gsl::narrow<double>(processor_metrics->processingNanos().load()),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});
     metrics.push_back({"is_running", (processor->isRunning() ? 1.0 : 0.0),
         {{"processor_uuid", processor->getUUIDStr()}, {"processor_name", processor->getName()}, {"metric_class", "FlowInformation"}}});

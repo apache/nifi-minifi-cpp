@@ -167,11 +167,11 @@ class ProcessorImpl : public virtual Processor, public ConnectableImpl, public C
     active_tasks_ = 0;
   }
 
-  std::string getProcessGroupUUIDStr() const {
+  std::string getProcessGroupUUIDStr() const override {
     return process_group_uuid_;
   }
 
-  void setProcessGroupUUIDStr(const std::string &uuid) {
+  void setProcessGroupUUIDStr(const std::string &uuid) override {
     process_group_uuid_ = uuid;
   }
 

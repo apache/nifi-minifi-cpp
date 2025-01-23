@@ -49,27 +49,27 @@ class ProcessorMetricsImpl : public state::response::ResponseNodeImpl, public vi
   std::chrono::milliseconds getLastOnTriggerRuntime() const override;
   void addLastOnTriggerRuntime(std::chrono::milliseconds runtime) override;
 
-  std::chrono::milliseconds getAverageSessionCommitRuntime() const;
-  std::chrono::milliseconds getLastSessionCommitRuntime() const;
-  void addLastSessionCommitRuntime(std::chrono::milliseconds runtime);
-  std::optional<size_t> getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const;
+  std::chrono::milliseconds getAverageSessionCommitRuntime() const override;
+  std::chrono::milliseconds getLastSessionCommitRuntime() const override;
+  void addLastSessionCommitRuntime(std::chrono::milliseconds runtime) override;
+  std::optional<size_t> getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const override;
 
-  std::atomic<size_t>& invocations() {return invocations_;}
-  const std::atomic<size_t>& invocations() const {return invocations_;}
-  std::atomic<size_t>& incoming_flow_files() {return incoming_flow_files_;}
-  const std::atomic<size_t>& incoming_flow_files() const {return incoming_flow_files_;}
-  std::atomic<size_t>& transferred_flow_files() {return transferred_flow_files_;}
-  const std::atomic<size_t>& transferred_flow_files() const {return transferred_flow_files_;}
-  std::atomic<uint64_t>& incoming_bytes() {return incoming_bytes_;}
-  const std::atomic<uint64_t>& incoming_bytes() const {return incoming_bytes_;}
-  std::atomic<uint64_t>& transferred_bytes() {return transferred_bytes_;}
-  const std::atomic<uint64_t>& transferred_bytes() const {return transferred_bytes_;}
-  std::atomic<uint64_t>& bytes_read() {return bytes_read_;}
-  const std::atomic<uint64_t>& bytes_read() const {return bytes_read_;}
-  std::atomic<uint64_t>& bytes_written() {return bytes_written_;}
-  const std::atomic<uint64_t>& bytes_written() const {return bytes_written_;}
-  std::atomic<uint64_t>& processing_nanos() {return processing_nanos_;}
-  const std::atomic<uint64_t>& processing_nanos() const {return processing_nanos_;}
+  std::atomic<size_t>& invocations() override {return invocations_;}
+  const std::atomic<size_t>& invocations() const override {return invocations_;}
+  std::atomic<size_t>& incomingFlowFiles() override {return incoming_flow_files_;}
+  const std::atomic<size_t>& incomingFlowFiles() const override {return incoming_flow_files_;}
+  std::atomic<size_t>& transferredFlowFiles() override {return transferred_flow_files_;}
+  const std::atomic<size_t>& transferredFlowFiles() const override {return transferred_flow_files_;}
+  std::atomic<uint64_t>& incomingBytes() override {return incoming_bytes_;}
+  const std::atomic<uint64_t>& incomingBytes() const override {return incoming_bytes_;}
+  std::atomic<uint64_t>& transferredBytes() override {return transferred_bytes_;}
+  const std::atomic<uint64_t>& transferredBytes() const override {return transferred_bytes_;}
+  std::atomic<uint64_t>& bytesRead() override {return bytes_read_;}
+  const std::atomic<uint64_t>& bytesRead() const override {return bytes_read_;}
+  std::atomic<uint64_t>& bytesWritten() override {return bytes_written_;}
+  const std::atomic<uint64_t>& bytesWritten() const override {return bytes_written_;}
+  std::atomic<uint64_t>& processingNanos() override {return processing_nanos_;}
+  const std::atomic<uint64_t>& processingNanos() const override {return processing_nanos_;}
 
  protected:
   template<typename ValueType>
