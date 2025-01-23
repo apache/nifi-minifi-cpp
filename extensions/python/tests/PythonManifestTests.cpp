@@ -157,7 +157,11 @@ class MyPyProc5(FlowFileTransform):
 )";
 
   controller.configuration_->set(minifi::Configuration::nifi_python_processor_dir, python_dir.string());
+#ifdef __linux__
+  controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-lib-loader*, *minifi-python-script*");
+#else
   controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*");
+#endif
 
   core::extension::ExtensionManager::get().initialize(controller.configuration_);
 

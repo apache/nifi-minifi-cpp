@@ -50,6 +50,9 @@ struct ObjectReference {
 
   explicit ObjectReference(PyObject* object)
       : object_(object) {
+    if (object_ == Py_None || object_ == Py_True || object_ == Py_False || object_ == Py_Ellipsis || object_ == Py_NotImplemented) {
+      Py_INCREF(object_);
+    }
   }
 
   ~ObjectReference() {
