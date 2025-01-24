@@ -51,6 +51,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
             -DUSE_LIBIDN2=OFF
             -DCURL_USE_LIBPSL=OFF
             -DCURL_USE_OPENSSL=ON
+            -DUSE_NGHTTP2=OFF
             )
 
     append_third_party_passthrough_args(CURL_CMAKE_ARGS "${CURL_CMAKE_ARGS}")
