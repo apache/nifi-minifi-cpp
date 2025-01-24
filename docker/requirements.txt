@@ -2,10 +2,10 @@ pyjks==20.0.0
 shortuuid==1.0.11
 behavex==2.0.1
 docker==5.0.0
-kafka-python==2.0.2
-confluent-kafka==1.7.0
+kafka-python-ng==2.2.3
+confluent-kafka==2.8.0
 PyYAML==6.0.1
-m2crypto==0.41.0
+m2crypto==0.43.0
 watchdog==2.1.2
 pyopenssl==23.0.0
 azure-storage-blob==12.13.0

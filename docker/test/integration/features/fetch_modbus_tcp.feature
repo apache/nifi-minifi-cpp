@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@x86_x64_only
 @CORE
 Feature: Minifi C++ can act as a modbus tcp master
 

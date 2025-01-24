@@ -80,10 +80,10 @@ class ImageStore:
             so_location = "psqlodbca.so"
         elif "bullseye" in MinifiContainer.MINIFI_TAG_PREFIX or "bookworm" in MinifiContainer.MINIFI_TAG_PREFIX:
             install_sql_cmd = "apt -y install odbc-postgresql"
-            so_location = "/usr/lib/x86_64-linux-gnu/odbc/psqlodbca.so"
+            so_location = "/usr/lib/$(gcc -dumpmachine)/odbc/psqlodbca.so"
         elif "jammy" in MinifiContainer.MINIFI_TAG_PREFIX or "noble" in MinifiContainer.MINIFI_TAG_PREFIX:
             install_sql_cmd = "apt -y install odbc-postgresql"
-            so_location = "/usr/lib/x86_64-linux-gnu/odbc/psqlodbca.so"
+            so_location = "/usr/lib/$(gcc -dumpmachine)/odbc/psqlodbca.so"
         else:
             install_sql_cmd = "apk --update --no-cache add psqlodbc"
             so_location = "psqlodbca.so"
@@ -143,7 +143,7 @@ class ImageStore:
         parse_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
         chunk_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
         if python_option == PythonOptions.SYSTEM_INSTALLED_PACKAGES:
-            if not MinifiContainer.MINIFI_TAG_PREFIX:
+            if not MinifiContainer.MINIFI_TAG_PREFIX or "bookworm" in MinifiContainer.MINIFI_TAG_PREFIX or "noble" in MinifiContainer.MINIFI_TAG_PREFIX:
                 additional_cmd = "RUN pip3 install --break-system-packages 'langchain<=0.17.0'"
             else:
                 additional_cmd = "RUN pip3 install 'langchain<=0.17.0'"

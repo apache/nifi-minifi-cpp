@@ -28,6 +28,7 @@ Feature: Sending data to Google Cloud Storage using PutGCSObject
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PutGCSObject
     And the "success" relationship of the PutGCSObject processor is connected to the PutFile
+    And the "failure" relationship of the PutGCSObject processor is connected to the PutGCSObject
 
     When all instances start up
 
