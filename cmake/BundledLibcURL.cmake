@@ -51,6 +51,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
             -DUSE_LIBIDN2=OFF
             -DCURL_USE_LIBPSL=OFF
             -DCURL_USE_OPENSSL=ON
+            -DUSE_NGHTTP2=OFF
             )
 
     append_third_party_passthrough_args(CURL_CMAKE_ARGS "${CURL_CMAKE_ARGS}")
@@ -58,8 +59,8 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             curl-external
-            URL "https://github.com/curl/curl/releases/download/curl-8_4_0/curl-8.4.0.tar.gz"
-            URL_HASH "SHA256=816e41809c043ff285e8c0f06a75a1fa250211bbfb2dc0a037eeef39f1a9e427"
+            URL "https://github.com/curl/curl/releases/download/curl-8_11_1/curl-8.11.1.tar.gz"
+            URL_HASH "SHA256=a889ac9dbba3644271bd9d1302b5c22a088893719b72be3487bc3d401e5c4e80"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/curl-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${CURL_CMAKE_ARGS}
