@@ -91,6 +91,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
     std::string nifi_configuration_class_name = "adaptiveconfiguration";
     configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 
+    bulletin_store_ = std::make_unique<core::BulletinStore>(*configuration);
     std::shared_ptr<core::FlowConfiguration> flow_config = core::createFlowConfiguration(
         core::ConfigurationContext{
             .flow_file_repo = test_repo,
@@ -98,7 +99,8 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
             .configuration = configuration,
             .path = test_file_location,
             .filesystem = filesystem,
-            .sensitive_values_encryptor = sensitive_values_encryptor
+            .sensitive_values_encryptor = sensitive_values_encryptor,
+            .bulletin_store = bulletin_store_.get()
         }, nifi_configuration_class_name);
 
     auto controller_service_provider = flow_config->getControllerServiceProvider();
@@ -119,7 +121,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
 
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{test_repo, test_flow_repo, content_repo};
     asset_manager_ = std::make_unique<minifi::utils::file::AssetManager>(*configuration);
-    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, flow_config, asset_manager_.get());
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, flow_config, asset_manager_.get(), bulletin_store_.get());
     flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration,
       std::move(flow_config), content_repo, std::move(metrics_publisher_store), filesystem, request_restart, asset_manager_.get());
     flowController_->load();
