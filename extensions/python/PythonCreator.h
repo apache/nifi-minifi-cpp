@@ -54,7 +54,7 @@ class PythonCreator : public minifi::core::CoreComponent {
 
   ~PythonCreator() override {
     for (const auto& clazz : registered_classes_) {
-      core::getClassLoader().unregisterClass(clazz);
+      core::getClassLoader().unregisterClass(clazz, ResourceType::Processor);
     }
   }
 
@@ -88,11 +88,11 @@ class PythonCreator : public minifi::core::CoreComponent {
         }
         logger_->log_info("Registering NiFi python processor: {}", class_name);
         core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
-          PythonProcessorType::NIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}, path.parent_path()}, qualified_module_name));
+          PythonProcessorType::NIFI_TYPE, std::vector{python_lib_path, std::filesystem::path{pathListings.value()}, path.parent_path()}, qualified_module_name), ResourceType::Processor);
       } else {
         logger_->log_info("Registering MiNiFi python processor: {}", class_name);
         core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
-          PythonProcessorType::MINIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}}, qualified_module_name));
+          PythonProcessorType::MINIFI_TYPE, std::vector{python_lib_path, std::filesystem::path{pathListings.value()}}, qualified_module_name), ResourceType::Processor);
       }
       registered_classes_.push_back(class_name);
       try {

@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::core {
 
 class JsonNode : public flow::Node::NodeImpl {
  public:
-  explicit JsonNode(const rapidjson::Value* node): node_(node) {}
+  explicit JsonNode(rapidjson::Value* node, rapidjson::Document::AllocatorType& alloc): node_(node), allocator_(alloc) {}
 
   explicit operator bool() const override {
     return node_ != nullptr;
@@ -47,7 +47,7 @@ class JsonNode : public flow::Node::NodeImpl {
   }
 
   flow::Node createEmpty() const override {
-    return flow::Node{std::make_shared<JsonNode>(nullptr)};
+    return flow::Node{std::make_shared<JsonNode>(nullptr, allocator_)};
   }
 
   [[nodiscard]] std::optional<std::string> getString() const override {
@@ -133,16 +133,49 @@ class JsonNode : public flow::Node::NodeImpl {
 
   flow::Node operator[](std::string_view key) const override {
     if (!node_ || node_->IsArray() || node_->IsNull()) {
-      return flow::Node{std::make_shared<JsonNode>(nullptr)};
+      return flow::Node{std::make_shared<JsonNode>(nullptr, allocator_)};
     }
     if (!node_->IsObject()) {
       throw std::runtime_error(fmt::format("Cannot get member '{}' of scalar json value at '{}'", key, path_));
     }
     auto it = node_->FindMember(rapidjson::Value(rapidjson::StringRef(key.data(), key.length())));
     if (it == node_->MemberEnd()) {
-      return flow::Node{std::make_shared<JsonNode>(nullptr)};
+      return flow::Node{std::make_shared<JsonNode>(nullptr, allocator_)};
     }
-    return flow::Node{std::make_shared<JsonNode>(&it->value)};
+    return flow::Node{std::make_shared<JsonNode>(&it->value, allocator_)};
+  }
+
+  [[nodiscard]] bool contains(const std::string_view key) const override {
+    return node_ && node_->HasMember(key.data());
+  }
+
+  [[nodiscard]] bool remove(const std::string_view key) override {
+    return node_->RemoveMember(key.data());
+  }
+
+  std::optional<flow::Node> pushBack() override {
+    if (!node_->IsArray()) {
+      return std::nullopt;
+    }
+    rapidjson::Value value(rapidjson::kObjectType);
+    auto& new_value = node_->PushBack(rapidjson::Value{rapidjson::kObjectType}, allocator_)[node_->Size() - 1];
+    return flow::Node{std::make_shared<JsonNode>(&new_value, allocator_)};
+  }
+
+  std::optional<flow::Node> addMember(const std::string_view key, const std::string_view value) override {
+    if (!node_ || !node_->IsObject()) {
+      throw std::runtime_error("Not an object");
+    }
+    auto& new_node = node_->AddMember(rapidjson::Value(key.data(), allocator_), rapidjson::Value(value.data(), allocator_), allocator_)[key.data()];
+    return flow::Node{std::make_shared<JsonNode>(&new_node, allocator_)};
+  }
+
+  std::optional<flow::Node> addObject(const std::string_view key) override {
+    if (!node_ || !node_->IsObject()) {
+      throw std::runtime_error("Not an object");
+    }
+    auto& new_node = node_->AddMember(rapidjson::Value(key.data(), allocator_), rapidjson::Value(rapidjson::kObjectType), allocator_)[key.data()];
+    return flow::Node{std::make_shared<JsonNode>(&new_node, allocator_)};
   }
 
   std::optional<flow::Node::Cursor> getCursor() const override {
@@ -150,12 +183,13 @@ class JsonNode : public flow::Node::NodeImpl {
   }
 
  private:
-  const rapidjson::Value* node_;
+  rapidjson::Value* node_;
+  rapidjson::Document::AllocatorType& allocator_;
 };
 
 class JsonValueIterator : public flow::Node::Iterator::IteratorImpl {
  public:
-  explicit JsonValueIterator(rapidjson::Value::ConstValueIterator it): it_(std::move(it)) {}
+  explicit JsonValueIterator(rapidjson::Value::ValueIterator it, rapidjson::Document::AllocatorType& alloc): it_(std::move(it)), allocator_(alloc) {}
 
   IteratorImpl& operator++() override {
     ++it_;
@@ -167,23 +201,24 @@ class JsonValueIterator : public flow::Node::Iterator::IteratorImpl {
     return it_ == ptr->it_;
   }
   flow::Node::Iterator::Value operator*() const override {
-    auto node = flow::Node{std::make_shared<JsonNode>(&*it_)};
-    auto first = flow::Node{std::make_shared<JsonNode>(nullptr)};
-    auto second = flow::Node{std::make_shared<JsonNode>(nullptr)};
+    auto node = flow::Node{std::make_shared<JsonNode>(&*it_, allocator_)};
+    auto first = flow::Node{std::make_shared<JsonNode>(nullptr, allocator_)};
+    auto second = flow::Node{std::make_shared<JsonNode>(nullptr, allocator_)};
     return {std::move(node), std::move(first), std::move(second)};
   }
 
   std::unique_ptr<IteratorImpl> clone() const override {
-    return std::make_unique<JsonValueIterator>(it_);
+    return std::make_unique<JsonValueIterator>(it_, allocator_);
   }
 
  private:
-  rapidjson::Value::ConstValueIterator it_;
+  rapidjson::Value::ValueIterator it_;
+  rapidjson::Document::AllocatorType& allocator_;
 };
 
 class JsonMemberIterator : public flow::Node::Iterator::IteratorImpl {
  public:
-  explicit JsonMemberIterator(rapidjson::Value::ConstMemberIterator it): it_(std::move(it)) {}
+  explicit JsonMemberIterator(rapidjson::Value::MemberIterator it, rapidjson::Document::AllocatorType& alloc): it_(std::move(it)), allocator_(alloc) {}
 
   IteratorImpl& operator++() override {
     ++it_;
@@ -195,18 +230,19 @@ class JsonMemberIterator : public flow::Node::Iterator::IteratorImpl {
     return it_ == ptr->it_;
   }
   flow::Node::Iterator::Value operator*() const override {
-    auto node = flow::Node{std::make_shared<JsonNode>(nullptr)};
-    auto first = flow::Node{std::make_shared<JsonNode>(&it_->name)};
-    auto second = flow::Node{std::make_shared<JsonNode>(&it_->value)};
+    auto node = flow::Node{std::make_shared<JsonNode>(nullptr, allocator_)};
+    auto first = flow::Node{std::make_shared<JsonNode>(&it_->name, allocator_)};
+    auto second = flow::Node{std::make_shared<JsonNode>(&it_->value, allocator_)};
     return flow::Node::Iterator::Value(node, first, second);
   }
 
   std::unique_ptr<IteratorImpl> clone() const override {
-    return std::make_unique<JsonMemberIterator>(it_);
+    return std::make_unique<JsonMemberIterator>(it_, allocator_);
   }
 
  private:
-  rapidjson::Value::ConstMemberIterator it_;
+  rapidjson::Value::MemberIterator it_;
+  rapidjson::Document::AllocatorType& allocator_;
 };
 
 inline flow::Node::Iterator JsonNode::begin() const {
@@ -214,9 +250,9 @@ inline flow::Node::Iterator JsonNode::begin() const {
     throw std::runtime_error(fmt::format("Cannot get begin of invalid json value at '{}'", path_));
   }
   if (node_->IsArray()) {
-    return flow::Node::Iterator{std::make_unique<JsonValueIterator>(node_->Begin())};
+    return flow::Node::Iterator{std::make_unique<JsonValueIterator>(node_->Begin(), allocator_)};
   } else if (node_->IsObject()) {
-    return flow::Node::Iterator{std::make_unique<JsonMemberIterator>(node_->MemberBegin())};
+    return flow::Node::Iterator{std::make_unique<JsonMemberIterator>(node_->MemberBegin(), allocator_)};
   } else {
     throw std::runtime_error(fmt::format("Json node is not iterable, neither array nor object at '{}'", path_));
   }
@@ -227,9 +263,9 @@ inline flow::Node::Iterator JsonNode::end() const {
     throw std::runtime_error(fmt::format("Cannot get end of invalid json value at '{}'", path_));
   }
   if (node_->IsArray()) {
-    return flow::Node::Iterator{std::make_unique<JsonValueIterator>(node_->End())};
+    return flow::Node::Iterator{std::make_unique<JsonValueIterator>(node_->End(), allocator_)};
   } else if (node_->IsObject()) {
-    return flow::Node::Iterator{std::make_unique<JsonMemberIterator>(node_->MemberEnd())};
+    return flow::Node::Iterator{std::make_unique<JsonMemberIterator>(node_->MemberEnd(), allocator_)};
   } else {
     throw std::runtime_error(fmt::format("Json node is not iterable, neither array nor object at '{}'", path_));
   }
