@@ -28,7 +28,7 @@ function(ADD_PACKAGE_VERIFY TAG_PREFIX)
         endif()
     endforeach()
 
-    set(DISABLED_TAGS "SKIP_CI,NEEDS_NUMPY,ENABLE_KAFKA")
+    set(DISABLED_TAGS "SKIP_CI,NEEDS_NUMPY")
 
     add_custom_target(
             docker-verify-${TAG_PREFIX}
