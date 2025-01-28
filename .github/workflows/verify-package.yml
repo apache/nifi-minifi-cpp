@@ -6,9 +6,9 @@ env:
     -DENABLE_ELASTICSEARCH=OFF -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DDOCKER_BUILD_ONLY=ON
   CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
-  rocky-build:
-    name: "Build package (Rocky 8)"
-    runs-on: ubuntu-22.04
+  rocky-x86-64-build:
+    name: "Build package (Rocky 8 x86_64)"
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
     steps:
       - id: checkout
@@ -38,40 +38,76 @@ jobs:
           key: verify-package-ccache-${{github.ref}}-${{github.sha}}
       - uses: actions/upload-artifact@v4
         with:
-          name: minifi-tar
+          name: minifi-x86-64-tar
           path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
           if-no-files-found: error
 
-  docker-tests:
-    name: "${{ matrix.platform.name }}"
-    runs-on: ubuntu-20.04
+  rocky-aarch64-build:
+    name: "Build package (Rocky 8 aarch64)"
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 180
-    needs: rocky-build
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+      - name: cache restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.ccache
+          key: verify-package-arm-ccache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            verify-package-arm-ccache-${{github.ref}}-
+            verify-package-arm-ccache-refs/heads/main-
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y ccache cmake
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+      - id: build
+        run: |
+          if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
+          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make rocky
+      - name: cache save
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: verify-package-arm-ccache-${{github.ref}}-${{github.sha}}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: minifi-aarch64-tar
+          path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
+          if-no-files-found: error
+
+  docker-x86-64-tests:
+    name: "${{ matrix.platform.name }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    needs: rocky-x86-64-build
     strategy:
       fail-fast: false
       matrix:
         platform: [
-          { name: "Rocky Linux 8",
+          { name: "Rocky Linux 8 x86-64",
             id: "rocky8",
             build_cmd: "make rocky8_from_rocky_package",
             verify_cmd: "make docker-verify-rocky8" },
-          { name: "Rocky Linux 9",
+          { name: "Rocky Linux 9 x86-64",
             id: "rocky9",
             build_cmd: "make rocky9_from_rocky_package",
             verify_cmd: "make docker-verify-rocky9" },
-          { name: "Ubuntu 22.04",
+          { name: "Ubuntu 22.04 x86-64",
             id: "ubuntu_jammy",
             build_cmd: "make jammy_from_rocky_package",
             verify_cmd: "make docker-verify-jammy" },
-          { name: "Ubuntu 24.04",
+          { name: "Ubuntu 24.04 x86-64",
             id: "ubuntu_noble",
             build_cmd: "make noble_from_rocky_package",
             verify_cmd: "make docker-verify-noble" },
-          { name: "Debian 11",
+          { name: "Debian 11 x86-64",
             id: "debian_bullseye",
             build_cmd: "make bullseye_from_rocky_package",
             verify_cmd: "make docker-verify-bullseye" },
-          { name: "Debian 12",
+          { name: "Debian 12 x86-64",
             id: "debian_bookworm",
             build_cmd: "make bookworm_from_rocky_package",
             verify_cmd: "make docker-verify-bookworm" },
@@ -82,7 +118,7 @@ jobs:
         uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: minifi-tar
+          name: minifi-x86-64-tar
           path: build
       - id: install_deps
         run: |
@@ -104,41 +140,43 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform.id }}_behavex_output
+          name: ${{ matrix.platform.id }}_x86_64_behavex_output
           path: build/behavex_output
-  docker-python-tests:
+
+
+  docker-aarch64-tests:
     name: "${{ matrix.platform.name }}"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 180
-    needs: rocky-build
+    needs: rocky-aarch64-build
     strategy:
       fail-fast: false
       matrix:
         platform: [
-          { name: "Rocky Linux 8 Python",
+          { name: "Rocky Linux 8 aarch64",
             id: "rocky8",
-            build_cmd: "make rocky8_py_from_rocky_package",
-            verify_cmd: "make docker-verify-rocky8_py" },
-          { name: "Rocky Linux 9 Python",
+            build_cmd: "make rocky8_from_rocky_package",
+            verify_cmd: "make docker-verify-rocky8" },
+          { name: "Rocky Linux 9 aarch64",
             id: "rocky9",
-            build_cmd: "make rocky9_py_from_rocky_package",
-            verify_cmd: "make docker-verify-rocky9_py" },
-          { name: "Patchelf-ed Ubuntu 22.04 Python",
-            id: "patchelfed_ubuntu22.04",
-            build_cmd: "make patched_jammy_py_from_rocky_package",
-            verify_cmd: "make docker-verify-patched_jammy_py" },
-          { name: "Patchelf-ed Debian 11 Python",
-            id: "patchelfed_debian11",
-            build_cmd: "make patched_bullseye_py_from_rocky_package",
-            verify_cmd: "make docker-verify-patched_bullseye_py" },
-          { name: "Ubuntu 22.04 with Anaconda Python",
-            id: "ubuntu22.04_anaconda",
-            build_cmd: "make jammy_py_from_rocky_package && make conda_jammy_py_from_rocky_package",
-            verify_cmd: "make docker-verify-conda_jammy_py" },
-          { name: "Rocky Linux 9 in virtualenv Python",
-            id: "rocky9_venv",
-            build_cmd: "make rocky9_py_from_rocky_package && make venv_rocky9_py_from_rocky_package",
-            verify_cmd: "make docker-verify-venv_rocky9_py" }
+            build_cmd: "make rocky9_from_rocky_package",
+            verify_cmd: "make docker-verify-rocky9" },
+          { name: "Ubuntu 22.04 aarch64",
+            id: "ubuntu_jammy",
+            build_cmd: "make jammy_from_rocky_package",
+            verify_cmd: "make docker-verify-jammy" },
+          { name: "Ubuntu 24.04 aarch64",
+            id: "ubuntu_noble",
+            build_cmd: "make noble_from_rocky_package",
+            verify_cmd: "make docker-verify-noble" },
+          { name: "Debian 11 aarch64",
+            id: "debian_bullseye",
+            build_cmd: "make bullseye_from_rocky_package",
+            verify_cmd: "make docker-verify-bullseye" },
+          { name: "Debian 12 aarch64",
+            id: "debian_bookworm",
+            build_cmd: "make bookworm_from_rocky_package",
+            verify_cmd: "make docker-verify-bookworm" },
         ]
 
     steps:
@@ -146,13 +184,13 @@ jobs:
         uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: minifi-tar
+          name: minifi-aarch64-tar
           path: build
       - id: install_deps
         run: |
           sudo apt update
           sudo apt install -y python3-virtualenv
-      - run: cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON .. \
+      - run: cd build && cmake ${DOCKER_CMAKE_FLAGS} .. \
           && ${{ matrix.platform.build_cmd }} && ${{ matrix.platform.verify_cmd }}
       - name: Test Reporter
         if: always()
@@ -168,5 +206,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform.id }}_behavex_output
+          name: ${{ matrix.platform.id }}_aarch64_behavex_output
           path: build/behavex_output

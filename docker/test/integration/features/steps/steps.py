@@ -731,12 +731,13 @@ def step_impl(context, content, topic_name):
 
     producer = Producer({
         "bootstrap.servers": "localhost:29093",
-        "security.protocol": "ssl",
+        "security.protocol": "SSL",
         "ssl.ca.location": ca_cert_file.name,
         "ssl.certificate.location": client_cert_file.name,
         "ssl.key.location": client_key_file.name,
         "ssl.key.password": "",
-        "client.id": socket.gethostname()})
+        "client.id": socket.gethostname(),
+        "ssl.endpoint.identification.algorithm": "none"})
     producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
     producer.flush(10)
 

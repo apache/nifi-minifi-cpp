@@ -38,7 +38,7 @@ class PythonLibLoader {
       python_command = python_binary.value();
     }
     std::string command = python_command +
-      " -c \"import sysconfig, os, glob; print(min(glob.glob(os.path.join(sysconfig.get_config_var('LIBDIR'), f\\\"libpython{sysconfig.get_config_var('VERSION')}.so*\\\")), key=len, default=''))\"";
+      R"###( -c "import sysconfig, os, glob; v = sysconfig.get_config_vars(); lib_dir = v['LIBDIR']; ld_lib = v['LDLIBRARY']; so_paths = glob.glob(f'{lib_dir}/*{ld_lib}*'); so_paths.extend(glob.glob(f'{lib_dir}/*/*{ld_lib}*')); print(list(filter(os.path.exists, so_paths))[0])")###";
     auto lib_python_path = execCommand(command);
     if (lib_python_path.empty()) {
       logger_->log_error("Failed to find libpython path from specified python binary: {}", python_command);
