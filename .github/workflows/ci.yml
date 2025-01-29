@@ -8,8 +8,8 @@ env:
   CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
   macos_xcode:
-    name: "macos-xcode"
-    runs-on: macos-14
+    name: "macOS 15 aarch64"
+    runs-on: macos-15
     timeout-minutes: 180
     env:
       MACOS_MINIFI_OPTIONS: >-
@@ -92,7 +92,7 @@ jobs:
         run: |
           # Set core file size limit to unlimited
           ulimit -c unlimited
-          ctest -j4 --output-on-failure --timeout 300
+          ctest --timeout 300 -j4 --output-on-failure --timeout 300
         working-directory: build
       - name: linter
         run: ninja linter
@@ -112,8 +112,8 @@ jobs:
           name: macos-binaries
           path: build/bin
   windows_VS2022:
-    name: "windows-2022"
-    runs-on: windows-2022
+    name: "Windows Server 2025 x86_64"
+    runs-on: windows-2025
     timeout-minutes: 240
     env:
       WINDOWS_MINIFI_OPTIONS: >-
@@ -229,7 +229,7 @@ jobs:
           name: cpack_error
           path: D:/a/nifi-minifi-cpp/nifi-minifi-cpp/build/_CPack_Packages/win64/WIX/wix.log
   ubuntu_24_04:
-    name: "ubuntu-24.04"
+    name: "Ubuntu 24.04 x86_64"
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
@@ -310,7 +310,7 @@ jobs:
         run: |
           # Set core file size limit to unlimited
           ulimit -c unlimited
-          ctest -j$(nproc) --output-on-failure
+          ctest --timeout 300 -j$(nproc) --output-on-failure
         working-directory: build
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
@@ -326,9 +326,9 @@ jobs:
         with:
           name: ubuntu-binaries
           path: build/bin
-  ubuntu_22_04_clang:
-    name: "ubuntu-22.04-clang"
-    runs-on: ubuntu-22.04
+  ubuntu_22_04_clang_arm:
+    name: "Ubuntu 22.04 clang aarch64"
+    runs-on: ubuntu-22.04-arm
     timeout-minutes: 240
     env:
       UBUNTU_CLANG_MINIFI_OPTIONS: >-
@@ -383,10 +383,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ubuntu-22.04-all-clang-ccache-${{github.ref}}-${{github.sha}}
+          key: ubuntu-22.04-arm-all-clang-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
-            ubuntu-22.04-all-clang-ccache-${{github.ref}}-
-            ubuntu-22.04-all-clang-ccache-refs/heads/main-
+            ubuntu-22.04-arm-all-clang-ccache-${{github.ref}}-
+            ubuntu-22.04-arm-all-clang-ccache-refs/heads/main-
       - id: install_deps
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
@@ -423,13 +423,13 @@ jobs:
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ubuntu-22.04-all-clang-ccache-${{github.ref}}-${{github.sha}}
+          key: ubuntu-22.04-arm-all-clang-ccache-${{github.ref}}-${{github.sha}}
       - name: test
         id: test
         run: |
           # Set core file size limit to unlimited
           ulimit -c unlimited
-          ctest -j$(nproc) --output-on-failure
+          ctest --timeout 300 -j$(nproc) --output-on-failure
         working-directory: build
       - name: linter
         run: cmake --build . --target linter
@@ -474,7 +474,7 @@ jobs:
           name: ubuntu-clang-binaries
           path: build/bin
   rocky:
-    name: "rocky"
+    name: "Rocky (docker) x86_64"
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     steps:
@@ -543,7 +543,7 @@ jobs:
           name: rocky-binaries
           path: /tmp/bin
   docker_build:
-    name: "Docker build for integration tests"
+    name: "Docker build for integration tests (x86_64)"
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     steps:
@@ -587,7 +587,7 @@ jobs:
           name: minifi_docker
           path: build/minifi_docker.tar
   docker_tests:
-    name: "Docker integration tests"
+    name: "Docker integration tests (x86_64)"
     needs: docker_build
     runs-on: ubuntu-24.04
     timeout-minutes: 180

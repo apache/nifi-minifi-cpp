@@ -1,10 +1,12 @@
 name: "MiNiFi-CPP Verify Package"
-on: [workflow_dispatch]
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
 env:
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
     -DENABLE_ELASTICSEARCH=OFF -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DDOCKER_BUILD_ONLY=ON
-  CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
   rocky-x86-64-build:
     name: "Build package (Rocky 8 x86_64)"
@@ -13,29 +15,13 @@ jobs:
     steps:
       - id: checkout
         uses: actions/checkout@v4
-      - name: cache restore
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.ccache
-          key: verify-package-ccache-${{github.ref}}-${{github.sha}}
-          restore-keys: |
-            verify-package-ccache-${{github.ref}}-
-            verify-package-ccache-refs/heads/main-
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y ccache cmake
-          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          sudo apt install -y cmake
       - id: build
         run: |
-          if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
-          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make rocky
-      - name: cache save
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: verify-package-ccache-${{github.ref}}-${{github.sha}}
+          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} .. && make rocky
       - uses: actions/upload-artifact@v4
         with:
           name: minifi-x86-64-tar
@@ -49,29 +35,13 @@ jobs:
     steps:
       - id: checkout
         uses: actions/checkout@v4
-      - name: cache restore
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.ccache
-          key: verify-package-arm-ccache-${{github.ref}}-${{github.sha}}
-          restore-keys: |
-            verify-package-arm-ccache-${{github.ref}}-
-            verify-package-arm-ccache-refs/heads/main-
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y ccache cmake
-          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          sudo apt install -y cmake
       - id: build
         run: |
-          if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
-          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make rocky
-      - name: cache save
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: verify-package-arm-ccache-${{github.ref}}-${{github.sha}}
+          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} .. && make rocky
       - uses: actions/upload-artifact@v4
         with:
           name: minifi-aarch64-tar

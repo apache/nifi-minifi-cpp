@@ -359,7 +359,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in plain text correctly", "[onTr
   CHECK(event.find(R"(Date:          )") != std::string::npos);
   CHECK(event.find(R"(Record ID:     )") != std::string::npos);
   CHECK(event.find(R"(Event ID:      14985)") != std::string::npos);
-  CHECK(event.find(R"(Task Category: N/A)") != std::string::npos);
+  CHECK((event.find(R"(Task Category: N/A)") != std::string::npos || event.find(R"(Task Category: None)") != std::string::npos));
   CHECK(event.find(R"(Level:         Information)") != std::string::npos);
   CHECK(event.find(R"(Keywords:      Classic)") != std::string::npos);
   CHECK(event.find(R"(User:          N/A)") != std::string::npos);
