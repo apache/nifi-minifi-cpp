@@ -84,7 +84,7 @@ core::Relationship SingleProcessorTestController::addDynamicRelationship(std::st
 }
 
 std::shared_ptr<core::FlowFile> SingleProcessorTestController::createFlowFile(const std::string_view content, std::unordered_map<std::string, std::string> attributes) {
-  const auto flow_file = std::make_shared<FlowFileRecord>();
+  const auto flow_file = std::make_shared<FlowFileRecordImpl>();
   for (auto& attr : std::move(attributes)) {
     flow_file->setAttribute(attr.first, std::move(attr.second));
   }

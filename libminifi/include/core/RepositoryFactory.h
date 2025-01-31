@@ -23,7 +23,7 @@
 
 #include "core/ContentRepository.h"
 #include "core/Repository.h"
-#include "Core.h"
+#include "core/Core.h"
 
 namespace org::apache::nifi::minifi::core {
 

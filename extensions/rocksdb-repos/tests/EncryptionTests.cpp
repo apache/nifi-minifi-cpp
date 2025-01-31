@@ -34,9 +34,9 @@ class FFRepoFixture : public TestController {
     LogTestController::getInstance().setTrace<FlowFileRepository>();
     home_ = createTempDirectory();
     repo_dir_ = home_ / "flowfile_repo";
-    config_ = std::make_shared<minifi::Configure>();
+    config_ = std::make_shared<minifi::ConfigureImpl>();
     config_->setHome(home_);
-    container_ = std::make_unique<minifi::Connection>(nullptr, nullptr, "container");
+    container_ = std::make_unique<minifi::ConnectionImpl>(nullptr, nullptr, "container");
     content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo_->initialize(config_);
   }
@@ -83,7 +83,7 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
 
 
   runWithNewRepository([&] (const std::shared_ptr<core::repository::FlowFileRepository>& repo) {
-    auto flowfile = std::make_shared<minifi::FlowFileRecord>();
+    auto flowfile = std::make_shared<minifi::FlowFileRecordImpl>();
     flowfile->setAttribute("my little pony", "my horse is amazing");
     flowfile->setConnection(container_.get());
     putFlowFile(flowfile, repo);

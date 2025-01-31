@@ -23,7 +23,7 @@
 
 #include "c2/C2Protocol.h"
 #include "c2/protocols/RESTProtocol.h"
-#include "controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextService.h"
 #include "http/HTTPClient.h"
 #include "utils/Enum.h"
 

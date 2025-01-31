@@ -34,12 +34,12 @@ namespace org::apache::nifi::minifi::c2 {
  * Design: Extends C2Trigger, and implements a trigger, action, reset state machine. Calling
  * triggered will check the file.
  */
-class FileUpdateTrigger : public C2Trigger {
+class FileUpdateTrigger final : public C2Trigger {
  public:
   MINIFIAPI static constexpr const char* Description = "Defines a file update trigger when the last write time of a file has been changed.";
 
-  explicit FileUpdateTrigger(std::string name, const utils::Identifier &uuid = {})
-      : C2Trigger(std::move(name), uuid),
+  explicit FileUpdateTrigger(const std::string_view name, const utils::Identifier &uuid = {})
+      : C2Trigger(name, uuid),
         update_(false) {
   }
 

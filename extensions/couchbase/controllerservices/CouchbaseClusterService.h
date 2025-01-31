@@ -30,7 +30,7 @@
 #include "core/PropertyType.h"
 #include "couchbase/cluster.hxx"
 #include "core/ProcessContext.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::couchbase {
@@ -101,14 +101,14 @@ class CouchbaseClient {
 
 namespace controllers {
 
-class CouchbaseClusterService : public core::controller::ControllerService {
+class CouchbaseClusterService : public core::controller::ControllerServiceImpl {
  public:
   explicit CouchbaseClusterService(std::string_view name, const minifi::utils::Identifier &uuid = {})
-      : ControllerService(name, uuid) {
+      : ControllerServiceImpl(name, uuid) {
   }
 
   explicit CouchbaseClusterService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(name) {
+      : ControllerServiceImpl(name) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Provides a centralized Couchbase connection and bucket passwords management. Bucket passwords can be specified via dynamic properties.";

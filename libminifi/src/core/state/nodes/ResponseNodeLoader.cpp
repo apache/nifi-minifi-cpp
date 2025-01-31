@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
+ResponseNodeLoaderImpl::ResponseNodeLoaderImpl(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
   std::shared_ptr<core::FlowConfiguration> flow_configuration, utils::file::AssetManager* asset_manager)
     : configuration_(std::move(configuration)),
       repository_metric_sources_(std::move(repository_metric_sources)),
@@ -41,7 +41,7 @@ ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration,
       asset_manager_(asset_manager) {
 }
 
-void ResponseNodeLoader::clearConfigRoot() {
+void ResponseNodeLoaderImpl::clearConfigRoot() {
   {
     std::lock_guard<std::mutex> guard(initialization_mutex_);
     initialized_metrics_.clear();
@@ -60,7 +60,7 @@ void ResponseNodeLoader::clearConfigRoot() {
   }
 }
 
-void ResponseNodeLoader::setNewConfigRoot(core::ProcessGroup* root) {
+void ResponseNodeLoaderImpl::setNewConfigRoot(core::ProcessGroup* root) {
   {
     std::lock_guard<std::mutex> guard(root_mutex_);
     root_ = root;
@@ -68,7 +68,7 @@ void ResponseNodeLoader::setNewConfigRoot(core::ProcessGroup* root) {
   initializeComponentMetrics();
 }
 
-void ResponseNodeLoader::initializeComponentMetrics() {
+void ResponseNodeLoaderImpl::initializeComponentMetrics() {
   {
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
     component_metrics_.clear();
@@ -98,7 +98,7 @@ void ResponseNodeLoader::initializeComponentMetrics() {
   }
 }
 
-nonstd::expected<SharedResponseNode, std::string> ResponseNodeLoader::getSystemMetricsNode(const std::string& clazz) {
+nonstd::expected<SharedResponseNode, std::string> ResponseNodeLoaderImpl::getSystemMetricsNode(const std::string& clazz) {
   std::lock_guard<std::mutex> guard(system_metrics_mutex_);
   if (system_metrics_.contains(clazz)) {
     return system_metrics_.at(clazz);
@@ -113,7 +113,7 @@ nonstd::expected<SharedResponseNode, std::string> ResponseNodeLoader::getSystemM
   return system_metrics_.at(clazz);
 }
 
-std::vector<SharedResponseNode> ResponseNodeLoader::getResponseNodes(const std::string& clazz) {
+std::vector<SharedResponseNode> ResponseNodeLoaderImpl::getResponseNodes(const std::string& clazz) {
   auto component_metrics = getComponentMetricsNodes(clazz);
   if (!component_metrics.empty()) {
     return component_metrics;
@@ -126,7 +126,7 @@ std::vector<SharedResponseNode> ResponseNodeLoader::getResponseNodes(const std::
   return {*response_node};
 }
 
-void ResponseNodeLoader::initializeRepositoryMetrics(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeRepositoryMetrics(const SharedResponseNode& response_node) const {
   auto repository_metrics = dynamic_cast<RepositoryMetrics*>(response_node.get());
   if (repository_metrics != nullptr) {
     for (const auto& repo : repository_metric_sources_) {
@@ -135,7 +135,7 @@ void ResponseNodeLoader::initializeRepositoryMetrics(const SharedResponseNode& r
   }
 }
 
-void ResponseNodeLoader::initializeQueueMetrics(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeQueueMetrics(const SharedResponseNode& response_node) const {
   std::lock_guard<std::mutex> guard(root_mutex_);
   if (!root_) {
     return;
@@ -151,14 +151,14 @@ void ResponseNodeLoader::initializeQueueMetrics(const SharedResponseNode& respon
   }
 }
 
-void ResponseNodeLoader::initializeAgentIdentifier(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeAgentIdentifier(const SharedResponseNode& response_node) const {
   auto identifier = dynamic_cast<state::response::AgentIdentifier*>(response_node.get());
   if (identifier != nullptr) {
     identifier->setAgentIdentificationProvider(configuration_);
   }
 }
 
-void ResponseNodeLoader::initializeAgentMonitor(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeAgentMonitor(const SharedResponseNode& response_node) const {
   auto monitor = dynamic_cast<state::response::AgentMonitor*>(response_node.get());
   if (monitor != nullptr) {
     for (const auto& repo : repository_metric_sources_) {
@@ -168,7 +168,7 @@ void ResponseNodeLoader::initializeAgentMonitor(const SharedResponseNode& respon
   }
 }
 
-void ResponseNodeLoader::initializeAgentNode(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeAgentNode(const SharedResponseNode& response_node) const {
   auto agent_node = dynamic_cast<state::response::AgentNode*>(response_node.get());
   if (agent_node != nullptr && controller_ != nullptr) {
     if (auto service = controller_->getControllerService(c2::UPDATE_NAME)) {
@@ -186,7 +186,7 @@ void ResponseNodeLoader::initializeAgentNode(const SharedResponseNode& response_
   }
 }
 
-void ResponseNodeLoader::initializeAgentStatus(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeAgentStatus(const SharedResponseNode& response_node) const {
   auto agent_status = dynamic_cast<state::response::AgentStatus*>(response_node.get());
   if (agent_status != nullptr) {
     for (const auto& repo : repository_metric_sources_) {
@@ -196,7 +196,7 @@ void ResponseNodeLoader::initializeAgentStatus(const SharedResponseNode& respons
   }
 }
 
-void ResponseNodeLoader::initializeConfigurationChecksums(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeConfigurationChecksums(const SharedResponseNode& response_node) const {
   auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());
   if (configuration_checksums) {
     configuration_checksums->addChecksumCalculator(configuration_->getChecksumCalculator());
@@ -206,14 +206,14 @@ void ResponseNodeLoader::initializeConfigurationChecksums(const SharedResponseNo
   }
 }
 
-void ResponseNodeLoader::initializeAssetInformation(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeAssetInformation(const SharedResponseNode& response_node) const {
   auto asset_info = dynamic_cast<state::response::AssetInformation*>(response_node.get());
   if (asset_info) {
     asset_info->setAssetManager(asset_manager_);
   }
 }
 
-void ResponseNodeLoader::initializeFlowInformation(const SharedResponseNode& response_node) const {
+void ResponseNodeLoaderImpl::initializeFlowInformation(const SharedResponseNode& response_node) const {
   auto flow_information = dynamic_cast<state::response::FlowInformation*>(response_node.get());
   if (flow_information == nullptr) {
     return;
@@ -240,7 +240,7 @@ void ResponseNodeLoader::initializeFlowInformation(const SharedResponseNode& res
   }
 }
 
-std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std::string& clazz) {
+std::vector<SharedResponseNode> ResponseNodeLoaderImpl::loadResponseNodes(const std::string& clazz) {
   auto response_nodes = getResponseNodes(clazz);
   if (response_nodes.empty()) {
     logger_->log_error("No metric defined for {}", clazz);
@@ -266,7 +266,7 @@ std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std:
   return response_nodes;
 }
 
-std::vector<SharedResponseNode> ResponseNodeLoader::getMatchingComponentMetricsNodes(const std::string& regex_str) const {
+std::vector<SharedResponseNode> ResponseNodeLoaderImpl::getMatchingComponentMetricsNodes(const std::string& regex_str) const {
   std::vector<SharedResponseNode> result;
   for (const auto& [metric_name, metrics] : component_metrics_) {
     utils::Regex regex(regex_str);
@@ -277,7 +277,7 @@ std::vector<SharedResponseNode> ResponseNodeLoader::getMatchingComponentMetricsN
   return result;
 }
 
-std::vector<SharedResponseNode> ResponseNodeLoader::getComponentMetricsNodes(const std::string& metrics_class) const {
+std::vector<SharedResponseNode> ResponseNodeLoaderImpl::getComponentMetricsNodes(const std::string& metrics_class) const {
   if (metrics_class.empty()) {
     return {};
   }
@@ -295,15 +295,15 @@ std::vector<SharedResponseNode> ResponseNodeLoader::getComponentMetricsNodes(con
   return {};
 }
 
-void ResponseNodeLoader::setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) {
+void ResponseNodeLoaderImpl::setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) {
   controller_ = controller;
 }
 
-void ResponseNodeLoader::setStateMonitor(state::StateMonitor* update_sink) {
+void ResponseNodeLoaderImpl::setStateMonitor(state::StateMonitor* update_sink) {
   update_sink_ = update_sink;
 }
 
-state::response::NodeReporter::ReportedNode ResponseNodeLoader::getAgentManifest() const {
+state::response::NodeReporter::ReportedNode ResponseNodeLoaderImpl::getAgentManifest() const {
   state::response::AgentInformation agentInfo("agentInfo");
   if (controller_) {
     if (auto service = controller_->getControllerService(c2::UPDATE_NAME)) {

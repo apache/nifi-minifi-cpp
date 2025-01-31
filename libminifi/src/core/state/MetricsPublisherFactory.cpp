@@ -18,6 +18,7 @@
 #include "core/state/MetricsPublisherFactory.h"
 
 #include "utils/StringUtils.h"
+#include "core/ClassLoader.h"
 
 namespace org::apache::nifi::minifi::state {
 

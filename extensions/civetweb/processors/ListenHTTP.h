@@ -34,7 +34,7 @@
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
@@ -47,7 +47,7 @@ struct ListenHTTPTestAccessor;
 
 namespace org::apache::nifi::minifi::processors {
 
-class ListenHTTP : public core::Processor {
+class ListenHTTP : public core::ProcessorImpl {
  private:
   static constexpr std::string_view DEFAULT_BUFFER_SIZE_STR = "5";
   static constexpr core::RelationshipDefinition Self{"__self__", "Marks the FlowFile to be owned by this processor"};
@@ -56,7 +56,7 @@ class ListenHTTP : public core::Processor {
   friend struct ::org::apache::nifi::minifi::test::ListenHTTPTestAccessor;
 
   explicit ListenHTTP(std::string_view name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }

@@ -19,7 +19,7 @@
 #pragma once
 #include <numbers>
 
-#include "core/Record.h"
+#include "minifi-cpp/core/Record.h"
 
 namespace org::apache::nifi::minifi::core::test {
 

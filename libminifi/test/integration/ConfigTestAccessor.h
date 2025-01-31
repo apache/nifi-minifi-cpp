@@ -24,6 +24,6 @@
 
 struct ConfigTestAccessor {
   static void call_setLoggerProperties(const std::shared_ptr<minifi::Configure>& config, std::shared_ptr<core::logging::LoggerProperties> props) {
-    config->setLoggerProperties(props);
+    std::dynamic_pointer_cast<minifi::ConfigureImpl>(config)->setLoggerProperties(props);
   }
 };

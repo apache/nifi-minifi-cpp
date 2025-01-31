@@ -35,14 +35,14 @@ std::mutex control_mutex;
 std::atomic<bool> subprocess_controller_service_found_correctly{false};
 std::atomic<bool> subprocess_controller_service_not_found_correctly{false};
 
-class MockControllerService : public minifi::core::controller::ControllerService {
+class MockControllerService : public minifi::core::controller::ControllerServiceImpl {
  public:
   explicit MockControllerService(std::string_view name, const minifi::utils::Identifier &uuid)
-      : ControllerService(name, uuid) {
+      : ControllerServiceImpl(name, uuid) {
   }
 
   explicit MockControllerService(std::string_view name)
-      : ControllerService(name) {
+      : ControllerServiceImpl(name) {
   }
   MockControllerService() = default;
 
@@ -54,7 +54,7 @@ class MockControllerService : public minifi::core::controller::ControllerService
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override {
-    minifi::core::controller::ControllerService::initialize();
+    minifi::core::controller::ControllerServiceImpl::initialize();
     enable();
   }
 
@@ -81,15 +81,15 @@ class MockControllerService : public minifi::core::controller::ControllerService
   std::string str;
 };
 
-class MockProcessor : public minifi::core::Processor {
+class MockProcessor : public minifi::core::ProcessorImpl {
  public:
   explicit MockProcessor(std::string_view name, const minifi::utils::Identifier &uuid)
-      : Processor(name, uuid) {
+      : ProcessorImpl(name, uuid) {
     setTriggerWhenEmpty(true);
   }
 
   explicit MockProcessor(std::string_view name)
-      : Processor(name) {
+      : ProcessorImpl(name) {
     setTriggerWhenEmpty(true);
   }
 
@@ -126,7 +126,7 @@ class MockProcessor : public minifi::core::Processor {
       std::shared_ptr<minifi::core::controller::ControllerService> service = context.getControllerService(linked_service, getUUID());
       std::lock_guard<std::mutex> lock(control_mutex);
       REQUIRE(nullptr != service);
-      REQUIRE("pushitrealgood" == std::static_pointer_cast<MockControllerService>(service)->doSomething());
+      REQUIRE("pushitrealgood" == std::dynamic_pointer_cast<MockControllerService>(service)->doSomething());
       // verify we have access to the controller service
       // and verify that we can execute it.
     }

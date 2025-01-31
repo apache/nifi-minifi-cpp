@@ -25,7 +25,7 @@
 #include <utility>
 
 #include "io/InputStream.h"
-#include "Processor.h"
+#include "core/Processor.h"
 #include "utils/Export.h"
 #include "controllers/SSLContextService.h"
 #include "core/Core.h"
@@ -43,7 +43,7 @@
 namespace org::apache::nifi::minifi::processors {
 
 
-class PutTCP final : public core::Processor {
+class PutTCP final : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description =
       "The PutTCP processor receives a FlowFile and transmits the FlowFile content over a TCP connection to the configured TCP server. "

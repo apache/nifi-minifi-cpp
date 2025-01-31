@@ -25,9 +25,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class StatefulProcessor : public core::Processor {
+class StatefulProcessor : public core::ProcessorImpl {
  public:
-  using core::Processor::Processor;
+  using core::ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "A processor with state for test purposes.";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};

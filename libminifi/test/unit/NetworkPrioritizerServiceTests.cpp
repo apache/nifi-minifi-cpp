@@ -78,7 +78,7 @@ TEST_CASE("TestPrioritizerOneInterfaceMaxThroughput", "[test3]") {
 TEST_CASE("TestPriorotizerMultipleInterfaces", "[test4]") {
   auto clock = std::make_shared<minifi::test::utils::ManualClock>();
   auto parent_controller = createNetworkPrioritizerService("TestService", clock);
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   parent_controller->initialize();
   parent_controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces, "false");
 

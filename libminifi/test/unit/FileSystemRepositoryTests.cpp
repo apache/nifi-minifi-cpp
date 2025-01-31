@@ -47,7 +47,7 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   TestController controller;
   auto dir = controller.createTempDirectory();
   auto fs_repo = std::make_shared<minifi::core::repository::FileSystemRepository>();
-  auto config = std::make_shared<minifi::Configure>();
+  auto config = std::make_shared<minifi::ConfigureImpl>();
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(fs_repo->initialize(config));
   const auto start_memory = minifi::utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
@@ -73,13 +73,13 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
 TEST_CASE("FileSystemRepository can clear orphan entries") {
   TestController testController;
   auto dir = testController.createTempDirectory();
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   {
     auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
     REQUIRE(content_repo->initialize(configuration));
 
-    minifi::ResourceClaim claim(content_repo);
+    minifi::ResourceClaimImpl claim(content_repo);
     content_repo->write(claim)->write("hi");
     // ensure that the content is not deleted during resource claim destruction
     content_repo->incrementStreamCount(claim);
@@ -99,13 +99,13 @@ TEST_CASE("FileSystemRepository can retry removing entry that previously failed 
     SKIP("Cannot test insufficient permissions with root user");
   TestController testController;
   auto dir = testController.createTempDirectory();
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
 
   auto content_repo = std::make_shared<TestFileSystemRepository>();
   REQUIRE(content_repo->initialize(configuration));
   {
-    minifi::ResourceClaim claim(content_repo);
+    minifi::ResourceClaimImpl claim(content_repo);
     content_repo->write(claim)->write("hi");
     auto files = minifi::utils::file::list_dir_all(dir, testController.getLogger());
     REQUIRE(files.size() == 1);
@@ -116,7 +116,7 @@ TEST_CASE("FileSystemRepository can retry removing entry that previously failed 
   utils::makeFileOrDirectoryWritable(dir);
   REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).size() == 1);
   {
-    minifi::ResourceClaim claim(content_repo);
+    minifi::ResourceClaimImpl claim(content_repo);
     content_repo->write(claim)->write("hi");
     REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).size() == 2);
   }
@@ -130,14 +130,14 @@ TEST_CASE("FileSystemRepository removes non-existing resource file from purge li
     SKIP("Cannot test insufficient permissions with root user");
   TestController testController;
   auto dir = testController.createTempDirectory();
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
 
   auto content_repo = std::make_shared<TestFileSystemRepository>();
   REQUIRE(content_repo->initialize(configuration));
   std::string filename;
   {
-    minifi::ResourceClaim claim(content_repo);
+    minifi::ResourceClaimImpl claim(content_repo);
     content_repo->write(claim)->write("hi");
     auto files = minifi::utils::file::list_dir_all(dir, testController.getLogger());
     REQUIRE(files.size() == 1);
@@ -150,7 +150,7 @@ TEST_CASE("FileSystemRepository removes non-existing resource file from purge li
   REQUIRE(std::filesystem::remove(filename));
   REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).empty());
   {
-    minifi::ResourceClaim claim(content_repo);
+    minifi::ResourceClaimImpl claim(content_repo);
     content_repo->write(claim)->write("hi");
     REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).size() == 1);
   }
@@ -164,14 +164,14 @@ TEST_CASE("Append Claim") {
   auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<TestFileSystemRepository>();
 
-  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
 
   const std::string content = "well hello there";
 
-  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+  auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   content_repo->write(*claim)->write(as_bytes(std::span(content)));
 
   // requesting append before content end fails

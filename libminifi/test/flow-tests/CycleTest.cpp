@@ -111,9 +111,9 @@ TEST_CASE("Flow with two long cycle", "[FlowWithCycle]") {
   auto controller = testController.controller_;
   auto root = testController.root_;
 
-  auto procGenerator = static_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator*>(root->findProcessorByName("Generator"));
-  auto procA = static_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("A"));
-  auto procB = static_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("B"));
+  auto procGenerator = dynamic_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator*>(root->findProcessorByName("Generator"));
+  auto procA = dynamic_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("A"));
+  auto procB = dynamic_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("B"));
 
   int tryCount = 0;
   while (tryCount++ < 10 && (procA->trigger_count.load() < 10 || procB->trigger_count.load() < 10)) {

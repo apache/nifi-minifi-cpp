@@ -26,7 +26,6 @@
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/ostream_sink.h"
 #include "spdlog/sinks/dist_sink.h"
-#include "unit/LogUtils.h"
 #include "properties/PropertiesFile.h"
 #include "ConfigTestAccessor.h"
 #include "unit/Catch.h"

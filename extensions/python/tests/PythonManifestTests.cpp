@@ -163,11 +163,11 @@ class MyPyProc5(FlowFileTransform):
   controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*");
 #endif
 
-  core::extension::ExtensionManager::get().initialize(controller.configuration_);
+  core::extension::ExtensionManagerImpl::get().initialize(controller.configuration_);
 
   controller.setupFlow();
 
-  auto c2_metrics_publisher = std::static_pointer_cast<minifi::c2::C2MetricsPublisher>(controller.metrics_publisher_store_->getMetricsPublisher(minifi::c2::C2_METRICS_PUBLISHER).lock());
+  auto c2_metrics_publisher = std::dynamic_pointer_cast<minifi::c2::C2MetricsPublisher>(controller.metrics_publisher_store_->getMetricsPublisher(minifi::c2::C2_METRICS_PUBLISHER).lock());
 
   auto agent_info = c2_metrics_publisher->getAgentManifest();
 

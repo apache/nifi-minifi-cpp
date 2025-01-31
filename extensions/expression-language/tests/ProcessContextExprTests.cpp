@@ -21,18 +21,18 @@
 #include "core/ProcessContext.h"
 #include "core/Resource.h"
 #include "ProcessContextExpr.h"
-#include "Processor.h"
-#include "PropertyDefinition.h"
-#include "PropertyDefinitionBuilder.h"
-#include "RelationshipDefinition.h"
+#include "core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 
 namespace org::apache::nifi::minifi {
 
-class DummyProcessor : public core::Processor {
+class DummyProcessor : public core::ProcessorImpl {
  public:
-  using core::Processor::Processor;
+  using core::ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "A processor that does nothing.";
   static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")

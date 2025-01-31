@@ -39,7 +39,7 @@ std::shared_ptr<minifi::core::controller::ControllerService> getControllerServic
     const std::string &service_name) {
   std::string nifi_configuration_class_name = "adaptiveconfiguration";
 
-  minifi::core::extension::ExtensionManager::get().initialize(configuration);
+  minifi::core::extension::ExtensionManagerImpl::get().initialize(configuration);
 
   configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
   auto flow_configuration = minifi::core::createFlowConfiguration(
@@ -78,7 +78,7 @@ std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(con
   if (nullptr == secure_context) {
     std::string secureStr;
     if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && minifi::utils::string::toBool(secureStr).value_or(false)) {
-      secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
+      secure_context = std::make_shared<minifi::controllers::SSLContextServiceImpl>("ControllerSocketProtocolSSL", configuration);
       secure_context->onEnable();
     }
   } else {
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  const auto configuration = std::make_shared<minifi::Configure>();
+  const auto configuration = std::make_shared<minifi::ConfigureImpl>();
   configuration->setHome(minifi_home);
   configuration->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 

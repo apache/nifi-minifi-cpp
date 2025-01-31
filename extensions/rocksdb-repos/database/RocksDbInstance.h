@@ -24,7 +24,7 @@
 #include <unordered_map>
 #include "RocksDbUtils.h"
 #include "rocksdb/db.h"
-#include "logging/Logger.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::internal {
 

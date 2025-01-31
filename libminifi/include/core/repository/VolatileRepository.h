@@ -37,14 +37,14 @@
 
 namespace org::apache::nifi::minifi::core::repository {
 
-class VolatileRepository : public core::ThreadedRepository {
+class VolatileRepository : public core::ThreadedRepositoryImpl {
  public:
   explicit VolatileRepository(std::string_view repo_name = "",
                               std::string /*dir*/ = REPOSITORY_DIRECTORY,
                               std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
                               int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                               std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
-    : core::ThreadedRepository(repo_name.length() > 0 ? repo_name : core::className<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
+    : core::ThreadedRepositoryImpl(repo_name.length() > 0 ? repo_name : core::className<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
       repo_data_(10000, static_cast<size_t>(maxPartitionBytes * 0.75)),
       current_index_(0),
       logger_(logging::LoggerFactory<VolatileRepository>::getLogger()) {

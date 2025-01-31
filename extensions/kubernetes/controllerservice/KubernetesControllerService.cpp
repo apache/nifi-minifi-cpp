@@ -24,19 +24,19 @@ extern "C" {
 }
 
 #include "core/Resource.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "Exception.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-KubernetesControllerService::KubernetesControllerService(const std::string& name, const utils::Identifier& uuid)
-  : AttributeProviderService(name, uuid),
+KubernetesControllerService::KubernetesControllerService(const std::string_view name, const utils::Identifier& uuid)
+  : AttributeProviderServiceImpl(name, uuid),
     logger_{core::logging::LoggerFactory<KubernetesControllerService>::getLogger(uuid)} {
 }
 
-KubernetesControllerService::KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration)
+KubernetesControllerService::KubernetesControllerService(const std::string_view name, const std::shared_ptr<Configure>& configuration)
   : KubernetesControllerService{name} {
     setConfiguration(configuration);
     initialize();
@@ -46,7 +46,7 @@ void KubernetesControllerService::initialize() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (initialized_) { return; }
 
-  ControllerService::initialize();
+  ControllerServiceImpl::initialize();
   setSupportedProperties(Properties);
   initialized_ = true;
 }

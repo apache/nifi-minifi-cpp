@@ -28,7 +28,7 @@
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
-#include "controllers/keyvalue/AutoPersistor.h"
+#include "utils/AutoPersistor.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
 #include "utils/file/FileUtils.h"
@@ -89,7 +89,7 @@ class PersistentStateStorageTestsFixture {
     test_repo.reset();
     configuration.reset();
 
-    configuration = std::make_shared<minifi::Configure>();
+    configuration = std::make_shared<minifi::ConfigureImpl>();
     test_repo = std::make_shared<TestRepository>();
     test_flow_repo = std::make_shared<TestFlowRepository>();
 

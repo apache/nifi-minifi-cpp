@@ -148,8 +148,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
  private:
   sitetosite::RespondCode current_code;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HttpSiteToSiteClient>::getLogger();
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
+
   HttpSiteToSiteClient(const HttpSiteToSiteClient &parent);
   HttpSiteToSiteClient &operator=(const HttpSiteToSiteClient &parent);
   static std::shared_ptr<utils::IdGenerator> id_generator_;

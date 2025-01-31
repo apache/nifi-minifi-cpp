@@ -1054,7 +1054,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   const core::Relationship success_relationship{"success", "everything is fine"};
 
   // use persistent state storage that defaults to rocksDB, not volatile
-  const auto configuration = std::make_shared<minifi::Configure>();
+  const auto configuration = std::make_shared<minifi::ConfigureImpl>();
   configuration->setHome(log_dir);
   {
     auto test_plan = testController.createPlan(configuration, state_dir);
@@ -1717,9 +1717,9 @@ TEST_CASE("TailFile onSchedule throws if an invalid Attribute Provider Service i
 
 namespace {
 
-class TestAttributeProviderService final : public minifi::controllers::AttributeProviderService {
+class TestAttributeProviderService final : public minifi::controllers::AttributeProviderServiceImpl {
  public:
-  using AttributeProviderService::AttributeProviderService;
+  using AttributeProviderServiceImpl::AttributeProviderServiceImpl;
 
   static constexpr const char* Description = "An attribute provider service which provides a constant set of records.";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};

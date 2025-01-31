@@ -23,8 +23,8 @@
 
 #include "core/FlowFile.h"
 #include "MinMaxHeap.h"
-#include "SwapManager.h"
-#include "TimeUtil.h"
+#include "minifi-cpp/SwapManager.h"
+#include "utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::test::utils {
 struct FlowFileQueueTestAccessor;

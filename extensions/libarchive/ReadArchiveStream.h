@@ -23,7 +23,8 @@
 
 #include "io/OutputStream.h"
 #include "io/ArchiveStream.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "io/InputStream.h"
+#include "core/logging/LoggerFactory.h"
 
 #include "archive_entry.h"
 #include "archive.h"
@@ -31,7 +32,7 @@
 
 namespace org::apache::nifi::minifi::io {
 
-class ReadArchiveStreamImpl final : public ReadArchiveStream {
+class ReadArchiveStreamImpl final : public InputStreamImpl, public ReadArchiveStream {
   class BufferedReader {
    public:
     explicit BufferedReader(std::shared_ptr<InputStream> input) : input_(std::move(input)) {}

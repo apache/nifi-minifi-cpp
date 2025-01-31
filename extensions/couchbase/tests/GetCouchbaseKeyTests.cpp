@@ -46,7 +46,8 @@ class GetCouchbaseKeyTestController : public TestController {
     LogTestController::getInstance().setDebug<controllers::CouchbaseClusterService>();
     LogTestController::getInstance().setDebug<processors::GetCouchbaseKey>();
     auto controller_service_node = controller_.plan->addController("MockCouchbaseClusterService", "MockCouchbaseClusterService");
-    mock_couchbase_cluster_service_ = std::static_pointer_cast<MockCouchbaseClusterService>(controller_service_node->getControllerServiceImplementation());
+    mock_couchbase_cluster_service_ = std::dynamic_pointer_cast<MockCouchbaseClusterService>(controller_service_node->getControllerServiceImplementation());
+    gsl_Assert(mock_couchbase_cluster_service_);
     proc_->setProperty(processors::GetCouchbaseKey::CouchbaseClusterControllerService, "MockCouchbaseClusterService");
   }
 

@@ -23,10 +23,9 @@
 #include <memory>
 
 #include "database/RocksDatabase.h"
-#include "FlowFile.h"
 #include "utils/gsl.h"
 #include "core/ContentRepository.h"
-#include "SwapManager.h"
+#include "minifi-cpp/SwapManager.h"
 #include "utils/ThreadPool.h"
 #include "core/logging/Logger.h"
 

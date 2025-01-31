@@ -17,26 +17,19 @@
 # under the License.
 #
 
-file(GLOB KEYVALUE_TESTS  "*.cpp")
+add_minifi_executable(PersistentMapStateStorageTest "PersistentStateStorageTest.cpp")
+createTests(PersistentMapStateStorageTest)
+add_test(NAME PersistentMapStateStorageTest COMMAND PersistentMapStateStorageTest --config-yaml "${TEST_RESOURCES}/PersistentMapStateStorage.yml")
+target_link_libraries(PersistentMapStateStorageTest minifi-standard-processors Catch2)
 
-SET(KEYVALUE_INT_TEST_COUNT 0)
-
-FOREACH(testfile ${KEYVALUE_TESTS})
-    get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_minifi_executable("${testfilename}" "${testfile}")
-    createTests("${testfilename}")
-    target_link_libraries(${testfilename} minifi-standard-processors Catch2)
-    if (ENABLE_ROCKSDB)
-        target_link_libraries(${testfilename} minifi-rocksdb-repos)
-    endif()
-
-    MATH(EXPR KEYVALUE_INT_TEST_COUNT "${KEYVALUE_INT_TEST_COUNT}+1")
-ENDFOREACH()
-
-message("-- Finished building ${KEYVALUE_INT_TEST_COUNT} keyvalue controller test file(s)...")
-
-add_test(NAME PersistentMapStateStorageTest COMMAND PersistentStateStorageTest --config-yaml "${TEST_RESOURCES}/PersistentMapStateStorage.yml")
-if (ENABLE_ROCKSDB)
-    add_test(NAME RocksDbStateStorageTest COMMAND PersistentStateStorageTest --config-yaml "${TEST_RESOURCES}/RocksDbStateStorage.yml")
-endif()
+add_minifi_executable(VolatileMapStateStorageTest "VolatileMapStateStorageTest.cpp")
+createTests(VolatileMapStateStorageTest)
 add_test(NAME VolatileMapStateStorageTest COMMAND VolatileMapStateStorageTest --config-yaml "${TEST_RESOURCES}/VolatileMapStateStorage.yml")
+target_link_libraries(VolatileMapStateStorageTest minifi-standard-processors Catch2)
+
+if (ENABLE_ROCKSDB)
+    add_minifi_executable(RocksDbStateStorageTest "PersistentStateStorageTest.cpp")
+    createTests(RocksDbStateStorageTest)
+    add_test(NAME RocksDbStateStorageTest COMMAND RocksDbStateStorageTest --config-yaml "${TEST_RESOURCES}/RocksDbStateStorage.yml")
+    target_link_libraries(RocksDbStateStorageTest minifi-rocksdb-repos Catch2)
+endif()

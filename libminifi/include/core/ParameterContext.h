@@ -21,7 +21,7 @@
 #include <unordered_set>
 #include <optional>
 
-#include "Core.h"
+#include "core/Core.h"
 #include "Exception.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -39,9 +39,9 @@ struct Parameter {
   std::string value;
 };
 
-class ParameterContext : public CoreComponent {
+class ParameterContext : public CoreComponentImpl {
  public:
-  using CoreComponent::CoreComponent;
+  using CoreComponentImpl::CoreComponentImpl;
 
   void setDescription(const std::string &description) {
     description_ = description;

@@ -23,6 +23,7 @@
 
 #include "core/ProcessSession.h"
 #include "LuaScriptStateManager.h"
+#include "minifi-cpp/core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
 

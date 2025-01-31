@@ -29,7 +29,7 @@
 #include <utility>
 #include <tuple>
 
-#include "Processor.h"
+#include "minifi-cpp/core/Processor.h"
 #include "Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
@@ -61,7 +61,7 @@ enum ProcessGroupType {
   REMOTE_PROCESS_GROUP,
 };
 
-class ProcessGroup : public CoreComponent {
+class ProcessGroup : public CoreComponentImpl {
   friend struct ::ProcessGroupTestAccessor;
  public:
   enum class Traverse {
@@ -268,8 +268,7 @@ class ProcessGroup : public CoreComponent {
   mutable std::recursive_mutex mutex_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
+
   ProcessGroup(const ProcessGroup &parent);
   ProcessGroup &operator=(const ProcessGroup &parent);
   static std::shared_ptr<utils::IdGenerator> id_generator_;

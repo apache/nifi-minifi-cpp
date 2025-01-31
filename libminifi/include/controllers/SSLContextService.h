@@ -38,13 +38,14 @@
 #include "utils/StringUtils.h"
 #include "utils/tls/ExtendedKeyUsage.h"
 #include "io/validation.h"
-#include "../core/controller/ControllerService.h"
+#include "core/controller/ControllerService.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "utils/Export.h"
 #include "utils/tls/CertificateUtils.h"
+#include "minifi-cpp/controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -70,16 +71,16 @@ class SSLContext {
  * Justification: Abstracts SSL support out of processors into a
  * configurable controller service.
  */
-class SSLContextService : public core::controller::ControllerService {
+class SSLContextServiceImpl : public core::controller::ControllerServiceImpl, public SSLContextService {
  public:
-  explicit SSLContextService(std::string_view name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
+  explicit SSLContextServiceImpl(std::string_view name, const utils::Identifier &uuid = {})
+      : ControllerServiceImpl(name, uuid),
         initialized_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
   }
 
-  explicit SSLContextService(std::string_view name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name),
+  explicit SSLContextServiceImpl(std::string_view name, const std::shared_ptr<Configure> &configuration)
+      : ControllerServiceImpl(name),
         initialized_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
     setConfiguration(configuration);
@@ -134,10 +135,10 @@ class SSLContextService : public core::controller::ControllerService {
 
   std::unique_ptr<SSLContext> createSSLContext();
 
-  const std::filesystem::path& getCertificateFile() const;
-  const std::string& getPassphrase() const;
-  const std::filesystem::path& getPrivateKeyFile() const;
-  const std::filesystem::path& getCACertificate() const;
+  const std::filesystem::path& getCertificateFile() const override;
+  const std::string& getPassphrase() const override;
+  const std::filesystem::path& getPrivateKeyFile() const override;
+  const std::filesystem::path& getCACertificate() const override;
 
   void yield() override {
   }
@@ -150,14 +151,14 @@ class SSLContextService : public core::controller::ControllerService {
     return false;
   }
 
-  void setMinTlsVersion(long min_version) {  // NOLINT(runtime/int) long due to SSL lib API
+  void setMinTlsVersion(long min_version) override {  // NOLINT(runtime/int) long due to SSL lib API
     minimum_tls_version_ = min_version;
   }
 
-  void setMaxTlsVersion(long max_version) {  // NOLINT(runtime/int) long due to SSL lib API
+  void setMaxTlsVersion(long max_version) override {  // NOLINT(runtime/int) long due to SSL lib API
     maximum_tls_version_ = max_version;
   }
-  bool configure_ssl_context(SSL_CTX *ctx);
+  bool configure_ssl_context(void* ctx) override;
 
   void onEnable() override;
 
@@ -224,12 +225,12 @@ class SSLContextService : public core::controller::ControllerService {
 #else
       std::to_array<core::PropertyReference>({
 #endif  // WIN32
-          ClientCertificate,
-          PrivateKey,
-          Passphrase,
-          CACertificate,
-          UseSystemCertStore
-      });
+                                                 ClientCertificate,
+                                                 PrivateKey,
+                                                 Passphrase,
+                                                 CACertificate,
+                                                 UseSystemCertStore
+                                             });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
