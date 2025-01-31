@@ -31,8 +31,9 @@ namespace org::apache::nifi::minifi::extensions::smb {
 
 class PutSmb final : public core::ProcessorImpl {
  public:
-  explicit PutSmb(const std::string_view name,  const utils::Identifier& uuid = {})
+  explicit PutSmb(const std::string_view name, const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<PutSmb>::getLogger(uuid_);
   }
 
   enum class FileExistsResolutionStrategy {
@@ -88,7 +89,6 @@ class PutSmb final : public core::ProcessorImpl {
   bool create_missing_dirs_ = true;
   FileExistsResolutionStrategy conflict_resolution_strategy_ = FileExistsResolutionStrategy::fail;
   std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutSmb>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::smb

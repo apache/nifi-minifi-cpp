@@ -38,8 +38,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class FocusArchiveEntry : public core::ProcessorImpl {
  public:
-  explicit FocusArchiveEntry(std::string_view name, const utils::Identifier& uuid = {})
-  : core::ProcessorImpl(name, uuid) {
+  explicit FocusArchiveEntry(const std::string_view name, const utils::Identifier& uuid = {})
+      : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger(uuid_);
   }
   ~FocusArchiveEntry()   override = default;
 
@@ -80,7 +81,6 @@ class FocusArchiveEntry : public core::ProcessorImpl {
   };
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger(uuid_);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 

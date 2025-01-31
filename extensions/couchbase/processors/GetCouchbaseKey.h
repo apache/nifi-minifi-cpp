@@ -107,7 +107,6 @@ class GetCouchbaseKey final : public core::AbstractProcessor<GetCouchbaseKey> {
  private:
   std::shared_ptr<controllers::CouchbaseClusterService> couchbase_cluster_service_;
   CouchbaseValueType document_type_ = CouchbaseValueType::Json;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetCouchbaseKey>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::couchbase::processors
