@@ -92,9 +92,10 @@ class FetchS3Object : public S3Processor {
   }
 
   std::optional<aws::s3::GetObjectRequestParameters> buildFetchS3RequestParams(
-    core::ProcessContext& context,
+    const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties) const;
+    const CommonProperties &common_properties,
+    std::string_view bucket) const;
 
   bool requester_pays_ = false;
 };
