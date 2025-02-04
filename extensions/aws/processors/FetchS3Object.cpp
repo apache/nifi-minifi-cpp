@@ -43,12 +43,13 @@ void FetchS3Object::onSchedule(core::ProcessContext& context, core::ProcessSessi
 }
 
 std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3RequestParams(
-    core::ProcessContext& context,
+    const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties) const {
+    const CommonProperties &common_properties,
+    const std::string_view bucket) const {
   gsl_Expects(client_config_);
   minifi::aws::s3::GetObjectRequestParameters get_object_params(common_properties.credentials, *client_config_);
-  get_object_params.bucket = common_properties.bucket;
+  get_object_params.bucket = bucket;
   get_object_params.requester_pays = requester_pays_;
 
   if (const auto object_key = context.getProperty(ObjectKey, &flow_file)) {
@@ -82,7 +83,15 @@ void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessio
     return;
   }
 
-  auto get_object_params = buildFetchS3RequestParams(context, *flow_file, *common_properties);
+  auto bucket = context.getProperty(Bucket.name, flow_file.get());
+  if (!bucket) {
+    logger_->log_error("Bucket is invalid due to {}", bucket.error().message());
+    session.transfer(flow_file, Failure);
+    return;
+  }
+  logger_->log_debug("S3Processor: Bucket [{}]", *bucket);
+
+  auto get_object_params = buildFetchS3RequestParams(context, *flow_file, *common_properties, *bucket);
   if (!get_object_params) {
     session.transfer(flow_file, Failure);
     return;

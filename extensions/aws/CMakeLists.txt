@@ -33,14 +33,20 @@ add_minifi_library(minifi-aws SHARED ${SOURCES})
 target_link_libraries(minifi-aws PUBLIC ${LIBMINIFI} Threads::Threads)
 
 target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-s3)
+target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-kinesis)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(arm64)|(ARM64)|(aarch64)|(armv8)")
     target_wholearchive_library_private(minifi-aws AWS::aws-checksums)
 endif()
-get_target_property(AWS_SDK_INCLUDE_DIRS AWS::aws-cpp-sdk-s3 INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(AWS_SDK_S3_INCLUDE_DIRS AWS::aws-cpp-sdk-s3 INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(AWS_SDK_KINESIS_INCLUDE_DIRS AWS::aws-cpp-sdk-kinesis INTERFACE_INCLUDE_DIRECTORIES)
+
 target_include_directories(minifi-aws INTERFACE ${AWS_SDK_INCLUDE_DIRS})
+target_include_directories(minifi-aws INTERFACE ${AWS_SDK_KINESIS_INCLUDE_DIRS})
+
 if(WIN32)
     target_compile_definitions(minifi-aws INTERFACE "AWS_CORE_API=__declspec(dllimport)")
     target_compile_definitions(minifi-aws INTERFACE "AWS_S3_API=__declspec(dllimport)")
+    target_compile_definitions(minifi-aws INTERFACE "AWS_KINESIS_API=__declspec(dllimport)")
 endif()
 
 register_extension(minifi-aws "AWS EXTENSIONS" AWS-EXTENSIONS "This enables AWS support" "extensions/aws/tests")

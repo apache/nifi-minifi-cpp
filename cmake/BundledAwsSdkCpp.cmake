@@ -60,7 +60,9 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             "${LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-c-sdkutils.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
-            "${LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
+            "${LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-cpp-sdk-kinesis.${SUFFIX}"
+    )
 
     FOREACH(BYPRODUCT ${BYPRODUCTS})
         LIST(APPEND AWSSDK_LIBRARIES_LIST "${BINARY_DIR}/thirdparty/libaws-install/${BYPRODUCT}")
@@ -69,7 +71,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     set(AWS_SDK_CPP_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             -DCMAKE_PREFIX_PATH=${BINARY_DIR}/thirdparty/libaws-install
             -DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/libaws-install
-            -DBUILD_ONLY=s3
+            -DBUILD_ONLY=kinesis%s3
             -DENABLE_TESTING=OFF
             -DBUILD_SHARED_LIBS=OFF
             -DENABLE_UNITY_BUILD=${AWS_ENABLE_UNITY_BUILD})
@@ -209,4 +211,10 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     add_dependencies(AWS::aws-cpp-sdk-s3 aws-sdk-cpp-external)
     target_include_directories(AWS::aws-cpp-sdk-s3 INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-cpp-sdk-s3 INTERFACE AWS::aws-cpp-sdk-core)
+
+    add_library(AWS::aws-cpp-sdk-kinesis STATIC IMPORTED)
+    set_target_properties(AWS::aws-cpp-sdk-kinesis PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-cpp-sdk-kinesis.${SUFFIX}")
+    add_dependencies(AWS::aws-cpp-sdk-kinesis aws-sdk-cpp-external)
+    target_include_directories(AWS::aws-cpp-sdk-kinesis INTERFACE ${LIBAWS_INCLUDE_DIR})
+    target_link_libraries(AWS::aws-cpp-sdk-kinesis INTERFACE AWS::aws-cpp-sdk-core)
 endfunction(use_bundled_libaws)

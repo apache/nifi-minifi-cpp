@@ -196,6 +196,10 @@ class DockerTestCluster:
                  and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
                  or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output)
 
+    def check_kinesis_server_record_data(self, container_name, record_data):
+        container_name = self.container_store.get_container_name_with_postfix(container_name)
+        return self.aws_checker.check_kinesis_server_record_data(container_name, record_data)
+
     def check_s3_server_object_data(self, container_name, test_data):
         container_name = self.container_store.get_container_name_with_postfix(container_name)
         return self.aws_checker.check_s3_server_object_data(container_name, test_data)
