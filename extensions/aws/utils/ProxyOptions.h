@@ -15,32 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "AWSInitializer.h"
+#include <string>
+#include <cstdint>
 
-#include <memory>
 
-#include "aws/core/auth/AWSCredentialsProvider.h"
-#include "aws/core/utils/memory/stl/AWSString.h"
-#include "aws/core/utils/logging/AWSLogging.h"
-#include "aws/core/platform/Environment.h"
-#include "AWSSdkLogger.h"
+namespace org::apache::nifi::minifi::aws {
 
-namespace org::apache::nifi::minifi::aws::utils {
+struct ProxyOptions {
+  std::string host;
+  uint32_t port = 0;
+  std::string username;
+  std::string password;
+};
 
-AWSInitializer& AWSInitializer::get() {
-  static AWSInitializer instance;
-  return instance;
-}
-
-AWSInitializer::~AWSInitializer() {
-  Aws::Utils::Logging::ShutdownAWSLogging();
-  Aws::ShutdownAPI(options_);
-}
-
-AWSInitializer::AWSInitializer() {
-  Aws::InitAPI(options_);
-  Aws::Utils::Logging::InitializeAWSLogging(std::make_shared<AWSSdkLogger>());
-}
-
-}  // namespace org::apache::nifi::minifi::aws::utils
+}  // namespace org::apache::nifi::minifi::aws

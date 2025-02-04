@@ -1,45 +1,17 @@
-diff -rupN a/generated/src/aws-cpp-sdk-s3/CMakeLists.txt b/generated/src/aws-cpp-sdk-s3/CMakeLists.txt
---- a/generated/src/aws-cpp-sdk-s3/CMakeLists.txt	2023-12-11 13:15:50.741732410 +0100
-+++ b/generated/src/aws-cpp-sdk-s3/CMakeLists.txt	2023-12-14 14:02:41.247487265 +0100
-@@ -59,6 +59,11 @@ if(USE_WINDOWS_DLL_SEMANTICS AND BUILD_S
-     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_S3_EXPORTS")
- endif()
- 
-+if(FORCE_EXPORT_S3_API)
-+    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_S3_API=__declspec(dllexport)")
-+    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_S3_EXTERN=")
-+endif()
-+
- target_include_directories(${PROJECT_NAME} PUBLIC
-     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-     $<INSTALL_INTERFACE:include>)
-diff -rupN a/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h b/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h
---- a/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h	2023-12-11 13:15:50.741732410 +0100
-+++ b/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h	2023-12-14 13:30:54.022259949 +0100
-@@ -22,10 +22,13 @@
-             #define AWS_S3_API __declspec(dllimport)
-         #endif /* AWS_S3_EXPORTS */
-         #define AWS_S3_EXTERN
--    #else
--        #define AWS_S3_API
--        #define AWS_S3_EXTERN extern
-     #endif // USE_IMPORT_EXPORT
-+    #ifndef AWS_S3_API
-+        #define AWS_S3_API
-+    #endif
-+    #ifndef AWS_S3_EXTERN
-+        #define AWS_S3_EXTERN
-+    #endif
- #else // defined (USE_WINDOWS_DLL_SEMANTICS) || defined (WIN32)
-     #define AWS_S3_API
-     #define AWS_S3_EXTERN extern
-diff -rupN a/src/aws-cpp-sdk-core/CMakeLists.txt b/src/aws-cpp-sdk-core/CMakeLists.txt
---- a/src/aws-cpp-sdk-core/CMakeLists.txt	2023-12-11 13:15:52.061754319 +0100
-+++ b/src/aws-cpp-sdk-core/CMakeLists.txt	2023-12-14 14:01:42.666518935 +0100
-@@ -682,6 +682,11 @@ elseif (BUILD_SHARED_LIBS)
+Subject: [PATCH] dll-export-injection
+---
+Index: src/aws-cpp-sdk-core/CMakeLists.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/aws-cpp-sdk-core/CMakeLists.txt b/src/aws-cpp-sdk-core/CMakeLists.txt
+--- a/src/aws-cpp-sdk-core/CMakeLists.txt	(revision 101ff00c3e4f5248673e853617d1731fbf844112)
++++ b/src/aws-cpp-sdk-core/CMakeLists.txt	(date 1743761315080)
+@@ -628,6 +628,11 @@
      target_compile_definitions(${PROJECT_NAME} PRIVATE "SMITHY_EXPORTS=1")
  endif()
- 
+
 +if(FORCE_EXPORT_CORE_API)
 +    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_CORE_API=__declspec(dllexport)")
 +    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_CORE_EXTERN=")
@@ -47,10 +19,15 @@ diff -rupN a/src/aws-cpp-sdk-core/CMakeLists.txt b/src/aws-cpp-sdk-core/CMakeLis
 +
  set_compiler_flags(${PROJECT_NAME})
  set_compiler_warnings(${PROJECT_NAME})
- 
-diff -rupN a/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h b/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h
---- a/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h	2023-12-11 13:15:52.061754319 +0100
-+++ b/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h	2023-12-14 13:31:41.699706791 +0100
+
+Index: src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h b/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h
+--- a/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h	(revision 101ff00c3e4f5248673e853617d1731fbf844112)
++++ b/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h	(date 1743761315080)
 @@ -19,10 +19,13 @@
              #define  AWS_CORE_API __declspec(dllimport)
          #endif // AWS_CORE_EXPORTS
@@ -68,25 +45,125 @@ diff -rupN a/src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h b/src/aws-cpp-
      #define AWS_CORE_LOCAL
  #else // defined (USE_WINDOWS_DLL_SEMANTICS) || defined (_WIN32)
      #define AWS_CORE_API
-diff -rupN a/src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h b/src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h
---- a/src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h	2023-12-11 13:15:52.065087708 +0100
-+++ b/src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h	2023-12-14 10:53:36.150592052 +0100
+Index: generated/src/aws-cpp-sdk-kinesis/include/aws/kinesis/Kinesis_EXPORTS.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/generated/src/aws-cpp-sdk-kinesis/include/aws/kinesis/Kinesis_EXPORTS.h b/generated/src/aws-cpp-sdk-kinesis/include/aws/kinesis/Kinesis_EXPORTS.h
+--- a/generated/src/aws-cpp-sdk-kinesis/include/aws/kinesis/Kinesis_EXPORTS.h	(revision 101ff00c3e4f5248673e853617d1731fbf844112)
++++ b/generated/src/aws-cpp-sdk-kinesis/include/aws/kinesis/Kinesis_EXPORTS.h	(date 1743763015621)
+@@ -22,10 +22,13 @@
+             #define AWS_KINESIS_API __declspec(dllimport)
+         #endif /* AWS_KINESIS_EXPORTS */
+         #define AWS_KINESIS_EXTERN
+-    #else
+-        #define AWS_KINESIS_API
+-        #define AWS_KINESIS_EXTERN extern
+     #endif // USE_IMPORT_EXPORT
++    #ifndef AWS_KINESIS_API
++        #define AWS_KINESIS_API
++    #endif
++    #ifndef AWS_KINESIS_EXTERN
++        #define AWS_KINESIS_EXTERN
++    #endif
+ #else // defined (USE_WINDOWS_DLL_SEMANTICS) || defined (WIN32)
+     #define AWS_KINESIS_API
+     #define AWS_KINESIS_EXTERN extern
+Index: generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h b/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h
+--- a/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h	(revision 101ff00c3e4f5248673e853617d1731fbf844112)
++++ b/generated/src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h	(date 1743761315080)
+@@ -22,10 +22,13 @@
+             #define AWS_S3_API __declspec(dllimport)
+         #endif /* AWS_S3_EXPORTS */
+         #define AWS_S3_EXTERN
+-    #else
+-        #define AWS_S3_API
+-        #define AWS_S3_EXTERN extern
+     #endif // USE_IMPORT_EXPORT
++    #ifndef AWS_S3_API
++        #define AWS_S3_API
++    #endif
++    #ifndef AWS_S3_EXTERN
++        #define AWS_S3_EXTERN
++    #endif
+ #else // defined (USE_WINDOWS_DLL_SEMANTICS) || defined (WIN32)
+     #define AWS_S3_API
+     #define AWS_S3_EXTERN extern
+Index: generated/src/aws-cpp-sdk-kinesis/CMakeLists.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/generated/src/aws-cpp-sdk-kinesis/CMakeLists.txt b/generated/src/aws-cpp-sdk-kinesis/CMakeLists.txt
+--- a/generated/src/aws-cpp-sdk-kinesis/CMakeLists.txt	(revision 101ff00c3e4f5248673e853617d1731fbf844112)
++++ b/generated/src/aws-cpp-sdk-kinesis/CMakeLists.txt	(date 1743761496232)
+@@ -59,6 +59,11 @@
+     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_KINESIS_EXPORTS")
+ endif()
+
++if(FORCE_EXPORT_KINESIS_API)
++    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_KINESIS_API=__declspec(dllexport)")
++    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_KINESIS_EXTERN=")
++endif()
++
+ target_include_directories(${PROJECT_NAME} PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+     $<INSTALL_INTERFACE:include>)
+Index: src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h b/src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h
+--- a/src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h	(revision 101ff00c3e4f5248673e853617d1731fbf844112)
++++ b/src/aws-cpp-sdk-core/include/aws/core/endpoint/DefaultEndpointProvider.h	(date 1743761315080)
 @@ -6,6 +6,7 @@
- 
+
  #pragma once
- 
+
 +#include <aws/core/Core_EXPORTS.h>
  #include <aws/core/endpoint/AWSPartitions.h>
  #include <aws/core/endpoint/EndpointProviderBase.h>
  #include <aws/core/endpoint/EndpointParameter.h>
-diff -rupN a/src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h b/src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h
---- a/src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h	2023-12-11 13:15:52.065087708 +0100
-+++ b/src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h	2023-12-14 10:53:36.150592052 +0100
+Index: src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h b/src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h
+--- a/src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h	(revision 101ff00c3e4f5248673e853617d1731fbf844112)
++++ b/src/aws-cpp-sdk-core/include/aws/core/endpoint/EndpointProviderBase.h	(date 1743761315080)
 @@ -6,6 +6,7 @@
- 
+
  #pragma once
- 
+
 +#include <aws/core/Core_EXPORTS.h>
  #include <aws/core/endpoint/AWSEndpoint.h>
  #include <aws/core/client/AWSError.h>
  #include <aws/core/endpoint/EndpointParameter.h>
+Index: generated/src/aws-cpp-sdk-s3/CMakeLists.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/generated/src/aws-cpp-sdk-s3/CMakeLists.txt b/generated/src/aws-cpp-sdk-s3/CMakeLists.txt
+--- a/generated/src/aws-cpp-sdk-s3/CMakeLists.txt	(revision 101ff00c3e4f5248673e853617d1731fbf844112)
++++ b/generated/src/aws-cpp-sdk-s3/CMakeLists.txt	(date 1743761315080)
+@@ -59,6 +59,11 @@
+     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_S3_EXPORTS")
+ endif()
+
++if(FORCE_EXPORT_S3_API)
++    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_S3_API=__declspec(dllexport)")
++    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_S3_EXTERN=")
++endif()
++
+ target_include_directories(${PROJECT_NAME} PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+     $<INSTALL_INTERFACE:include>)

@@ -1,6 +1,4 @@
 /**
- * @file S3RequestSender.h
- * S3RequestSender class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -54,13 +52,6 @@
 #include "utils/AWSInitializer.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
-
-struct ProxyOptions {
-  std::string host;
-  uint32_t port = 0;
-  std::string username;
-  std::string password;
-};
 
 class S3RequestSender {
  public:

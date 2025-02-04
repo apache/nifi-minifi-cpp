@@ -20,6 +20,7 @@ from .containers.NifiContainer import NifiContainer
 from .containers.NifiContainer import NiFiOptions
 from .containers.ZookeeperContainer import ZookeeperContainer
 from .containers.KafkaBrokerContainer import KafkaBrokerContainer
+from .containers.KinesisServerContainer import KinesisServerContainer
 from .containers.S3ServerContainer import S3ServerContainer
 from .containers.AzureStorageServerContainer import AzureStorageServerContainer
 from .containers.FakeGcsServerContainer import FakeGcsServerContainer
@@ -153,6 +154,14 @@ class ContainerStore:
                                                                 network=self.network,
                                                                 image_store=self.image_store,
                                                                 command=command))
+        elif engine == 'kinesis-server':
+            return self.containers.setdefault(container_name,
+                                              KinesisServerContainer(feature_context=feature_context,
+                                                                     name=container_name,
+                                                                     vols=self.vols,
+                                                                     network=self.network,
+                                                                     image_store=self.image_store,
+                                                                     command=command))
         elif engine == 'azure-storage-server':
             return self.containers.setdefault(container_name,
                                               AzureStorageServerContainer(feature_context=feature_context,

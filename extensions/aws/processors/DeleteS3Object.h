@@ -81,9 +81,10 @@ class DeleteS3Object : public S3Processor {
   }
 
   std::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(
-    core::ProcessContext& context,
+    const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties) const;
+    const CommonProperties &common_properties,
+    std::string_view bucket) const;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors
