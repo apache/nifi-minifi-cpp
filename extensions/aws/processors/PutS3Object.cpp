@@ -111,7 +111,7 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
 }
 
 bool PutS3Object::setCannedAcl(
-    core::ProcessContext& context,
+    const core::ProcessContext& context,
     const core::FlowFile& flow_file,
     aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
   if (const auto canned_acl = context.getProperty(CannedACL, &flow_file)) {
@@ -127,7 +127,7 @@ bool PutS3Object::setCannedAcl(
 }
 
 bool PutS3Object::setAccessControl(
-      core::ProcessContext& context,
+      const core::ProcessContext& context,
       const core::FlowFile& flow_file,
       aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
   if (const auto full_control_user_list = context.getProperty(FullControlUserList, &flow_file)) {
@@ -151,13 +151,14 @@ bool PutS3Object::setAccessControl(
 }
 
 std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3RequestParams(
-    core::ProcessContext& context,
+    const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties) const {
+    const CommonProperties &common_properties,
+    const std::string_view bucket) const {
   gsl_Expects(client_config_);
   aws::s3::PutObjectRequestParameters params(common_properties.credentials, *client_config_);
   params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
-  params.bucket = common_properties.bucket;
+  params.bucket = bucket;
   params.user_metadata_map = user_metadata_map_;
   params.server_side_encryption = server_side_encryption_;
   params.storage_class = storage_class_;
@@ -206,7 +207,7 @@ void PutS3Object::setAttributes(
   }
 }
 
-void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properties) {
+void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properties, const std::string_view bucket) {
   {
     std::lock_guard<std::mutex> lock(last_ageoff_mutex_);
     const auto now = std::chrono::system_clock::now();
@@ -220,7 +221,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   logger_->log_trace("Listing aged off multipart uploads still in progress.");
   aws::s3::ListMultipartUploadsRequestParameters list_params(common_properties.credentials, *client_config_);
   list_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
-  list_params.bucket = common_properties.bucket;
+  list_params.bucket = bucket;
   list_params.age_off_limit = multipart_upload_max_age_threshold_;
   list_params.use_virtual_addressing = use_virtual_addressing_;
   auto aged_off_uploads_in_progress = s3_wrapper_.listMultipartUploads(list_params);
@@ -229,14 +230,14 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
     return;
   }
 
-  logger_->log_info("Found {} aged off pending multipart upload jobs in bucket '{}'", aged_off_uploads_in_progress->size(), common_properties.bucket);
+  logger_->log_info("Found {} aged off pending multipart upload jobs in bucket '{}'", aged_off_uploads_in_progress->size(), bucket);
   size_t aborted = 0;
   for (const auto& upload : *aged_off_uploads_in_progress) {
     logger_->log_info("Aborting multipart upload with key '{}' and upload id '{}' in bucket '{}' due to reaching maximum upload age threshold.",
-      upload.key, upload.upload_id, common_properties.bucket);
+      upload.key, upload.upload_id, bucket);
     aws::s3::AbortMultipartUploadRequestParameters abort_params(common_properties.credentials, *client_config_);
     abort_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
-    abort_params.bucket = common_properties.bucket;
+    abort_params.bucket = bucket;
     abort_params.key = upload.key;
     abort_params.upload_id = upload.upload_id;
     abort_params.use_virtual_addressing = use_virtual_addressing_;
@@ -247,7 +248,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
     ++aborted;
   }
   if (aborted > 0) {
-    logger_->log_info("Aborted {} pending multipart upload jobs in bucket '{}'", aborted, common_properties.bucket);
+    logger_->log_info("Aborted {} pending multipart upload jobs in bucket '{}'", aborted, bucket);
   }
   s3_wrapper_.ageOffLocalS3MultipartUploadStates(multipart_upload_max_age_threshold_);
 }
@@ -266,9 +267,17 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
     return;
   }
 
-  ageOffMultipartUploads(*common_properties);
+  auto bucket = context.getProperty(Bucket.name, flow_file.get());
+  if (!bucket) {
+    logger_->log_error("Bucket is invalid due to {}", bucket.error().message());
+    session.transfer(flow_file, Failure);
+    return;
+  }
+  logger_->log_debug("S3Processor: Bucket [{}]", *bucket);
 
-  auto put_s3_request_params = buildPutS3RequestParams(context, *flow_file, *common_properties);
+  ageOffMultipartUploads(*common_properties, *bucket);
+
+  auto put_s3_request_params = buildPutS3RequestParams(context, *flow_file, *common_properties, *bucket);
   if (!put_s3_request_params) {
     session.transfer(flow_file, Failure);
     return;
