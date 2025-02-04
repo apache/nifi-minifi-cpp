@@ -63,6 +63,8 @@ class ImageStore:
             image = self.__build_mqtt_broker_image()
         elif container_engine == "splunk":
             image = self.__build_splunk_image()
+        elif container_engine == "kinesis-server":
+            image = self.__build_kinesis_image()
         elif container_engine == "reverse-proxy":
             image = self.__build_reverse_proxy_image()
         elif container_engine == "diag-slave-tcp":
@@ -248,6 +250,9 @@ class ImageStore:
             """.format(base_image='eclipse-mosquitto:2.0.14'))
 
         return self.__build_image(dockerfile)
+
+    def __build_kinesis_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/kinesis-mock", 'kinesis-server')
 
     def __build_splunk_image(self):
         return self.__build_image_by_path(self.test_dir + "/resources/splunk-hec", 'minifi-splunk')
