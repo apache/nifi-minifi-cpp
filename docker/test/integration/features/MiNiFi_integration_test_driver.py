@@ -251,6 +251,9 @@ class MiNiFi_integration_test:
         assert not self.cluster.segfault_happened() or self.cluster.log_app_output()
         assert validator.validate() or self.cluster.log_app_output()
 
+    def check_kinesis_server_record_data(self, kinesis_container_name, record_data):
+        assert self.cluster.check_kinesis_server_record_data(kinesis_container_name, record_data) or self.cluster.log_app_output()
+
     def check_s3_server_object_data(self, s3_container_name, object_data):
         assert self.cluster.check_s3_server_object_data(s3_container_name, object_data) or self.cluster.log_app_output()
 
