@@ -43,6 +43,7 @@ class MinifiOptions:
         self.enable_controller_socket = False
         self.enable_log_metrics_publisher = False
         self.enable_example_minifi_python_processors = False
+        self.enable_openssl_fips_mode = False
 
 
 class MinifiContainer(FlowContainer):
@@ -52,6 +53,13 @@ class MinifiContainer(FlowContainer):
 
     def __init__(self, feature_context, config_dir, options, name, vols, network, image_store, command=None):
         self.options = options
+        if options.enable_openssl_fips_mode:
+            if command is not None:
+                command = ["/bin/sh", "-c", MinifiContainer.MINIFI_ROOT + "/fips/openssl fipsinstall -out " + MinifiContainer.MINIFI_ROOT + "/fips/fipsmodule.cnf -module "
+                           + MinifiContainer.MINIFI_ROOT + "/fips/fips.so && " + command]
+            else:
+                command = ["/bin/sh", "-c", MinifiContainer.MINIFI_ROOT + "/fips/openssl fipsinstall -out " + MinifiContainer.MINIFI_ROOT + "/fips/fipsmodule.cnf -module "
+                           + MinifiContainer.MINIFI_ROOT + "/fips/fips.so && " + MinifiContainer.MINIFI_ROOT + "/bin/minifi.sh run"]
 
         super().__init__(feature_context=feature_context,
                          config_dir=config_dir,
@@ -158,6 +166,9 @@ class MinifiContainer(FlowContainer):
 
             if self.options.use_nifi_python_processors_with_virtualenv or self.options.remove_python_requirements_txt:
                 f.write("nifi.python.install.packages.automatically=true\n")
+
+            if self.options.enable_openssl_fips_mode:
+                f.write("nifi.openssl.fips.support.enable=true\n")
 
     def _setup_config(self):
         self._create_properties()

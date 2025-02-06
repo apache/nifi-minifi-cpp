@@ -200,6 +200,8 @@ class Configuration : public virtual Properties {
   static constexpr const char *nifi_python_env_setup_binary = "nifi.python.env.setup.binary";
   static constexpr const char *nifi_python_install_packages_automatically = "nifi.python.install.packages.automatically";
 
+  static constexpr const char *nifi_openssl_fips_support_enable = "nifi.openssl.fips.support.enable";
+
   MINIFIAPI static const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyValidator*>> CONFIGURATION_PROPERTIES;
   MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
 
