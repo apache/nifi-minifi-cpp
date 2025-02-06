@@ -54,25 +54,26 @@ class PushGrafanaLoki : public core::ProcessorImpl {
     .build();
   EXTENSIONAPI static constexpr auto TenantID = core::PropertyDefinitionBuilder<>::createProperty("Tenant ID")
     .withDescription("The tenant ID used by default to push logs to Grafana Loki. If omitted or empty it assumes Grafana Loki is running in single-tenant mode and no X-Scope-OrgID header is sent.")
+    .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
     .build();
   EXTENSIONAPI static constexpr auto MaxBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Size")
     .withDescription("The maximum number of flow files to process at a time. If it is set to 0, all FlowFiles will be processed at once.")
-    .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+    .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
     .withDefaultValue("100")
     .build();
   EXTENSIONAPI static constexpr auto LogLineBatchWait = core::PropertyDefinitionBuilder<>::createProperty("Log Line Batch Wait")
     .withDescription("Time to wait before sending a log line batch to Grafana Loki, full or not. If this property and Log Line Batch Size are both unset, "
                      "the log batch of the current trigger will be sent immediately.")
-    .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+    .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
     .build();
   EXTENSIONAPI static constexpr auto LogLineBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Log Line Batch Size")
     .withDescription("Number of log lines to send in a batch to Loki. If this property and Log Line Batch Wait are both unset, "
                      "the log batch of the current trigger will be sent immediately.")
-    .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+    .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
     .build();
   EXTENSIONAPI static constexpr auto ConnectTimeout = core::PropertyDefinitionBuilder<>::createProperty("Connection Timeout")
     .withDescription("Max wait time for connection to the Grafana Loki service.")
-    .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+    .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
     .withDefaultValue("5 s")
     .isRequired(true)
     .build();

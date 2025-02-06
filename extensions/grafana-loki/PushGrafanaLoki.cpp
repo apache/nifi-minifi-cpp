@@ -130,15 +130,15 @@ void PushGrafanaLoki::onSchedule(core::ProcessContext& context, core::ProcessSes
     log_line_metadata_attributes_ = utils::string::splitAndTrimRemovingEmpty(*log_line_metadata_attributes, ",");
   }
 
-  auto log_line_batch_wait = context.getProperty<core::TimePeriodValue>(LogLineBatchWait);
-  auto log_line_batch_size = context.getProperty<uint64_t>(LogLineBatchSize);
+  auto log_line_batch_wait = utils::parseOptionalMsProperty(context, LogLineBatchWait);
+  auto log_line_batch_size = utils::parseOptionalU64Property(context, LogLineBatchSize);
   if (log_line_batch_size && *log_line_batch_size < 1) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Log Line Batch Size property is missing or less than 1!");
   }
   log_line_batch_size_is_set_ = log_line_batch_size.has_value();
   log_line_batch_wait_is_set_ = log_line_batch_wait.has_value();
 
-  max_batch_size_ = context.getProperty<uint64_t>(MaxBatchSize);
+  max_batch_size_ = utils::parseOptionalU64Property(context, MaxBatchSize);
   if (max_batch_size_) {
     logger_->log_debug("PushGrafanaLoki Max Batch Size is set to: {}", *max_batch_size_);
   }
@@ -149,8 +149,8 @@ void PushGrafanaLoki::onSchedule(core::ProcessContext& context, core::ProcessSes
   }
 
   if (log_line_batch_wait) {
-    log_batch_.setLogLineBatchWait(log_line_batch_wait->getMilliseconds());
-    logger_->log_debug("PushGrafanaLoki Log Line Batch Wait is set to {} milliseconds", log_line_batch_wait->getMilliseconds());
+    log_batch_.setLogLineBatchWait(*log_line_batch_wait);
+    logger_->log_debug("PushGrafanaLoki Log Line Batch Wait is set to {} milliseconds", *log_line_batch_wait);
   }
 }
 

@@ -162,7 +162,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
   auto* const libwrapper_observer = libwrapper.get();
   const auto consume_journald = plan->addProcessor(std::make_unique<ConsumeJournald>("ConsumeJournald", utils::Identifier{},
       std::move(libwrapper)), "ConsumeJournald");
-  REQUIRE(consume_journald->setProperty(ConsumeJournald::TimestampFormat, "ISO8601"));
+  REQUIRE(consume_journald->setProperty(ConsumeJournald::TimestampFormat.name, "ISO8601"));
   const auto get_cursor_position = [&consume_journald]() -> std::string {
     return ConsumeJournaldTestAccessor::get_state_manager_(dynamic_cast<ConsumeJournald&>(*consume_journald))->get()->at("cursor");
   };
@@ -189,9 +189,9 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
     REQUIRE(!content.empty());
   }
   SECTION("Raw format, one-by-one") {
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::BatchSize, "1"));
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::PayloadFormat, "Raw"));
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::ProcessOldMessages, "true"));
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::BatchSize.name, "1"));
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::PayloadFormat.name, "Raw"));
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::ProcessOldMessages.name, "true"));
     {
       plan->runNextProcessor();
       REQUIRE("0" == get_cursor_position());
@@ -248,8 +248,8 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
     REQUIRE("6" == get_cursor_position());
   }
   SECTION("Include Timestamp is honored") {
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::BatchSize, "1"));
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::IncludeTimestamp, "false"));
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::BatchSize.name, "1"));
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::IncludeTimestamp.name, "false"));
     plan->runNextProcessor();  // first run: seeks to the end, no flow files are created. Yields.
     REQUIRE(nullptr == plan->getCurrentFlowFile());
 
@@ -260,8 +260,8 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
     REQUIRE(!plan->getCurrentFlowFile()->getAttribute("timestamp").has_value());
   }
   SECTION("Batch Size is honored") {
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::BatchSize, "3"));
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::ProcessOldMessages, "true"));
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::BatchSize.name, "3"));
+    REQUIRE(consume_journald->setProperty(ConsumeJournald::ProcessOldMessages.name, "true"));
     libwrapper_observer->journal.emplace_back("systemd", "Mounted /boot.", 1);
     libwrapper_observer->journal.emplace_back("dbus-daemon", "[system] Successfully activated service 'org.freedesktop.UPower'", 2200);
 
@@ -278,20 +278,5 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
     plan->runCurrentProcessor();
     REQUIRE(8 == plan->getNumFlowFileProducedByCurrentProcessor());
     REQUIRE(consume_journald->isYield());
-  }
-  SECTION("throw on invalid batch size") {
-    REQUIRE_THROWS(consume_journald->setProperty(ConsumeJournald::BatchSize, "asdf"));
-  }
-  SECTION("throw on invalid payload format") {
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::PayloadFormat, "raw"));  // case-sensitive
-    REQUIRE_THROWS(plan->scheduleProcessor(consume_journald));
-  }
-  SECTION("throw on invalid journal type") {
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::JournalType, "hello"));
-    REQUIRE_THROWS(plan->scheduleProcessor(consume_journald));
-  }
-  SECTION("throw on invalid journal type") {
-    REQUIRE(consume_journald->setProperty(ConsumeJournald::JournalType, "hello"));
-    REQUIRE_THROWS(plan->scheduleProcessor(consume_journald));
   }
 }

@@ -35,7 +35,7 @@
 
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
-#include "core/ProcessorNode.h"
+#include "core/Processor.h"
 #include "http/BaseHTTPClient.h"
 #include "controllers/SSLContextService.h"
 #include "utils/net/DNS.h"
@@ -111,16 +111,16 @@ void RemoteProcessorGroupPort::initialize() {
 }
 
 void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string value;
-  if (context.getProperty(portUUID, value) && !value.empty()) {
-    protocol_uuid_ = value;
+  if (auto protocol_uuid = context.getProperty(portUUID)) {
+    protocol_uuid_ = *protocol_uuid;
   }
 
-  std::string context_name;
-  if (!context.getProperty(SSLContext, context_name) || IsNullOrEmpty(context_name)) {
+  auto context_name = context.getProperty(SSLContext);
+  if (!context_name || IsNullOrEmpty(*context_name)) {
     context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
   }
-  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(context_name, getUUID());
+
+  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(*context_name, getUUID());
   if (nullptr != service) {
     ssl_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
   } else {
@@ -130,15 +130,8 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
       ssl_service->onEnable();
     }
   }
-  {
-    if (auto idle_timeout = context.getProperty<core::TimePeriodValue>(idleTimeout)) {
-      idle_timeout_ = idle_timeout->getMilliseconds();
-    } else {
-      static_assert(idleTimeout.default_value);
-      logger_->log_debug("{} attribute is invalid, so default value of {} will be used", idleTimeout.name, *idleTimeout.default_value);
-      idle_timeout_ = core::TimePeriodValue(std::string(*idleTimeout.default_value)).getMilliseconds();
-    }
-  }
+
+  idle_timeout_ = context.getProperty(idleTimeout) | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>) | utils::expect("RemoteProcessGroupPort::idleTimeout has default value");
 
   std::lock_guard<std::mutex> lock(peer_mutex_);
   if (!nifi_instances_.empty()) {

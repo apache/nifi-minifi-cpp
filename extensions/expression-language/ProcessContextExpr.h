@@ -34,14 +34,14 @@ namespace org::apache::nifi::minifi::core {
  */
 class ProcessContextExpr final : public core::ProcessContextImpl {
  public:
-  ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider,
+  ProcessContextExpr(Processor& processor, controller::ControllerServiceProvider* controller_service_provider,
                      const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo,
                      const std::shared_ptr<core::ContentRepository> &content_repo = core::repository::createFileSystemRepository())
       : core::ProcessContextImpl(processor, controller_service_provider, repo, flow_repo, content_repo),
         logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
   }
 
-  ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider,
+  ProcessContextExpr(Processor& processor, controller::ControllerServiceProvider* controller_service_provider,
                      const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration,
                      const std::shared_ptr<core::ContentRepository> &content_repo = core::repository::createFileSystemRepository())
       : core::ProcessContextImpl(processor, controller_service_provider, repo, flow_repo, configuration, content_repo),
@@ -50,24 +50,18 @@ class ProcessContextExpr final : public core::ProcessContextImpl {
 
   ~ProcessContextExpr() override = default;
 
-  bool getProperty(const Property& property, std::string &value, const FlowFile* const flow_file) override;
+  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
+  nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile*) const override;
 
-  bool getProperty(const PropertyReference& property, std::string &value, const FlowFile* const flow_file) override;
+  nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
+  nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
 
-  bool getDynamicProperty(const Property &property, std::string &value, const FlowFile* const flow_file) override;
-
-  bool setProperty(const std::string& property, std::string value) override;
-
-  bool setDynamicProperty(const std::string& property, std::string value) override;
-
-  using ProcessContextImpl::getProperty;
+  std::map<std::string, std::string> getDynamicProperties(const FlowFile*) const override;
 
  private:
-  bool getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const FlowFile* const flow_file);
+  mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_expressions_;
+  mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_dynamic_expressions_;
 
-  std::unordered_map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
-  std::unordered_map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
-  std::unordered_map<std::string, std::string> expression_strs_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

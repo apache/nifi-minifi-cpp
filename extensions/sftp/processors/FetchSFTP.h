@@ -70,7 +70,7 @@ class FetchSFTP : public SFTPProcessorBase {
   EXTENSIONAPI static constexpr auto CreateDirectory = core::PropertyDefinitionBuilder<>::createProperty("Create Directory")
       .withDescription("Specifies whether or not the remote directory should be created if it does not exist.")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto DisableDirectoryListing = core::PropertyDefinitionBuilder<>::createProperty("Disable Directory Listing")
@@ -82,13 +82,13 @@ class FetchSFTP : public SFTPProcessorBase {
           "Also, if any other SFTP client created the directory after this processor performed a listing and before a directory creation request by this processor is finished, "
           "then an error is returned because the directory already exists.")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto UseCompression = core::PropertyDefinitionBuilder<>::createProperty("Use Compression")
       .withDescription("Indicates whether or not ZLIB compression should be used when transferring files")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
 

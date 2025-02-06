@@ -16,20 +16,22 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <vector>
-#include <set>
-
 #include "core/flow/StructuredConfiguration.h"
-#include "core/flow/CheckRequiredField.h"
-#include "core/flow/StructuredConnectionParser.h"
-#include "core/state/Value.h"
-#include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
-#include "utils/TimeUtil.h"
-#include "utils/RegexUtils.h"
+
+#include <memory>
+#include <set>
+#include <vector>
+
 #include "Funnel.h"
 #include "core/ParameterContext.h"
 #include "core/ParameterTokenParser.h"
+#include "core/flow/CheckRequiredField.h"
+#include "core/flow/StructuredConnectionParser.h"
+#include "core/state/Value.h"
+#include "utils/RegexUtils.h"
+#include "utils/TimeUtil.h"
+#include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
+#include "utils/PropertyErrors.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -175,7 +177,6 @@ void StructuredConfiguration::parseParameterContexts(const Node& parameter_conte
 }
 
 void StructuredConfiguration::parseProcessorNode(const Node& processors_node, core::ProcessGroup* parentGroup) {
-  int64_t runDurationNanos = -1;
   utils::Identifier uuid;
   std::unique_ptr<core::Processor> processor;
 
@@ -303,15 +304,14 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
       logger_->log_debug("setting scheduling strategy as {}", procCfg.schedulingStrategy);
     }
 
-    uint8_t maxConcurrentTasks = 0;
-    if (core::Property::StringToInt(procCfg.maxConcurrentTasks, maxConcurrentTasks)) {
-      logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", maxConcurrentTasks);
-      processor->setMaxConcurrentTasks(maxConcurrentTasks);
+    if (auto max_concurrent_tasks = parsing::parseIntegral<uint8_t>(procCfg.maxConcurrentTasks)) {
+      logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", *max_concurrent_tasks);
+      processor->setMaxConcurrentTasks(*max_concurrent_tasks);
     }
 
-    if (core::Property::StringToInt(procCfg.runDurationNanos, runDurationNanos)) {
-      logger_->log_debug("parseProcessorNode: runDurationNanos => [{}]", runDurationNanos);
-      processor->setRunDurationNano(std::chrono::nanoseconds(runDurationNanos));
+    if (auto run_duration_nanos = parsing::parseIntegral<uint64_t>(procCfg.runDurationNanos)) {
+      logger_->log_debug("parseProcessorNode: runDurationNanos => [{}]", *run_duration_nanos);
+      processor->setRunDurationNano(std::chrono::nanoseconds(*run_duration_nanos));
     }
 
     std::vector<core::Relationship> autoTerminatedRelationships;
@@ -403,10 +403,9 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
           }
           if (currRpgNode[schema_.rpg_proxy_port]) {
             auto http_proxy_port = currRpgNode[schema_.rpg_proxy_port].getIntegerAsString().value();
-            int32_t port = 0;
-            if (core::Property::StringToInt(http_proxy_port, port)) {
-              logger_->log_debug("parseRemoteProcessGroup: proxy port => [{}]", port);
-              group->setHttpProxyPort(port);
+            if (auto port = parsing::parseIntegral<int>(http_proxy_port)) {
+              logger_->log_debug("parseRemoteProcessGroup: proxy port => [{}]", *port);
+              group->setHttpProxyPort(*port);
             }
           }
         }
@@ -473,13 +472,12 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
     throw std::invalid_argument("Invalid scheduling strategy " + schedulingStrategyStr);
   }
 
-  int64_t lvalue = 0;
   if (node["host"] && node["port"]) {
     auto hostStr = node["host"].getString().value();
 
     std::string portStr = node["port"].getIntegerAsString().value();
-    if (core::Property::StringToInt(portStr, lvalue) && !hostStr.empty()) {
-      logger_->log_debug("ProvenanceReportingTask port {}", lvalue);
+    if (auto port = parsing::parseIntegral<int64_t>(portStr)) {
+      logger_->log_debug("ProvenanceReportingTask port {}", *port);
       std::string url = hostStr + ":" + portStr;
       reportTask->setURL(url);
     }
@@ -501,8 +499,8 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
   port_uuid = portUUIDStr;
   reportTask->setPortUUID(port_uuid);
 
-  if (core::Property::StringToInt(batchSizeStr, lvalue)) {
-    reportTask->setBatchSize(gsl::narrow<int>(lvalue));
+  if (auto batch_size = parsing::parseIntegral<int>(batchSizeStr)) {
+    reportTask->setBatchSize(*batch_size);
   }
 
   reportTask->initialize();
@@ -637,7 +635,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   // else defaults to RAW
 
   // handle port properties
-  if (Node propertiesNode = port_node[schema_.rpg_port_properties]) {
+  if (const Node propertiesNode = port_node[schema_.rpg_port_properties]) {
     parsePropertiesNode(propertiesNode, *port, nameStr, nullptr);
   } else {
     parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port, nullptr);
@@ -650,27 +648,25 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   processor.setScheduledState(core::RUNNING);
 
   if (auto tasksNode = port_node[schema_.max_concurrent_tasks]) {
-    std::string rawMaxConcurrentTasks = tasksNode.getIntegerAsString().value();
-    int32_t maxConcurrentTasks = 0;
-    if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
-      processor.setMaxConcurrentTasks(maxConcurrentTasks);
+    const std::string raw_max_concurrent_tasks = tasksNode.getIntegerAsString().value();
+    if (auto max_concurrent_tasks = parsing::parseIntegral<uint8_t>(raw_max_concurrent_tasks).value_or(0)) {
+      logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", max_concurrent_tasks);
+      processor.setMaxConcurrentTasks(max_concurrent_tasks);
     }
-    logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", maxConcurrentTasks);
-    processor.setMaxConcurrentTasks(maxConcurrentTasks);
   }
 }
 
 void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component,
     ParameterContext* parameter_context) {
-  core::Property myProp(property_name, "", "");
-  component.getProperty(property_name, myProp);
+  const auto property_reference = component.getPropertyReference(property_name);
+  const bool is_sensitive = property_reference ? property_reference->is_sensitive : false;
 
   for (const auto& nodeVal : property_value_node) {
     if (nodeVal) {
       Node propertiesNode = nodeVal["value"];
       auto rawValueString = propertiesNode.getString().value();
       std::unique_ptr<core::ParameterTokenParser> token_parser;
-      if (myProp.isSensitive()) {
+      if (is_sensitive) {
         rawValueString = utils::crypto::property_encryption::decrypt(rawValueString, sensitive_values_encryptor_);
         token_parser = std::make_unique<core::SensitiveParameterTokenParser>(rawValueString, sensitive_values_encryptor_);
       } else {
@@ -686,114 +682,88 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
 
       logger_->log_debug("Found property {}", property_name);
 
-      if (!component.updateProperty(property_name, rawValueString)) {
-        auto proc = dynamic_cast<core::Connectable*>(&component);
-        if (proc) {
-          logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
-          if (!component.updateDynamicProperty(property_name, rawValueString)) {
-            logger_->log_warn("Unable to set the dynamic property {}", property_name);
-          } else {
-            logger_->log_warn("Dynamic property {} has been set", property_name);
-          }
+      const auto append_prop_result = component.appendProperty(property_name, rawValueString);
+      if (!append_prop_result && append_prop_result.error() == make_error_code(PropertyErrorCode::NotSupportedProperty)) {
+        logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, component.getName());
+        if (!component.appendDynamicProperty(property_name, rawValueString)) {
+          logger_->log_warn("Unable to set the dynamic property {}", property_name);
+        } else {
+          logger_->log_warn("Dynamic property {} has been set", property_name);
         }
       }
     }
   }
 }
 
-PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node,
+std::optional<std::string> StructuredConfiguration::getReplacedParametersValueOrDefault(const std::string_view property_name,
+    const bool is_sensitive,
+    const std::optional<std::string_view> default_value,
+    const Node& property_value_node,
     ParameterContext* parameter_context) {
-  using state::response::Value;
-  PropertyValue defaultValue;
-  defaultValue = property_from_processor.getDefaultValue();
-  const std::type_index defaultType = defaultValue.getTypeInfo();
   try {
-    PropertyValue coercedValue = defaultValue;
-    auto int64_val = property_value_node.getInt64();
-    if (defaultType == Value::INT64_TYPE && int64_val) {
-      coercedValue = gsl::narrow<int64_t>(int64_val.value());
-    } else if (defaultType == Value::UINT64_TYPE && int64_val) {
-      coercedValue = gsl::narrow<uint64_t>(int64_val.value());
-    } else if (defaultType == Value::UINT32_TYPE && int64_val) {
-      coercedValue = gsl::narrow<uint32_t>(int64_val.value());
-    } else if (defaultType == Value::INT_TYPE && int64_val) {
-      coercedValue = gsl::narrow<int>(int64_val.value());
-    } else if (defaultType == Value::BOOL_TYPE && property_value_node.getBool()) {
-      coercedValue = property_value_node.getBool().value();
+    std::unique_ptr<core::ParameterTokenParser> token_parser;
+    std::string property_value_string;
+    if (is_sensitive) {
+      property_value_string = utils::crypto::property_encryption::decrypt(property_value_node.getScalarAsString().value(), sensitive_values_encryptor_);
+      token_parser = std::make_unique<core::SensitiveParameterTokenParser>(std::move(property_value_string), sensitive_values_encryptor_);
     } else {
-      std::string property_value_string;
-      std::unique_ptr<core::ParameterTokenParser> token_parser;
-      if (property_from_processor.isSensitive()) {
-        property_value_string = utils::crypto::property_encryption::decrypt(property_value_node.getScalarAsString().value(), sensitive_values_encryptor_);
-        token_parser = std::make_unique<core::SensitiveParameterTokenParser>(property_value_string, sensitive_values_encryptor_);
-      } else {
-        property_value_string = property_value_node.getScalarAsString().value();
-        token_parser = std::make_unique<core::NonSensitiveParameterTokenParser>(property_value_string);
-      }
-      property_value_string = token_parser->replaceParameters(parameter_context);
-      coercedValue = property_value_string;
+      property_value_string = property_value_node.getScalarAsString().value();
+      token_parser = std::make_unique<core::NonSensitiveParameterTokenParser>(std::move(property_value_string));
     }
-    return coercedValue;
+    auto replaced_property_value_string = token_parser->replaceParameters(parameter_context);
+    return replaced_property_value_string;
   } catch (const utils::crypto::EncryptionError& e) {
     logger_->log_error("Fetching property failed with a decryption error: {}", e.what());
     throw;
   } catch (const ParameterException& e) {
-    logger_->log_error("Error while substituting parameters in property '{}': {}", property_from_processor.getName(), e.what());
+    logger_->log_error("Error while substituting parameters in property '{}': {}", property_name, e.what());
     throw;
   } catch (const std::exception& e) {
     logger_->log_error("Fetching property failed with an exception of {}", e.what());
-    logger_->log_error("Invalid conversion for field {}. Value {}", property_from_processor.getName(), property_value_node.getDebugString());
+    logger_->log_error("Invalid conversion for field {}. Value {}", property_name, property_value_node.getDebugString());
   } catch (...) {
-    logger_->log_error("Invalid conversion for field {}. Value {}", property_from_processor.getName(), property_value_node.getDebugString());
+    logger_->log_error("Invalid conversion for field {}. Value {}", property_name, property_value_node.getDebugString());
   }
-  return defaultValue;
+  return default_value | utils::transform([](const std::string_view def_value) { return std::string{def_value}; });
 }
 
-void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor,
+void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component,
     ParameterContext* parameter_context) {
-  core::Property myProp(property_name, "", "");
-  processor.getProperty(property_name, myProp);
+  auto my_prop = component.getPropertyReference(property_name);
+  const bool is_sensitive = my_prop ? my_prop->is_sensitive : false;
+  const std::optional<std::string_view> default_value = my_prop ? my_prop->default_value : std::nullopt;
 
-  PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, property_value_node, parameter_context);
-
-  bool property_set = false;
-  try {
-    property_set = processor.setProperty(myProp, coercedValue);
-  } catch(const utils::internal::InvalidValueException&) {
-    auto component = dynamic_cast<core::CoreComponent*>(&processor);
-    if (component == nullptr) {
-      logger_->log_error("processor was not a CoreComponent for property '{}'", property_name);
-    } else {
-      logger_->log_error("Invalid value was set for property '{}' creating component '{}'", property_name, component->getName());
-    }
-    throw;
+  const auto value_to_set = getReplacedParametersValueOrDefault(property_name, is_sensitive, default_value, property_value_node, parameter_context);
+  if (!value_to_set) {
+    return;
   }
-  if (!property_set) {
-    const auto rawValueString = coercedValue.getValue()->getStringValue();
-    auto proc = dynamic_cast<core::Connectable*>(&processor);
-    if (proc) {
-      logger_->log_warn("Received property {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, proc->getName());
-      if (!processor.setDynamicProperty(property_name, rawValueString)) {
-        logger_->log_warn("Unable to set the dynamic property {}", property_name);
-      } else {
-        logger_->log_warn("Dynamic property {} has been set", property_name);
-      }
+  if (my_prop) {
+    const auto prop_set = component.setProperty(property_name, *value_to_set);
+    if (!prop_set) {
+      logger_->log_error("Invalid value was set for property '{}' creating component '{}'", property_name, component.getName());
+      raiseComponentError(component.getName(), "", prop_set.error().message());
     }
+    return;
+  }
+  logger_->log_warn("Received property {} but is not one of the supported properties for {}. Attempting to add as dynamic property.", property_name, component.getName());
+
+  if (!component.setDynamicProperty(property_name, *value_to_set)) {
+    logger_->log_warn("Unable to set the dynamic property {}", property_name);
   } else {
-    logger_->log_debug("Property {} has been set", property_name);
+    logger_->log_warn("Dynamic property {} has been set", property_name);
   }
 }
 
-void StructuredConfiguration::parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor,
+void StructuredConfiguration::parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component,
     ParameterContext* parameter_context) {
   logger_->log_trace("Encountered {}", property_name);
   if (!property_value_node || property_value_node.isNull()) {
     return;
   }
   if (property_value_node.isSequence()) {
-    parsePropertyValueSequence(property_name, property_value_node, processor, parameter_context);
+    parsePropertyValueSequence(property_name, property_value_node, component, parameter_context);
   } else {
-    parseSingleProperty(property_name, property_value_node, processor, parameter_context);
+    parseSingleProperty(property_name, property_value_node, component, parameter_context);
   }
 }
 
@@ -883,32 +853,30 @@ void StructuredConfiguration::parseParameterContext(const flow::Node& node, core
 
 
 void StructuredConfiguration::validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &section) const {
-  const auto &component_properties = component.getProperties();
+  const auto& component_properties = component.getSupportedProperties();
 
   // Validate required properties
-  for (const auto &prop_pair : component_properties) {
-    if (prop_pair.second.getRequired()) {
-      if (prop_pair.second.getValue().to_string().empty()) {
-        std::string reason = utils::string::join_pack("required property '", prop_pair.second.getName(), "' is not set");
-        raiseComponentError(component_name, section, reason);
-      } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid) {
-        std::string reason = utils::string::join_pack("the configured value is not valid for property '", prop_pair.second.getName(), "'");
+  for (const auto& [property_name, property] : component_properties) {
+    if (property.getRequired()) {
+      if (!property.getValue()) {
+        std::string reason = utils::string::join_pack("required property '", property.getName(), "' is not set");
         raiseComponentError(component_name, section, reason);
       }
     }
   }
 
   // Validate dependent properties
-  for (const auto &prop_pair : component_properties) {
-    const auto &dep_props = prop_pair.second.getDependentProperties();
+  for (const auto & [property_name, property] : component_properties) {
+    const auto &dep_props = property.getDependentProperties();
 
-    if (prop_pair.second.getValue().to_string().empty()) {
+    const auto property_value = property.getValue();
+    if (!property_value) {
       continue;
     }
 
     for (const auto &dep_prop_key : dep_props) {
-      if (component_properties.at(dep_prop_key).getValue().to_string().empty()) {
-        std::string reason = utils::string::join_pack("property '", prop_pair.second.getName(),
+      if (auto dep_prop_value = component_properties.at(dep_prop_key).getValue(); !dep_prop_value) {
+        std::string reason = utils::string::join_pack("property '", property.getName(),
             "' depends on property '", dep_prop_key, "' which is not set");
         raiseComponentError(component_name, section, reason);
       }
@@ -916,18 +884,18 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
   }
 
   // Validate mutually-exclusive properties
-  for (const auto &prop_pair : component_properties) {
-    const auto &excl_props = prop_pair.second.getExclusiveOfProperties();
+  for (const auto& [prop_name, prop] : component_properties) {
+    const auto& excl_props = prop.getExclusiveOfProperties();
 
-    if (prop_pair.second.getValue().empty()) {
+    if (!prop.getValue()) {
       continue;
     }
 
-    for (const auto &excl_pair : excl_props) {
-      utils::Regex excl_expr(excl_pair.second);
-      if (utils::regexMatch(component_properties.at(excl_pair.first).getValue().to_string(), excl_expr)) {
-        std::string reason = utils::string::join_pack("property '", prop_pair.second.getName(),
-            "' must not be set when the value of property '", excl_pair.first, "' matches '", excl_pair.second, "'");
+    for (const auto &[excl_prop_key, excl_prop_regex] : excl_props) {
+      utils::Regex excl_expr(excl_prop_regex);
+      if (utils::regexMatch(component_properties.at(excl_prop_key).getValue().value_or(""), excl_expr)) {
+        std::string reason = utils::string::join_pack("property '", prop.getName(),
+            "' must not be set when the value of property '", excl_prop_key, "' matches '", excl_prop_regex, "'");
         raiseComponentError(component_name, section, reason);
       }
     }

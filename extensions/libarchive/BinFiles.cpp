@@ -15,19 +15,22 @@
  * limitations under the License.
  */
 #include "BinFiles.h"
+
 #include <cstdio>
-#include <memory>
-#include <string>
-#include <vector>
-#include <set>
-#include <unordered_set>
-#include <map>
 #include <deque>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <unordered_set>
 #include <utility>
-#include "utils/StringUtils.h"
+#include <vector>
+
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -48,36 +51,33 @@ void BinFiles::initialize() {
 }
 
 void BinFiles::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  uint32_t val32 = 0;
-  uint64_t val64 = 0;
-  if (context.getProperty(MinSize, val64)) {
-    this->binManager_.setMinSize(val64);
+  if (const auto val64 = utils::parseOptionalU64Property(context, MinSize)) {
+    this->binManager_.setMinSize(*val64);
     logger_->log_debug("BinFiles: MinSize [{}]", val64);
   }
-  if (context.getProperty(MaxSize, val64)) {
-    this->binManager_.setMaxSize(val64);
+  if (const auto val64 = utils::parseOptionalU64Property(context, MaxSize)) {
+    this->binManager_.setMaxSize(*val64);
     logger_->log_debug("BinFiles: MaxSize [{}]", val64);
   }
-  if (context.getProperty(MinEntries, val32)) {
-    this->binManager_.setMinEntries(val32);
-    logger_->log_debug("BinFiles: MinEntries [{}]", val32);
+  if (const auto val64 = utils::parseOptionalU64Property(context, MinEntries)) {
+    this->binManager_.setMinEntries(gsl::narrow<uint32_t>(*val64));
+    logger_->log_debug("BinFiles: MinEntries [{}]", *val64);
   }
-  if (context.getProperty(MaxEntries, val32)) {
-    this->binManager_.setMaxEntries(val32);
-    logger_->log_debug("BinFiles: MaxEntries [{}]", val32);
+  if (const auto val64 = utils::parseOptionalU64Property(context, MaxEntries)) {
+    this->binManager_.setMaxEntries(gsl::narrow<uint32_t>(*val64));
+    logger_->log_debug("BinFiles: MaxEntries [{}]", *val64);
   }
-  if (context.getProperty(MaxBinCount, maxBinCount_)) {
-    logger_->log_debug("BinFiles: MaxBinCount [{}]", maxBinCount_);
-  }
-  if (auto max_bin_age = context.getProperty<core::TimePeriodValue>(MaxBinAge)) {
+  maxBinCount_ = gsl::narrow<uint32_t>(utils::parseU64Property(context, MaxBinCount));
+  logger_->log_debug("BinFiles: MaxBinCount [{}]", maxBinCount_);
+
+  if (auto max_bin_age = utils::parseOptionalMsProperty(context, MaxBinAge)) {
     // We need to trigger the processor even when there are no incoming flow files so that it can flush the bins.
     setTriggerWhenEmpty(true);
-    this->binManager_.setBinAge(max_bin_age->getMilliseconds());
-    logger_->log_debug("BinFiles: MaxBinAge [{}]", max_bin_age->getMilliseconds());
+    this->binManager_.setBinAge(*max_bin_age);
+    logger_->log_debug("BinFiles: MaxBinAge [{}]", *max_bin_age);
   }
-  if (context.getProperty(BatchSize, batchSize_)) {
-    logger_->log_debug("BinFiles: BatchSize [{}]", batchSize_);
-  }
+  batchSize_ = gsl::narrow<uint32_t>(utils::parseU64Property(context, BatchSize));
+  logger_->log_debug("BinFiles: BatchSize [{}]", batchSize_);
 }
 
 void BinFiles::preprocessFlowFile(const std::shared_ptr<core::FlowFile>& flow) {

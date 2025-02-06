@@ -17,11 +17,13 @@
 
 #include "DeleteGCSObject.h"
 
-#include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
+
+#include "../GCPAttributes.h"
+#include "core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/FlowFile.h"
-#include "../GCPAttributes.h"
+#include "core/Resource.h"
 
 namespace gcs = ::google::cloud::storage;
 
@@ -54,14 +56,11 @@ void DeleteGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSess
   }
 
   gcs::Generation generation;
-
-  if (auto gen_str = context.getProperty(ObjectGeneration, flow_file.get()); gen_str && !gen_str->empty()) {
-    try {
-      int64_t gen = 0;
-      utils::internal::ValueParser(*gen_str).parse(gen).parseEnd();
-      generation = gcs::Generation(gen);
-    } catch (const utils::internal::ValueException&) {
-      logger_->log_error("Invalid generation: {}", *gen_str);
+  if (const auto object_generation_str =  context.getProperty(ObjectGeneration, flow_file.get()); object_generation_str && !object_generation_str->empty()) {
+    if (const auto geni64 = parsing::parseIntegral<int64_t>(*object_generation_str)) {
+      generation = gcs::Generation{*geni64};
+    } else {
+      logger_->log_error("Invalid generation: {}", *object_generation_str);
       session.transfer(flow_file, Failure);
       return;
     }

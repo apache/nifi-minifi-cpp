@@ -24,7 +24,7 @@
 
 #include "minifi-cpp/properties/Configure.h"
 #include "core/Core.h"
-#include "core/ConfigurableComponent.h"
+#include "core/ConfigurableComponentImpl.h"
 #include "core/Connectable.h"
 #include "minifi-cpp/core/controller/ControllerService.h"
 

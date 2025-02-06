@@ -63,7 +63,7 @@ int PropertiesImpl::getInt(const std::string &key, int default_value) const {
 
 namespace {
 const core::PropertyValidator* getValidator(const std::string& lookup_value) {
-  auto configuration_property = Configuration::CONFIGURATION_PROPERTIES.find(lookup_value);
+  const auto configuration_property = Configuration::CONFIGURATION_PROPERTIES.find(lookup_value);
 
   if (configuration_property != Configuration::CONFIGURATION_PROPERTIES.end())
     return configuration_property->second;
@@ -81,7 +81,7 @@ bool allDigitsOrSpaces(const std::string& value) {
 }
 
 std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, const std::string& value) {
-  if (validator != &core::StandardPropertyTypes::TIME_PERIOD_TYPE) {
+  if (validator != &core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR) {
     return std::nullopt;
   }
   if (value.empty() || !allDigits(value)) {
@@ -92,7 +92,7 @@ std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(cons
 }
 
 std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, const std::string& value) {
-  if (validator != &core::StandardPropertyTypes::DATA_SIZE_TYPE) {
+  if (validator != &core::StandardPropertyTypes::DATA_SIZE_VALIDATOR) {
     return std::nullopt;
   }
   if (value.empty() || !allDigits(value)) {
@@ -103,33 +103,8 @@ std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const 
 }
 
 bool integerValidatedProperty(const core::PropertyValidator* const validator) {
-  return validator == &core::StandardPropertyTypes::INTEGER_TYPE
-      || validator == &core::StandardPropertyTypes::UNSIGNED_INT_TYPE
-      || validator == &core::StandardPropertyTypes::LONG_TYPE
-      || validator == &core::StandardPropertyTypes::UNSIGNED_LONG_TYPE;
-}
-
-std::optional<int64_t> stringToDataSize(const std::string_view input) {
-  int64_t value = 0;
-  std::string unit_str;
-  if (!utils::string::splitToValueAndUnit(input, value, unit_str)) {
-    return std::nullopt;
-  }
-
-  if (const auto unit_multiplier = core::DataSizeValue::getUnitMultiplier(unit_str)) {
-    return value * *unit_multiplier;
-  }
-  return std::nullopt;
-}
-
-std::optional<int64_t> stringToDataTransferSpeed(std::string_view input) {
-  std::string data_size;
-  try {
-    data_size = core::DataTransferSpeedValue::removePerSecSuffix(std::string(input));
-  } catch (const utils::internal::ParseException&) {
-    return std::nullopt;
-  }
-  return stringToDataSize(data_size);
+  return validator == &core::StandardPropertyTypes::INTEGER_VALIDATOR
+      || validator == &core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR;
 }
 
 std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, const std::string& value) {
@@ -145,12 +120,8 @@ std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::P
     return fmt::format("{}", parsed_time->count());
   }
 
-  if (auto parsed_data_size = stringToDataSize(value)) {
+  if (auto parsed_data_size = parsing::parseDataSize(value)) {
     return fmt::format("{}", *parsed_data_size);
-  }
-
-  if (auto parsed_data_transfer_speed = stringToDataTransferSpeed(value)) {
-    return fmt::format("{}", *parsed_data_transfer_speed);
   }
 
   return std::nullopt;
@@ -187,8 +158,8 @@ void fixValidatedProperty(const std::string& property_name,
 }  // namespace
 
 // Load Configure File
-// If the loaded property is time-period or data-size validated and it has no explicit units ms or B will be appended.
-// If the loaded property is integer validated and it has some explicit unit(time-period or data-size) it will be converted to ms/B and its unit cut off
+// If the loaded property is time-period or data-size validated, and it has no explicit units ms or B will be appended.
+// If the loaded property is integer validated, and it has some explicit unit(time-period or data-size) it will be converted to ms/B and its unit cut off
 void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
