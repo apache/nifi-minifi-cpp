@@ -32,11 +32,11 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
                 },
                 {
                     "id": 11111,
-                    "key": "ubuntu-20.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
+                    "key": "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
                 },
                 {
                     "id": 11112,
-                    "key": "ubuntu-20.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
+                    "key": "ubuntu-24.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
                 },
                 {
                     "id": 12345,
@@ -52,11 +52,11 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
                 },
                 {
                     "id": 44444,
-                    "key": "ubuntu-20.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456",
+                    "key": "ubuntu-24.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456",
                 },
                 {
                     "id": 55555,
-                    "key": "ubuntu-20.04-all-clang-ccache-refs/heads/main-2f4d283f5bc894af8dfc295e5976a5f1b4664567",
+                    "key": "ubuntu-24.04-all-clang-ccache-refs/heads/main-2f4d283f5bc894af8dfc295e5976a5f1b4664567",
                 }
             ]
         }
@@ -77,11 +77,11 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
                 },
                 {
                     "id": 11111,
-                    "key": "ubuntu-20.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
+                    "key": "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
                 },
                 {
                     "id": 11112,
-                    "key": "ubuntu-20.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
+                    "key": "ubuntu-24.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
                 },
                 {
                     "id": 12345,
@@ -97,11 +97,11 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
                 },
                 {
                     "id": 44444,
-                    "key": "ubuntu-20.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456",
+                    "key": "ubuntu-24.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456",
                 },
                 {
                     "id": 55555,
-                    "key": "ubuntu-20.04-all-clang-ccache-refs/heads/main-2f4d283f5bc894af8dfc295e5976a5f1b4664567",
+                    "key": "ubuntu-24.04-all-clang-ccache-refs/heads/main-2f4d283f5bc894af8dfc295e5976a5f1b4664567",
                 }
             ]
         }
@@ -143,8 +143,8 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
         self.assertEqual(set([call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list]),
                          {"macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
                           "macos-xcode-ccache-refs/heads/MINIFICPP-9999-9d5e183f5bc894af8dfc295e5976a5f1b4664456",
-                          "ubuntu-20.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
-                          "ubuntu-20.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456"})
+                          "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
+                          "ubuntu-24.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456"})
 
     def test_cache_cleanup_with_zero_open_prs(self):
         cleaner = GithubActionsCacheCleaner("mytoken", "githubuser/nifi-minifi-cpp")
@@ -152,11 +152,11 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
         cleaner.remove_obsolete_cache_entries()
         self.assertEqual(set([call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list]),
                          {"macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
-                          "ubuntu-20.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
-                          "ubuntu-20.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
+                          "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
+                          "ubuntu-24.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
                           "macos-xcode-ccache-refs/pull/227/merge-2d6d283f5bc894af8dfc295e5976a5f154753536",
                           "macos-xcode-ccache-refs/heads/MINIFICPP-9999-9d5e183f5bc894af8dfc295e5976a5f1b4664456",
-                          "ubuntu-20.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456"})
+                          "ubuntu-24.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456"})
 
     def test_cache_cleanup_with_zero_action_caches(self):
         cleaner = GithubActionsCacheCleaner("mytoken", "githubuser/nifi-minifi-cpp")
