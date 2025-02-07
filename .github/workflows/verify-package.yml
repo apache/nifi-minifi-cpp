@@ -44,7 +44,7 @@ jobs:
 
   docker-tests:
     name: "${{ matrix.platform.name }}"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
     needs: rocky-build
     strategy:
@@ -108,7 +108,7 @@ jobs:
           path: build/behavex_output
   docker-python-tests:
     name: "${{ matrix.platform.name }}"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
     needs: rocky-build
     strategy:

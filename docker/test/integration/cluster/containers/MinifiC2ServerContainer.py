@@ -20,6 +20,8 @@ import jks
 
 from .Container import Container
 from OpenSSL import crypto
+from cryptography.hazmat.primitives.serialization import pkcs12, BestAvailableEncryption, load_pem_private_key
+from cryptography import x509
 from ssl_utils.SSL_cert_utils import make_server_cert
 
 
@@ -37,10 +39,17 @@ class MinifiC2ServerContainer(Container):
             os.chmod(self.server_keystore_file.name, 0o644)
 
             self.server_truststore_file = tempfile.NamedTemporaryFile(delete=False)
-            pkcs12 = crypto.PKCS12()
-            pkcs12.set_privatekey(feature_context.root_ca_key)
-            pkcs12.set_certificate(feature_context.root_ca_cert)
-            pkcs12_data = pkcs12.export(passphrase="abcdefgh")
+            private_key_pem = crypto.dump_privatekey(crypto.FILETYPE_PEM, feature_context.root_ca_key)
+            private_key = load_pem_private_key(private_key_pem, password=None)
+            certificate_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, feature_context.root_ca_cert)
+            certificate = x509.load_pem_x509_certificate(certificate_pem)
+            pkcs12_data = pkcs12.serialize_key_and_certificates(
+                name=None,
+                key=private_key,
+                cert=certificate,
+                cas=None,
+                encryption_algorithm=BestAvailableEncryption(b'abcdefgh')
+            )
             self.server_truststore_file.write(pkcs12_data)
             self.server_truststore_file.close()
             os.chmod(self.server_truststore_file.name, 0o644)

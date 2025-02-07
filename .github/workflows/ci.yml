@@ -475,7 +475,7 @@ jobs:
           path: build/bin
   rocky:
     name: "rocky"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
     steps:
       - id: checkout
@@ -589,7 +589,7 @@ jobs:
   docker_tests:
     name: "Docker integration tests"
     needs: docker_build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
     steps:
       - id: checkout

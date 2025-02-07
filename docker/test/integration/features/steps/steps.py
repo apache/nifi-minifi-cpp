@@ -39,7 +39,6 @@ import binascii
 import humanfriendly
 import OpenSSL.crypto
 
-from kafka import KafkaProducer
 from confluent_kafka.admin import AdminClient, NewTopic
 from confluent_kafka import Producer
 import socket
@@ -736,6 +735,7 @@ def step_impl(context, content, topic_name):
         "ssl.certificate.location": client_cert_file.name,
         "ssl.key.location": client_key_file.name,
         "ssl.key.password": "",
+        'ssl.endpoint.identification.algorithm': 'none',
         "client.id": socket.gethostname()})
     producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
     producer.flush(10)
@@ -802,9 +802,9 @@ def step_impl(context, content, topic_name, semicolon_separated_headers):
     for header in semicolon_separated_headers.split(";"):
         kv = header.split(":")
         headers.append((kv[0].strip(), kv[1].strip().encode("utf-8")))
-    producer = KafkaProducer(bootstrap_servers='localhost:29092')
-    future = producer.send(topic_name, content.encode("utf-8"), headers=headers)
-    assert future.get(timeout=60)
+    producer = Producer({"bootstrap.servers": "localhost:29092"})
+    producer.produce(topic_name, content.encode("utf-8"), headers=headers)
+    producer.flush(10)
 
 
 @when("the Kafka consumer is registered in kafka broker")
