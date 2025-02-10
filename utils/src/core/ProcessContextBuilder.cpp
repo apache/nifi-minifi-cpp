@@ -24,15 +24,16 @@
 namespace org::apache::nifi::minifi::core {
 
 ProcessContextBuilderImpl::ProcessContextBuilderImpl(std::string_view name, const minifi::utils::Identifier &uuid)
-    : core::CoreComponentImpl(name, uuid) {
-  content_repo_ = repository::createFileSystemRepository();
-  configuration_ = minifi::Configure::create();
-}
+    : core::CoreComponentImpl(name, uuid),
+      configuration_{minifi::Configure::create()},
+      content_repo_{repository::createFileSystemRepository()}
+{}
 
 ProcessContextBuilderImpl::ProcessContextBuilderImpl(std::string_view name)
-    : core::CoreComponentImpl(name) {
-  content_repo_ = repository::createFileSystemRepository();
-  configuration_ = minifi::Configure::create();
+    : core::CoreComponentImpl(name),
+      configuration_{minifi::Configure::create()},
+      content_repo_{repository::createFileSystemRepository()}
+{}
 }
 
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilderImpl::withProvider(core::controller::ControllerServiceProvider* controller_service_provider) {
