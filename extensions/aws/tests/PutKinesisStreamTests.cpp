@@ -42,7 +42,7 @@ class MockKinesisClient final : public Aws::Kinesis::KinesisClient {
   mutable uint32_t sequence_number_ = 0;
 };
 
-class PutKinesisStreamMocked : public aws::processors::PutKinesisStream {
+class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream {
  public:
   static constexpr const char* Description = "PutKinesisStreamMocked";
 
@@ -50,7 +50,14 @@ class PutKinesisStreamMocked : public aws::processors::PutKinesisStream {
   : PutKinesisStream(name, uuid) {
   }
 
+  PutKinesisStreamMocked(const PutKinesisStreamMocked&) = delete;
+  PutKinesisStreamMocked(PutKinesisStreamMocked&&) = delete;
+  PutKinesisStreamMocked& operator=(const PutKinesisStreamMocked&) = delete;
+  PutKinesisStreamMocked& operator=(PutKinesisStreamMocked&&) = delete;
+
   ~PutKinesisStreamMocked() override = default;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   std::unique_ptr<Aws::Kinesis::KinesisClient> getClient(const Aws::Auth::AWSCredentials&) override {
     return std::make_unique<MockKinesisClient>();
