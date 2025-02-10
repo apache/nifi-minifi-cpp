@@ -27,8 +27,9 @@ FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
 
     target_link_libraries(${testfilename} minifi-civet-extensions)
     target_link_libraries(${testfilename} minifi-standard-processors)
+    target_compile_definitions(${testfilename} PRIVATE TEST_RESOURCES="${TEST_RESOURCES}")
 
-    createTests("${testfilename}")
+    createIntegrationTests("${testfilename}")
     target_link_libraries(${testfilename} Catch2WithMain)
     MATH(EXPR CIVETWEB-EXTENSIONS_TEST_COUNT "${CIVETWEB-EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
@@ -42,4 +43,5 @@ FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
         )
     set_tests_properties("${testfilename}" PROPERTIES LABELS "civetweb")
 ENDFOREACH()
+
 message("-- Finished building ${CIVETWEB-EXTENSIONS_TEST_COUNT} civetweb related test file(s)...")
