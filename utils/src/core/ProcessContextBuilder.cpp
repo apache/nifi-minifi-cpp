@@ -34,7 +34,6 @@ ProcessContextBuilderImpl::ProcessContextBuilderImpl(std::string_view name)
       configuration_{minifi::Configure::create()},
       content_repo_{repository::createFileSystemRepository()}
 {}
-}
 
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilderImpl::withProvider(core::controller::ControllerServiceProvider* controller_service_provider) {
   controller_service_provider_ = controller_service_provider;
