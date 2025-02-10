@@ -18,12 +18,12 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "core/Core.h"
 #include "http/HTTPClient.h"
 #include "InvokeHTTP.h"
-#include "processors/ListenHTTP.h"
 #include "core/FlowFile.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
@@ -33,62 +33,66 @@
 #include "unit/SingleProcessorTestController.h"
 #include "integration/ConnectionCountingServer.h"
 #include "unit/TestUtils.h"
+#include "integration/TestServer.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
+class TestHandler : public CivetHandler {
+ public:
+  bool handleGet(CivetServer*, struct mg_connection* conn) override {
+    headers_.clear();
+    auto req_info = mg_get_request_info(conn);
+    for (int i = 0; i < req_info->num_headers; ++i) {
+      auto header = &req_info->http_headers[i];
+      headers_[std::string(header->name)] = std::string(header->value);
+    }
+    mg_printf(conn, "HTTP/1.1 200 OK\r\n");
+    return true;
+  }
+
+  [[nodiscard]] const std::unordered_map<std::string, std::string>& getHeaders() const {
+    return headers_;
+  }
+
+ private:
+  std::unordered_map<std::string, std::string> headers_;
+};
+
 class TestHTTPServer {
  public:
-  explicit TestHTTPServer(TestController& test_controller) {
-    LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
-    LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::LogAttribute>();
-
-    test_plan_ = test_controller.createPlan();
-
-    listen_http_ = dynamic_cast<processors::ListenHTTP*>(test_plan_->addProcessor("ListenHTTP", PROCESSOR_NAME));
-    log_attribute_ = dynamic_cast<processors::LogAttribute*>(test_plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true));
-    REQUIRE(listen_http_);
-    REQUIRE(log_attribute_);
-    log_attribute_->setProperty(processors::LogAttribute::LogPayload.name, "true");
-    test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "testytesttest");
-    test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::Port, "8681");
-    test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::HeadersAsAttributesRegex, ".*");
-    test_plan_->runProcessor(listen_http_);
-    test_plan_->runProcessor(log_attribute_);
-    thread_ = std::thread{[this] {
-      while (running_) {
-        if (listen_http_->isWorkAvailable()) {
-          test_plan_->runProcessor(listen_http_);
-          test_plan_->runProcessor(log_attribute_);
-        }
-      }
-    }};
+  TestHTTPServer() : server_(std::make_unique<TestServer>("8681", "/testytesttest", &handler_)) {
   }
   TestHTTPServer(const TestHTTPServer&) = delete;
   TestHTTPServer(TestHTTPServer&&) = delete;
   TestHTTPServer& operator=(const TestHTTPServer&) = delete;
   TestHTTPServer& operator=(TestHTTPServer&&) = delete;
+  ~TestHTTPServer() = default;
 
-  static constexpr const char* PROCESSOR_NAME = "my_http_server";
   static constexpr const char* URL = "http://localhost:8681/testytesttest";
 
-  ~TestHTTPServer() {
-    running_ = false;
-    thread_.join();
+  [[nodiscard]] const std::unordered_map<std::string, std::string>& getHeaders() const {
+    return handler_.getHeaders();
+  }
+
+  [[nodiscard]] std::vector<std::string> getHeaderKeys() const {
+    std::vector<std::string> keys;
+    for (const auto& [key, _] : handler_.getHeaders()) {
+      keys.push_back(key);
+    }
+    return keys;
   }
 
  private:
-  processors::ListenHTTP* listen_http_ = nullptr;
-  processors::LogAttribute* log_attribute_ = nullptr;
-  std::shared_ptr<TestPlan> test_plan_;
-  std::thread thread_;
-  std::atomic_bool running_{true};
+  TestHandler handler_;
+  std::unique_ptr<TestServer> server_;
 };
 
 TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
 
   TestController testController;
-  TestHTTPServer http_server(testController);
+  TestHTTPServer http_server;
 
   LogTestController::getInstance().setInfo<minifi::core::ProcessSession>();
 
@@ -120,7 +124,7 @@ TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in H
 
   test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
-  TestHTTPServer http_server(test_controller);
+  TestHTTPServer http_server;
 
   LogTestController::getInstance().setDebug<InvokeHTTP>();
 
@@ -133,6 +137,7 @@ TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in H
   auto file_contents = result.at(InvokeHTTP::RelFailure);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
+  REQUIRE(http_server.getHeaders().empty());
 }
 
 TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that would be invalid as an HTTP header, and the policy is FAIL, but the attribute is not matched",
@@ -141,7 +146,7 @@ TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that wou
 
   test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
-  TestHTTPServer http_server(test_controller);
+  TestHTTPServer http_server;
 
   LogTestController::getInstance().setDebug<InvokeHTTP>();
 
@@ -154,8 +159,11 @@ TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that wou
   REQUIRE(result.at(InvokeHTTP::RelFailure).empty());
   const auto& success_contents = result.at(InvokeHTTP::Success);
   REQUIRE(success_contents.size() == 1);
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(1s, "key:valid-header value:value2"));
-  REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid"));
+  REQUIRE(http_server.getHeaders().at("valid-header") == "value2");
+  auto header_keys = http_server.getHeaderKeys();
+  REQUIRE(std::find_if(header_keys.begin(), header_keys.end(), [] (const auto& key) {
+    return minifi::utils::string::startsWith(key, "invalid");
+  }) == header_keys.end());
 }
 
 TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]") {
@@ -163,7 +171,7 @@ TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]")
 
   test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
-  TestHTTPServer http_server(test_controller);
+  TestHTTPServer http_server;
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
@@ -175,8 +183,8 @@ TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]")
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(1s, "key:invalid-header value:value"));
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(1s, "key:X-MiNiFi-Empty-Attribute-Name value:value2"));
+  REQUIRE(http_server.getHeaders().at("invalid-header") == "value");
+  REQUIRE(http_server.getHeaders().at("X-MiNiFi-Empty-Attribute-Name") == "value2");
 }
 
 TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]") {
@@ -184,7 +192,7 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
 
   test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
-  TestHTTPServer http_server(test_controller);
+  TestHTTPServer http_server;
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
@@ -197,8 +205,11 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(1s, "key:legit-header value:value1"));
-  REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
+  REQUIRE(http_server.getHeaders().at("legit-header") == "value1");
+  auto header_keys = http_server.getHeaderKeys();
+  REQUIRE(std::find_if(header_keys.begin(), header_keys.end(), [] (const auto& key) {
+    return minifi::utils::string::startsWith(key, "invalid");
+  }) == header_keys.end());
 }
 
 TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[httptest1]") {
@@ -206,7 +217,7 @@ TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[
 
   test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
-  TestHTTPServer http_server(test_controller);
+  TestHTTPServer http_server;
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
@@ -219,8 +230,11 @@ TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
-  REQUIRE_FALSE(LogTestController::getInstance().contains("key:legit-header value:value1"));
-  REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
+  auto header_keys = http_server.getHeaderKeys();
+  REQUIRE_FALSE(http_server.getHeaders().contains("legit-header"));
+  REQUIRE(std::find_if(header_keys.begin(), header_keys.end(), [] (const auto& key) {
+    return minifi::utils::string::startsWith(key, "invalid");
+  }) == header_keys.end());
 }
 
 TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
@@ -228,7 +242,7 @@ TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
 
   test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   auto invoke_http = test_controller.getProcessor();
-  TestHTTPServer http_server(test_controller);
+  TestHTTPServer http_server;
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
@@ -250,7 +264,11 @@ TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
-  REQUIRE(utils::verifyEventHappenedInPollTime(1s, [&] {return LogTestController::getInstance().contains("key:Date", 0ms) == date_header;}));
+  if (date_header) {
+    REQUIRE(http_server.getHeaders().contains("Date"));
+  } else {
+    REQUIRE_FALSE(http_server.getHeaders().contains("Date"));
+  }
 }
 
 TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substring", "[httptest1]") {
@@ -258,7 +276,7 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
 
   test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
-  TestHTTPServer http_server(test_controller);
+  TestHTTPServer http_server;
 
   LogTestController::getInstance().setTrace<InvokeHTTP>();
 
@@ -271,9 +289,12 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(1s, "key:header value:value2"));
-  REQUIRE_FALSE(LogTestController::getInstance().contains("key:header1 value:value1"));
-  REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
+  REQUIRE(http_server.getHeaders().at("header") == "value2");
+  REQUIRE_FALSE(http_server.getHeaders().contains("header1"));
+  auto header_keys = http_server.getHeaderKeys();
+  REQUIRE(std::find_if(header_keys.begin(), header_keys.end(), [] (const auto& key) {
+    return minifi::utils::string::startsWith(key, "invalid");
+  }) == header_keys.end());
 }
 
 TEST_CASE("HTTPTestsResponseBodyinAttribute", "[InvokeHTTP]") {
@@ -366,6 +387,7 @@ TEST_CASE("Data transfer speed parsing") {
 
 TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers", "[InvokeHTTP][http][attribute][header][sanitize]") {
   using processors::InvokeHTTP;
+  log_attribute_->setProperty(processors::LogAttribute::LogPayload, "true");
   constexpr std::string_view test_content = "flow file content";
   std::string_view test_attr_value_in;
   std::string_view test_attr_value_out;
@@ -396,8 +418,9 @@ TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers
   CHECK(result.at(InvokeHTTP::RelRetry).empty());
   CHECK(!result.at(InvokeHTTP::Success).empty());
   CHECK(!result.at(InvokeHTTP::RelResponse).empty());
-  CHECK(utils::verifyLogLinePresenceInPollTime(1s, fmt::format("key:{} value:{}", InvokeHTTP::STATUS_MESSAGE, test_attr_value_out)));
-  CHECK(utils::verifyLogLinePresenceInPollTime(1s, fmt::format("Payload:\n{}\n----", test_content)));
+  auto flow_file = result.at(InvokeHTTP::Success)[0];
+  CHECK(flow_file->getAttribute(InvokeHTTP::STATUS_MESSAGE).value() == test_attr_value_out);
+  CHECK(controller.plan->getContent(flow_file) == test_content);
 }
 
 }  // namespace org::apache::nifi::minifi::test

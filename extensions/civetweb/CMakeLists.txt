@@ -30,7 +30,7 @@ target_include_directories(minifi-civet-extensions BEFORE PUBLIC
                            ${CMAKE_SOURCE_DIR}/libminifi/include
                            ${CMAKE_SOURCE_DIR}/libminifi/include/core
                            ${CMAKE_SOURCE_DIR}/thirdparty/
-                           ${civetweb_SOURCE_DIR}/include
+                           ${CIVETWEB_INCLUDE_DIRS}/include
                            ./include)
 target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads civetweb::civetweb-cpp)
 
