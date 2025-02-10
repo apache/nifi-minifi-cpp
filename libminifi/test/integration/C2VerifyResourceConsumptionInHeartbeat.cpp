@@ -22,7 +22,6 @@
 #include "c2/C2Agent.h"
 #include "protocols/RESTProtocol.h"
 #include "protocols/RESTSender.h"
-#include "protocols/RESTReceiver.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "integration/HTTPHandlers.h"
 #include "unit/TestUtils.h"
@@ -111,7 +110,6 @@ class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTProtocol>();
-    LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
     VerifyC2Base::testSetup();
   }
 

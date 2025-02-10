@@ -16,5 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+include(GetCivetWeb)
+get_civetweb()
+
 add_subdirectory(unit)
 add_subdirectory(integration)

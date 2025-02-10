@@ -14,6 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+if(TARGET civetweb::civetweb-cpp)
+    return()
+endif()
 
 include(FetchContent)
 
@@ -43,3 +46,6 @@ target_compile_definitions(civetweb-c-library PRIVATE SOCKET_TIMEOUT_QUANTUM=200
 
 add_library(civetweb::c-library ALIAS civetweb-c-library)
 add_library(civetweb::civetweb-cpp ALIAS civetweb-cpp)
+
+set(CIVETWEB_INCLUDE_DIR "${civetweb_SOURCE_DIR}/include")
+set(CIVETWEB_INCLUDE_DIRS "${CIVETWEB_INCLUDE_DIR}")

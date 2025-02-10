@@ -19,7 +19,6 @@
 #include <string>
 #include <iostream>
 #include "processors/InvokeHTTP.h"
-#include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "unit/TestBase.h"
 #include "core/logging/Logger.h"
@@ -47,8 +46,6 @@ class HttpTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<core::ProcessContext>();
     LogTestController::getInstance().setTrace<minifi::processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::http::HTTPClient>();
-    LogTestController::getInstance().setDebug<minifi::processors::ListenHTTP>();
-    LogTestController::getInstance().setDebug<minifi::processors::ListenHTTP::Handler>();
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<minifi::ThreadedSchedulingAgent>();
