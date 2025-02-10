@@ -18,6 +18,6 @@
 #
 file(GLOB SOURCES "*.cpp")
 add_minifi_library(libminifi-integrationtest STATIC ${SOURCES})
-target_link_libraries(libminifi-integrationtest libminifi-unittest minifi-civet-extensions)
+target_link_libraries(libminifi-integrationtest libminifi-unittest civetweb::civetweb-cpp)
 target_include_directories(libminifi-integrationtest BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/" "${CMAKE_SOURCE_DIR}/libminifi/test/libtest/")
-target_include_directories(libminifi-integrationtest BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/civetweb/")
+target_include_directories(libminifi-integrationtest BEFORE PRIVATE "${CIVETWEB_INCLUDE_DIRS}")

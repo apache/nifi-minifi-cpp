@@ -16,5 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+if (NOT ENABLE_ALL AND NOT ENABLE_PROMETHEUS AND NOT ENABLE_GRAFANA_LOKI AND NOT ENABLE_CIVET)
+    message("CivetWeb was disabled for MiNiFi, but will be enabled for tests")
+    include(GetCivetWeb)
+    get_civetweb()
+endif()
+
 add_subdirectory(unit)
 add_subdirectory(integration)
