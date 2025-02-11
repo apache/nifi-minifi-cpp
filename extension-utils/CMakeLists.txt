@@ -11,7 +11,7 @@ file(GLOB SOURCES
         src/utils/*.cpp)
 add_minifi_library(minifi-extension-utils STATIC ${SOURCES})
 target_include_directories(minifi-extension-utils PUBLIC include)
-target_link_libraries(minifi-extension-utils PUBLIC minifi-core)
+target_link_libraries(minifi-extension-utils PUBLIC minifi-api)
 
 include(RangeV3)
 include(Asio)
@@ -31,5 +31,5 @@ if (UNIX AND (CMAKE_SYSTEM_PROCESSOR MATCHES "armv7"))
     target_link_libraries(minifi-extension-utils PUBLIC "-latomic")
 endif()
 
-target_link_libraries(minifi-extension-utils PRIVATE minifi-core)
+target_link_libraries(minifi-extension-utils PRIVATE minifi-api)
 target_link_libraries(minifi-extension-utils PUBLIC minifi-utils)

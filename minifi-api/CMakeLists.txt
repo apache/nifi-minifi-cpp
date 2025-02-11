@@ -1,3 +1,3 @@
-add_library(minifi-core INTERFACE)
-target_include_directories(minifi-core INTERFACE include)
-target_link_libraries(minifi-core INTERFACE gsl-lite)
+add_library(minifi-api INTERFACE)
+target_include_directories(minifi-api INTERFACE include)
+target_link_libraries(minifi-api INTERFACE gsl-lite)
