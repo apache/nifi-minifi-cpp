@@ -212,7 +212,7 @@ class TestControllerServiceProvider : public core::controller::ControllerService
     return is_ssl_ ? ssl_context_service_ : nullptr;
   }
 
-  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&, const std::string&, bool) override {
+  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&) override {
     return nullptr;
   }
   void clearControllerServices() override {

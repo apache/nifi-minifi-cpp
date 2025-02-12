@@ -15,19 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
 #include <string>
 #include <utility>
- #include <memory>
-#include <vector>
-#include "core/ProcessGroup.h"
-#include "core/ClassLoader.h"
+#include <memory>
+#include <unordered_set>
+#include <thread>
 #include "core/controller/ControllerService.h"
 #include "ControllerServiceNodeMap.h"
-#include "ControllerServiceNode.h"
-#include "StandardControllerServiceNode.h"
 #include "ControllerServiceProvider.h"
 #include "core/logging/LoggerFactory.h"
 
@@ -39,6 +35,7 @@ class StandardControllerServiceProvider : public ControllerServiceProviderImpl  
       : ControllerServiceProviderImpl(std::move(services)),
         extension_loader_(loader),
         configuration_(std::move(configuration)),
+        admin_yield_duration_(readAdministrativeYieldDuration()),
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
@@ -47,64 +44,35 @@ class StandardControllerServiceProvider : public ControllerServiceProviderImpl  
 
   StandardControllerServiceProvider& operator=(const StandardControllerServiceProvider &other) = delete;
   StandardControllerServiceProvider& operator=(StandardControllerServiceProvider &&other) = delete;
-
-  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string& type, const std::string&, const std::string& id, bool) override {
-    std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
-
-    if (!new_controller_service) {
-      return nullptr;
-    }
-
-    std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service,
-                                                                                                              sharedFromThis<ControllerServiceProvider>(), id,
-                                                                                                              configuration_);
-
-    controller_map_->put(id, new_service_node);
-    return new_service_node;
+  ~StandardControllerServiceProvider() override {
+    stopEnableRetryThread();
   }
 
-  void enableAllControllerServices() override {
-    logger_->log_info("Enabling {} controller services", controller_map_->getAllControllerServices().size());
-    for (const auto& service : controller_map_->getAllControllerServices()) {
-      logger_->log_info("Enabling {}", service->getName());
-      if (!service->canEnable()) {
-        logger_->log_warn("Service {} cannot be enabled", service->getName());
-        continue;
-      }
-      if (!service->enable()) {
-        logger_->log_warn("Could not enable {}", service->getName());
-      }
-    }
-  }
-
-  void disableAllControllerServices() override {
-    logger_->log_info("Disabling {} controller services", controller_map_->getAllControllerServices().size());
-    for (const auto& service : controller_map_->getAllControllerServices()) {
-      logger_->log_info("Disabling {}", service->getName());
-      if (!service->enabled()) {
-        logger_->log_warn("Service {} is not enabled", service->getName());
-        continue;
-      }
-      if (!service->disable()) {
-        logger_->log_warn("Could not disable {}", service->getName());
-      }
-    }
-  }
-
-  void clearControllerServices() override {
-    controller_map_->clear();
-  }
+  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string& type, const std::string& id) override;
+  void enableAllControllerServices() override;
+  void disableAllControllerServices() override;
+  void clearControllerServices() override;
 
  protected:
+  void stopEnableRetryThread();
+  void startEnableRetryThread();
+
   bool canEdit() override {
     return false;
   }
 
   ClassLoader &extension_loader_;
-
   std::shared_ptr<Configure> configuration_;
 
  private:
+  std::chrono::milliseconds readAdministrativeYieldDuration() const;
+
+  std::thread controller_service_enable_retry_thread_;
+  std::atomic_bool enable_retry_thread_running_{false};
+  std::mutex enable_retry_mutex_;
+  std::condition_variable enable_retry_condition_;
+  std::unordered_set<std::shared_ptr<ControllerServiceNode>> controller_services_to_enable_;
+  std::chrono::milliseconds admin_yield_duration_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

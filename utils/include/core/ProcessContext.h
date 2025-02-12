@@ -110,7 +110,11 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   // controller services
 
   std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override {
-    return controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier, processor_uuid);
+    auto controller_service = controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier, processor_uuid);
+    if (!controller_service || controller_service->getState() != core::controller::ControllerServiceState::ENABLED) {
+      return nullptr;
+    }
+    return controller_service;
   }
 
   void initializeContentRepository(const std::string& home) override {
@@ -149,8 +153,8 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
     const auto path = configuration->getWithFallback(Configure::nifi_state_storage_local_path, Configure::nifi_state_storage_local_path_old);
 
     /* Function to help creating a state storage */
-    auto create_provider = [&](const std::string& type, const std::string& longType, const std::unordered_map<std::string, std::string>& extraProperties) -> std::shared_ptr<core::StateStorage> {
-      auto new_node = controller_service_provider->createControllerService(type, longType, DefaultStateStorageName, true /*firstTimeAdded*/);
+    auto create_provider = [&](const std::string& type, const std::unordered_map<std::string, std::string>& extraProperties) -> std::shared_ptr<core::StateStorage> {
+      auto new_node = controller_service_provider->createControllerService(type, DefaultStateStorageName);
       if (new_node == nullptr) { return nullptr; }
       new_node->initialize();
       auto storage = new_node->getControllerServiceImplementation();
@@ -169,19 +173,19 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
     /* Try to create a RocksDB-backed provider */
     if (preferredType.empty() || preferredType == "RocksDbPersistableKeyValueStoreService" || preferredType == "RocksDbStateStorage") {
-      auto provider = create_provider("RocksDbStateStorage", "org.apache.nifi.minifi.controllers.RocksDbStateStorage", {{"Directory", path.value_or("corecomponentstate")}});
+      auto provider = create_provider("RocksDbStateStorage", {{"Directory", path.value_or("corecomponentstate")}});
       if (provider != nullptr) { return provider; }
     }
 
     /* Fall back to a locked unordered map-backed provider */
     if (preferredType.empty() || preferredType == "UnorderedMapPersistableKeyValueStoreService" || preferredType == "PersistentMapStateStorage") {
-      auto provider = create_provider("PersistentMapStateStorage", "org.apache.nifi.minifi.controllers.PersistentMapStateStorage", {{"File", path.value_or("corecomponentstate.txt")}});
+      auto provider = create_provider("PersistentMapStateStorage", {{"File", path.value_or("corecomponentstate.txt")}});
       if (provider != nullptr) { return provider; }
     }
 
     /* Fall back to volatile memory-backed provider */
     if (preferredType.empty() || preferredType == "UnorderedMapKeyValueStoreService" || preferredType == "VolatileMapStateStorage") {
-      auto provider = create_provider("VolatileMapStateStorage", "org.apache.nifi.minifi.controllers.VolatileMapStateStorage", {});
+      auto provider = create_provider("VolatileMapStateStorage", {});
       if (provider != nullptr) { return provider; }
     }
 

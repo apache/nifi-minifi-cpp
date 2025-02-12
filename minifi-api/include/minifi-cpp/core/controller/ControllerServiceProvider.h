@@ -40,7 +40,7 @@ class ControllerServiceProvider : public virtual CoreComponent, public virtual C
  public:
   ~ControllerServiceProvider() override = default;
 
-  virtual std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &longType, const std::string &id, bool firstTimeAdded) = 0;
+  virtual std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &id) = 0;
   virtual ControllerServiceNode* getControllerServiceNode(const std::string &id) const = 0;
   virtual ControllerServiceNode* getControllerServiceNode(const std::string &id, const utils::Identifier &processor_or_controller_uuid) const = 0;
   virtual void putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node, ProcessGroup* process_group) = 0;

@@ -138,11 +138,11 @@ class CouchbaseClusterService : public core::controller::ControllerServiceImpl {
   void initialize() override;
 
   void yield() override {
-  };
+  }
 
   bool isWorkAvailable() override {
     return false;
-  };
+  }
 
   bool isRunning() const override {
     return getState() == core::controller::ControllerServiceState::ENABLED;

@@ -76,7 +76,6 @@ class SchedulingAgentTestFixture {
  protected:
   std::shared_ptr<core::Repository> test_repo_ = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::ContentRepository> content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
-  std::shared_ptr<minifi::FlowController> controller_ = std::make_shared<TestFlowController>(test_repo_, test_repo_, content_repo_);
 
   TestController test_controller_;
   std::shared_ptr<TestPlan> test_plan = test_controller_.createPlan();

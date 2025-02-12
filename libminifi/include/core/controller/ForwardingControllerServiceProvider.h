@@ -31,8 +31,8 @@ class ForwardingControllerServiceProvider : public ControllerServiceProviderImpl
  public:
   using ControllerServiceProviderImpl::ControllerServiceProviderImpl;
 
-  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &longType, const std::string &id, bool firstTimeAdded) override {
-    return controller_service_provider_impl_->createControllerService(type, longType, id, firstTimeAdded);
+  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &id) override {
+    return controller_service_provider_impl_->createControllerService(type, id);
   }
 
   ControllerServiceNode* getControllerServiceNode(const std::string &id) const override {
