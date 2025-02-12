@@ -19,8 +19,19 @@
 #include "core/controller/StandardControllerServiceNode.h"
 #include <memory>
 #include <mutex>
+#include <algorithm>
 
 namespace org::apache::nifi::minifi::core::controller {
+
+bool StandardControllerServiceNode::canEnable() {
+  if (active) {
+    return false;
+  }
+
+  return std::all_of(linked_controller_services_.begin(), linked_controller_services_.end(), [](auto linked_service) {
+    return linked_service->canEnable();
+  });
+}
 
 bool StandardControllerServiceNode::enable() {
   logger_->log_trace("Enabling CSN {}", getName());
@@ -46,15 +57,31 @@ bool StandardControllerServiceNode::enable() {
     for (const auto& service : linked_controller_services_) {
       services.push_back(service->getControllerServiceImplementation());
       if (!service->enable()) {
-        logger_->log_debug("Linked Service '{}' could not be enabled", service->getName());
+        logger_->log_warn("Linked Service '{}' could not be enabled", service->getName());
         return false;
       }
     }
-    impl->setLinkedControllerServices(services);
-    impl->onEnable();
+    try {
+      impl->setLinkedControllerServices(services);
+      impl->onEnable();
+    } catch(const std::exception& e) {
+      logger_->log_warn("Service '{}' failed to enable: {}", getName(), e.what());
+      controller_service_->setState(ENABLING);
+      return false;
+    }
+  } else {
+    logger_->log_warn("Service '{}' service implementation could not be found", controller_service_->getName());
+    controller_service_->setState(ENABLING);
+    return false;
   }
   active = true;
   controller_service_->setState(ENABLED);
+  return true;
+}
+
+bool StandardControllerServiceNode::disable() {
+  controller_service_->setState(DISABLED);
+  active = false;
   return true;
 }
 
