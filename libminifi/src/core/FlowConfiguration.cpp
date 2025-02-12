@@ -98,7 +98,13 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   auto old_parameter_contexts = std::move(parameter_contexts_);
   service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(std::make_unique<core::controller::ControllerServiceNodeMap>(), configuration_);
   auto payload = getRootFromPayload(yamlConfigPayload);
-  if (!url.empty() && payload != nullptr) {
+  if (!payload) {
+    service_provider_ = old_provider;
+    parameter_contexts_ = std::move(old_parameter_contexts);
+    return nullptr;
+  }
+
+  if (!url.empty()) {
     std::string payload_flow_id;
     std::string bucket_id;
     auto path_split = utils::string::split(url, "/");
@@ -110,10 +116,8 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
       }
     }
     flow_version_->setFlowVersion(url, bucket_id, flow_id ? *flow_id : payload_flow_id);
-  } else {
-    service_provider_ = old_provider;
-    parameter_contexts_ = std::move(old_parameter_contexts);
   }
+
   return payload;
 }
 

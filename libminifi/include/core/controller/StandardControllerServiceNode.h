@@ -46,39 +46,17 @@ class StandardControllerServiceNode : public ControllerServiceNodeImpl {
   StandardControllerServiceNode(const StandardControllerServiceNode &other) = delete;
   StandardControllerServiceNode &operator=(const StandardControllerServiceNode &parent) = delete;
 
-  /**
-   * Initializes the controller service node.
-   */
   void initialize() override {
     ControllerServiceNodeImpl::initialize();
     active = false;
   }
 
-  bool canEnable() override {
-    if (!active.load()) {
-      for (auto linked_service : linked_controller_services_) {
-        if (!linked_service->canEnable()) {
-          return false;
-        }
-      }
-      return true;
-    } else {
-      return false;
-    }
-  }
-
+  bool canEnable() override;
   bool enable() override;
-
-  bool disable() override {
-    controller_service_->setState(DISABLED);
-    active = false;
-    return true;
-  }
+  bool disable() override;
 
  protected:
-  // controller service provider.
   std::shared_ptr<ControllerServiceProvider> provider;
-
   std::mutex mutex_;
 
  private:
