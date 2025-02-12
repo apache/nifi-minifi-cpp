@@ -146,17 +146,21 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   ProcessContextImpl &operator=(const ProcessContextImpl &parent) = delete;
 
   std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override {
-    return controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier, processor_uuid);
+    auto controller_service = controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier, processor_uuid);
+    if (!controller_service || controller_service->getState() != core::controller::ControllerServiceState::ENABLED) {
+      return nullptr;
+    }
+    return controller_service;
   }
 
   void initializeContentRepository(const std::string& home) override {
-      configure_->setHome(home);
-      content_repo_->initialize(configure_);
-      initialized_ = true;
+    configure_->setHome(home);
+    content_repo_->initialize(configure_);
+    initialized_ = true;
   }
 
   bool isInitialized() const override {
-      return initialized_;
+    return initialized_;
   }
 
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";
