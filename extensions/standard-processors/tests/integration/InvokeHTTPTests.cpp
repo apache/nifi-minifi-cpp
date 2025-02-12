@@ -83,6 +83,13 @@ class TestHTTPServer {
     return keys;
   }
 
+  [[nodiscard]] bool noInvalidHeaderPresent() const {
+    auto header_keys = getHeaderKeys();
+    return std::none_of(header_keys.begin(), header_keys.end(), [] (const auto& key) {
+      return minifi::utils::string::startsWith(key, "invalid");
+    });
+  }
+
  private:
   TestHandler handler_;
   std::unique_ptr<TestServer> server_;
@@ -160,10 +167,7 @@ TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that wou
   const auto& success_contents = result.at(InvokeHTTP::Success);
   REQUIRE(success_contents.size() == 1);
   REQUIRE(http_server.getHeaders().at("valid-header") == "value2");
-  auto header_keys = http_server.getHeaderKeys();
-  REQUIRE(std::find_if(header_keys.begin(), header_keys.end(), [] (const auto& key) {
-    return minifi::utils::string::startsWith(key, "invalid");
-  }) == header_keys.end());
+  REQUIRE(http_server.noInvalidHeaderPresent());
 }
 
 TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]") {
@@ -206,10 +210,7 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
   REQUIRE(http_server.getHeaders().at("legit-header") == "value1");
-  auto header_keys = http_server.getHeaderKeys();
-  REQUIRE(std::find_if(header_keys.begin(), header_keys.end(), [] (const auto& key) {
-    return minifi::utils::string::startsWith(key, "invalid");
-  }) == header_keys.end());
+  REQUIRE(http_server.noInvalidHeaderPresent());
 }
 
 TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[httptest1]") {
@@ -232,9 +233,7 @@ TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
   auto header_keys = http_server.getHeaderKeys();
   REQUIRE_FALSE(http_server.getHeaders().contains("legit-header"));
-  REQUIRE(std::find_if(header_keys.begin(), header_keys.end(), [] (const auto& key) {
-    return minifi::utils::string::startsWith(key, "invalid");
-  }) == header_keys.end());
+  REQUIRE(http_server.noInvalidHeaderPresent());
 }
 
 TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
@@ -291,10 +290,7 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
   REQUIRE(http_server.getHeaders().at("header") == "value2");
   REQUIRE_FALSE(http_server.getHeaders().contains("header1"));
-  auto header_keys = http_server.getHeaderKeys();
-  REQUIRE(std::find_if(header_keys.begin(), header_keys.end(), [] (const auto& key) {
-    return minifi::utils::string::startsWith(key, "invalid");
-  }) == header_keys.end());
+  REQUIRE(http_server.noInvalidHeaderPresent());
 }
 
 TEST_CASE("HTTPTestsResponseBodyinAttribute", "[InvokeHTTP]") {
