@@ -15,7 +15,6 @@
 
 
 from .containers.MinifiContainer import MinifiContainer
-from .containers.NifiContainer import NifiContainer
 import logging
 import tarfile
 import docker
@@ -131,8 +130,8 @@ class ImageStore:
         return self.__build_image(dockerfile)
 
     def __build_minifi_cpp_image_with_nifi_python_processors(self, python_option):
-        parse_document_url = "https://raw.githubusercontent.com/apache/nifi/rel/nifi-" + NifiContainer.NIFI_VERSION + "/nifi-python-extensions/nifi-text-embeddings-module/src/main/python/ParseDocument.py"
-        chunk_document_url = "https://raw.githubusercontent.com/apache/nifi/rel/nifi-" + NifiContainer.NIFI_VERSION + "/nifi-python-extensions/nifi-text-embeddings-module/src/main/python/ChunkDocument.py"
+        parse_document_url = "https://raw.githubusercontent.com/apache/nifi-python-extensions/refs/heads/main/src/extensions/chunking/ParseDocument.py"
+        chunk_document_url = "https://raw.githubusercontent.com/apache/nifi-python-extensions/refs/heads/main/src/extensions/chunking/ChunkDocument.py"
         pip3_install_command = ""
         requirements_install_command = ""
         additional_cmd = ""
@@ -150,7 +149,7 @@ class ImageStore:
         elif python_option == PythonOptions.REQUIREMENTS_FILE:
             requirements_install_command = "echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\"
         elif python_option == PythonOptions.INLINE_DEFINED_PACKAGES:
-            parse_document_sed_cmd = parse_document_sed_cmd[:-2] + ' sed -i "54 i \\ \\ \\ \\ \\ \\ \\ \\ dependencies = [\\\"langchain<=0.17.0\\\"]" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
+            parse_document_sed_cmd = parse_document_sed_cmd[:-2] + ' sed -i "s/langchain==[0-9.]\\+/langchain<=0.17.0/" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
             chunk_document_sed_cmd = 'sed -i "s/\\[\\\'langchain\\\'\\]/\\[\\\'langchain<=0.17.0\\\'\\]/" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
         if not MinifiContainer.MINIFI_TAG_PREFIX:
             pip3_install_command = "RUN apk --update --no-cache add py3-pip"
