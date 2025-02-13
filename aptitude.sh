@@ -23,10 +23,6 @@ verify_enable_platform(){
 add_os_flags() {
     CC=${CC:-gcc}
     CXX=${CXX:-g++}
-    if [[ "$OS" = Ubuntu* && "$OS_MAJOR" -lt 22 ]]; then
-        CC=${CC:-gcc-11}
-        CXX=${CXX:-g++-11}
-    fi
     export CC
     export CXX
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX"
@@ -41,10 +37,6 @@ bootstrap_cmake(){
 }
 bootstrap_compiler() {
     compiler_pkgs="gcc g++"
-    if [[ "$OS" = Ubuntu* && "$OS_MAJOR" -lt 22 ]]; then
-        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-        compiler_pkgs="gcc-11 g++-11"
-    fi
     # shellcheck disable=SC2086
     sudo apt-get -y install $compiler_pkgs
 }
