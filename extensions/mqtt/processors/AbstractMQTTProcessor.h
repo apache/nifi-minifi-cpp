@@ -323,8 +323,6 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
   mqtt::MqttQoS last_will_qos_{mqtt::MqttQoS::LEVEL_0};
   bool last_will_retain_ = false;
   std::string last_will_content_type_;
-
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors
