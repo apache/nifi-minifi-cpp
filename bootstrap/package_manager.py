@@ -277,6 +277,7 @@ class ChocolateyPackageManager(PackageManager):
                                     "autoconf": set(),
                                     "libtool": set(),
                                     "make": set(),
+                                    "m4": {"gnuwin32-m4"},
                                     "perl": {"strawberryperl", "NASM"}})
         return True
 
