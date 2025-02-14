@@ -14,26 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "core/ProcessorNode.h"
-#include <memory>
-#include <utility>
-namespace org::apache::nifi::minifi::core {
-
-ProcessorNodeImpl::ProcessorNodeImpl(Connectable* processor)
-    : ConnectableImpl(processor->getName()),
-      processor_(processor) {
-  setUUID(processor->getUUID());
-}
-
-ProcessorNodeImpl::~ProcessorNodeImpl() = default;
-
-bool ProcessorNodeImpl::isWorkAvailable() {
-  return processor_->isWorkAvailable();
-}
-
-bool ProcessorNodeImpl::isRunning() const {
-  return processor_->isRunning();
-}
-
-}  // namespace org::apache::nifi::minifi::core
+#include "minifi-cpp/utils/PropertyExceptions.h"

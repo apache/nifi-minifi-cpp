@@ -25,6 +25,7 @@
 
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Resource.h"
+#include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -33,15 +34,7 @@ void UpdateAttribute::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void UpdateAttribute::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  attributes_.clear();
-  const auto &dynamic_prop_keys = context.getDynamicPropertyKeys();
-  logger_->log_info("UpdateAttribute registering {} keys", dynamic_prop_keys.size());
-
-  for (const auto &key : dynamic_prop_keys) {
-    attributes_.emplace_back(core::PropertyDefinitionBuilder<>::createProperty(key).withDescription("auto generated").supportsExpressionLanguage(true).build());
-    logger_->log_info("UpdateAttribute registered attribute '{}'", key);
-  }
+void UpdateAttribute::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {
 }
 
 void UpdateAttribute::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
@@ -53,11 +46,9 @@ void UpdateAttribute::onTrigger(core::ProcessContext& context, core::ProcessSess
   }
 
   try {
-    for (const auto &attribute : attributes_) {
-      std::string value;
-      context.getDynamicProperty(attribute, value, flow_file.get());
-      flow_file->setAttribute(attribute.getName(), value);
-      logger_->log_debug("Set attribute '{}' of flow file '{}' with value '{}'", attribute.getName(), flow_file->getUUIDStr(), value);
+    for (const auto& [dyn_prop_name, dyn_prop_value] : context.getDynamicProperties(flow_file.get())) {
+      flow_file->setAttribute(dyn_prop_name, dyn_prop_value);
+      logger_->log_debug("Set attribute '{}' of flow file '{}' with value '{}'", dyn_prop_name, flow_file->getUUIDStr(), dyn_prop_value);
     }
     session.transfer(flow_file, Success);
   } catch (const std::exception &e) {

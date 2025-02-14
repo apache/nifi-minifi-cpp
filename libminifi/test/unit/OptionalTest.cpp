@@ -77,3 +77,19 @@ TEST_CASE("optional filter", "[optional][filter]") {
   REQUIRE(7 == (std::make_optional(7) | utils::filter([](int i) { return i % 2 == 1; })).value());
   REQUIRE(std::nullopt == (std::make_optional(8) | utils::filter([](int i) { return i % 2 == 1; })));
 }
+
+TEST_CASE("optional toExpected") {
+  std::optional<int> opt_with_value = 5;
+  std::optional<int> opt_without_value = std::nullopt;
+
+  nonstd::expected<int, std::error_code> expected_from_value_ec = opt_with_value | utils::toExpected(std::make_error_code(std::io_errc::stream));
+  nonstd::expected<int, std::error_code> expected_from_null_opt_ec = opt_without_value | utils::toExpected(std::make_error_code(std::io_errc::stream));
+  nonstd::expected<int, int> expected_from_value_int = opt_with_value | utils::toExpected(9);
+  nonstd::expected<int, int> expected_from_null_opt_int = opt_without_value | utils::toExpected(9);
+
+  CHECK(expected_from_value_ec == 5);
+  CHECK(expected_from_value_int == 5);
+
+  CHECK(expected_from_null_opt_ec.error() == std::make_error_code(std::io_errc::stream));
+  CHECK(expected_from_null_opt_int.error() == 9);
+}

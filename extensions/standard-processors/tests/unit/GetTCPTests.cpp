@@ -155,7 +155,7 @@ TEST_CASE("GetTCP test with delimiter", "[GetTCP]") {
   SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
-  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize, "2"));
+  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
 
 
   TcpTestServer tcp_test_server;
@@ -165,14 +165,14 @@ TEST_CASE("GetTCP test with delimiter", "[GetTCP]") {
   SECTION("SSL") {
     addSslContextServiceTo(controller);
     tcp_test_server.enableSSL();
-    REQUIRE(get_tcp->setProperty(GetTCP::SSLContextService, "SSLContextService"));
+    REQUIRE(get_tcp->setProperty(GetTCP::SSLContextService.name, "SSLContextService"));
   }
 
   tcp_test_server.queueMessage("Hello\n");
   tcp_test_server.run();
   REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [&] { return tcp_test_server.getPort() != 0; }, 20ms));
 
-  REQUIRE(get_tcp->setProperty(GetTCP::EndpointList, fmt::format("localhost:{}", tcp_test_server.getPort())));
+  REQUIRE(get_tcp->setProperty(GetTCP::EndpointList.name, fmt::format("localhost:{}", tcp_test_server.getPort())));
   controller.plan->scheduleProcessor(get_tcp);
 
   ProcessorTriggerResult result;
@@ -186,9 +186,9 @@ TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
   SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
-  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize, "2"));
-  REQUIRE(get_tcp->setProperty(GetTCP::MaxMessageSize, "10"));
-  REQUIRE(get_tcp->setProperty(GetTCP::MessageDelimiter, "\r"));
+  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
+  REQUIRE(get_tcp->setProperty(GetTCP::MaxMessageSize.name, "10"));
+  REQUIRE(get_tcp->setProperty(GetTCP::MessageDelimiter.name, "\r"));
 
   TcpTestServer tcp_test_server;
 
@@ -197,7 +197,7 @@ TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
   SECTION("SSL") {
     addSslContextServiceTo(controller);
     tcp_test_server.enableSSL();
-    REQUIRE(get_tcp->setProperty(GetTCP::SSLContextService, "SSLContextService"));
+    REQUIRE(get_tcp->setProperty(GetTCP::SSLContextService.name, "SSLContextService"));
   }
 
   tcp_test_server.queueMessage("abcdefghijklmnopqrstuvwxyz\rBye\r");
@@ -205,7 +205,7 @@ TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
 
   REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [&] { return tcp_test_server.getPort() != 0; }, 20ms));
 
-  REQUIRE(get_tcp->setProperty(GetTCP::EndpointList, fmt::format("localhost:{}", tcp_test_server.getPort())));
+  REQUIRE(get_tcp->setProperty(GetTCP::EndpointList.name, fmt::format("localhost:{}", tcp_test_server.getPort())));
   controller.plan->scheduleProcessor(get_tcp);
 
   ProcessorTriggerResult result;
@@ -227,7 +227,7 @@ TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
   SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
-  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize, "2"));
+  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
 
   TcpTestServer server_1;
   TcpTestServer server_2;
@@ -238,7 +238,7 @@ TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
     addSslContextServiceTo(controller);
     server_1.enableSSL();
     server_2.enableSSL();
-    REQUIRE(get_tcp->setProperty(GetTCP::SSLContextService, "SSLContextService"));
+    REQUIRE(get_tcp->setProperty(GetTCP::SSLContextService.name, "SSLContextService"));
   }
 
   server_1.queueMessage("abcdefghijklmnopqrstuvwxyz\nBye\n");
@@ -249,7 +249,7 @@ TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
 
   REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [&] { return server_1.getPort() != 0 && server_2.getPort() != 0; }, 20ms));
 
-  REQUIRE(get_tcp->setProperty(GetTCP::EndpointList, fmt::format("localhost:{},localhost:{}", server_1.getPort(), server_2.getPort())));
+  REQUIRE(get_tcp->setProperty(GetTCP::EndpointList.name, fmt::format("localhost:{},localhost:{}", server_1.getPort(), server_2.getPort())));
   controller.plan->scheduleProcessor(get_tcp);
 
   ProcessorTriggerResult result;
@@ -271,8 +271,8 @@ TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
   SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
-  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize, "10"));
-  REQUIRE(get_tcp->setProperty(GetTCP::MaxQueueSize, "50"));
+  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "10"));
+  REQUIRE(get_tcp->setProperty(GetTCP::MaxQueueSize.name, "50"));
 
   TcpTestServer server;
 
@@ -280,7 +280,7 @@ TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
   SECTION("SSL") {
     addSslContextServiceTo(controller);
     server.enableSSL();
-    REQUIRE(get_tcp->setProperty(GetTCP::SSLContextService, "SSLContextService"));
+    REQUIRE(get_tcp->setProperty(GetTCP::SSLContextService.name, "SSLContextService"));
   }
 
   LogTestController::getInstance().setWarn<GetTCP>();
@@ -293,7 +293,7 @@ TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
 
   REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [&] { return server.getPort() != 0; }, 20ms));
 
-  REQUIRE(get_tcp->setProperty(GetTCP::EndpointList, fmt::format("localhost:{}", server.getPort())));
+  REQUIRE(get_tcp->setProperty(GetTCP::EndpointList.name, fmt::format("localhost:{}", server.getPort())));
   controller.plan->scheduleProcessor(get_tcp);
 
   CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));

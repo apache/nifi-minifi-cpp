@@ -17,18 +17,20 @@
  */
 #include "GetTCP.h"
 
-#include <memory>
-#include <thread>
-#include <string>
 
-#include <asio/read_until.hpp>
-#include <asio/detached.hpp>
-#include "utils/net/AsioCoro.h"
-#include "utils/gsl.h"
-#include "utils/StringUtils.h"
+#include <memory>
+#include <string>
+#include <thread>
+
+#include "asio/detached.hpp"
+#include "asio/read_until.hpp"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/StringUtils.h"
+#include "utils/gsl.h"
+#include "utils/net/AsioCoro.h"
+#include "utils/ProcessorConfigUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -86,14 +88,7 @@ std::optional<asio::ssl::context> GetTCP::parseSSLContext(core::ProcessContext& 
 }
 
 uint64_t GetTCP::parseMaxBatchSize(core::ProcessContext& context) {
-  if (auto max_batch_size = context.getProperty<uint64_t>(MaxBatchSize)) {
-    if (*max_batch_size == 0) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("{} should be non-zero.", MaxBatchSize.name));
-    }
-    return *max_batch_size;
-  }
-  static_assert(MaxBatchSize.default_value);
-  return MaxBatchSize.type->parse(*MaxBatchSize.default_value);
+  return utils::parseU64Property(context, MaxBatchSize);
 }
 
 void GetTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
@@ -101,18 +96,18 @@ void GetTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   auto delimiter = parseDelimiter(context);
   auto ssl_context = parseSSLContext(context);
 
-  std::optional<size_t> max_queue_size = context.getProperty<uint64_t>(MaxQueueSize);
-  std::optional<size_t> max_message_size = context.getProperty<uint64_t>(MaxMessageSize);
+  std::optional<size_t> max_queue_size = utils::parseOptionalU64Property(context, MaxQueueSize);
+  std::optional<size_t> max_message_size = utils::parseOptionalU64Property(context, MaxMessageSize);
 
 
   asio::steady_timer::duration timeout_duration = 1s;
-  if (auto timeout_value = context.getProperty<core::TimePeriodValue>(Timeout)) {
-    timeout_duration = timeout_value->getMilliseconds();
+  if (auto timeout_value = utils::parseOptionalMsProperty(context, Timeout)) {
+    timeout_duration = *timeout_value;
   }
 
   asio::steady_timer::duration reconnection_interval = 1min;
-  if (auto reconnect_interval_value = context.getProperty<core::TimePeriodValue>(ReconnectInterval)) {
-    reconnection_interval = reconnect_interval_value->getMilliseconds();
+  if (auto reconnect_interval_value = utils::parseOptionalMsProperty(context, ReconnectInterval)) {
+    reconnection_interval = *reconnect_interval_value;;
   }
 
 

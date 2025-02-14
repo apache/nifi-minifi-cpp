@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-
 #include "PostElasticsearch.h"
 
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -27,8 +26,9 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stream.h"
 #include "rapidjson/writer.h"
-#include "utils/expected.h"
 #include "utils/JsonCallback.h"
+#include "utils/expected.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
 
@@ -50,7 +50,7 @@ auto PostElasticsearch::getCredentialsService(core::ProcessContext& context) con
 }
 
 void PostElasticsearch::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  context.getProperty(MaxBatchSize, max_batch_size_);
+  max_batch_size_ = utils::parseU64Property(context, MaxBatchSize);
   if (max_batch_size_ < 1)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Max Batch Size property is invalid");
 
@@ -96,7 +96,7 @@ class ElasticPayload {
     if (!index)
       return nonstd::make_unexpected("Missing index");
 
-    auto id = context.getProperty(PostElasticsearch::Identifier, flow_file.get());
+    auto id = context.getProperty(PostElasticsearch::Identifier, flow_file.get()) | utils::toOptional();
     if (!id && (action == "delete" || action == "update" || action == "upsert"))
       return nonstd::make_unexpected("Identifier is required for DELETE,UPDATE and UPSERT actions");
 

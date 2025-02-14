@@ -28,7 +28,7 @@
 #include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "core/Core.h"
 #include "ControllerServiceLookup.h"
-#include "core/ConfigurableComponent.h"
+#include "core/ConfigurableComponentImpl.h"
 #include "ControllerServiceNode.h"
 #include "ControllerServiceNodeMap.h"
 #include "core/ClassLoader.h"

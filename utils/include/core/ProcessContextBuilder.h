@@ -66,7 +66,7 @@ class ProcessContextBuilderImpl : public core::CoreComponentImpl, public virtual
 
   std::shared_ptr<ProcessContextBuilder> withConfiguration(const std::shared_ptr<minifi::Configure> &configuration) override;
 
-  std::shared_ptr<core::ProcessContext> build(const std::shared_ptr<ProcessorNode> &processor) override;
+  std::shared_ptr<core::ProcessContext> build(Processor& processor) override;
 
  protected:
   std::shared_ptr<minifi::Configure> configuration_;

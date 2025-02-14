@@ -26,6 +26,7 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "range/v3/algorithm/find.hpp"
 #include "core/ProcessSession.h"
+#include "core/ProcessContext.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -36,17 +37,22 @@ void AttributesToJSON::initialize() {
 }
 
 void AttributesToJSON::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string value;
-  if (context.getProperty(AttributesList, value) && !value.empty()) {
-    attribute_list_ = utils::string::splitAndTrimRemovingEmpty(value, ",");
-  }
-  if (context.getProperty(AttributesRegularExpression, value) && !value.empty()) {
-    attributes_regular_expression_ = utils::Regex(value);
-  }
+  attribute_list_ = context.getProperty(AttributesList)
+      | utils::transform([](const auto attributes_list_str) { return utils::string::splitAndTrimRemovingEmpty(attributes_list_str, ","); })
+      | utils::valueOrElse([] { return std::vector<std::string>{}; });
+
+  attributes_regular_expression_ = context.getProperty(AttributesRegularExpression)
+      | utils::transform([](const auto s) { return utils::Regex{s}; })
+      | utils::toOptional();
+
   write_destination_ = utils::parseEnumProperty<attributes_to_json::WriteDestination>(context, Destination);
 
-  context.getProperty(IncludeCoreAttributes, include_core_attributes_);
-  context.getProperty(NullValue, null_value_);
+  include_core_attributes_ = context.getProperty(IncludeCoreAttributes)
+      | utils::andThen(parsing::parseBool)
+      | utils::expect("AttributesToJSON::IncludeCoreAttributes should be available in onSchedule");
+  null_value_ = context.getProperty(NullValue)
+      | utils::andThen(parsing::parseBool)
+      | utils::expect("AttributesToJSON::NullValue should be available in onSchedule");
 }
 
 bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute) const {
