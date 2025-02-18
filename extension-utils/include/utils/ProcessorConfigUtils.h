@@ -25,6 +25,7 @@
 #include "core/ProcessContext.h"
 #include "core/PropertyType.h"
 #include "utils/Enum.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::utils {
 
