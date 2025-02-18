@@ -173,7 +173,7 @@ bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession& session,
   }
   const auto split_position = gsl::narrow<int64_t>(getSplitPosition(last_regex_match, pattern_location_));
   if (split_position != 0) {
-    split_before_last_pattern = session.clone(*original_flow_file, 0, split_position);
+    split_before_last_pattern = session.clone(*original_flow_file, 0, gsl::narrow<int64_t>(split_position));
   }
   if (split_position != gsl::narrow<int64_t>(original_flow_file->getSize())) {
     split_after_last_pattern = session.clone(*original_flow_file, split_position, gsl::narrow<int64_t>(original_flow_file->getSize()) - split_position);
