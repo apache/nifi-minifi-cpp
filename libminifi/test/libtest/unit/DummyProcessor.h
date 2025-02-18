@@ -20,7 +20,7 @@
 #include <string_view>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "agent/agent_docs.h"
 #include "core/PropertyDefinitionBuilder.h"
 

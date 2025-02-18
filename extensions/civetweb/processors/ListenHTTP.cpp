@@ -108,7 +108,7 @@ void ListenHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionF
   logger_->log_debug("ListenHTTP using {}: {}", BatchSize.name, batch_size_);
 
   std::optional<std::string> flow_id;
-  if (auto flow_version = context.getProcessor().getFlowIdentifier()) {
+  if (auto flow_version = context.getProcessorInfo().getFlowIdentifier()) {
     flow_id = flow_version->getFlowId();
   }
 
@@ -502,14 +502,6 @@ void ListenHTTP::notifyStop() {
 
   server_.reset();
   handler_.reset();
-}
-
-std::set<core::Connectable*> ListenHTTP::getOutGoingConnections(const std::string &relationship) {
-  auto result = core::ProcessorImpl::getOutGoingConnections(relationship);
-  if (relationship == Self.name) {
-    result.insert(this);
-  }
-  return result;
 }
 
 REGISTER_RESOURCE(ListenHTTP, Processor);

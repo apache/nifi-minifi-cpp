@@ -26,12 +26,13 @@
 #include <string>
 #include <vector>
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/OptionalUtils.h"
 #include "utils/gsl.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "minifi-cpp/core/ProcessorDescriptor.h"
 
 namespace org::apache::nifi::minifi::processors {
 const char *GenerateFlowFile::DATA_FORMAT_TEXT = "Text";
@@ -83,7 +84,7 @@ void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSe
       | utils::valueOrElse([]() {return false;});
   bool is_unique = utils::parseOptionalBoolProperty(context, UniqueFlowFiles).value_or(true);
 
-  const auto custom_text_without_evaluation = getProperty(CustomText.name);
+  const auto custom_text_without_evaluation = context.getProperty(CustomText.name);
   const bool has_custom_text = custom_text_without_evaluation.has_value() && !custom_text_without_evaluation->empty();
 
   file_size_ = utils::parseDataSizeProperty(context, FileSize);

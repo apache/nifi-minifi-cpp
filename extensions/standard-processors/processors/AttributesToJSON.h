@@ -132,7 +132,6 @@ class AttributesToJSON : public core::ProcessorImpl {
   void addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::optional<std::string>& value) const;
   std::string buildAttributeJsonData(const core::FlowFile::AttributeMap& flowfile_attributes);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AttributesToJSON>::getLogger(uuid_);
   std::vector<std::string> attribute_list_;
   std::optional<utils::Regex> attributes_regular_expression_;
   attributes_to_json::WriteDestination write_destination_;
