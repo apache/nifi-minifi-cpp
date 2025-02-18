@@ -22,15 +22,14 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
+#include "minifi-cpp/core/ProcessorDescriptor.h"
 
 namespace org::apache::nifi::minifi {
 
 class ForwardingNode : public core::ProcessorImpl {
  public:
-  ForwardingNode(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger) : ProcessorImpl(name, uuid), logger_(std::move(logger)) {
-    strategy_ = core::SchedulingStrategy::EVENT_DRIVEN;
-  }
+  ForwardingNode(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger) : ProcessorImpl(name, uuid), logger_(std::move(logger)) {}
   ForwardingNode(std::string_view name, std::shared_ptr<core::logging::Logger> logger) : ProcessorImpl(name), logger_(std::move(logger)) {}
 
   MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};

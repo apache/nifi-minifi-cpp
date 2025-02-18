@@ -44,61 +44,30 @@ namespace core {
 class ProcessContext;
 class ProcessSession;
 class ProcessSessionFactory;
+class ProcessorDescriptor;
 
-class Processor : public virtual Connectable, public virtual ConfigurableComponent, public virtual state::response::ResponseNodeSource {
+class ProcessorApi {
  public:
-  ~Processor() override = default;
+  virtual ~ProcessorApi() = default;
 
-  virtual void setScheduledState(ScheduledState state) = 0;
-  virtual ScheduledState getScheduledState() const = 0;
-  virtual void setSchedulingStrategy(SchedulingStrategy strategy) = 0;
-  virtual SchedulingStrategy getSchedulingStrategy() const = 0;
-  virtual void setSchedulingPeriod(std::chrono::steady_clock::duration period) = 0;
-  virtual std::chrono::steady_clock::duration getSchedulingPeriod() const = 0;
-  virtual void setCronPeriod(const std::string &period) = 0;
-  virtual std::string getCronPeriod() const = 0;
-  virtual void setRunDurationNano(std::chrono::steady_clock::duration period) = 0;
-  virtual std::chrono::steady_clock::duration getRunDurationNano() const = 0;
-  virtual void setYieldPeriodMsec(std::chrono::milliseconds period) = 0;
-  virtual std::chrono::steady_clock::duration getYieldPeriod() const = 0;
-  virtual void setPenalizationPeriod(std::chrono::milliseconds period) = 0;
+  virtual bool isWorkAvailable() = 0;
+
+  virtual void restore(const std::shared_ptr<FlowFile>& file) = 0;
+
+
+  [[nodiscard]] virtual bool supportsDynamicProperties() const = 0;
+  [[nodiscard]] virtual bool supportsDynamicRelationships() const = 0;
+
+  virtual void initialize(ProcessorDescriptor& descriptor) = 0;
   virtual bool isSingleThreaded() const = 0;
   virtual std::string getProcessorType() const = 0;
-  virtual void setTriggerWhenEmpty(bool value) = 0;
   virtual bool getTriggerWhenEmpty() const = 0;
-  virtual uint8_t getActiveTasks() const = 0;
-  virtual void incrementActiveTasks() = 0;
-  virtual void decrementActiveTask() = 0;
-  virtual void clearActiveTask() = 0;
-  using Connectable::yield;
-  virtual void yield(std::chrono::steady_clock::duration delta_time) = 0;
-  virtual bool isYield() = 0;
-  virtual void clearYield() = 0;
-  virtual std::chrono::steady_clock::time_point getYieldExpirationTime() const = 0;
-  virtual std::chrono::steady_clock::duration getYieldTime() const = 0;
-  virtual bool flowFilesOutGoingFull() const = 0;
-  virtual bool addConnection(Connectable* connection) = 0;
-  virtual void triggerAndCommit(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory) = 0;
-  virtual void trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session) = 0;
   virtual void onTrigger(ProcessContext&, ProcessSession&) = 0;
   virtual void onSchedule(ProcessContext&, ProcessSessionFactory&) = 0;
   virtual void onUnSchedule() = 0;
-  virtual bool isThrottledByBackpressure() const = 0;
-  virtual void validateAnnotations() const = 0;
+  virtual void notifyStop() = 0;
   virtual annotation::Input getInputRequirement() const = 0;
   virtual gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const = 0;
-  virtual std::string getProcessGroupUUIDStr() const = 0;
-  virtual void setProcessGroupUUIDStr(const std::string &uuid) = 0;
-  virtual std::string getProcessGroupName() const = 0;
-  virtual void setProcessGroupName(const std::string &name) = 0;
-  virtual std::string getProcessGroupPath() const = 0;
-  virtual void setProcessGroupPath(const std::string &path) = 0;
-  virtual logging::LOG_LEVEL getLogBulletinLevel() const = 0;
-  virtual void setLogBulletinLevel(logging::LOG_LEVEL level) = 0;
-  virtual void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) = 0;
-
-  virtual void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false) = 0;
-  virtual const std::unordered_map<Connection*, std::unordered_set<Processor*>>& reachable_processors() const = 0;
 };
 
 }  // namespace core

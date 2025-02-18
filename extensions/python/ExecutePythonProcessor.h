@@ -90,7 +90,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void initialize() override;
+  void initialize(core::ProcessorDescriptor& self) override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 

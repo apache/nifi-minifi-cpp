@@ -25,21 +25,21 @@
 
 namespace org::apache::nifi::minifi::core {
 
-nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(const std::string_view name, const FlowFile* flow_file) const {
-  const auto property = getProcessor().getSupportedProperty(name);
+nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(ProcessContext& context, const std::string_view name, const FlowFile* flow_file) const {
+  const auto property = context.getProcessorInfo().getPropertyReference(name);
   if (!property) {
     return nonstd::make_unexpected(PropertyErrorCode::NotSupportedProperty);
   }
 
-  if (!property->supportsExpressionLanguage()) {
-    return ProcessContextImpl::getProperty(name, flow_file);
+  if (!property->supports_expression_language) {
+    return context.getProperty(name, flow_file);
   }
   if (!cached_expressions_.contains(name)) {
-    auto expression_str = ProcessContextImpl::getProperty(name, flow_file);
+    auto expression_str = context.getProperty(name, flow_file);
     if (!expression_str) { return expression_str; }
     cached_expressions_.emplace(std::string{name}, expression::compile(*expression_str));
   }
-  expression::Parameters p(this, flow_file);
+  expression::Parameters p(&context, flow_file);
   auto result = cached_expressions_[std::string{name}](p).asString();
   if (!property->getValidator().validate(result)) {
     return nonstd::make_unexpected(PropertyErrorCode::ValidationFailed);
@@ -47,21 +47,25 @@ nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(c
   return result;
 }
 
-nonstd::expected<std::string, std::error_code> ProcessContextExpr::getDynamicProperty(const std::string_view name, const FlowFile* flow_file) const {
-  // all dynamic properties support EL
+nonstd::expected<std::string, std::error_code> ProcessContextExpr::getDynamicProperty(ProcessContext& context, const std::string_view name, const FlowFile* flow_file) const {
   if (!cached_dynamic_expressions_.contains(name)) {
-    auto expression_str = ProcessContextImpl::getDynamicProperty(name, flow_file);
+    auto expression_str = context.getDynamicProperty(name, flow_file);
     if (!expression_str) { return expression_str; }
     cached_dynamic_expressions_.emplace(std::string{name}, expression::compile(*expression_str));
   }
-  const expression::Parameters p(this, flow_file);
+  const expression::Parameters p(&context, flow_file);
   return cached_dynamic_expressions_[std::string{name}](p).asString();
 }
 
-nonstd::expected<void, std::error_code> ProcessContextExpr::setProperty(const std::string_view name, std::string value) {
-  cached_expressions_.erase(std::string{name});
-  return ProcessContextImpl::setProperty(name, std::move(value));
-}
+//nonstd::expected<void, std::error_code> ProcessContextExpr::setProperty(const std::string_view name, std::string value) {
+//  cached_expressions_.erase(std::string{name});
+//  return ProcessContextImpl::setProperty(name, std::move(value));
+//}
+//
+//nonstd::expected<void, std::error_code> ProcessContextExpr::setDynamicProperty(std::string name, std::string value) {
+//  cached_dynamic_expressions_.erase(name);
+//  return ProcessContextImpl::setDynamicProperty(std::move(name), std::move(value));
+//}
 
 nonstd::expected<void, std::error_code> ProcessContextExpr::setDynamicProperty(std::string name, std::string value) {
   cached_dynamic_expressions_.erase(name);

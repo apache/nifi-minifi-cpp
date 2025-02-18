@@ -155,8 +155,6 @@ class ListenHTTP : public core::ProcessorImpl {
     return handler_ ? !handler_->empty() : false;
   }
 
-  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
-
   struct ResponseBody {
     std::string uri;
     std::string mime_type;
