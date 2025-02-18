@@ -23,6 +23,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "range/v3/action/sort.hpp"
 #include "range/v3/action/unique.hpp"
+#include "core/ProcessorProxy.h"
 
 namespace org {
 namespace apache {
@@ -37,6 +38,8 @@ class ClassLoaderImpl : public ClassLoader {
   ClassLoader& getClassLoader(const std::string& child_name) override;
 
   void registerClass(const std::string &clazz, std::unique_ptr<ObjectFactory> factory) override;
+
+  void registerClass(const std::string &clazz, std::unique_ptr<ProcessorFactory> factory) override;
 
   void unregisterClass(const std::string& clazz) override;
 
@@ -95,6 +98,47 @@ void ClassLoaderImpl::registerClass(const std::string &clazz, std::unique_ptr<Ob
     logger_->log_trace("Registering class '{}' at '{}'", clazz, name_);
     loaded_factories_.insert(std::make_pair(clazz, std::move(factory)));
   }
+
+namespace {
+class ProcessorFactoryWrapper : public ObjectFactoryImpl {
+ public:
+  explicit ProcessorFactoryWrapper(std::unique_ptr<ProcessorFactory> factory)
+    : ObjectFactoryImpl(factory->getGroupName()),
+      factory_(std::move(factory)) {}
+
+  std::unique_ptr<CoreComponent> create(const std::string &name) override {
+    return std::unique_ptr<CoreComponent>{createRaw(name)};
+  }
+
+  std::unique_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
+    return std::unique_ptr<CoreComponent>{createRaw(name, uuid)};
+  }
+
+  CoreComponent* createRaw(const std::string &name) override {
+    return createRaw(name, utils::IdGenerator::getIdGenerator()->generate());
+  }
+
+  CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
+    auto logger = logging::LoggerFactoryBase::getAliasedLogger(getClassName(), uuid);
+    return new ProcessorProxy(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = logger}));
+  }
+
+  std::string getGroupName() const override {
+    return factory_->getGroupName();
+  }
+
+  std::string getClassName() override {
+    return factory_->getClassName();
+  }
+
+ private:
+  std::unique_ptr<ProcessorFactory> factory_;
+};
+}
+
+void ClassLoaderImpl::registerClass(const std::string &clazz, std::unique_ptr<ProcessorFactory> factory) {
+  registerClass(clazz, std::make_unique<ProcessorFactoryWrapper>(std::move(factory)));
+}
 
 void ClassLoaderImpl::unregisterClass(const std::string& clazz) {
   std::lock_guard<std::mutex> lock(internal_mutex_);

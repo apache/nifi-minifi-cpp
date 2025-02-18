@@ -35,11 +35,11 @@ concept Summable = requires(T x) { x + x; };  // NOLINT(readability/braces)
 template<typename T>
 concept DividableByInteger = requires(T x, uint32_t divisor) { x / divisor; };  // NOLINT(readability/braces)
 
-class Processor;
+class ProcessorImpl;
 
 class ProcessorMetricsImpl : public state::response::ResponseNodeImpl, public virtual ProcessorMetrics {
  public:
-  explicit ProcessorMetricsImpl(const Processor& source_processor);
+  explicit ProcessorMetricsImpl(const ProcessorImpl& source_processor);
 
   [[nodiscard]] std::string getName() const override;
 
@@ -97,7 +97,7 @@ class ProcessorMetricsImpl : public state::response::ResponseNodeImpl, public vi
 
   mutable std::mutex transferred_relationships_mutex_;
   std::unordered_map<std::string, size_t> transferred_relationships_;
-  const Processor& source_processor_;
+  const ProcessorImpl& source_processor_;
   Averager<std::chrono::milliseconds> on_trigger_runtime_averager_;
   Averager<std::chrono::milliseconds> session_commit_runtime_averager_;
 
