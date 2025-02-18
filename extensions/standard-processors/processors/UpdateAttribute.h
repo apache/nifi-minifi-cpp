@@ -35,9 +35,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class UpdateAttribute : public core::ProcessorImpl {
  public:
-  UpdateAttribute(std::string_view name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "This processor updates the attributes of a FlowFile using properties that are added by the user. "
       "This allows you to set default attribute changes that affect every FlowFile going through the processor, equivalent to the \"basic\" usage in Apache NiFi.";
@@ -58,9 +56,6 @@ class UpdateAttribute : public core::ProcessorImpl {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdateAttribute>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

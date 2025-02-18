@@ -26,14 +26,14 @@
 #include "../Value.h"
 #include "../PublishedMetricProvider.h"
 #include "core/Core.h"
-#include "core/Connectable.h"
+#include "minifi-cpp/core/Connectable.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
 class ResponseNode;
 using SharedResponseNode = gsl::not_null<std::shared_ptr<ResponseNode>>;
 
-class ResponseNode : public virtual core::Connectable, public virtual PublishedMetricProvider {
+class ResponseNode : public virtual core::CoreComponent, public virtual PublishedMetricProvider {
  public:
   ~ResponseNode() override = default;
 

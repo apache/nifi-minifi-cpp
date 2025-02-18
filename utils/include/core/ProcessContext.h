@@ -46,46 +46,27 @@
 
 namespace org::apache::nifi::minifi::core {
 
+class Processor;
+
 class ProcessContextImpl : public core::VariableRegistryImpl, public virtual ProcessContext {
  public:
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
   ProcessContextImpl(Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
-      const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<core::ContentRepository>& content_repo = repository::createFileSystemRepository())
-      : VariableRegistryImpl(Configure::create()),
-        controller_service_provider_(controller_service_provider),
-        flow_repo_(flow_repo),
-        content_repo_(content_repo),
-        processor_(processor),
-        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
-        configure_(minifi::Configure::create()),
-        initialized_(false) {
-    repo_ = repo;
-    state_storage_ = getStateStorage(logger_, controller_service_provider_, nullptr);
-  }
+      const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<core::ContentRepository>& content_repo = repository::createFileSystemRepository());
 
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
   ProcessContextImpl(Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
       const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<minifi::Configure>& configuration,
-      const std::shared_ptr<core::ContentRepository>& content_repo = repository::createFileSystemRepository())
-      : VariableRegistryImpl(configuration),
-        controller_service_provider_(controller_service_provider),
-        flow_repo_(flow_repo),
-        content_repo_(content_repo),
-        processor_(processor),
-        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
-        configure_(configuration),
-        initialized_(false) {
-    repo_ = repo;
-    state_storage_ = getStateStorage(logger_, controller_service_provider_, configuration);
-    if (!configure_) { configure_ = minifi::Configure::create(); }
-  }
+      const std::shared_ptr<core::ContentRepository>& content_repo = repository::createFileSystemRepository());
 
   // Get Processor associated with the Process Context
   Processor& getProcessor() const override { return processor_; }
+
+  const ProcessorInfo& getProcessorInfo() const override { return *info_; }
 
   nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
   nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
@@ -93,13 +74,13 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile*) const override;
   nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
 
-  std::vector<std::string> getDynamicPropertyKeys() const override { return processor_.getDynamicPropertyKeys(); }
-  std::map<std::string, std::string> getDynamicProperties(const FlowFile*) const override { return processor_.getDynamicProperties(); }
+  std::vector<std::string> getDynamicPropertyKeys() const override;
+  std::map<std::string, std::string> getDynamicProperties(const FlowFile*) const override;
 
-  bool isAutoTerminated(Relationship relationship) const override { return processor_.isAutoTerminated(relationship); }
-  uint8_t getMaxConcurrentTasks() const override { return processor_.getMaxConcurrentTasks(); }
+  bool isAutoTerminated(Relationship relationship) const override;
+  uint8_t getMaxConcurrentTasks() const override;
 
-  void yield() override { processor_.yield(); }
+  void yield() override;
 
   std::shared_ptr<core::Repository> getProvenanceRepository() override { return repo_; }
 
@@ -132,11 +113,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";
 
-  StateManager* getStateManager() override {
-    if (state_storage_ == nullptr) { return nullptr; }
-    if (!state_manager_) { state_manager_ = state_storage_->getStateManager(processor_); }
-    return state_manager_.get();
-  }
+  StateManager* getStateManager() override;
 
   bool hasStateManager() const override { return state_manager_ != nullptr; }
 
@@ -228,27 +205,8 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   Processor& processor_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<Configure> configure_;
+  std::unique_ptr<ProcessorInfo> info_;
   bool initialized_;
 };
-
-inline nonstd::expected<std::string, std::error_code> ProcessContextImpl::getProperty(const std::string_view name, const FlowFile* const) const {
-  return getProcessor().getProperty(name);
-}
-
-inline nonstd::expected<void, std::error_code> ProcessContextImpl::setProperty(const std::string_view name, std::string value) {
-  return getProcessor().setProperty(name, std::move(value));
-}
-
-inline nonstd::expected<void, std::error_code> ProcessContextImpl::clearProperty(const std::string_view name) {
-  return getProcessor().clearProperty(name);
-}
-
-inline nonstd::expected<std::string, std::error_code> ProcessContextImpl::getDynamicProperty(const std::string_view name, const FlowFile* const) const {
-  return getProcessor().getDynamicProperty(name);
-}
-
-inline nonstd::expected<void, std::error_code> ProcessContextImpl::setDynamicProperty(std::string name, std::string value) {
-  return getProcessor().setDynamicProperty(std::move(name), std::move(value));
-}
 
 }  // namespace org::apache::nifi::minifi::core

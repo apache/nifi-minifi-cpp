@@ -54,7 +54,7 @@ class ObjectNode : public ResponseNodeImpl {
   }
 
   std::string getName() const override {
-    return ConnectableImpl::getName();
+    return CoreComponentImpl::getName();
   }
 
   std::vector<SerializedResponseNode> serialize() override;

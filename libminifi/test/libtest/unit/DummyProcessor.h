@@ -20,7 +20,7 @@
 #include <string_view>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "agent/agent_docs.h"
 
 namespace org::apache::nifi::minifi::test {

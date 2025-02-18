@@ -232,12 +232,4 @@ void PushGrafanaLoki::restore(const std::shared_ptr<core::FlowFile>& flow_file) 
   log_batch_.restore(flow_file);
 }
 
-std::set<core::Connectable*> PushGrafanaLoki::getOutGoingConnections(const std::string &relationship) {
-  auto result = core::ConnectableImpl::getOutGoingConnections(relationship);
-  if (relationship == Self.getName()) {
-    result.insert(this);
-  }
-  return result;
-}
-
 }  // namespace org::apache::nifi::minifi::extensions::grafana::loki
