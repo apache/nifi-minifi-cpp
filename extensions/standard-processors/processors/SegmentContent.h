@@ -34,9 +34,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class SegmentContent final : public core::ProcessorImpl {
  public:
-  explicit SegmentContent(const std::string_view name, const utils::Identifier& uuid = {}) : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<SegmentContent>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr auto Description = "Segments a FlowFile into multiple smaller segments on byte boundaries.";
 

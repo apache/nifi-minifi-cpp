@@ -16,4 +16,17 @@
  */
 #pragma once
 
-#include "core/ProcessorImpl.h"
+#include "minifi-cpp/utils/Id.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include <memory>
+#include <string>
+
+namespace org::apache::nifi::minifi::core {
+
+struct ProcessorMetadata {
+  utils::Identifier uuid;
+  std::string name;
+  std::shared_ptr<logging::Logger> logger;
+};
+
+}  // namespace org::apache::nifi::minifi::core
