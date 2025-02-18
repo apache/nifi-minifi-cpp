@@ -29,6 +29,7 @@
 #include "Funnel.h"
 #include "core/Resource.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -1029,7 +1030,6 @@ TEST_CASE("NiFi flow json can use alternative targetUris field") {
   REQUIRE(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 }
 
-
 TEST_CASE("Test parameters in controller services") {
   ConfigurationTestController test_controller;
   auto context = test_controller.getContext();
@@ -1147,6 +1147,335 @@ TEST_CASE("Parameters can be used in controller services in nested process group
   REQUIRE(impl);
   CHECK(impl->getProperty("Passphrase").value() == "secret1!!1!");
   CHECK(impl->getProperty("Private Key").value() == "/opt/secrets/private-key.pem");
+}
+
+TEST_CASE("Test parameter context inheritance") {
+  ConfigurationTestController test_controller;
+  auto context = test_controller.getContext();
+  auto encrypted_parameter_value = minifi::utils::crypto::property_encryption::encrypt("value1", *context.sensitive_values_encryptor);
+  auto encrypted_sensitive_property_value = minifi::utils::crypto::property_encryption::encrypt("#{my_new_parameter}", *context.sensitive_values_encryptor);
+  core::flow::AdaptiveConfiguration config(context);
+
+  static const std::string CONFIG_JSON =
+      fmt::format(R"(
+{{
+  "parameterContexts": [
+    {{
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "inherited-context",
+      "description": "inherited parameter context",
+      "parameters": [
+        {{
+          "name": "my_new_parameter",
+          "description": "",
+          "sensitive": true,
+          "value": "{}"
+        }}
+      ],
+      "inheritedParameterContexts": ["base-context"]
+    }},
+    {{
+      "identifier": "521e10b7-8e00-3188-9a27-476cca376351",
+      "name": "base-context",
+      "description": "my base parameter context",
+      "parameters": [
+        {{
+          "name": "my_old_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "old_value"
+        }}
+      ]
+    }}
+  ],
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [{{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {{
+        "Sensitive Property": "{}",
+        "Simple Property": "#{{my_old_parameter}}"
+      }}
+    }}],
+    "parameterContextName": "inherited-context"
+  }}
+}})", encrypted_parameter_value, encrypted_sensitive_property_value);
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  REQUIRE(proc);
+  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+  REQUIRE(proc->getProperty("Simple Property") == "old_value");
+}
+
+TEST_CASE("Parameter context can not inherit from a itself") {
+  ConfigurationTestController test_controller;
+
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "parameterContexts": [
+    {
+      "identifier": "521e10b7-8e00-3188-9a27-476cca376351",
+      "name": "base-context",
+      "description": "my base parameter context",
+      "parameters": [
+        {
+          "name": "my_old_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "old_value"
+        }
+      ],
+      "inheritedParameterContexts": ["base-context"]
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {
+        "Simple Property": "#{my_old_parameter}"
+      }
+    }],
+    "parameterContextName": "base-context"
+  }
+})";
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Inherited parameter context 'base-context' cannot be the same as the parameter context!");
+}
+
+TEST_CASE("Parameter context can not inherit from non-existing parameter context") {
+  ConfigurationTestController test_controller;
+
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "parameterContexts": [
+    {
+      "identifier": "521e10b7-8e00-3188-9a27-476cca376351",
+      "name": "base-context",
+      "description": "my base parameter context",
+      "parameters": [
+        {
+          "name": "my_old_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "old_value"
+        }
+      ],
+      "inheritedParameterContexts": ["unknown"]
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {
+        "Simple Property": "#{my_old_parameter}"
+      }
+    }],
+    "parameterContextName": "base-context"
+  }
+})";
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Inherited parameter context 'unknown' does not exist!");
+}
+
+TEST_CASE("Cycles are not allowed in parameter context inheritance") {
+  ConfigurationTestController test_controller;
+
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "parameterContexts": [
+    {
+      "identifier": "123e10b7-8e00-3188-9a27-476cca376351",
+      "name": "a-context",
+      "description": "",
+      "parameters": [
+        {
+          "name": "a_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "a_value"
+        }
+      ],
+      "inheritedParameterContexts": ["c-context"]
+    },
+    {
+      "identifier": "456e10b7-8e00-3188-9a27-476cca376351",
+      "name": "b-context",
+      "description": "",
+      "parameters": [
+        {
+          "name": "b_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "b_value"
+        }
+      ],
+      "inheritedParameterContexts": ["a-context"]
+    },
+    {
+      "identifier": "789e10b7-8e00-3188-9a27-476cca376351",
+      "name": "c-context",
+      "description": "",
+      "parameters": [
+        {
+          "name": "c_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "c_value"
+        }
+      ],
+      "inheritedParameterContexts": ["d-context", "b-context"]
+    },
+    {
+      "identifier": "101e10b7-8e00-3188-9a27-476cca376351",
+      "name": "d-context",
+      "description": "",
+      "parameters": [
+        {
+          "name": "d_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "d_value"
+        }
+      ],
+      "inheritedParameterContexts": []
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {
+        "Simple Property": "#{my_old_parameter}"
+      }
+    }],
+    "parameterContextName": "c-context"
+  }
+})";
+
+  REQUIRE_THROWS_AS(config.getRootFromPayload(CONFIG_JSON), std::invalid_argument);
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Circular references in Parameter Context inheritance are not allowed. Inheritance cycle was detected in parameter context"));
+}
+
+TEST_CASE("Parameter context inheritance order is respected") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "parameterContexts": [
+    {
+      "identifier": "721e10b7-8e00-3188-9a27-476cca376978",
+      "name": "a-context",
+      "description": "",
+      "parameters": [
+        {
+          "name": "a_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "1"
+        },
+        {
+          "name": "b_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "identifier": "521e10b7-8e00-3188-9a27-476cca376351",
+      "name": "b-context",
+      "description": "",
+      "parameters": [
+        {
+          "name": "b_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "3"
+        },
+        {
+          "name": "c_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "identifier": "123e10b7-8e00-3188-9a27-476cca376351",
+      "name": "c-context",
+      "description": "",
+      "parameters": [
+        {
+          "name": "c_parameter",
+          "description": "",
+          "sensitive": false,
+          "value": "5"
+        }
+      ],
+      "inheritedParameterContexts": ["b-context", "a-context"]
+    }
+  ],
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyProcessor",
+      "type": "org.apache.nifi.processors.DummyFlowJsonProcessor",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "properties": {
+        "My A Property": "#{a_parameter}",
+        "My B Property": "#{b_parameter}",
+        "My C Property": "#{c_parameter}"
+      }
+    }],
+    "parameterContextName": "c-context"
+  }
+})";
+
+  std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
+  REQUIRE(flow);
+
+  auto* proc = flow->findProcessorByName("MyProcessor");
+  std::string value;
+  REQUIRE(proc->getDynamicProperty("My A Property", value));
+  CHECK(value == "1");
+  REQUIRE(proc->getDynamicProperty("My B Property", value));
+  CHECK(value == "3");
+  REQUIRE(proc->getDynamicProperty("My C Property", value));
+  CHECK(value == "5");
 }
 
 }  // namespace org::apache::nifi::minifi::test
