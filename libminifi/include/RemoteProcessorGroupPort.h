@@ -29,7 +29,7 @@
 #include "http/BaseHTTPClient.h"
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -212,7 +212,7 @@ class RemoteProcessorGroupPort : public core::ProcessorImpl {
   }
 
   std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol(bool create);
-  void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
+  void returnProtocol(core::ProcessContext& context, std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
 
   moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
 

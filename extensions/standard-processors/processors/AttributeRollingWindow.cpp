@@ -46,7 +46,7 @@ void AttributeRollingWindow::onSchedule(core::ProcessContext& context, core::Pro
 void AttributeRollingWindow::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   gsl_Expects(runningInvariant());
   const auto flow_file = session.get();
-  if (!flow_file) { yield(); return; }
+  if (!flow_file) { context.yield(); return; }
   gsl_Assert(flow_file);
   const auto current_value_opt_str = context.getProperty(ValueToTrack, flow_file.get());
   if (!current_value_opt_str) {

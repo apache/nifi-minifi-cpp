@@ -22,7 +22,7 @@ namespace org::apache::nifi::minifi::utils::net {
 std::optional<utils::net::SslData> getSslData(const core::ProcessContext& context, const core::PropertyReference& ssl_prop, const std::shared_ptr<core::logging::Logger>& logger) {
   auto getSslContextService = [&]() -> std::shared_ptr<minifi::controllers::SSLContextServiceInterface> {
     if (auto ssl_service_name = context.getProperty(ssl_prop); ssl_service_name && !ssl_service_name->empty()) {
-      if (auto service = context.getControllerService(*ssl_service_name, context.getProcessor().getUUID())) {
+      if (auto service = context.getControllerService(*ssl_service_name, context.getProcessorInfo().getUUID())) {
         if (auto ssl_service = std::dynamic_pointer_cast<org::apache::nifi::minifi::controllers::SSLContextServiceInterface>(service)) {
           return ssl_service;
         } else {

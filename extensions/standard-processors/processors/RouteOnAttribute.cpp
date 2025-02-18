@@ -33,8 +33,8 @@ void RouteOnAttribute::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void RouteOnAttribute::onSchedule(core::ProcessContext &, core::ProcessSessionFactory&) {
-  route_properties_ = getDynamicProperties();
+void RouteOnAttribute::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  route_properties_ = context.getDynamicProperties();
 
   const auto static_relationships = RouteOnAttribute::Relationships;
   std::vector<core::RelationshipDefinition> relationships(static_relationships.begin(), static_relationships.end());
@@ -78,7 +78,7 @@ void RouteOnAttribute::onTrigger(core::ProcessContext& context, core::ProcessSes
   } catch (const std::exception &e) {
     logger_->log_error("Caught exception while updating attributes: type: {}, what: {}", typeid(e).name(), e.what());
     session.transfer(flow_file, Failure);
-    yield();
+    context.yield();
   }
 }
 

@@ -29,6 +29,7 @@
 #include "agent/agent_docs.h"
 #include "utils/OptionalUtils.h"
 #include "utils/Macro.h"
+#include "core/ProcessorFactory.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -54,9 +55,16 @@ class StaticClassType {
       auto module_name = "minifi-system";
 #endif
 
-    for (const auto& construction_name : construction_names_) {
-      auto factory = std::unique_ptr<ObjectFactory>(new DefaultObjectFactory<Class>(module_name));
-      getClassLoader().registerClass(construction_name, std::move(factory));
+    if constexpr (Type == ResourceType::Processor) {
+      for (const auto& construction_name : construction_names_) {
+        auto factory = std::unique_ptr<ProcessorFactory>(new ProcessorFactoryImpl<Class>(module_name));
+        getClassLoader().registerClass(construction_name, std::move(factory));
+      }
+    } else {
+      for (const auto& construction_name : construction_names_) {
+        auto factory = std::unique_ptr<ObjectFactory>(new DefaultObjectFactory<Class>(module_name));
+        getClassLoader().registerClass(construction_name, std::move(factory));
+      }
     }
 
     minifi::AgentDocs::createClassDescription<Class, Type>(module_name, class_name);

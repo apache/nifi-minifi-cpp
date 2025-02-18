@@ -27,6 +27,7 @@
 #include "utils/Enum.h"
 #include "utils/expected.h"
 #include "utils/OptionalUtils.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::utils {
 

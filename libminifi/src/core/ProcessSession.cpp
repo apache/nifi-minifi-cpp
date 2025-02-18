@@ -34,6 +34,7 @@
 #include "io/StreamSlice.h"
 #include "io/StreamPipe.h"
 #include "utils/gsl.h"
+#include "core/Processor.h"
 
 /* This implementation is only for native Windows systems.  */
 #if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__

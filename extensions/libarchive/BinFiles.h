@@ -262,8 +262,6 @@ class BinFiles : public core::ProcessorImpl {
 
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
 
-  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
-
  protected:
   // Allows general pre-processing of a flow file before it is offered to a bin. This is called before getGroupId().
   virtual void preprocessFlowFile(const std::shared_ptr<core::FlowFile>& flow);

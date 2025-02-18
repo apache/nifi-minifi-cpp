@@ -123,7 +123,7 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
     return nullptr;
   }
 
-  if (auto controller_service = context->getControllerService(controller_service_name, context->getProcessor().getUUID())) {
+  if (auto controller_service = context->getControllerService(controller_service_name, context->getProcessorInfo().getUUID())) {
     std::string controller_service_type_str = controller_service_type;
     if (controller_service_type_str == "SSLContextService") {
       auto ssl_ctx_service = std::dynamic_pointer_cast<controllers::SSLContextServiceInterface>(controller_service);
@@ -147,7 +147,7 @@ PyObject* PyProcessContext::getName(PyProcessContext* self, PyObject*) {
     return nullptr;
   }
 
-  return object::returnReference(context->getProcessor().getName());
+  return object::returnReference(context->getProcessorInfo().getName());
 }
 
 PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
@@ -157,7 +157,7 @@ PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
     return nullptr;
   }
 
-  auto properties = context->getProcessor().getSupportedProperties();
+  auto properties = context->getProcessorInfo().getSupportedProperties();
   auto py_properties = OwnedDict::create();
   for (const auto& [property_name, property] : properties) {
     if (const auto value = context->getProperty(property_name)) {

@@ -54,7 +54,7 @@ struct GetFileRequest {
 
 class GetFileMetrics : public core::ProcessorMetricsImpl {
  public:
-  explicit GetFileMetrics(const core::Processor& source_processor)
+  explicit GetFileMetrics(const core::ProcessorApi& source_processor)
     : core::ProcessorMetricsImpl(source_processor) {
   }
 

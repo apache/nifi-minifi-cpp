@@ -317,14 +317,6 @@ void BinFiles::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   file_store_.put(flowFile);
 }
 
-std::set<core::Connectable*> BinFiles::getOutGoingConnections(const std::string &relationship) {
-  auto result = core::ConnectableImpl::getOutGoingConnections(relationship);
-  if (relationship == Self.getName()) {
-    result.insert(this);
-  }
-  return result;
-}
-
 REGISTER_RESOURCE(BinFiles, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

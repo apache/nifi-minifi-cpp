@@ -25,7 +25,6 @@
 #include <unordered_map>
 
 #include "core/Core.h"
-#include "core/Connectable.h"
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "core/state/PublishedMetricProvider.h"
 
@@ -37,37 +36,26 @@ using SharedResponseNode = gsl::not_null<std::shared_ptr<ResponseNode>>;
 /**
  * Purpose: Defines a metric. Serialization is intended to be thread safe.
  */
-class ResponseNodeImpl : public core::ConnectableImpl, public PublishedMetricProviderImpl, public virtual ResponseNode {
+class ResponseNodeImpl : public core::CoreComponentImpl, public PublishedMetricProviderImpl, public virtual ResponseNode {
  public:
   ResponseNodeImpl()
-      : core::ConnectableImpl("metric"),
+      : core::CoreComponentImpl("metric"),
         is_array_(false) {
   }
 
   explicit ResponseNodeImpl(const std::string_view name)
-      : core::ConnectableImpl(name),
+      : core::CoreComponentImpl(name),
         is_array_(false) {
   }
 
   ResponseNodeImpl(const std::string_view name, const utils::Identifier& uuid)
-      : core::ConnectableImpl(name, uuid),
+      : core::CoreComponentImpl(name, uuid),
         is_array_(false) {
   }
 
   ~ResponseNodeImpl() override = default;
 
   static std::vector<SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<SharedResponseNode>& nodes);
-
-  void yield() override {
-  }
-
-  bool isRunning() const override {
-    return true;
-  }
-
-  bool isWorkAvailable() override {
-    return true;
-  }
 
   bool isArray() const override {
     return is_array_;

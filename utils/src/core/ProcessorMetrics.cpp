@@ -25,7 +25,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessorMetricsImpl::ProcessorMetricsImpl(const Processor& source_processor)
+ProcessorMetricsImpl::ProcessorMetricsImpl(const ProcessorImpl& source_processor)
     : source_processor_(source_processor),
       on_trigger_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT),
       session_commit_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT) {
