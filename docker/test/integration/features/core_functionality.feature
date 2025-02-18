@@ -40,6 +40,14 @@ Feature: Core flow functionalities
     And at least one flowfile with the content "second_custom_text" is placed in the monitored directory in less than 20 seconds
 
   @CORE
+  Scenario: A funnel can be used as a terminator
+    Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
+    And a Funnel with the name "TerminalFunnel" is set up
+    And the "success" relationship of the GenerateFlowFile processor is connected to the TerminalFunnel
+    When the MiNiFi instance starts up
+    Then the Minifi logs do not contain the following message: "Connect empty for non auto terminated relationship" after 5 seconds
+
+  @CORE
   Scenario: The default configuration uses RocksDB for both the flow file and content repositories
     Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
     When the MiNiFi instance starts up

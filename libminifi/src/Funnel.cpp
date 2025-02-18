@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,24 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include <string>
-#include <utility>
-
-#include "ForwardingNode.h"
+#include "Funnel.h"
 
 namespace org::apache::nifi::minifi {
 
-class Funnel final : public ForwardingNode {
- public:
-  Funnel(std::string_view name, const utils::Identifier& uuid) : ForwardingNode(name, uuid, core::logging::LoggerFactory<Funnel>::getLogger(uuid)) {}
-  explicit Funnel(std::string_view name) : ForwardingNode(name, core::logging::LoggerFactory<Funnel>::getLogger()) {}
-
-  MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override;
-};
+void Funnel::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {
+  addAutoTerminatedRelationship(Success);
+}
 
 }  // namespace org::apache::nifi::minifi
