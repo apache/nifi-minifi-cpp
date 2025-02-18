@@ -29,7 +29,7 @@ class SyslogTcpClientContainer(Container):
 
         logging.info('Creating and running a Syslog tcp client docker container...')
         self.client.containers.run(
-            "ubuntu:20.04",
+            "ubuntu:24.04",
             detach=True,
             name=self.name,
             network=self.network.name,

@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+from utils import retry_check
 
 
 class ElasticSearchChecker:
     def __init__(self, container_communicator):
         self.container_communicator = container_communicator
 
+    @retry_check()
     def is_elasticsearch_empty(self, container_name):
         (code, output) = self.container_communicator.execute_command(container_name, ["curl", "-s", "-u", "elastic:password", "-k", "-XGET", "https://localhost:9200/_search"])
         return code == 0 and '"hits":[]' in output

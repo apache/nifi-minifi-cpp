@@ -43,7 +43,7 @@ function usage {
   echo "-p, --prefix          Additional prefix added to the image tag"
   echo "-u, --uid             User id to be used in the Docker image (default: 1000)"
   echo "-g, --gid             Group id to be used in the Docker image (default: 1000)"
-  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (bionic|focal|fedora|centos)"
+  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (centos|rockylinux)"
   echo "-l  --dump-location   Path where to the output dump to be put"
   echo "-c  --cmake-param     CMake parameter passed in PARAM=value format"
   echo "-o  --options         Minifi options string"

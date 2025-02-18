@@ -127,12 +127,6 @@ class AptPackageManager(PackageManager):
         return set(lines)
 
     def install_compiler(self) -> str:
-        if distro.id() == "ubuntu" and int(distro.major_version()) < 22:
-            self.install({"compiler_prereq": {"apt-transport-https", "ca-certificates", "software-properties-common"}})
-            _run_command_with_confirm("sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test",
-                                      no_confirm=self.no_confirm)
-            self.install({"compiler": {"build-essential", "g++-11"}})
-            return "-DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11"
         self.install({"compiler": {"g++"}})
         return ""
 
