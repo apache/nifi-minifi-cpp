@@ -16,4 +16,18 @@
  */
 #pragma once
 
-#include "core/ProcessorImpl.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include <span>
+
+namespace org::apache::nifi::minifi::core {
+
+class ProcessorDescriptor {
+ public:
+  virtual ~ProcessorDescriptor() = default;
+
+  virtual void setSupportedRelationships(std::span<const RelationshipDefinition> relationships) = 0;
+  virtual void setSupportedProperties(std::span<const PropertyReference> properties) = 0;
+};
+
+}  // namespace org::apache::nifi::minifi::core
