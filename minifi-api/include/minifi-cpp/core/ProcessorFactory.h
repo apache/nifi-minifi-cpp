@@ -14,6 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include "core/ProcessorImpl.h"
+#include <string>
+#include <memory>
+#include <utility>
+#include "minifi-cpp/core/Processor.h"
+#include "minifi-cpp/core/ProcessorMetadata.h"
+
+namespace org::apache::nifi::minifi::core {
+
+class ProcessorFactory {
+ public:
+  virtual std::unique_ptr<ProcessorApi> create(ProcessorMetadata info) = 0;
+  virtual std::string getGroupName() const = 0;
+  virtual std::string getClassName() const = 0;
+
+  virtual ~ProcessorFactory() = default;
+};
+
+}  // namespace org::apache::nifi::minifi::core
