@@ -195,14 +195,6 @@ jobs:
       - name: Add sccache to path
         run: '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";" + (Split-Path -Path $env:SCCACHE_PATH -Parent), [EnvironmentVariableTarget]::Machine);'
         shell: powershell
-      - name: Install jom
-        run: |
-          Invoke-WebRequest -Uri "http://download.qt.io/official_releases/jom/jom_1_1_4.zip" -OutFile "jom.zip"
-          if ((Get-FileHash 'jom.zip').Hash -ne "d533c1ef49214229681e90196ed2094691e8c4a0a0bef0b2c901debcb562682b") {Write "Hash mismatch"; Exit 1}
-          New-Item -ItemType Directory -Path D:\jom
-          Expand-Archive -Path jom.zip -DestinationPath D:\jom
-          [Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";D:\jom", [EnvironmentVariableTarget]::Machine);
-        shell: powershell
       - name: build
         run: |
           python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --noninteractive --skip-compiler-install --minifi-options="%WINDOWS_MINIFI_OPTIONS%" --cmake-options="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
