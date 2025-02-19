@@ -16,9 +16,12 @@
  */
 
 #include "SplunkHECProcessor.h"
+
 #include <utility>
+
 #include "core/ProcessContext.h"
 #include "http/HTTPClient.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
 
@@ -27,17 +30,10 @@ void SplunkHECProcessor::initialize() {
 }
 
 void SplunkHECProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (!context.getProperty(Hostname, hostname_))
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get Hostname");
-
-  if (!context.getProperty(Port, port_))
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get Port");
-
-  if (!context.getProperty(Token, token_))
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get Token");
-
-  if (!context.getProperty(SplunkRequestChannel, request_channel_))
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get SplunkRequestChannel");
+  hostname_ = utils::parseProperty(context, Hostname);
+  port_ = utils::parseProperty(context, Port);
+  token_ = utils::parseProperty(context, Token);
+  request_channel_ = utils::parseProperty(context, SplunkRequestChannel);
 }
 
 std::string SplunkHECProcessor::getNetworkLocation() const {
@@ -45,9 +41,8 @@ std::string SplunkHECProcessor::getNetworkLocation() const {
 }
 
 std::shared_ptr<minifi::controllers::SSLContextService> SplunkHECProcessor::getSSLContextService(core::ProcessContext& context) const {
-  std::string context_name;
-  if (context.getProperty(SSLContext, context_name) && !IsNullOrEmpty(context_name))
-    return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(context_name, getUUID()));
+  if (const auto context_name = context.getProperty(SSLContext); context_name && !IsNullOrEmpty(*context_name))
+    return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*context_name, getUUID()));
   return nullptr;
 }
 

@@ -40,9 +40,9 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
   const auto listen_udp = controller.getProcessor<ListenUDP>();
   LogTestController::getInstance().setTrace<ListenUDP>();
 
-  REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize, "2"));
+  REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize.name, "2"));
 
-  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_udp);
+  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_udp);
 
   asio::ip::udp::endpoint endpoint;
   SECTION("sending through IPv6", "[IPv6]") {
@@ -71,8 +71,8 @@ TEST_CASE("ListenUDP can be rescheduled", "[ListenUDP][NetworkListenerProcessor]
   SingleProcessorTestController controller{std::make_unique<ListenUDP>("ListenUDP")};
   const auto listen_udp = controller.getProcessor<ListenUDP>();
   LogTestController::getInstance().setTrace<ListenUDP>();
-  REQUIRE(listen_udp->setProperty(ListenUDP::Port, "0"));
-  REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize, "100"));
+  REQUIRE(listen_udp->setProperty(ListenUDP::Port.name, "0"));
+  REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize.name, "100"));
 
   REQUIRE_NOTHROW(controller.plan->scheduleProcessor(listen_udp));
   REQUIRE_NOTHROW(controller.plan->reset(true));
@@ -82,10 +82,10 @@ TEST_CASE("ListenUDP can be rescheduled", "[ListenUDP][NetworkListenerProcessor]
 TEST_CASE("ListenUDP max queue and max batch size test", "[ListenUDP][NetworkListenerProcessor]") {
   SingleProcessorTestController controller{std::make_unique<ListenUDP>("ListenUDP")};
   const auto listen_udp = controller.getProcessor<ListenUDP>();
-  REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize, "10"));
-  REQUIRE(listen_udp->setProperty(ListenUDP::MaxQueueSize, "50"));
+  REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize.name, "10"));
+  REQUIRE(listen_udp->setProperty(ListenUDP::MaxQueueSize.name, "50"));
 
-  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_udp);
+  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_udp);
 
   asio::ip::udp::endpoint endpoint;
   SECTION("sending through IPv6", "[IPv6]") {

@@ -40,13 +40,13 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 }
 
 std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonPath() const {
-  std::string json_path;
-  if (!getProperty(JsonFilePath, json_path)) {
+  const auto json_path = getProperty(JsonFilePath.name);
+  if (!json_path) {
     logger_->log_error("Missing or invalid {}", JsonFilePath.name);
     return nullptr;
   }
 
-  auto json_path_credentials = gcs::oauth2::CreateServiceAccountCredentialsFromJsonFilePath(json_path);
+  auto json_path_credentials = gcs::oauth2::CreateServiceAccountCredentialsFromJsonFilePath(*json_path);
   if (!json_path_credentials.ok()) {
     logger_->log_error("{}", json_path_credentials.status().message());
     return nullptr;
@@ -55,13 +55,13 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 }
 
 std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonContents() const {
-  std::string json_contents;
-  if (!getProperty(JsonContents, json_contents)) {
+  auto json_contents = getProperty(JsonContents.name);
+  if (!json_contents) {
     logger_->log_error("Missing or invalid {}", JsonContents.name);
     return nullptr;
   }
 
-  auto json_path_credentials = gcs::oauth2::CreateServiceAccountCredentialsFromJsonContents(json_contents);
+  auto json_path_credentials = gcs::oauth2::CreateServiceAccountCredentialsFromJsonContents(*json_contents);
   if (!json_path_credentials.ok()) {
     logger_->log_error("{}", json_path_credentials.status().message());
     return nullptr;
@@ -70,10 +70,9 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 }
 
 void GCPCredentialsControllerService::onEnable() {
-  std::string value;
   std::optional<CredentialsLocation> credentials_location;
-  if (getProperty(CredentialsLoc, value)) {
-    credentials_location = magic_enum::enum_cast<CredentialsLocation>(value);
+  if (const auto value = getProperty(CredentialsLoc.name)) {
+    credentials_location = magic_enum::enum_cast<CredentialsLocation>(*value);
   }
   if (!credentials_location) {
     logger_->log_error("Invalid Credentials Location, defaulting to {}", magic_enum::enum_name(CredentialsLocation::USE_DEFAULT_CREDENTIALS));

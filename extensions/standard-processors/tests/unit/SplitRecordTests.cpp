@@ -31,8 +31,8 @@ class SplitRecordTestController : public TestController {
     controller_.plan->addController("JsonRecordSetReader", "JsonRecordSetReader");
     controller_.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
     REQUIRE(controller_.getProcessor());
-    controller_.getProcessor()->setProperty(processors::SplitRecord::RecordReader, "JsonRecordSetReader");
-    controller_.getProcessor()->setProperty(processors::SplitRecord::RecordWriter, "JsonRecordSetWriter");
+    controller_.getProcessor()->setProperty(processors::SplitRecord::RecordReader.name, "JsonRecordSetReader");
+    controller_.getProcessor()->setProperty(processors::SplitRecord::RecordWriter.name, "JsonRecordSetWriter");
   }
 
   void verifyResults(const ProcessorTriggerResult& results, const std::vector<std::string>& expected_contents) const {
@@ -60,21 +60,21 @@ class SplitRecordTestController : public TestController {
 };
 
 TEST_CASE_METHOD(SplitRecordTestController, "Invalid Records Per Split property", "[splitrecord]") {
-  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit, "invalid");
+  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit.name, "invalid");
   auto results = controller_.trigger({InputFlowFileData{"{\"name\": \"John\"}\n{\"name\": \"Jill\"}"}});
   REQUIRE(results[processors::SplitRecord::Failure].size() == 1);
-  REQUIRE(LogTestController::getInstance().contains("Failed to convert Records Per Split property to an integer", 1s));
+  REQUIRE(LogTestController::getInstance().contains("Records Per Split should be set to a number larger than 0", 1s));
 }
 
 TEST_CASE_METHOD(SplitRecordTestController, "Records Per Split property should be greater than zero", "[splitrecord]") {
-  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit, "${id}");
+  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit.name, "${id}");
   auto results = controller_.trigger({InputFlowFileData{"{\"name\": \"John\"}\n{\"name\": \"Jill\"}", {{"id", "0"}}}});
   REQUIRE(results[processors::SplitRecord::Failure].size() == 1);
   REQUIRE(LogTestController::getInstance().contains("Records Per Split should be set to a number larger than 0", 1s));
 }
 
 TEST_CASE_METHOD(SplitRecordTestController, "Invalid records in flow file result in zero splits", "[splitrecord]") {
-  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit, "1");
+  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit.name, "1");
   auto results = controller_.trigger({InputFlowFileData{ R"({"name": "John)"}});
   CHECK(results[processors::SplitRecord::Splits].empty());
   REQUIRE(results[processors::SplitRecord::Original].size() == 1);
@@ -82,13 +82,13 @@ TEST_CASE_METHOD(SplitRecordTestController, "Invalid records in flow file result
 }
 
 TEST_CASE_METHOD(SplitRecordTestController, "Split records one by one", "[splitrecord]") {
-  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit, "1");
+  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit.name, "1");
   auto results = controller_.trigger({InputFlowFileData{"{\"name\": \"John\"}\n{\"name\": \"Jill\"}"}});
   verifyResults(results, {R"([{"name":"John"}])", R"([{"name":"Jill"}])"});
 }
 
 TEST_CASE_METHOD(SplitRecordTestController, "Split records two by two", "[splitrecord]") {
-  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit, "2");
+  controller_.getProcessor()->setProperty(processors::SplitRecord::RecordsPerSplit.name, "2");
   auto results = controller_.trigger({InputFlowFileData{"{\"a\": \"1\", \"b\": \"2\"}\n{\"c\": \"3\"}\n{\"d\": \"4\", \"e\": \"5\"}\n{\"f\": \"6\"}\n{\"g\": \"7\", \"h\": \"8\"}\n"}});
   verifyResults(results, {R"([{"a":"1","b":"2"},{"c":"3"}])", R"([{"d":"4","e":"5"},{"f":"6"}])", R"([{"g":"7","h":"8"}])"});
 }

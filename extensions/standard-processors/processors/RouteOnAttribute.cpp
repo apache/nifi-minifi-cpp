@@ -33,20 +33,18 @@ void RouteOnAttribute::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void RouteOnAttribute::onDynamicPropertyModified(const core::Property& /*orig_property*/, const core::Property &new_property) {
-  // Update the routing table when routes are added via dynamic properties.
-  route_properties_[new_property.getName()] = new_property;
+void RouteOnAttribute::onSchedule(core::ProcessContext &, core::ProcessSessionFactory&) {
+  route_properties_ = getDynamicProperties();
 
   const auto static_relationships = RouteOnAttribute::Relationships;
   std::vector<core::RelationshipDefinition> relationships(static_relationships.begin(), static_relationships.end());
 
-  for (const auto &route : route_properties_) {
+  for (const auto& route : route_properties_) {
     core::RelationshipDefinition route_rel{ route.first, "Dynamic route" };
     route_rels_[route.first] = route_rel;
     relationships.push_back(route_rel);
-    logger_->log_info("RouteOnAttribute registered route '{}' with expression '{}'", route.first, route.second.getValue().to_string());
+    logger_->log_info("RouteOnAttribute registered route '{}' with expression '{}'", route.first, route.second);
   }
-
   setSupportedRelationships(relationships);
 }
 
@@ -63,8 +61,7 @@ void RouteOnAttribute::onTrigger(core::ProcessContext& context, core::ProcessSes
 
     // Perform dynamic routing logic
     for (const auto &route : route_properties_) {
-      std::string do_route;
-      context.getDynamicProperty(route.second, do_route, flow_file.get());
+      std::string do_route = context.getDynamicProperty(route.first, flow_file.get()).value_or("");
 
       if (do_route == "true") {
         did_match = true;

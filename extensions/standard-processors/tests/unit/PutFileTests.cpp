@@ -33,7 +33,6 @@
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "core/Processor.h"
-#include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "Exception.h"
 

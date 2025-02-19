@@ -26,7 +26,7 @@
 #include "unit/TestBase.h"
 #include "FlowController.h"
 #include "RemoteProcessorGroupPort.h"
-#include "core/ConfigurableComponent.h"
+#include "core/ConfigurableComponentImpl.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "integration/HTTPHandlers.h"
 #include "http/HTTPStream.h"

@@ -56,7 +56,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext& context, core::ProcessSe
 
   // Extract archive contents
   ArchiveMetadata archiveMetadata;
-  context.getProperty(Path, archiveMetadata.focusedEntry);
+  archiveMetadata.focusedEntry = context.getProperty(Path).value_or("");
   flowFile->getAttribute("filename", archiveMetadata.archiveName);
 
   session.read(flowFile, ReadCallback{this, &file_man, &archiveMetadata});

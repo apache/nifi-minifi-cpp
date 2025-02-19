@@ -41,26 +41,24 @@ void VolatileRepositoryData::clear() {
 
 void VolatileRepositoryData::initialize(const std::shared_ptr<Configure> &configure, const std::string& repo_name) {
   if (configure != nullptr) {
-    int64_t max_cnt = 0;
     std::stringstream strstream;
     strstream << Configure::nifi_volatile_repository_options << repo_name << "." << VOLATILE_REPO_MAX_COUNT;
     std::string value;
     if (configure->get(strstream.str(), value)) {
-      if (core::Property::StringToInt(value, max_cnt)) {
-        max_count = gsl::narrow<uint32_t>(max_cnt);
+      if (const auto max_cnt = parsing::parseIntegral<uint32_t>(value)) {
+        max_count = *max_cnt;
       }
     }
 
     strstream.str("");
     strstream.clear();
-    int64_t max_bytes = 0;
     strstream << Configure::nifi_volatile_repository_options << repo_name << "." << VOLATILE_REPO_MAX_BYTES;
     if (configure->get(strstream.str(), value)) {
-      if (core::Property::StringToInt(value, max_bytes)) {
-        if (max_bytes <= 0) {
+      if (const auto max_bytes = parsing::parseIntegral<int64_t>(value)) {
+        if (*max_bytes <= 0) {
           max_size = std::numeric_limits<uint32_t>::max();
         } else {
-          max_size = gsl::narrow<size_t>(max_bytes);
+          max_size = gsl::narrow<size_t>(*max_bytes);
         }
       }
     }

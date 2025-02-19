@@ -131,12 +131,6 @@ TEST_CASE("GetFile ignores files smaller than MinSize", "[GetFile]") {
   REQUIRE(LogTestController::getInstance().contains("Size:67 Offset:0"));
 }
 
-TEST_CASE("GetFile onSchedule() throws if the required Directory property is not set", "[GetFile]") {
-  GetFileTestController test_controller;
-  test_controller.setProperty(minifi::processors::GetFile::Directory, "");
-  REQUIRE_THROWS_AS(test_controller.runSession(), minifi::Exception);
-}
-
 TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
   GetFileTestController test_controller;
   SECTION("KeepSourceFile is not set, so defaults to false") {}
@@ -274,7 +268,7 @@ TEST_CASE("GetFile sets attributes correctly") {
   minifi::test::SingleProcessorTestController test_controller(std::make_unique<GetFile>("GetFile"));
   const auto get_file = test_controller.getProcessor();
   std::filesystem::path dir = test_controller.createTempDirectory();
-  get_file->setProperty(GetFile::Directory, dir.string());
+  get_file->setProperty(GetFile::Directory.name, dir.string());
   SECTION("File in subdirectory of input directory") {
     std::filesystem::create_directories(dir / "a" / "b");
     minifi::test::utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
@@ -310,7 +304,7 @@ TEST_CASE("GetFile can use expression language in Directory property") {
   auto date_str = date::format("%Y-%m-%d", std::chrono::system_clock::now());
   auto dir = base_dir/ date_str;
   std::filesystem::create_directories(dir);
-  get_file->setProperty(GetFile::Directory, base_dir.string() + "/${now():format('%Y-%m-%d')}");
+  get_file->setProperty(GetFile::Directory.name, base_dir.string() + "/${now():format('%Y-%m-%d')}");
   minifi::test::utils::putFileToDir(dir, "testfile.txt", "The quick brown fox jumps over the lazy dog\n");
 
   auto result = test_controller.trigger();

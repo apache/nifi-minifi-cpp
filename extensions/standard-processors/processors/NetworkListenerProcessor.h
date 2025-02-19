@@ -50,7 +50,7 @@ class NetworkListenerProcessor : public core::ProcessorImpl {
     stopServer();
   }
 
-  uint16_t getPort() {
+  uint16_t getPort() const {
     if (server_)
       return server_->getPort();
     return 0;
@@ -70,7 +70,7 @@ class NetworkListenerProcessor : public core::ProcessorImpl {
  private:
   struct ServerOptions {
     std::optional<uint64_t> max_queue_size;
-    int port = 0;
+    uint16_t port = 0;
   };
 
   void stopServer();

@@ -51,10 +51,11 @@ uint64_t ListingStateManager::getLatestListedKeyTimestampInMilliseconds(const st
     stored_listed_key_timestamp_str = it->second;
   }
 
-  int64_t stored_listed_key_timestamp = 0;
-  core::Property::StringToInt(stored_listed_key_timestamp_str, stored_listed_key_timestamp);
+  if (auto stored_listed_key_timestamp = parsing::parseIntegral<int64_t>(stored_listed_key_timestamp_str)) {
+    return *stored_listed_key_timestamp;
+  }
 
-  return stored_listed_key_timestamp;
+  throw std::runtime_error("Invalid listed key timestamp");
 }
 
 std::unordered_set<std::string> ListingStateManager::getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) {

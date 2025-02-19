@@ -19,6 +19,7 @@
 #include "PushGrafanaLoki.h"
 
 #include "http/HTTPClient.h"
+#include "rapidjson/document.h"
 
 namespace org::apache::nifi::minifi::extensions::grafana::loki {
 
@@ -34,7 +35,7 @@ class PushGrafanaLokiREST : public PushGrafanaLoki {
 
   EXTENSIONAPI static constexpr auto ReadTimeout = core::PropertyDefinitionBuilder<>::createProperty("Read Timeout")
     .withDescription("Max wait time for response from remote service.")
-    .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+    .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
     .withDefaultValue("15 s")
     .isRequired(true)
     .build();

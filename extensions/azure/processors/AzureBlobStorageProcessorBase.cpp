@@ -21,44 +21,42 @@
 #include "AzureBlobStorageProcessorBase.h"
 
 #include "core/ProcessContext.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
 void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string value;
-  if (!context.getProperty(ContainerName, value) || value.empty()) {
+  if (!getProperty(ContainerName.name)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Container Name property missing or invalid");
   }
 
-  if (context.getProperty(AzureStorageCredentialsService, value) && !value.empty()) {
-    logger_->log_info("Getting Azure Storage credentials from controller service with name: '{}'", value);
+  if (auto azure_storage_credentials_service = getProperty(AzureStorageCredentialsService.name)) {
+    logger_->log_info("Getting Azure Storage credentials from controller service with name: '{}'", *azure_storage_credentials_service);
     return;
   }
 
-  if (!context.getProperty(UseManagedIdentityCredentials, use_managed_identity_credentials_)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Use Managed Identity Credentials is invalid.");
-  }
+  use_managed_identity_credentials_ = minifi::utils::parseBoolProperty(context, UseManagedIdentityCredentials);
 
   if (use_managed_identity_credentials_) {
     logger_->log_info("Using Managed Identity for authentication");
     return;
   }
 
-  if (context.getProperty(ConnectionString, value) && !value.empty()) {
+  if (auto connection_string = getProperty(ConnectionString.name); connection_string && !connection_string->empty()) {
     logger_->log_info("Using connectionstring directly for Azure Storage authentication");
     return;
   }
 
-  if (!context.getProperty(StorageAccountName, value) || value.empty()) {
+  if (!getProperty(StorageAccountName.name)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Account Name property missing or invalid");
   }
 
-  if (context.getProperty(StorageAccountKey, value) && !value.empty()) {
+  if (const auto storage_account_key = getProperty(StorageAccountKey.name); storage_account_key && !storage_account_key->empty()) {
     logger_->log_info("Using storage account name and key for authentication");
     return;
   }
 
-  if (!context.getProperty(SASToken, value) || value.empty()) {
+  if (const auto sas_token = getProperty(SASToken.name); !sas_token || sas_token->empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Neither Storage Account Key nor SAS Token property was set.");
   }
 
@@ -68,21 +66,20 @@ void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, co
 storage::AzureStorageCredentials AzureBlobStorageProcessorBase::getAzureCredentialsFromProperties(
     core::ProcessContext &context, const core::FlowFile* const flow_file) const {
   storage::AzureStorageCredentials credentials;
-  std::string value;
-  if (context.getProperty(StorageAccountName, value, flow_file)) {
-    credentials.setStorageAccountName(value);
+  if (const auto value = context.getProperty(StorageAccountName, flow_file)) {
+    credentials.setStorageAccountName(*value);
   }
-  if (context.getProperty(StorageAccountKey, value, flow_file)) {
-    credentials.setStorageAccountKey(value);
+  if (const auto value = context.getProperty(StorageAccountKey, flow_file)) {
+    credentials.setStorageAccountKey(*value);
   }
-  if (context.getProperty(SASToken, value, flow_file)) {
-    credentials.setSasToken(value);
+  if (const auto value = context.getProperty(SASToken, flow_file)) {
+    credentials.setSasToken(*value);
   }
-  if (context.getProperty(CommonStorageAccountEndpointSuffix, value, flow_file)) {
-    credentials.setEndpontSuffix(value);
+  if (const auto value = context.getProperty(CommonStorageAccountEndpointSuffix, flow_file)) {
+    credentials.setEndpontSuffix(*value);
   }
-  if (context.getProperty(ConnectionString, value, flow_file)) {
-    credentials.setConnectionString(value);
+  if (const auto value = context.getProperty(ConnectionString, flow_file)) {
+    credentials.setConnectionString(*value);
   }
   credentials.setUseManagedIdentityCredentials(use_managed_identity_credentials_);
   return credentials;
@@ -99,7 +96,8 @@ bool AzureBlobStorageProcessorBase::setCommonStorageParameters(
 
   params.credentials = *credentials;
 
-  if (!context.getProperty(ContainerName, params.container_name, flow_file) || params.container_name.empty()) {
+  params.container_name = context.getProperty(ContainerName, flow_file).value_or("");
+  if (params.container_name.empty()) {
     logger_->log_error("Container Name is invalid or empty!");
     return false;
   }
