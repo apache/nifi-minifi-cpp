@@ -39,6 +39,56 @@ rapidjson::Value& getMember(rapidjson::Value& node, const std::string& member_na
 }
 }
 
+void JsonFlowSerializer::addProviderCreatedParameterContexts(rapidjson::Value& flow_definition_json, rapidjson::Document::AllocatorType& alloc, const core::flow::FlowSchema& schema,
+    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const {
+  std::vector<gsl::not_null<ParameterContext*>> provided_parameter_contexts;
+  for (const auto& [parameter_context_name, parameter_context] : parameter_contexts) {
+    if (!parameter_context->getParameterProvider().empty()) {
+      provided_parameter_contexts.push_back(gsl::make_not_null(parameter_context.get()));
+    }
+  }
+
+  if (provided_parameter_contexts.empty()) {
+    return;
+  }
+
+  std::unordered_set<std::string> parameter_context_names;
+  if (flow_definition_json.HasMember(schema.parameter_contexts[0])) {
+    auto parameter_contexts_node = getMember(flow_definition_json, schema.parameter_contexts[0]).GetArray();
+    for (auto& parameter_context : parameter_contexts_node) {
+      parameter_context_names.insert(getMember(parameter_context, schema.name[0]).GetString());
+    }
+  } else {
+    flow_definition_json.AddMember(rapidjson::Value(schema.parameter_contexts[0].c_str(), alloc), rapidjson::Value(rapidjson::kArrayType), alloc);
+  }
+
+  for (const auto& parameter_context : provided_parameter_contexts) {
+    if (parameter_context_names.contains(parameter_context->getName())) {
+      logger_->log_warn("Parameter context '{}' already exists in the flow definition, will not be updated!", parameter_context->getName());
+      continue;
+    }
+    rapidjson::Value parameter_context_json(rapidjson::kObjectType);
+    parameter_context_json.AddMember(rapidjson::Value(schema.identifier[0], alloc), rapidjson::Value(parameter_context->getUUIDStr(), alloc), alloc);
+    parameter_context_json.AddMember(rapidjson::Value(schema.name[0], alloc), rapidjson::Value(parameter_context->getName(), alloc), alloc);
+    parameter_context_json.AddMember(rapidjson::Value(schema.parameter_provider[0], alloc), rapidjson::Value(parameter_context->getParameterProvider(), alloc), alloc);
+    auto parameters = parameter_context->getParameters();
+    rapidjson::Value parameters_json(rapidjson::kArrayType);
+    for (const auto& [name, parameter] : parameters) {
+      rapidjson::Value parameter_json(rapidjson::kObjectType);
+      parameter_json.AddMember(rapidjson::Value(schema.name[0], alloc), rapidjson::Value(name, alloc), alloc);
+      parameter_json.AddMember(rapidjson::Value(schema.description[0], alloc), rapidjson::Value(parameter.description, alloc), alloc);
+      parameter_json.AddMember(rapidjson::Value(schema.sensitive[0], alloc), rapidjson::Value(parameter.sensitive), alloc);
+      parameter_json.AddMember(rapidjson::Value(schema.provided[0], alloc), rapidjson::Value(parameter.provided), alloc);
+      parameter_json.AddMember(rapidjson::Value(schema.value[0], alloc), rapidjson::Value(parameter.value, alloc), alloc);
+      parameters_json.PushBack(parameter_json, alloc);
+    }
+    parameter_context_json.AddMember(rapidjson::Value(schema.parameters[0], alloc), parameters_json, alloc);
+
+    auto& parameter_contexts_node = getMember(flow_definition_json, schema.parameter_contexts[0]);
+    parameter_contexts_node.PushBack(parameter_context_json, alloc);
+  }
+}
+
 void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc,
     const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
     const core::flow::Overrides& overrides) const {
@@ -125,6 +175,9 @@ void JsonFlowSerializer::encryptSensitiveProcessorProperties(rapidjson::Value& r
 
 void JsonFlowSerializer::encryptSensitiveControllerServiceProperties(rapidjson::Value& root_group, rapidjson::Document::AllocatorType& alloc, const core::ProcessGroup& process_group,
     const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
+  if (!root_group.HasMember(schema.controller_services[0])) {
+    return;
+  }
   auto controller_services = getMember(root_group, schema.controller_services[0]).GetArray();
   for (auto &controller_service_json : controller_services) {
     const std::string controller_service_id_str{getMember(controller_service_json, schema.identifier[0]).GetString(), getMember(controller_service_json, schema.identifier[0]).GetStringLength()};
@@ -150,17 +203,18 @@ void JsonFlowSerializer::encryptSensitiveControllerServiceProperties(rapidjson::
 }
 
 std::string JsonFlowSerializer::serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-    const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
+    const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides, const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const {
   gsl_Expects(schema.root_group.size() == 1 && schema.identifier.size() == 1 &&
       schema.processors.size() == 1 && schema.processor_properties.size() == 1 &&
       schema.controller_services.size() == 1 && schema.controller_service_properties.size() == 1);
 
   rapidjson::Document doc;
-  auto alloc = doc.GetAllocator();
+  auto& alloc = doc.GetAllocator();
   rapidjson::Value flow_definition_json;
   flow_definition_json.CopyFrom(flow_definition_json_, alloc);
   auto& root_group = getMember(flow_definition_json, schema.root_group[0]);
 
+  addProviderCreatedParameterContexts(flow_definition_json, alloc, schema, parameter_contexts);
   encryptSensitiveParameters(flow_definition_json, alloc, schema, encryption_provider, overrides);
   encryptSensitiveProcessorProperties(root_group, alloc, process_group, schema, encryption_provider, overrides);
   encryptSensitiveControllerServiceProperties(root_group, alloc, process_group, schema, encryption_provider, overrides);

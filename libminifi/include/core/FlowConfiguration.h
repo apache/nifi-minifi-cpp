@@ -42,6 +42,7 @@
 #include "utils/file/FileSystem.h"
 #include "utils/ChecksumCalculator.h"
 #include "ParameterContext.h"
+#include "ParameterProvider.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -95,6 +96,8 @@ class FlowConfiguration : public CoreComponentImpl {
   // Create Provenance Report Task
   std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> createProvenanceReportTask();
 
+  static std::unique_ptr<core::ParameterProvider> createParameterProvider(const std::string &class_name, const std::string &full_class_name, const utils::Identifier& uuid);
+
   [[nodiscard]] std::shared_ptr<state::response::FlowVersion> getFlowVersion() const {
     return flow_version_;
   }
@@ -140,6 +143,7 @@ class FlowConfiguration : public CoreComponentImpl {
 
  protected:
   std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>> parameter_contexts_;
+  std::vector<gsl::not_null<std::unique_ptr<ParameterProvider>>> parameter_providers_;
   std::optional<std::filesystem::path> config_path_;
   std::shared_ptr<core::Repository> flow_file_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;
