@@ -112,6 +112,8 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             BUILD_BYPRODUCTS "${BYPRODUCTS}"
             EXCLUDE_FROM_ALL TRUE
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables

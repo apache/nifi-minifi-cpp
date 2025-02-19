@@ -49,6 +49,18 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         set(OPENSSL_SHARED_FLAG "no-shared" CACHE STRING "" FORCE)
     endif()
 
+    set(OPENSSL_EXTRA_FLAGS
+            no-tests            # Disable tests
+            no-apps             # disable executables
+            no-capieng          # disable CAPI engine (legacy)
+            no-dso              # disable dynamic libraries
+            no-docs             # disable docs and manpages
+            no-legacy           # disable legacy modules
+            no-module           # disable dynamically loadable engines
+            no-pinshared        # don't pin shared libraries in the process memory
+            enable-tfo          # Enable TCP Fast Open
+            no-ssl)             # disable SSLv3
+
     set(OPENSSL_BIN_DIR "${BINARY_DIR}/thirdparty/openssl-install" CACHE STRING "" FORCE)
 
     FOREACH(BYPRODUCT ${BYPRODUCTS})
@@ -91,11 +103,13 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 URL_HASH "SHA256=2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
-                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
+                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} ${OPENSSL_EXTRA_FLAGS} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
                 EXCLUDE_FROM_ALL TRUE
                 BUILD_COMMAND ${OPENSSL_BUILD_COMMAND}
                 INSTALL_COMMAND nmake install
+                DOWNLOAD_NO_PROGRESS TRUE
+                TLS_VERIFY TRUE
             )
     else()
         ExternalProject_Add(
@@ -104,9 +118,11 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 URL_HASH "SHA256=2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
-                CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
+                CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} ${OPENSSL_EXTRA_FLAGS} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
                 EXCLUDE_FROM_ALL TRUE
+                DOWNLOAD_NO_PROGRESS TRUE
+                TLS_VERIFY TRUE
         )
     endif()
 

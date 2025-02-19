@@ -67,6 +67,8 @@ function(use_bundled_osspuuid SOURCE_DIR BINARY_DIR)
             PATCH_COMMAND ${PC}
             STEP_TARGETS build
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables

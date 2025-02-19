@@ -56,6 +56,8 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
                 PATCH_COMMAND ${PC}
                 BUILD_BYPRODUCTS "${LIBSODIUM_BIN_DIR}/${BYPRODUCT}"
                 EXCLUDE_FROM_ALL TRUE
+                DOWNLOAD_NO_PROGRESS TRUE
+                TLS_VERIFY TRUE
         )
     else()
         set(CONFIGURE_COMMAND ./configure --disable-pie --enable-minimal "--prefix=${LIBSODIUM_BIN_DIR}")
@@ -75,6 +77,8 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
                 PATCH_COMMAND ""
                 STEP_TARGETS build
                 EXCLUDE_FROM_ALL TRUE
+                DOWNLOAD_NO_PROGRESS TRUE
+                TLS_VERIFY TRUE
         )
     endif()
 

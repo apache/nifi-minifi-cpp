@@ -80,6 +80,8 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/rocksdb-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables

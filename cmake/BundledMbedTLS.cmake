@@ -55,6 +55,8 @@ function(use_bundled_mbedtls SOURCE_DIR BINARY_DIR)
             CMAKE_ARGS ${MBEDTLS_CMAKE_ARGS}
             BUILD_BYPRODUCTS ${MBEDTLS_LIBRARIES_LIST}
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables

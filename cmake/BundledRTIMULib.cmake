@@ -32,6 +32,8 @@ function(use_bundled_rtimulib SOURCE_DIR BINARY_DIR)
             INSTALL_COMMAND ""
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/RTIMULib/RTIMULib/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables

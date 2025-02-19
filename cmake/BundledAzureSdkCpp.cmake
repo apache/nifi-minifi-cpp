@@ -76,6 +76,8 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             CMAKE_ARGS ${AZURE_SDK_CMAKE_ARGS}
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             PATCH_COMMAND ${PC}
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set dependencies

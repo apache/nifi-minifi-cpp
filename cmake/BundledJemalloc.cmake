@@ -38,6 +38,8 @@ function(use_bundled_jemalloc SOURCE_DIR BINARY_DIR)
             PATCH_COMMAND ./autogen.sh && ./configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS}"
             STEP_TARGETS build
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables
