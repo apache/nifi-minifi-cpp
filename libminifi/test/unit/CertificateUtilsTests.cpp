@@ -30,12 +30,12 @@ TEST_CASE("getCertificateExpiration() works correctly") {
   using namespace std::literals::chrono_literals;
 
   const auto executable_dir = utils::file::get_executable_dir();
-  const auto cert_location = executable_dir / "resources" / "goodCA.crt";
+  const auto cert_location = executable_dir / "resources" / "ca_A.crt";
 
   size_t num_times_called = 0;
   utils::tls::processPEMCertificate(cert_location, {}, {[&](utils::tls::X509_unique_ptr cert) {
     ++num_times_called;
-    CHECK(utils::tls::getCertificateExpiration(cert) == date::sys_days(date::year_month_day(2053_y / 4 / 30)) + 9h + 3min);
+    CHECK(utils::tls::getCertificateExpiration(cert) == date::sys_days(date::year_month_day(2033_y / 6 / 26)) + 12h + 26min + 48s);
     return std::error_code{};
   }, {}, {}});
   CHECK(num_times_called == 1);
