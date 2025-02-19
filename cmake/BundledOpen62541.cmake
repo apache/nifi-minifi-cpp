@@ -51,6 +51,8 @@ function(use_bundled_open62541 SOURCE_DIR BINARY_DIR)
             CMAKE_ARGS ${OPEN62541_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${OPEN62541_BYPRODUCT_DIR}/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set dependencies

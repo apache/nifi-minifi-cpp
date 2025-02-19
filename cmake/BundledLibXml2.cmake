@@ -57,6 +57,8 @@ function(use_bundled_libxml2 SOURCE_DIR BINARY_DIR)
                 PATCH_COMMAND ${PC}
                 BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libxml2-install/${BYPRODUCT}"
                 EXCLUDE_FROM_ALL TRUE
+                DOWNLOAD_NO_PROGRESS TRUE
+                TLS_VERIFY TRUE
         )
     else()
         ExternalProject_Add(
@@ -74,6 +76,8 @@ function(use_bundled_libxml2 SOURCE_DIR BINARY_DIR)
                 PATCH_COMMAND ./configure --enable-shared=no --enable-static=yes --with-pic=yes --with-iconv=no --with-zlib=no --with-lzma=no --with-python=no --with-ftp=no --with-http=no --prefix=${BINARY_DIR}/thirdparty/libxml2-install
                 STEP_TARGETS build
                 EXCLUDE_FROM_ALL TRUE
+                DOWNLOAD_NO_PROGRESS TRUE
+                TLS_VERIFY TRUE
         )
     endif()
 

@@ -41,6 +41,8 @@ function(use_bundled_pugixml SOURCE_DIR BINARY_DIR)
             CMAKE_ARGS ${PUGI_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${PUGI_BYPRODUCT_DIR}/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables

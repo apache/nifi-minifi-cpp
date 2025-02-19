@@ -47,6 +47,8 @@ function(use_bundled_bzip2 SOURCE_DIR BINARY_DIR)
             PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${BZIP2_BIN_DIR}/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables
