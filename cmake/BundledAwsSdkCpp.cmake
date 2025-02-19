@@ -90,6 +90,8 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             PATCH_COMMAND ${AWS_SDK_CPP_PATCH_COMMAND}
             BUILD_BYPRODUCTS "${AWSSDK_LIBRARIES_LIST}"
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set dependencies

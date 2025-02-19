@@ -50,6 +50,8 @@ function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
             CMAKE_ARGS ${YAMLCPP_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/yaml-cpp-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
+            DOWNLOAD_NO_PROGRESS TRUE
+            TLS_VERIFY TRUE
     )
 
     # Set variables
