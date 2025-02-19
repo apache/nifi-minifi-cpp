@@ -50,9 +50,9 @@ struct ParameterProviderConfig {
   }
 };
 
-class ParameterProvider : public ConfigurableComponent, public CoreComponent {
+class ParameterProvider : public ConfigurableComponentImpl, public CoreComponentImpl {
  public:
-  using CoreComponent::CoreComponent;
+  using CoreComponentImpl::CoreComponentImpl;
   ParameterProvider(const ParameterProvider &other) = delete;
   ParameterProvider &operator=(const ParameterProvider &other) = delete;
 

@@ -17,7 +17,7 @@
 #pragma once
 
 #include "core/ParameterProvider.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::parameter_providers {
 
