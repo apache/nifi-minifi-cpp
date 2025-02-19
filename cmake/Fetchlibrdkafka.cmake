@@ -34,8 +34,8 @@ set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/librdkafka/0001-remove-findLZ4-an
 set(PC "${Patch_EXECUTABLE}" -p1 -i "${PATCH_FILE}")
 
 FetchContent_Declare(libkafka
-        URL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.6.0.tar.gz
-        URL_HASH SHA256=abe0212ecd3e7ed3c4818a4f2baf7bf916e845e902bb15ae48834ca2d36ac745
+        URL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.8.0.tar.gz
+        URL_HASH SHA256=5bd1c46f63265f31c6bfcedcde78703f77d28238eadf23821c2b43fc30be3e25
         PATCH_COMMAND "${PC}"
 )
 
