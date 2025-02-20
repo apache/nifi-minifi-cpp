@@ -370,7 +370,7 @@ std::chrono::steady_clock::duration ProcessorImpl::getYieldTime() const {
 }
 
 void ProcessorImpl::setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) {
-  logger_->addLogCallback(callback);
+  logger_->setLogCallback(callback);
 }
 
 }  // namespace org::apache::nifi::minifi::core

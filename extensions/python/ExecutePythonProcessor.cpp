@@ -282,8 +282,8 @@ std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships()
 
 void ExecutePythonProcessor::setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) {
   gsl_Expects(logger_ && python_logger_);
-  logger_->addLogCallback(callback);
-  python_logger_->addLogCallback(callback);
+  logger_->setLogCallback(callback);
+  python_logger_->setLogCallback(callback);
 }
 
 REGISTER_RESOURCE(ExecutePythonProcessor, Processor);

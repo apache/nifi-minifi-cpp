@@ -123,7 +123,7 @@ class LoggerBase : public Logger {
   bool should_log(LOG_LEVEL level) override;
   void log_string(LOG_LEVEL level, std::string str) override;
   LOG_LEVEL level() const override;
-  void addLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback) override;
+  void setLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback) override;
 
  protected:
   LoggerBase(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller);
@@ -141,7 +141,7 @@ class LoggerBase : public Logger {
 
  private:
   std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
-  std::vector<std::function<void(LOG_LEVEL level, const std::string&)>> log_callbacks_;
+  std::function<void(LOG_LEVEL level, const std::string&)> log_callback_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::logging
