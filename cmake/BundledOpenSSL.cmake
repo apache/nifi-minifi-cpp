@@ -71,8 +71,20 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     # Note: when upgrading to a later release than 3.1.1 the --no-apps could be used instead of --no-tests to minimize the build size
     if (WIN32)
-        set(OPENSSL_BUILD_COMMAND nmake)
-        set(OPENSSL_WINDOWS_COMPILE_FLAGS "")
+        find_program(JOM_EXECUTABLE_PATH
+            NAMES jom.exe
+            PATHS ENV PATH
+            NO_DEFAULT_PATH)
+        if(JOM_EXECUTABLE_PATH)
+            include(ProcessorCount)
+            processorcount(jobs)
+            set(OPENSSL_BUILD_COMMAND ${JOM_EXECUTABLE_PATH} -j${jobs})
+            set(OPENSSL_WINDOWS_COMPILE_FLAGS /FS)
+        else()
+            message("Using nmake for OpenSSL build")
+            set(OPENSSL_BUILD_COMMAND nmake)
+            set(OPENSSL_WINDOWS_COMPILE_FLAGS "")
+        endif()
         ExternalProject_Add(
                 openssl-external
                 URL https://github.com/openssl/openssl/releases/download/openssl-3.3.2/openssl-3.3.2.tar.gz
