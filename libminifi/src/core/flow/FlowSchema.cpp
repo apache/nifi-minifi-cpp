@@ -31,6 +31,7 @@ FlowSchema FlowSchema::getDefault() {
       .max_concurrent_tasks = {"max concurrent tasks"},
       .penalization_period = {"penalization period"},
       .proc_yield_period = {"yield period"},
+      .bulletin_level = {"bulletin level"},
       .runduration_nanos = {"run duration nanos"},
 
       .connections = {"Connections"},
@@ -96,6 +97,7 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .max_concurrent_tasks = {"concurrentlySchedulableTaskCount"},
       .penalization_period = {"penaltyDuration"},
       .proc_yield_period = {"yieldDuration"},
+      .bulletin_level = {"bulletinLevel"},
       // TODO(adebreceni): MINIFICPP-2033 since this is unused the mismatch between nano and milli is not an issue
       .runduration_nanos = {"runDurationMillis"},
 

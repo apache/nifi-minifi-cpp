@@ -36,13 +36,14 @@
 #include "core/RepositoryMetricsSource.h"
 #include "utils/file/AssetManager.h"
 #include "minifi-cpp/core/state/nodes/ResponseNodeLoader.h"
+#include "core/BulletinStore.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
 class ResponseNodeLoaderImpl : public ResponseNodeLoader {
  public:
   ResponseNodeLoaderImpl(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
-    std::shared_ptr<core::FlowConfiguration> flow_configuration, utils::file::AssetManager* asset_manager = nullptr);
+    std::shared_ptr<core::FlowConfiguration> flow_configuration, utils::file::AssetManager* asset_manager = nullptr, core::BulletinStore* bulletin_store = nullptr);
 
   void setNewConfigRoot(core::ProcessGroup* root) override;
   void clearConfigRoot() override;
@@ -81,6 +82,7 @@ class ResponseNodeLoaderImpl : public ResponseNodeLoader {
   utils::file::AssetManager* asset_manager_{};
   core::controller::ControllerServiceProvider* controller_{};
   state::StateMonitor* update_sink_{};
+  core::BulletinStore* bulletin_store_{};
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ResponseNodeLoader>::getLogger()};
 };
 

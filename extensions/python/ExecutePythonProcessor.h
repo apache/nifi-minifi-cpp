@@ -46,6 +46,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
         python_dynamic_(false),
         reload_on_script_change_(true) {
     logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger(uuid_);
+    python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "
@@ -138,8 +139,8 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   }
 
   std::map<std::string, core::Property> getProperties() const override;
-
   std::vector<core::Relationship> getPythonRelationships();
+  void setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) override;
 
  protected:
   const core::Property* findProperty(const std::string& name) const override;
