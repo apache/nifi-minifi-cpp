@@ -151,6 +151,9 @@ int main(int argc, char **argv) {
   argument_parser.add_argument("--updateflow")
     .metavar("FLOW_CONFIG_PATH")
     .help("Updates the flow of the agent using the provided flow file");
+  argument_parser.add_argument("--flowstatus")
+    .metavar("FLOW_STATUS_QUERY")
+    .help("Returns flow status for the provided query");
 
   auto addFlagOption = [&](std::string_view name, const std::string& help) {
     argument_parser.add_argument(name)
@@ -274,6 +277,12 @@ int main(int argc, char **argv) {
         std::cout << debug_res.error() << std::endl;
       else
         std::cout << "Debug bundle written to " << std::filesystem::path(*debug_path) / "debug.tar.gz";
+    }
+
+    if (const auto& status_query = argument_parser.present("--flowstatus")) {
+      if (!minifi::controller::getFlowStatus(socket_data, *status_query, std::cout)) {
+        std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
+      }
     }
   } catch (const std::exception &exc) {
     // catch anything thrown within try block that derives from std::exception

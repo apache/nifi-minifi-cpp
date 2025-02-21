@@ -51,7 +51,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
                                std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
                                std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store,
                                std::shared_ptr<utils::file::FileSystem> filesystem, std::function<void()> request_restart,
-                               utils::file::AssetManager* asset_manager)
+                               utils::file::AssetManager* asset_manager, core::BulletinStore* bulletin_store)
     : core::controller::ForwardingControllerServiceProvider(core::className<FlowController>()),
       running_(false),
       initialized_(false),
@@ -90,8 +90,10 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     std::shared_ptr<c2::ControllerSocketMetricsPublisher> controller_socket_metrics_publisher;
     if (auto publisher = metrics_publisher_store_->getMetricsPublisher(c2::CONTROLLER_SOCKET_METRICS_PUBLISHER).lock()) {
       controller_socket_metrics_publisher = std::dynamic_pointer_cast<c2::ControllerSocketMetricsPublisher>(publisher);
+      controller_socket_metrics_publisher->setFlowStatusDependencies(bulletin_store, flow_file_repo_->getDirectory(), content_repo_->getStoragePath());
     }
     controller_socket_protocol_ = std::make_unique<c2::ControllerSocketProtocol>(*this, *this, configuration_, controller_socket_metrics_publisher);
+    root_wrapper_.setControllerSocketProtocol(controller_socket_protocol_.get());
   }
 }
 

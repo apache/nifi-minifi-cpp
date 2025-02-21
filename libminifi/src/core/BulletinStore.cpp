@@ -73,6 +73,17 @@ std::deque<Bulletin> BulletinStore::getBulletins(std::optional<std::chrono::syst
   return {};
 }
 
+std::vector<Bulletin> BulletinStore::getBulletinsForProcessor(const std::string& processor_uuid) const {
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<Bulletin> bulletins;
+  for (const auto& bulletin : bulletins_) {
+    if (bulletin.source_id == processor_uuid) {
+      bulletins.push_back(bulletin);
+    }
+  }
+  return bulletins;
+}
+
 size_t BulletinStore::getMaxBulletinCount() const {
   return max_bulletin_count_;
 }
