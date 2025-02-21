@@ -35,8 +35,8 @@ class BulletinStoreTestAccessor {
   }
 };
 
-std::unique_ptr<core::Processor> createDummyProcessor() {
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+std::unique_ptr<core::Processor> createDummyProcessor(const std::string& processor_uuid = "4d7fa7e6-2459-46dd-b2ba-61517239edf5") {
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse(processor_uuid).value());
   processor->setProcessGroupUUIDStr("68fa9ae4-b9fc-4873-b0d9-edab59fdb0c2");
   processor->setProcessGroupName("sub_group");
   processor->setProcessGroupPath("root / sub_group");
@@ -125,6 +125,28 @@ TEST_CASE("Return only bulletins that are inside the defined time interval", "[b
   CHECK(bulletins[0].source_id == "4d7fa7e6-2459-46dd-b2ba-61517239edf5");
   CHECK(bulletins[0].source_name == "DummyProcessor");
   CHECK(bulletins[1].id == 3);
+}
+
+TEST_CASE("Return bulletins for a specific processor", "[bulletinStore]") {
+  ConfigureImpl configuration;
+  core::BulletinStore bulletin_store(configuration);
+  auto processor1 = createDummyProcessor();
+  auto processor2 = createDummyProcessor("147a7f22-b65c-48ff-ac19-1b504f6dbaaf");
+  for (size_t i = 0; i < 2; ++i) {
+    bulletin_store.addProcessorBulletin(*processor1, logging::LOG_LEVEL::warn, "Warning message 1");
+  }
+  for (size_t i = 0; i < 2; ++i) {
+    bulletin_store.addProcessorBulletin(*processor2, logging::LOG_LEVEL::warn, "Warning message 2");
+  }
+  for (size_t i = 0; i < 2; ++i) {
+    bulletin_store.addProcessorBulletin(*processor1, logging::LOG_LEVEL::warn, "Warning message 3");
+  }
+
+  auto bulletins = bulletin_store.getBulletinsForProcessor("147a7f22-b65c-48ff-ac19-1b504f6dbaaf");
+  REQUIRE(bulletins.size() == 2);
+  CHECK(bulletins[0].id == 3);
+  CHECK(bulletins[1].id == 4);
+  CHECK(bulletins[0].message == "Warning message 2");
 }
 
 }  // namespace org::apache::nifi::minifi::test
