@@ -18,7 +18,7 @@
 include(FetchContent)
 
 FetchContent_Declare(expected-lite
-    URL      https://github.com/martinmoene/expected-lite/archive/refs/tags/v0.6.0.tar.gz
-    URL_HASH SHA256=90478ff7345100bf7539b12ea2c5ff04a7b6290bc5c280f02b473d5c65165342
+    URL      https://github.com/martinmoene/expected-lite/archive/refs/tags/v0.8.0.tar.gz
+    URL_HASH SHA256=27649f30bd9d4fe7b193ab3eb6f78c64d0f585c24c085f340b4722b3d0b5e701
 )
 FetchContent_MakeAvailable(expected-lite)
