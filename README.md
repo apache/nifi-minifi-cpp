@@ -521,6 +521,19 @@ MiNiFi can then be stopped by issuing:
 
     $ ./bin/minifi.sh stop
 
+### Query flow status
+
+To query the status of the flow, you can use the following command on Unix systems:
+
+    $ ./bin/minifi.sh flowStatus [host:optional] [port:optional] "<query>"
+
+On Windows systems, you can use the following command:
+
+    $ ./bin/flowstatus-minifi.bat [host:optional] [port:optional] "<query>"
+
+The query can look like the following: "processor:TailFile:health,stats,bulletins". For more information on the query syntax and options, please see the [flow status documentation](OPS.md#Flowstatus-command).
+Note: The command requires minifi controller to be enabled in the minifi.properties file.
+
 ### Running as a docker container
 You can use the officially released image pulled from the [apache/nifi-minifi-cpp](https://hub.docker.com/r/apache/nifi-minifi-cpp) repository on dockerhub or you can use your locally built image.
 The container can be run with a specific configuration by mounting the locally edited configuration files to your docker container.
