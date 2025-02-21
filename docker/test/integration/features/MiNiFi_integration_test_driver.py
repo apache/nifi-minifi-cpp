@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import os
 import time
 import uuid
 
@@ -61,7 +62,6 @@ class MiNiFi_integration_test:
 
     def start_kafka_broker(self, context):
         self.cluster.acquire_container(context=context, name='kafka-broker', engine='kafka-broker')
-        self.cluster.deploy_container(name='zookeeper')
         self.cluster.deploy_container(name='kafka-broker')
         assert self.cluster.wait_for_container_startup_to_finish('kafka-broker') or self.cluster.log_app_output()
 
@@ -177,6 +177,11 @@ class MiNiFi_integration_test:
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.__check_output_after_time_period(wait_time_in_seconds, output_validator)
 
+    def check_for_no_files_generated_in_subdir(self, wait_time_in_seconds, subdir):
+        output_validator = NoFileOutPutValidator()
+        output_validator.set_output_dir(self.file_system_observer.get_output_dir() + "/" + subdir)
+        self.__check_output_after_time_period(wait_time_in_seconds, output_validator)
+
     def check_for_single_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleFileOutputValidator(decode_escaped_str(content))
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
@@ -191,6 +196,34 @@ class MiNiFi_integration_test:
         output_validator = MultiFileOutputValidator(file_count, [decode_escaped_str(content) for content in expected_content])
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.__check_output(timeout_seconds, output_validator, file_count)
+
+    def check_subdirectory(self, sub_directory: str, expected_contents: list, timeout: int, interval: float = 1.0) -> bool:
+        logging.info("check_directory")
+        start_time = time.time()
+        expected_contents.sort()
+        while time.time() - start_time < timeout:
+            try:
+                current_contents = []
+                directory = self.file_system_observer.get_output_dir() + "/" + sub_directory
+                current_files = os.listdir(directory)
+                for file in current_files:
+                    file_path = os.path.join(directory, file)
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+                        current_contents.append(content)
+                current_contents.sort()
+
+                if current_contents == expected_contents:
+                    logging.info("subdir checks out")
+                    return True
+                logging.info(f"expected: {expected_contents} vs actual {current_contents}")
+
+            except Exception as e:
+                print(f"Error checking directory: {e}")
+
+            time.sleep(interval)
+
+        return False
 
     def check_for_at_least_one_file_with_matching_content(self, regex, timeout_seconds):
         output_validator = SingleOrMultiFileOutputRegexValidator(regex)
@@ -269,8 +302,8 @@ class MiNiFi_integration_test:
     def check_azure_storage_server_data(self, azure_container_name, object_data):
         assert self.cluster.check_azure_storage_server_data(azure_container_name, object_data) or self.cluster.log_app_output()
 
-    def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
-        assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name) or self.cluster.log_app_output()
+    def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name, count):
+        assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name, count) or self.cluster.log_app_output()
 
     def check_splunk_event(self, splunk_container_name, query):
         assert self.cluster.check_splunk_event(splunk_container_name, query) or self.cluster.log_app_output()
