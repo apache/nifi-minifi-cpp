@@ -28,7 +28,6 @@
 #include "utils/gsl.h"
 #include "utils/detail/MonadicOperationWrappers.h"
 #include "fmt/format.h"
-#include "utils/Error.h"  // for more readable std::error_code fmt::formatter
 
 
 namespace org::apache::nifi::minifi::utils {
@@ -152,7 +151,7 @@ T&& operator|(std::optional<T> object, const or_terminate_wrapper e) {
     return std::move(*object);
   }
   std::cerr << fmt::format("Aborting due to {}", e.reason) << std::endl;
-  std::abort();
+  std::terminate();
 }
 }  // namespace detail
 }  // namespace org::apache::nifi::minifi::utils
