@@ -32,7 +32,6 @@
 #include "utils/TimeUtil.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "utils/PropertyErrors.h"
-#include "utils/Error.h"  // for more readable std::error_code fmt::formatter
 
 namespace org::apache::nifi::minifi::core::flow {
 

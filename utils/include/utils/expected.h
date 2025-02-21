@@ -23,7 +23,7 @@
 #include "nonstd/expected.hpp"
 #include "utils/detail/MonadicOperationWrappers.h"
 #include "fmt/format.h"
-#include "utils/Error.h"  // for more readable std::error_code fmt::formatter
+#include "fmt/std.h"
 
 namespace org::apache::nifi::minifi::utils {
 namespace detail {
@@ -199,7 +199,7 @@ typename std::remove_cvref_t<Expected>::value_type operator|(Expected&& object, 
   if (object) {
     return std::move(*object);
   }
-  throw std::runtime_error(fmt::format("{}: {}", e.reason, object.error()));
+  throw std::runtime_error(fmt::format("{}, but got {}", e.reason, object.error()));
 }
 
 template<expected Expected>
@@ -229,3 +229,34 @@ auto try_expression(F&& action, Args&&... args) noexcept {
 }
 
 }  // namespace org::apache::nifi::minifi::utils
+
+#ifndef WIN32  // on windows this conflicts because nonstd::expected === std::expected
+// based on fmt::formatter<std::expected<T, E>, Char
+template <typename T, typename E, typename Char>
+struct fmt::formatter<nonstd::expected<T, E>, Char,
+                 std::enable_if_t<(std::is_void<T>::value ||
+                                   fmt::is_formattable<T, Char>::value) &&
+                                  fmt::is_formattable<E, Char>::value>> {
+  template <typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) -> const Char* {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(const nonstd::expected<T, E>& value, FormatContext& ctx) const
+      -> decltype(ctx.out()) {
+    auto out = ctx.out();
+
+    if (value.has_value()) {
+      out = fmt::detail::write<Char>(out, "nonstd::expected(");
+      if constexpr (!std::is_void<T>::value)
+        out = fmt::detail::write_escaped_alternative<Char>(out, *value);
+    } else {
+      out = fmt::detail::write<Char>(out, "nonstd::unexpected(");
+      out = fmt::detail::write_escaped_alternative<Char>(out, value.error());
+    }
+    *out++ = ')';
+    return out;
+  }
+};
+#endif

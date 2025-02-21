@@ -100,3 +100,17 @@ std::string get_encoded_string(const std::string& input, KafkaEncoding encoding)
 std::optional<std::string> get_encoded_message_key(const rd_kafka_message_t& message, KafkaEncoding encoding);
 
 }  // namespace org::apache::nifi::minifi::utils
+
+namespace magic_enum::customize {
+using org::apache::nifi::minifi::utils::KafkaEncoding;
+
+template <>
+constexpr customize_t enum_name<KafkaEncoding>(const KafkaEncoding value) noexcept {
+  switch (value) {
+    case KafkaEncoding::UTF8: return "UTF-8";
+    case KafkaEncoding::HEX: return "Hex";
+    default: return invalid_tag;
+  }
+}
+
+}  // namespace magic_enum::customize

@@ -1,8 +1,7 @@
 pyjks==20.0.0
 shortuuid==1.0.13
-behavex==4.0.10
+behavex==4.1.0
 docker==7.1.0
-confluent-kafka==2.8.0
 PyYAML==6.0.2
 m2crypto==0.41.0
 watchdog==6.0.0

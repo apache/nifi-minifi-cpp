@@ -20,6 +20,7 @@
 
 #include <string>
 #include <system_error>
+
 #include "magic_enum.hpp"
 
 namespace org::apache::nifi::minifi::modbus {
@@ -46,18 +47,13 @@ enum class ModbusExceptionCode : std::underlying_type_t<std::byte> {
   UnexpectedResponsePDUSize
 };
 
-
 struct ModbusErrorCategory final : std::error_category {
-  [[nodiscard]] const char* name() const noexcept override {
-    return "modbus error";
-  }
+  [[nodiscard]] const char* name() const noexcept override { return "MiNiFi Modbus Error Category"; }
 
   [[nodiscard]] std::string message(int ev) const override {
     const auto modbus_exception_code = static_cast<ModbusExceptionCode>(ev);
     auto modbus_exception_code_str = std::string{magic_enum::enum_name<ModbusExceptionCode>(modbus_exception_code)};
-    if (modbus_exception_code_str.empty()) {
-      return "UNKNOWN ERROR";
-    }
+    if (modbus_exception_code_str.empty()) { return fmt::format("UNKNOWN ERROR {}", ev); }
     return modbus_exception_code_str;
   }
 };
@@ -73,5 +69,5 @@ inline std::error_code make_error_code(ModbusExceptionCode c) {
 
 }  // namespace org::apache::nifi::minifi::modbus
 
-template <>
+template<>
 struct std::is_error_code_enum<org::apache::nifi::minifi::modbus::ModbusExceptionCode> : std::true_type {};

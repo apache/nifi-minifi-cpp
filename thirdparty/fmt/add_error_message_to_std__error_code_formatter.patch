@@ -1,0 +1,16 @@
+Index: include/fmt/std.h
+<+>UTF-8
+===================================================================
+diff --git a/include/fmt/std.h b/include/fmt/std.h
+--- a/include/fmt/std.h	(revision 0c9fce2ffefecfdce794e1859584e25877b7b592)
++++ b/include/fmt/std.h	(date 1743521991335)
+@@ -426,6 +426,9 @@
+     out = detail::write_bytes<Char>(out, ec.category().name(), format_specs());
+     out = detail::write<Char>(out, Char(':'));
+     out = detail::write<Char>(out, ec.value());
++    out = detail::write_bytes<Char>(out, " (");
++    out = detail::write_bytes<Char>(out, ec.message());
++    out = detail::write<Char>(out, ")");
+     return out;
+   }
+ };
