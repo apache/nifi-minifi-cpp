@@ -183,6 +183,25 @@ status_service() {
     fi
 }
 
+flowStatus() {
+    if ! [ -f "${bin_dir}/minificontroller" ]; then
+        echo "MiNiFi Controller is not installed"
+        return
+    fi
+    if [ "$#" -lt 2 ]; then
+        echo "MiNiFi flowStatus operation requires a flow status query parameter like \"processor:TailFile:health,stats,bulletins\""
+        return
+    fi
+
+    if [ "$#" -lt 3 ]; then
+        exec "${bin_dir}/minificontroller" --flowstatus "$2"
+    elif [ "$#" -lt 3 ]; then
+        exec "${bin_dir}/minificontroller" --port "$2" --flowstatus "$3"
+    else
+        exec "${bin_dir}/minificontroller" --host "$2" --port "$3" --flowstatus "$4"
+    fi
+}
+
 case "$1" in
     start)
       start_service
@@ -207,7 +226,10 @@ case "$1" in
       uninstall "$@"
       echo "Service minifi uninstalled. Please remove the ${MINIFI_HOME} directory manually."
       ;;
+    flowStatus)
+      flowStatus "$@"
+      ;;
     *)
-      echo "Usage: minifi.sh {start|stop|run|restart|status|install|uninstall}"
+      echo "Usage: minifi.sh {start|stop|run|restart|status|install|uninstall|flowStatus}"
       ;;
 esac
