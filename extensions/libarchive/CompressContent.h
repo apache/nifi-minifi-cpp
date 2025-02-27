@@ -85,8 +85,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class CompressContent : public core::ProcessorImpl {
  public:
-  explicit CompressContent(std::string_view name, const utils::Identifier& uuid = {})
-    : core::ProcessorImpl(name, uuid) {
+  explicit CompressContent(const std::string_view name, const utils::Identifier& uuid = {})
+      : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<CompressContent>::getLogger(uuid_);
   }
   ~CompressContent() override = default;
 
@@ -214,7 +215,6 @@ class CompressContent : public core::ProcessorImpl {
 
   void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, core::ProcessSession& session);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger(uuid_);
   int compressLevel_{};
   compress_content::CompressionMode compressMode_;
   compress_content::ExtendedCompressionFormat compressFormat_;

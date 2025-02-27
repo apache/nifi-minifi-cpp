@@ -46,8 +46,9 @@ enum class ScriptEngineOption {
 
 class ExecuteScript : public core::ProcessorImpl {
  public:
-  explicit ExecuteScript(std::string_view name, const utils::Identifier &uuid = {})
+  explicit ExecuteScript(const std::string_view name, const utils::Identifier &uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<ExecuteScript>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "
@@ -99,8 +100,6 @@ class ExecuteScript : public core::ProcessorImpl {
   }
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteScript>::getLogger(uuid_);
-
   std::unique_ptr<extensions::script::ScriptExecutor> script_executor_;
 };
 
