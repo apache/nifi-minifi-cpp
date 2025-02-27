@@ -31,7 +31,7 @@
 namespace org::apache::nifi::minifi {
 
 enum class ResourceType {
-  Processor, ControllerService, InternalResource, DescriptionOnly
+  Processor, ControllerService, InternalResource, DescriptionOnly, ParameterProvider
 };
 
 struct ClassDescription {

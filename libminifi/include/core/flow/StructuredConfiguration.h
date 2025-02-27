@@ -108,7 +108,7 @@ class StructuredConfiguration : public FlowConfiguration {
    */
   std::unique_ptr<core::ProcessGroup> parseRootProcessGroup(const Node& root_flow_node);
 
-  void parseParameterContexts(const Node& parameter_contexts_node);
+  void parseParameterContexts(const Node& parameter_contexts_node, const Node& parameter_providers_node);
   void parseControllerServices(const Node& controller_services_node, core::ProcessGroup* parent_group);
 
   /**
@@ -234,6 +234,9 @@ class StructuredConfiguration : public FlowConfiguration {
    * @param reason
    */
   void raiseComponentError(const std::string &component_name, const std::string &section, const std::string &reason) const;
+  void parseParameterProvidersNode(const Node& parameter_providers_node);
+  void parseParameterContextsNode(const Node& parameter_contexts_node);
+  void parseParameterContextInheritance(const Node& parameter_contexts_node);
   void verifyNoInheritanceCycles() const;
 };
 
