@@ -69,7 +69,7 @@ class ReadModbusFunction {
   const uint8_t unit_id_;
 };
 
-class ReadCoilStatus final : public ReadModbusFunction {
+class ReadCoilStatus : public ReadModbusFunction {
  public:
   ReadCoilStatus(const uint16_t transaction_id, const uint8_t unit_id, const uint16_t starting_address, const uint16_t number_of_points)
       : ReadModbusFunction(transaction_id, unit_id),
@@ -94,7 +94,7 @@ class ReadCoilStatus final : public ReadModbusFunction {
 };
 
 template<typename T>
-class ReadRegisters final : public ReadModbusFunction {
+class ReadRegisters : public ReadModbusFunction {
  public:
   ReadRegisters(const RegisterType register_type, const uint16_t transaction_id, const uint8_t unit_id, const uint16_t starting_address, const uint16_t number_of_points)
       : ReadModbusFunction(transaction_id, unit_id),

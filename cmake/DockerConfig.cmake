@@ -152,7 +152,7 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
         endif()
     endforeach()
 
-    set(DISABLED_TAGS "SKIP_CI,NEEDS_NUMPY")
+    set(DISABLED_TAGS "SKIP_CI")
 
     add_custom_target(
         docker-verify
@@ -172,5 +172,4 @@ function(CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE BASE_IMAGE TAG_PREFIX INSTALL_P
             ${CMAKE_BINARY_DIR})
 endfunction()
 
-include(VerifyPythonCompatibility)
 include(VerifyPackageWithDocker)
