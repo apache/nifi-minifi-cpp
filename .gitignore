@@ -89,3 +89,7 @@ extensions/windows-event-log/tests/custom-provider/unit-test-provider.man
 extensions/windows-event-log/tests/custom-provider/unit-test-provider.rc
 extensions/windows-event-log/tests/custom-provider/unit-test-provider.res
 extensions/windows-event-log/tests/custom-provider/unit-test-providerTEMP.BIN
+
+##################################################################################################
+#  If you add anything here, consider adding it to the CPACK_SOURCE_IGNORE_FILES list, as well.  #
+##################################################################################################
