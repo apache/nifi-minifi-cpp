@@ -56,7 +56,11 @@ class BaseOPCProcessor : public core::ProcessorImpl {
       .withDescription("Path to the DER-encoded key file")
       .build();
   EXTENSIONAPI static constexpr auto TrustedPath = core::PropertyDefinitionBuilder<>::createProperty("Trusted server certificate path")
-      .withDescription("Path to the DER-encoded trusted server certificate")
+      .withDescription("Comma separated list of paths to the DER-encoded trusted server certificates")
+      .build();
+  EXTENSIONAPI static constexpr auto PathReferenceTypes = core::PropertyDefinitionBuilder<>::createProperty("Path reference types")
+      .withDescription("Specify the reference types between nodes in the path if Path Node ID type is used. If not provided, all reference types are assumed to be Organizes. "
+                       "The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype.")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       OPCServerEndPoint,
@@ -65,7 +69,8 @@ class BaseOPCProcessor : public core::ProcessorImpl {
       Password,
       CertificatePath,
       KeyPath,
-      TrustedPath
+      TrustedPath,
+      PathReferenceTypes
   });
 
 
@@ -77,23 +82,30 @@ class BaseOPCProcessor : public core::ProcessorImpl {
 
  protected:
   virtual bool reconnect();
+  void readPathReferenceTypes(core::ProcessContext& context, const std::string& node_id);
+  void parseIdType(core::ProcessContext& context, const core::PropertyReference& prop);
 
   std::shared_ptr<core::logging::Logger> logger_;
 
+  std::string node_id_;
+  int32_t namespace_idx_ = 0;
+  opc::OPCNodeIDType id_type_{};
+
   opc::ClientPtr connection_;
 
-  std::string endPointURL_;
+  std::string endpoint_url_;
 
-  std::string applicationURI_;
+  std::string application_uri_;
   std::string username_;
   std::string password_;
   std::string certpath_;
   std::string keypath_;
   std::string trustpath_;
 
-  std::vector<char> certBuffer_;
-  std::vector<char> keyBuffer_;
-  std::vector<std::vector<char>> trustBuffers_;
+  std::vector<char> cert_buffer_;
+  std::vector<char> key_buffer_;
+  std::vector<std::vector<char>> trust_buffers_;
+  std::vector<UA_UInt32> path_reference_types_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

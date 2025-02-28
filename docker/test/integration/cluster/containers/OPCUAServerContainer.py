@@ -23,7 +23,7 @@ class OPCUAServerContainer(Container):
         super().__init__(feature_context, name, 'opcua-server', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
-        return "TCP network layer listening on"
+        return "New DiscoveryUrl added: opc.tcp://"
 
     def deploy(self):
         if not self.set_deployed():
@@ -31,7 +31,7 @@ class OPCUAServerContainer(Container):
 
         logging.info('Creating and running OPC UA server docker container...')
         self.client.containers.run(
-            "lordgamez/open62541:1.3.5",
+            "lordgamez/open62541:1.4.10",
             detach=True,
             name=self.name,
             network=self.network.name,

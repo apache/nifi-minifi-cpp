@@ -39,6 +39,11 @@
 
 namespace org::apache::nifi::minifi::processors {
 
+enum class LazyModeOptions {
+  On,
+  Off
+};
+
 class FetchOPCProcessor : public BaseOPCProcessor {
  public:
   explicit FetchOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
@@ -48,30 +53,32 @@ class FetchOPCProcessor : public BaseOPCProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches OPC-UA node";
 
-  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<3>::createProperty("Node ID type")
+  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<magic_enum::enum_count<opc::OPCNodeIDType>()>::createProperty("Node ID type")
       .withDescription("Specifies the type of the provided node ID")
       .isRequired(true)
-      .withAllowedValues({"Path", "Int", "String"})
+      .withAllowedValues(magic_enum::enum_names<opc::OPCNodeIDType>())
       .build();
   EXTENSIONAPI static constexpr auto NodeID = core::PropertyDefinitionBuilder<>::createProperty("Node ID")
-      .withDescription("Specifies the ID of the root node to traverse")
+      .withDescription("Specifies the ID of the root node to traverse. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.")
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto NameSpaceIndex = core::PropertyDefinitionBuilder<>::createProperty("Namespace index")
-      .withDescription("The index of the namespace. Used only if node ID type is not path.")
+      .withDescription("The index of the namespace.")
       .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("0")
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaxDepth = core::PropertyDefinitionBuilder<>::createProperty("Max depth")
       .withDescription("Specifiec the max depth of browsing. 0 means unlimited.")
       .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
-      .build();
-  EXTENSIONAPI static constexpr auto Lazy = core::PropertyDefinitionBuilder<2>::createProperty("Lazy mode")
-      .withDescription("Only creates flowfiles from nodes with new timestamp from the server.")
-      .withDefaultValue("Off")
       .isRequired(true)
-      .withAllowedValues({"On", "Off"})
+      .build();
+  EXTENSIONAPI static constexpr auto Lazy = core::PropertyDefinitionBuilder<magic_enum::enum_count<LazyModeOptions>()>::createProperty("Lazy mode")
+      .withDescription("Only creates flowfiles from nodes with new timestamp from the server.")
+      .isRequired(true)
+      .withAllowedValues(magic_enum::enum_names<LazyModeOptions>())
+      .withDefaultValue(magic_enum::enum_name(LazyModeOptions::Off))
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::to_array<core::PropertyReference>({
       NodeIDType,
@@ -86,6 +93,18 @@ class FetchOPCProcessor : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Retrieved OPC-UA nodes where value cannot be extracted (only if enabled)"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
+  EXTENSIONAPI static constexpr auto NodeIDAttr = core::OutputAttributeDefinition<>{"NodeID", { Success }, "ID of the node."};
+  EXTENSIONAPI static constexpr auto NodeIDTypeAttr = core::OutputAttributeDefinition<>{"NodeID type", { Success }, "Type of the node ID."};
+  EXTENSIONAPI static constexpr auto BrowsenameAttr = core::OutputAttributeDefinition<>{"Browsename", { Success }, "The browse name of the node."};
+  EXTENSIONAPI static constexpr auto FullPathAttr = core::OutputAttributeDefinition<>{"Full path", { Success }, "The full path of the node."};
+  EXTENSIONAPI static constexpr auto SourcetimestampAttr = core::OutputAttributeDefinition<>{"Sourcetimestamp", { Success },
+    "The timestamp of when the node was created in the server as 'MM-dd-yyyy HH:mm:ss.mmm'."};
+  EXTENSIONAPI static constexpr auto TypenameAttr = core::OutputAttributeDefinition<>{"Typename", { Success }, "The type name of the node data."};
+  EXTENSIONAPI static constexpr auto DatasizeAttr = core::OutputAttributeDefinition<>{"Datasize", { Success }, "The size of the node data."};
+
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 7> {NodeIDAttr, NodeIDTypeAttr, BrowsenameAttr, FullPathAttr, SourcetimestampAttr,
+    TypenameAttr, DatasizeAttr};
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
@@ -98,21 +117,17 @@ class FetchOPCProcessor : public BaseOPCProcessor {
   void initialize() override;
 
  protected:
-  bool nodeFoundCallBack(opc::Client& client, const UA_ReferenceDescription *ref, const std::string& path,
-                         core::ProcessContext& context, core::ProcessSession& session);
+  bool nodeFoundCallBack(const UA_ReferenceDescription *ref, const std::string& path,
+                         core::ProcessContext& context, core::ProcessSession& session,
+                         size_t& nodes_found, size_t& variables_found);
 
-  void OPCData2FlowFile(const opc::NodeData& opcnode, core::ProcessContext& context, core::ProcessSession& session);
+  void OPCData2FlowFile(const opc::NodeData& opc_node, core::ProcessContext& context, core::ProcessSession& session);
 
-  std::string nodeID_;
-  int32_t nameSpaceIdx_ = 0;
-  opc::OPCNodeIDType idType_{};
-  uint32_t nodesFound_ = 0;
-  uint32_t variablesFound_ = 0;
-  uint64_t maxDepth_ = 0;
+  uint64_t max_depth_ = 0;
   bool lazy_mode_ = false;
 
  private:
-  std::vector<UA_NodeId> translatedNodeIDs_;  // Only used when user provides path, path->nodeid translation is only done once
+  std::vector<UA_NodeId> translated_node_ids_;  // Only used when user provides path, path->nodeid translation is only done once
   std::unordered_map<std::string, std::string> node_timestamp_;  // Key = Full path, Value = Timestamp
 };
 

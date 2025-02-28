@@ -29,302 +29,284 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-  void PutOPCProcessor::initialize() {
-    setSupportedProperties(Properties);
-    setSupportedRelationships(Relationships);
+void PutOPCProcessor::initialize() {
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
+}
+
+void PutOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  logger_->log_trace("PutOPCProcessor::onSchedule");
+
+  BaseOPCProcessor::onSchedule(context, session_factory);
+
+  node_id_ = utils::parseProperty(context, ParentNodeID);
+
+  parseIdType(context, ParentNodeIDType);
+
+  namespace_idx_ = gsl::narrow<int32_t>(utils::parseI64Property(context, ParentNameSpaceIndex));
+  node_data_type_ = utils::parseEnumProperty<opc::OPCNodeDataType>(context, ValueType);
+
+  if (id_type_ == opc::OPCNodeIDType::Path) {
+    readPathReferenceTypes(context, node_id_);
   }
 
-  void PutOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
-    logger_->log_trace("PutOPCProcessor::onSchedule");
+  const auto value = context.getProperty(CreateNodeReferenceType).value_or("");
+  if (auto ref_type = opc::mapOpcReferenceType(value)) {
+    create_node_reference_type_ = ref_type.value();
+  } else {
+    logger_->log_error("Invalid reference type: {}", value);
+  }
+}
 
-    parentExists_ = false;
-
-    BaseOPCProcessor::onSchedule(context, session_factory);
-
-    nodeID_ = utils::parseProperty(context, ParentNodeID);
-
-    std::string value = utils::parseProperty(context, ParentNodeIDType);
-
-    if (value == "String") {
-      idType_ = opc::OPCNodeIDType::String;
-    } else if (value == "Int") {
-      idType_ = opc::OPCNodeIDType::Int;
-    } else if (value == "Path") {
-      idType_ = opc::OPCNodeIDType::Path;
+bool PutOPCProcessor::readParentNodeId() {
+  if (id_type_ == opc::OPCNodeIDType::Path) {
+    std::vector<UA_NodeId> translated_node_ids;
+    if (connection_->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids, namespace_idx_, path_reference_types_, logger_) !=
+        UA_STATUSCODE_GOOD) {
+      logger_->log_error("Failed to translate {} to node id, no flow files will be put", node_id_.c_str());
+      return false;
+    } else if (translated_node_ids.size() != 1) {
+      logger_->log_error("{} was translated to multiple node ids, no flow files will be put", node_id_.c_str());
+      return false;
     } else {
-      // Where have our validators gone?
-      auto error_msg = utils::string::join_pack(value, " is not a valid node ID type!");
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
+      parent_node_id_ = translated_node_ids[0];
     }
+  } else {
+    parent_node_id_.namespaceIndex = namespace_idx_;
+    if (id_type_ == opc::OPCNodeIDType::Int) {
+      parent_node_id_.identifierType = UA_NODEIDTYPE_NUMERIC;
+      parent_node_id_.identifier.numeric = std::stoi(node_id_);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    } else {  // idType_ == opc::OPCNodeIDType::String
+      parent_node_id_.identifierType = UA_NODEIDTYPE_STRING;
+      parent_node_id_.identifier.string = UA_STRING_ALLOC(node_id_.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    }
+    if (!connection_->exists(parent_node_id_)) {
+      logger_->log_error("Parent node doesn't exist, no flow files will be put");
+      return false;
+    }
+  }
+  return true;
+}
 
-    if (idType_ == opc::OPCNodeIDType::Int) {
-      try {
-        // ensure that nodeID_ can be parsed as an int
-        static_cast<void>(std::stoi(nodeID_));
-      } catch(...) {
-        auto error_msg = utils::string::join_pack(nodeID_, " cannot be used as an int type node ID");
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-      }
-    }
-    if (idType_ != opc::OPCNodeIDType::Path) {
-      nameSpaceIdx_ = gsl::narrow<int32_t>(utils::parseI64Property(context, ParentNameSpaceIndex));
-    }
-
-    std::string typestr = utils::parseProperty(context, ValueType);
-    nodeDataType_ = utils::at(opc::StringToOPCDataTypeMap, typestr);  // This throws, but allowed values are generated based on this map -> that's a really unexpected error
+nonstd::expected<std::pair<bool, UA_NodeId>, std::string> PutOPCProcessor::configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const {
+  const auto namespaceidx = context.getProperty(TargetNodeNameSpaceIndex, &flow_file).value_or("");
+  if (namespaceidx.empty()) {
+    return nonstd::make_unexpected(fmt::format("Flowfile {} had no target namespace index specified, routing to failure!", flow_file.getUUIDStr()));
+  }
+  int32_t nsi = 0;
+  try {
+    nsi = std::stoi(namespaceidx);
+  } catch (const std::exception&) {
+    return nonstd::make_unexpected(fmt::format("Flowfile {} has invalid namespace index ({}), routing to failure!",
+                                   flow_file.getUUIDStr(), namespaceidx));
   }
 
-  void PutOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-    logger_->log_trace("PutOPCProcessor::onTrigger");
+  const auto target_id_type = context.getProperty(TargetNodeIDType, &flow_file).value_or("");
+  if (target_id_type.empty()) {
+    return nonstd::make_unexpected(fmt::format("Flowfile {} has invalid target node id type, routing to failure!",
+                                   flow_file.getUUIDStr()));
+  }
 
-    if (!reconnect()) {
-      yield();
-      return;
+  const auto target_id = context.getProperty(TargetNodeID, &flow_file).value_or("");
+  if (target_id.empty()) {
+    return nonstd::make_unexpected(fmt::format("Flowfile {} had target node ID type specified ({}) without ID, routing to failure!",
+                                    flow_file.getUUIDStr(), target_id_type));
+  }
+
+  UA_NodeId target_node;
+  target_node.namespaceIndex = nsi;
+  if (target_id_type == "Int") {
+    target_node.identifierType = UA_NODEIDTYPE_NUMERIC;
+    try {
+      target_node.identifier.numeric = std::stoi(target_id);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    } catch (const std::exception&) {
+      return nonstd::make_unexpected(fmt::format("Flowfile {}: target node ID is not a valid integer: {}. Routing to failure!",
+                                      flow_file.getUUIDStr(), target_id));
     }
+  } else if (target_id_type == "String") {
+    target_node.identifierType = UA_NODEIDTYPE_STRING;
+    target_node.identifier.string = UA_STRING_ALLOC(target_id.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
+  } else {
+    return nonstd::make_unexpected(fmt::format("Flowfile {}: target node ID type is invalid: {}. Routing to failure!",
+                                    flow_file.getUUIDStr(), target_id_type));
+  }
+  return std::make_pair(connection_->exists(target_node), target_node);
+}
 
-    if (!parentExists_) {
-      if (idType_ == opc::OPCNodeIDType::Path) {
-        std::vector<UA_NodeId> translatedNodeIDs;
-        if (connection_->translateBrowsePathsToNodeIdsRequest(nodeID_, translatedNodeIDs, logger_) !=
-            UA_STATUSCODE_GOOD) {
-          logger_->log_error("Failed to translate {} to node id, no flow files will be put", nodeID_.c_str());
-          yield();
-          return;
-        } else if (translatedNodeIDs.size() != 1) {
-          logger_->log_error("{} was translated to multiple node ids, no flow files will be put", nodeID_.c_str());
-          yield();
-          return;
+void PutOPCProcessor::updateNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const {
+  logger_->log_trace("Node exists, trying to update it");
+  try {
+    UA_StatusCode sc = 0;
+    switch (node_data_type_) {
+      case opc::OPCNodeDataType::Int64: {
+        int64_t value = std::stoll(contentstr);
+        sc = connection_->update_node(target_node, value);
+        break;
+      }
+      case opc::OPCNodeDataType::UInt64: {
+        uint64_t value = std::stoull(contentstr);
+        sc = connection_->update_node(target_node, value);
+        break;
+      }
+      case opc::OPCNodeDataType::Int32: {
+        int32_t value = std::stoi(contentstr);
+        sc = connection_->update_node(target_node, value);
+        break;
+      }
+      case opc::OPCNodeDataType::UInt32: {
+        uint32_t value = std::stoul(contentstr);
+        sc = connection_->update_node(target_node, value);
+        break;
+      }
+      case opc::OPCNodeDataType::Boolean: {
+        if (auto contentstr_parsed = utils::string::toBool(contentstr)) {
+          sc = connection_->update_node(target_node, contentstr_parsed.value());
         } else {
-          parentNodeID_ = translatedNodeIDs[0];
-          parentExists_ = true;
+          throw std::runtime_error("Content cannot be converted to bool");
         }
-      } else {
-        parentNodeID_.namespaceIndex = nameSpaceIdx_;
-        if (idType_ == opc::OPCNodeIDType::Int) {
-          parentNodeID_.identifierType = UA_NODEIDTYPE_NUMERIC;
-          parentNodeID_.identifier.numeric = std::stoi(nodeID_);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-        } else {  // idType_ == opc::OPCNodeIDType::String
-          parentNodeID_.identifierType = UA_NODEIDTYPE_STRING;
-          parentNodeID_.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
-        }
-        if (!connection_->exists(parentNodeID_)) {
-          logger_->log_error("Parent node doesn't exist, no flow files will be put");
-          yield();
-          return;
-        }
-        parentExists_ = true;
+        break;
       }
+      case opc::OPCNodeDataType::Float: {
+        float value = std::stof(contentstr);
+        sc = connection_->update_node(target_node, value);
+        break;
+      }
+      case opc::OPCNodeDataType::Double: {
+        double value = std::stod(contentstr);
+        sc = connection_->update_node(target_node, value);
+        break;
+      }
+      case opc::OPCNodeDataType::String: {
+        sc = connection_->update_node(target_node, contentstr);
+        break;
+      }
+      default:
+        logger_->log_error("Unhandled data type: {}", magic_enum::enum_name(node_data_type_));
+        gsl_Assert(false);
     }
-
-    auto flowFile = session.get();
-
-    // Do nothing if there are no incoming files
-    if (!flowFile) {
+    if (sc != UA_STATUSCODE_GOOD) {
+      logger_->log_error("Failed to update node: {}", UA_StatusCode_name(sc));
+      session.transfer(flow_file, Failure);
       return;
     }
 
-    const auto targetidtype = context.getProperty(TargetNodeIDType, flowFile.get());
-
-    bool targetNodeExists = false;
-    bool targetNodeValid = false;
-    UA_NodeId targetnode;
-
-    if (targetidtype) {
-      const auto targetid = context.getProperty(TargetNodeID, flowFile.get());
-      const auto namespaceidx = context.getProperty(TargetNodeNameSpaceIndex, flowFile.get());
-
-
-      if (!targetid) {
-        logger_->log_error("Flowfile {} had target node ID type specified ({}) without ID, routing to failure!",
-                           flowFile->getUUIDStr(), *targetidtype);
-        session.transfer(flowFile, Failure);
-        return;
-      }
-
-      if (!namespaceidx) {
-        logger_->log_error("Flowfile {} had target node ID type specified ({}) without namespace index, routing to failure!", flowFile->getUUIDStr(), *targetidtype);
-        session.transfer(flowFile, Failure);
-        return;
-      }
-      int32_t nsi = 0;
-      try {
-        nsi = std::stoi(*namespaceidx);
-      } catch (...) {
-        logger_->log_error("Flowfile {} has invalid namespace index ({}), routing to failure!",
-                           flowFile->getUUIDStr(), *namespaceidx);
-        session.transfer(flowFile, Failure);
-        return;
-      }
-
-      targetnode.namespaceIndex = nsi;
-      if (targetidtype == "Int") {
-        targetnode.identifierType = UA_NODEIDTYPE_NUMERIC;
-        try {
-          targetnode.identifier.numeric = std::stoi(*targetid);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-          targetNodeValid = true;
-        } catch (...) {
-          logger_->log_error("Flowfile {}: target node ID is not a valid integer: {}. Routing to failure!",
-                             flowFile->getUUIDStr(), *targetid);
-          session.transfer(flowFile, Failure);
-          return;
-        }
-      } else if (targetidtype == "String") {
-        targetnode.identifierType = UA_NODEIDTYPE_STRING;
-        targetnode.identifier.string = UA_STRING_ALLOC(targetid->c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
-        targetNodeValid = true;
-      } else {
-        logger_->log_error("Flowfile {}: target node ID type is invalid: {}. Routing to failure!",
-                           flowFile->getUUIDStr(), *targetidtype);
-        session.transfer(flowFile, Failure);
-        return;
-      }
-      targetNodeExists = connection_->exists(targetnode);
-    }
-
-    const auto contentstr = to_string(session.readBuffer(flowFile));
-    if (targetNodeExists) {
-      logger_->log_trace("Node exists, trying to update it");
-      try {
-        UA_StatusCode sc = 0;
-        switch (nodeDataType_) {
-          case opc::OPCNodeDataType::Int64: {
-            int64_t value = std::stoll(contentstr);
-            sc = connection_->update_node(targetnode, value);
-            break;
-          }
-          case opc::OPCNodeDataType::UInt64: {
-            uint64_t value = std::stoull(contentstr);
-            sc = connection_->update_node(targetnode, value);
-            break;
-          }
-          case opc::OPCNodeDataType::Int32: {
-            int32_t value = std::stoi(contentstr);
-            sc = connection_->update_node(targetnode, value);
-            break;
-          }
-          case opc::OPCNodeDataType::UInt32: {
-            uint32_t value = std::stoul(contentstr);
-            sc = connection_->update_node(targetnode, value);
-            break;
-          }
-          case opc::OPCNodeDataType::Boolean: {
-            const auto contentstr_parsed = utils::string::toBool(contentstr);
-            if (contentstr_parsed) {
-              sc = connection_->update_node(targetnode, contentstr_parsed.value());
-            } else {
-              throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
-            }
-            break;
-          }
-          case opc::OPCNodeDataType::Float: {
-            float value = std::stof(contentstr);
-            sc = connection_->update_node(targetnode, value);
-            break;
-          }
-          case opc::OPCNodeDataType::Double: {
-            double value = std::stod(contentstr);
-            sc = connection_->update_node(targetnode, value);
-            break;
-          }
-          case opc::OPCNodeDataType::String: {
-            sc = connection_->update_node(targetnode, contentstr);
-            break;
-          }
-          default:
-            throw opc::OPCException(GENERAL_EXCEPTION, "This should never happen!");
-        }
-        if (sc != UA_STATUSCODE_GOOD) {
-          logger_->log_error("Failed to update node: {}", UA_StatusCode_name(sc));
-          session.transfer(flowFile, Failure);
-          return;
-        }
-      } catch (...) {
-        const std::string typestr = context.getProperty(ValueType).value_or("");
-        logger_->log_error("Failed to convert {} to data type {}", contentstr, typestr);
-        session.transfer(flowFile, Failure);
-        return;
-      }
-      logger_->log_trace("Node successfully updated!");
-      session.transfer(flowFile, Success);
-      return;
-    } else {
-      logger_->log_trace("Node doesn't exist, trying to create new node");
-      const auto browsename = context.getProperty(TargetNodeBrowseName, flowFile.get());
-      if (!browsename) {
-        logger_->log_error("Target node browse name is required for flowfile ({}) as new node is to be created",
-                           flowFile->getUUIDStr());
-        session.transfer(flowFile, Failure);
-        return;
-      }
-      if (!targetNodeValid) {
-        targetnode = UA_NODEID_NUMERIC(1, 0);
-      }
-      try {
-        UA_StatusCode sc = 0;
-        UA_NodeId resultnode;
-        switch (nodeDataType_) {
-          case opc::OPCNodeDataType::Int64: {
-            int64_t value = std::stoll(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, *browsename, value, &resultnode);
-            break;
-          }
-          case opc::OPCNodeDataType::UInt64: {
-            uint64_t value = std::stoull(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, *browsename, value, &resultnode);
-            break;
-          }
-          case opc::OPCNodeDataType::Int32: {
-            int32_t value = std::stoi(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, *browsename, value, &resultnode);
-            break;
-          }
-          case opc::OPCNodeDataType::UInt32: {
-            uint32_t value = std::stoul(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, *browsename, value, &resultnode);
-            break;
-          }
-          case opc::OPCNodeDataType::Boolean: {
-            const auto contentstr_parsed = utils::string::toBool(contentstr);
-            if (contentstr_parsed) {
-              sc = connection_->add_node(parentNodeID_, targetnode, *browsename, contentstr_parsed.value(), &resultnode);
-            } else {
-              throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
-            }
-            break;
-          }
-          case opc::OPCNodeDataType::Float: {
-            float value = std::stof(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, *browsename, value, &resultnode);
-            break;
-          }
-          case opc::OPCNodeDataType::Double: {
-            double value = std::stod(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, *browsename, value, &resultnode);
-            break;
-          }
-          case opc::OPCNodeDataType::String: {
-            sc = connection_->add_node(parentNodeID_, targetnode, *browsename, contentstr, &resultnode);
-            break;
-          }
-          default:
-            throw opc::OPCException(GENERAL_EXCEPTION, "This should never happen!");
-        }
-        if (sc != UA_STATUSCODE_GOOD) {
-          logger_->log_error("Failed to create node: {}", UA_StatusCode_name(sc));
-          session.transfer(flowFile, Failure);
-          return;
-        }
-      } catch (...) {
-        const std::string typestr = context.getProperty(ValueType).value_or("");
-        logger_->log_error("Failed to convert {} to data type {}", contentstr, typestr);
-        session.transfer(flowFile, Failure);
-        return;
-      }
-      logger_->log_trace("Node successfully created!");
-      session.transfer(flowFile, Success);
-      return;
-    }
+    logger_->log_trace("Node successfully updated!");
+    session.transfer(flow_file, Success);
+  } catch (const std::exception&) {
+    logger_->log_error("Failed to convert {} to data type {}", contentstr, magic_enum::enum_name(node_data_type_));
+    session.transfer(flow_file, Failure);
   }
+}
+
+void PutOPCProcessor::createNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessContext& context, core::ProcessSession& session,
+    const std::shared_ptr<core::FlowFile>& flow_file) const {
+  logger_->log_trace("Node doesn't exist, trying to create new node");
+  const auto browse_name = context.getProperty(TargetNodeBrowseName, flowFile.get()).value_or("");
+  if (browse_name.empty()) {
+    logger_->log_error("Target node browse name is required for flowfile ({}) as new node is to be created",
+                       flow_file->getUUIDStr());
+    session.transfer(flow_file, Failure);
+    return;
+  }
+
+  try {
+    UA_StatusCode sc = 0;
+    UA_NodeId result_node;
+    switch (node_data_type_) {
+      case opc::OPCNodeDataType::Int64: {
+        int64_t value = std::stoll(contentstr);
+        sc = connection_->add_node(parent_node_id_, target_node, create_node_reference_type_, browse_name, value, &result_node);
+        break;
+      }
+      case opc::OPCNodeDataType::UInt64: {
+        uint64_t value = std::stoull(contentstr);
+        sc = connection_->add_node(parent_node_id_, target_node, create_node_reference_type_, browse_name, value, &result_node);
+        break;
+      }
+      case opc::OPCNodeDataType::Int32: {
+        int32_t value = std::stoi(contentstr);
+        sc = connection_->add_node(parent_node_id_, target_node, create_node_reference_type_, browse_name, value, &result_node);
+        break;
+      }
+      case opc::OPCNodeDataType::UInt32: {
+        uint32_t value = std::stoul(contentstr);
+        sc = connection_->add_node(parent_node_id_, target_node, create_node_reference_type_, browse_name, value, &result_node);
+        break;
+      }
+      case opc::OPCNodeDataType::Boolean: {
+        if (auto contentstr_parsed = utils::string::toBool(contentstr)) {
+          sc = connection_->add_node(parent_node_id_, target_node, create_node_reference_type_, browse_name, contentstr_parsed.value(), &result_node);
+        } else {
+          throw std::runtime_error("Content cannot be converted to bool");
+        }
+        break;
+      }
+      case opc::OPCNodeDataType::Float: {
+        float value = std::stof(contentstr);
+        sc = connection_->add_node(parent_node_id_, target_node, create_node_reference_type_, browse_name, value, &result_node);
+        break;
+      }
+      case opc::OPCNodeDataType::Double: {
+        double value = std::stod(contentstr);
+        sc = connection_->add_node(parent_node_id_, target_node, create_node_reference_type_, browse_name, value, &result_node);
+        break;
+      }
+      case opc::OPCNodeDataType::String: {
+        sc = connection_->add_node(parent_node_id_, target_node, create_node_reference_type_, browse_name, contentstr, &result_node);
+        break;
+      }
+      default:
+        logger_->log_error("Unhandled data type: {}", magic_enum::enum_name(node_data_type_));
+        gsl_Assert(false);
+    }
+    if (sc != UA_STATUSCODE_GOOD) {
+      logger_->log_error("Failed to create node: {}", UA_StatusCode_name(sc));
+      session.transfer(flow_file, Failure);
+      return;
+    }
+
+    logger_->log_trace("Node successfully created!");
+    session.transfer(flow_file, Success);
+  } catch (const std::exception&) {
+    logger_->log_error("Failed to convert {} to data type {}", contentstr, magic_enum::enum_name(node_data_type_));
+    session.transfer(flow_file, Failure);
+  }
+}
+
+void PutOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  logger_->log_trace("PutOPCProcessor::onTrigger");
+
+  if (!reconnect()) {
+    logger_->log_warn("Could not connect to OPC server, yielding");
+    yield();
+    return;
+  }
+
+  if (!readParentNodeId()) {
+    yield();
+    return;
+  }
+
+  auto flow_file = session.get();
+  if (!flow_file) {
+    return;
+  }
+
+  auto target_node_result = configureTargetNode(context, *flow_file);
+  if (!target_node_result.has_value()) {
+    logger_->log_error("{}", target_node_result.error());
+    session.transfer(flow_file, Failure);
+    return;
+  }
+
+  const auto& [target_node_exists, target_node] = target_node_result.value();
+  const auto contentstr = to_string(session.readBuffer(flow_file));
+  if (target_node_exists) {
+    updateNode(target_node, contentstr, session, flow_file);
+  } else {
+    createNode(target_node, contentstr, context, session, flow_file);
+  }
+}
 
 REGISTER_RESOURCE(PutOPCProcessor, Processor);
 
