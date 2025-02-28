@@ -545,8 +545,8 @@ else()
 endif(WIN32)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
 set(CPACK_SOURCE_IGNORE_FILES
-    "/build/"
-    "/cmake-build-"
+    "/.*build.*/"
+    "/build_description\\\\.cpp"
     "~"
     "\\\\.git/"
     "\\\\.idea"
