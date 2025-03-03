@@ -26,11 +26,12 @@
 #include <string>
 #include <vector>
 
-#include "utils/gsl.h"
-#include "utils/OptionalUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/OptionalUtils.h"
+#include "utils/gsl.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 const char *GenerateFlowFile::DATA_FORMAT_TEXT = "Text";
@@ -77,16 +78,16 @@ GenerateFlowFile::Mode GenerateFlowFile::getMode(bool is_unique, bool is_text, b
 }
 
 void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  bool is_text = context.getProperty<std::string>(DataFormat)
+  bool is_text = context.getProperty(DataFormat)
       | utils::transform([](const std::string& data_format) { return data_format == DATA_FORMAT_TEXT;})
       | utils::valueOrElse([]() {return false;});
-  bool is_unique = context.getProperty<bool>(UniqueFlowFiles) | utils::valueOrElse([] { return true; });
+  bool is_unique = utils::parseOptionalBoolProperty(context, UniqueFlowFiles).value_or(true);
 
-  auto custom_text_without_evaluation = context.getProperty(CustomText);
-  bool has_custom_text = custom_text_without_evaluation.has_value() && !custom_text_without_evaluation->empty();
+  const auto custom_text_without_evaluation = getProperty(CustomText.name);
+  const bool has_custom_text = custom_text_without_evaluation.has_value() && !custom_text_without_evaluation->empty();
 
-  context.getProperty(FileSize, file_size_);
-  context.getProperty(BatchSize, batch_size_);
+  file_size_ = utils::parseDataSizeProperty(context, FileSize);
+  batch_size_ = utils::parseU64Property(context, BatchSize);
 
   mode_ = getMode(is_unique, is_text, has_custom_text, file_size_);
 
@@ -105,8 +106,7 @@ void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSe
 void GenerateFlowFile::refreshNonUniqueData(core::ProcessContext& context) {
   if (mode_ != Mode::CustomText)
     return;
-  std::string custom_text;
-  context.getProperty(CustomText, custom_text, nullptr);
+  std::string custom_text = context.getProperty(CustomText).value_or("");
   non_unique_data_.assign(custom_text.begin(), custom_text.end());
 }
 

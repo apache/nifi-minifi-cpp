@@ -72,25 +72,25 @@ class NetworkPrioritizerService : public core::controller::ControllerServiceImpl
   MINIFIAPI static constexpr auto MaxThroughput = core::PropertyDefinitionBuilder<>::createProperty("Max Throughput")
       .withDescription("Max throughput ( per second ) for these network controllers")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .withDefaultValue("1 MB")
       .build();
   MINIFIAPI static constexpr auto MaxPayload = core::PropertyDefinitionBuilder<>::createProperty("Max Payload")
       .withDescription("Maximum payload for these network controllers")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
       .withDefaultValue("1 GB")
       .build();
   MINIFIAPI static constexpr auto VerifyInterfaces = core::PropertyDefinitionBuilder<>::createProperty("Verify Interfaces")
       .withDescription("Verify that interfaces are operational")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   MINIFIAPI static constexpr auto DefaultPrioritizer = core::PropertyDefinitionBuilder<>::createProperty("Default Prioritizer")
       .withDescription("Sets this controller service as the default prioritizer for all comms")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

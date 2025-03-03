@@ -25,6 +25,8 @@
 #include "utils/StringUtils.h"
 #include "core/Resource.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace {
   std::string escape(const std::string& str) {
     std::stringstream escaped;
@@ -131,13 +133,15 @@ void PersistentMapStateStorage::onEnable() {
     return;
   }
 
-  const auto always_persist = getProperty<bool>(AlwaysPersist).value_or(false);
+  const auto always_persist = (getProperty(AlwaysPersist.name) | utils::andThen(parsing::parseBool)).value_or(false);
   logger_->log_info("Always Persist property: {}", always_persist);
 
-  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval).value_or(core::TimePeriodValue{}).getMilliseconds();
+  const auto auto_persistence_interval = (getProperty(AutoPersistenceInterval.name) | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)).value_or(1min);
   logger_->log_info("Auto Persistence Interval property: {}", auto_persistence_interval);
 
-  if (!getProperty(File, file_)) {
+  if (auto file = getProperty(File.name)) {
+    file_ = *file;
+  } else {
     logger_->log_error("Invalid or missing property: File");
     return;
   }

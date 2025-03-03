@@ -48,13 +48,13 @@ class KamikazeProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto ThrowInOnSchedule = core::PropertyDefinitionBuilder<>::createProperty("Throw in onSchedule")
       .withDescription("Set to throw expcetion during onSchedule call")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto ThrowInOnTrigger = core::PropertyDefinitionBuilder<>::createProperty("Throw in onTrigger")
       .withDescription("Set to throw expcetion during onTrigger call")
       .isRequired(true)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

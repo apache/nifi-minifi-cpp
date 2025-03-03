@@ -20,30 +20,24 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "PropertyDefinition.h"
-#include "PropertyValue.h"
-#include "PropertyType.h"
-#include "range/v3/view/transform.hpp"
+#include "PropertyValidator.h"
 #include "range/v3/range/conversion.hpp"
+#include "range/v3/view/transform.hpp"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class Property {
+class Property final {
  public:
-  /*!
-   * Create a new property
-   * Pay special attention to when value is "true" or "false"
-   * as they will get coerced to the bool true and false, causing
-   * further overwrites to inherit the bool validator.
-   */
-  Property(std::string name, std::string description, const std::string& value, bool is_required, std::vector<std::string> dependent_properties,
-           std::vector<std::pair<std::string, std::string>> exclusive_of_properties);
+  Property(std::string name, std::string description, const std::string &value, bool is_required, std::vector<std::string> dependent_properties,
+      std::vector<std::pair<std::string, std::string>> exclusive_of_properties);
 
-  Property(std::string name, std::string description, const std::string& value);
+  Property(std::string name, std::string description, const std::string &value);
 
   Property(std::string name, std::string description);
 
@@ -53,153 +47,62 @@ class Property {
 
   Property();
 
-  Property(const PropertyReference&);
+  Property(const PropertyReference &);
 
   virtual ~Property() = default;
 
-  void setTransient() {
-    is_transient_ = true;
-  }
+  void setTransient() { is_transient_ = true; }
 
-  bool isTransient() const {
-    return is_transient_;
-  }
+  bool isTransient() const { return is_transient_; }
+  std::vector<std::string> getAllowedValues() const { return allowed_values_; }
+  void setAllowedValues(std::vector<std::string> allowed_values) { allowed_values_ = std::move(allowed_values); }
+  std::optional<std::string> getDefaultValue() const { return default_value_; }
   std::string getName() const;
   std::string getDisplayName() const;
   std::vector<std::string> getAllowedTypes() const;
   std::string getDescription() const;
   const PropertyValidator& getValidator() const;
-  const PropertyValue &getValue() const;
+  [[nodiscard]] nonstd::expected<std::span<const std::string>, std::error_code> getAllValues() const;
+  [[nodiscard]] nonstd::expected<std::string_view, std::error_code> getValue() const;
+  nonstd::expected<void, std::error_code> setValue(std::string value);
+  nonstd::expected<void, std::error_code> appendValue(std::string value);
+  void clearValues();
   bool getRequired() const;
   bool isSensitive() const;
   bool supportsExpressionLanguage() const;
   std::vector<std::string> getDependentProperties() const;
   std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
   std::vector<std::string> getValues();
-
-  const PropertyValue &getDefaultValue() const {
-    return default_value_;
+  PropertyReference getReference() const {
+    return PropertyReference(name_, display_name_, description_, is_required_, is_sensitive_, {}, {}, {}, {}, default_value_, validator_, supports_el_);
   }
 
-  template<typename T = std::string>
-  void setValue(const T &value) {
-    if (!is_collection_) {
-      values_.clear();
-      values_.push_back(default_value_);
-    } else {
-      values_.push_back(default_value_);
-    }
-    PropertyValue& vn = values_.back();
-    vn.setValidator(*validator_);
-    vn = value;
-    ValidationResult result = vn.validate(name_);
-    if (!result.valid) {
-      throw utils::internal::InvalidValueException(name_ + " value validation failed");
-    }
-  }
-
-  void setValue(PropertyValue &newValue) {
-    if (!is_collection_) {
-      values_.clear();
-      values_.push_back(newValue);
-    } else {
-      values_.push_back(newValue);
-    }
-    PropertyValue& vn = values_.back();
-    vn.setValidator(*validator_);
-    ValidationResult result = vn.validate(name_);
-    if (!result.valid) {
-      throw utils::internal::InvalidValueException(name_ + " value validation failed");
-    }
-  }
   void setSupportsExpressionLanguage(bool supportEl);
 
-  std::vector<PropertyValue> getAllowedValues() const {
-    return allowed_values_;
-  }
-
-  void setAllowedValues(gsl::span<const std::string_view> allowed_values, const core::PropertyParser& property_parser);
-
+  /**
+   * Add value to the collection of values.
+   */
   void addValue(const std::string &value);
   Property &operator=(const Property &other) = default;
   Property &operator=(Property &&other) = default;
-
-  bool operator<(const Property & right) const;
-
-  static bool StringToPermissions(const std::string& input, uint32_t& output) {
-    uint32_t temp = 0U;
-    if (input.size() == 9U) {
-      /* Probably rwxrwxrwx formatted */
-      for (size_t i = 0; i < 3; i++) {
-        if (input[i * 3] == 'r') {
-          temp |= 04 << ((2 - i) * 3);
-        } else if (input[i * 3] != '-') {
-          return false;
-        }
-        if (input[i * 3 + 1] == 'w') {
-          temp |= 02 << ((2 - i) * 3);
-        } else if (input[i * 3 + 1] != '-') {
-          return false;
-        }
-        if (input[i * 3 + 2] == 'x') {
-          temp |= 01 << ((2 - i) * 3);
-        } else if (input[i * 3 + 2] != '-') {
-          return false;
-        }
-      }
-    } else {
-      /* Probably octal */
-      try {
-        size_t pos = 0U;
-        temp = std::stoul(input, &pos, 8);
-        if (pos != input.size()) {
-          return false;
-        }
-        if ((temp & ~static_cast<uint32_t>(0777)) != 0U) {
-          return false;
-        }
-      } catch (...) {
-        return false;
-      }
-    }
-    output = temp;
-    return true;
-  }
-
-  template<typename T>
-  static bool StringToInt(std::string input, T &output);
-
-  static bool StringToInt(std::string input, int64_t &output) {
-    return StringToInt<int64_t>(input, output);
-  }
-
-  static bool StringToInt(std::string input, uint64_t &output) {
-    return StringToInt<uint64_t>(input, output);
-  }
-
-  static bool StringToInt(std::string input, int32_t &output) {
-    return StringToInt<int32_t>(input, output);
-  }
-
-  static bool StringToInt(std::string input, uint32_t &output) {
-    return StringToInt<uint32_t>(input, output);
-  }
+  // Compare
+  bool operator<(const Property &right) const;
 
  protected:
-  PropertyValue coerceDefaultValue(const std::string &value);
-
   std::string name_;
+  std::string display_name_;
   std::string description_;
   bool is_required_;
   bool is_sensitive_ = false;
   std::vector<std::string> dependent_properties_;
   std::vector<std::pair<std::string, std::string>> exclusive_of_properties_;
   bool is_collection_;
-  gsl::not_null<const PropertyValidator*> validator_;
-  PropertyValue default_value_;
-  std::vector<PropertyValue> values_;
-  std::string display_name_;
-  std::vector<PropertyValue> allowed_values_;
+
+  std::optional<std::string> default_value_ = std::nullopt;
+  std::vector<std::string> values_{};
+  std::vector<std::string> allowed_values_{};
+  gsl::not_null<const PropertyValidator *> validator_;
+
   // types represents the allowable types for this property
   // these types should be the canonical name.
   std::vector<std::string> types_;

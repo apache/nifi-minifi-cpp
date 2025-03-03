@@ -34,4 +34,12 @@ std::error_code getLastError() {
 #endif
 }
 
+bool compareErrors(const std::error_code lhs, const std::error_code rhs) {
+  if (lhs.value() != rhs.value()) { return false; }
+  if (lhs.category() == rhs.category()) { return true; }
+  // Due to different static categories on windows across dll-s
+  return std::string_view(lhs.category().name()) == std::string_view(rhs.category().name());
+}
+
+
 }  // namespace org::apache::nifi::minifi::utils

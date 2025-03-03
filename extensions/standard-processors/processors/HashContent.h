@@ -150,10 +150,12 @@ class HashContent : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto HashAlgorithm = core::PropertyDefinitionBuilder<>::createProperty("Hash Algorithm")
       .withDescription("Name of the algorithm used to generate checksum")
       .withDefaultValue("SHA256")
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto FailOnEmpty = core::PropertyDefinitionBuilder<>::createProperty("Fail on empty")
       .withDescription("Route to failure relationship in case of empty content")
       .withDefaultValue("false")
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       HashAttribute,

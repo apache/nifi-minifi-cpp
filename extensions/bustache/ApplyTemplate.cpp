@@ -19,14 +19,15 @@
  */
 #include "ApplyTemplate.h"
 
-#include <unordered_map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
-#include "core/Resource.h"
 #include "bustache/model.hpp"
 #include "bustache/render/string.hpp"
+#include "core/Resource.h"
+#include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -41,8 +42,7 @@ void ApplyTemplate::onTrigger(core::ProcessContext& context, core::ProcessSessio
     return;
   }
 
-  std::string template_file;
-  context.getProperty(Template, template_file, flow_file.get());
+  std::string template_file = context.getProperty(Template.name, flow_file.get()).value_or("");
   session.write(flow_file, [&template_file, &flow_file, this](const auto& output_stream) {
     logger_->log_info("ApplyTemplate reading template file from {}", template_file);
     // TODO(szaszm): we might want to return to memory-mapped input files when the next todo is done. Until then, the agents stores the whole result in memory anyway, so no point in not doing the same

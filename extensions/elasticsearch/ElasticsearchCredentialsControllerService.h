@@ -46,6 +46,7 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
   EXTENSIONAPI static constexpr auto ApiKey = core::PropertyDefinitionBuilder<>::createProperty("API Key")
       .withDescription("The API Key to use")
       .isSensitive(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
         Username,

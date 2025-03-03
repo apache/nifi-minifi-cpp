@@ -17,6 +17,7 @@
 
 #include "RetryFlowFile.h"
 
+#include "utils/ProcessorConfigUtils.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -27,11 +28,11 @@ void RetryFlowFile::initialize() {
 }
 
 void RetryFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  context.getProperty(RetryAttribute, retry_attribute_);
-  context.getProperty(MaximumRetries, maximum_retries_);
-  context.getProperty(PenalizeRetries, penalize_retries_);
-  context.getProperty(FailOnNonNumericalOverwrite, fail_on_non_numerical_overwrite_);
-  context.getProperty(ReuseMode, reuse_mode_);
+  retry_attribute_ = utils::parseProperty(context, RetryAttribute);
+  maximum_retries_ = utils::parseU64Property(context, MaximumRetries);
+  penalize_retries_ = utils::parseBoolProperty(context, PenalizeRetries);
+  fail_on_non_numerical_overwrite_ = utils::parseBoolProperty(context, FailOnNonNumericalOverwrite);
+  reuse_mode_ = utils::parseProperty(context, ReuseMode);
   readDynamicPropertyKeys(context);
 }
 
@@ -94,27 +95,21 @@ void RetryFlowFile::readDynamicPropertyKeys(const core::ProcessContext& context)
 std::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<core::FlowFile>& flow_file) const {
   std::string value_as_string;
   flow_file->getAttribute(retry_attribute_, value_as_string);
-  uint64_t value;
-  try {
-    utils::internal::ValueParser(value_as_string).parse(value).parseEnd();
-    return value;
+  if (const auto value = parsing::parseIntegral<uint64_t>(value_as_string)) {
+    return *value;
   }
-  catch(const utils::internal::ParseException&) {
-    if (fail_on_non_numerical_overwrite_) {
-      logger_->log_info("Non-numerical retry property in RetryFlowFile (value: {}). Sending flowfile to failure...", value_as_string);
-      return std::nullopt;
-    }
+  if (fail_on_non_numerical_overwrite_) {
+    logger_->log_info("Non-numerical retry property in RetryFlowFile (value: {}). Sending flowfile to failure...", value_as_string);
+    return std::nullopt;
   }
   logger_->log_info("Non-numerical retry property in RetryFlowFile: overwriting {} with 0.", value_as_string);
   return 0;
 }
 
-void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
-  for (const auto& attribute : exceeded_flowfile_attribute_keys_) {
-    std::string value;
-    context.getDynamicProperty(attribute, value, flow_file.get());
-    flow_file->setAttribute(attribute.getName(), value);
-    logger_->log_info("Set attribute '{}' of flow file '{}' with value '{}'", attribute.getName(), flow_file->getUUIDStr(), value);
+void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(const core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
+  for (const auto& [key, value] : context.getDynamicProperties(flow_file.get())) {
+    flow_file->setAttribute(key, value);
+    logger_->log_info("Set attribute '{}' of flow file '{}' with value '{}'", key, flow_file->getUUIDStr(), value);
   }
 }
 

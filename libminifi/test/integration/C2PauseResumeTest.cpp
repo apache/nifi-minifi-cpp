@@ -155,8 +155,7 @@ TEST_CASE("C2PauseResumeTest", "[c2test]") {
 
   const auto inv = dynamic_cast<minifi::processors::InvokeHTTP*>(proc);
   REQUIRE(inv != nullptr);
-  std::string url;
-  inv->getProperty(minifi::processors::InvokeHTTP::URL, url);
+  std::string url = inv->getProperty(minifi::processors::InvokeHTTP::URL.name).value_or("");
   std::string port;
   std::string scheme;
   std::string path;

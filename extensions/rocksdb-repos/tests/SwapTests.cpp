@@ -27,7 +27,6 @@
 #include "core/PropertyDefinition.h"
 #include "core/RelationshipDefinition.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "core/ProcessorNode.h"
 #include "core/repository/FileSystemRepository.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -108,8 +107,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
   connection->setSourceUUID(processor->getUUID());
   processor->addConnection(connection.get());
 
-  auto processor_node = std::make_shared<core::ProcessorNodeImpl>(processor.get());
-  auto context = std::make_shared<core::ProcessContextImpl>(processor_node, nullptr, prov_repo, ff_repo, content_repo);
+  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, prov_repo, ff_repo, content_repo);
   auto session_factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
 
   for (size_t i = 0; i < 200; ++i) {

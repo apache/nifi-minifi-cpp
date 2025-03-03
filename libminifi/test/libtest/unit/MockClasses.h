@@ -98,7 +98,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
   static constexpr const char* Description = "An example processor";
   static constexpr auto LinkedService = minifi::core::PropertyDefinitionBuilder<>::createProperty("linkedService").withDescription("Linked service").build();
   static constexpr auto InSubProcessGroup = minifi::core::PropertyDefinitionBuilder<>::createProperty("InSubProcessGroup")
-    .withPropertyType(minifi::core::StandardPropertyTypes::BOOLEAN_TYPE)
+    .withValidator(minifi::core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
     .withDefaultValue("false")
     .withDescription("Is in sub process group")
     .build();
@@ -120,8 +120,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
     if (!flow_file) {
       flow_file = session.create();
     }
-    std::string linked_service;
-    getProperty("linkedService", linked_service);
+    std::string linked_service = getProperty("linkedService").value_or("");
     if (!IsNullOrEmpty(linked_service)) {
       std::shared_ptr<minifi::core::controller::ControllerService> service = context.getControllerService(linked_service, getUUID());
       std::lock_guard<std::mutex> lock(control_mutex);
@@ -131,8 +130,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
       // and verify that we can execute it.
     }
 
-    bool in_sub_process_group = false;
-    getProperty("InSubProcessGroup", in_sub_process_group);
+    bool in_sub_process_group = getProperty("InSubProcessGroup") | minifi::utils::andThen(minifi::parsing::parseBool) | minifi::utils::expect("");
     auto sub_service = context.getControllerService("SubMockController", getUUID());
     if (in_sub_process_group) {
       REQUIRE(nullptr != sub_service);

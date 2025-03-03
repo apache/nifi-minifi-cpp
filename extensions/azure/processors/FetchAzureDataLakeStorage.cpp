@@ -23,6 +23,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -38,19 +39,18 @@ std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeSt
     return std::nullopt;
   }
 
-  std::string value;
-  if (context.getProperty(RangeStart, value, &flow_file)) {
-    params.range_start = std::stoull(value);
+  if (auto range_start = utils::parseOptionalU64Property(context, RangeStart, &flow_file)) {
+    params.range_start = *range_start;
     logger_->log_debug("Range Start property set to {}", *params.range_start);
   }
 
-  if (context.getProperty(RangeLength, value, &flow_file)) {
-    params.range_length = std::stoull(value);
+  if (auto range_length = utils::parseOptionalU64Property(context, RangeLength, &flow_file)) {
+    params.range_length = *range_length;
     logger_->log_debug("Range Length property set to {}", *params.range_length);
   }
 
-  if (context.getProperty(NumberOfRetries, value, &flow_file)) {
-    params.number_of_retries = std::stoull(value);
+  if (auto number_of_retries = utils::parseOptionalU64Property(context, NumberOfRetries, &flow_file)) {
+    params.number_of_retries = *number_of_retries;
     logger_->log_debug("Number Of Retries property set to {}", *params.number_of_retries);
   }
 

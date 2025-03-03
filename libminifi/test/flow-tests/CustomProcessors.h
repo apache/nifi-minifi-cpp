@@ -18,21 +18,22 @@
 
 #pragma once
 
+
 #include <memory>
 #include <random>
 #include <string>
-#include <unordered_map>
 #include <utility>
 
 #include "core/Processor.h"
-#include "unit/TestBase.h"
-#include "unit/Catch.h"
-#include "processors/GenerateFlowFile.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Resource.h"
+#include "processors/GenerateFlowFile.h"
+#include "unit/Catch.h"
+#include "unit/TestBase.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -40,13 +41,13 @@ static constexpr auto Apple = core::RelationshipDefinition{"apple", ""};
 static constexpr auto Banana = core::RelationshipDefinition{"banana", ""};
 // The probability that this processor routes to Apple
 static constexpr auto AppleProbability = core::PropertyDefinitionBuilder<>::createProperty("AppleProbability")
-    .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+    .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
     .withDefaultValue("100")
     .isRequired(true)
     .build();
 // The probability that this processor routes to Banana
 static constexpr auto BananaProbability = core::PropertyDefinitionBuilder<>::createProperty("BananaProbability")
-    .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+    .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
     .withDefaultValue("0")
     .isRequired(true)
     .build();
@@ -84,8 +85,8 @@ class TestProcessor : public core::ProcessorImpl, public ProcessorWithStatistics
     auto flowFile = session.get();
     if (!flowFile) return;
     std::random_device rd{};
-    std::uniform_int_distribution<int> dis(0, 100);
-    int rand = dis(rd);
+    std::uniform_int_distribution<int64_t> dis(0, 100);
+    int64_t rand = dis(rd);
     if (rand <= apple_probability_) {
       session.transfer(flowFile, Apple);
       return;
@@ -98,17 +99,13 @@ class TestProcessor : public core::ProcessorImpl, public ProcessorWithStatistics
     throw std::runtime_error("Couldn't route file");
   }
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override {
-    int apple;
-    bool appleSuccess = context.getProperty(AppleProbability, apple);
-    REQUIRE(appleSuccess);
-    int banana;
-    bool bananaSuccess = context.getProperty(BananaProbability, banana);
-    REQUIRE(bananaSuccess);
+    const int64_t apple = utils::parseI64Property(context, AppleProbability);
+    const int64_t banana = utils::parseI64Property(context, BananaProbability);
     apple_probability_ = apple;
     banana_probability_ = banana;
   }
-  std::atomic<int> apple_probability_;
-  std::atomic<int> banana_probability_;
+  std::atomic<int64_t> apple_probability_;
+  std::atomic<int64_t> banana_probability_;
 };
 
 class TestFlowFileGenerator : public processors::GenerateFlowFile, public ProcessorWithStatistics {

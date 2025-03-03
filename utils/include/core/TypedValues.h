@@ -27,7 +27,7 @@
 #include "state/Value.h"
 #include "utils/StringUtils.h"
 #include "utils/ValueParser.h"
-#include "utils/PropertyErrors.h"
+#include "utils/PropertyExceptions.h"
 #include "utils/Literals.h"
 #include "utils/TimeUtil.h"
 #include "core/logging/Logger.h"
