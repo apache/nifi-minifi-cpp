@@ -52,7 +52,6 @@ void JsonFlowSerializer::addProviderCreatedParameterContexts(rapidjson::Value& f
     return;
   }
 
-  std::unordered_set<std::string> parameter_context_names;
   if (!flow_definition_json.HasMember(schema.parameter_contexts[0])) {
     flow_definition_json.AddMember(rapidjson::Value(schema.parameter_contexts[0].c_str(), alloc), rapidjson::Value(rapidjson::kArrayType), alloc);
   }
