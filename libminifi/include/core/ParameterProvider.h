@@ -55,6 +55,9 @@ class ParameterProvider : public ConfigurableComponentImpl, public CoreComponent
   using CoreComponentImpl::CoreComponentImpl;
   ParameterProvider(const ParameterProvider &other) = delete;
   ParameterProvider &operator=(const ParameterProvider &other) = delete;
+  ParameterProvider(ParameterProvider &&other) = delete;
+  ParameterProvider &operator=(ParameterProvider &&other) = delete;
+  ~ParameterProvider() override = default;
 
   MINIFIAPI static constexpr auto SensitiveParameterScope = core::PropertyDefinitionBuilder<magic_enum::enum_count<SensitiveParameterScopeOptions>()>::createProperty("Sensitive Parameter Scope")
       .withDescription("Define which parameters are considered sensitive, being either 'none', 'all' or 'selected'. If 'selected' is chosen, the 'Sensitive Parameter List' property must be set.")

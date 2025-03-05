@@ -34,4 +34,4 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Generated Parameter Contexts
 
-This provider generates a single Parameter Context with the name specified in the `Parameter Group Name` property. The parameters generated match the name of the environment variables that are included.
+This provider generates a single Parameter Context with the name specified in the `Parameter Group Name` property, if it doesn't exist yet. The parameters generated match the name of the environment variables that are included.
