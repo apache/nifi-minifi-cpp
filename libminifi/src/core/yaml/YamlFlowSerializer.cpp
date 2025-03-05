@@ -36,7 +36,6 @@ void YamlFlowSerializer::addProviderCreatedParameterContexts(YAML::Node flow_def
     return;
   }
 
-  std::vector<std::string> parameter_context_names;
   auto parameter_contexts_node = flow_definition_yaml[schema.parameter_contexts[0]];
 
   if (!parameter_contexts_node.IsDefined() || !parameter_contexts_node.IsSequence()) {
