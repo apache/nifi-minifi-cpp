@@ -69,7 +69,7 @@ class ParameterProvider : public ConfigurableComponentImpl, public CoreComponent
       .withDescription("List of sensitive parameters, if 'Sensitive Parameter Scope' is set to 'selected'.")
       .build();
   MINIFIAPI static constexpr auto ReloadValuesOnRestart = core::PropertyDefinitionBuilder<>::createProperty("Reload Values On Restart")
-      .withDescription("Reload provider generated parameter context values on restart")
+      .withDescription("Reload provider-generated parameter context values when MiNiFi is restarted")
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .isRequired(true)
