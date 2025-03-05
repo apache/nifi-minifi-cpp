@@ -187,7 +187,7 @@ void writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::s
   std::exit(0);
 }
 
-bool replaceMinifiHomeVariable(const std::filesystem::path& file_path, std::string minifi_home_path, const std::shared_ptr<core::logging::Logger>& logger) {
+bool replaceMinifiHomeVariable(const std::filesystem::path& file_path, const std::filesystem::path& minifi_home_path, const std::shared_ptr<core::logging::Logger>& logger) {
   std::ifstream input_file(file_path);
   if (!input_file) {
     logger->log_error("Failed to open file: {}", file_path.string());
@@ -205,10 +205,10 @@ bool replaceMinifiHomeVariable(const std::filesystem::path& file_path, std::stri
     return true;
   }
 
-  std::replace(minifi_home_path.begin(), minifi_home_path.end(), '\\', '/');
+  auto minifi_home_path_str = minifi_home_path.generic_string();
   do {
-    content.replace(pos, placeholder.length(), minifi_home_path);
-    pos += minifi_home_path.length();
+    content.replace(pos, placeholder.length(), minifi_home_path_str);
+    pos += minifi_home_path_str.length();
   } while((pos = content.find(placeholder, pos)) != std::string::npos);
 
   std::ofstream output_file(file_path);
@@ -251,7 +251,7 @@ void initializeFipsMode(const std::shared_ptr<minifi::Configure>& configure, con
     std::exit(1);
   }
 
-  if (!replaceMinifiHomeVariable(minifi_home / "fips" / "openssl.cnf", minifi_home.string(), logger)) {
+  if (!replaceMinifiHomeVariable(minifi_home / "fips" / "openssl.cnf", minifi_home, logger)) {
     logger->log_error("Failed to replace MINIFI_HOME variable in openssl.cnf");
     std::exit(1);
   }
@@ -260,21 +260,25 @@ void initializeFipsMode(const std::shared_ptr<minifi::Configure>& configure, con
 
   if (!OSSL_PROVIDER_set_default_search_path(nullptr, (minifi_home / "fips").string().c_str())) {
     logger->log_error("Failed to set FIPS module path: {}", (minifi_home / "fips").string());
+    ERR_print_errors_fp(stderr);
     std::exit(1);
   }
 
   if (OSSL_PROVIDER_available(nullptr, "fips") != 1) {
     logger->log_error("FIPS provider not available in default search path");
+    ERR_print_errors_fp(stderr);
     std::exit(1);
   }
 
   if (!EVP_default_properties_enable_fips(nullptr, 1)) {
     logger->log_error("Failed to enable FIPS mode");
+    ERR_print_errors_fp(stderr);
     std::exit(1);
   }
 
   if (!EVP_default_properties_is_fips_enabled(nullptr)) {
     logger->log_error("FIPS mode is not enabled");
+    ERR_print_errors_fp(stderr);
     std::exit(1);
   }
 
@@ -431,12 +435,12 @@ int main(int argc, char **argv) {
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
     overridePropertiesFromCommandLine(argument_parser, configure);
 
-    initializeFipsMode(configure, minifiHome, logger);
-
     minifi::core::extension::ExtensionManagerImpl::get().initialize(configure);
 
     dumpDocsIfRequested(argument_parser, configure);
     writeSchemaIfRequested(argument_parser, configure);
+
+    initializeFipsMode(configure, minifiHome, logger);
 
     std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
         | utils::andThen(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
