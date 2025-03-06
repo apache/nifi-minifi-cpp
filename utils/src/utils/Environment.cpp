@@ -149,7 +149,7 @@ std::unordered_map<std::string, std::string> Environment::getEnvironmentVariable
       std::vector<char> buffer(size_needed);
       WideCharToMultiByte(CP_UTF8, 0, wstring_variable_key_value_pair.c_str(), -1, buffer.data(), size_needed, nullptr, nullptr);
 
-      std::string variable_key_value_pair(buffer.data(), buffer.size());
+      std::string variable_key_value_pair(buffer.data(), size_needed - 1);
       size_t pos = variable_key_value_pair.find('=');
       if (pos != std::string::npos) {
         env_var_map.emplace(variable_key_value_pair.substr(0, pos), variable_key_value_pair.substr(pos + 1));
