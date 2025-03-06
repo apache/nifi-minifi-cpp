@@ -57,7 +57,7 @@ nonstd::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core
 void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const auto original_flow_file = session.get();
   if (!original_flow_file) {
-    yield();
+    context.yield();
     return;
   }
 

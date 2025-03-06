@@ -68,7 +68,7 @@ void GetFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFact
   }
 }
 
-void GetFile::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+void GetFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const bool is_dir_empty_before_poll = isListingEmpty();
   logger_->log_debug("Listing is {} before polling directory", is_dir_empty_before_poll ? "empty" : "not empty");
   if (is_dir_empty_before_poll) {
@@ -81,7 +81,7 @@ void GetFile::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   const bool is_dir_empty_after_poll = isListingEmpty();
   logger_->log_debug("Listing is {} after polling directory", is_dir_empty_after_poll ? "empty" : "not empty");
   if (is_dir_empty_after_poll) {
-    yield();
+    context.yield();
     return;
   }
 
@@ -191,7 +191,7 @@ void GetFile::performListing(const GetFileRequest &request) {
     if (fileMatchesRequestCriteria(fullpath, filename, request)) {
       putListing(fullpath);
     }
-    return isRunning();
+    return true;
   };
   utils::file::list_dir(request.inputDirectory, callback, logger_, request.recursive);
 }

@@ -28,9 +28,7 @@ class PushGrafanaLokiREST : public PushGrafanaLoki {
   EXTENSIONAPI static constexpr const char* Description = "A Grafana Loki push processor that uses the Grafana Loki REST API. The processor expects each flow file to contain a single log line to be "
                                                           "pushed to Grafana Loki, therefore it is usually used together with the TailFile processor.";
 
-  explicit PushGrafanaLokiREST(const std::string& name, const utils::Identifier& uuid = {})
-      : PushGrafanaLoki(name, uuid, core::logging::LoggerFactory<PushGrafanaLokiREST>::getLogger(uuid)) {
-  }
+  using PushGrafanaLoki::PushGrafanaLoki;
   ~PushGrafanaLokiREST() override = default;
 
   EXTENSIONAPI static constexpr auto ReadTimeout = core::PropertyDefinitionBuilder<>::createProperty("Read Timeout")

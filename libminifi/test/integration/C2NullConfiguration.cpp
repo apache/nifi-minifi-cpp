@@ -59,10 +59,8 @@ class VerifyC2Server : public HTTPIntegrationBase {
     auto* const proc = pg->findProcessorByName("invoke");
     REQUIRE(proc != nullptr);
 
-    const auto* const inv = dynamic_cast<minifi::processors::InvokeHTTP*>(proc);
-
-    REQUIRE(inv != nullptr);
-    std::string url = inv->getProperty(processors::InvokeHTTP::URL.name).value_or("");
+    proc->getImpl<minifi::processors::InvokeHTTP>();
+    std::string url = proc->getProperty(processors::InvokeHTTP::URL.name).value_or("");
 
     std::string port;
     std::string scheme;

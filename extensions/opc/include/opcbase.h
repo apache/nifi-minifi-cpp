@@ -73,10 +73,7 @@ class BaseOPCProcessor : public core::ProcessorImpl {
       PathReferenceTypes
   });
 
-
-  explicit BaseOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
-  : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
 
