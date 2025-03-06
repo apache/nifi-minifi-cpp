@@ -237,7 +237,6 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
 
   void addMatchedFieldsAsAttributes(const cwel::EventRender &eventRender, core::ProcessSession &session, const std::shared_ptr<core::FlowFile> &flowFile) const;
 
-  std::shared_ptr<core::logging::Logger> logger_;
   core::StateManager* state_manager_{nullptr};
   wel::METADATA_NAMES header_names_;
   std::optional<std::string> header_delimiter_;

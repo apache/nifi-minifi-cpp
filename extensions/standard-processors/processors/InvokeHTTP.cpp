@@ -204,7 +204,7 @@ void InvokeHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionF
     return createHTTPClientFromMembers(url);
   };
 
-  client_queue_ = std::make_unique<invoke_http::HttpClientStore>(getMaxConcurrentTasks() * 2, create_client);
+  client_queue_ = std::make_unique<invoke_http::HttpClientStore>(context.getMaxConcurrentTasks() * 2, create_client);
 }
 
 bool InvokeHTTP::shouldEmitFlowFile() const {
@@ -255,7 +255,7 @@ void InvokeHTTP::onTrigger(core::ProcessContext& context, core::ProcessSession& 
       flow_file = session.create();
     } else {
       logger_->log_debug("Exiting because method is {} and there is no flowfile available to execute it, yielding", magic_enum::enum_name(method_));
-      yield();
+      context.yield();
       return;
     }
   } else {

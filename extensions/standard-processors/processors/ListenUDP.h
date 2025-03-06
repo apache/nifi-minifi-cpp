@@ -31,9 +31,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListenUDP : public NetworkListenerProcessor {
  public:
-  explicit ListenUDP(const std::string& name, const utils::Identifier& uuid = {})
-    : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenUDP>::getLogger(uuid)) {
-  }
+  using NetworkListenerProcessor::NetworkListenerProcessor;
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for incoming UDP datagrams. For each datagram the processor produces a single FlowFile.";
 

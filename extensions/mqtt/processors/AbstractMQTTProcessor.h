@@ -24,7 +24,7 @@
 #include <shared_mutex>
 
 #include "core/PropertyDefinition.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
@@ -86,9 +86,7 @@ static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
 class AbstractMQTTProcessor : public core::ProcessorImpl {
  public:
-  explicit AbstractMQTTProcessor(std::string_view name, const utils::Identifier& uuid = {}, std::shared_ptr<core::ProcessorMetrics> metrics = {})
-      : core::ProcessorImpl(name, uuid, std::move(metrics)) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   ~AbstractMQTTProcessor() override {
     freeResources();
@@ -221,7 +219,7 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
   /**
    * Checks property consistency before connecting to broker
    */
-  virtual void checkProperties() {
+  virtual void checkProperties(core::ProcessContext& /*context*/) {
   }
 
   /**
@@ -323,8 +321,6 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
   mqtt::MqttQoS last_will_qos_{mqtt::MqttQoS::LEVEL_0};
   bool last_will_retain_ = false;
   std::string last_will_content_type_;
-
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

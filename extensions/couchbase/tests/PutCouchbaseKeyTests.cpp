@@ -17,6 +17,7 @@
  */
 
 #include "unit/TestBase.h"
+#include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "unit/SingleProcessorTestController.h"
 #include "processors/PutCouchbaseKey.h"
@@ -42,7 +43,7 @@ struct ExpectedCallOptions {
 class PutCouchbaseKeyTestController : public TestController {
  public:
   PutCouchbaseKeyTestController()
-      : controller_(std::make_unique<processors::PutCouchbaseKey>("PutCouchbaseKey")),
+      : controller_(minifi::test::utils::make_processor<processors::PutCouchbaseKey>("PutCouchbaseKey")),
         proc_(controller_.getProcessor()) {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();

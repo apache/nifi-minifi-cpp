@@ -474,7 +474,7 @@ bool TailFile::getStateFromLegacyStateFile(const core::ProcessContext& context,
 }
 
 void TailFile::logState() {
-  logger_->log_info("State of the TailFile processor {}:", name_);
+  logger_->log_info("State of the TailFile processor {}:", getName());
   for (const auto& [key, value] : tail_states_) {
     logger_->log_info("key => {{{}}}", value);
   }
@@ -600,7 +600,7 @@ void TailFile::onTrigger(core::ProcessContext& context, core::ProcessSession& se
   }
 
   if (!session.existsFlowFileInRelationship(Success)) {
-    yield();
+    context.yield();
   }
 
   first_trigger_ = false;

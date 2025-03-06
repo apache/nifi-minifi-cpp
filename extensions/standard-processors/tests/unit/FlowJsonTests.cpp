@@ -152,19 +152,19 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   REQUIRE(proc->getProperty("Batch Size") == "12");
 
   // verify funnel
-  auto* funnel = dynamic_cast<minifi::Funnel*>(flow->findProcessorByName("CoolFunnel"));
+  TypedProcessorWrapper<minifi::Funnel> funnel = flow->findProcessorByName("CoolFunnel");
   REQUIRE(funnel);
   REQUIRE(funnel->getUUIDStr() == "00000000-0000-0000-0000-000000000010");
 
   // verify RPG input port
-  auto* port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(flow->findProcessorByName("AmazingInputPort"));
+  TypedProcessorWrapper<minifi::RemoteProcessorGroupPort> port = flow->findProcessorByName("AmazingInputPort");
   REQUIRE(port);
   REQUIRE(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
   REQUIRE(port->getMaxConcurrentTasks() == 7);
-  REQUIRE(port->getInstances().size() == 1);
-  REQUIRE(port->getInstances().front().host_ == "localhost");
-  REQUIRE(port->getInstances().front().port_ == 8090);
-  REQUIRE(port->getInstances().front().protocol_ == "https://");
+  REQUIRE(port.get().getInstances().size() == 1);
+  REQUIRE(port.get().getInstances().front().host_ == "localhost");
+  REQUIRE(port.get().getInstances().front().port_ == 8090);
+  REQUIRE(port.get().getInstances().front().protocol_ == "https://");
   REQUIRE(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 
   // verify connection
@@ -735,7 +735,7 @@ TEST_CASE("Property value sequences can use parameters") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
+  auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllPropertyValues("Simple Property");
   REQUIRE(values);
@@ -796,7 +796,7 @@ TEST_CASE("Dynamic properties can use parameters") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
+  auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
   REQUIRE(values);
@@ -912,7 +912,7 @@ TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
+  auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
   core::Property property("Sensitive Property", "");
   auto values = proc->getAllPropertyValues("Sensitive Property");
@@ -1013,17 +1013,17 @@ TEST_CASE("NiFi flow json can use alternative targetUris field") {
   REQUIRE(flow);
 
   // verify RPG input port
-  auto* port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(flow->findProcessorByName("AmazingInputPort"));
+  TypedProcessorWrapper<minifi::RemoteProcessorGroupPort> port = flow->findProcessorByName("AmazingInputPort");
   REQUIRE(port);
-  REQUIRE(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
+  REQUIRE(port.get().getUUIDStr() == "00000000-0000-0000-0000-000000000003");
   REQUIRE(port->getMaxConcurrentTasks() == 7);
   if (target_uri_valid) {
-    REQUIRE(port->getInstances().size() == 1);
-    REQUIRE(port->getInstances().front().host_ == "localhost");
-    REQUIRE(port->getInstances().front().port_ == 8090);
-    REQUIRE(port->getInstances().front().protocol_ == "https://");
+    REQUIRE(port.get().getInstances().size() == 1);
+    REQUIRE(port.get().getInstances().front().host_ == "localhost");
+    REQUIRE(port.get().getInstances().front().port_ == 8090);
+    REQUIRE(port.get().getInstances().front().protocol_ == "https://");
   } else {
-    REQUIRE(port->getInstances().empty());
+    REQUIRE(port.get().getInstances().empty());
   }
   REQUIRE(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 }

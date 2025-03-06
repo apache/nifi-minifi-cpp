@@ -32,7 +32,7 @@
 #include <sstream>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
@@ -136,9 +136,7 @@ static const std::map<std::string, const std::function<HashReturnType(const std:
 
 class HashContent : public core::ProcessorImpl {
  public:
-  explicit HashContent(std::string_view name,  const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. "
       "Configuration options exist to select hashing algorithm and set the name of the attribute.";
@@ -180,7 +178,6 @@ class HashContent : public core::ProcessorImpl {
   void initialize() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HashContent>::getLogger(uuid_);
   std::function<HashReturnType(const std::shared_ptr<io::InputStream>&)> algorithm_ = SHA256Hash;
   std::string attrKey_;
   bool failOnEmpty_{};

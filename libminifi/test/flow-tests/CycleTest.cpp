@@ -111,16 +111,16 @@ TEST_CASE("Flow with two long cycle", "[FlowWithCycle]") {
   auto controller = testController.controller_;
   auto root = testController.root_;
 
-  auto procGenerator = dynamic_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator*>(root->findProcessorByName("Generator"));
-  auto procA = dynamic_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("A"));
-  auto procB = dynamic_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("B"));
+  TypedProcessorWrapper<org::apache::nifi::minifi::processors::TestFlowFileGenerator> procGenerator = root->findProcessorByName("Generator");
+  TypedProcessorWrapper<org::apache::nifi::minifi::processors::TestProcessor> procA = root->findProcessorByName("A");
+  TypedProcessorWrapper<org::apache::nifi::minifi::processors::TestProcessor> procB = root->findProcessorByName("B");
 
   int tryCount = 0;
-  while (tryCount++ < 10 && (procA->trigger_count.load() < 10 || procB->trigger_count.load() < 10)) {
+  while (tryCount++ < 10 && (procA.get().trigger_count.load() < 10 || procB.get().trigger_count.load() < 10)) {
     std::this_thread::sleep_for(std::chrono::milliseconds{1000});
   }
 
-  REQUIRE(procGenerator->trigger_count.load() <= 3);
-  REQUIRE(procA->trigger_count.load() >= 10);
-  REQUIRE(procB->trigger_count.load() >= 10);
+  REQUIRE(procGenerator.get().trigger_count.load() <= 3);
+  REQUIRE(procA.get().trigger_count.load() >= 10);
+  REQUIRE(procB.get().trigger_count.load() >= 10);
 }

@@ -26,7 +26,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "io/StreamPipe.h"
 #include "utils/gsl.h"
@@ -36,9 +36,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class CaptureRTSPFrame final : public core::ProcessorImpl {
  public:
-  explicit CaptureRTSPFrame(const std::string_view name, const utils::Identifier &uuid = {})
-      : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Captures a frame from the RTSP stream at specified intervals.";
 
@@ -90,7 +88,6 @@ class CaptureRTSPFrame final : public core::ProcessorImpl {
   void notifyStop() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CaptureRTSPFrame>::getLogger(uuid_);
   std::mutex mutex_;
   std::string rtsp_username_;
   std::string rtsp_password_;

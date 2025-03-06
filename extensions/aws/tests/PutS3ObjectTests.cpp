@@ -45,9 +45,7 @@ class PutS3ObjectLimitChanged : public minifi::aws::processors::PutS3Object {
  protected:
   friend class ::FlowProcessorS3TestsFixture<PutS3ObjectLimitChanged>;
 
-  explicit PutS3ObjectLimitChanged(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<minifi::aws::s3::S3RequestSender> s3_request_sender)
-    : PutS3Object(name, uuid, std::move(s3_request_sender)) {
-  }
+  using PutS3Object::PutS3Object;
 
   uint64_t getMinPartSize() const override {
     return 1;
