@@ -69,6 +69,7 @@
 #include "core/state/MetricsPublisherStore.h"
 #include "argparse/argparse.hpp"
 #include "agent/agent_version.h"
+#include "Fips.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -337,6 +338,8 @@ int main(int argc, char **argv) {
 
     dumpDocsIfRequested(argument_parser, configure);
     writeSchemaIfRequested(argument_parser, configure);
+
+    minifi::fips::initializeFipsMode(configure, minifiHome, logger);
 
     std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
         | utils::andThen(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
