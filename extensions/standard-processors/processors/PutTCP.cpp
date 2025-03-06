@@ -38,9 +38,6 @@ namespace org::apache::nifi::minifi::processors {
 
 constexpr size_t chunk_size = 1024;
 
-PutTCP::PutTCP(const std::string& name, const utils::Identifier& uuid)
-    : ProcessorImpl(name, uuid) {}
-
 PutTCP::~PutTCP() = default;
 
 void PutTCP::initialize() {
@@ -52,10 +49,10 @@ void PutTCP::notifyStop() {}
 
 void PutTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   // if the required properties are missing or empty even before evaluating the EL expression, then we can throw in onSchedule, before we waste any flow files
-  if (!getProperty(Hostname.name)) {
+  if (!context.hasNonEmptyProperty(Hostname.name)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing hostname"};
   }
-  if (!getProperty(Port.name)) {
+  if (!context.hasNonEmptyProperty(Port.name)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing port"};
   }
   if (const auto idle_connection_expiration = utils::parseOptionalMsProperty(context, IdleConnectionExpiration); idle_connection_expiration && *idle_connection_expiration > 0ms)
@@ -95,7 +92,7 @@ void PutTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
 void PutTCP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const auto flow_file = session.get();
   if (!flow_file) {
-    yield();
+    context.yield();
     return;
   }
 

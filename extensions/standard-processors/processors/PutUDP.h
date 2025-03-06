@@ -62,7 +62,7 @@ class PutUDP final : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutUDP(std::string_view name, const utils::Identifier& uuid = {});
+  using ProcessorImpl::ProcessorImpl;
   PutUDP(const PutUDP&) = delete;
   PutUDP& operator=(const PutUDP&) = delete;
   ~PutUDP() final;
@@ -71,8 +71,5 @@ class PutUDP final : public core::ProcessorImpl {
   void notifyStop() final;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) final;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) final;
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_;
 };
 }  // namespace org::apache::nifi::minifi::processors

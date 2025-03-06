@@ -188,14 +188,6 @@ void DefragmentText::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   flow_file_store_.put(flowFile);
 }
 
-std::set<core::Connectable*> DefragmentText::getOutGoingConnections(const std::string &relationship) {
-  auto result = core::ConnectableImpl::getOutGoingConnections(relationship);
-  if (relationship == Self.getName()) {
-    result.insert(this);
-  }
-  return result;
-}
-
 void DefragmentText::Buffer::append(core::ProcessSession& session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append) {
   if (empty()) {
     store(session, flow_file_to_append);

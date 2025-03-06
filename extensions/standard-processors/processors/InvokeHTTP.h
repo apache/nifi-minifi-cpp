@@ -28,7 +28,7 @@
 
 #include "core/Core.h"
 #include "core/OutputAttributeDefinition.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -127,9 +127,9 @@ class InvokeHTTP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr std::string_view REQUEST_URL = "invokehttp.request.url";
   EXTENSIONAPI static constexpr std::string_view TRANSACTION_ID = "invokehttp.tx.id";
 
-  explicit InvokeHTTP(std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    setTriggerWhenEmpty(true);
+  explicit InvokeHTTP(core::ProcessorMetadata info)
+      : ProcessorImpl(info) {
+      setTriggerWhenEmpty(true);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
@@ -369,8 +369,6 @@ class InvokeHTTP : public core::ProcessorImpl {
 
 
   invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_{};
-
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger(uuid_)};
 
   std::unique_ptr<invoke_http::HttpClientStore> client_queue_;
 };

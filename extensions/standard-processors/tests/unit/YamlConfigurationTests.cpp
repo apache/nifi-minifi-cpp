@@ -1609,7 +1609,7 @@ Parameter Context Name: my-context
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("DummyProcessor"));
+  auto* proc = flow->findProcessorByName("DummyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllPropertyValues("Simple Property");
   REQUIRE(values);
@@ -1660,7 +1660,7 @@ Parameter Context Name: my-context
   REQUIRE(flow);
 
   core::Property property("My Dynamic Property Sequence", "");
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("DummyProcessor"));
+  auto* proc = flow->findProcessorByName("DummyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
   REQUIRE(values);
@@ -1760,7 +1760,7 @@ Parameter Context Name: my-context
 
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("DummyFlowYamlProcessor"));
+  auto* proc = flow->findProcessorByName("DummyFlowYamlProcessor");
   auto values = proc->getAllPropertyValues("Sensitive Property");
   REQUIRE(values);
   REQUIRE(values->size() == 2);

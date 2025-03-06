@@ -20,17 +20,22 @@
 #include <string_view>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "agent/agent_docs.h"
 
 namespace org::apache::nifi::minifi::test {
 
 class DummyProcessor : public minifi::core::ProcessorImpl {
-  using minifi::core::ProcessorImpl::ProcessorImpl;
-
  public:
-  DummyProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : ProcessorImpl(name, uuid) {}
-  explicit DummyProcessor(std::string_view name) : ProcessorImpl(name) {}
+  using ProcessorImpl::ProcessorImpl;
+
+  DummyProcessor(std::string_view name)
+    : ProcessorImpl{minifi::core::ProcessorMetadata{
+      .uuid = minifi::utils::IdGenerator::getIdGenerator()->generate(),
+      .name = std::string{name},
+      .logger = minifi::core::logging::LoggerFactory<DummyProcessor>::getLogger()
+    }} {}
+
   static constexpr const char* Description = "A processor that does nothing.";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};

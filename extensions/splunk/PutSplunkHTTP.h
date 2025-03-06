@@ -34,9 +34,7 @@ namespace org::apache::nifi::minifi::extensions::splunk {
 
 class PutSplunkHTTP final : public SplunkHECProcessor {
  public:
-  explicit PutSplunkHTTP(std::string_view name, const utils::Identifier& uuid = {})
-      : SplunkHECProcessor(name, uuid) {
-  }
+  using SplunkHECProcessor::SplunkHECProcessor;
   PutSplunkHTTP(const PutSplunkHTTP&) = delete;
   PutSplunkHTTP(PutSplunkHTTP&&) = delete;
   PutSplunkHTTP& operator=(const PutSplunkHTTP&) = delete;
@@ -114,7 +112,6 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
   std::optional<std::string> source_;
   std::optional<std::string> host_;
   std::optional<std::string> index_;
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PutSplunkHTTP>::getLogger(uuid_)};
   std::shared_ptr<utils::ResourceQueue<http::HTTPClient>> client_queue_;
 };
 

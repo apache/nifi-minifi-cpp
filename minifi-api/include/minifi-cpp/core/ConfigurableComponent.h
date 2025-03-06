@@ -49,6 +49,9 @@ public:
   [[nodiscard]] virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
   [[nodiscard]] virtual std::map<std::string, std::string> getDynamicProperties() const = 0;
 
+  [[nodiscard]] virtual nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const = 0;
+  [[nodiscard]] virtual nonstd::expected<std::vector<std::string>, std::error_code> getAllDynamicPropertyValues(std::string_view name) const = 0;
+
   [[nodiscard]] virtual bool supportsDynamicProperties() const = 0;
   [[nodiscard]] virtual bool supportsDynamicRelationships() const = 0;
 

@@ -31,9 +31,7 @@ class PushGrafanaLokiGrpc final : public PushGrafanaLoki {
   EXTENSIONAPI static constexpr const char* Description = "A Grafana Loki push processor that uses the Grafana Loki Grpc port. The processor expects each flow file to contain a single log line to be "
                                                           "pushed to Grafana Loki, therefore it is usually used together with the TailFile processor.";
 
-  explicit PushGrafanaLokiGrpc(const std::string_view name, const utils::Identifier& uuid = {})
-      : PushGrafanaLoki(name, uuid, core::logging::LoggerFactory<PushGrafanaLokiGrpc>::getLogger(uuid)) {
-  }
+  using PushGrafanaLoki::PushGrafanaLoki;
   ~PushGrafanaLokiGrpc() override = default;
 
   EXTENSIONAPI static constexpr auto KeepAliveTime = core::PropertyDefinitionBuilder<>::createProperty("Keep Alive Time")

@@ -28,11 +28,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-ReplaceText::ReplaceText(std::string_view name, const utils::Identifier& uuid)
-  : core::ProcessorImpl(name, uuid),
-    logger_(core::logging::LoggerFactory<ReplaceText>::getLogger(uuid)) {
-}
-
 void ReplaceText::initialize() {
   setSupportedProperties(Properties);
   setSupportedRelationships(Relationships);
@@ -55,7 +50,7 @@ void ReplaceText::onTrigger(core::ProcessContext& context, core::ProcessSession&
   std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
     logger_->log_trace("No flow file");
-    yield();
+    context.yield();
     return;
   }
 
@@ -77,7 +72,7 @@ ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& contex
   Parameters parameters;
 
   const auto search_value = (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE ?
-      getProperty(SearchValue.name) : context.getProperty(SearchValue, flow_file.get()));
+      context.getRawProperty(SearchValue.name) : context.getProperty(SearchValue, flow_file.get()));
   if (search_value) {
     parameters.search_value_ = *search_value;
     logger_->log_debug("the {} property is set to {}", SearchValue.name, parameters.search_value_);
@@ -90,7 +85,7 @@ ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& contex
   }
 
   const auto replacement_value = (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE ?
-      getProperty(ReplacementValue.name) : context.getProperty(ReplacementValue, flow_file.get()));
+      context.getRawProperty(ReplacementValue.name) : context.getProperty(ReplacementValue, flow_file.get()));
   if (replacement_value) {
     parameters.replacement_value_ = *replacement_value;
     logger_->log_debug("the {} property is set to {}", ReplacementValue.name, parameters.replacement_value_);

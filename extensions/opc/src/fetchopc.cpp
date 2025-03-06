@@ -82,7 +82,7 @@ namespace org::apache::nifi::minifi::processors {
     logger_->log_trace("FetchOPCProcessor::onTrigger");
 
     if (!reconnect()) {
-      yield();
+      context.yield();
       return;
     }
 
@@ -101,7 +101,7 @@ namespace org::apache::nifi::minifi::processors {
         myID.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
       } else {
         logger_->log_error("Unhandled id type: '{}'. No flowfiles are generated.", magic_enum::enum_underlying(idType_));
-        yield();
+        context.yield();
         return;
       }
       connection_->traverse(myID, f, "", maxDepth_);
@@ -110,7 +110,7 @@ namespace org::apache::nifi::minifi::processors {
         auto sc = connection_->translateBrowsePathsToNodeIdsRequest(nodeID_, translatedNodeIDs_, logger_);
         if (sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to translate {} to node id, no flow files will be generated ({})", nodeID_.c_str(), UA_StatusCode_name(sc));
-          yield();
+          context.yield();
           return;
         }
       }
@@ -120,10 +120,10 @@ namespace org::apache::nifi::minifi::processors {
     }
     if (nodesFound_ == 0) {
       logger_->log_warn("Connected to OPC server, but no variable nodes were found. Configuration might be incorrect! Yielding...");
-      yield();
+      context.yield();
     } else if (variablesFound_ == 0) {
       logger_->log_warn("Found no variables when traversing the specified node. No flowfiles are generated. Yielding...");
-      yield();
+      context.yield();
     }
   }
 

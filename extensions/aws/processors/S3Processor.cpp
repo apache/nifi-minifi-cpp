@@ -32,14 +32,8 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-S3Processor::S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-  : core::ProcessorImpl(name, uuid),
-    logger_(std::move(logger)) {
-}
-
-S3Processor::S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-  : core::ProcessorImpl(name, uuid),
-    logger_(std::move(logger)),
+S3Processor::S3Processor(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+  : core::ProcessorImpl(info),
     s3_wrapper_(std::move(s3_request_sender)) {
 }
 
@@ -94,7 +88,7 @@ std::optional<aws::s3::ProxyOptions> S3Processor::getProxy(core::ProcessContext&
 
 void S3Processor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   client_config_ = Aws::Client::ClientConfiguration();
-  if (!getProperty(Bucket.name)) {
+  if (!context.hasNonEmptyProperty(Bucket.name)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
   }
 

@@ -43,8 +43,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-SFTPProcessorBase::SFTPProcessorBase(const std::string_view name, const utils::Identifier& uuid)
-    : ProcessorImpl(name, uuid),
+SFTPProcessorBase::SFTPProcessorBase(core::ProcessorMetadata info)
+    : ProcessorImpl(info),
       connection_timeout_(0),
       data_timeout_(0),
       strict_host_checking_(false),

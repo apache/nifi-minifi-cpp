@@ -59,9 +59,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class DefragmentText : public core::ProcessorImpl {
  public:
-  explicit DefragmentText(std::string_view name,  const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. "
       "It can handle multiple inputs differentiated by the absolute.path flow file attribute.";
@@ -115,7 +113,6 @@ class DefragmentText : public core::ProcessorImpl {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
-  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
 
  protected:
   class Buffer {
@@ -157,7 +154,6 @@ class DefragmentText : public core::ProcessorImpl {
   std::optional<std::chrono::milliseconds> max_age_;
   std::optional<size_t> max_size_;
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DefragmentText>::getLogger(uuid_);
   core::FlowFileStore flow_file_store_;
   std::unordered_map<FragmentSource::Id, FragmentSource, FragmentSource::Id::hash> fragment_sources_;
 

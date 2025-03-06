@@ -21,6 +21,7 @@
 #include "AttributeRollingWindow.h"
 #include "unit/SingleProcessorTestController.h"
 #include "core/FlowFile.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 using AttributeRollingWindow = processors::AttributeRollingWindow;
@@ -36,7 +37,7 @@ bool checkAttributes(const std::map<std::string, std::string>& expected, const s
 }
 
 TEST_CASE("AttributeRollingWindow properly forwards properties to RollingWindow and sets attributes", "[attributerollingwindow]") {
-  SingleProcessorTestController controller{std::make_unique<AttributeRollingWindow>("AttributeRollingWindow")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<AttributeRollingWindow>("AttributeRollingWindow")};
   const auto proc = controller.getProcessor();
   controller.plan->setProperty(proc, AttributeRollingWindow::ValueToTrack, "${value}");
   controller.plan->setProperty(proc, AttributeRollingWindow::WindowLength, "3");

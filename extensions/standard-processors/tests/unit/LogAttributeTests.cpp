@@ -29,7 +29,7 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("LogAttribute logs payload", "[LogAttribute]") {
-  SingleProcessorTestController controller{std::make_unique<LogAttribute>("log_attribute")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<LogAttribute>("log_attribute")};
   const auto log_attribute = controller.getProcessor();
   LogTestController::getInstance().setTrace<LogAttribute>();
 
@@ -54,7 +54,7 @@ TEST_CASE("LogAttribute logs payload", "[LogAttribute]") {
 }
 
 TEST_CASE("LogAttribute LogLevel and LogPrefix", "[LogAttribute]") {
-  SingleProcessorTestController controller{std::make_unique<LogAttribute>("log_attribute")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<LogAttribute>("log_attribute")};
   const auto log_attribute = controller.getProcessor();
   LogTestController::getInstance().setTrace<LogAttribute>();
 
@@ -81,7 +81,7 @@ TEST_CASE("LogAttribute LogLevel and LogPrefix", "[LogAttribute]") {
 }
 
 TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
-  SingleProcessorTestController controller{std::make_unique<LogAttribute>("log_attribute")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<LogAttribute>("log_attribute")};
   const auto log_attribute = controller.getProcessor();
   LogTestController::getInstance().setTrace<LogAttribute>();
 
@@ -128,7 +128,7 @@ TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
 }
 
 TEST_CASE("LogAttribute batch test", "[LogAttribute]") {
-  SingleProcessorTestController controller{std::make_unique<LogAttribute>("log_attribute")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<LogAttribute>("log_attribute")};
   const auto log_attribute = controller.getProcessor();
 
   const auto [flow_files_to_log, expected_success_flow_files] = GENERATE(

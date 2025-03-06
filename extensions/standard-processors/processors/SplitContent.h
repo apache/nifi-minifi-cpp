@@ -23,7 +23,7 @@
 
 #include "FlowFileRecord.h"
 #include "core/ProcessSession.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class SplitContent final : public core::ProcessorImpl {
  public:
-  explicit SplitContent(const std::string_view name, const utils::Identifier& uuid = {}) : ProcessorImpl(name, uuid) {}
+  using ProcessorImpl::ProcessorImpl;
 
   using size_type = std::vector<std::byte>::size_type;
   enum class ByteSequenceFormat { Hexadecimal, Text };
@@ -124,7 +124,6 @@ class SplitContent final : public core::ProcessorImpl {
   std::optional<ByteSequenceMatcher> byte_sequence_matcher_;
   bool keep_byte_sequence = false;
   ByteSequenceLocation byte_sequence_location_ = ByteSequenceLocation::Trailing;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SplitContent>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

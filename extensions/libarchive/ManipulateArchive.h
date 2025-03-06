@@ -25,7 +25,7 @@
 
 #include "FlowFileRecord.h"
 #include "ArchiveMetadata.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -38,9 +38,7 @@ using core::logging::Logger;
 
 class ManipulateArchive : public core::ProcessorImpl {
  public:
-  explicit ManipulateArchive(std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~ManipulateArchive() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.";
@@ -91,7 +89,6 @@ class ManipulateArchive : public core::ProcessorImpl {
   void initialize() override;
 
  private:
-  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<ManipulateArchive>::getLogger(uuid_);
   std::string before_, after_, operation_, destination_, targetEntry_;
 };
 
