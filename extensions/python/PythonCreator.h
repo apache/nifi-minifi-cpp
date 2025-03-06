@@ -124,7 +124,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
         factory = std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
           PythonProcessorType::MINIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}}, qualified_module_name);
       }
-      if (!registered_classes_.emplace(class_name, factory.get()).second) {
+      if (registered_classes_.emplace(class_name, factory.get()).second) {
         core::getClassLoader().registerClass(class_name, std::move(factory));
       } else {
         logger_->log_warn("Ignoring duplicate python processor at '{}' with class '{}'", path.string(), class_name);
