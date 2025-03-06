@@ -29,7 +29,7 @@
 
 #include "controllers/AttributeProviderService.h"
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -104,10 +104,7 @@ enum class Mode {
 
 class TailFile : public core::ProcessorImpl {
  public:
-  explicit TailFile(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<TailFile>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   ~TailFile() override = default;
 

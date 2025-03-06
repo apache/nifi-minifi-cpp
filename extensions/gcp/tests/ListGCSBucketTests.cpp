@@ -21,6 +21,7 @@
 #include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"
 #include "google/cloud/storage/testing/canonical_errors.h"
+#include "unit/TestUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
@@ -65,7 +66,7 @@ auto CreateObject(int index, int generation = 1) {
 class ListGCSBucketTests : public ::testing::Test {
  public:
   void SetUp() override {
-    list_gcs_bucket_ = test_controller_.getProcessor<ListGCSBucketMocked>();
+    list_gcs_bucket_ = test_controller_.getProcessor();
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
@@ -74,13 +75,13 @@ class ListGCSBucketTests : public ::testing::Test {
                                        ListGCSBucket::GCPCredentials,
                                        "gcp_credentials_controller_service");
   }
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{std::make_unique<ListGCSBucketMocked>("ListGCSBucketMocked")};
-  ListGCSBucketMocked* list_gcs_bucket_ = nullptr;
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{minifi::test::utils::make_processor<ListGCSBucketMocked>("ListGCSBucketMocked")};
+  TypedProcessorWrapper<ListGCSBucketMocked> list_gcs_bucket_;
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
 };
 
 TEST_F(ListGCSBucketTests, MissingBucket) {
-  EXPECT_CALL(*list_gcs_bucket_->mock_client_, CreateResumableUpload).Times(0);
+  EXPECT_CALL(*list_gcs_bucket_.get().mock_client_, CreateResumableUpload).Times(0);
   EXPECT_THROW(test_controller_.trigger(), std::runtime_error);
 }
 
@@ -88,7 +89,7 @@ TEST_F(ListGCSBucketTests, ServerGivesPermaError) {
   auto return_permanent_error = [](ListObjectsRequest const&) {
     return google::cloud::StatusOr<ListObjectsResponse>(PermanentError());
   };
-  EXPECT_CALL(*list_gcs_bucket_->mock_client_, ListObjects)
+  EXPECT_CALL(*list_gcs_bucket_.get().mock_client_, ListObjects)
       .WillOnce(return_permanent_error);
   EXPECT_TRUE(test_controller_.plan->setProperty(list_gcs_bucket_, ListGCSBucket::Bucket, "bucket-from-property"));
   const auto& result = test_controller_.trigger();
@@ -99,7 +100,7 @@ TEST_F(ListGCSBucketTests, ServerGivesTransientErrors) {
   auto return_temp_error = [](ListObjectsRequest const&) {
     return google::cloud::StatusOr<ListObjectsResponse>(TransientError());
   };
-  EXPECT_CALL(*list_gcs_bucket_->mock_client_, ListObjects).WillOnce(return_temp_error);
+  EXPECT_CALL(*list_gcs_bucket_.get().mock_client_, ListObjects).WillOnce(return_temp_error);
   EXPECT_TRUE(test_controller_.plan->setProperty(list_gcs_bucket_, ListGCSBucket::NumberOfRetries, "1"));
   EXPECT_TRUE(test_controller_.plan->setProperty(list_gcs_bucket_, ListGCSBucket::Bucket, "bucket-from-property"));
   const auto& result = test_controller_.trigger();
@@ -107,7 +108,7 @@ TEST_F(ListGCSBucketTests, ServerGivesTransientErrors) {
 }
 
 TEST_F(ListGCSBucketTests, WithoutVersions) {
-  EXPECT_CALL(*list_gcs_bucket_->mock_client_, ListObjects)
+  EXPECT_CALL(*list_gcs_bucket_.get().mock_client_, ListObjects)
       .WillOnce([](ListObjectsRequest const& req)
                     -> google::cloud::StatusOr<ListObjectsResponse> {
         EXPECT_EQ("bucket-from-property", req.bucket_name());
@@ -127,7 +128,7 @@ TEST_F(ListGCSBucketTests, WithoutVersions) {
 
 
 TEST_F(ListGCSBucketTests, WithVersions) {
-  EXPECT_CALL(*list_gcs_bucket_->mock_client_, ListObjects)
+  EXPECT_CALL(*list_gcs_bucket_.get().mock_client_, ListObjects)
       .WillOnce([](ListObjectsRequest const& req)
                     -> google::cloud::StatusOr<ListObjectsResponse> {
         EXPECT_EQ("bucket-from-property", req.bucket_name());

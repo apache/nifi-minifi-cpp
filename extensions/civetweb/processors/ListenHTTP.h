@@ -27,7 +27,6 @@
 #include <CivetServer.h>
 
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -40,6 +39,7 @@
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
 #include "core/FlowFileStore.h"
+#include "core/ProcessorImpl.h"
 
 namespace org::apache::nifi::minifi::test {
 struct ListenHTTPTestAccessor;
@@ -55,9 +55,8 @@ class ListenHTTP : public core::ProcessorImpl {
  public:
   friend struct ::org::apache::nifi::minifi::test::ListenHTTPTestAccessor;
 
-  explicit ListenHTTP(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger(uuid_);
+  explicit ListenHTTP(core::ProcessorMetadata info)
+      : ProcessorImpl(info) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }

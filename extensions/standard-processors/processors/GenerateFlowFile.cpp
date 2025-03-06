@@ -84,8 +84,7 @@ void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSe
       | utils::valueOrElse([]() {return false;});
   bool is_unique = utils::parseOptionalBoolProperty(context, UniqueFlowFiles).value_or(true);
 
-  const auto custom_text_without_evaluation = context.getProperty(CustomText.name);
-  const bool has_custom_text = custom_text_without_evaluation.has_value() && !custom_text_without_evaluation->empty();
+  const bool has_custom_text = context.hasNonEmptyProperty(CustomText.name);
 
   file_size_ = utils::parseDataSizeProperty(context, FileSize);
   batch_size_ = utils::parseU64Property(context, BatchSize);

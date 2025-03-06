@@ -22,6 +22,7 @@
 #include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"
 #include "google/cloud/storage/testing/canonical_errors.h"
+#include "unit/TestUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
@@ -46,7 +47,7 @@ REGISTER_RESOURCE(FetchGCSObjectMocked, Processor);
 class FetchGCSObjectTests : public ::testing::Test {
  public:
   void SetUp() override {
-    fetch_gcs_object_ = test_controller_.getProcessor<FetchGCSObjectMocked>();
+    fetch_gcs_object_ = test_controller_.getProcessor();
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
@@ -55,13 +56,13 @@ class FetchGCSObjectTests : public ::testing::Test {
                                        FetchGCSObject::GCPCredentials,
                                        "gcp_credentials_controller_service");
   }
-  FetchGCSObjectMocked* fetch_gcs_object_ = nullptr;
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{std::make_unique<FetchGCSObjectMocked>("FetchGCSObjectMocked")};
+  TypedProcessorWrapper<FetchGCSObjectMocked> fetch_gcs_object_;
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{minifi::test::utils::make_processor<FetchGCSObjectMocked>("FetchGCSObjectMocked")};
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
 };
 
 TEST_F(FetchGCSObjectTests, MissingBucket) {
-  EXPECT_CALL(*fetch_gcs_object_->mock_client_, CreateResumableUpload).Times(0);
+  EXPECT_CALL(*fetch_gcs_object_.get().mock_client_, CreateResumableUpload).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::Bucket, ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(FetchGCSObject::Success).size());
@@ -72,7 +73,7 @@ TEST_F(FetchGCSObjectTests, MissingBucket) {
 }
 
 TEST_F(FetchGCSObjectTests, ServerError) {
-  EXPECT_CALL(*fetch_gcs_object_->mock_client_, ReadObject)
+  EXPECT_CALL(*fetch_gcs_object_.get().mock_client_, ReadObject)
       .WillOnce([](gcs::internal::ReadObjectRangeRequest const& request) {
         EXPECT_EQ(request.bucket_name(), "bucket-from-property") << request;
         auto mock_source = std::make_unique<gcs::testing::MockObjectReadSource>();
@@ -106,7 +107,7 @@ TEST_F(FetchGCSObjectTests, HappyPath) {
     return gcs::internal::ReadSourceResult{
         l, gcs::internal::HttpResponse{200, {}, {}}};
   };
-  EXPECT_CALL(*fetch_gcs_object_->mock_client_, ReadObject)
+  EXPECT_CALL(*fetch_gcs_object_.get().mock_client_, ReadObject)
       .WillOnce([&](gcs::internal::ReadObjectRangeRequest const& request) {
         EXPECT_EQ(request.bucket_name(), "bucket-from-attribute") << request;
         EXPECT_TRUE(request.HasOption<gcs::Generation>());
@@ -140,7 +141,7 @@ TEST_F(FetchGCSObjectTests, EmptyGeneration) {
     return gcs::internal::ReadSourceResult{
         l, gcs::internal::HttpResponse{200, {}, {}}};
   };
-  EXPECT_CALL(*fetch_gcs_object_->mock_client_, ReadObject)
+  EXPECT_CALL(*fetch_gcs_object_.get().mock_client_, ReadObject)
       .WillOnce([&](gcs::internal::ReadObjectRangeRequest const& request) {
         EXPECT_EQ(request.bucket_name(), "bucket-from-attribute") << request;
         EXPECT_FALSE(request.HasOption<gcs::Generation>());

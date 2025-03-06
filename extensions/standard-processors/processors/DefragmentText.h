@@ -59,10 +59,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class DefragmentText : public core::ProcessorImpl {
  public:
-  explicit DefragmentText(const std::string_view name,  const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<DefragmentText>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. "
       "It can handle multiple inputs differentiated by the absolute.path flow file attribute.";

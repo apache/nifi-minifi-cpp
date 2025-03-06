@@ -34,15 +34,16 @@ namespace org::apache::nifi::minifi::core {
  */
 class ProcessContextExpr final : public core::ProcessContextImpl {
  public:
+  using ProcessContextImpl::ProcessContextImpl;
   ~ProcessContextExpr() override = default;
 
-  nonstd::expected<std::string, std::error_code> getProperty(ProcessContext& context, std::string_view name, const FlowFile*) const override;
-  nonstd::expected<std::string, std::error_code> getDynamicProperty(ProcessContext& context, std::string_view name, const FlowFile*) const override;
+  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
+  nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile*) const override;
 //
-//  nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value);
-//  nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value);
+  nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
+  nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
 
-  std::map<std::string, std::string> getDynamicProperties(ProcessContext& context, const FlowFile*) const override;
+  std::map<std::string, std::string> getDynamicProperties(const FlowFile*) const override;
 
  private:
   mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_expressions_;

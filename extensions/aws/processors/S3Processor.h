@@ -35,7 +35,7 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/OptionalUtils.h"
@@ -184,19 +184,18 @@ class S3Processor : public core::ProcessorImpl {
   });
 
 
-  explicit S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger);
+  using ProcessorImpl::ProcessorImpl;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
-  explicit S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
+  explicit S3Processor(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
 
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(core::ProcessContext& context) const;
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context, const core::FlowFile* const flow_file);
   std::optional<aws::s3::ProxyOptions> getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file);
   std::optional<CommonProperties> getCommonELSupportedProperties(core::ProcessContext& context, const core::FlowFile* const flow_file);
 
-  std::shared_ptr<core::logging::Logger> logger_;
   aws::s3::S3Wrapper s3_wrapper_;
   std::optional<Aws::Client::ClientConfiguration> client_config_;
 };
