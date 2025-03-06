@@ -52,7 +52,8 @@ ProcessorProxy::ProcessorProxy(std::string_view name, std::unique_ptr<ProcessorA
       run_duration_(DEFAULT_RUN_DURATION),
       yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
       active_tasks_(0),
-      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)) {
+      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
+      impl_(std::move(impl)) {
   has_work_.store(false);
   // Setup the default values
   strategy_ = TIMER_DRIVEN;
@@ -69,7 +70,8 @@ ProcessorProxy::ProcessorProxy(std::string_view name, const utils::Identifier& u
       run_duration_(DEFAULT_RUN_DURATION),
       yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
       active_tasks_(0),
-      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)) {
+      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
+      impl_(std::move(impl)) {
   has_work_.store(false);
   // Setup the default values
   strategy_ = TIMER_DRIVEN;
@@ -183,7 +185,7 @@ void ProcessorProxy::triggerAndCommit(const std::shared_ptr<ProcessContext>& con
 }
 
 void ProcessorProxy::trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session) {
-  ++impl_->getMetrics()->iterations();
+  ++impl_->getMetrics()->invocations();
   const auto start = std::chrono::steady_clock::now();
   onTrigger(*context, *process_session);
   impl_->getMetrics()->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
@@ -361,7 +363,7 @@ class ProcessorDescriptorImpl : public ProcessorDescriptor {
     impl_->setSupportedRelationships(relationships);
   }
 
-  void setSupportedProperties(std::span<const PropertyReference> properties) {
+  void setSupportedProperties(std::span<const PropertyReference> properties) override {
     impl_->setSupportedProperties(properties);
   }
 

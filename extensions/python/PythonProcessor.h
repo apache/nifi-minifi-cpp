@@ -34,7 +34,7 @@ class ExecutePythonProcessor;
 
 class PythonProcessor {
  public:
-  explicit PythonProcessor(core::Processor* proc);
+  explicit PythonProcessor(python::processors::ExecutePythonProcessor* proc);
 
   void setSupportsDynamicProperties();
 

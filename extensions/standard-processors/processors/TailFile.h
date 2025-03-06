@@ -29,7 +29,7 @@
 
 #include "controllers/AttributeProviderService.h"
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -104,9 +104,7 @@ enum class Mode {
 
 class TailFile : public core::ProcessorImpl {
  public:
-  explicit TailFile(std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   ~TailFile() override = default;
 
@@ -283,7 +281,6 @@ class TailFile : public core::ProcessorImpl {
   controllers::AttributeProviderService* attribute_provider_service_ = nullptr;
   std::unordered_map<std::string, controllers::AttributeProviderService::AttributeMap> extra_attributes_;
   std::optional<uint32_t> batch_size_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

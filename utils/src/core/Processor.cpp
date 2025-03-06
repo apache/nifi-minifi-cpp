@@ -39,28 +39,19 @@
 #include "Exception.h"
 #include "core/Processor.h"
 #include "core/ProcessorMetrics.h"
-#include "minifi-cpp/utils/PropertyErrors.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
 
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessorImpl::ProcessorImpl(ProcessorMetadata info, std::shared_ptr<ProcessorMetrics> metrics)
+ProcessorImpl::ProcessorImpl(ProcessorMetadata info)
     : info_(info),
       trigger_when_empty_(false),
-      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetricsImpl>(*this)),
+      metrics_(std::make_shared<ProcessorMetricsImpl>(*this)),
       logger_(info.logger) {
   logger_->log_debug("Processor {} created with uuid {}", getName(), getUUIDStr());
 }
-
-ProcessorImpl::ProcessorImpl(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::shared_ptr<ProcessorMetrics> metrics)
-    : ProcessorImpl(ProcessorMetadata{
-        .uuid = uuid,
-        .name = std::string{name},
-        .logger = logger ? logger : logging::LoggerFactory<ProcessorImpl>::getLogger(uuid)
-      }, metrics)
-{}
 
 ProcessorImpl::~ProcessorImpl() {
   logger_->log_debug("Destroying processor {} with uuid {}", getName(), getUUIDStr());
@@ -70,7 +61,7 @@ bool ProcessorImpl::isWorkAvailable() {
   return false;
 }
 
-void ProcessorImpl::restore(const std::shared_ptr<FlowFile>& file) {
+void ProcessorImpl::restore(const std::shared_ptr<FlowFile>& /*file*/) {
   gsl_Assert("Not implemented");
 }
 

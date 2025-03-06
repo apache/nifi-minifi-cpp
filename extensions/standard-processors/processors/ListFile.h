@@ -39,9 +39,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListFile : public core::ProcessorImpl {
  public:
-  explicit ListFile(std::string_view name, const utils::Identifier& uuid = {})
-    : core::ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from the local filesystem. For each file that is listed, "
       "creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchFile.";
@@ -149,7 +147,6 @@ class ListFile : public core::ProcessorImpl {
  private:
   std::shared_ptr<core::FlowFile> createFlowFile(core::ProcessSession& session, const utils::ListedFile& listed_file);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListFile>::getLogger(uuid_);
   std::filesystem::path input_directory_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
   bool recurse_subdirectories_ = true;

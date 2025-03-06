@@ -78,7 +78,7 @@ namespace org::apache::nifi::minifi::processors {
     logger_->log_trace("PutOPCProcessor::onTrigger");
 
     if (!reconnect()) {
-      yield();
+      context.yield();
       return;
     }
 
@@ -88,11 +88,11 @@ namespace org::apache::nifi::minifi::processors {
         if (connection_->translateBrowsePathsToNodeIdsRequest(nodeID_, translatedNodeIDs, logger_) !=
             UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to translate {} to node id, no flow files will be put", nodeID_.c_str());
-          yield();
+          context.yield();
           return;
         } else if (translatedNodeIDs.size() != 1) {
           logger_->log_error("{} was translated to multiple node ids, no flow files will be put", nodeID_.c_str());
-          yield();
+          context.yield();
           return;
         } else {
           parentNodeID_ = translatedNodeIDs[0];
@@ -109,7 +109,7 @@ namespace org::apache::nifi::minifi::processors {
         }
         if (!connection_->exists(parentNodeID_)) {
           logger_->log_error("Parent node doesn't exist, no flow files will be put");
-          yield();
+          context.yield();
           return;
         }
         parentExists_ = true;

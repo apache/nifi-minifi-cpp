@@ -26,11 +26,11 @@
 namespace org::apache::nifi::minifi::azure::processors {
 
 void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (!getProperty(ContainerName.name)) {
+  if (!context.hasNonEmptyProperty(ContainerName.name)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Container Name property missing or invalid");
   }
 
-  if (auto azure_storage_credentials_service = getProperty(AzureStorageCredentialsService.name)) {
+  if (auto azure_storage_credentials_service = context.getProperty(AzureStorageCredentialsService.name)) {
     logger_->log_info("Getting Azure Storage credentials from controller service with name: '{}'", *azure_storage_credentials_service);
     return;
   }
@@ -42,21 +42,21 @@ void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, co
     return;
   }
 
-  if (auto connection_string = getProperty(ConnectionString.name); connection_string && !connection_string->empty()) {
+  if (context.hasNonEmptyProperty(ConnectionString.name)) {
     logger_->log_info("Using connectionstring directly for Azure Storage authentication");
     return;
   }
 
-  if (!getProperty(StorageAccountName.name)) {
+  if (!context.hasNonEmptyProperty(StorageAccountName.name)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Account Name property missing or invalid");
   }
 
-  if (const auto storage_account_key = getProperty(StorageAccountKey.name); storage_account_key && !storage_account_key->empty()) {
+  if (context.hasNonEmptyProperty(StorageAccountKey.name)) {
     logger_->log_info("Using storage account name and key for authentication");
     return;
   }
 
-  if (const auto sas_token = getProperty(SASToken.name); !sas_token || sas_token->empty()) {
+  if (!context.hasNonEmptyProperty(SASToken.name)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Neither Storage Account Key nor SAS Token property was set.");
   }
 

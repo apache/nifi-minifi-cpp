@@ -23,7 +23,7 @@
 #include <string>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 
@@ -34,8 +34,7 @@ namespace org::apache::nifi::minifi::processors {
  */
 class ApplyTemplate final : public core::ProcessorImpl {
  public:
-  explicit ApplyTemplate(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {}
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Applies the mustache template specified by the \"Template\" property and writes the output to the flow file content. "
     "FlowFile attributes are used as template parameters.";
@@ -57,9 +56,6 @@ class ApplyTemplate final : public core::ProcessorImpl {
 
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ApplyTemplate>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -21,7 +21,7 @@
 #include <utility>
 
 #include "core/controller/ControllerService.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -83,13 +83,8 @@ class MockControllerService : public minifi::core::controller::ControllerService
 
 class MockProcessor : public minifi::core::ProcessorImpl {
  public:
-  explicit MockProcessor(std::string_view name, const minifi::utils::Identifier &uuid)
-      : ProcessorImpl(name, uuid) {
-    setTriggerWhenEmpty(true);
-  }
-
-  explicit MockProcessor(std::string_view name)
-      : ProcessorImpl(name) {
+  explicit MockProcessor(minifi::core::ProcessorMetadata info)
+      : ProcessorImpl(info) {
     setTriggerWhenEmpty(true);
   }
 
@@ -120,7 +115,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
     if (!flow_file) {
       flow_file = session.create();
     }
-    std::string linked_service = getProperty("linkedService").value_or("");
+    std::string linked_service = context.getProperty("linkedService").value_or("");
     if (!IsNullOrEmpty(linked_service)) {
       std::shared_ptr<minifi::core::controller::ControllerService> service = context.getControllerService(linked_service, getUUID());
       std::lock_guard<std::mutex> lock(control_mutex);
@@ -130,7 +125,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
       // and verify that we can execute it.
     }
 
-    bool in_sub_process_group = getProperty("InSubProcessGroup") | minifi::utils::andThen(minifi::parsing::parseBool) | minifi::utils::orThrow("");
+    bool in_sub_process_group = context.getProperty("InSubProcessGroup") | minifi::utils::andThen(minifi::parsing::parseBool) | minifi::utils::expect("");
     auto sub_service = context.getControllerService("SubMockController", getUUID());
     if (in_sub_process_group) {
       REQUIRE(nullptr != sub_service);
@@ -140,9 +135,5 @@ class MockProcessor : public minifi::core::ProcessorImpl {
       subprocess_controller_service_not_found_correctly = true;
     }
     session.transfer(flow_file, Success);
-  }
-
-  bool isYield() override {
-    return false;
   }
 };

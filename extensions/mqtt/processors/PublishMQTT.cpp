@@ -59,7 +59,7 @@ void PublishMQTT::onTriggerImpl(core::ProcessContext& context, core::ProcessSess
   std::shared_ptr<core::FlowFile> flow_file = session.get();
 
   if (!flow_file) {
-    yield();
+    context.yield();
     return;
   }
 
@@ -132,9 +132,9 @@ bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::s
   return send_finished_task.get_future().get();
 }
 
-void PublishMQTT::checkProperties() {
-  auto is_property_explicitly_set = [this](const std::string_view property_name) -> bool {
-    const auto property_values = getAllPropertyValues(property_name) | utils::orThrow("It should only be called on valid property");
+void PublishMQTT::checkProperties(core::ProcessContext& context) {
+  auto is_property_explicitly_set = [&context](const std::string_view property_name) -> bool {
+    const auto property_values = context.getAllPropertyValues(property_name) | utils::orThrow("It should only be called on valid property");
     return !property_values.empty();
   };
   if ((mqtt_version_ == mqtt::MqttVersions::V_3_1_0 || mqtt_version_ == mqtt::MqttVersions::V_3_1_1 || mqtt_version_ == mqtt::MqttVersions::V_3X_AUTO)) {
@@ -293,7 +293,7 @@ uint16_t PublishMQTT::InFlightMessageCounter::getCounter() const {
   return counter_;
 }
 
-PublishMQTT::PublishMQTTMetrics::PublishMQTTMetrics(const core::Processor& source_processor, const InFlightMessageCounter& in_flight_message_counter)
+PublishMQTT::PublishMQTTMetrics::PublishMQTTMetrics(const core::ProcessorImpl& source_processor, const InFlightMessageCounter& in_flight_message_counter)
   : core::ProcessorMetricsImpl(source_processor),
     in_flight_message_counter_(&in_flight_message_counter) {
 }

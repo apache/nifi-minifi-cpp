@@ -64,12 +64,12 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ListAzureBlobStorage(std::string_view name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : ListAzureBlobStorage(name, nullptr, uuid) {
+  explicit ListAzureBlobStorage(core::ProcessorMetadata info)
+    : ListAzureBlobStorage(info, nullptr) {
   }
 
-  explicit ListAzureBlobStorage(std::string_view name, std::unique_ptr<storage::BlobStorageClient> blob_storage_client, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureBlobStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureBlobStorage>::getLogger(uuid), std::move(blob_storage_client)) {
+  explicit ListAzureBlobStorage(core::ProcessorMetadata info, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
+    : AzureBlobStorageProcessorBase(info, std::move(blob_storage_client)) {
   }
 
   void initialize() override;

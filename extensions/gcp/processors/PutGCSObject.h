@@ -72,9 +72,7 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class PutGCSObject : public GCSProcessor {
  public:
-  explicit PutGCSObject(std::string_view name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger(uuid)) {
-  }
+  using GCSProcessor::GCSProcessor;
   ~PutGCSObject() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Puts flow files to a Google Cloud Storage Bucket.";
