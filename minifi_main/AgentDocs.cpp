@@ -17,13 +17,12 @@
 
 #include "AgentDocs.h"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "range/v3/algorithm.hpp"
-#include "range/v3/action/transform.hpp"
 #include "range/v3/algorithm/lexicographical_compare.hpp"
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/transform.hpp"
@@ -32,11 +31,9 @@
 #include "agent/agent_docs.h"
 #include "agent/agent_version.h"
 #include "core/Core.h"
-#include "core/PropertyValue.h"
 #include "core/PropertyType.h"
 #include "core/Relationship.h"
 #include "TableFormatter.h"
-#include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 
 namespace {
@@ -190,6 +187,7 @@ namespace org::apache::nifi::minifi::docs {
 void AgentDocs::generate(const std::filesystem::path& docs_dir) {
   std::vector<std::pair<std::string, minifi::ClassDescription>> controller_services;
   std::vector<std::pair<std::string, minifi::ClassDescription>> processors;
+  std::vector<std::pair<std::string, minifi::ClassDescription>> parameter_providers;
   for (const auto &group : minifi::AgentBuild::getExtensions()) {
     struct Components descriptions = build_description_.getClassDescriptions(group);
     for (const auto &controller_service_description : descriptions.controller_services_) {
@@ -198,9 +196,13 @@ void AgentDocs::generate(const std::filesystem::path& docs_dir) {
     for (const auto &processor_description : descriptions.processors_) {
       processors.emplace_back(extractClassName(processor_description.full_name_), processor_description);
     }
+    for (const auto& parameter_provider_description : descriptions.parameter_providers_) {
+      parameter_providers.emplace_back(extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
+    }
   }
-  ranges::sort(controller_services, std::less(), lowercaseFirst);
-  ranges::sort(processors, std::less(), lowercaseFirst);
+  std::ranges::sort(controller_services, std::less(), lowercaseFirst);
+  std::ranges::sort(processors, std::less(), lowercaseFirst);
+  std::ranges::sort(parameter_providers, std::less(), lowercaseFirst);
 
   std::ofstream controllers_md(docs_dir / "CONTROLLERS.md");
   writeHeader(controllers_md, controller_services);
@@ -219,6 +221,14 @@ void AgentDocs::generate(const std::filesystem::path& docs_dir) {
     writeDynamicProperties(processors_md, documentation);
     writeRelationships(processors_md, documentation);
     writeOutputAttributes(processors_md, documentation);
+  }
+
+  std::ofstream parameter_providers_md(docs_dir / "PARAMETER_PROVIDERS.md");
+  writeHeader(parameter_providers_md, parameter_providers);
+  for (const auto& [name, documentation] : parameter_providers) {
+    writeName(parameter_providers_md, name);
+    writeDescription(parameter_providers_md, documentation);
+    writeProperties(parameter_providers_md, documentation);
   }
 }
 

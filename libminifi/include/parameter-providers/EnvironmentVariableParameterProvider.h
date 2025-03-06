@@ -52,7 +52,9 @@ class EnvironmentVariableParameterProvider final : public core::ParameterProvide
  public:
   using ParameterProvider::ParameterProvider;
 
-  MINIFIAPI static constexpr const char* Description = "Fetches parameters from environment variables";
+  MINIFIAPI static constexpr const char* Description = "Fetches parameters from environment variables.\n\n"
+          "This provider generates a single Parameter Context with the name specified in the `Parameter Group Name` property, if it doesn't exist yet. "
+          "The parameters generated match the name of the environment variables that are included.";
 
   MINIFIAPI static constexpr auto EnvironmentVariableInclusionStrategy =
     core::PropertyDefinitionBuilder<magic_enum::enum_count<EnvironmentVariableInclusionStrategyOptions>()>::createProperty("Environment Variable Inclusion Strategy")
@@ -70,9 +72,11 @@ class EnvironmentVariableParameterProvider final : public core::ParameterProvide
       .isRequired(true)
       .build();
 
+  MINIFIAPI static constexpr auto Properties = minifi::utils::array_cat(core::ParameterProvider::Properties,
+          std::to_array<core::PropertyReference>({EnvironmentVariableInclusionStrategy, IncludeEnvironmentVariables, ParameterGroupName}));
+
   void initialize() override {
-    setSupportedProperties(minifi::utils::array_cat(core::ParameterProvider::Properties,
-      std::to_array<core::PropertyReference>({EnvironmentVariableInclusionStrategy, IncludeEnvironmentVariables, ParameterGroupName})));
+    setSupportedProperties(Properties);
   }
 
  private:
