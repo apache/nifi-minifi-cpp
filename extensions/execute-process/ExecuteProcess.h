@@ -36,7 +36,7 @@
 #include <utility>
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -48,11 +48,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class ExecuteProcess final : public core::ProcessorImpl {
  public:
-  explicit ExecuteProcess(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid),
-        working_dir_(".") {
-    logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~ExecuteProcess() override {
     if (pid_ > 0) {
       kill(pid_, SIGTERM);
@@ -107,7 +103,7 @@ class ExecuteProcess final : public core::ProcessorImpl {
 
  private:
   std::vector<std::string> readArgs() const;
-  void executeProcessForkFailed();
+  void executeProcessForkFailed(core::ProcessContext& context);
   void executeChildProcess() const;
   void collectChildProcessOutput(core::ProcessSession& session);
   void readOutputInBatches(core::ProcessSession& session) const;
@@ -116,7 +112,7 @@ class ExecuteProcess final : public core::ProcessorImpl {
 
   std::string command_;
   std::string command_argument_;
-  std::filesystem::path working_dir_;
+  std::filesystem::path working_dir_{"."};
   std::chrono::milliseconds batch_duration_  = std::chrono::milliseconds(0);
   bool redirect_error_stream_ = false;
   std::string full_command_;

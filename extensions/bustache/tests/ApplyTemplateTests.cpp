@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include "unit/TestBase.h"
+#include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "core/Core.h"
 
@@ -47,7 +48,7 @@ const char* EXPECT_OUTPUT = "TemplateBegins\nExampleValue\nTemplateEnds";
 
 TEST_CASE("Test Creation of ApplyTemplate", "[ApplyTemplateCreate]") {
   TestController testController;
-  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ApplyTemplate>("processor_name");
+  std::shared_ptr<core::Processor> processor = minifi::test::utils::make_processor<org::apache::nifi::minifi::processors::ApplyTemplate>("processor_name");
   REQUIRE(processor->getName() == "processor_name");
   REQUIRE(processor->getUUID());
 }

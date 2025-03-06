@@ -107,7 +107,7 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::Proc
   }
 
   readProperties(context);
-  checkProperties();
+  checkProperties(context);
   initializeClient();
 }
 
@@ -251,7 +251,7 @@ void AbstractMQTTProcessor::onTrigger(core::ProcessContext& context, core::Proce
 
   if (!MQTTAsync_isConnected(client_)) {
     logger_->log_error("Could not work with MQTT broker because disconnected to {}", uri_);
-    yield();
+    context.yield();
     return;
   }
 

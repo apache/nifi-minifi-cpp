@@ -79,11 +79,11 @@ std::vector<std::string> ExecuteProcess::readArgs() const {
   return args;
 }
 
-void ExecuteProcess::executeProcessForkFailed() {
+void ExecuteProcess::executeProcessForkFailed(core::ProcessContext& context) {
   logger_->log_error("Execute Process fork failed");
   close(pipefd_[0]);
   close(pipefd_[1]);
-  yield();
+  context.yield();
 }
 
 void ExecuteProcess::executeChildProcess() const {
@@ -208,26 +208,26 @@ void ExecuteProcess::collectChildProcessOutput(core::ProcessSession& session) {
   pid_ = 0;
 }
 
-void ExecuteProcess::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+void ExecuteProcess::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   if (full_command_.empty()) {
-    yield();
+    context.yield();
     return;
   }
   std::error_code current_path_error;
   std::filesystem::current_path(working_dir_, current_path_error);
   if (current_path_error) {
-    yield();
+    context.yield();
     return;
   }
   logger_->log_info("Execute Command {}", full_command_);
 
   if (pipe(pipefd_) == -1) {
-    yield();
+    context.yield();
     return;
   }
   switch (pid_ = fork()) {
     case -1:
-      executeProcessForkFailed();
+      executeProcessForkFailed(context);
       break;
     case 0:  // this is the code the child runs
       executeChildProcess();

@@ -57,7 +57,7 @@ void ListenHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionF
   std::string headersAsAttributesPattern = context.getProperty(HeadersAsAttributesRegex).value_or("");
   logger_->log_debug("ListenHTTP using {}: {}", HeadersAsAttributesRegex.name, headersAsAttributesPattern);
 
-  auto numThreads = getMaxConcurrentTasks();
+  auto numThreads = context.getMaxConcurrentTasks();
 
   logger_->log_info("ListenHTTP starting HTTP server on port {} and path {} with {} threads", randomPort ? "random" : listeningPort, base_path, numThreads);
 
@@ -134,7 +134,7 @@ void ListenHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionF
 
 ListenHTTP::~ListenHTTP() = default;
 
-void ListenHTTP::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+void ListenHTTP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("OnTrigger ListenHTTP");
   bool restored_processed = false;
   for (auto& ff : file_store_.getNewFlowFiles()) {
@@ -146,7 +146,7 @@ void ListenHTTP::onTrigger(core::ProcessContext&, core::ProcessSession& session)
   const bool incoming_processed = processIncomingFlowFile(session);
   const bool request_processed = processRequestBuffer(session);
   if (!restored_processed && !incoming_processed && !request_processed) {
-    yield();
+    context.yield();
   }
 }
 

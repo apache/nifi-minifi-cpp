@@ -39,6 +39,8 @@
 #include "asio/ssl.hpp"
 #include "utils/net/Ssl.h"
 #include "range/v3/algorithm/any_of.hpp"
+#include "core/ProcessorProxy.h"
+#include "core/logging/LoggerFactory.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -210,18 +212,17 @@ inline std::error_code hide_file(const std::filesystem::path& file_name) {
 #endif /* WIN32 */
 
 template<typename T>
-concept NetworkingProcessor = std::derived_from<T, minifi::core::Processor>
-    && requires(T x) {
-      {T::Port} -> std::convertible_to<core::PropertyReference>;
-      {x.getPort()} -> std::convertible_to<uint16_t>;
-    };  // NOLINT(readability/braces)
+concept NetworkingProcessor =  requires(T x) {
+  {T::Port} -> std::convertible_to<core::PropertyReference>;
+  {x.getPort()} -> std::convertible_to<uint16_t>;
+};  // NOLINT(readability/braces)
 
 template<NetworkingProcessor T>
-uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_plan, T& processor) {
-  REQUIRE(processor.setProperty(T::Port.name, "0"));
-  test_plan->scheduleProcessor(&processor);
-  REQUIRE(verifyEventHappenedInPollTime(250ms, [&processor] { return processor.getPort() != 0; }, 20ms));
-  return processor.getPort();
+uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_plan, const TypedProcessorWrapper<T>& processor) {
+  REQUIRE(processor->setProperty(T::Port.name, "0"));
+  test_plan->scheduleProcessor(processor);
+  REQUIRE(verifyEventHappenedInPollTime(250ms, [&processor] { return processor.get().getPort() != 0; }, 20ms));
+  return processor.get().getPort();
 }
 
 inline bool runningAsUnixRoot() {
@@ -231,6 +232,28 @@ inline bool runningAsUnixRoot() {
   return geteuid() == 0;
 #endif
 }
+
+template<typename T>
+std::unique_ptr<core::Processor> make_processor(std::string_view name, std::optional<minifi::utils::Identifier> uuid = std::nullopt) {
+  if (!uuid) {
+    uuid = minifi::utils::IdGenerator::getIdGenerator()->generate();
+  }
+  auto processor_impl = std::make_unique<T>(core::ProcessorMetadata{
+    .uuid = uuid.value(),
+    .name = std::string{name},
+    .logger = minifi::core::logging::LoggerFactory<T>::getLogger(uuid.value())
+  });
+  return std::make_unique<core::ProcessorProxy>(name, uuid.value(), std::move(processor_impl));
+}
+
+template<typename T, typename ...Args>
+std::unique_ptr<core::Processor> make_custom_processor(Args&&... args) {
+  auto processor_impl = std::make_unique<T>(std::forward<Args>(args)...);
+  auto name = processor_impl->getName();
+  auto uuid = processor_impl->getUUID();
+  return std::make_unique<core::ProcessorProxy>(name, uuid, std::move(processor_impl));
+}
+
 }  // namespace org::apache::nifi::minifi::test::utils
 
 namespace Catch {

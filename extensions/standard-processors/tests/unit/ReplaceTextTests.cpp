@@ -27,7 +27,13 @@ struct ReplaceTextTestAccessor {
   ReplaceText processor_;
   ReplaceText::Parameters parameters_;
 
-  ReplaceTextTestAccessor() : processor_{"replace_text"} {}
+  ReplaceTextTestAccessor()
+    : processor_{minifi::core::ProcessorMetadata{
+        .uuid = minifi::utils::IdGenerator::getIdGenerator()->generate(),
+        .name = "replace_text",
+        .logger = minifi::core::logging::LoggerFactory<ReplaceText>::getLogger()
+      }}
+  {}
 
   void setEvaluationMode(EvaluationModeType evaluation_mode) { processor_.evaluation_mode_ = evaluation_mode; }
   void setReplacementStrategy(ReplacementStrategyType replacement_strategy) { processor_.replacement_strategy_ = replacement_strategy; }

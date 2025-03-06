@@ -24,7 +24,7 @@
 #include <memory>
 
 #include "core/OutputAttributeDefinition.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -205,7 +205,7 @@ class RouteText : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit RouteText(std::string_view name, const utils::Identifier& uuid = {});
+  using ProcessorImpl::ProcessorImpl;
 
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
@@ -236,8 +236,6 @@ class RouteText : public core::ProcessorImpl {
   std::string group_fallback_;
 
   std::map<std::string, core::Relationship> dynamic_relationships_;
-
-  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -24,7 +24,7 @@
 #include <string>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -60,8 +60,7 @@ class ProcessorWithStatistics {
 
 class TestProcessor : public core::ProcessorImpl, public ProcessorWithStatistics {
  public:
-  TestProcessor(std::string_view name, const utils::Identifier& uuid) : ProcessorImpl(name, uuid) {}
-  explicit TestProcessor(const std::string& name) : ProcessorImpl(name) {}
+  using ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "Processor used for testing cycles";
   static constexpr auto Properties = std::to_array<core::PropertyReference>({AppleProbability, BananaProbability});
@@ -110,8 +109,7 @@ class TestProcessor : public core::ProcessorImpl, public ProcessorWithStatistics
 
 class TestFlowFileGenerator : public processors::GenerateFlowFile, public ProcessorWithStatistics {
  public:
-  TestFlowFileGenerator(std::string_view name, const utils::Identifier& uuid) : GenerateFlowFile(name, uuid) {}
-  explicit TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
+  using GenerateFlowFile::GenerateFlowFile;
 
   static constexpr const char* Description = "Processor generating files and notifying us";
 

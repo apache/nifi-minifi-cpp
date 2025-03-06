@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "unit/TestBase.h"
+#include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "util/ArchiveTests.h"
 #include "core/PropertyDefinition.h"
@@ -110,7 +111,7 @@ bool run_archive_test(TAE_MAP_T input_map, TAE_MAP_T output_map, const PROP_MAP_
 
 TEST_CASE("Test creation of ManipulateArchive", "[manipulatearchiveCreate]") {
   TestController testController;
-  auto processor = std::make_shared<ManipulateArchive>("processorname");
+  auto processor = minifi::test::utils::make_processor<ManipulateArchive>("processorname");
   REQUIRE(processor->getName() == "processorname");
   REQUIRE(processor->getUUID());
 }

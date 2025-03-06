@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,20 +17,21 @@
 #pragma once
 
 #include <string>
-#include <utility>
+#include <map>
+#include "utils/expected.h"
+#include "minifi-cpp/core/FlowFile.h"
+#include "minifi-cpp/core/ProcessContext.h"
 
-#include "ForwardingNode.h"
+namespace org::apache::nifi::minifi::core {
 
-namespace org::apache::nifi::minifi {
-
-class Funnel final : public ForwardingNode {
+class ProcessContextApi {
  public:
-  Funnel(std::string_view name, const utils::Identifier& uuid) : ForwardingNode(core::ProcessorMetadata{.uuid = uuid, .name = std::string{name}, .logger = core::logging::LoggerFactory<Funnel>::getLogger(uuid)}) {}
+  virtual nonstd::expected<std::string, std::error_code> getProperty(ProcessContext& context, std::string_view name, const FlowFile*) const = 0;
+  virtual nonstd::expected<std::string, std::error_code> getDynamicProperty(ProcessContext& context, std::string_view name, const FlowFile*) const = 0;
 
-  MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+  virtual std::map<std::string, std::string> getDynamicProperties(ProcessContext& context, const FlowFile*) const = 0;
 
-  void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override;
+  virtual ~ProcessContextApi() = default;
 };
 
-}  // namespace org::apache::nifi::minifi
+}  // namespace org::apache::nifi::minifi::core

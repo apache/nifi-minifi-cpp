@@ -23,6 +23,7 @@
 #include "unit/SingleProcessorTestController.h"
 #include "io/BufferStream.h"
 #include "utils/ConfigurationUtils.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -167,7 +168,7 @@ void verifySplitResults(const SingleProcessorTestController& controller, const P
 }
 
 void runSplitTextTest(const std::string& input, const std::vector<ExpectedSplitTextResult>& expected_results, const SplitTextProperties& properties) {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::LineSplitCount.name, std::to_string(properties.line_split_count)));
   if (properties.maximum_fragment_size) {
@@ -191,19 +192,19 @@ void runSplitTextTest(const std::string& input, const std::vector<ExpectedSplitT
 }
 
 TEST_CASE("Line Split Count property is required") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   REQUIRE_THROWS_WITH(controller.trigger("", {}), "Expected parsable uint64_t from \"SplitText::Line Split Count\", but got PropertyNotSet (Property Error:2)");
 }
 
 TEST_CASE("Line Split Count property can only be 0 if Maximum Fragment Size is set") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::LineSplitCount.name, "0"));
   REQUIRE_THROWS_AS(controller.trigger("", {}), minifi::Exception);
 }
 
 TEST_CASE("Maximum Fragment Size cannot be set to 0") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::LineSplitCount.name, "0"));
   REQUIRE(split_text->setProperty(processors::SplitText::MaximumFragmentSize.name, "0 B"));
@@ -211,7 +212,7 @@ TEST_CASE("Maximum Fragment Size cannot be set to 0") {
 }
 
 TEST_CASE("Header Line Marker Characters size cannot be equal or larger than split text buffer size") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::LineSplitCount.name, "1"));
   std::string header_marker_character(BUFFER_SIZE, 'A');
@@ -221,7 +222,7 @@ TEST_CASE("Header Line Marker Characters size cannot be equal or larger than spl
 
 
 TEST_CASE("SplitText only forwards empty flowfile") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::LineSplitCount.name, "1"));
   const auto trigger_results = controller.trigger("", {{std::string(core::SpecialFlowAttribute::FILENAME), "a.foo"}});
@@ -406,7 +407,7 @@ TEST_CASE("Endlines are trimmed when Remove Trailing Newlines is set to true and
 }
 
 TEST_CASE("If flowfile is empty after trailing new lines are removed then flow file is not emitted") {
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   SECTION("Line split count 1") {
     REQUIRE(split_text->setProperty(processors::SplitText::LineSplitCount.name, "1"));
@@ -602,7 +603,7 @@ TEST_CASE("If the header defined by the header line count is larger than the flo
   SECTION("Header line count is one line shorter larger than the flow file") {
     input = "header line 1\nheader line 2\nthis is a new line\n";
   }
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::LineSplitCount.name, "1"));
   REQUIRE(split_text->setProperty(processors::SplitText::HeaderLineCount.name, "4"));
@@ -616,7 +617,7 @@ TEST_CASE("If the header defined by the header line count is larger than the flo
 TEST_CASE("If the header defined by the header line count is larger than the max fragment size then the processor should fail") {
   std::string input;
   input = "header line 1\nheader line 2\nthis is a new line\n";
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::MaximumFragmentSize.name, "20 B"));
   REQUIRE(split_text->setProperty(processors::SplitText::HeaderLineCount.name, "2"));
@@ -630,7 +631,7 @@ TEST_CASE("If the header defined by the header line count is larger than the max
 
 TEST_CASE("If header line count is the same as the flow file line count then no new flow file should be emitted") {
   std::string input = "header line 1\nheader line 2\nthis is a new line\n";
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::LineSplitCount.name, "1"));
   REQUIRE(split_text->setProperty(processors::SplitText::HeaderLineCount.name, "3"));
@@ -809,7 +810,7 @@ TEST_CASE("If a split fragment would only consist of new lines then only the tri
 TEST_CASE("If the header defined by header marker characters is larger than the max fragments size then the processor should fail") {
   std::string input;
   input = "header line 1\nheader line 2\nthis is a new line\n";
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::MaximumFragmentSize.name, "20 B"));
   REQUIRE(split_text->setProperty(processors::SplitText::HeaderLineMarkerCharacters.name, "hea"));
@@ -824,7 +825,7 @@ TEST_CASE("If the header defined by header marker characters is larger than the 
 TEST_CASE("If the header defined by header marker characters is the only content in the flow file then the processor should not emit new flow files") {
   std::string input;
   input = "header line 1\nheader line 2\n";
-  SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   REQUIRE(split_text->setProperty(processors::SplitText::MaximumFragmentSize.name, "40 B"));
   REQUIRE(split_text->setProperty(processors::SplitText::HeaderLineMarkerCharacters.name, "hea"));

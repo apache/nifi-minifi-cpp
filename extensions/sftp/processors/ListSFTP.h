@@ -55,7 +55,7 @@ class ListSFTP : public SFTPProcessorBase {
   static constexpr std::string_view ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW = "Tracking Time Window";
   static constexpr std::string_view ENTITY_TRACKING_INITIAL_LISTING_TARGET_ALL_AVAILABLE = "All Available";
 
-  explicit ListSFTP(std::string_view name, const utils::Identifier& uuid = {});
+  using SFTPProcessorBase::SFTPProcessorBase;
   ~ListSFTP() override;
 
   EXTENSIONAPI static constexpr const char* Description = "Performs a listing of the files residing on an SFTP server. "

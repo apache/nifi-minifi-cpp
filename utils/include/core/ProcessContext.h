@@ -62,11 +62,19 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
   const ProcessorInfo& getProcessorInfo() const override { return *info_; }
 
+  virtual bool hasNonEmptyProperty(std::string_view name) const override;
+
+  bool isRunning() const override;
   nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
   nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
   nonstd::expected<void, std::error_code> clearProperty(std::string_view name) override;
   nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile*) const override;
   nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
+  nonstd::expected<std::string, std::error_code> getRawProperty(std::string_view name) const override;
+  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const override;
+  bool hasIncomingConnections() const override;
+
+  void addAutoTerminatedRelationship(const core::Relationship& relationship) override;
 
   std::vector<std::string> getDynamicPropertyKeys() const override;
   std::map<std::string, std::string> getDynamicProperties(const FlowFile*) const override;

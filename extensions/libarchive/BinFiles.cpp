@@ -290,7 +290,7 @@ void BinFiles::onTrigger(core::ProcessContext& context, core::ProcessSession& se
   const bool valid_batch = assumeOwnershipOfNextBatch(session);
   if (auto ready_bins = gatherReadyBins(context); ready_bins.empty()) {
     if (!valid_batch) {
-      yield();
+      context.yield();
     }
   } else {
     processReadyBins(std::move(ready_bins), session);

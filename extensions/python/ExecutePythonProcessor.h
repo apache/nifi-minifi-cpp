@@ -28,7 +28,7 @@
 #include <filesystem>
 
 #include "concurrentqueue.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -40,8 +40,8 @@ namespace org::apache::nifi::minifi::extensions::python::processors {
 
 class ExecutePythonProcessor : public core::ProcessorImpl {
  public:
-  explicit ExecutePythonProcessor(std::string_view name, const utils::Identifier &uuid = {})
-      : ProcessorImpl(name, uuid),
+  explicit ExecutePythonProcessor(core::ProcessorMetadata info)
+      : ProcessorImpl(info),
         processor_initialized_(false),
         python_dynamic_(false),
         reload_on_script_change_(true) {
@@ -90,7 +90,8 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void initialize(core::ProcessorDescriptor& self) override;
+  void initializeScript();
+  void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
@@ -138,14 +139,12 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
     qualified_module_name_ = qualified_module_name;
   }
 
-  std::map<std::string, core::Property, std::less<>> getSupportedProperties() const override;
-  nonstd::expected<core::Property, std::error_code> getSupportedProperty(std::string_view name) const override;
+  void setScriptFilePath(std::string script_file_path) {
+    script_file_path_ = script_file_path;
+  }
 
   std::vector<core::Relationship> getPythonRelationships() const;
   void setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) override;
-
-  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const override;
-  nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
 
  private:
   mutable std::mutex python_properties_mutex_;
@@ -166,6 +165,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   std::optional<std::string> python_class_name_;
   std::vector<std::filesystem::path> python_paths_;
   std::string qualified_module_name_;
+  std::string module_directory_;
 
   void appendPathForImportModules() const;
   void loadScriptFromFile();

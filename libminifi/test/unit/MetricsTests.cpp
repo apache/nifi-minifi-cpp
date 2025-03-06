@@ -29,6 +29,7 @@
 #include "range/v3/algorithm/find_if.hpp"
 #include "unit/SingleProcessorTestController.h"
 #include "core/ProcessorMetrics.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -288,11 +289,8 @@ TEST_CASE("Test commit runtime processor metrics", "[ProcessorMetrics]") {
 }
 
 class DuplicateContentProcessor : public minifi::core::ProcessorImpl {
-  using minifi::core::ProcessorImpl::ProcessorImpl;
-
  public:
-  DuplicateContentProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : ProcessorImpl(name, uuid) {}
-  explicit DuplicateContentProcessor(std::string_view name) : ProcessorImpl(name) {}
+  using ProcessorImpl::ProcessorImpl;
   static constexpr const char* Description = "A processor that creates two more of the same flow file.";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr auto Success = core::RelationshipDefinition{"success", "Newly created FlowFiles"};
@@ -330,7 +328,7 @@ class DuplicateContentProcessor : public minifi::core::ProcessorImpl {
 };
 
 TEST_CASE("Test processor metrics change after trigger", "[ProcessorMetrics]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<DuplicateContentProcessor>("DuplicateContentProcessor"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<DuplicateContentProcessor>("DuplicateContentProcessor"));
   test_controller.trigger({minifi::test::InputFlowFileData{"log line 1", {}}});
   auto metrics = test_controller.getProcessor()->getMetrics();
   CHECK(metrics->invocations() == 1);

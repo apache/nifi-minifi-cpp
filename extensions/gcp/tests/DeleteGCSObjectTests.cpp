@@ -22,6 +22,7 @@
 #include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"
 #include "google/cloud/storage/testing/canonical_errors.h"
+#include "unit/TestUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
@@ -49,7 +50,7 @@ REGISTER_RESOURCE(DeleteGCSObjectMocked, Processor);
 class DeleteGCSObjectTests : public ::testing::Test {
  public:
   void SetUp() override {
-    delete_gcs_object_ = test_controller_.getProcessor<DeleteGCSObjectMocked>();
+    delete_gcs_object_ = test_controller_.getProcessor();
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
@@ -59,13 +60,13 @@ class DeleteGCSObjectTests : public ::testing::Test {
                                        "gcp_credentials_controller_service");
   }
 
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{std::make_unique<DeleteGCSObjectMocked>("DeleteGCSObjectMocked")};
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{minifi::test::utils::make_processor<DeleteGCSObjectMocked>("DeleteGCSObjectMocked")};
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
-  DeleteGCSObjectMocked* delete_gcs_object_ = nullptr;
+  TypedProcessorWrapper<DeleteGCSObjectMocked> delete_gcs_object_ = nullptr;
 };
 
 TEST_F(DeleteGCSObjectTests, MissingBucket) {
-  EXPECT_CALL(*delete_gcs_object_->mock_client_, CreateResumableUpload).Times(0);
+  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, CreateResumableUpload).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
@@ -76,7 +77,7 @@ TEST_F(DeleteGCSObjectTests, MissingBucket) {
 }
 
 TEST_F(DeleteGCSObjectTests, ServerGivesPermaError) {
-  EXPECT_CALL(*delete_gcs_object_->mock_client_, DeleteObject)
+  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, DeleteObject)
       .WillOnce(testing::Return(PermanentError()));
   EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world");
@@ -88,7 +89,7 @@ TEST_F(DeleteGCSObjectTests, ServerGivesPermaError) {
 }
 
 TEST_F(DeleteGCSObjectTests, ServerGivesTransientErrors) {
-  EXPECT_CALL(*delete_gcs_object_->mock_client_, DeleteObject).WillOnce(testing::Return(TransientError()));
+  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, DeleteObject).WillOnce(testing::Return(TransientError()));
   EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::NumberOfRetries, "1"));
   EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
@@ -101,7 +102,7 @@ TEST_F(DeleteGCSObjectTests, ServerGivesTransientErrors) {
 
 
 TEST_F(DeleteGCSObjectTests, HandlingSuccessfullDeletion) {
-  EXPECT_CALL(*delete_gcs_object_->mock_client_, DeleteObject)
+  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, DeleteObject)
       .WillOnce([](DeleteObjectRequest const& request) {
         EXPECT_EQ("bucket-from-attribute", request.bucket_name());
         EXPECT_TRUE(request.HasOption<gcs::Generation>());
@@ -117,7 +118,7 @@ TEST_F(DeleteGCSObjectTests, HandlingSuccessfullDeletion) {
 }
 
 TEST_F(DeleteGCSObjectTests, EmptyGeneration) {
-  EXPECT_CALL(*delete_gcs_object_->mock_client_, DeleteObject)
+  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, DeleteObject)
       .WillOnce([](DeleteObjectRequest const& request) {
         EXPECT_EQ("bucket-from-attribute", request.bucket_name());
         EXPECT_FALSE(request.HasOption<gcs::Generation>());

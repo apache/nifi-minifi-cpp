@@ -36,9 +36,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListenTCP : public NetworkListenerProcessor {
  public:
-  explicit ListenTCP(std::string_view name, const utils::Identifier& uuid = {})
-      : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger(uuid)) {
-  }
+  using NetworkListenerProcessor::NetworkListenerProcessor;
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a configurable message delimiter. "
                                                           "For each message the processor produces a single FlowFile.";

@@ -22,7 +22,7 @@
 #include "range/v3/view/transform.hpp"
 #include "minifi-cpp/core/Annotation.h"
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "utils/StringUtils.h"

@@ -247,8 +247,7 @@ class PublishKafka final : public KafkaProcessorBase {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PublishKafka(const std::string_view name, const utils::Identifier& uuid = {})
-      : KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<PublishKafka>::getLogger(uuid)) {}
+  using KafkaProcessorBase::KafkaProcessorBase;
 
   PublishKafka(const PublishKafka&) = delete;
   PublishKafka(PublishKafka&&) = delete;

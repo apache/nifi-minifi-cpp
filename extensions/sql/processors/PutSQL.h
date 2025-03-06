@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class PutSQL : public SQLProcessor {
  public:
-  explicit PutSQL(std::string_view name, const utils::Identifier& uuid = {});
+  using SQLProcessor::SQLProcessor;
 
   EXTENSIONAPI static constexpr const char* Description =
       "Executes a SQL UPDATE or INSERT command. The content of an incoming FlowFile is expected to be the SQL command to execute. "

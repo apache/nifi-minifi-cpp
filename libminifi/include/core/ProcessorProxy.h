@@ -152,6 +152,14 @@ class ProcessorProxy : public virtual Processor, public ConnectableImpl, public 
     active_tasks_ = 0;
   }
 
+  std::string getProcessGroupUUIDStr() const override {
+    return process_group_uuid_;
+  }
+
+  void setProcessGroupUUIDStr(const std::string &uuid) override {
+    process_group_uuid_ = uuid;
+  }
+
   void yield() override;
 
   void yield(std::chrono::steady_clock::duration delta_time) override;
@@ -216,6 +224,15 @@ class ProcessorProxy : public virtual Processor, public ConnectableImpl, public 
     return impl_->getMetrics();
   }
 
+  ProcessorApi& getImpl() const override {
+    gsl_Assert(impl_);
+    return *impl_;
+  }
+
+  void restore(const std::shared_ptr<FlowFile>& file) override {
+    impl_->restore(file);
+  }
+
   static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
 
   static constexpr auto OutputAttributes = std::array<OutputAttributeReference, 0>{};
@@ -254,6 +271,9 @@ class ProcessorProxy : public virtual Processor, public ConnectableImpl, public 
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<Connection*, std::unordered_set<Processor*>> reachable_processors_;
 
+  std::string process_group_uuid_;
+
+ protected:
   std::unique_ptr<ProcessorApi> impl_;
 };
 

@@ -28,9 +28,10 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/RepositoryFactory.h"
 #include "repository/VolatileContentRepository.h"
+#include "unit/TestUtils.h"
 
 namespace {
 
@@ -79,7 +80,7 @@ TEST_CASE("Import null data") {
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
-  auto processor = std::make_shared<TestProcessor>("dummy");
+  auto processor = minifi::test::utils::make_processor<TestProcessor>("dummy");
   utils::Identifier uuid = processor->getUUID();
   auto output = std::make_unique<minifi::ConnectionImpl>(ff_repository, content_repo, "output");
   output->addRelationship({"out", ""});

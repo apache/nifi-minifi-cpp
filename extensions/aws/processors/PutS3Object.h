@@ -180,9 +180,7 @@ class PutS3Object : public S3Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutS3Object(std::string_view name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : S3Processor(name, uuid, core::logging::LoggerFactory<PutS3Object>::getLogger(uuid)) {
-  }
+  using S3Processor::S3Processor;
 
   ~PutS3Object() override = default;
 
@@ -196,8 +194,8 @@ class PutS3Object : public S3Processor {
 
   friend class ::FlowProcessorS3TestsFixture<PutS3Object>;
 
-  explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(name, uuid, core::logging::LoggerFactory<PutS3Object>::getLogger(uuid), std::move(s3_request_sender)) {
+  explicit PutS3Object(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(info, std::move(s3_request_sender)) {
   }
 
   virtual uint64_t getMinPartSize() const {

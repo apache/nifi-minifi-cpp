@@ -45,7 +45,6 @@ void RouteOnAttribute::onSchedule(core::ProcessContext& context, core::ProcessSe
     relationships.push_back(route_rel);
     logger_->log_info("RouteOnAttribute registered route '{}' with expression '{}'", route.first, route.second);
   }
-  setSupportedRelationships(relationships);
 }
 
 void RouteOnAttribute::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {

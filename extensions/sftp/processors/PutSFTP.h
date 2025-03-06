@@ -51,7 +51,7 @@ class PutSFTP : public SFTPProcessorBase {
   static constexpr std::string_view CONFLICT_RESOLUTION_FAIL = "FAIL";
   static constexpr std::string_view CONFLICT_RESOLUTION_NONE = "NONE";
 
-  explicit PutSFTP(std::string_view name, const utils::Identifier& uuid = {});
+  explicit PutSFTP(core::ProcessorMetadata info);
   ~PutSFTP() override;
 
   EXTENSIONAPI static constexpr const char* Description = "Sends FlowFiles to an SFTP Server";

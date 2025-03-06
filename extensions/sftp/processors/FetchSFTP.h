@@ -42,7 +42,7 @@ class FetchSFTP : public SFTPProcessorBase {
   static constexpr char const *COMPLETION_STRATEGY_MOVE_FILE = "Move File";
   static constexpr char const *COMPLETION_STRATEGY_DELETE_FILE = "Delete File";
 
-  explicit FetchSFTP(std::string_view name, const utils::Identifier& uuid = {});
+  using SFTPProcessorBase::SFTPProcessorBase;
   ~FetchSFTP() override;
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches the content of a file from a remote SFTP server "

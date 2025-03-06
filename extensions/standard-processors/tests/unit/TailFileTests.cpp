@@ -77,7 +77,7 @@ void appendTempFile(const std::filesystem::path& directory, const std::filesyste
 
 TEST_CASE("TailFile reads the file until the first delimiter then picks up the second line if a delimiter is written between runs", "[simple]") {
   // Create and write to the test file
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<minifi::processors::TailFile>("TailFile"));
 
   auto dir = test_controller.createTempDirectory();
   auto temp_file_path = dir / TMP_FILE;
@@ -745,7 +745,7 @@ TEST_CASE("TailFile onSchedule throws in Multiple mode if the Base Directory doe
 }
 
 TEST_CASE("TailFile finds and finishes the renamed file and continues with the new log file", "[rotation]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<minifi::processors::TailFile>("TailFile"));
 
   constexpr char DELIM = ',';
   constexpr size_t expected_pieces = std::ranges::count(NEWLINE_FILE, DELIM);  // The last piece is left as considered unfinished
@@ -812,7 +812,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
 }
 
 TEST_CASE("TailFile finds and finishes multiple rotated files and continues with the new log file", "[rotation]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<minifi::processors::TailFile>("TailFile"));
 
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
 
@@ -1407,7 +1407,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
 
   auto plan = testController.createPlan();
 
-  auto tail_file = plan->addProcessor("TailFile", "Tail");
+  auto tail_file = plan->addProcessor<minifi::processors::TailFile>("Tail");
   plan->setProperty(tail_file, minifi::processors::TailFile::TailMode, "Multiple file");
   plan->setProperty(tail_file, minifi::processors::TailFile::BaseDirectory, directory.string());
   plan->setProperty(tail_file, minifi::processors::TailFile::FileName, ".*\\.log");
@@ -1418,9 +1418,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
   SECTION("Lookup frequency not set => defaults to 10 minutes") {
     TestController::runSession(plan, true);
 
-    const auto tail_file_processor = dynamic_cast<minifi::processors::TailFile*>(tail_file);
-    REQUIRE(tail_file_processor);
-    REQUIRE(tail_file_processor->getLookupFrequency() == std::chrono::minutes{10});
+    REQUIRE(tail_file.get().getLookupFrequency() == std::chrono::minutes{10});
   }
 
   SECTION("Lookup frequency set to zero => new files are picked up immediately") {
@@ -1785,7 +1783,7 @@ TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderSer
 TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]") {
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
 
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<minifi::processors::TailFile>("TailFile"));
   auto tailfile = test_controller.getProcessor();
 
   auto temp_file_path  = test_controller.createTempDirectory() / TMP_FILE;

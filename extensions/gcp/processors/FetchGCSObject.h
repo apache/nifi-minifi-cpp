@@ -33,9 +33,7 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class FetchGCSObject : public GCSProcessor {
  public:
-  explicit FetchGCSObject(std::string_view name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<FetchGCSObject>::getLogger(uuid)) {
-  }
+  using GCSProcessor::GCSProcessor;
   ~FetchGCSObject() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches a file from a Google Cloud Bucket. Designed to be used in tandem with ListGCSBucket.";

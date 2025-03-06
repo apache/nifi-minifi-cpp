@@ -64,7 +64,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext& context, core::ProcessSe
   archiveMetadata.focusedEntry = context.getProperty(Path).value_or("");
   flowFile->getAttribute("filename", archiveMetadata.archiveName);
 
-  session.read(flowFile, ReadCallback{this, &file_man, &archiveMetadata});
+  session.read(flowFile, ReadCallback{&context, &file_man, &archiveMetadata});
 
   // For each extracted entry, import & stash to key
   std::string targetEntryStashKey;
@@ -131,7 +131,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext& context, core::ProcessSe
 
 struct FocusArchiveEntryReadData {
   std::shared_ptr<io::InputStream> stream;
-  core::Processor *processor = nullptr;
+  core::ProcessContext* context = nullptr;
   std::array<std::byte, BUFFER_SIZE> buf{};
 };
 
@@ -145,9 +145,9 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
   do {
     last_read = data->stream->read(data->buf);
     read += last_read;
-  } while (data->processor->isRunning() && last_read > 0 && !io::isError(last_read) && read < BUFFER_SIZE);
+  } while (data->context->isRunning() && last_read > 0 && !io::isError(last_read) && read < BUFFER_SIZE);
 
-  if (!data->processor->isRunning()) {
+  if (!data->context->isRunning()) {
     archive_set_error(a, EINTR, "Processor shut down during read");
     return -1;
   }
@@ -162,7 +162,7 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
 
   FocusArchiveEntryReadData data;
   data.stream = stream;
-  data.processor = proc_;
+  data.context = context_;
 
   archive_read_support_format_all(input_archive.get());
   archive_read_support_filter_all(input_archive.get());
@@ -173,7 +173,7 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
     return nlen;
   }
 
-  while (proc_->isRunning()) {
+  while (context_->isRunning()) {
     auto res = archive_read_next_header(input_archive.get(), &entry);
 
     if (res == ARCHIVE_EOF) {
@@ -236,9 +236,9 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
   return nlen;
 }
 
-FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata)
+FocusArchiveEntry::ReadCallback::ReadCallback(core::ProcessContext* context, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata)
     : file_man_(file_man),
-      proc_(processor),
+      context_(context),
       _archiveMetadata(archiveMetadata) {
 }
 

@@ -43,7 +43,7 @@
 #include "utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "minifi-cpp/core/Processor.h"
-#include "minifi-cpp/utils/PropertyErrors.h"
+#include "utils/PropertyErrors.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
 #include "Exception.h"
 
@@ -71,14 +71,11 @@ class ProcessContext;
 class ProcessSession;
 class ProcessSessionFactory;
 
-constexpr std::chrono::microseconds MINIMUM_SCHEDULING_PERIOD{30};
-
 #define BUILDING_DLL 1
 
 class ProcessorImpl : public virtual ProcessorApi {
  public:
-  explicit ProcessorImpl(ProcessorMetadata info, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
-  explicit ProcessorImpl(std::string_view name, const utils::Identifier& uuid = utils::IdGenerator::getIdGenerator()->generate(), std::shared_ptr<core::logging::Logger> logger = nullptr, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
+  explicit ProcessorImpl(ProcessorMetadata info);
 
   ProcessorImpl(const ProcessorImpl& parent) = delete;
   ProcessorImpl& operator=(const ProcessorImpl& parent) = delete;

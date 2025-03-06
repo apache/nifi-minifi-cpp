@@ -38,7 +38,7 @@
 
 TEST_CASE("Test Creation of PutFile", "[getfileCreate]") {
   TestController testController;
-  auto processor = std::make_shared<org::apache::nifi::minifi::processors::PutFile>("processorname");
+  auto processor = minifi::test::utils::make_processor<org::apache::nifi::minifi::processors::PutFile>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 

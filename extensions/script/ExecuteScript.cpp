@@ -70,7 +70,7 @@ void ExecuteScript::onSchedule(core::ProcessContext& context, core::ProcessSessi
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Script File set is not a regular file or does not exist: " + script_file);
   }
 
-  script_executor_->initialize(std::move(script_file), std::move(script_body), std::move(module_directory), getMaxConcurrentTasks(), Success, Failure, Original, logger_);
+  script_executor_->initialize(std::move(script_file), std::move(script_body), std::move(module_directory), context.getMaxConcurrentTasks(), Success, Failure, Original, logger_);
 }
 
 void ExecuteScript::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {

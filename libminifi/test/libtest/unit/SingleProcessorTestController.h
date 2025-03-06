@@ -24,6 +24,7 @@
 #include <vector>
 #include "TestBase.h"
 #include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -61,8 +62,10 @@ class SingleProcessorTestController : public TestController {
 
   core::Relationship addDynamicRelationship(std::string name);
 
-  template<typename T = core::Processor>
-  T* getProcessor() const { return dynamic_cast<T*>(processor_); }
+  template<typename T>
+  TypedProcessorWrapper<T> getProcessor() const { return processor_; }
+
+  core::Processor* getProcessor() const { return processor_; }
 
   std::shared_ptr<TestPlan> plan = createPlan();
 

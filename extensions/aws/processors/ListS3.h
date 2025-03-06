@@ -94,11 +94,9 @@ class ListS3 : public S3Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ListS3(std::string_view name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : S3Processor(name, uuid, core::logging::LoggerFactory<ListS3>::getLogger(uuid)) {
-  }
-  explicit ListS3(const std::string& name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(name, uuid, core::logging::LoggerFactory<ListS3>::getLogger(uuid), std::move(s3_request_sender)) {
+  using S3Processor::S3Processor;
+  explicit ListS3(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(info, std::move(s3_request_sender)) {
   }
 
   ~ListS3() override = default;

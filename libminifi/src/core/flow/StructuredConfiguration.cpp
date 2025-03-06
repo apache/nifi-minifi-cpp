@@ -24,6 +24,7 @@
 
 #include "Funnel.h"
 #include "core/ParameterContext.h"
+#include "core/ProcessorProxy.h"
 #include "core/ParameterTokenParser.h"
 #include "core/ReferenceParser.h"
 #include "core/flow/CheckRequiredField.h"
@@ -581,7 +582,9 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
     return;
   }
 
-  auto reportTask = createProvenanceReportTask();
+  auto report_task_impl = createProvenanceReportTask();
+  auto* reportTask = report_task_impl.get();
+  auto report_task_wrapper = std::make_unique<core::ProcessorProxy>("", std::move(report_task_impl));
 
   checkRequiredField(node, schema_.scheduling_strategy);
   auto schedulingStrategyStr = node[schema_.scheduling_strategy].getString().value();
@@ -590,11 +593,11 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
 
   if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(schedulingPeriodStr)) {
     logger_->log_debug("ProvenanceReportingTask schedulingPeriod {}", scheduling_period);
-    reportTask->setSchedulingPeriod(*scheduling_period);
+    report_task_wrapper->setSchedulingPeriod(*scheduling_period);
   }
 
   if (schedulingStrategyStr == "TIMER_DRIVEN") {
-    reportTask->setSchedulingStrategy(core::TIMER_DRIVEN);
+    report_task_wrapper->setSchedulingStrategy(core::TIMER_DRIVEN);
     logger_->log_debug("ProvenanceReportingTask scheduling strategy {}", schedulingStrategyStr);
   } else {
     throw std::invalid_argument("Invalid scheduling strategy " + schedulingStrategyStr);
@@ -631,11 +634,11 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
     reportTask->setBatchSize(*batch_size);
   }
 
-  reportTask->initialize();
+  report_task_wrapper->initialize();
 
   // add processor to parent
-  reportTask->setScheduledState(core::RUNNING);
-  parent_group->addProcessor(std::move(reportTask));
+  report_task_wrapper->setScheduledState(core::RUNNING);
+  parent_group->addProcessor(std::move(report_task_wrapper));
 }
 
 void StructuredConfiguration::parseControllerServices(const Node& controller_services_node, core::ProcessGroup* parent_group) {
@@ -741,13 +744,15 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
     "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
   uuid = portId;
 
-  auto port = std::make_unique<minifi::RemoteProcessorGroupPort>(
+  auto port_impl = std::make_unique<minifi::RemoteProcessorGroupPort>(
           nameStr, parent->getURL(), this->configuration_, uuid);
+  auto* port = port_impl.get();
+  auto port_wrapper = std::make_unique<core::ProcessorProxy>(nameStr, uuid, std::move(port_impl));
   port->setDirection(direction);
   port->setTimeout(parent->getTimeout());
   port->setTransmitting(true);
-  port->setYieldPeriodMsec(parent->getYieldPeriodMsec());
-  port->initialize();
+  port_wrapper->setYieldPeriodMsec(parent->getYieldPeriodMsec());
+  port_wrapper->initialize();
   if (!parent->getInterface().empty())
     port->setInterface(parent->getInterface());
   if (parent->getTransportProtocol() == "HTTP") {
@@ -759,15 +764,15 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 
   // handle port properties
   if (const Node propertiesNode = port_node[schema_.rpg_port_properties]) {
-    parsePropertiesNode(propertiesNode, *port, nameStr, nullptr);
+    parsePropertiesNode(propertiesNode, *port_wrapper, nameStr, nullptr);
   } else {
-    parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port, nullptr);
-    validateComponentProperties(*port, nameStr, port_node.getPath());
+    parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port_wrapper, nullptr);
+    validateComponentProperties(*port_wrapper, nameStr, port_node.getPath());
   }
 
   // add processor to parent
-  auto& processor = *port;
-  parent->addProcessor(std::move(port));
+  auto& processor = *port_wrapper;
+  parent->addProcessor(std::move(port_wrapper));
   processor.setScheduledState(core::RUNNING);
 
   if (auto tasksNode = port_node[schema_.max_concurrent_tasks]) {
@@ -947,7 +952,7 @@ void StructuredConfiguration::parseFunnels(const Node& node, core::ProcessGroup*
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect funnel UUID format.");
     });
 
-    auto funnel = std::make_unique<minifi::Funnel>(name, uuid.value());
+    auto funnel = std::make_unique<core::ProcessorProxy>(name, uuid.value(), std::make_unique<minifi::Funnel>(name, uuid.value()));
     logger_->log_debug("Created funnel with UUID {} and name {}", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);
@@ -975,7 +980,7 @@ void StructuredConfiguration::parsePorts(const flow::Node& node, core::ProcessGr
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect port UUID format.");
     });
 
-    auto port = std::make_unique<Port>(name, uuid.value(), port_type);
+    auto port = std::make_unique<PortProxy>(name, uuid.value(), std::make_unique<PortImpl>(name, uuid.value(), port_type));
     logger_->log_debug("Created port UUID {} and name {}", id, name);
     port->setScheduledState(core::RUNNING);
     port->setSchedulingStrategy(core::EVENT_DRIVEN);

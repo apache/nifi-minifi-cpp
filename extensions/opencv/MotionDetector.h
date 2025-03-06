@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -35,10 +35,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class MotionDetector final : public core::ProcessorImpl {
  public:
-  explicit MotionDetector(const std::string_view name, const utils::Identifier &uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<MotionDetector>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Detect motion from captured images.";
 

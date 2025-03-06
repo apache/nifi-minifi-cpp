@@ -112,10 +112,7 @@ class PutOPCProcessor final : public BaseOPCProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
-      : BaseOPCProcessor(name, uuid) {
-    logger_ = core::logging::LoggerFactory<PutOPCProcessor>::getLogger(uuid_);
-  }
+  using BaseOPCProcessor::BaseOPCProcessor;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;

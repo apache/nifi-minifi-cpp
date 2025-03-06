@@ -249,7 +249,7 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164
 }
 
 TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
-  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize.name, "2"));
@@ -261,7 +261,7 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "UDP"));
     protocol = "UDP";
 
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -281,7 +281,7 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
     protocol = "TCP";
 
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -305,7 +305,7 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
 }
 
 TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize.name, "100"));
@@ -317,7 +317,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "UDP"));
     protocol = "UDP";
 
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -347,7 +347,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
     protocol = "TCP";
 
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -410,7 +410,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
 }
 
 TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::Port.name, "0"));
@@ -432,7 +432,7 @@ TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog][NetworkListenerProc
 }
 
 TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize.name, "10"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages.name, "false"));
@@ -444,7 +444,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
 
   SECTION("UDP") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "UDP"));
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -463,7 +463,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
 
   SECTION("TCP") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
-    port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv6", "[IPv6]") {
@@ -490,7 +490,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
 }
 
 TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][NetworkListenerProcessor]") {
-  SingleProcessorTestController controller{std::make_unique<ListenSyslog>("ListenSyslog")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<ListenSyslog>("ListenSyslog")};
   const auto listen_syslog = controller.getProcessor<ListenSyslog>();
 
   auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
@@ -506,7 +506,7 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty.name, "TCP"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::SSLContextService.name, "SSLContextService"));
 
-  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, *listen_syslog);
+  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
   asio::ip::tcp::endpoint endpoint;
   SECTION("sending through IPv6", "[IPv6]") {

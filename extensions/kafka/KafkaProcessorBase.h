@@ -21,7 +21,7 @@
 #include <string_view>
 
 #include "controllers/SSLContextServiceInterface.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "rdkafka_utils.h"
 #include "utils/Enum.h"
@@ -88,10 +88,7 @@ class KafkaProcessorBase : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({SSLContextService,
       SecurityProtocol, KerberosServiceName, KerberosPrincipal, KerberosKeytabPath, SASLMechanism, Username, Password});
 
-  KafkaProcessorBase(
-      const std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-      : core::ProcessorImpl(name, uuid),
-        logger_(std::move(logger)) {}
+  using ProcessorImpl::ProcessorImpl;
 
   KafkaProcessorBase(const KafkaProcessorBase&) = delete;
   KafkaProcessorBase(KafkaProcessorBase&&) = delete;
@@ -104,7 +101,6 @@ class KafkaProcessorBase : public core::ProcessorImpl {
   void setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config);
 
   kafka::SecurityProtocolOption security_protocol_{};
-  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

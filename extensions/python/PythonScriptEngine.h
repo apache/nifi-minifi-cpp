@@ -39,6 +39,10 @@
 
 namespace org::apache::nifi::minifi::extensions::python {
 
+namespace processors {
+class ExecutePythonProcessor;
+}  // namespace processors
+
 class PythonScriptEngine {
  public:
   PythonScriptEngine();
@@ -143,8 +147,8 @@ class PythonScriptEngine {
     bindings_.put(name, value);
   }
 
-  void onInitialize(core::Processor* proc);
-  void describe(core::Processor* proc);
+  void onInitialize(processors::ExecutePythonProcessor* proc);
+  void describe(processors::ExecutePythonProcessor* proc);
   void onSchedule(core::ProcessContext& context);
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session);
   void initialize(const core::Relationship& success, const core::Relationship& failure, const core::Relationship& original, const std::shared_ptr<core::logging::Logger>& logger);

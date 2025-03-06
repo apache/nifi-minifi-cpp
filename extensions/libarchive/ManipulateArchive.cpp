@@ -92,7 +92,7 @@ void ManipulateArchive::onSchedule(core::ProcessContext& context, core::ProcessS
     }
 }
 
-void ManipulateArchive::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+void ManipulateArchive::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
     std::shared_ptr<core::FlowFile> flowFile = session.get();
 
     if (!flowFile) {
@@ -102,7 +102,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext&, core::ProcessSession& s
     ArchiveMetadata archiveMetadata;
     utils::file::FileManager file_man;
 
-    session.read(flowFile, FocusArchiveEntry::ReadCallback{this, &file_man, &archiveMetadata});
+    session.read(flowFile, FocusArchiveEntry::ReadCallback{&context, &file_man, &archiveMetadata});
 
     auto entries_end = archiveMetadata.entryMetadata.end();
 

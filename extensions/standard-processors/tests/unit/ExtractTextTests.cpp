@@ -46,7 +46,7 @@ const char* TEST_ATTR = "ExtractedText";
 
 TEST_CASE("Test creation of ExtractText", "[extracttextCreate]") {
   TestController testController;
-  auto processor = std::make_unique<org::apache::nifi::minifi::processors::ExtractText>("processorname");
+  auto processor = minifi::test::utils::make_processor<org::apache::nifi::minifi::processors::ExtractText>("processorname");
   REQUIRE(processor->getName() == "processorname");
   utils::Identifier processoruuid = processor->getUUID();
   REQUIRE(processoruuid);

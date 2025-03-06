@@ -22,7 +22,7 @@
 #include <map>
 
 #include "controllers/SSLContextServiceInterface.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -34,10 +34,9 @@ namespace org::apache::nifi::minifi::extensions::grafana::loki {
 
 class PushGrafanaLoki : public core::ProcessorImpl {
  public:
-  PushGrafanaLoki(const std::string_view name, const utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
-      : ProcessorImpl(name, uuid),
-        logger_(logger),
-        log_batch_(logger_) {
+  PushGrafanaLoki(core::ProcessorMetadata info)
+      : ProcessorImpl(info),
+        log_batch_(info.logger) {
   }
   ~PushGrafanaLoki() override = default;
 
@@ -141,7 +140,6 @@ class PushGrafanaLoki : public core::ProcessorImpl {
   void setUpStateManager(core::ProcessContext& context);
   virtual void setUpStreamLabels(core::ProcessContext& context) = 0;
 
-  std::shared_ptr<core::logging::Logger> logger_;
   std::optional<uint64_t> max_batch_size_;
   std::vector<std::string> log_line_metadata_attributes_;
   bool log_line_batch_size_is_set_ = false;

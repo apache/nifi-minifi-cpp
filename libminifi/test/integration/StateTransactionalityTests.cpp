@@ -69,9 +69,9 @@ class StatefulIntegrationTest : public IntegrationBase {
         // set hooks
         const auto processController = dynamic_cast<ProcessorController*>(&component);
         REQUIRE(processController != nullptr);
-        stateful_processor_ = dynamic_cast<StatefulProcessor*>(&processController->getProcessor());
+        stateful_processor_ = &processController->getProcessor();
         REQUIRE(stateful_processor_);
-        stateful_processor_->setHooks(on_schedule_hook_, on_trigger_hooks_);
+        stateful_processor_.get().setHooks(on_schedule_hook_, on_trigger_hooks_);
       }
 
       ++controllerVecIdx;
@@ -83,7 +83,7 @@ class StatefulIntegrationTest : public IntegrationBase {
 
   void runAssertions() override {
     REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
-      return stateful_processor_->hasFinishedHooks() && log_checker_();
+      return stateful_processor_.get().hasFinishedHooks() && log_checker_();
     }));
   }
 
@@ -92,7 +92,7 @@ class StatefulIntegrationTest : public IntegrationBase {
   const std::vector<StatefulProcessor::HookType> on_trigger_hooks_;
   const LogChecker log_checker_;
   const std::string test_case_;
-  StatefulProcessor* stateful_processor_ = nullptr;
+  TypedProcessorWrapper<StatefulProcessor> stateful_processor_ = nullptr;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<StatefulIntegrationTest>::getLogger()};
 };
 

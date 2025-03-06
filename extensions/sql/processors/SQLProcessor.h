@@ -21,7 +21,7 @@
 #pragma once
 
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -41,9 +41,7 @@ class SQLProcessor: public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({DBControllerService});
 
  protected:
-  SQLProcessor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-    : core::ProcessorImpl(name, uuid), logger_(std::move(logger)) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   static std::vector<std::string> collectArguments(const std::shared_ptr<core::FlowFile>& flow_file);
 
@@ -57,7 +55,6 @@ class SQLProcessor: public core::ProcessorImpl {
     connection_.reset();
   }
 
-  std::shared_ptr<core::logging::Logger> logger_;
   std::shared_ptr<sql::controllers::DatabaseService> db_service_;
   std::unique_ptr<sql::Connection> connection_;
 };

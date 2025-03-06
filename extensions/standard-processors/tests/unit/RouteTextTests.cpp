@@ -20,6 +20,7 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "processors/RouteText.h"
+#include "unit/TestUtils.h"
 
 namespace processors = minifi::processors;
 
@@ -54,7 +55,7 @@ struct RouteTextController : public TestController {
 
   RouteTextController() {
     plan_ = createPlan();
-    proc_ = plan_->addProcessor(std::make_unique<processors::RouteText>("RouteText"), "RouteText");
+    proc_ = plan_->addProcessor(minifi::test::utils::make_processor<processors::RouteText>("RouteText"), "RouteText");
     input_ = plan_->addConnection(nullptr, {"success", ""}, proc_);
     createOutput(processors::RouteText::Original);
     createOutput(processors::RouteText::Unmatched);

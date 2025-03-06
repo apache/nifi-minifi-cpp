@@ -21,7 +21,7 @@
 #include "core/ProcessContext.h"
 #include "core/Resource.h"
 #include "ProcessContextExpr.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"

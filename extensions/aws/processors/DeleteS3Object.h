@@ -64,9 +64,7 @@ class DeleteS3Object : public S3Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit DeleteS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : S3Processor(name, uuid, core::logging::LoggerFactory<DeleteS3Object>::getLogger(uuid)) {
-  }
+  using S3Processor::S3Processor;
 
   ~DeleteS3Object() override = default;
 
@@ -76,8 +74,8 @@ class DeleteS3Object : public S3Processor {
  private:
   friend class ::FlowProcessorS3TestsFixture<DeleteS3Object>;
 
-  explicit DeleteS3Object(std::string_view name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(name, uuid, core::logging::LoggerFactory<DeleteS3Object>::getLogger(uuid), std::move(s3_request_sender)) {
+  explicit DeleteS3Object(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(info, std::move(s3_request_sender)) {
   }
 
   std::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(

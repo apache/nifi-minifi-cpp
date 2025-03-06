@@ -24,7 +24,7 @@
 #include <utility>
 #include <optional>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyDefinition.h"

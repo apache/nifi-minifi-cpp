@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -40,7 +40,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class SFTPProcessorBase : public core::ProcessorImpl {
  public:
-  SFTPProcessorBase(std::string_view name, const utils::Identifier& uuid);
+  SFTPProcessorBase(core::ProcessorMetadata info);
   ~SFTPProcessorBase() override;
 
   static constexpr std::string_view PROXY_TYPE_DIRECT = "DIRECT";
@@ -158,8 +158,6 @@ class SFTPProcessorBase : public core::ProcessorImpl {
   void notifyStop() override;
 
  protected:
-  std::shared_ptr<core::logging::Logger> logger_;
-
   std::chrono::milliseconds connection_timeout_;
   std::chrono::milliseconds data_timeout_;
   std::string host_key_file_;
