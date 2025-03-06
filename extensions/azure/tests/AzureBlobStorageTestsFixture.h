@@ -33,6 +33,7 @@
 #include "processors/UpdateAttribute.h"
 #include "utils/file/FileUtils.h"
 #include "MockBlobStorage.h"
+#include "core/ProcessorProxy.h"
 
 const std::string CONTAINER_NAME = "test-container";
 const std::string STORAGE_ACCOUNT_NAME = "test-account";
@@ -61,8 +62,10 @@ class AzureBlobStorageTestsFixture {
     plan_ = test_controller_.createPlan();
     auto mock_blob_storage = std::make_unique<MockBlobStorage>();
     mock_blob_storage_ptr_ = mock_blob_storage.get();
-    auto azure_blob_storage_processor_unique_ptr = std::unique_ptr<ProcessorType>(
-      new ProcessorType("AzureBlobStorageProcessor", utils::Identifier(), std::move(mock_blob_storage)));
+    auto uuid = utils::IdGenerator::getIdGenerator()->generate();
+    auto impl = std::unique_ptr<ProcessorType>(
+      new ProcessorType({.uuid = uuid, .name = "AzureBlobStorageProcessor", .logger = logging::LoggerFactory<ProcessorType>::getLogger(uuid)}, std::move(mock_blob_storage)));
+    auto azure_blob_storage_processor_unique_ptr = std::make_unique<core::ProcessorProxy>(impl->getName(), impl->getUUID(), std::move(impl));
     azure_blob_storage_processor_ = azure_blob_storage_processor_unique_ptr.get();
     auto input_dir = test_controller_.createTempDirectory();
     std::ofstream input_file_stream(input_dir / GET_FILE_NAME);

@@ -24,7 +24,7 @@
 #include <atomic>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -54,7 +54,7 @@ struct GetFileRequest {
 
 class GetFileMetrics : public core::ProcessorMetricsImpl {
  public:
-  explicit GetFileMetrics(const core::ProcessorApi& source_processor)
+  explicit GetFileMetrics(const core::ProcessorImpl& source_processor)
     : core::ProcessorMetricsImpl(source_processor) {
   }
 
@@ -84,10 +84,9 @@ class GetFileMetrics : public core::ProcessorMetricsImpl {
 
 class GetFile : public core::ProcessorImpl {
  public:
-  explicit GetFile(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
+  explicit GetFile(core::ProcessorMetadata info)
+      : ProcessorImpl(info) {
     metrics_ = gsl::make_not_null(std::make_shared<GetFileMetrics>(*this));
-    logger_ = core::logging::LoggerFactory<GetFile>::getLogger(uuid_);
   }
   ~GetFile() override = default;
 

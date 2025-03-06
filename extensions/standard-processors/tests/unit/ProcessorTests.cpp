@@ -54,7 +54,7 @@
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;
-  auto processor = std::make_shared<minifi::processors::GetFile>("processorname");
+  auto processor = minifi::test::utils::make_processor<minifi::processors::GetFile>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 
@@ -67,7 +67,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   auto config = std::make_shared<minifi::ConfigureImpl>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(config);
-  auto processor = std::make_shared<minifi::processors::GetFile>("getfileCreate2");
+  auto processor = minifi::test::utils::make_processor<minifi::processors::GetFile>("getfileCreate2");
   processor->initialize();
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::dynamic_pointer_cast<TestRepository>(test_repo);
@@ -147,7 +147,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  auto processor = std::make_shared<minifi::processors::GetFile>("getfileCreate2");
+  auto processor = minifi::test::utils::make_processor<minifi::processors::GetFile>("getfileCreate2");
   processor->initialize();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -233,7 +233,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   LogTestController::getInstance().setDebug<minifi::processors::GenerateFlowFile>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(std::make_shared<minifi::ConfigureImpl>());
-  auto processor = std::make_shared<org::apache::nifi::minifi::processors::GenerateFlowFile>("GFF");
+  auto processor = minifi::test::utils::make_processor<org::apache::nifi::minifi::processors::GenerateFlowFile>("GFF");
   processor->initialize();
   REQUIRE(processor->setProperty(minifi::processors::GenerateFlowFile::BatchSize.name, "10"));
   REQUIRE(processor->setProperty(minifi::processors::GenerateFlowFile::FileSize.name, "0"));
@@ -410,7 +410,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceReporter>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   auto processor = plan->addProcessor("GetFile", "getfileCreate2");
-  auto processorReport = plan->addProcessor(std::make_unique<minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
+  TypedProcessorWrapper<minifi::core::reporting::SiteToSiteProvenanceReportingTask> processorReport = plan->addProcessor(minifi::test::utils::make_custom_processor<minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
       std::make_shared<minifi::ConfigureImpl>()), "reporter", core::Relationship("success", "description"), false);
 
   auto dir = testController.createTempDirectory();
@@ -461,7 +461,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
       throw std::runtime_error("Did not find record");
     }
   }
-  auto taskReport = dynamic_cast<minifi::core::reporting::SiteToSiteProvenanceReportingTask*>(processorReport);
+  auto taskReport = &processorReport.get();
   taskReport->setBatchSize(1);
   std::vector<std::shared_ptr<core::SerializableComponent>> recordsReport;
   recordsReport.push_back(std::make_shared<minifi::provenance::ProvenanceEventRecordImpl>());
@@ -483,9 +483,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
 class TestProcessorNoContent : public minifi::core::ProcessorImpl {
  public:
-  explicit TestProcessorNoContent(std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "test resource";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
@@ -544,7 +542,7 @@ void testRPGBypass(const std::string &host, const std::string &port, bool has_er
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::dynamic_pointer_cast<TestRepository>(test_repo);
 
-  auto rpg = std::make_shared<minifi::RemoteProcessorGroupPort>("rpg", "http://localhost:8989/nifi", configuration);
+  auto rpg = minifi::test::utils::make_custom_processor<minifi::RemoteProcessorGroupPort>("rpg", "http://localhost:8989/nifi", configuration, utils::IdGenerator::getIdGenerator()->generate());
   rpg->initialize();
   REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName.name, host));
   REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::port.name, port));
@@ -594,7 +592,7 @@ class ProcessorWithIncomingConnectionTest {
   ~ProcessorWithIncomingConnectionTest();
 
  protected:
-  std::shared_ptr<minifi::processors::LogAttribute> processor_;
+  std::shared_ptr<minifi::core::Processor> processor_;
   std::shared_ptr<minifi::Connection> incoming_connection_;
   std::shared_ptr<core::ProcessSession> session_;
 };
@@ -606,7 +604,7 @@ ProcessorWithIncomingConnectionTest::ProcessorWithIncomingConnectionTest() {
   const auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(std::make_shared<minifi::ConfigureImpl>());
 
-  processor_ = std::make_shared<minifi::processors::LogAttribute>("test_processor");
+  processor_ = minifi::test::utils::make_processor<minifi::processors::LogAttribute>("test_processor");
   incoming_connection_ = std::make_shared<minifi::ConnectionImpl>(repo, content_repo, "incoming_connection");
   incoming_connection_->addRelationship(core::Relationship{"success", ""});
   incoming_connection_->setDestinationUUID(processor_->getUUID());
@@ -810,7 +808,7 @@ TEST_CASE("Test getProcessorType", "[getProcessorType]") {
 }
 
 TEST_CASE("IsYield and getYieldTime is consistent") {
-  auto processor = TestProcessorNoContent("test_processor");
-  processor.yield(1ms);
-  REQUIRE(processor.isYield() == (processor.getYieldTime() != 0ms));
+  auto processor = minifi::test::utils::make_processor<TestProcessorNoContent>("test_processor");
+  processor->yield(1ms);
+  REQUIRE(processor->isYield() == (processor->getYieldTime() != 0ms));
 }

@@ -117,7 +117,7 @@ class CompressDecompressionTestController : public TestController {
 
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    processor = std::make_shared<minifi::processors::CompressContent>("compresscontent");
+    processor = minifi::test::utils::make_processor<minifi::processors::CompressContent>("compresscontent");
     processor->initialize();
     utils::Identifier processoruuid = processor->getUUID();
     REQUIRE(processoruuid);

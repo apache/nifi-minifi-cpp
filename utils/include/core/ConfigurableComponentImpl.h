@@ -49,8 +49,8 @@ class ConfigurableComponentImpl : public virtual ConfigurableComponent {
   // for property sequences
   nonstd::expected<void, std::error_code> appendProperty(std::string_view name, std::string value) override;
   nonstd::expected<void, std::error_code> appendDynamicProperty(std::string_view name, std::string value) override;
-  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const;
-  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllDynamicPropertyValues(std::string_view name) const;
+  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const override;
+  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllDynamicPropertyValues(std::string_view name) const override;
 
  private:
   std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<ConfigurableComponentImpl>::getLogger();

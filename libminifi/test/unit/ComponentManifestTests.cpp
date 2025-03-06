@@ -26,6 +26,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Resource.h"
 #include "core/state/nodes/AgentInformation.h"
+#include "core/ProcessorImpl.h"
 
 using minifi::state::response::SerializedResponseNode;
 

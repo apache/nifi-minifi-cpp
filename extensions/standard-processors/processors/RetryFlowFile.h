@@ -42,10 +42,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class RetryFlowFile : public core::ProcessorImpl {
  public:
-  explicit RetryFlowFile(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<RetryFlowFile>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~RetryFlowFile() override = default;
 
   // ReuseMode allowed values

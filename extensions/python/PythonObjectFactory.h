@@ -27,13 +27,14 @@
 #include "core/ClassLoader.h"
 #include "ExecutePythonProcessor.h"
 #include "utils/StringUtils.h"
+#include "core/ProcessorFactory.h"
 
 enum class PythonProcessorType {
   MINIFI_TYPE,
   NIFI_TYPE
 };
 
-class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjectFactory<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor> {
+class PythonObjectFactory : public org::apache::nifi::minifi::core::ProcessorFactoryImpl<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor> {
  public:
   explicit PythonObjectFactory(std::string file, std::string class_name, PythonProcessorType python_processor_type,
     const std::vector<std::filesystem::path>& python_paths, std::string qualified_module_name)
@@ -44,8 +45,8 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
         qualified_module_name_(std::move(qualified_module_name)) {
   }
 
-  std::unique_ptr<org::apache::nifi::minifi::core::CoreComponent> create(const std::string &name) override {
-    auto obj = DefaultObjectFactory::create(name);
+  std::unique_ptr<org::apache::nifi::minifi::core::ProcessorApi> create(org::apache::nifi::minifi::core::ProcessorMetadata info) override {
+    auto obj = ProcessorFactoryImpl::create(info);
     auto ptr = org::apache::nifi::minifi::utils::dynamic_unique_cast<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor>(std::move(obj));
     if (ptr == nullptr) {
       return nullptr;
@@ -55,57 +56,9 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefaultObjec
       ptr->setPythonPaths(python_paths_);
     }
     ptr->setQualifiedModuleName(qualified_module_name_);
-    ptr->initialize();
-    if (!ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile.name, file_)) {
-      return nullptr;
-    }
+    ptr->setScriptFilePath(file_);
+    ptr->initializeScript();
     return ptr;
-  }
-
-  std::unique_ptr<org::apache::nifi::minifi::core::CoreComponent> create(const std::string &name, const org::apache::nifi::minifi::utils::Identifier &uuid) override {
-    auto obj = DefaultObjectFactory::create(name, uuid);
-    auto ptr = org::apache::nifi::minifi::utils::dynamic_unique_cast<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor>(std::move(obj));
-    if (ptr == nullptr) {
-      return nullptr;
-    }
-    if (python_processor_type_ == PythonProcessorType::NIFI_TYPE) {
-      ptr->setPythonClassName(class_name_);
-      ptr->setPythonPaths(python_paths_);
-    }
-    ptr->setQualifiedModuleName(qualified_module_name_);
-    ptr->initialize();
-    if (!ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile.name, file_)) {
-      return nullptr;
-    }
-    return ptr;
-  }
-
-  org::apache::nifi::minifi::core::CoreComponent* createRaw(const std::string &name) override {
-    auto ptr = dynamic_cast<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor*>(DefaultObjectFactory::createRaw(name));
-    if (python_processor_type_ == PythonProcessorType::NIFI_TYPE) {
-      ptr->setPythonClassName(class_name_);
-      ptr->setPythonPaths(python_paths_);
-    }
-    ptr->setQualifiedModuleName(qualified_module_name_);
-    ptr->initialize();
-    if (!ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile.name, file_)) {
-      return nullptr;
-    }
-    return dynamic_cast<org::apache::nifi::minifi::core::CoreComponent*>(ptr);
-  }
-
-  org::apache::nifi::minifi::core::CoreComponent* createRaw(const std::string &name, const org::apache::nifi::minifi::utils::Identifier &uuid) override {
-    auto ptr = dynamic_cast<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor*>(DefaultObjectFactory::createRaw(name, uuid));
-    if (python_processor_type_ == PythonProcessorType::NIFI_TYPE) {
-      ptr->setPythonClassName(class_name_);
-      ptr->setPythonPaths(python_paths_);
-    }
-    ptr->setQualifiedModuleName(qualified_module_name_);
-    ptr->initialize();
-    if (!ptr->setProperty(org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile.name, file_)) {
-      return nullptr;
-    }
-    return dynamic_cast<org::apache::nifi::minifi::core::CoreComponent*>(ptr);
   }
 
  private:

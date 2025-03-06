@@ -72,7 +72,7 @@ void PythonScriptEngine::evalFile(const std::filesystem::path& file_name) {
   }
 }
 
-void PythonScriptEngine::onInitialize(core::Processor* proc) {
+void PythonScriptEngine::onInitialize(processors::ExecutePythonProcessor* proc) {
   auto newproc = std::make_shared<python::PythonProcessor>(proc);
   if (processor_instance_.get() != nullptr) {
     callProcessorObjectMethod("onInitialize", std::weak_ptr(newproc));
@@ -81,7 +81,7 @@ void PythonScriptEngine::onInitialize(core::Processor* proc) {
   }
 }
 
-void PythonScriptEngine::describe(core::Processor* proc) {
+void PythonScriptEngine::describe(processors::ExecutePythonProcessor* proc) {
   auto newproc = std::make_shared<python::PythonProcessor>(proc);
   if (processor_instance_.get() != nullptr) {
     callRequiredProcessorObjectMethod("describe", std::weak_ptr(newproc));
