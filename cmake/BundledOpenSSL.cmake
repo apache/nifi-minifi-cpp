@@ -57,16 +57,12 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     set(OPENSSL_EXTRA_FLAGS
             no-tests            # Disable tests
-            no-apps             # disable executables
             no-capieng          # disable CAPI engine (legacy)
-            no-dso              # disable dynamic libraries
             no-docs             # disable docs and manpages
             no-legacy           # disable legacy modules
-            no-module           # disable dynamically loadable engines
-            no-pinshared        # don't pin shared libraries in the process memory
             enable-tfo          # Enable TCP Fast Open
             no-ssl              # disable SSLv3
-            no-engine)
+            no-engine)          # disable Engine API as it is deprecated since OpenSSL 3.0 and not FIPS compatible
 
     set(OPENSSL_BIN_DIR "${BINARY_DIR}/thirdparty/openssl-install" CACHE STRING "" FORCE)
 
@@ -195,6 +191,14 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     install(FILES "${OPENSSL_BIN_DIR}/bin/openssl${EXECUTABLE_SUFFIX}" DESTINATION fips COMPONENT bin
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_EXECUTE)
 
+    set(OPENSSL_FIPS_EXTRA_FLAGS
+            no-tests            # Disable tests
+            no-capieng          # disable CAPI engine (legacy)
+            no-legacy           # disable legacy modules
+            no-ssl              # disable SSLv3
+            no-engine           # disable Engine API as it is deprecated since OpenSSL 3.0 and not FIPS compatible
+            enable-fips)        # enable FIPS module
+
     if (WIN32)
         find_program(JOM_EXECUTABLE_PATH
             NAMES jom.exe
@@ -216,7 +220,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 URL_HASH "SHA256=eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-fips-src"
                 BUILD_IN_SOURCE true
-                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} no-engine enable-fips no-tests "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
+                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} ${OPENSSL_FIPS_EXTRA_FLAGS} enable-fips "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_FIPS_FILE_LIST}
                 EXCLUDE_FROM_ALL TRUE
                 BUILD_COMMAND ${OPENSSL_BUILD_COMMAND}
@@ -229,7 +233,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 URL_HASH "SHA256=eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-fips-src"
                 BUILD_IN_SOURCE true
-                CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} no-engine enable-fips no-tests "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
+                CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} ${OPENSSL_FIPS_EXTRA_FLAGS}  "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_FIPS_FILE_LIST}
                 EXCLUDE_FROM_ALL TRUE
                 INSTALL_COMMAND make install_fips
