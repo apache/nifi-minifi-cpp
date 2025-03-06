@@ -40,6 +40,7 @@ class Connection;
 
 namespace core {
 
+class ProcessorApi;
 class ProcessContext;
 class ProcessSession;
 class ProcessSessionFactory;
@@ -84,6 +85,17 @@ class Processor : public virtual Connectable, public virtual ConfigurableCompone
   virtual void validateAnnotations() const = 0;
   virtual annotation::Input getInputRequirement() const = 0;
   virtual gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const = 0;
+  virtual std::string getProcessGroupUUIDStr() const = 0;
+  virtual void setProcessGroupUUIDStr(const std::string &uuid) = 0;
+
+  virtual ProcessorApi& getImpl() const = 0;
+
+  template<typename T>
+  T& getImpl() const {
+    auto* res = dynamic_cast<T*>(&getImpl());
+    gsl_Assert(res);
+    return *res;
+  }
 
   virtual void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false) = 0;
   virtual const std::unordered_map<Connection*, std::unordered_set<Processor*>>& reachable_processors() const = 0;

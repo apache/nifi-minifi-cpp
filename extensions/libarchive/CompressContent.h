@@ -85,10 +85,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class CompressContent : public core::ProcessorImpl {
  public:
-  explicit CompressContent(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<CompressContent>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~CompressContent() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm "

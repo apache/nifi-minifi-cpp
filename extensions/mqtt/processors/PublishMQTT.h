@@ -39,10 +39,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
-  explicit PublishMQTT(const std::string_view name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(name, uuid) {
+  explicit PublishMQTT(core::ProcessorMetadata info)
+      : processors::AbstractMQTTProcessor(info) {
     metrics_ = gsl::make_not_null(std::make_shared<PublishMQTTMetrics>(*this, in_flight_message_counter_));
-    logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
@@ -111,7 +110,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   class PublishMQTTMetrics : public core::ProcessorMetricsImpl {
    public:
-    PublishMQTTMetrics(const core::Processor& source_processor, const InFlightMessageCounter& in_flight_message_counter);
+    PublishMQTTMetrics(const core::ProcessorImpl& source_processor, const InFlightMessageCounter& in_flight_message_counter);
     std::vector<state::response::SerializedResponseNode> serialize() override;
     std::vector<state::PublishedMetric> calculateMetrics() override;
 
@@ -186,7 +185,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     // there is no need to do anything like subscribe in the beginning
   }
 
-  void checkProperties() override;
+  void checkProperties(core::ProcessContext& context) override;
   void checkBrokerLimitsImpl() override;
 
   bool retain_ = false;

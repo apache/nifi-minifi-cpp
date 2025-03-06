@@ -60,8 +60,10 @@ class AzureDataLakeStorageTestsFixture {
     plan_ = test_controller_.createPlan();
     auto mock_data_lake_storage_client = std::make_unique<MockDataLakeStorageClient>();
     mock_data_lake_storage_client_ptr_ = mock_data_lake_storage_client.get();
-    auto azure_data_lake_storage_unique_ptr = std::unique_ptr<AzureDataLakeStorageProcessor>(
-      new AzureDataLakeStorageProcessor("AzureDataLakeStorageProcessor", utils::Identifier(), std::move(mock_data_lake_storage_client)));
+    auto uuid = utils::IdGenerator::getIdGenerator()->generate();
+    auto impl = std::unique_ptr<AzureDataLakeStorageProcessor>(
+      new AzureDataLakeStorageProcessor({.uuid = uuid, .name = "AzureDataLakeStorageProcessor", .logger = logging::LoggerFactory<AzureDataLakeStorageProcessor>::getLogger(uuid)}, std::move(mock_data_lake_storage_client)));
+    auto azure_data_lake_storage_unique_ptr = std::make_unique<core::ProcessorProxy>(impl->getName(), impl->getUUID(), std::move(impl));
     azure_data_lake_storage_ = azure_data_lake_storage_unique_ptr.get();
     auto input_dir = test_controller_.createTempDirectory();
     minifi::test::utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);

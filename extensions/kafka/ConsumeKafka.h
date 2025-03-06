@@ -286,8 +286,7 @@ class ConsumeKafka final : public KafkaProcessorBase {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ConsumeKafka(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
-      : KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<ConsumeKafka>::getLogger(uuid)) {}
+  using KafkaProcessorBase::KafkaProcessorBase;
 
   ConsumeKafka(const ConsumeKafka&) = delete;
   ConsumeKafka(ConsumeKafka&&) = delete;

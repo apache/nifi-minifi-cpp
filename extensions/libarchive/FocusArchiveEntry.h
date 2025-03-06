@@ -24,7 +24,7 @@
 
 #include "ArchiveMetadata.h"
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -38,10 +38,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class FocusArchiveEntry : public core::ProcessorImpl {
  public:
-  explicit FocusArchiveEntry(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~FocusArchiveEntry()   override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Allows manipulation of entries within an archive (e.g. TAR) by focusing on one entry within the archive at a time. "
@@ -68,12 +65,12 @@ class FocusArchiveEntry : public core::ProcessorImpl {
 
   class ReadCallback {
    public:
-    explicit ReadCallback(core::Processor*, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata);
+    explicit ReadCallback(core::ProcessContext* context, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata);
     int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const;
 
    private:
     utils::file::FileManager *file_man_;
-    core::Processor * const proc_;
+    core::ProcessContext* const context_;
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger();
     ArchiveMetadata *_archiveMetadata;
     static int ok_cb(struct archive *, void* /*d*/) { return ARCHIVE_OK; }

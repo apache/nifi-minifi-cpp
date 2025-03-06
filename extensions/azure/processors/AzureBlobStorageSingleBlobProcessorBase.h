@@ -41,11 +41,9 @@ class AzureBlobStorageSingleBlobProcessorBase : public AzureBlobStorageProcessor
 
  protected:
   explicit AzureBlobStorageSingleBlobProcessorBase(
-    std::string_view name,
-    const minifi::utils::Identifier& uuid,
-    const std::shared_ptr<core::logging::Logger>& logger,
+    core::ProcessorMetadata info,
     std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageProcessorBase(name, uuid, logger, std::move(blob_storage_client)) {
+    : AzureBlobStorageProcessorBase(info, std::move(blob_storage_client)) {
   }
 
   bool setBlobOperationParameters(

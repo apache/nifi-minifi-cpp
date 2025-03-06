@@ -51,6 +51,7 @@ ProcessContextImpl::ProcessContextImpl(
       initialized_(false) {
   repo_ = repo;
   state_storage_ = getStateStorage(logger_, controller_service_provider_, nullptr);
+  info_ = std::make_unique<StandardProcessorInfo>(processor);
 }
 
 ProcessContextImpl::ProcessContextImpl(
@@ -69,6 +70,11 @@ ProcessContextImpl::ProcessContextImpl(
   state_storage_ = getStateStorage(logger_, controller_service_provider_, configuration);
   if (!configure_) { configure_ = minifi::Configure::create(); }
   info_ = std::make_unique<StandardProcessorInfo>(processor);
+}
+
+bool ProcessContextImpl::hasNonEmptyProperty(std::string_view name) const {
+  auto val = getProcessor().getProperty(name);
+  return val && !val->empty();
 }
 
 std::vector<std::string> ProcessContextImpl::getDynamicPropertyKeys() const { return processor_.getDynamicPropertyKeys(); }
@@ -97,14 +103,34 @@ nonstd::expected<std::string, std::error_code> ProcessContextImpl::getDynamicPro
   return getProcessor().getDynamicProperty(name);
 }
 
+nonstd::expected<std::string, std::error_code> ProcessContextImpl::getRawProperty(const std::string_view name) const {
+  return getProcessor().getProperty(name);
+}
+
 nonstd::expected<void, std::error_code> ProcessContextImpl::setDynamicProperty(std::string name, std::string value) {
   return getProcessor().setDynamicProperty(std::move(name), std::move(value));
+}
+
+[[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> ProcessContextImpl::getAllPropertyValues(std::string_view name) const {
+  return getProcessor().getAllPropertyValues(name);
+}
+
+void ProcessContextImpl::addAutoTerminatedRelationship(const core::Relationship& relationship) {
+  return getProcessor().addAutoTerminatedRelationship(relationship);
+}
+
+bool ProcessContextImpl::isRunning() const {
+  return getProcessor().isRunning();
 }
 
 StateManager* ProcessContextImpl::getStateManager() {
   if (state_storage_ == nullptr) { return nullptr; }
   if (!state_manager_) { state_manager_ = state_storage_->getStateManager(processor_); }
   return state_manager_.get();
+}
+
+bool ProcessContextImpl::hasIncomingConnections() const {
+  return getProcessor().hasIncomingConnections();
 }
 
 }  // namespace org::apache::nifi::minifi::core

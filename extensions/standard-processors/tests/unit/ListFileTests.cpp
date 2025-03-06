@@ -228,7 +228,7 @@ TEST_CASE("ListFile sets attributes correctly") {
   using minifi::processors::ListFile;
 
   LogTestController::getInstance().setTrace<ListFile>();
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<ListFile>("ListFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<ListFile>("ListFile"));
   const auto list_file = test_controller.getProcessor();
   std::filesystem::path dir = test_controller.createTempDirectory();
   REQUIRE(list_file->setProperty(ListFile::InputDirectory.name, dir.string()));
@@ -256,7 +256,7 @@ TEST_CASE("ListFile sets attributes correctly") {
 TEST_CASE("If a second file with the same modification time shows up later, then it will get listed") {
   using minifi::processors::ListFile;
 
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<ListFile>("ListFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<ListFile>("ListFile"));
   const auto list_file = test_controller.getProcessor();
 
   const auto input_dir = test_controller.createTempDirectory();

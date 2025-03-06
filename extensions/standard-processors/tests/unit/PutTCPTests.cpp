@@ -98,8 +98,8 @@ utils::net::SslData createSslDataForServer() {
 class PutTCPTestFixture {
  public:
   PutTCPTestFixture() :
-      controller_(std::make_unique<PutTCP>("PutTCP")),
-      put_tcp_(controller_.getProcessor<PutTCP>()) {
+      controller_(minifi::test::utils::make_processor<PutTCP>("PutTCP")),
+      put_tcp_(controller_.getProcessor()) {
     LogTestController::getInstance().setTrace<PutTCP>();
     LogTestController::getInstance().setInfo<core::ProcessSession>();
     LogTestController::getInstance().setTrace<utils::net::Server>();
@@ -230,7 +230,7 @@ class PutTCPTestFixture {
   }
 
   test::SingleProcessorTestController controller_;
-  PutTCP* put_tcp_;
+  minifi::core::Processor* put_tcp_;
 
   class Server {
    public:

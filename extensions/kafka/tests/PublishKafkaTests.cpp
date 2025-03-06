@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "unit/TestBase.h"
+#include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "PublishKafka.h"
 #include "unit/SingleProcessorTestController.h"
@@ -25,7 +26,7 @@ namespace org::apache::nifi::minifi::test {
 TEST_CASE("Scheduling should fail when batch size is larger than the max queue message count", "[testPublishKafka]") {
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setTrace<processors::PublishKafka>();
-  SingleProcessorTestController test_controller(std::make_unique<processors::PublishKafka>("PublishKafka"));
+  SingleProcessorTestController test_controller(minifi::test::utils::make_processor<processors::PublishKafka>("PublishKafka"));
   const auto publish_kafka = test_controller.getProcessor();
   REQUIRE(publish_kafka->setProperty(processors::PublishKafka::ClientName.name, "test_client"));
   REQUIRE(publish_kafka->setProperty(processors::PublishKafka::SeedBrokers.name, "test_seedbroker"));
@@ -36,34 +37,34 @@ TEST_CASE("Scheduling should fail when batch size is larger than the max queue m
 
 TEST_CASE("Compress Codec property") {
   using processors::PublishKafka;
-  SingleProcessorTestController test_controller(std::make_unique<PublishKafka>("PublishKafka"));
+  SingleProcessorTestController test_controller(minifi::test::utils::make_processor<PublishKafka>("PublishKafka"));
   REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::ClientName.name, "test_client"));
   REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::SeedBrokers.name, "test_seedbroker"));
   REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::Topic.name, "test_topic"));
   REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::MessageTimeOut.name, "10ms"));
 
   SECTION("none") {
-    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "none"));
+    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "none"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("gzip") {
-    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "gzip"));
+    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "gzip"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("snappy") {
-    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "snappy"));
+    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "snappy"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("lz4") {
-    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "lz4"));
+    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "lz4"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("zstd") {
-    REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "zstd"));
+    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "zstd"));
     REQUIRE_NOTHROW(test_controller.trigger("input"));
   }
   SECTION("foo") {
-    REQUIRE_FALSE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "foo"));
+    REQUIRE_FALSE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "foo"));
   }
 }
 
