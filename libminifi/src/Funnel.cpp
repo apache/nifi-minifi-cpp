@@ -16,11 +16,12 @@
  */
 
 #include "Funnel.h"
+#include "minifi-cpp/core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi {
 
-void Funnel::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {
-  addAutoTerminatedRelationship(Success);
+void Funnel::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  context.addAutoTerminatedRelationship(Success);
 }
 
 }  // namespace org::apache::nifi::minifi
