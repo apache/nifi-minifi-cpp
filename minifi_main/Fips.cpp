@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "utils/FipsUtils.h"
+#include "Fips.h"
 
 #include <fstream>
 #include <algorithm>
@@ -26,7 +26,7 @@
 #include "utils/StringUtils.h"
 #include "utils/OptionalUtils.h"
 
-namespace org::apache::nifi::minifi::utils::fips {
+namespace org::apache::nifi::minifi::fips {
 
 namespace {
 bool replaceMinifiHomeVariable(const std::filesystem::path& file_path, const std::filesystem::path& minifi_home_path, const std::shared_ptr<core::logging::Logger>& logger) {
@@ -128,4 +128,4 @@ void initializeFipsMode(const std::shared_ptr<minifi::Configure>& configure, con
   logger->log_info("FIPS mode enabled in MiNiFi C++");
 }
 
-}  // namespace org::apache::nifi::minifi::utils::fips
+}  // namespace org::apache::nifi::minifi::fips
