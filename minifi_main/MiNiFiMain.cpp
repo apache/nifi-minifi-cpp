@@ -334,12 +334,12 @@ int main(int argc, char **argv) {
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
     overridePropertiesFromCommandLine(argument_parser, configure);
 
+    minifi::fips::initializeFipsMode(configure, minifiHome, logger);
+
     minifi::core::extension::ExtensionManagerImpl::get().initialize(configure);
 
     dumpDocsIfRequested(argument_parser, configure);
     writeSchemaIfRequested(argument_parser, configure);
-
-    minifi::fips::initializeFipsMode(configure, minifiHome, logger);
 
     std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
         | utils::andThen(utils::timeutils::StringToDuration<std::chrono::milliseconds>)

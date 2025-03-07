@@ -7,3 +7,7 @@ providers = prov
 
 [prov]
 fips = fips_sect
+base = base_sect
+
+[base_sect]
+activate = 1
