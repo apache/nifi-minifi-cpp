@@ -38,6 +38,12 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         set(BYPRODUCT_SUFFIX ".a" CACHE STRING "" FORCE)
     endif()
 
+    if (WIN32)
+        set(EXECUTABLE_SUFFIX ".exe" CACHE STRING "" FORCE)
+    else()
+        set(EXECUTABLE_SUFFIX "" CACHE STRING "" FORCE)
+    endif()
+
     set(BYPRODUCTS
             "${LIBDIR}/${BYPRODUCT_PREFIX}ssl${BYPRODUCT_SUFFIX}"
             "${LIBDIR}/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}"
@@ -51,15 +57,12 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     set(OPENSSL_EXTRA_FLAGS
             no-tests            # Disable tests
-            no-apps             # disable executables
             no-capieng          # disable CAPI engine (legacy)
-            no-dso              # disable dynamic libraries
             no-docs             # disable docs and manpages
             no-legacy           # disable legacy modules
-            no-module           # disable dynamically loadable engines
-            no-pinshared        # don't pin shared libraries in the process memory
             enable-tfo          # Enable TCP Fast Open
-            no-ssl)             # disable SSLv3
+            no-ssl              # disable SSLv3
+            no-engine)          # disable Engine API as it is deprecated since OpenSSL 3.0 and not FIPS compatible
 
     set(OPENSSL_BIN_DIR "${BINARY_DIR}/thirdparty/openssl-install" CACHE STRING "" FORCE)
 
@@ -99,8 +102,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         endif()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.2/openssl-3.3.2.tar.gz
-                URL_HASH "SHA256=2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.3/openssl-3.3.3.tar.gz
+                URL_HASH "SHA256=712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} ${OPENSSL_EXTRA_FLAGS} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
@@ -114,8 +117,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     else()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.2/openssl-3.3.2.tar.gz
-                URL_HASH "SHA256=2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.3/openssl-3.3.3.tar.gz
+                URL_HASH "SHA256=712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} ${OPENSSL_EXTRA_FLAGS} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
@@ -132,6 +135,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     set(OPENSSL_LIBRARIES "${OPENSSL_LIBRARIES_LIST};${CMAKE_DL_LIBS}"  CACHE STRING "" FORCE)
     set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_BIN_DIR}/${LIBDIR}/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
     set(OPENSSL_SSL_LIBRARY "${OPENSSL_BIN_DIR}/${LIBDIR}/${BYPRODUCT_PREFIX}ssl${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
+    set(OPENSSL_VERSION "3.3.3" CACHE STRING "" FORCE)
 
     # Set exported variables for FindPackage.cmake
     set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_OPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR}" CACHE STRING "" FORCE)
@@ -164,5 +168,78 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         set_property(TARGET OpenSSL::Crypto APPEND PROPERTY INTERFACE_LINK_LIBRARIES crypt32.lib )
         set_property(TARGET OpenSSL::SSL APPEND PROPERTY INTERFACE_LINK_LIBRARIES crypt32.lib)
     endif()
+
+    if (WIN32)
+        set(BYPRODUCT_DYN_SUFFIX ".dll" CACHE STRING "" FORCE)
+    elseif(APPLE)
+        set(BYPRODUCT_DYN_SUFFIX ".dylib" CACHE STRING "" FORCE)
+    else()
+        set(BYPRODUCT_DYN_SUFFIX ".so" CACHE STRING "" FORCE)
+    endif()
+
+    set(FIPS_BYPRODUCTS
+            "${LIBDIR}/ossl-modules/fips${BYPRODUCT_DYN_SUFFIX}"
+            )
+
+    set(OPENSSL_FIPS_BIN_DIR "${BINARY_DIR}/thirdparty/openssl-fips-install" CACHE STRING "" FORCE)
+
+    FOREACH(BYPRODUCT ${FIPS_BYPRODUCTS})
+        LIST(APPEND OPENSSL_FIPS_FILE_LIST "${OPENSSL_FIPS_BIN_DIR}/${BYPRODUCT}")
+    ENDFOREACH(BYPRODUCT)
+
+    install(FILES ${OPENSSL_FIPS_FILE_LIST} DESTINATION fips COMPONENT bin)
+    install(FILES "${OPENSSL_BIN_DIR}/bin/openssl${EXECUTABLE_SUFFIX}" DESTINATION fips COMPONENT bin
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_EXECUTE)
+
+    set(OPENSSL_FIPS_EXTRA_FLAGS
+            no-tests            # Disable tests
+            no-capieng          # disable CAPI engine (legacy)
+            no-legacy           # disable legacy modules
+            no-ssl              # disable SSLv3
+            no-engine           # disable Engine API as it is deprecated since OpenSSL 3.0 and not FIPS compatible
+            enable-fips)        # enable FIPS module
+
+    if (WIN32)
+        find_program(JOM_EXECUTABLE_PATH
+            NAMES jom.exe
+            PATHS ENV PATH
+            NO_DEFAULT_PATH)
+        if(JOM_EXECUTABLE_PATH)
+            include(ProcessorCount)
+            processorcount(jobs)
+            set(OPENSSL_BUILD_COMMAND ${JOM_EXECUTABLE_PATH} -j${jobs})
+            set(OPENSSL_WINDOWS_COMPILE_FLAGS /FS)
+        else()
+            message("Using nmake for OpenSSL build")
+            set(OPENSSL_BUILD_COMMAND nmake)
+            set(OPENSSL_WINDOWS_COMPILE_FLAGS "")
+        endif()
+        ExternalProject_Add(
+                openssl-fips-external
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.0.9/openssl-3.0.9.tar.gz
+                URL_HASH "SHA256=eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
+                SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-fips-src"
+                BUILD_IN_SOURCE true
+                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} ${OPENSSL_FIPS_EXTRA_FLAGS} enable-fips "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
+                BUILD_BYPRODUCTS ${OPENSSL_FIPS_FILE_LIST}
+                EXCLUDE_FROM_ALL TRUE
+                BUILD_COMMAND ${OPENSSL_BUILD_COMMAND}
+                INSTALL_COMMAND nmake install_fips
+            )
+    else()
+        ExternalProject_Add(
+            openssl-fips-external
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.0.9/openssl-3.0.9.tar.gz
+                URL_HASH "SHA256=eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
+                SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-fips-src"
+                BUILD_IN_SOURCE true
+                CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} ${OPENSSL_FIPS_EXTRA_FLAGS}  "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
+                BUILD_BYPRODUCTS ${OPENSSL_FIPS_FILE_LIST}
+                EXCLUDE_FROM_ALL TRUE
+                INSTALL_COMMAND make install_fips
+        )
+    endif()
+
+    add_dependencies(OpenSSL::Crypto openssl-fips-external)
 
 endfunction(use_openssl)
