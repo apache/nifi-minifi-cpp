@@ -102,8 +102,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         endif()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.2/openssl-3.3.2.tar.gz
-                URL_HASH "SHA256=2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.3/openssl-3.3.3.tar.gz
+                URL_HASH "SHA256=712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} ${OPENSSL_EXTRA_FLAGS} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
@@ -117,8 +117,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     else()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.2/openssl-3.3.2.tar.gz
-                URL_HASH "SHA256=2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.3/openssl-3.3.3.tar.gz
+                URL_HASH "SHA256=712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} ${OPENSSL_EXTRA_FLAGS} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
@@ -135,7 +135,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     set(OPENSSL_LIBRARIES "${OPENSSL_LIBRARIES_LIST};${CMAKE_DL_LIBS}"  CACHE STRING "" FORCE)
     set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_BIN_DIR}/${LIBDIR}/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
     set(OPENSSL_SSL_LIBRARY "${OPENSSL_BIN_DIR}/${LIBDIR}/${BYPRODUCT_PREFIX}ssl${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
-    set(OPENSSL_VERSION "3.3.2" CACHE STRING "" FORCE)
+    set(OPENSSL_VERSION "3.3.3" CACHE STRING "" FORCE)
 
     # Set exported variables for FindPackage.cmake
     set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_OPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR}" CACHE STRING "" FORCE)
