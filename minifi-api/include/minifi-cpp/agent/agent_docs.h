@@ -52,10 +52,11 @@ struct ClassDescription {
 struct Components {
   std::vector<ClassDescription> processors_;
   std::vector<ClassDescription> controller_services_;
+  std::vector<ClassDescription> parameter_providers_;
   std::vector<ClassDescription> other_components_;
 
   [[nodiscard]] bool empty() const noexcept {
-    return processors_.empty() && controller_services_.empty() && other_components_.empty();
+    return processors_.empty() && controller_services_.empty() && parameter_providers_.empty() && other_components_.empty();
   }
 };
 

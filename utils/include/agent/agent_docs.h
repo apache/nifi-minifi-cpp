@@ -80,6 +80,14 @@ void AgentDocs::createClassDescription(const std::string& group, const std::stri
         .class_properties_ = detail::toVector(Class::Properties),
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
     });
+  } else if constexpr (Type == ResourceType::ParameterProvider) {
+    components.parameter_providers_.push_back(ClassDescription{
+        .type_ = Type,
+        .short_name_ = name,
+        .full_name_ = detail::classNameWithDots<Class>(),
+        .description_ = Class::Description,
+        .class_properties_ = detail::toVector(Class::Properties)
+    });
   } else if constexpr (Type == ResourceType::DescriptionOnly) {
     components.other_components_.push_back(ClassDescription{
         .type_ = Type,
