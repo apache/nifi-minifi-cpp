@@ -41,11 +41,11 @@ uint64_t getUnitMultiplier(const std::string_view unit_str) {
           {"GB", 1_GiB},
           {"TB", 1_TiB},
           {"PB", 1_PiB},
-          {"KiB", 1_KiB},
-          {"MiB", 1_MiB},
-          {"GiB", 1_GiB},
-          {"TiB", 1_TiB},
-          {"PiB", 1_PiB},
+          {"KIB", 1_KiB},
+          {"MIB", 1_MiB},
+          {"GIB", 1_GiB},
+          {"TIB", 1_TiB},
+          {"PIB", 1_PiB},
       };
   const auto unit_multiplier = unit_map.find(unit_str);
   if (unit_multiplier != unit_map.end()) { return unit_multiplier->second; }
