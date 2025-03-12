@@ -142,6 +142,7 @@ class S3Processor : public core::ProcessorImpl {
           "region, but this property overrides the selected endpoint URL, allowing use "
           "with other S3-compatible endpoints.")
       .supportsExpressionLanguage(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
       .withDescription("Proxy host name or IP")
