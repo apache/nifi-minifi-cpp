@@ -27,10 +27,7 @@ std::string parseProperty(const core::ProcessContext& ctx, const core::PropertyR
 }
 
 std::optional<std::string> parseOptionalProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file) {
-  if (const auto property_str = ctx.getProperty(property, flow_file)) {
-    return *property_str;
-  }
-  return std::nullopt;
+  return ctx.getProperty(property, flow_file) | utils::toOptional();
 }
 
 std::optional<bool> parseOptionalBoolProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file) {
