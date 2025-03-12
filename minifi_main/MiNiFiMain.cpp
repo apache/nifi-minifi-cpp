@@ -69,6 +69,7 @@
 #include "core/state/MetricsPublisherStore.h"
 #include "argparse/argparse.hpp"
 #include "agent/agent_version.h"
+#include "Fips.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -332,6 +333,8 @@ int main(int argc, char **argv) {
     configure->setHome(minifiHome);
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
     overridePropertiesFromCommandLine(argument_parser, configure);
+
+    minifi::fips::initializeFipsMode(configure, minifiHome, logger);
 
     minifi::core::extension::ExtensionManagerImpl::get().initialize(configure);
 

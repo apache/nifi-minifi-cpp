@@ -931,6 +931,23 @@ To notify the agent which extensions it should load see [Loading extensions](Ext
 ### Python processors
 Please see the [Python Processors Readme](extensions/python/PYTHON.md).
 
+### Enabling FIPS support
+
+To enable FIPS support, and use MiNiFi C++ in FIPS compliant mode, there are a few steps that need to be taken before the application startup. First the following property needs to be set in the minifi.properties file:
+
+    # in minifi.properties
+    nifi.openssl.fips.support.enable=true
+
+Before first starting the application, the fipsmodule.cnf needs to be generated. To do this run the following command with the openssl binary (openssl on Unix and openssl.exe on windows) with the following parameters provided in the $MINIFI_HOME/fips directory:
+
+    # on Unix platform
+    ./openssl fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME/fips/fips.so
+
+    # on Windows platform
+    openssl.exe fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME\fips\fips.dll
+
+If the command finishes successfully, the fipsmodule.cnf file will be generated in the $MINIFI_HOME/fips directory. After this the application can be started and it will configure OpenSSL to start in FIPS mode.
+
 ## Log configuration
 By default the application logs for Apache MiNiFi C++ can be found in the ${MINIFI_HOME}/logs/minifi-app.log file with default INFO level logging. The logger can be reconfigured in the ${MINIFI_HOME}/conf/minifi-log.properties file to use different output streams, log level, and output format.
 

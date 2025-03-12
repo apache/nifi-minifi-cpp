@@ -59,6 +59,7 @@ ${WIX_EXTRA_FEATURES}
       <ComponentRef Id="LOGPROP"/>
       <ComponentRef Id="UIDPROP"/>
       <ComponentRef Id="CONFIGFILE"/>
+      <ComponentRef Id="OPENSSLCONFCOMP"/>
       <ComponentRef Id="UpdateConfig"/>
       <ComponentRef Id="UpdateConfigNotExist"/>
     </Feature>
@@ -323,6 +324,12 @@ ${WIX_EXTRA_FEATURES}
 
                 <File Source="conf/minifi.properties" Id="minifiprops2" KeyPath="yes" />
                 <Condition><![CDATA[ENABLEC2<>"1"]]></Condition>
+              </Component>
+            </Directory>
+
+            <Directory Id="FIPSDIR" Name="fips">
+              <Component Id="OPENSSLCONFCOMP" Guid="77845aec-87fb-46e3-b0c8-b86b57256aec">
+                <File Id="OPENSSLCONF" Source="fips\openssl.cnf" KeyPath="yes"/>
               </Component>
             </Directory>
 

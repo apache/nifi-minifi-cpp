@@ -33,7 +33,7 @@ endif()
 include(CppVersion)
 set_cpp_version()
 
-set(MINIFIEXE_SOURCES MiNiFiMain.cpp MainHelper.cpp MiNiFiWindowsService.cpp AgentDocs.cpp TableFormatter.cpp)
+set(MINIFIEXE_SOURCES MiNiFiMain.cpp MainHelper.cpp MiNiFiWindowsService.cpp AgentDocs.cpp TableFormatter.cpp Fips.cpp)
 if(WIN32)
     set_source_files_properties("${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc" PROPERTIES GENERATED TRUE)
     list(APPEND MINIFIEXE_SOURCES "${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc")

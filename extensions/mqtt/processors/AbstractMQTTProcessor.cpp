@@ -318,7 +318,7 @@ void AbstractMQTTProcessor::disconnect() {
 
 void AbstractMQTTProcessor::setBrokerLimits(MQTTAsync_successData5* response) {
   auto readProperty = [response] (MQTTPropertyCodes property_code, auto& out_var) {
-    const int value = MQTTProperties_getNumericValue(&response->properties, property_code);
+    const auto value = MQTTProperties_getNumericValue(&response->properties, property_code);
     if (value != PAHO_MQTT_C_FAILURE_CODE) {
       if constexpr (std::is_same_v<decltype(out_var), std::optional<std::chrono::seconds>&>) {
         out_var = std::chrono::seconds(value);
