@@ -545,7 +545,49 @@ else()
     set(CPACK_SOURCE_GENERATOR "TGZ")
 endif(WIN32)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
-set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;${CMAKE_SOURCE_DIR}/build/;~$;${CPACK_SOURCE_IGNORE_FILES};${CMAKE_SOURCE_DIR}/.git/;${CMAKE_SOURCE_DIR}/.idea/;${CMAKE_SOURCE_DIR}/cmake-build-debug/")
+set(CPACK_SOURCE_IGNORE_FILES
+    "/.*build.*/"
+    "/build_description\\\\.cpp"
+    "~"
+    "\\\\.git/"
+    "\\\\.idea"
+    "\\\\.kdev4"
+    "\\\\.project"
+    "\\\\.vscode"
+    "\\\\.swp"
+    "thirdparty/uuid/tst_uuid"
+    "assemblies"
+    "CMakeCache\\\\.txt"
+    "CMakeFiles"
+    "CMakeScripts"
+    "cmake_install\\\\.cmake"
+    "install_manifest\\\\.txt"
+    "CTestTestfile\\\\.cmake"
+    "\\\\.o\\$"
+    "\\\\.a\\$"
+    "/docs/generated/"
+    "flowfile_checkpoint"
+    "flowfile_repository"
+    "content_repository"
+    "provenance_repository"
+    "corecomponentstate"
+    "thirdparty/apache-rat/apache-rat"
+    "compile_commands\\\\.json"
+    "/venv/"
+    "__pycache__"
+    "\\\\.pyc"
+    "/logs/"
+    "behavex_output"
+    "\\\\.device_id"
+    "\\\\.cache"
+    "\\\\.ccache"
+    "\\\\.cproject"
+    "\\\\.settings"
+    "profraw"
+    "bootstrap/option_state\\\\.json"
+    "docker/test-env-py3"
+    "\\\\.ropeproject"
+)
 
 # Generate binary assembly. Exclude conf for windows since we'll be doing the work in the WiX template
 if (NOT WIN32)
