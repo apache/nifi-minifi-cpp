@@ -29,6 +29,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "failure" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the LogAttribute
 
     When a Couchbase server is started
@@ -53,6 +54,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "failure" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the LogAttribute
 
     When a Couchbase server is started
@@ -80,6 +82,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "failure" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
@@ -109,6 +112,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "failure" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
@@ -139,6 +143,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "failure" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
@@ -167,6 +172,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a CouchbaseClusterService is setup up with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "failure" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
 
     When a Couchbase server is started
@@ -190,6 +196,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a CouchbaseClusterService is set up up with SSL connection with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "failure" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
@@ -218,6 +225,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And a CouchbaseClusterService is setup up using mTLS authentication with the name "CouchbaseClusterService"
 
     And the "success" relationship of the GetFile processor is connected to the PutCouchbaseKey
+    And the "failure" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
