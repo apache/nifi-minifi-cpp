@@ -53,7 +53,7 @@ uint64_t getUnitMultiplier(const std::string_view unit_str) {
 
   return 1;
 }
-}
+}  // namespace
 
 nonstd::expected<uint64_t, std::error_code> parseDataSizeMinMax(const std::string_view input, const uint64_t minimum, const uint64_t maximum) {
   const auto trimmed_input = utils::string::trim(input);
