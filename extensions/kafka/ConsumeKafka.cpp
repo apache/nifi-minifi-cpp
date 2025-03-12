@@ -54,8 +54,8 @@ void ConsumeKafka::onSchedule(core::ProcessContext& context, core::ProcessSessio
   group_id_                     = utils::parseProperty(context, GroupID);
   offset_reset_                 = utils::parseProperty(context, OffsetReset);
   key_attribute_encoding_       = utils::parseProperty(context, KeyAttributeEncoding);
-  max_poll_time_milliseconds_   = utils::parseMsProperty(context, MaxPollTime);
-  session_timeout_milliseconds_ = utils::parseMsProperty(context, SessionTimeout);
+  max_poll_time_milliseconds_   = utils::parseDurationProperty(context, MaxPollTime);
+  session_timeout_milliseconds_ = utils::parseDurationProperty(context, SessionTimeout);
 
   // Optional properties
   message_demarcator_ = context.getProperty(MessageDemarcator).value_or("");

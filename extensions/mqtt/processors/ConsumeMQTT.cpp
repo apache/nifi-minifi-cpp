@@ -51,7 +51,7 @@ void ConsumeMQTT::readProperties(core::ProcessContext& context) {
   topic_ = utils::parseProperty(context, Topic);
   clean_session_ = utils::parseBoolProperty(context, CleanSession);
   clean_start_ = utils::parseBoolProperty(context, CleanStart);
-  session_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseMsProperty(context, SessionExpiryInterval));
+  session_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseDurationProperty(context, SessionExpiryInterval));
   max_queue_size_ = utils::parseU64Property(context, QueueBufferMaxMessage);
   attribute_from_content_type_ = context.getProperty(AttributeFromContentType).value_or("");
   topic_alias_maximum_ = gsl::narrow<uint16_t>(utils::parseU64Property(context, QueueBufferMaxMessage));

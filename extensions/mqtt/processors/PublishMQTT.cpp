@@ -49,7 +49,7 @@ void PublishMQTT::readProperties(core::ProcessContext& context) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "PublishMQTT: Topic is required");
   }
   retain_ = utils::parseBoolProperty(context, Retain);
-  message_expiry_interval_ = utils::parseOptionalMsProperty(context, MessageExpiryInterval) | utils::transform([](const auto&& ms) { return std::chrono::duration_cast<std::chrono::seconds>(ms); });
+  message_expiry_interval_ = utils::parseOptionalDurationProperty(context, MessageExpiryInterval) | utils::transform([](const auto&& ms) { return std::chrono::duration_cast<std::chrono::seconds>(ms); });
 
   in_flight_message_counter_.setEnabled(mqtt_version_ == mqtt::MqttVersions::V_5_0 && qos_ != mqtt::MqttQoS::LEVEL_0);
 }

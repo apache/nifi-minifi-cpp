@@ -72,8 +72,8 @@ void SFTPProcessorBase::notifyStop() {
 void SFTPProcessorBase::parseCommonPropertiesOnSchedule(core::ProcessContext& context) {
   strict_host_checking_ = utils::parseBoolProperty(context, StrictHostKeyChecking);
   host_key_file_ = utils::parseOptionalProperty(context, HostKeyFile).value_or("");
-  connection_timeout_ = utils::parseMsProperty(context, ConnectionTimeout);
-  data_timeout_ = utils::parseMsProperty(context, DataTimeout);
+  connection_timeout_ = utils::parseDurationProperty(context, ConnectionTimeout);
+  data_timeout_ = utils::parseDurationProperty(context, DataTimeout);
   use_keepalive_on_timeout_ = utils::parseBoolProperty(context, SendKeepaliveOnTimeout);
   proxy_type_ = utils::parseProperty(context, ProxyType);
 }

@@ -139,7 +139,7 @@ void QuerySplunkIndexingStatus::initialize() {
 
 void QuerySplunkIndexingStatus::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   SplunkHECProcessor::onSchedule(context, session_factory);
-  max_age_ = utils::parseMsProperty(context, MaximumWaitingTime);
+  max_age_ = utils::parseDurationProperty(context, MaximumWaitingTime);
   batch_size_ = utils::parseU64Property(context, MaxQuerySize);
   initializeClient(client_, getNetworkLocation().append(getEndpoint()), getSSLContextService(context));
 }
