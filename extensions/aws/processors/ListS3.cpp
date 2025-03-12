@@ -65,7 +65,7 @@ void ListS3::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   list_request_params_->use_versions = minifi::utils::parseBoolProperty(context, UseVersions);
   logger_->log_debug("ListS3: UseVersions [{}]", list_request_params_->use_versions);
 
-  list_request_params_->min_object_age = minifi::utils::parseMsProperty(context, MinimumObjectAge).count();
+  list_request_params_->min_object_age = minifi::utils::parseDurationProperty(context, MinimumObjectAge).count();
   logger_->log_debug("S3Processor: Minimum Object Age [{}]", list_request_params_->min_object_age);
 
   write_object_tags_ = minifi::utils::parseBoolProperty(context, WriteObjectTags);

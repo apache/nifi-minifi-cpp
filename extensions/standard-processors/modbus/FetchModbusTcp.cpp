@@ -48,8 +48,8 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
     throw Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "missing port"};
   }
 
-  idle_connection_expiration_ = utils::parseOptionalMsProperty(context, IdleConnectionExpiration);
-  timeout_duration_ = utils::parseOptionalMsProperty(context, Timeout).value_or(15s);
+  idle_connection_expiration_ = utils::parseOptionalDurationProperty(context, IdleConnectionExpiration);
+  timeout_duration_ = utils::parseOptionalDurationProperty(context, Timeout).value_or(15s);
 
 
   if (context.getProperty(ConnectionPerFlowFile) | utils::andThen(parsing::parseBool) | utils::expect("FetchModbusTcp::ConnectionPerFlowFile is required property")) {

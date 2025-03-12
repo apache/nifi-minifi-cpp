@@ -272,7 +272,7 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
     }
 
     recursive_lookup_ = utils::parseBoolProperty(context, RecursiveLookup);
-    lookup_frequency_ = utils::parseMsProperty(context, LookupFrequency);
+    lookup_frequency_ = utils::parseDurationProperty(context, LookupFrequency);
 
     recoverState(context);
 

@@ -455,7 +455,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (const auto queue_buffer_max_time = utils::parseOptionalMsProperty(context, QueueBufferMaxTime)) {
+  if (const auto queue_buffer_max_time = utils::parseOptionalDurationProperty(context, QueueBufferMaxTime)) {
     auto valueConf = std::to_string(queue_buffer_max_time->count());
     result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.ms", valueConf.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.ms [{}]", valueConf);
@@ -560,7 +560,7 @@ bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::stri
     }
   }
 
-  if (const auto request_timeout = utils::parseOptionalMsProperty(context, RequestTimeOut)) {
+  if (const auto request_timeout = utils::parseOptionalDurationProperty(context, RequestTimeOut)) {
     auto valueConf = std::to_string(request_timeout->count());
     result = rd_kafka_topic_conf_set(topic_conf_.get(), "request.timeout.ms", valueConf.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: request.timeout.ms [{}]", valueConf);
@@ -570,7 +570,7 @@ bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::stri
     }
   }
 
-  if (const auto message_timeout = utils::parseOptionalMsProperty(context, MessageTimeOut)) {
+  if (const auto message_timeout = utils::parseOptionalDurationProperty(context, MessageTimeOut)) {
     auto valueConf = std::to_string(message_timeout->count());
     result = rd_kafka_topic_conf_set(topic_conf_.get(), "message.timeout.ms", valueConf.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: message.timeout.ms [{}]", valueConf);

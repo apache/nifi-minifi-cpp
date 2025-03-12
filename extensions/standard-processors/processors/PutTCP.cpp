@@ -58,12 +58,12 @@ void PutTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   if (!getProperty(Port.name)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing port"};
   }
-  if (const auto idle_connection_expiration = utils::parseOptionalMsProperty(context, IdleConnectionExpiration); idle_connection_expiration && *idle_connection_expiration > 0ms)
+  if (const auto idle_connection_expiration = utils::parseOptionalDurationProperty(context, IdleConnectionExpiration); idle_connection_expiration && *idle_connection_expiration > 0ms)
     idle_connection_expiration_ = idle_connection_expiration;
   else
     idle_connection_expiration_.reset();
 
-  if (const auto timeout = utils::parseOptionalMsProperty(context, Timeout); timeout && *timeout > 0ms)
+  if (const auto timeout = utils::parseOptionalDurationProperty(context, Timeout); timeout && *timeout > 0ms)
     timeout_duration_ = *timeout;
   else
     timeout_duration_ = 15s;
