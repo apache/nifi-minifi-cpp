@@ -57,11 +57,11 @@ std::optional<MultipartUploadState> MultipartUploadStateStorage::getState(const 
   MultipartUploadState state;
   state.upload_id = state_map[state_key + ".upload_id"];
 
-  state.upload_time_ms_since_epoch = parsing::parseIntegral<int64_t>(state_map[state_key + ".upload_time"]) | utils::expect("Expected parsable upload_time_ms_since_epoch");
-  state.uploaded_parts = parsing::parseIntegral<size_t>(state_map[state_key + ".uploaded_parts"]) | utils::expect("Expected parsable state.uploaded_parts");
-  state.uploaded_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".uploaded_size"]) | utils::expect("Expected parsable state.uploaded_size");
-  state.part_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".part_size"]) | utils::expect("Expected parsable state.part_size");
-  state.full_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".full_size"]) | utils::expect("Expected parsable state.full_size");
+  state.upload_time_ms_since_epoch = parsing::parseIntegral<int64_t>(state_map[state_key + ".upload_time"]) | utils::expect(fmt::format("Expected parsable {}.upload_time", state_key));
+  state.uploaded_parts = parsing::parseIntegral<size_t>(state_map[state_key + ".uploaded_parts"]) | utils::expect(fmt::format("Expected parsable {}.uploaded_parts", state_key));
+  state.uploaded_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".uploaded_size"]) | utils::expect(fmt::format("Expected parsable {}.uploaded_size", state_key));
+  state.part_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".part_size"]) | utils::expect(fmt::format("Expected parsable {}.part_size", state_key));
+  state.full_size = parsing::parseIntegral<uint64_t>(state_map[state_key + ".full_size"]) | utils::expect(fmt::format("Expected parsable {}.full_size", state_key));
   state.uploaded_etags = minifi::utils::string::splitAndTrimRemovingEmpty(state_map[state_key + ".uploaded_etags"], ";");
   return state;
 }
