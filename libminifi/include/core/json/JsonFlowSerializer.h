@@ -25,10 +25,14 @@ class JsonFlowSerializer : public core::flow::FlowSerializer {
  public:
   explicit JsonFlowSerializer(rapidjson::Document document) : flow_definition_json_(std::move(document)) {}
 
-  [[nodiscard]] std::string serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-      const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const override;
+  [[nodiscard]] std::string serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema,
+      const utils::crypto::EncryptionProvider& encryption_provider,
+      const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides,
+      const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const override;
 
  private:
+  void addProviderCreatedParameterContexts(rapidjson::Value& flow_definition_json, rapidjson::Document::AllocatorType& alloc, const core::flow::FlowSchema& schema,
+    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const;
   void encryptSensitiveParameters(rapidjson::Value& flow_definition_json, rapidjson::Document::AllocatorType& alloc, const core::flow::FlowSchema& schema,
       const utils::crypto::EncryptionProvider& encryption_provider, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const;
   void encryptSensitiveProcessorProperties(rapidjson::Value& root_group, rapidjson::Document::AllocatorType& alloc, const core::ProcessGroup& process_group,

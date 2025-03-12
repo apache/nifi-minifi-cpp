@@ -26,9 +26,12 @@ class YamlFlowSerializer : public core::flow::FlowSerializer {
   explicit YamlFlowSerializer(const YAML::Node& flow_definition_yaml) : flow_definition_yaml_(flow_definition_yaml) {}
 
   [[nodiscard]] std::string serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-      const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const override;
+      const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides,
+      const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const override;
 
  private:
+  void addProviderCreatedParameterContexts(YAML::Node flow_definition_yaml, const core::flow::FlowSchema& schema,
+    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const;
   void encryptSensitiveParameters(YAML::Node& flow_definition_yaml, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
     const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const;
   void encryptSensitiveProcessorProperties(YAML::Node& flow_definition_yaml, const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema,

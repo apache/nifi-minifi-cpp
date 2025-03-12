@@ -23,6 +23,59 @@
 
 namespace org::apache::nifi::minifi::core::yaml {
 
+void YamlFlowSerializer::addProviderCreatedParameterContexts(YAML::Node flow_definition_yaml, const core::flow::FlowSchema& schema,
+    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const {
+  std::vector<gsl::not_null<ParameterContext*>> provided_parameter_contexts;
+  for (const auto& [parameter_context_name, parameter_context] : parameter_contexts) {
+    if (!parameter_context->getParameterProvider().empty()) {
+      provided_parameter_contexts.push_back(gsl::make_not_null(parameter_context.get()));
+    }
+  }
+
+  if (provided_parameter_contexts.empty()) {
+    return;
+  }
+
+  std::unordered_set<std::string> parameter_context_names;
+  auto parameter_contexts_node = flow_definition_yaml[schema.parameter_contexts[0]];
+
+  if (parameter_contexts_node.IsDefined() && parameter_contexts_node.IsSequence()) {
+    for (const auto& parameter_context : parameter_contexts_node) {
+      parameter_context_names.insert(parameter_context[schema.name[0]].as<std::string>());
+    }
+  } else {
+    parameter_contexts_node = YAML::Node(YAML::NodeType::Sequence);
+  }
+
+  for (const auto& parameter_context : provided_parameter_contexts) {
+    if (parameter_context_names.contains(parameter_context->getName())) {
+      logger_->log_warn("Parameter context '{}' already exists in the flow definition, will not be updated!", parameter_context->getName());
+      continue;
+    }
+
+    YAML::Node parameter_context_node;
+    parameter_context_node[schema.identifier[0]] = std::string(parameter_context->getUUIDStr());
+    parameter_context_node[schema.name[0]] = parameter_context->getName();
+    parameter_context_node[schema.parameter_provider[0]] = parameter_context->getParameterProvider();
+
+    YAML::Node parameters_node = YAML::Node(YAML::NodeType::Sequence);
+    auto parameters = parameter_context->getParameters();
+    for (const auto& [name, parameter] : parameters) {
+      YAML::Node parameter_node;
+      parameter_node[schema.name[0]] = name;
+      parameter_node[schema.description[0]] = parameter.description;
+      parameter_node[schema.sensitive[0]] = parameter.sensitive;
+      parameter_node[schema.provided[0]] = parameter.provided;
+      parameter_node[schema.value[0]] = parameter.value;
+
+      parameters_node.push_back(parameter_node);
+    }
+
+    parameter_context_node[schema.parameters[0]] = parameters_node;
+    parameter_contexts_node.push_back(parameter_context_node);
+  }
+}
+
 void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
     const core::flow::Overrides& overrides) const {
   std::unordered_set<std::string> processed_property_names;
@@ -128,13 +181,15 @@ void YamlFlowSerializer::encryptSensitiveControllerServiceProperties(YAML::Node&
 }
 
 std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-    const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const {
+    const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides,
+    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const {
   gsl_Expects(schema.identifier.size() == 1 &&
       schema.processors.size() == 1 && schema.processor_properties.size() == 1 &&
       schema.controller_services.size() == 1 && schema.controller_service_properties.size() == 1);
 
   auto flow_definition_yaml = YAML::Clone(flow_definition_yaml_);
 
+  addProviderCreatedParameterContexts(flow_definition_yaml, schema, parameter_contexts);
   encryptSensitiveParameters(flow_definition_yaml, schema, encryption_provider, overrides);
   encryptSensitiveProcessorProperties(flow_definition_yaml, process_group, schema, encryption_provider, overrides);
   encryptSensitiveControllerServiceProperties(flow_definition_yaml, process_group, schema, encryption_provider, overrides);
