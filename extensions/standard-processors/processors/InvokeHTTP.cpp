@@ -154,8 +154,8 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
   maximum_upload_speed_ = context.getProperty(UploadSpeedLimit) | utils::andThen(invoke_http::parseDataTransferSpeed) | utils::toOptional();
   maximum_download_speed_ = context.getProperty(DownloadSpeedLimit) | utils::andThen(invoke_http::parseDataTransferSpeed) | utils::toOptional();
 
-  connect_timeout_ = utils::parseMsProperty(context, ConnectTimeout);  // Shouldn't fail due to default value;
-  read_timeout_ = utils::parseMsProperty(context, ReadTimeout);  // Shouldn't fail due to default value;
+  connect_timeout_ = utils::parseDurationProperty(context, ConnectTimeout);  // Shouldn't fail due to default value;
+  read_timeout_ = utils::parseDurationProperty(context, ReadTimeout);  // Shouldn't fail due to default value;
 
   proxy_.host = context.getProperty(InvokeHTTP::ProxyHost).value_or("");
   proxy_.port = (context.getProperty(InvokeHTTP::ProxyPort) | utils::andThen(parsing::parseIntegral<int>)).value_or(0);

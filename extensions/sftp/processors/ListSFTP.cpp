@@ -114,8 +114,8 @@ void ListSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   target_system_timestamp_precision_ = utils::parseProperty(context, TargetSystemTimestampPrecision);
   entity_tracking_initial_listing_target_ = utils::parseProperty(context, EntityTrackingInitialListingTarget);
 
-  minimum_file_age_ = utils::parseMsProperty(context, MinimumFileAge);
-  maximum_file_age_ = utils::parseOptionalMsProperty(context, MaximumFileAge);
+  minimum_file_age_ = utils::parseDurationProperty(context, MinimumFileAge);
+  maximum_file_age_ = utils::parseOptionalDurationProperty(context, MaximumFileAge);
 
   minimum_file_size_ = utils::parseDataSizeProperty(context, MinimumFileSize);
   maximum_file_size_ = utils::parseOptionalDataSizeProperty(context, MaximumFileSize);

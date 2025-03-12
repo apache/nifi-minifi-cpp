@@ -56,12 +56,12 @@ void PushGrafanaLokiGrpc::setUpStreamLabels(core::ProcessContext& context) {
 void PushGrafanaLokiGrpc::setUpGrpcChannel(const std::string& url, core::ProcessContext& context) {
   ::grpc::ChannelArguments args;
 
-  if (auto keep_alive_time = utils::parseOptionalMsProperty(context, PushGrafanaLokiGrpc::KeepAliveTime)) {
+  if (auto keep_alive_time = utils::parseOptionalDurationProperty(context, PushGrafanaLokiGrpc::KeepAliveTime)) {
     logger_->log_debug("PushGrafanaLokiGrpc Keep Alive Time is set to {} ms", keep_alive_time->count());
     args.SetInt(GRPC_ARG_KEEPALIVE_TIME_MS, gsl::narrow<int>(keep_alive_time->count()));
   }
 
-  if (auto keep_alive_timeout = utils::parseOptionalMsProperty(context, PushGrafanaLokiGrpc::KeepAliveTimeout)) {
+  if (auto keep_alive_timeout = utils::parseOptionalDurationProperty(context, PushGrafanaLokiGrpc::KeepAliveTimeout)) {
     logger_->log_debug("PushGrafanaLokiGrpc Keep Alive Timeout is set to {} ms", keep_alive_timeout->count());
     args.SetInt(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, gsl::narrow<int>(keep_alive_timeout->count()));
   }
@@ -99,7 +99,7 @@ void PushGrafanaLokiGrpc::onSchedule(core::ProcessContext& context, core::Proces
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Url property cannot be empty!");
   }
   tenant_id_ = context.getProperty(TenantID) | utils::toOptional();
-  if (auto connection_timeout = utils::parseOptionalMsProperty(context, PushGrafanaLokiGrpc::ConnectTimeout)) {
+  if (auto connection_timeout = utils::parseOptionalDurationProperty(context, PushGrafanaLokiGrpc::ConnectTimeout)) {
     connection_timeout_ms_ = *connection_timeout;
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid connection timeout is set.");

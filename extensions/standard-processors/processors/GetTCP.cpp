@@ -101,12 +101,12 @@ void GetTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
 
 
   asio::steady_timer::duration timeout_duration = 1s;
-  if (auto timeout_value = utils::parseOptionalMsProperty(context, Timeout)) {
+  if (auto timeout_value = utils::parseOptionalDurationProperty(context, Timeout)) {
     timeout_duration = *timeout_value;
   }
 
   asio::steady_timer::duration reconnection_interval = 1min;
-  if (auto reconnect_interval_value = utils::parseOptionalMsProperty(context, ReconnectInterval)) {
+  if (auto reconnect_interval_value = utils::parseOptionalDurationProperty(context, ReconnectInterval)) {
     reconnection_interval = *reconnect_interval_value;;
   }
 

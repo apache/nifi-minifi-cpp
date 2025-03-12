@@ -46,8 +46,8 @@ void ListFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   file_filter_.filename_filter = context.getProperty(FileFilter) | utils::transform([] (const auto& str) { return std::regex(str);}) | utils::toOptional();
   file_filter_.path_filter = context.getProperty(PathFilter) | utils::transform([] (const auto& str) { return std::regex(str);}) | utils::toOptional();
 
-  file_filter_.minimum_file_age = utils::parseOptionalMsProperty(context, MinimumFileAge);
-  file_filter_.maximum_file_age = utils::parseOptionalMsProperty(context, MaximumFileAge);
+  file_filter_.minimum_file_age = utils::parseOptionalDurationProperty(context, MinimumFileAge);
+  file_filter_.maximum_file_age = utils::parseOptionalDurationProperty(context, MaximumFileAge);
 
   file_filter_.minimum_file_size = utils::parseOptionalDataSizeProperty(context, MinimumFileSize);
   file_filter_.maximum_file_size = utils::parseOptionalDataSizeProperty(context, MaximumFileSize);

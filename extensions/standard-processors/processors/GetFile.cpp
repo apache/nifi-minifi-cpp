@@ -47,11 +47,11 @@ void GetFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFact
   request_.batchSize = utils::parseU64Property(context, BatchSize);
   request_.ignoreHiddenFile = utils::parseBoolProperty(context, IgnoreHiddenFile);
   request_.keepSourceFile = utils::parseBoolProperty(context, KeepSourceFile);
-  request_.maxAge = utils::parseMsProperty(context, MaxAge);
-  request_.minAge = utils::parseMsProperty(context, MinAge);
+  request_.maxAge = utils::parseDurationProperty(context, MaxAge);
+  request_.minAge = utils::parseDurationProperty(context, MinAge);
   request_.maxSize = utils::parseDataSizeProperty(context, MaxSize);
   request_.minSize = utils::parseDataSizeProperty(context, MinSize);
-  request_.pollInterval = utils::parseMsProperty(context, PollInterval);
+  request_.pollInterval = utils::parseDurationProperty(context, PollInterval);
   request_.recursive = utils::parseBoolProperty(context, Recurse);
   request_.fileFilter = utils::parseProperty(context, FileFilter);
 

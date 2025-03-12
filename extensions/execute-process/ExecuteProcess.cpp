@@ -54,7 +54,7 @@ void ExecuteProcess::onSchedule(core::ProcessContext& context, core::ProcessSess
   if (auto working_dir_str = context.getProperty(WorkingDir)) {
     working_dir_ = *working_dir_str;
   }
-  batch_duration_ = utils::parseMsProperty(context, BatchDuration);
+  batch_duration_ = utils::parseDurationProperty(context, BatchDuration);
   logger_->log_debug("Setting batch duration to {}", batch_duration_);
 
   if (const auto redirect_error_stream = utils::parseOptionalBoolProperty(context, RedirectErrorStream)) {

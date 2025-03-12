@@ -130,7 +130,7 @@ void PushGrafanaLoki::onSchedule(core::ProcessContext& context, core::ProcessSes
     log_line_metadata_attributes_ = utils::string::splitAndTrimRemovingEmpty(*log_line_metadata_attributes, ",");
   }
 
-  auto log_line_batch_wait = utils::parseOptionalMsProperty(context, LogLineBatchWait);
+  auto log_line_batch_wait = utils::parseOptionalDurationProperty(context, LogLineBatchWait);
   auto log_line_batch_size = utils::parseOptionalU64Property(context, LogLineBatchSize);
   if (log_line_batch_size && *log_line_batch_size < 1) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Log Line Batch Size property is missing or less than 1!");

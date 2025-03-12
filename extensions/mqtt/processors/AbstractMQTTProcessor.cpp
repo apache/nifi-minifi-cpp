@@ -45,10 +45,10 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::Proc
   }
   logger_->log_debug("AbstractMQTTProcessor: Password [{}]", password_);
 
-  keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseMsProperty(context, KeepAliveInterval));
+  keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseDurationProperty(context, KeepAliveInterval));
   logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [{}] s", int64_t{keep_alive_interval_.count()});
 
-  connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseMsProperty(context, ConnectionTimeout));
+  connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(utils::parseDurationProperty(context, ConnectionTimeout));
   logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [{}] s", int64_t{connection_timeout_.count()});
 
   qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(context, QoS);

@@ -82,10 +82,10 @@ void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSession
   logger_->log_debug("PutS3Object: Multipart Size {}", multipart_size_);
 
 
-  multipart_upload_ageoff_interval_ = minifi::utils::parseMsProperty(context, MultipartUploadAgeOffInterval);
+  multipart_upload_ageoff_interval_ = minifi::utils::parseDurationProperty(context, MultipartUploadAgeOffInterval);
   logger_->log_debug("PutS3Object: Multipart Upload Ageoff Interval {}", multipart_upload_ageoff_interval_);
 
-  multipart_upload_max_age_threshold_ = minifi::utils::parseMsProperty(context, MultipartUploadMaxAgeThreshold);
+  multipart_upload_max_age_threshold_ = minifi::utils::parseDurationProperty(context, MultipartUploadMaxAgeThreshold);
   logger_->log_debug("PutS3Object: Multipart Upload Max Age Threshold {}", multipart_upload_max_age_threshold_);
 
   std::string value;

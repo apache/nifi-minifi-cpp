@@ -35,11 +35,11 @@ void PushGrafanaLokiREST::initialize() {
 }
 
 void PushGrafanaLokiREST::setupClientTimeouts(const core::ProcessContext& context) {
-  if (auto connection_timeout = utils::parseOptionalMsProperty(context, PushGrafanaLokiREST::ConnectTimeout)) {
+  if (auto connection_timeout = utils::parseOptionalDurationProperty(context, PushGrafanaLokiREST::ConnectTimeout)) {
     client_.setConnectionTimeout(*connection_timeout);
   }
 
-  if (auto read_timeout = utils::parseOptionalMsProperty(context, PushGrafanaLokiREST::ReadTimeout)) {
+  if (auto read_timeout = utils::parseOptionalDurationProperty(context, PushGrafanaLokiREST::ReadTimeout)) {
     client_.setReadTimeout(*read_timeout);
   }
 }

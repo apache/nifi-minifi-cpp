@@ -70,7 +70,7 @@ void BinFiles::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   maxBinCount_ = gsl::narrow<uint32_t>(utils::parseU64Property(context, MaxBinCount));
   logger_->log_debug("BinFiles: MaxBinCount [{}]", maxBinCount_);
 
-  if (auto max_bin_age = utils::parseOptionalMsProperty(context, MaxBinAge)) {
+  if (auto max_bin_age = utils::parseOptionalDurationProperty(context, MaxBinAge)) {
     // We need to trigger the processor even when there are no incoming flow files so that it can flush the bins.
     setTriggerWhenEmpty(true);
     this->binManager_.setBinAge(*max_bin_age);
