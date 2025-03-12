@@ -29,7 +29,7 @@ nonstd::expected<bool, std::error_code> parseBool(const std::string_view input) 
 
 namespace {
 uint64_t getUnitMultiplier(const std::string_view unit_str) {
-  static std::map<std::string, int64_t, std::less<>> unit_map{
+  static std::map<std::string_view, int64_t, std::less<>> unit_map{
           {"B", 1},
           {"K", 1_KB},
           {"M", 1_MB},
