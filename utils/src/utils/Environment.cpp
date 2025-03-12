@@ -30,6 +30,9 @@
 #include <unordered_map>
 
 #include "utils/gsl.h"
+#ifdef WIN32
+#include "utils/UnicodeConversion.h"
+#endif
 
 // Apple doesn't provide the environ global variable
 #if defined(__APPLE__) && !defined(environ)
@@ -133,33 +136,28 @@ bool Environment::isRunningAsService() {
 std::unordered_map<std::string, std::string> Environment::getEnvironmentVariables() {
   std::unordered_map<std::string, std::string> env_var_map;
 
-  Environment::accessEnvironment([&env_var_map](){
 #ifdef WIN32
-    LPWCH env_strings = GetEnvironmentStringsW();
-    if (!env_strings) {
-      return;
+  LPWCH env_strings = GetEnvironmentStringsW();
+  if (!env_strings) {
+    return env_var_map;
+  }
+
+  LPWCH env = env_strings;
+
+  while (*env) {
+    std::wstring wstring_variable_key_value_pair(env);
+    auto variable_key_value_pair = utils::to_string(wstring_variable_key_value_pair);
+    size_t pos = variable_key_value_pair.find('=');
+    if (pos != std::string::npos) {
+      env_var_map.emplace(variable_key_value_pair.substr(0, pos), variable_key_value_pair.substr(pos + 1));
     }
 
-    LPWCH env = env_strings;
+    env += wcslen(env) + 1;
+  }
 
-    while (*env) {
-      std::wstring wstring_variable_key_value_pair(env);
-
-      int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstring_variable_key_value_pair.c_str(), -1, nullptr, 0, nullptr, nullptr);
-      std::vector<char> buffer(size_needed);
-      WideCharToMultiByte(CP_UTF8, 0, wstring_variable_key_value_pair.c_str(), -1, buffer.data(), size_needed, nullptr, nullptr);
-
-      std::string variable_key_value_pair(buffer.data(), size_needed - 1);
-      size_t pos = variable_key_value_pair.find('=');
-      if (pos != std::string::npos) {
-        env_var_map.emplace(variable_key_value_pair.substr(0, pos), variable_key_value_pair.substr(pos + 1));
-      }
-
-      env += wcslen(env) + 1;
-    }
-
-    FreeEnvironmentStringsW(env_strings);
+  FreeEnvironmentStringsW(env_strings);
 #else
+  Environment::accessEnvironment([&env_var_map](){
     for (char **env = environ; *env != nullptr; ++env) {
       std::string variable_key_value_pair(*env);
       size_t pos = variable_key_value_pair.find('=');
@@ -167,8 +165,8 @@ std::unordered_map<std::string, std::string> Environment::getEnvironmentVariable
         env_var_map.emplace(variable_key_value_pair.substr(0, pos), variable_key_value_pair.substr(pos + 1));
       }
     }
-#endif
   });
+#endif
 
   return env_var_map;
 }
