@@ -16,18 +16,9 @@
  */
 #pragma once
 
-#include <limits>
-#include <memory>
-#include <string>
-#include <utility>
 #include <minifi-cpp/core/PropertyValidator.h>
 
-#include "utils/StringUtils.h"
-
-namespace org::apache::nifi::minifi::core {
-
-
-namespace StandardPropertyTypes {
+namespace org::apache::nifi::minifi::core::StandardPropertyTypes {
 
 inline constexpr auto ALWAYS_VALID_VALIDATOR = AlwaysValidValidator{};
 inline constexpr auto NON_BLANK_VALIDATOR = NonBlankValidator{};
@@ -38,17 +29,4 @@ inline constexpr auto UNSIGNED_INTEGER_VALIDATOR = UnsignedIntegerValidator{};
 inline constexpr auto DATA_SIZE_VALIDATOR = DataSizeValidator{};
 inline constexpr auto PORT_VALIDATOR = PortValidator{};
 
-
-enum class PropertyTypeCode : int64_t {
-  INTEGER = 0,
-  LONG = 1,
-  BOOLEAN = 2,
-  DATA_SIZE = 3,
-  TIME_PERIOD = 4,
-  NON_BLANK = 5,
-  PORT = 6
-};
-
-}  // namespace StandardPropertyTypes
-
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi::core::StandardPropertyTypes
