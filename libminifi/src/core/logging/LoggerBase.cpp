@@ -36,6 +36,10 @@ void LoggerControl::setEnabled(bool status) {
   is_enabled_ = status;
 }
 
+void LoggerBase::setLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  log_callback_ = callback;
+}
 
 bool LoggerBase::should_log(LOG_LEVEL level) {
   if (controller_ && !controller_->is_enabled())
@@ -46,6 +50,9 @@ bool LoggerBase::should_log(LOG_LEVEL level) {
 }
 
 void LoggerBase::log_string(LOG_LEVEL level, std::string str) {
+  if (log_callback_) {
+    log_callback_(level, str);
+  }
   delegate_->log(mapToSpdLogLevel(level), str.c_str());
 }
 
