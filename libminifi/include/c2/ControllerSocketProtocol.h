@@ -46,6 +46,7 @@ class ControllerSocketProtocol {
     std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter);
   ~ControllerSocketProtocol();
   void initialize();
+  void setRoot(core::ProcessGroup* root);
 
  private:
   void handleStart(io::BaseStream &stream);
@@ -59,6 +60,7 @@ class ControllerSocketProtocol {
   void writeGetFullResponse(io::BaseStream &stream);
   void writeManifestResponse(io::BaseStream &stream);
   void writeJstackResponse(io::BaseStream &stream);
+  void writeFlowStatusResponse(io::BaseStream &stream);
   void writeDebugBundleResponse(io::BaseStream &stream);
   void handleDescribe(io::BaseStream &stream);
   asio::awaitable<void> handleCommand(std::unique_ptr<io::BaseStream> stream);

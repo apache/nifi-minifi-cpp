@@ -52,10 +52,16 @@ void RootProcessGroupWrapper::setNewRoot(std::unique_ptr<core::ProcessGroup> new
   }
 
   if (metrics_publisher_store_) { metrics_publisher_store_->clearMetricNodes(); }
+  if (controller_socket_protocol_) {
+    controller_socket_protocol_->setRoot(nullptr);
+  }
   backup_root_ = std::move(root_);
   root_ = std::move(new_root);
   processor_to_controller_.clear();
   if (metrics_publisher_store_) { metrics_publisher_store_->loadMetricNodes(root_.get()); }
+  if (controller_socket_protocol_) {
+    controller_socket_protocol_->setRoot(root_.get());
+  }
 }
 
 void RootProcessGroupWrapper::restoreBackup() {
