@@ -93,3 +93,11 @@ TEST_CASE("optional toExpected") {
   CHECK(expected_from_null_opt_ec.error() == std::make_error_code(std::io_errc::stream));
   CHECK(expected_from_null_opt_int.error() == 9);
 }
+
+TEST_CASE("optional orThrow") {
+  std::optional<int> opt_with_value = 5;
+  std::optional<int> opt_without_value = std::nullopt;
+
+  REQUIRE_THROWS_WITH(opt_without_value | utils::orThrow("should throw"), "should throw");
+  CHECK((opt_with_value | utils::orThrow("should be 5")) == 5);
+}

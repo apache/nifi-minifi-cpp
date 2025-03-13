@@ -18,8 +18,11 @@
 #include <type_traits>
 #include <utility>
 #include <optional>
+#include <iostream>
+
 #include "nonstd/expected.hpp"
 #include "utils/detail/MonadicOperationWrappers.h"
+#include "fmt/format.h"
 
 namespace org::apache::nifi::minifi::utils {
 namespace detail {
@@ -191,11 +194,20 @@ std::optional<typename std::remove_cvref_t<Expected>::value_type> operator|(Expe
 }
 
 template<expected Expected>
-typename std::remove_cvref_t<Expected>::value_type operator|(Expected&& object, expect_wrapper e) {
+typename std::remove_cvref_t<Expected>::value_type operator|(Expected&& object, or_throw_wrapper e) {
   if (object) {
     return std::move(*object);
   }
-  throw std::runtime_error(e.reason);
+  throw std::runtime_error(fmt::format("{}: {}", e.reason, object.error()));
+}
+
+template<expected Expected>
+typename std::remove_cvref_t<Expected>::value_type operator|(Expected&& object, detail::or_terminate_wrapper e) {
+  if (object) {
+    return std::move(*object);
+  }
+  std::cerr << fmt::format("Aborting due to {}: {}", e.reason, object.error()) << std::endl;
+  std::abort();
 }
 }  // namespace detail
 

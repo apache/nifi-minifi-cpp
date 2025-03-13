@@ -163,7 +163,7 @@ class RouteText::MatchingContext {
     if (it != regex_values_.end()) {
       return it->second;
     }
-    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::expect("Missing dynamic property");
+    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::orThrow("Missing dynamic property");
     std::vector<utils::Regex::Mode> flags;
     if (case_policy_ == route_text::CasePolicy::IGNORE_CASE) {
       flags.push_back(utils::Regex::Mode::ICASE);
@@ -176,7 +176,7 @@ class RouteText::MatchingContext {
     if (it != string_values_.end()) {
       return it->second;
     }
-    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::expect("Missing dynamic property");
+    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::orThrow("Missing dynamic property");
     return (string_values_[property_name] = value);
   }
 
@@ -185,7 +185,7 @@ class RouteText::MatchingContext {
     if (it != searcher_values_.end()) {
       return it->second.searcher_;
     }
-    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::expect("Missing dynamic property");
+    const auto value = process_context_.getDynamicProperty(property_name, flow_file_.get()) | utils::orThrow("Missing dynamic property");
 
     return searcher_values_.emplace(
         std::piecewise_construct, std::forward_as_tuple(property_name),

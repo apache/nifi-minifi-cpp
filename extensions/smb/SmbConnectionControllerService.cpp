@@ -28,8 +28,8 @@ void SmbConnectionControllerService::initialize() {
 }
 
 void SmbConnectionControllerService::onEnable()  {
-  std::string hostname = getProperty(Hostname.name) | utils::expect("Required property");
-  std::string share = getProperty(Share.name) | utils::expect("Required property");
+  std::string hostname = getProperty(Hostname.name) | utils::orThrow("Required property");
+  std::string share = getProperty(Share.name) | utils::orThrow("Required property");
 
   server_path_ = "\\\\" + hostname + "\\" + share;
 

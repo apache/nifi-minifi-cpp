@@ -43,8 +43,8 @@ void AppendHostInfo::initialize() {
 
 void AppendHostInfo::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::unique_lock unique_lock(shared_mutex_);
-  hostname_attribute_name_ = context.getProperty(HostAttribute) | utils::expect("HostAttribute has default value");
-  ipaddress_attribute_name_ = context.getProperty(IPAttribute) | utils::expect("IPAttribute has default value");
+  hostname_attribute_name_ = context.getProperty(HostAttribute) | utils::orThrow("HostAttribute has default value");
+  ipaddress_attribute_name_ = context.getProperty(IPAttribute) | utils::orThrow("IPAttribute has default value");
   interface_name_filter_ = context.getProperty(InterfaceNameFilter)
       | utils::toOptional()
       | utils::filter([](const std::string& inf) { return !inf.empty(); });

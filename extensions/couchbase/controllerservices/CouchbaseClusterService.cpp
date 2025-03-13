@@ -216,7 +216,7 @@ void CouchbaseClusterService::initialize() {
 }
 
 void CouchbaseClusterService::onEnable() {
-  std::string connection_string = getProperty(ConnectionString.name) | utils::expect("required property");
+  std::string connection_string = getProperty(ConnectionString.name) | utils::orThrow("required property");
   std::string username = getProperty(UserName.name).value_or("");
   std::string password = getProperty(UserPassword.name).value_or("");
 

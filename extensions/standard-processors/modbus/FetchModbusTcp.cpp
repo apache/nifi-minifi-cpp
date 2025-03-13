@@ -52,7 +52,7 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
   timeout_duration_ = utils::parseOptionalDurationProperty(context, Timeout).value_or(15s);
 
 
-  if (context.getProperty(ConnectionPerFlowFile) | utils::andThen(parsing::parseBool) | utils::expect("FetchModbusTcp::ConnectionPerFlowFile is required property")) {
+  if (context.getProperty(ConnectionPerFlowFile) | utils::andThen(parsing::parseBool) | utils::orThrow("FetchModbusTcp::ConnectionPerFlowFile is required property")) {
     connections_.reset();
   } else {
     connections_.emplace();

@@ -797,7 +797,7 @@ std::string TailFile::baseDirectoryFromAttributes(const controllers::AttributePr
   for (const auto& [key, value] : attribute_map) {
     flow_file->setAttribute(key, value);
   }
-  return context.getProperty(BaseDirectory, flow_file.get()) | utils::expect("Base directory is required for multiple tail mode.");
+  return context.getProperty(BaseDirectory, flow_file.get()) | utils::orThrow("Base directory is required for multiple tail mode.");
 }
 
 std::chrono::milliseconds TailFile::getLookupFrequency() const {

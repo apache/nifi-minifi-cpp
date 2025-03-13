@@ -131,7 +131,7 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
     }
   }
 
-  idle_timeout_ = context.getProperty(idleTimeout) | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>) | utils::expect("RemoteProcessGroupPort::idleTimeout has default value");
+  idle_timeout_ = context.getProperty(idleTimeout) | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>) | utils::orThrow("RemoteProcessGroupPort::idleTimeout has default value");
 
   std::lock_guard<std::mutex> lock(peer_mutex_);
   if (!nifi_instances_.empty()) {

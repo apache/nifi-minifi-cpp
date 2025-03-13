@@ -53,7 +53,7 @@ void DefragmentText::onSchedule(core::ProcessContext& context, core::ProcessSess
 
   pattern_ = context.getProperty(Pattern)
     | utils::transform([](const auto pattern_str) { return utils::Regex{pattern_str}; })
-    | utils::expect("Pattern property missing or invalid");
+    | utils::orThrow("Pattern property missing or invalid");
 }
 
 void DefragmentText::onTrigger(core::ProcessContext&, core::ProcessSession& session) {

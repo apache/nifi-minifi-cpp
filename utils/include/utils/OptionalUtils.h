@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
+#pragma once
 
 #include <functional>
 #include <optional>
 #include <type_traits>
 #include <utility>
+#include <iostream>
 
 #include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 #include "utils/detail/MonadicOperationWrappers.h"
+#include "fmt/format.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -134,8 +135,22 @@ nonstd::expected<T, E> operator|(std::optional<T> object, to_expected_wrapper<E>
   }
   return std::move(*object);
 }
+
+template<typename T>
+T&& operator|(std::optional<T> object, const or_throw_wrapper e) {
+  if (object) {
+    return std::move(*object);
+  }
+  throw std::runtime_error(e.reason);
+}
+
+template<typename T>
+T&& operator|(std::optional<T> object, const or_terminate_wrapper e) {
+  if (object) {
+    return std::move(*object);
+  }
+  std::cerr << fmt::format("Aborting due to {}", e.reason) << std::endl;
+  std::abort();
+}
 }  // namespace detail
 }  // namespace org::apache::nifi::minifi::utils
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
-
