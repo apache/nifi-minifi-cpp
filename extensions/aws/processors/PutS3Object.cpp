@@ -70,13 +70,13 @@ void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSession
 
   multipart_threshold_ = context.getProperty(MultipartThreshold)
       | minifi::utils::andThen([&](const auto str) { return parsing::parseDataSizeMinMax(str, getMinPartSize(), getMaxUploadSize()); })
-      | minifi::utils::expect("Multipart Part Size is not between the valid 5MB and 5GB range!");
+      | minifi::utils::orThrow("Multipart Part Size is not between the valid 5MB and 5GB range!");
 
   logger_->log_debug("PutS3Object: Multipart Threshold {}", multipart_threshold_);
 
   multipart_size_ = context.getProperty(MultipartPartSize)
     | minifi::utils::andThen([&](const auto str) { return parsing::parseDataSizeMinMax(str, getMinPartSize(), getMaxUploadSize()); })
-    | minifi::utils::expect("Multipart Part Size is not between the valid 5MB and 5GB range!");
+    | minifi::utils::orThrow("Multipart Part Size is not between the valid 5MB and 5GB range!");
 
 
   logger_->log_debug("PutS3Object: Multipart Size {}", multipart_size_);

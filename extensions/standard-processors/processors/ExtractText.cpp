@@ -63,7 +63,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
 
   std::string attrKey = ctx_->getProperty(Attribute).value_or("");
   std::string sizeLimitStr = ctx_->getProperty(SizeLimit).value_or("");
-  bool regex_mode = ctx_->getProperty(RegexMode) | utils::andThen(parsing::parseBool) | utils::expect("Missing ExtractText::RegexMode despite default value");
+  bool regex_mode = ctx_->getProperty(RegexMode) | utils::andThen(parsing::parseBool) | utils::orThrow("Missing ExtractText::RegexMode despite default value");
 
   if (sizeLimitStr.empty())
     sizeLimitStr = DEFAULT_SIZE_LIMIT_STR;

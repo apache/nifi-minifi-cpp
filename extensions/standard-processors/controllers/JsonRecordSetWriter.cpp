@@ -70,8 +70,8 @@ rapidjson::Value toJson(const core::RecordObject& field, rapidjson::Document::Al
 }  // namespace
 
 void JsonRecordSetWriter::onEnable() {
-  output_grouping_ = getProperty(OutputGrouping.name) | utils::andThen(parsing::parseEnum<OutputGroupingType>) | utils::expect("JsonRecordSetWriter::OutputGrouping is required property");
-  pretty_print_ = getProperty(PrettyPrint.name) | utils::andThen(parsing::parseBool) | utils::expect("Missing JsonRecordSetWriter::PrettyPrint despite default value");
+  output_grouping_ = getProperty(OutputGrouping.name) | utils::andThen(parsing::parseEnum<OutputGroupingType>) | utils::orThrow("JsonRecordSetWriter::OutputGrouping is required property");
+  pretty_print_ = getProperty(PrettyPrint.name) | utils::andThen(parsing::parseBool) | utils::orThrow("Missing JsonRecordSetWriter::PrettyPrint despite default value");
 }
 
 void JsonRecordSetWriter::writePerLine(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {

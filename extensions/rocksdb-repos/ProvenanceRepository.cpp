@@ -30,7 +30,7 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
   }
   logger_->log_debug("MiNiFi Provenance Repository Directory {}", directory_);
   if (config->get(Configure::nifi_provenance_repository_max_storage_size, value)) {
-    max_partition_bytes_ = gsl::narrow<int64_t>(parsing::parseDataSize(value) | utils::expect("expected parsable data size"));
+    max_partition_bytes_ = gsl::narrow<int64_t>(parsing::parseDataSize(value) | utils::orThrow("expected parsable data size"));
   }
   logger_->log_debug("MiNiFi Provenance Max Partition Bytes {}", max_partition_bytes_);
   if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {

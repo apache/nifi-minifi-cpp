@@ -554,10 +554,10 @@ TEST_CASE("expected toOptional") {
   CHECK(res2 == 5);
 }
 
-TEST_CASE("expected expect") {
+TEST_CASE("expected orThrow") {
   nonstd::expected<int, std::string> unexpected{nonstd::unexpect, "hello"};
   nonstd::expected<int, std::string> expected{5};
 
-  REQUIRE_THROWS_WITH(std::move(unexpected) | utils::expect("should throw"), "should throw");
-  CHECK((std::move(expected) | utils::expect("should be 5")) == 5);
+  REQUIRE_THROWS_WITH(std::move(unexpected) | utils::orThrow("should throw"), "should throw: hello");
+  CHECK((std::move(expected) | utils::orThrow("should be 5")) == 5);
 }
