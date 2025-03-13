@@ -98,7 +98,7 @@ void S3Processor::onSchedule(core::ProcessContext& context, core::ProcessSession
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
   }
 
-  client_config_->region = context.getProperty(Region) | minifi::utils::expect("Region property missing or invalid");
+  client_config_->region = context.getProperty(Region) | minifi::utils::orThrow("Region property missing or invalid");
   logger_->log_debug("S3Processor: Region [{}]", client_config_->region);
 
   if (auto communications_timeout = minifi::utils::parseOptionalDurationProperty(context, CommunicationsTimeout)) {

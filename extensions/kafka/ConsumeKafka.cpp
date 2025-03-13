@@ -142,7 +142,7 @@ void ConsumeKafka::extend_config_from_dynamic_properties(const core::ProcessCont
   }
   logger_->log_info("Loading {} extra kafka configuration fields from ConsumeKafka dynamic properties:", dynamic_prop_keys.size());
   for (const std::string& key : dynamic_prop_keys) {
-    std::string value = context.getDynamicProperty(key) | utils::expect("");
+    std::string value = context.getDynamicProperty(key) | utils::orThrow(fmt::format("This shouldn't happen, dynamic property {} is expected because we just queried the list of dynamic properties", key));
     logger_->log_info("{}: {}", key.c_str(), value.c_str());
     setKafkaConfigurationField(*conf_, key, value);
   }

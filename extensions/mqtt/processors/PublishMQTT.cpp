@@ -133,7 +133,7 @@ bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::s
 
 void PublishMQTT::checkProperties() {
   auto is_property_explicitly_set = [this](const std::string_view property_name) -> bool {
-    const auto property_values = getAllPropertyValues(property_name) | utils::expect("It should only be called on valid property");
+    const auto property_values = getAllPropertyValues(property_name) | utils::orThrow("It should only be called on valid property");
     return !property_values.empty();
   };
   if ((mqtt_version_ == mqtt::MqttVersions::V_3_1_0 || mqtt_version_ == mqtt::MqttVersions::V_3_1_1 || mqtt_version_ == mqtt::MqttVersions::V_3X_AUTO)) {

@@ -39,11 +39,11 @@ void HashContent::initialize() {
 }
 
 void HashContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  attrKey_ = context.getProperty(HashAttribute) | utils::expect("Missing HashContent::HashAttribute despite default value");
-  failOnEmpty_ = context.getProperty(FailOnEmpty) | utils::andThen(parsing::parseBool) | utils::expect("Missing HashContent::FailOnEmpty despite default value");
+  attrKey_ = context.getProperty(HashAttribute) | utils::orThrow("Missing HashContent::HashAttribute despite default value");
+  failOnEmpty_ = context.getProperty(FailOnEmpty) | utils::andThen(parsing::parseBool) | utils::orThrow("Missing HashContent::FailOnEmpty despite default value");
 
   {
-    std::string algo_name = context.getProperty(HashAlgorithm) | utils::expect("HashContent::HashAlgorithm is required property");
+    std::string algo_name = context.getProperty(HashAlgorithm) | utils::orThrow("HashContent::HashAlgorithm is required property");
     std::transform(algo_name.begin(), algo_name.end(), algo_name.begin(), ::toupper);
     std::erase(algo_name, '-');
     if (!HashAlgos.contains(algo_name)) {

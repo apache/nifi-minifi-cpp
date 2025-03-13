@@ -49,10 +49,10 @@ void AttributesToJSON::onSchedule(core::ProcessContext& context, core::ProcessSe
 
   include_core_attributes_ = context.getProperty(IncludeCoreAttributes)
       | utils::andThen(parsing::parseBool)
-      | utils::expect("AttributesToJSON::IncludeCoreAttributes should be available in onSchedule");
+      | utils::orThrow("AttributesToJSON::IncludeCoreAttributes should be available in onSchedule");
   null_value_ = context.getProperty(NullValue)
       | utils::andThen(parsing::parseBool)
-      | utils::expect("AttributesToJSON::NullValue should be available in onSchedule");
+      | utils::orThrow("AttributesToJSON::NullValue should be available in onSchedule");
 }
 
 bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute) const {
