@@ -30,8 +30,11 @@ set(RDKAFKA_BUILD_EXAMPLES "OFF" CACHE STRING "" FORCE)
 set(RDKAFKA_BUILD_TESTS "OFF" CACHE STRING "" FORCE)
 set(LIBRDKAFKA_STATICLIB "1" CACHE STRING "" FORCE)
 
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/librdkafka/0001-remove-findLZ4-and-findZSTD.patch")
-set(PC "${Patch_EXECUTABLE}" -p1 -i "${PATCH_FILE}")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/librdkafka/0001-remove-findLZ4-and-findZSTD.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/librdkafka/0002-undef-X509_NAME.patch")
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
 
 FetchContent_Declare(libkafka
         URL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.8.0.tar.gz
