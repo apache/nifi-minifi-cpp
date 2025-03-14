@@ -26,6 +26,7 @@
 #include <memory>
 #include <string_view>
 #include <utility>
+#include <optional>
 
 #include "open62541/client.h"
 #include "core/logging/Logger.h"
@@ -35,56 +36,71 @@ namespace org::apache::nifi::minifi::opc {
 
 class OPCException : public minifi::Exception {
  public:
-  OPCException(ExceptionType type, std::string &&errorMsg)
-  : Exception(type, errorMsg) {
+  OPCException(ExceptionType type, std::string &&error_msg)
+    : Exception(type, error_msg) {
   }
 };
 
-enum class OPCNodeIDType{ Path, Int, String };
+enum class OPCNodeIDType{
+  Path,
+  Int,
+  String
+};
 
-enum class OPCNodeDataType{ Int64, UInt64, Int32, UInt32, Boolean, Float, Double, String };
+enum class OPCNodeDataType{
+  Int64,
+  UInt64,
+  Int32,
+  UInt32,
+  Boolean,
+  Float,
+  Double,
+  String
+};
 
 struct NodeData;
 
 class Client;
 
-using nodeFoundCallBackFunc = bool(Client& client, const UA_ReferenceDescription*, const std::string&);
+using NodeFoundCallBackFunc = bool(const UA_ReferenceDescription*, const std::string&);
 
 class Client {
  public:
+  ~Client();
   bool isConnected();
   UA_StatusCode connect(const std::string& url, const std::string& username = "", const std::string& password = "");
-  ~Client();
-  NodeData getNodeData(const UA_ReferenceDescription *ref, const std::string& basePath = "");
-  UA_ReferenceDescription * getNodeReference(UA_NodeId nodeId);
-  void traverse(UA_NodeId nodeId, const std::function<nodeFoundCallBackFunc>& cb, const std::string& basePath = "", uint64_t maxDepth = 0, bool fetchRoot = true);
-  bool exists(UA_NodeId nodeId);
-  UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& foundNodeIDs, const std::shared_ptr<core::logging::Logger>& logger);
+  NodeData getNodeData(const UA_ReferenceDescription *ref, const std::string& base_path = "");
+  UA_ReferenceDescription * getNodeReference(UA_NodeId node_id);
+  void traverse(UA_NodeId node_id, const std::function<NodeFoundCallBackFunc>& cb, const std::string& base_path = "", uint64_t max_depth = 0, bool fetch_root = true);
+  bool exists(UA_NodeId node_id);
+  UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& found_node_ids, int32_t namespace_index,
+    const std::vector<UA_UInt32>& path_reference_types, const std::shared_ptr<core::logging::Logger>& logger);
 
   template<typename T>
-  UA_StatusCode update_node(const UA_NodeId nodeId, T value);
+  UA_StatusCode update_node(const UA_NodeId node_id, T value);
 
   template<typename T>
-  UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, T value, UA_NodeId *receivedNodeId);
+  UA_StatusCode add_node(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name, T value, UA_NodeId *received_node_id);
 
-  static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
-                                              const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
-                                              const std::vector<std::vector<char>>& trustBuffers);
+  static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
+                                              const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
+                                              const std::vector<std::vector<char>>& trust_buffers);
 
  private:
-  Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
-      const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
-      const std::vector<std::vector<char>>& trustBuffers);
+  Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
+      const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
+      const std::vector<std::vector<char>>& trust_buffers);
 
   UA_Client *client_;
   std::shared_ptr<core::logging::Logger> logger_;
+  UA_Logger minifi_ua_logger_{};
 };
 
 using ClientPtr = std::unique_ptr<Client>;
 
 struct NodeData {
   std::vector<uint8_t> data;
-  UA_DataTypeKind dataTypeID;
+  UA_DataTypeKind data_type_id;
   std::map<std::string, std::string> attributes;
 
   virtual ~NodeData() {
@@ -98,7 +114,7 @@ struct NodeData {
   NodeData& operator= (NodeData &&) = delete;
 
   NodeData(NodeData&& rhs) : data(rhs.data), attributes(rhs.attributes) {
-    dataTypeID = rhs.dataTypeID;
+    data_type_id = rhs.data_type_id;
     this->var_ = rhs.var_;
     rhs.var_ = nullptr;
   }
@@ -120,22 +136,13 @@ struct NodeData {
   friend std::string nodeValue2String(const NodeData&);
 };
 
-inline constexpr std::array<std::pair<std::string_view, OPCNodeDataType>, 8>  StringToOPCDataTypeMap = {{
-  {"Int64", OPCNodeDataType::Int64},
-  {"UInt64", OPCNodeDataType::UInt64 },
-  {"Int32", OPCNodeDataType::Int32},
-  {"UInt32", OPCNodeDataType::UInt32},
-  {"Boolean", OPCNodeDataType::Boolean},
-  {"Float", OPCNodeDataType::Float},
-  {"Double", OPCNodeDataType::Double},
-  {"String", OPCNodeDataType::String}
-}};
-
 std::string nodeValue2String(const NodeData& nd);
 
 std::string OPCDateTime2String(UA_DateTime raw_date);
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args);
+
+std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type);
 
 }  // namespace org::apache::nifi::minifi::opc
 
