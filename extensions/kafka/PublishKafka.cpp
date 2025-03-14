@@ -353,7 +353,7 @@ void PublishKafka::onSchedule(core::ProcessContext& context, core::ProcessSessio
 
   // Attributes to Send as Headers
   attributeNameRegex_ = context.getProperty(AttributeNameRegex)
-    | utils::transform([](const auto pattern_str) { return utils::Regex{pattern_str}; })
+    | utils::transform([](const auto pattern_str) { return utils::Regex{std::move(pattern_str)}; })
     | utils::toOptional();
 
   key_.brokers_ = brokers;
