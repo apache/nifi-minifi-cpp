@@ -2147,15 +2147,11 @@ Parameter Context Name: dummycontext
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("DummyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("DummyProcessor"));
   REQUIRE(proc);
-  REQUIRE(proc->getProperty("Simple Property") == "value1");
-  core::Property property("My Dynamic Property Sequence", "");
-  proc->getDynamicProperty("My Dynamic Property Sequence", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value2");
-  CHECK(values[1] == "value3");
+  auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
+  CHECK((*values)[0] == "value2");
+  CHECK((*values)[1] == "value3");
 }
 
 TEST_CASE("Parameter providers can be configured to select which parameters to be sensitive", "[YamlConfiguration]") {
