@@ -40,13 +40,13 @@ namespace org::apache::nifi::minifi {
 namespace core {
 class ConsumeKafkaMaxPollTimePropertyValidator final : public PropertyValidator {
  public:
-  constexpr ~ConsumeKafkaMaxPollTimePropertyType() override { }  // NOLINT see comment at grandparent
+  constexpr ~ConsumeKafkaMaxPollTimePropertyValidator() override { }  // NOLINT see comment at grandparent
 
   [[nodiscard]] bool validate(const std::string_view input) const override;
   [[nodiscard]] std::optional<std::string_view> getEquivalentNifiStandardValidatorName() const override { return std::nullopt; }
 };
 
-inline constexpr ConsumeKafkaMaxPollTimePropertyType CONSUME_KAFKA_MAX_POLL_TIME_TYPE{};
+inline constexpr ConsumeKafkaMaxPollTimePropertyValidator CONSUME_KAFKA_MAX_POLL_TIME_TYPE{};
 }  // namespace core
 
 namespace processors {

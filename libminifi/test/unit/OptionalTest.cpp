@@ -90,8 +90,9 @@ TEST_CASE("optional toExpected") {
   CHECK(expected_from_value_ec == 5);
   CHECK(expected_from_value_int == 5);
 
-  CHECK(!expected_from_null_opt_ec && expected_from_null_opt_ec.error() == std::make_error_code(std::io_errc::stream));
-  CHECK(!expected_from_null_opt_ec && expected_from_null_opt_int.error() == 9);
+  REQUIRE_FALSE(expected_from_null_opt_ec);
+  CHECK(expected_from_null_opt_ec.error() == std::make_error_code(std::io_errc::stream));
+  CHECK(expected_from_null_opt_int.error() == 9);
 }
 
 TEST_CASE("optional orThrow") {

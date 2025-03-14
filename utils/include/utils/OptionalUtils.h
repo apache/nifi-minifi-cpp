@@ -143,7 +143,7 @@ T&& operator|(std::optional<T> object, const or_throw_wrapper e) {
   if (object) {
     return std::move(*object);
   }
-  throw std::runtime_error(fmt::format("{}: {}", e.reason, object.error()));
+  throw std::runtime_error(fmt::format("{}", e.reason));
 }
 
 template<typename T>
