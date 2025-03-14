@@ -1,0 +1,11 @@
+diff -rupN old/src/rdkafka_ssl.c new/src/rdkafka_ssl.c
+--- old/src/rdkafka_ssl.c	2025-03-14 11:17:53.053817600 +0100
++++ new/src/rdkafka_ssl.c	2025-03-14 11:18:42.118319700 +0100
+@@ -39,6 +39,7 @@
+ 
+ #ifdef _WIN32
+ #include <wincrypt.h>
++#undef X509_NAME
+ #pragma comment(lib, "crypt32.lib")
+ #pragma comment(lib, "libcrypto.lib")
+ #pragma comment(lib, "libssl.lib")
