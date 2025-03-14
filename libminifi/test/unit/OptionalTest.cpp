@@ -100,5 +100,6 @@ TEST_CASE("optional orThrow") {
   std::optional<int> opt_without_value = std::nullopt;
 
   REQUIRE_THROWS_WITH(opt_without_value | utils::orThrow("should throw"), "should throw");
-  CHECK((opt_with_value | utils::orThrow("should be 5")) == 5);
+  const int unwrapped_val = opt_with_value | utils::orThrow("should be 5");
+  CHECK(unwrapped_val == 5);
 }

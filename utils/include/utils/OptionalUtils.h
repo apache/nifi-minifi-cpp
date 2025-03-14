@@ -139,7 +139,7 @@ nonstd::expected<T, E> operator|(std::optional<T> object, to_expected_wrapper<E>
 }
 
 template<typename T>
-T&& operator|(std::optional<T> object, const or_throw_wrapper e) {
+T operator|(std::optional<T> object, const or_throw_wrapper e) {
   if (object) {
     return std::move(*object);
   }
