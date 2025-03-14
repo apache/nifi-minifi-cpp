@@ -123,6 +123,9 @@ class DockerTestCluster:
     def remove_python_requirements_txt_in_minifi(self):
         self.container_store.remove_python_requirements_txt_in_minifi()
 
+    def use_nifi_python_processors_without_dependencies_in_minifi(self):
+        self.container_store.use_nifi_python_processors_without_dependencies_in_minifi()
+
     def set_yaml_in_minifi(self):
         self.container_store.set_yaml_in_minifi()
 

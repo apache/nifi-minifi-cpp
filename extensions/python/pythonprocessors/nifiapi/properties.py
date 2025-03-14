@@ -15,9 +15,10 @@
 
 from enum import Enum
 from typing import List, Dict
-from minifi_native import ProcessSession, StateManager, timePeriodStringToMilliseconds, dataSizeStringToBytes
+from minifi_native import ProcessSession, timePeriodStringToMilliseconds, dataSizeStringToBytes
 from minifi_native import FlowFile as CppFlowFile
 from minifi_native import ProcessContext as CppProcessContext
+from .componentstate import StateManager
 
 
 # This is a mock for NiFi's StandardValidators class methods, that return the property type equivalent in MiNiFi C++ if exists
@@ -294,7 +295,7 @@ class ProcessContext:
         return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support, controller_service_definition)
 
     def getStateManager(self) -> StateManager:
-        return self.cpp_context.getStateManager()
+        return StateManager(self.cpp_context.getStateManager())
 
     def getName(self) -> str:
         return self.cpp_context.getName()
