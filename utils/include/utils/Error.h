@@ -18,6 +18,16 @@
 #pragma once
 
 #include <system_error>
+#include "fmt/format.h"
+#include "fmt/std.h"
+
+template <>
+struct fmt::formatter<std::error_code> : fmt::formatter<std::string> {
+  auto format(const std::error_code& ec, fmt::format_context& ctx) const {
+    return fmt::formatter<std::string>::format(
+        fmt::format("{}: {} ({})", ec.category().name(), ec.message(), ec.value()), ctx);
+  }
+};
 
 namespace org::apache::nifi::minifi::utils {
 

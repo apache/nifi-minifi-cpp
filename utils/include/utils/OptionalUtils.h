@@ -28,6 +28,8 @@
 #include "utils/gsl.h"
 #include "utils/detail/MonadicOperationWrappers.h"
 #include "fmt/format.h"
+#include "utils/Error.h"  // for more readable std::error_code fmt::formatter
+
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -141,7 +143,7 @@ T&& operator|(std::optional<T> object, const or_throw_wrapper e) {
   if (object) {
     return std::move(*object);
   }
-  throw std::runtime_error(e.reason);
+  throw std::runtime_error(fmt::format("{}: {}", e.reason, object.error()));
 }
 
 template<typename T>
