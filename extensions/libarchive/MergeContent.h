@@ -296,6 +296,7 @@ class MergeContent : public processors::BinFiles {
  public:
   explicit MergeContent(const std::string& name, const utils::Identifier& uuid = {})
       : processors::BinFiles(name, uuid) {
+    logger_ = core::logging::LoggerFactory<MergeContent>::getLogger(uuid_);
     mergeStrategy_ = merge_content_options::MERGE_STRATEGY_DEFRAGMENT;
     mergeFormat_ = merge_content_options::MERGE_FORMAT_CONCAT_VALUE;
     delimiterStrategy_ = merge_content_options::DELIMITER_STRATEGY_FILENAME;
@@ -389,7 +390,6 @@ class MergeContent : public processors::BinFiles {
  private:
   void validatePropertyOptions();
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MergeContent>::getLogger(uuid_);
   std::string mergeStrategy_;
   std::string mergeFormat_;
   std::string correlationAttributeName_;
