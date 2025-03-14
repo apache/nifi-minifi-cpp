@@ -38,7 +38,7 @@
 namespace org::apache::nifi::minifi {
 
 namespace core {
-class ConsumeKafkaMaxPollTimePropertyType final : public PropertyValidator {
+class ConsumeKafkaMaxPollTimePropertyValidator final : public PropertyValidator {
  public:
   constexpr ~ConsumeKafkaMaxPollTimePropertyType() override { }  // NOLINT see comment at grandparent
 
