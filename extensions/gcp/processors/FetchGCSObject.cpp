@@ -124,10 +124,11 @@ void FetchGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSessi
   FetchFromGCSCallback callback(client, *bucket, *object_name);
   callback.setEncryptionKey(encryption_key_);
 
-  gcs::Generation generation;
   if (const auto object_generation_str =  context.getProperty(ObjectGeneration, flow_file.get()); object_generation_str && !object_generation_str->empty()) {
     if (const auto geni64 = parsing::parseIntegral<int64_t>(*object_generation_str)) {
-      generation = gcs::Generation{*geni64};
+      gcs::Generation generation = gcs::Generation{*geni64};
+      callback.setGeneration(generation);
+
     } else {
       logger_->log_error("Invalid generation: {}", *object_generation_str);
       session.transfer(flow_file, Failure);
@@ -135,7 +136,6 @@ void FetchGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSessi
     }
   }
 
-  callback.setGeneration(generation);
 
   session.write(flow_file, std::ref(callback));
   if (!callback.getStatus().ok()) {
