@@ -23,7 +23,7 @@ from textwrap import dedent
 import os
 
 
-class PythonOptions:
+class PythonWithDependenciesOptions:
     REQUIREMENTS_FILE = 0
     SYSTEM_INSTALLED_PACKAGES = 1
     INLINE_DEFINED_PACKAGES = 2
@@ -50,11 +50,13 @@ class ImageStore:
         elif container_engine == "minifi-cpp-with-example-python-processors":
             image = self.__build_minifi_cpp_image_with_example_minifi_python_processors()
         elif container_engine == "minifi-cpp-nifi-python":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors(PythonOptions.REQUIREMENTS_FILE)
+            image = self.__build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(PythonWithDependenciesOptions.REQUIREMENTS_FILE)
         elif container_engine == "minifi-cpp-nifi-python-system-python-packages":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors(PythonOptions.SYSTEM_INSTALLED_PACKAGES)
+            image = self.__build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(PythonWithDependenciesOptions.SYSTEM_INSTALLED_PACKAGES)
         elif container_engine == "minifi-cpp-nifi-with-inline-python-dependencies":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors(PythonOptions.INLINE_DEFINED_PACKAGES)
+            image = self.__build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(PythonWithDependenciesOptions.INLINE_DEFINED_PACKAGES)
+        elif container_engine == "minifi-cpp-nifi-with-python-without-dependencies":
+            image = self.__build_minifi_cpp_image_with_nifi_python_processors()
         elif container_engine == "http-proxy":
             image = self.__build_http_proxy_image()
         elif container_engine == "postgresql-server":
@@ -129,7 +131,7 @@ class ImageStore:
 
         return self.__build_image(dockerfile)
 
-    def __build_minifi_cpp_image_with_nifi_python_processors(self, python_option):
+    def __build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(self, python_option):
         parse_document_url = "https://raw.githubusercontent.com/apache/nifi-python-extensions/refs/heads/main/src/extensions/chunking/ParseDocument.py"
         chunk_document_url = "https://raw.githubusercontent.com/apache/nifi-python-extensions/refs/heads/main/src/extensions/chunking/ChunkDocument.py"
         pip3_install_command = ""
@@ -141,14 +143,14 @@ class ImageStore:
         # d: Delete line
         parse_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
         chunk_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
-        if python_option == PythonOptions.SYSTEM_INSTALLED_PACKAGES:
+        if python_option == PythonWithDependenciesOptions.SYSTEM_INSTALLED_PACKAGES:
             if not MinifiContainer.MINIFI_TAG_PREFIX or "bookworm" in MinifiContainer.MINIFI_TAG_PREFIX or "noble" in MinifiContainer.MINIFI_TAG_PREFIX:
                 additional_cmd = "RUN pip3 install --break-system-packages 'langchain<=0.17.0'"
             else:
                 additional_cmd = "RUN pip3 install 'langchain<=0.17.0'"
-        elif python_option == PythonOptions.REQUIREMENTS_FILE:
+        elif python_option == PythonWithDependenciesOptions.REQUIREMENTS_FILE:
             requirements_install_command = "echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\"
-        elif python_option == PythonOptions.INLINE_DEFINED_PACKAGES:
+        elif python_option == PythonWithDependenciesOptions.INLINE_DEFINED_PACKAGES:
             parse_document_sed_cmd = parse_document_sed_cmd[:-2] + ' sed -i "s/langchain==[0-9.]\\+/langchain<=0.17.0/" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
             chunk_document_sed_cmd = 'sed -i "s/\\[\\\'langchain\\\'\\]/\\[\\\'langchain<=0.17.0\\\'\\]/" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
         if not MinifiContainer.MINIFI_TAG_PREFIX:
@@ -159,18 +161,6 @@ class ImageStore:
                 {pip3_install_command}
                 {additional_cmd}
                 USER minificpp
-                COPY RotatingForwarder.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/RotatingForwarder.py
-                COPY SpecialPropertyTypeChecker.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/SpecialPropertyTypeChecker.py
-                COPY ProcessContextInterfaceChecker.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ProcessContextInterfaceChecker.py
-                COPY CreateFlowFile.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/CreateFlowFile.py
-                COPY FailureWithAttributes.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/FailureWithAttributes.py
-                COPY subtractutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/subtractutils.py
-                COPY RelativeImporterProcessor.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/RelativeImporterProcessor.py
-                COPY multiplierutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/multiplierutils.py
-                COPY CreateNothing.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/CreateNothing.py
-                COPY FailureWithContent.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/FailureWithContent.py
-                COPY TransferToOriginal.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/TransferToOriginal.py
-                COPY SetRecordField.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/SetRecordField.py
                 RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     wget {chunk_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\
@@ -189,6 +179,32 @@ class ImageStore:
                            requirements_install_command=requirements_install_command,
                            parse_document_sed_cmd=parse_document_sed_cmd,
                            chunk_document_sed_cmd=chunk_document_sed_cmd))
+        return self.__build_image(dockerfile)
+
+    def __build_minifi_cpp_image_with_nifi_python_processors(self):
+        pip3_install_command = ""
+        if not MinifiContainer.MINIFI_TAG_PREFIX:
+            pip3_install_command = "RUN apk --update --no-cache add py3-pip"
+        dockerfile = dedent("""\
+                FROM {base_image}
+                USER root
+                {pip3_install_command}
+                USER minificpp
+                COPY RotatingForwarder.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/RotatingForwarder.py
+                COPY SpecialPropertyTypeChecker.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/SpecialPropertyTypeChecker.py
+                COPY ProcessContextInterfaceChecker.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ProcessContextInterfaceChecker.py
+                COPY CreateFlowFile.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/CreateFlowFile.py
+                COPY FailureWithAttributes.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/FailureWithAttributes.py
+                COPY subtractutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/subtractutils.py
+                COPY RelativeImporterProcessor.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/RelativeImporterProcessor.py
+                COPY multiplierutils.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/compute/processors/multiplierutils.py
+                COPY CreateNothing.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/CreateNothing.py
+                COPY FailureWithContent.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/FailureWithContent.py
+                COPY TransferToOriginal.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/TransferToOriginal.py
+                COPY SetRecordField.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/SetRecordField.py
+                COPY TestStateManager.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/TestStateManager.py
+                RUN python3 -m venv /opt/minifi/minifi-current/venv
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION, pip3_install_command=pip3_install_command))
 
         def build_full_python_resource_path(resource):
             return os.path.join(self.test_dir, "resources", "python", resource)
@@ -206,6 +222,7 @@ class ImageStore:
             build_full_python_resource_path("FailureWithContent.py"),
             build_full_python_resource_path("TransferToOriginal.py"),
             build_full_python_resource_path("SetRecordField.py"),
+            build_full_python_resource_path("TestStateManager.py"),
         ])
 
     def __build_http_proxy_image(self):
