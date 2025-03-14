@@ -30,8 +30,8 @@ namespace org::apache::nifi::minifi::test {
 TEST_CASE("Shiftr successful case") {
   SingleProcessorTestController controller{std::make_unique<minifi::processors::JoltTransformJSON>("JoltProc")};
   auto proc = controller.getProcessor();
-  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
-  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltSpecification, R"json(
     {
       "a": "a_out",
       "b": {
@@ -78,8 +78,8 @@ TEST_CASE("Shiftr successful case") {
 TEST_CASE("Shiftr multiple destination") {
   SingleProcessorTestController controller{std::make_unique<minifi::processors::JoltTransformJSON>("JoltProc")};
   auto proc = controller.getProcessor();
-  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
-  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltSpecification, R"json(
     {
       "a": ["out1", "out2.inner"]
     }
@@ -130,8 +130,8 @@ TEST_CASE("Shiftr invalid reference") {
 TEST_CASE("Shiftr matches are correctly ordered") {
   SingleProcessorTestController controller{std::make_unique<minifi::processors::JoltTransformJSON>("JoltProc")};
   auto proc = controller.getProcessor();
-  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
-  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltSpecification, R"json(
     {
       "a": {
         "a": {
@@ -174,8 +174,8 @@ TEST_CASE("Shiftr matches are correctly ordered") {
 TEST_CASE("Shiftr arrays are maps with numeric keys") {
   SingleProcessorTestController controller{std::make_unique<minifi::processors::JoltTransformJSON>("JoltProc")};
   auto proc = controller.getProcessor();
-  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
-  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltSpecification, R"json(
     {
       "a": {
         "0": "a_&",
@@ -206,8 +206,8 @@ TEST_CASE("Shiftr arrays are maps with numeric keys") {
 TEST_CASE("Shiftr put into array at index") {
   SingleProcessorTestController controller{std::make_unique<minifi::processors::JoltTransformJSON>("JoltProc")};
   auto proc = controller.getProcessor();
-  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
-  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltSpecification, R"json(
     {
       "a": "out[1]",
       "b": "out[2].inner",
@@ -240,8 +240,8 @@ TEST_CASE("Shiftr multiple patterns") {
   // this is an extension, so we can escape and match on a '|' character
   SingleProcessorTestController controller{std::make_unique<minifi::processors::JoltTransformJSON>("JoltProc")};
   auto proc = controller.getProcessor();
-  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
-  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
+  controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltSpecification, R"json(
     {
       "a|b": "out1",
       "b\\||c": "out2"
@@ -308,8 +308,8 @@ TEST_CASE("Run tests from https://github.com/bazaarvoice/jolt") {
     SingleProcessorTestController controller{std::make_unique<minifi::processors::JoltTransformJSON>("JoltProc")};
     auto proc = controller.getProcessor();
     LogTestController::getInstance().setTrace<minifi::processors::JoltTransformJSON>();
-    proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
-    proc->setProperty(processors::JoltTransformJSON::JoltSpecification, to_string(doc["spec"]));
+    controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));
+    controller.plan->setProperty(proc, processors::JoltTransformJSON::JoltSpecification, to_string(doc["spec"]));
 
     auto res = controller.trigger(to_string(doc["input"]));
 

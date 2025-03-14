@@ -83,50 +83,50 @@ class SSLContextServiceImpl : public core::controller::ControllerServiceImpl, pu
       : ControllerServiceImpl(name),
         initialized_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
-    setConfiguration(configuration);
-    initialize();
+    ControllerServiceImpl::setConfiguration(configuration);
+    SSLContextServiceImpl::initialize();
 
     // set the properties based on the configuration
     std::string value;
     if (configuration_->get(Configure::nifi_security_client_certificate, value)) {
-      setProperty(ClientCertificate, value);
+      ControllerServiceImpl::setProperty(ClientCertificate.name, value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_private_key, value)) {
-      setProperty(PrivateKey, value);
+      ControllerServiceImpl::setProperty(PrivateKey.name, value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_pass_phrase, value)) {
-      setProperty(Passphrase, value);
+      ControllerServiceImpl::setProperty(Passphrase.name, value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_ca_certificate, value)) {
-      setProperty(CACertificate, value);
+      ControllerServiceImpl::setProperty(CACertificate.name, value);
     }
 
     if (configuration_->get(Configure::nifi_security_use_system_cert_store, value)) {
-      setProperty(UseSystemCertStore, value);
+      ControllerServiceImpl::setProperty(UseSystemCertStore.name, value);
     }
 
 #ifdef WIN32
     if (configuration_->get(Configure::nifi_security_windows_cert_store_location, value)) {
-      setProperty(CertStoreLocation, value);
+      ControllerServiceImpl::setProperty(CertStoreLocation.name, value);
     }
 
     if (configuration_->get(Configure::nifi_security_windows_server_cert_store, value)) {
-      setProperty(ServerCertStore, value);
+      ControllerServiceImpl::setProperty(ServerCertStore.name, value);
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_store, value)) {
-      setProperty(ClientCertStore, value);
+      ControllerServiceImpl::setProperty(ClientCertStore.name, value);
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_cn, value)) {
-      setProperty(ClientCertCN, value);
+      ControllerServiceImpl::setProperty(ClientCertCN.name, value);
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_key_usage, value)) {
-      setProperty(ClientCertKeyUsage, value);
+      ControllerServiceImpl::setProperty(ClientCertKeyUsage.name, value);
     }
 #endif  // WIN32
   }
@@ -211,7 +211,7 @@ class SSLContextServiceImpl : public core::controller::ControllerServiceImpl, pu
   MINIFIAPI static constexpr auto UseSystemCertStore = core::PropertyDefinitionBuilder<>::createProperty("Use System Cert Store")
       .withDescription("Whether to use the certificates in the OS's certificate store")
       .isRequired(false)
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   MINIFIAPI static constexpr auto Properties =

@@ -27,6 +27,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::systemd {
 
@@ -54,28 +55,13 @@ void ConsumeJournald::notifyStop() {
 
 void ConsumeJournald::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   gsl_Expects(!running_ && worker_);
-  using JournalTypeEnum = systemd::JournalType;
 
-  const auto parse_payload_format = [](const std::string& property_value) -> std::optional<systemd::PayloadFormat> {
-    if (property_value == PAYLOAD_FORMAT_RAW) return systemd::PayloadFormat::Raw;
-    if (property_value == PAYLOAD_FORMAT_SYSLOG) return systemd::PayloadFormat::Syslog;
-    return std::nullopt;
-  };
-  const auto parse_journal_type = [](const std::string& property_value) -> std::optional<JournalTypeEnum> {
-    if (property_value == JOURNAL_TYPE_USER) return JournalTypeEnum::User;
-    if (property_value == JOURNAL_TYPE_SYSTEM) return JournalTypeEnum::System;
-    if (property_value == JOURNAL_TYPE_BOTH) return JournalTypeEnum::Both;
-    return std::nullopt;
-  };
-  batch_size_ = context.getProperty<size_t>(BatchSize).value();
-  payload_format_ = (context.getProperty(PayloadFormat) | utils::andThen(parse_payload_format)
-      | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "invalid payload format"}; }))
-      .value();
-  include_timestamp_ = context.getProperty<bool>(IncludeTimestamp).value();
-  const auto journal_type = (context.getProperty(JournalType) | utils::andThen(parse_journal_type)
-      | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "invalid journal type"}; }))
-      .value();
-  const auto process_old_messages = context.getProperty<bool>(ProcessOldMessages).value_or(false);
+  batch_size_ = utils::parseU64Property(context, BatchSize);
+  payload_format_ = utils::parseEnumProperty<systemd::PayloadFormat>(context, PayloadFormat);
+  include_timestamp_ = utils::parseBoolProperty(context, IncludeTimestamp);
+  const auto journal_type = utils::parseEnumProperty<systemd::JournalType>(context, JournalType);
+
+  const auto process_old_messages = utils::parseBoolProperty(context, ProcessOldMessages);
   timestamp_format_ = [&context] {
     auto tf_prop = (context.getProperty(TimestampFormat)
         | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "invalid timestamp format" }; }))
@@ -216,7 +202,7 @@ std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) con
 
 std::string ConsumeJournald::getCursor() const {
   const auto cursor = [this] {
-    gsl::owner<char*> cursor_out;
+    gsl::owner<char*> cursor_out = nullptr;
     const auto err_code = journal_->getCursor(&cursor_out);
     if (err_code < 0) throw SystemErrorException{"sd_journal_get_cursor", std::generic_category().default_error_condition(-err_code)};
     gsl_Ensures(cursor_out);

@@ -19,6 +19,7 @@
 #include "AWSCredentialsService.h"
 
 #include "core/Resource.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::aws::controllers {
 
@@ -27,19 +28,17 @@ void AWSCredentialsService::initialize() {
 }
 
 void AWSCredentialsService::onEnable() {
-  std::string value;
-  if (getProperty(AccessKey, value)) {
-    aws_credentials_provider_.setAccessKey(value);
+  if (const auto access_key = getProperty(AccessKey.name)) {
+    aws_credentials_provider_.setAccessKey(*access_key);
   }
-  if (getProperty(SecretKey, value)) {
-    aws_credentials_provider_.setSecretKey(value);
+  if (const auto secret_key = getProperty(SecretKey.name)) {
+    aws_credentials_provider_.setSecretKey(*secret_key);
   }
-  if (getProperty(CredentialsFile, value)) {
-    aws_credentials_provider_.setCredentialsFile(value);
+  if (const auto credentials_file = getProperty(CredentialsFile.name)) {
+    aws_credentials_provider_.setCredentialsFile(*credentials_file);
   }
-  bool use_default_credentials = false;
-  if (getProperty(UseDefaultCredentials, use_default_credentials)) {
-    aws_credentials_provider_.setUseDefaultCredentials(use_default_credentials);
+  if (const auto use_credentials = getProperty(UseDefaultCredentials.name) | minifi::utils::andThen(parsing::parseBool)) {
+    aws_credentials_provider_.setUseDefaultCredentials(*use_credentials);
   }
 }
 

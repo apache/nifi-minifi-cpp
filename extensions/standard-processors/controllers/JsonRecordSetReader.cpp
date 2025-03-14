@@ -17,6 +17,7 @@
 
 #include "JsonRecordSetReader.h"
 #include "core/Resource.h"
+#include "rapidjson/document.h"
 
 #ifdef WIN32
 #pragma push_macro("GetObject")

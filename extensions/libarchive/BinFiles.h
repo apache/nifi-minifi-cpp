@@ -189,34 +189,34 @@ class BinFiles : public core::ProcessorImpl {
 
   EXTENSIONAPI static constexpr auto MinSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum Group Size")
       .withDescription("The minimum size of for the bundle")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
   EXTENSIONAPI static constexpr auto MaxSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum Group Size")
       .withDescription("The maximum size for the bundle. If not specified, there is no maximum.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto MinEntries = core::PropertyDefinitionBuilder<>::createProperty("Minimum Number of Entries")
       .withDescription("The minimum number of files to include in a bundle")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("1")
       .build();
   EXTENSIONAPI static constexpr auto MaxEntries = core::PropertyDefinitionBuilder<>::createProperty("Maximum Number of Entries")
       .withDescription("The maximum number of files to include in a bundle. If not specified, there is no maximum.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto MaxBinAge = core::PropertyDefinitionBuilder<>::createProperty("Max Bin Age")
       .withDescription("The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto MaxBinCount = core::PropertyDefinitionBuilder<>::createProperty("Maximum number of Bins")
       .withDescription("Specifies the maximum number of bins that can be held in memory at any one time")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("100")
       .build();
   EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
       .withDescription("Maximum number of FlowFiles processed in a single session")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("1")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

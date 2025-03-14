@@ -29,26 +29,12 @@ void CaptureRTSPFrame::initialize() {
 }
 
 void CaptureRTSPFrame::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string value;
-
-  if (context.getProperty(RTSPUsername, value)) {
-    rtsp_username_ = value;
-  }
-  if (context.getProperty(RTSPPassword, value)) {
-    rtsp_password_ = value;
-  }
-  if (context.getProperty(RTSPHostname, value)) {
-    rtsp_host_ = value;
-  }
-  if (context.getProperty(RTSPPort, value)) {
-    rtsp_port_ = value;
-  }
-  if (context.getProperty(RTSPURI, value)) {
-    rtsp_uri_ = value;
-  }
-  if (context.getProperty(ImageEncoding, value)) {
-    image_encoding_ = value;
-  }
+  rtsp_username_ = context.getProperty(RTSPUsername).value_or("");
+  rtsp_password_ = context.getProperty(RTSPPassword).value_or("");
+  rtsp_host_ = context.getProperty(RTSPHostname).value_or("");
+  rtsp_port_ = context.getProperty(RTSPPort).value_or("");
+  rtsp_uri_ = context.getProperty(RTSPURI).value_or("");
+  image_encoding_ = context.getProperty(ImageEncoding).value_or("");
 
   logger_->log_trace("CaptureRTSPFrame processor scheduled");
 

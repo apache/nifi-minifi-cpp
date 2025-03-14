@@ -16,21 +16,7 @@
  */
 
 #include "minifi-cpp/core/ProcessContext.h"
-#include "core/TypedValues.h"
 
 namespace org::apache::nifi::minifi::core {
-
-bool ProcessContext::getProperty(std::string_view name, detail::NotAFlowFile auto &value) const {
-  if constexpr (std::is_base_of_v<TransformableValue, std::decay_t<decltype(value)>>) {
-    std::string prop_str;
-    if (!getProperty(std::string{name}, prop_str)) {
-      return false;
-    }
-    value = std::decay_t<decltype(value)>(std::move(prop_str));
-    return true;
-  } else {
-    return getProperty(name, value);
-  }
-}
 
 }  // namespace org::apache::nifi::minifi::core

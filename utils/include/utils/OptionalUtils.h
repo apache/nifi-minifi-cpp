@@ -15,17 +15,21 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
+#pragma once
 
 #include <functional>
 #include <optional>
 #include <type_traits>
 #include <utility>
+#include <iostream>
 
+#include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 #include "utils/detail/MonadicOperationWrappers.h"
+#include "fmt/format.h"
+#include "utils/Error.h"  // for more readable std::error_code fmt::formatter
+
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -125,8 +129,30 @@ auto operator|(std::optional<SourceType> o, filter_wrapper<F> f) noexcept(noexce
     return std::nullopt;
   }
 }
+
+template<typename T, typename E>
+nonstd::expected<T, E> operator|(std::optional<T> object, to_expected_wrapper<E> e) {
+  if (!object) {
+    return nonstd::make_unexpected(e.error);
+  }
+  return std::move(*object);
+}
+
+template<typename T>
+T operator|(std::optional<T> object, const or_throw_wrapper e) {
+  if (object) {
+    return std::move(*object);
+  }
+  throw std::runtime_error(fmt::format("{}", e.reason));
+}
+
+template<typename T>
+T&& operator|(std::optional<T> object, const or_terminate_wrapper e) {
+  if (object) {
+    return std::move(*object);
+  }
+  std::cerr << fmt::format("Aborting due to {}", e.reason) << std::endl;
+  std::abort();
+}
 }  // namespace detail
 }  // namespace org::apache::nifi::minifi::utils
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
-

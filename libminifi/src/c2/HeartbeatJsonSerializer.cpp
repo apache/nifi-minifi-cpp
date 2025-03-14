@@ -16,6 +16,7 @@
  */
 
 #include "c2/HeartbeatJsonSerializer.h"
+#include "core/TypedValues.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
