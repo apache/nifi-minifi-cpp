@@ -26,7 +26,7 @@ TEST_CASE("Parameter Group Name is required", "[parameterProviders]") {
   utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName, "");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "");
   REQUIRE_THROWS_WITH(provider.createParameterContexts(), "Parameter Operation: Parameter Group Name is required");
 }
 
@@ -34,7 +34,7 @@ TEST_CASE("Test EnvironmentVariableParameterProvider with default options", "[pa
   utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName, "environment-variable-parameter-context");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "environment-variable-parameter-context");
   auto contexts = provider.createParameterContexts();
   REQUIRE(contexts.size() == 1);
   REQUIRE(contexts[0]->getName() == "environment-variable-parameter-context");
@@ -49,9 +49,9 @@ TEST_CASE("Create parameter context with selected environment variables", "[para
   utils::Environment::setEnvironmentVariable("MINIFI_NEW_DATA", "minifi_new_data_value");
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName, "environment-variable-parameter-context");
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::EnvironmentVariableInclusionStrategy, "Comma-Separated");
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::IncludeEnvironmentVariables, "MINIFI_DATA,MINIFI_NEW_DATA");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "environment-variable-parameter-context");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::EnvironmentVariableInclusionStrategy.name, "Comma-Separated");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::IncludeEnvironmentVariables.name, "MINIFI_DATA,MINIFI_NEW_DATA");
   auto contexts = provider.createParameterContexts();
   REQUIRE(contexts.size() == 1);
   REQUIRE(contexts[0]->getName() == "environment-variable-parameter-context");
@@ -66,8 +66,8 @@ TEST_CASE("Create parameter context with selected environment variables", "[para
 TEST_CASE("Environment variable list must be defined if Comma-Separated inclusion strategy is set", "[parameterProviders]") {
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName, "environment-variable-parameter-context");
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::EnvironmentVariableInclusionStrategy, "Comma-Separated");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "environment-variable-parameter-context");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::EnvironmentVariableInclusionStrategy.name, "Comma-Separated");
   REQUIRE_THROWS_WITH(provider.createParameterContexts(), "Parameter Operation: Environment Variable Inclusion Strategy is set to Comma-Separated, "
     "but no value is defined in Include Environment Variables property");
 }
@@ -77,9 +77,9 @@ TEST_CASE("Create parameter context with regex matching environment variables", 
   utils::Environment::setEnvironmentVariable("MINIFI_NEW_DATA", "minifi_new_data_value");
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName, "environment-variable-parameter-context");
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::EnvironmentVariableInclusionStrategy, "Regular Expression");
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::IncludeEnvironmentVariables, "MINIFI_DATA_.*");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "environment-variable-parameter-context");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::EnvironmentVariableInclusionStrategy.name, "Regular Expression");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::IncludeEnvironmentVariables.name, "MINIFI_DATA_.*");
   auto contexts = provider.createParameterContexts();
   REQUIRE(contexts.size() == 1);
   REQUIRE(contexts[0]->getName() == "environment-variable-parameter-context");
@@ -92,8 +92,8 @@ TEST_CASE("Create parameter context with regex matching environment variables", 
 TEST_CASE("Regex must be defined if regex inclusion strategy is set", "[parameterProviders]") {
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName, "environment-variable-parameter-context");
-  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::EnvironmentVariableInclusionStrategy, "Regular Expression");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "environment-variable-parameter-context");
+  provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::EnvironmentVariableInclusionStrategy.name, "Regular Expression");
   REQUIRE_THROWS_WITH(provider.createParameterContexts(), "Parameter Operation: Environment Variable Inclusion Strategy is set to Regular Expression, "
     "but no regex is defined in Include Environment Variables property");
 }
