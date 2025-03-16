@@ -44,7 +44,6 @@ static std::string escape(std::string str) {
 
 static std::string prettifyJson(const std::string& str) {
   rapidjson::Document doc;
-  std::cout << str << std::endl;
   rapidjson::ParseResult res = doc.Parse(str.c_str(), str.length());
   gsl_Assert(res);
 
