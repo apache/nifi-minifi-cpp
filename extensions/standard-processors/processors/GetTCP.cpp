@@ -90,7 +90,7 @@ std::optional<asio::ssl::context> GetTCP::parseSSLContext(core::ProcessContext& 
 uint64_t GetTCP::parseMaxBatchSize(core::ProcessContext& context) {
   const auto max_batch_size = utils::parseU64Property(context, MaxBatchSize);
   if (max_batch_size == 0) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION,"Max batch size must be greater than zero");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Max batch size must be greater than zero");
   }
   return max_batch_size;
 }
@@ -102,7 +102,6 @@ void GetTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
 
   std::optional<size_t> max_queue_size = utils::parseOptionalU64Property(context, MaxQueueSize);
   std::optional<size_t> max_message_size = utils::parseOptionalU64Property(context, MaxMessageSize);
-
 
   asio::steady_timer::duration timeout_duration = 1s;
   if (auto timeout_value = utils::parseOptionalDurationProperty(context, Timeout)) {
