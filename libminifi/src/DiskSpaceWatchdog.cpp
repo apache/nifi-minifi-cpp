@@ -29,7 +29,7 @@ namespace {
 namespace chr = std::chrono;
 
 std::optional<uint64_t> data_size_string_to_int(const std::string& str) {
-  return (parsing::parseDataSize(str) | utils::transform([](const auto& value) { return std::optional{value}; })).value_or(std::nullopt);
+  return parsing::parseDataSize(str) | utils::toOptional();
 }
 
 }  // namespace
