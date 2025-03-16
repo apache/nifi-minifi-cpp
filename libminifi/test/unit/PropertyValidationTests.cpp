@@ -52,6 +52,7 @@ TEST_CASE("Parsing int has spaces") {
   Property property{property_definition};
   CHECK(property.setValue("  55  ").has_value());
   CHECK(property.getValue() == "  55  ");
+  CHECK_FALSE(property.setValue("  10000000000000000000  "));
 }
 
 TEST_CASE("Parsing bool has baggage after") {
@@ -62,6 +63,53 @@ TEST_CASE("Parsing bool has baggage after") {
   Property property{property_definition};
   CHECK_FALSE(property.setValue("false almost bool").has_value());
   CHECK(property.getValue() == "true");
+}
+
+TEST_CASE("NON_BLANK_VALIDATOR test") {
+  static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withDefaultValue("true")
+      .build();
+  Property property{property_definition};
+  CHECK_FALSE(property.setValue(""));
+  CHECK(property.setValue("foo"));
+}
+
+TEST_CASE("UNSIGNED_INTEGER_VALIDATOR test") {
+  static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
+      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withDefaultValue("true")
+      .build();
+  Property property{property_definition};
+  CHECK_FALSE(property.setValue(" -12"));
+  CHECK_FALSE(property.setValue(" 1000000000000000000000"));
+  CHECK(property.setValue("  231  "));
+}
+
+TEST_CASE("DATA_SIZE_VALIDATOR test") {
+  static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
+      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
+      .withDefaultValue("true")
+      .build();
+  Property property{property_definition};
+  CHECK(property.setValue("100 MaciBytes"));
+  CHECK(property.setValue("100 KB "));
+  CHECK(property.setValue("  100 KB  "));
+  CHECK_FALSE(property.setValue("GB"));
+  CHECK_FALSE(property.setValue("foo"));
+}
+
+TEST_CASE("PORT_VALIDATOR test") {
+  static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
+      .withValidator(core::StandardPropertyTypes::PORT_VALIDATOR)
+      .withDefaultValue("true")
+      .build();
+  Property property{property_definition};
+  CHECK(property.setValue("0"));
+  CHECK(property.setValue(" 65535"));
+  CHECK_FALSE(property.setValue("65536"));
+  CHECK_FALSE(property.setValue("  -2  "));
+  CHECK_FALSE(property.setValue("foo"));
 }
 
 class TestConfigurableComponent : public ConfigurableComponentImpl, public CoreComponentImpl {
