@@ -68,12 +68,13 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
         << "]";
   }
   if (const auto validator_name = prop.getValidator().getEquivalentNifiStandardValidatorName()) {
-    if (validator_name == "INTEGER_VALIDATOR" || validator_name == "NON_NEGATIVE_INTEGER_VALIDATOR") {
+    if (validator_name == core::StandardPropertyTypes::INTEGER_VALIDATOR.getEquivalentNifiStandardValidatorName() ||
+        validator_name == core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
       out << R"(, "type": "integer")";
       if (const auto default_value = prop.getDefaultValue()) {
         out << R"(, "default": )" << *default_value;
       }
-    } else if (validator_name == "BOOLEAN_VALIDATOR") {
+    } else if (validator_name == core::StandardPropertyTypes::BOOLEAN_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
       out << R"(, "type": "boolean")";
       if (const auto default_value = prop.getDefaultValue()) {
         out << R"(, "default": )" << *default_value;
