@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "core/ProcessContext.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::utils {

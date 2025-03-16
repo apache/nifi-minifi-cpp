@@ -123,4 +123,15 @@ public:
  }
 };
 
+namespace StandardPropertyTypes {
+inline constexpr auto ALWAYS_VALID_VALIDATOR = AlwaysValidValidator{};
+inline constexpr auto NON_BLANK_VALIDATOR = NonBlankValidator{};
+inline constexpr auto TIME_PERIOD_VALIDATOR = TimePeriodValidator{};
+inline constexpr auto BOOLEAN_VALIDATOR = BooleanValidator{};
+inline constexpr auto INTEGER_VALIDATOR = IntegerValidator{};
+inline constexpr auto UNSIGNED_INTEGER_VALIDATOR = UnsignedIntegerValidator{};
+inline constexpr auto DATA_SIZE_VALIDATOR = DataSizeValidator{};
+inline constexpr auto PORT_VALIDATOR = PortValidator{};
+}
+
 }  // namespace org::apache::nifi::minifi::core
