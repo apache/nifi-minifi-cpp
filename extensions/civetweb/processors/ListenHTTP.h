@@ -72,7 +72,8 @@ class ListenHTTP : public core::ProcessorImpl {
 
   EXTENSIONAPI static constexpr auto BasePath = core::PropertyDefinitionBuilder<>::createProperty("Base Path")
       .withDescription("Base path for incoming connections")
-      .isRequired(false)
+      .isRequired(true)
+      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
       .withDefaultValue("contentListener")
       .build();
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")

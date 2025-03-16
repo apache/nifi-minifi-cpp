@@ -55,10 +55,12 @@ class AppendHostInfo : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto HostAttribute = core::PropertyDefinitionBuilder<>::createProperty("Hostname Attribute")
       .withDescription("Flowfile attribute used to record the agent's hostname")
       .withDefaultValue("source.hostname")
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto IPAttribute = core::PropertyDefinitionBuilder<>::createProperty("IP Attribute")
       .withDescription("Flowfile attribute used to record the agent's IP addresses in a comma separated list")
       .withDefaultValue("source.ipv4")
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto RefreshPolicy = core::PropertyDefinitionBuilder<2>::createProperty("Refresh Policy")
       .withDescription("When to recalculate the host info")

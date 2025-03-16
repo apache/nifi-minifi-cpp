@@ -47,12 +47,12 @@ void RocksDbStateStorage::onEnable() {
 
   const auto always_persist = getProperty(AlwaysPersist.name)
       | utils::andThen(parsing::parseBool)
-      | utils::orThrow("RocksDbStateStorage::AlwaysPersist has default value");
+      | utils::orThrow("RocksDbStateStorage::AlwaysPersist is a required Property");
   logger_->log_info("Always Persist property: {}", always_persist);
 
   const auto auto_persistence_interval = getProperty(AutoPersistenceInterval.name)
       | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)
-      | utils::orThrow("RocksDbStateStorage::AutoPersistenceInterval has default value");
+      | utils::orThrow("RocksDbStateStorage::AutoPersistenceInterval is a required Property");
   logger_->log_info("Auto Persistence Interval property: {}", auto_persistence_interval);
 
   directory_ = getProperty(Directory.name) | utils::orThrow("RocksDbStateStorage::Directory is required property");

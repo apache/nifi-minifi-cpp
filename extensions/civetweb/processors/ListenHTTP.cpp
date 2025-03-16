@@ -40,7 +40,7 @@ void ListenHTTP::initialize() {
 }
 
 void ListenHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string base_path = context.getProperty(BasePath) | utils::orThrow("ListenHTTP::BasePath has default value");
+  std::string base_path = context.getProperty(BasePath) | utils::orThrow("ListenHTTP::BasePath is a required Property");
 
   base_path.insert(0, "/");
 
