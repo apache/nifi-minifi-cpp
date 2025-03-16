@@ -59,14 +59,14 @@ TEST_CASE("LogAttribute LogLevel and LogPrefix", "[LogAttribute]") {
   LogTestController::getInstance().setTrace<LogAttribute>();
 
   const auto [log_level, log_prefix, expected_dash] = GENERATE(
-    std::make_tuple("info", "", "--------------------------------------------------"),
+    std::make_tuple(std::string_view("info"), std::string_view(""), std::string_view("--------------------------------------------------")),
     std::make_tuple("critical", "foo", "-----------------------foo------------------------"),
     std::make_tuple("debug", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis neque sit amet dui pretium sodales.",
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi mollis neque sit amet dui pretium sodales."),
     std::make_tuple("error", "", "--------------------------------------------------"));
 
   REQUIRE(controller.plan->setProperty(log_attribute, LogAttribute::LogLevel, log_level));
-  controller.plan->setProperty(log_attribute, LogAttribute::LogPrefix, log_prefix);
+  CHECK(controller.plan->setProperty(log_attribute, LogAttribute::LogPrefix, log_prefix) == (!log_prefix.empty()));
 
   controller.plan->scheduleProcessor(log_attribute);
   const auto result = controller.trigger("hello world", {{"eng", "apple"}, {"ger", "Apfel"}, {"fra", "pomme"}});
@@ -85,8 +85,8 @@ TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
   const auto log_attribute = controller.getProcessor();
   LogTestController::getInstance().setTrace<LogAttribute>();
 
-  auto attrs_to_log = "";
-  auto attrs_to_ignore = "";
+  std::string_view attrs_to_log = "";
+  std::string_view attrs_to_ignore = "";
   auto expected_eng = true;
   auto expected_ger = true;
   auto expected_fra = true;
@@ -112,8 +112,8 @@ TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
     expected_ger = false;
   }
 
-  controller.plan->setProperty(log_attribute, LogAttribute::AttributesToLog, attrs_to_log);
-  controller.plan->setProperty(log_attribute, LogAttribute::AttributesToIgnore, attrs_to_ignore);
+  CHECK(controller.plan->setProperty(log_attribute, LogAttribute::AttributesToLog, attrs_to_log) == !attrs_to_log.empty());
+  CHECK(controller.plan->setProperty(log_attribute, LogAttribute::AttributesToIgnore, attrs_to_ignore) == !attrs_to_ignore.empty());
 
 
   controller.plan->scheduleProcessor(log_attribute);
