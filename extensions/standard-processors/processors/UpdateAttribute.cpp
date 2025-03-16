@@ -34,9 +34,6 @@ void UpdateAttribute::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void UpdateAttribute::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {
-}
-
 void UpdateAttribute::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto flow_file = session.get();
 
