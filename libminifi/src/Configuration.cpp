@@ -17,7 +17,7 @@
 #include <algorithm>
 
 #include "properties/Configuration.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 
 namespace org::apache::nifi::minifi {
 

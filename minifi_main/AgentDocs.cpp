@@ -31,7 +31,7 @@
 #include "agent/agent_docs.h"
 #include "agent/agent_version.h"
 #include "core/Core.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/Relationship.h"
 #include "TableFormatter.h"
 #include "utils/StringUtils.h"

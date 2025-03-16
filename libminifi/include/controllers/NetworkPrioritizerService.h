@@ -30,7 +30,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "ThreadManagementService.h"
 #include "io/NetworkPrioritizer.h"
 #include "utils/Export.h"

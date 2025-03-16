@@ -26,7 +26,7 @@
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "google/cloud/storage/oauth2/credentials.h"
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"

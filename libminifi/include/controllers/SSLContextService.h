@@ -42,7 +42,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/Export.h"
 #include "utils/tls/CertificateUtils.h"
 #include "minifi-cpp/controllers/SSLContextService.h"

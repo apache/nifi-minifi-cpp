@@ -26,7 +26,7 @@
 
 #include "AzureDataLakeStorageProcessorBase.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/ArrayUtils.h"
 #include "utils/AzureEnums.h"
 
