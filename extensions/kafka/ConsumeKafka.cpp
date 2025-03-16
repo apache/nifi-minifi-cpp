@@ -21,7 +21,7 @@
 
 #include "core/FlowFile.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"

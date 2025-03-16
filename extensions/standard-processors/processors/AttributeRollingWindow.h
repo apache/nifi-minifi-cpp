@@ -27,7 +27,7 @@
 #include "core/Annotation.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
 #include "RollingWindow.h"
 #include "core/StateManager.h"

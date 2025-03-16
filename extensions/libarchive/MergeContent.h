@@ -30,7 +30,7 @@
 #include "SmartArchivePtrs.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "serialization/FlowFileSerializer.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"

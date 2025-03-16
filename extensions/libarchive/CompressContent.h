@@ -26,7 +26,7 @@
 #include <map>
 #include <string>
 
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "archive_entry.h"
 #include "archive.h"
 
