@@ -79,9 +79,6 @@ class Property final {
 
   void setSupportsExpressionLanguage(bool supportEl);
 
-  /**
-   * Add value to the collection of values.
-   */
   void addValue(const std::string &value);
   Property &operator=(const Property &other) = default;
   Property &operator=(Property &&other) = default;
@@ -103,8 +100,6 @@ class Property final {
   std::vector<std::string> allowed_values_{};
   gsl::not_null<const PropertyValidator *> validator_;
 
-  // types represents the allowable types for this property
-  // these types should be the canonical name.
   std::vector<std::string> types_;
   bool supports_el_;
   bool is_transient_;
