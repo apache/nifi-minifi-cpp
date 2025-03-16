@@ -43,8 +43,8 @@ void AppendHostInfo::initialize() {
 
 void AppendHostInfo::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::unique_lock unique_lock(shared_mutex_);
-  hostname_attribute_name_ = context.getProperty(HostAttribute) | utils::orThrow("HostAttribute has default value");
-  ipaddress_attribute_name_ = context.getProperty(IPAttribute) | utils::orThrow("IPAttribute has default value");
+  hostname_attribute_name_ = context.getProperty(HostAttribute) | utils::orThrow("AppendHostInfo::HostAttribute is a required Property");
+  ipaddress_attribute_name_ = context.getProperty(IPAttribute) | utils::orThrow("AppendHostInfo::IPAttribute is a required Property");
   interface_name_filter_ = context.getProperty(InterfaceNameFilter)
       | utils::toOptional()
       | utils::filter([](const std::string& inf) { return !inf.empty(); });
@@ -83,8 +83,8 @@ void AppendHostInfo::onTrigger(core::ProcessContext&, core::ProcessSession& sess
 void AppendHostInfo::refreshHostInfo() {
   hostname_ = org::apache::nifi::minifi::utils::net::getMyHostName();
   auto filter = [this](const utils::NetworkInterfaceInfo& interface_info) -> bool {
-    bool has_ipv4_address = interface_info.hasIpV4Address();
-    bool matches_regex_or_empty_regex = (!interface_name_filter_.has_value()) || std::regex_match(interface_info.getName(), interface_name_filter_.value());
+    const bool has_ipv4_address = interface_info.hasIpV4Address();
+    const bool matches_regex_or_empty_regex = (!interface_name_filter_.has_value()) || std::regex_match(interface_info.getName(), interface_name_filter_.value());
     return has_ipv4_address && matches_regex_or_empty_regex;
   };
   auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos(filter);
