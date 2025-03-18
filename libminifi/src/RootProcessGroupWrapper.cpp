@@ -177,13 +177,7 @@ state::StateController* RootProcessGroupWrapper::getProcessorController(const st
 }
 
 std::optional<std::chrono::milliseconds> RootProcessGroupWrapper::loadShutdownTimeoutFromConfiguration() {
-  std::string shutdown_timeout_str;
-  if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
-    if (const auto shutdown_timeout = parsing::parseDuration<std::chrono::milliseconds>(shutdown_timeout_str)) {
-      return *shutdown_timeout;
-    }
-  }
-  return std::nullopt;
+  return configuration_->get(Configure::nifi_flowcontroller_drain_timeout) | utils::andThen([] (const auto& s) { return parsing::parseDuration(s) | utils::toOptional(); });
 }
 
 }  // namespace org::apache::nifi::minifi
