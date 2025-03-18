@@ -84,6 +84,7 @@ nonstd::expected<void, std::error_code> ConfigurableComponentImpl::setDynamicPro
     return nonstd::make_unexpected(PropertyErrorCode::DynamicPropertiesNotSupported);
   }
   Property& prop = dynamic_properties_[std::move(name)];
+  prop.setSupportsExpressionLanguage(true);
   return prop.setValue(std::move(value));
 }
 
@@ -93,6 +94,7 @@ nonstd::expected<void, std::error_code> ConfigurableComponentImpl::appendDynamic
     return nonstd::make_unexpected(PropertyErrorCode::DynamicPropertiesNotSupported);
   }
   Property& prop = dynamic_properties_[std::string{name}];
+  prop.setSupportsExpressionLanguage(true);
   return prop.appendValue(std::move(value));
 }
 
