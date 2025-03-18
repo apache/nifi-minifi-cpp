@@ -127,6 +127,8 @@ std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::P
   return std::nullopt;
 }
 
+// If the loaded property is time period or data size validated, and it has no explicit units, then ms or B will be appended.
+// If the loaded property is integer validated, and it has some explicit unit (time period or data size), it will be converted to ms or B, and its unit is cut off.
 void fixValidatedProperty(const std::string& property_name,
     std::string& persisted_value,
     std::string& value,
@@ -157,9 +159,6 @@ void fixValidatedProperty(const std::string& property_name,
 }
 }  // namespace
 
-// Load Configure File
-// If the loaded property is time period or data size validated, and it has no explicit units, then ms or B will be appended.
-// If the loaded property is integer validated, and it has some explicit unit (time period or data size), it will be converted to ms or B, and its unit is cut off.
 void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
