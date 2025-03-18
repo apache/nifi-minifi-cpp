@@ -25,6 +25,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
 
@@ -47,7 +48,7 @@ void ListS3::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required property is not set or invalid");
   }
 
-  auto bucket = context.getProperty(Bucket.name) | minifi::utils::expect("Required property");
+  auto bucket = context.getProperty(Bucket.name) | minifi::utils::orThrow("Required property");
   logger_->log_debug("S3Processor: Bucket [{}]", bucket);
 
   gsl_Expects(client_config_);

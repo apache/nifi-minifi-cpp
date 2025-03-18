@@ -39,7 +39,7 @@ class PutKinesisStream : public AwsProcessor {
   EXTENSIONAPI static constexpr auto AmazonKinesisStreamName = core::PropertyDefinitionBuilder<>::createProperty("Amazon Kinesis Stream Name")
       .withDescription("The name of Kinesis Stream")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto AmazonKinesisStreamPartitionKey = core::PropertyDefinitionBuilder<>::createProperty("Amazon Kinesis Stream Partition Key")
@@ -48,12 +48,12 @@ class PutKinesisStream : public AwsProcessor {
       .build();
   EXTENSIONAPI static constexpr auto MessageBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
       .withDescription("Batch size for messages. [1-500]")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("250")
       .build();
   EXTENSIONAPI static constexpr auto MaxBatchDataSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Data Size")
       .withDescription("Soft cap on the data size of the batch to a single stream. (max 4MB)")
-      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::DATA_SIZE_VALIDATOR)
       .withDefaultValue("1 MB")
       .build();
 
