@@ -584,7 +584,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
     auto hostStr = node["host"].getString().value();
 
     std::string portStr = node["port"].getIntegerAsString().value();
-    if (auto port = parsing::parseIntegral<int64_t>(portStr)) {
+    if (auto port = parsing::parseIntegral<int64_t>(portStr); port && !hostStr.empty()) {
       logger_->log_debug("ProvenanceReportingTask port {}", *port);
       std::string url = hostStr + ":" + portStr;
       reportTask->setURL(url);
@@ -753,9 +753,9 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 
   if (auto tasksNode = port_node[schema_.max_concurrent_tasks]) {
     const std::string raw_max_concurrent_tasks = tasksNode.getIntegerAsString().value();
-    if (auto max_concurrent_tasks = parsing::parseIntegral<uint8_t>(raw_max_concurrent_tasks).value_or(0)) {
-      logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", max_concurrent_tasks);
-      processor.setMaxConcurrentTasks(max_concurrent_tasks);
+    if (auto max_concurrent_tasks = parsing::parseIntegral<uint8_t>(raw_max_concurrent_tasks); max_concurrent_tasks) {
+      logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", *max_concurrent_tasks);
+      processor.setMaxConcurrentTasks(*max_concurrent_tasks);
     }
   }
 }
