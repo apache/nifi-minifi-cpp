@@ -75,4 +75,11 @@ TEST_CASE("Test Permissions Parsing") {
 
   CHECK_FALSE(parsePermissions("0644 banana"));
 }
+
+TEST_CASE("Test Duration Parsing") {
+  using namespace std::literals::chrono_literals;
+  CHECK(12s == parseDuration("12s"));
+  CHECK_FALSE(parseDuration("12ss"));
+  CHECK_FALSE(parseDuration("2 fortnights"));
+}
 }  // namespace org::apache::nifi::minifi::parsing::test
