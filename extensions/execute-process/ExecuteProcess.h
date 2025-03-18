@@ -74,12 +74,12 @@ class ExecuteProcess final : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto BatchDuration = core::PropertyDefinitionBuilder<>::createProperty("Batch Duration")
       .withDescription("If the process is expected to be long-running and produce textual output, a batch duration can be specified.")
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("0 sec")
       .build();
   EXTENSIONAPI static constexpr auto RedirectErrorStream = core::PropertyDefinitionBuilder<>::createProperty("Redirect Error Stream")
       .withDescription("If true will redirect any error stream output of the process to the output stream.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

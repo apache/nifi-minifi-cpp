@@ -149,24 +149,24 @@ class InvokeHTTP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto ConnectTimeout = core::PropertyDefinitionBuilder<>::createProperty("Connection Timeout")
       .withDescription("Max wait time for connection to remote service")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("5 s")
       .build();
   EXTENSIONAPI static constexpr auto ReadTimeout = core::PropertyDefinitionBuilder<>::createProperty("Read Timeout")
       .withDescription("Max wait time for response from remote service")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("15 s")
       .build();
   EXTENSIONAPI static constexpr auto DateHeader = core::PropertyDefinitionBuilder<>::createProperty("Include Date Header")
       .withDescription("Include an RFC-2616 Date header in the request.")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto FollowRedirects = core::PropertyDefinitionBuilder<>::createProperty("Follow Redirects")
       .withDescription("Follow HTTP redirects issued by remote server.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto AttributesToSend = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Send")
@@ -202,25 +202,25 @@ class InvokeHTTP : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto SendBody = core::PropertyDefinitionBuilder<>::createProperty("send-message-body", "Send Body")
       .withDescription("DEPRECATED. Only kept for backwards compatibility, no functionality is included.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto SendMessageBody = core::PropertyDefinitionBuilder<>::createProperty("Send Message Body")
       .withDescription("If true, sends the HTTP message body on POST/PUT/PATCH requests (default). "
           "If false, suppresses the message body and content-type header for these requests.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto UseChunkedEncoding = core::PropertyDefinitionBuilder<>::createProperty("Use Chunked Encoding")
       .withDescription("When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header"
           " and instead send 'Transfer-Encoding' with a value of 'chunked'."
           " This will enable the data transfer mechanism which was introduced in HTTP 1.1 to pass data of unknown lengths in chunks.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto DisablePeerVerification = core::PropertyDefinitionBuilder<>::createProperty("Disable Peer Verification")
       .withDescription("DEPRECATED. The value is ignored, peer and host verification are always performed when using SSL/TLS.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto PutResponseBodyInAttribute = core::PropertyDefinitionBuilder<>::createProperty("Put Response Body in Attribute")
@@ -230,12 +230,12 @@ class InvokeHTTP : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto AlwaysOutputResponse = core::PropertyDefinitionBuilder<>::createProperty("Always Output Response")
       .withDescription("Will force a response FlowFile to be generated and routed to the 'Response' relationship regardless of what the server status code received is ")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto PenalizeOnNoRetry = core::PropertyDefinitionBuilder<>::createProperty("Penalize on \"No Retry\"")
       .withDescription("Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto InvalidHTTPHeaderFieldHandlingStrategy

@@ -35,7 +35,7 @@ class PushGrafanaLokiREST : public PushGrafanaLoki {
 
   EXTENSIONAPI static constexpr auto ReadTimeout = core::PropertyDefinitionBuilder<>::createProperty("Read Timeout")
     .withDescription("Max wait time for response from remote service.")
-    .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+    .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
     .withDefaultValue("15 s")
     .isRequired(true)
     .build();

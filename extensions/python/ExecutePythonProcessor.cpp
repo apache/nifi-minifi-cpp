@@ -179,19 +179,19 @@ enum class PropertyValidatorCode : int64_t {
 const core::PropertyValidator& translateCodeToPropertyValidator(const PropertyValidatorCode& code) {
   switch (code) {
     case PropertyValidatorCode::INTEGER:  // NOLINT(*-branch-clone)
-      return core::StandardPropertyTypes::INTEGER_VALIDATOR;
+      return core::StandardPropertyValidators::INTEGER_VALIDATOR;
     case PropertyValidatorCode::LONG:
-      return core::StandardPropertyTypes::INTEGER_VALIDATOR;
+      return core::StandardPropertyValidators::INTEGER_VALIDATOR;
     case PropertyValidatorCode::BOOLEAN:
-      return core::StandardPropertyTypes::BOOLEAN_VALIDATOR;
+      return core::StandardPropertyValidators::BOOLEAN_VALIDATOR;
     case PropertyValidatorCode::DATA_SIZE:
-      return core::StandardPropertyTypes::DATA_SIZE_VALIDATOR;
+      return core::StandardPropertyValidators::DATA_SIZE_VALIDATOR;
     case PropertyValidatorCode::TIME_PERIOD:
-      return core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR;
+      return core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR;
     case PropertyValidatorCode::NON_BLANK:
-      return core::StandardPropertyTypes::NON_BLANK_VALIDATOR;
+      return core::StandardPropertyValidators::NON_BLANK_VALIDATOR;
     case PropertyValidatorCode::PORT:
-      return core::StandardPropertyTypes::PORT_VALIDATOR;
+      return core::StandardPropertyValidators::PORT_VALIDATOR;
     default:
       throw std::invalid_argument("Unknown PropertyValidatorCode");
   }

@@ -46,7 +46,7 @@ class GCSProcessor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto NumberOfRetries = core::PropertyDefinitionBuilder<>::createProperty("Number of retries")
       .withDescription("How many retry attempts should be made before routing to the failure relationship.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("6")
       .isRequired(true)
       .supportsExpressionLanguage(false)

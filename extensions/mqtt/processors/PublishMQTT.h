@@ -53,12 +53,12 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
       .build();
   EXTENSIONAPI static constexpr auto Retain = core::PropertyDefinitionBuilder<>::createProperty("Retain")
       .withDescription("Retain published message in broker")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto MessageExpiryInterval = core::PropertyDefinitionBuilder<>::createProperty("Message Expiry Interval")
       .withDescription("Time while message is valid and will be forwarded by broker. MQTT 5.x only.")
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto ContentType = core::PropertyDefinitionBuilder<>::createProperty("Content Type")
       .withDescription("Content type of the message. MQTT 5.x only.")

@@ -50,13 +50,13 @@ class GenerateFlowFile : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto FileSize = core::PropertyDefinitionBuilder<>::createProperty("File Size")
       .withDescription("The size of the file that will be used")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::DATA_SIZE_VALIDATOR)
       .withDefaultValue("1 kB")
       .build();
   EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
       .withDescription("The number of FlowFiles to be transferred in each invocation")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("1")
       .build();
   EXTENSIONAPI static constexpr auto DataFormat = core::PropertyDefinitionBuilder<2>::createProperty("Data Format")
@@ -70,7 +70,7 @@ class GenerateFlowFile : public core::ProcessorImpl {
           "If false, a random value will be generated and all FlowFiles will get the same content but this offers much higher throughput "
           "(but see the description of Custom Text for special non-random use cases)")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto CustomText = core::PropertyDefinitionBuilder<>::createProperty("Custom Text")

@@ -110,7 +110,7 @@ class RemoteProcessorGroupPort : public core::ProcessorImpl {
   MINIFIAPI static constexpr auto idleTimeout = core::PropertyDefinitionBuilder<>::createProperty("Idle Timeout")
     .withDescription("Max idle time for remote service")
     .isRequired(true)
-    .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+    .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
     .withDefaultValue("15 s")
     .build();
 

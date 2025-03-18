@@ -53,34 +53,34 @@ class LogAttribute : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto AttributesToLog = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Log")
       .withDescription("A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.")
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto AttributesToIgnore = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Ignore")
       .withDescription("A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.")
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto LogPayload = core::PropertyDefinitionBuilder<>::createProperty("Log Payload")
       .withDescription("If true, the FlowFile's payload will be logged, in addition to its attributes. Otherwise, just the Attributes will be logged.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto HexencodePayload = core::PropertyDefinitionBuilder<>::createProperty("Hexencode Payload")
       .withDescription("If true, the FlowFile's payload will be logged in a hexencoded format")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto MaxPayloadLineLength = core::PropertyDefinitionBuilder<>::createProperty("Maximum Payload Line Length")
       .withDescription("The logged payload will be broken into lines this long. 0 means no newlines will be added.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
   EXTENSIONAPI static constexpr auto LogPrefix = core::PropertyDefinitionBuilder<>::createProperty("Log Prefix")
       .withDescription("Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.")
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto FlowFilesToLog = core::PropertyDefinitionBuilder<>::createProperty("FlowFiles To Log")
       .withDescription("Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("1")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

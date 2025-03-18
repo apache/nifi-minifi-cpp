@@ -66,7 +66,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto ReloadOnScriptChange = core::PropertyDefinitionBuilder<>::createProperty("Reload on Script Change")
       .withDescription("If true and Script File property is used, then script file will be reloaded if it has changed, otherwise the first loaded version will be used at all times.")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

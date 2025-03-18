@@ -45,18 +45,18 @@ class GetCouchbaseKey final : public core::AbstractProcessor<GetCouchbaseKey> {
       .withDescription("The name of bucket to access.")
       .withDefaultValue("default")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ScopeName = core::PropertyDefinitionBuilder<>::createProperty("Scope Name")
       .withDescription("Scope to use inside the bucket. If not specified, the _default scope is used.")
       .supportsExpressionLanguage(true)
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto CollectionName = core::PropertyDefinitionBuilder<>::createProperty("Collection Name")
       .withDescription("Collection to use inside the bucket scope. If not specified, the _default collection is used.")
       .supportsExpressionLanguage(true)
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto DocumentType = core::PropertyDefinitionBuilder<3>::createProperty("Document Type")
       .withDescription("Content type of the retrieved value.")
@@ -67,7 +67,7 @@ class GetCouchbaseKey final : public core::AbstractProcessor<GetCouchbaseKey> {
   EXTENSIONAPI static constexpr auto DocumentId = core::PropertyDefinitionBuilder<>::createProperty("Document Id")
       .withDescription("A static, fixed Couchbase document id, or an expression to construct the Couchbase document id.")
       .supportsExpressionLanguage(true)
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto PutValueToAttribute = core::PropertyDefinitionBuilder<>::createProperty("Put Value to Attribute")
       .withDescription("If set, the retrieved value will be put into an attribute of the FlowFile instead of a the content of the FlowFile. "

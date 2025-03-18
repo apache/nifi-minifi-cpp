@@ -50,7 +50,7 @@ std::string formatName(std::string_view name_view, bool is_required) {
 }
 
 std::string formatAllowedValues(const minifi::core::Property& property) {
-  if (property.getValidator().getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyTypes::BOOLEAN_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+  if (property.getValidator().getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
     return "true<br/>false";
   } else {
     const auto allowed_values = property.getAllowedValues();

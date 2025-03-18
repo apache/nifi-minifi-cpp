@@ -51,7 +51,7 @@ class FetchS3Object : public S3Processor {
       .build();
   EXTENSIONAPI static constexpr auto RequesterPays = core::PropertyDefinitionBuilder<>::createProperty("Requester Pays")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .withDescription("If true, indicates that the requester consents to pay any charges associated with retrieving "
           "objects from the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'.")

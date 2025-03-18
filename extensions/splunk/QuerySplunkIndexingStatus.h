@@ -72,14 +72,14 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
   EXTENSIONAPI static constexpr auto MaximumWaitingTime = core::PropertyDefinitionBuilder<>::createProperty("Maximum Waiting Time")
       .withDescription("The maximum time the processor tries to acquire acknowledgement confirmation for an index, from the point of registration. "
           "After the given amount of time, the processor considers the index as not acknowledged and transfers the FlowFile to the \"unacknowledged\" relationship.")
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("1 hour")
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaxQuerySize = core::PropertyDefinitionBuilder<>::createProperty("Maximum Query Size")
       .withDescription("The maximum number of acknowledgement identifiers the outgoing query contains in one batch. "
           "It is recommended not to set it too low in order to reduce network communication.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("1000")
       .isRequired(true)
       .build();

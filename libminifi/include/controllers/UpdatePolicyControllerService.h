@@ -55,13 +55,13 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
 
   MINIFIAPI static constexpr auto AllowAllProperties = core::PropertyDefinitionBuilder<>::createProperty("Allow All Properties")
       .withDescription("Allows all properties, which are also not disallowed, to be updated")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   MINIFIAPI static constexpr auto PersistUpdates = core::PropertyDefinitionBuilder<>::createProperty("Persist Updates")
       .withDescription("Property that dictates whether updates should persist after a restart")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   MINIFIAPI static constexpr auto AllowedProperties = core::PropertyDefinitionBuilder<>::createProperty("Allowed Properties")

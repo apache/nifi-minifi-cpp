@@ -77,13 +77,13 @@ class GetTCP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto MaxQueueSize = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Message Queue")
       .withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
           "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("10000")
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaxBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Size")
       .withDescription("The maximum number of messages to process at a time.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("500")
       .isRequired(true)
       .build();
@@ -92,14 +92,14 @@ class GetTCP : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto Timeout = core::PropertyDefinitionBuilder<>::createProperty("Timeout")
       .withDescription("The timeout for connecting to and communicating with the destination.")
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("1s")
       .isRequired(true)
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ReconnectInterval = core::PropertyDefinitionBuilder<>::createProperty("Reconnection Interval")
       .withDescription("The duration to wait before attempting to reconnect to the endpoints.")
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("1 min")
       .isRequired(true)
       .supportsExpressionLanguage(true)

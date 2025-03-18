@@ -38,17 +38,17 @@ class PushGrafanaLokiGrpc final : public PushGrafanaLoki {
 
   EXTENSIONAPI static constexpr auto KeepAliveTime = core::PropertyDefinitionBuilder<>::createProperty("Keep Alive Time")
     .withDescription("The period after which a keepalive ping is sent on the transport. If not set, then the keep alive is disabled.")
-    .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+    .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
     .build();
   EXTENSIONAPI static constexpr auto KeepAliveTimeout = core::PropertyDefinitionBuilder<>::createProperty("Keep Alive Timeout")
     .withDescription("The amount of time the sender of the keepalive ping waits for an acknowledgement. If it does not receive an acknowledgment within this time, "
                      "it will close the connection. If not set, then the default value 20 seconds is used.")
-    .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+    .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
     .build();
   EXTENSIONAPI static constexpr auto MaxPingsWithoutData = core::PropertyDefinitionBuilder<>::createProperty("Max Pings Without Data")
     .withDescription("The maximum number of pings that can be sent when there is no data/header frame to be sent. gRPC Core will not continue sending pings "
                      "if we run over the limit. Setting it to 0 allows sending pings without such a restriction. If not set, then the default value 2 is used.")
-    .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+    .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
     .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(PushGrafanaLoki::Properties, std::to_array<core::PropertyReference>({
       KeepAliveTime,

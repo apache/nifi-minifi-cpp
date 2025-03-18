@@ -54,13 +54,13 @@ class SplitContent final : public core::ProcessorImpl {
       core::PropertyDefinitionBuilder<>::createProperty("Byte Sequence")
           .withDescription("A representation of bytes to look for and upon which to split the source file into separate files")
           .isRequired(true)
-          .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+          .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
           .build();
 
   EXTENSIONAPI static constexpr auto KeepByteSequence =
       core::PropertyDefinitionBuilder<>::createProperty("Keep Byte Sequence")
           .withDescription("Determines whether or not the Byte Sequence should be included with each Split")
-          .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+          .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
           .withDefaultValue("false")
           .isRequired(true)
           .build();

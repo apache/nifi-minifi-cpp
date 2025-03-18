@@ -140,14 +140,14 @@ class RouteText : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto TrimWhitespace = core::PropertyDefinitionBuilder<>::createProperty("Ignore Leading/Trailing Whitespace")
       .withDescription("Indicates whether or not the whitespace at the beginning and end should be ignored when evaluating a segment.")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto IgnoreCase = core::PropertyDefinitionBuilder<>::createProperty("Ignore Case")
       .withDescription("If true, capitalization will not be taken into account when comparing values. E.g., matching against 'HELLO' or 'hello' will have the same result. "
           "This property is ignored if the 'Matching Strategy' is set to 'Satisfies Expression'.")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto GroupingRegex = core::PropertyDefinitionBuilder<>::createProperty("Grouping Regular Expression")

@@ -78,14 +78,14 @@ class ListSFTP : public SFTPProcessorBase {
       .withDescription("If true, will pull files from arbitrarily nested subdirectories; "
                       "otherwise, will not traverse subdirectories")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto FollowSymlink = core::PropertyDefinitionBuilder<>::createProperty("Follow symlink")
       .withDescription("If true, will pull even symbolic files and also nested symbolic subdirectories; "
           "otherwise, will not read symbolic files and will not traverse symbolic link subdirectories")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto FileFilterRegex = core::PropertyDefinitionBuilder<>::createProperty("File Filter Regex")
@@ -100,7 +100,7 @@ class ListSFTP : public SFTPProcessorBase {
   EXTENSIONAPI static constexpr auto IgnoreDottedFiles = core::PropertyDefinitionBuilder<>::createProperty("Ignore Dotted Files")
       .withDescription("If true, files whose names begin with a dot (\".\") will be ignored")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto TargetSystemTimestampPrecision = core::PropertyDefinitionBuilder<4>::createProperty("Target System Timestamp Precision")
@@ -138,18 +138,18 @@ class ListSFTP : public SFTPProcessorBase {
   EXTENSIONAPI static constexpr auto MinimumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Age")
       .withDescription("The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("0 sec")
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
       .withDescription("The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto MinimumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
       .withDescription("The minimum size that a file must be in order to be pulled")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::DATA_SIZE_VALIDATOR)
       .withDefaultValue("0 B")
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Size")

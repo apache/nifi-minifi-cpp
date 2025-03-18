@@ -111,7 +111,7 @@ Property::Property(std::string name, std::string description, const std::string&
       exclusive_of_properties_(std::move(exclusive_of_properties)),
       is_collection_(false),
       default_value_(value),
-      validator_(&StandardPropertyTypes::ALWAYS_VALID_VALIDATOR),
+      validator_(&StandardPropertyValidators::ALWAYS_VALID_VALIDATOR),
       supports_el_(false),
       is_transient_(false) {}
 
@@ -121,7 +121,7 @@ Property::Property(std::string name, std::string description, const std::string&
       is_required_(false),
       is_collection_(false),
       default_value_(value),
-      validator_{&StandardPropertyTypes::ALWAYS_VALID_VALIDATOR},
+      validator_{&StandardPropertyValidators::ALWAYS_VALID_VALIDATOR},
       supports_el_(false),
       is_transient_(false) {}
 
@@ -130,11 +130,11 @@ Property::Property(std::string name, std::string description)
       description_(std::move(description)),
       is_required_(false),
       is_collection_(true),
-      validator_{&StandardPropertyTypes::ALWAYS_VALID_VALIDATOR},
+      validator_{&StandardPropertyValidators::ALWAYS_VALID_VALIDATOR},
       supports_el_(false),
       is_transient_(false) {}
 
-Property::Property() : is_required_(false), is_collection_(false), validator_{&StandardPropertyTypes::ALWAYS_VALID_VALIDATOR}, supports_el_(false), is_transient_(false) {}
+Property::Property() : is_required_(false), is_collection_(false), validator_{&StandardPropertyValidators::ALWAYS_VALID_VALIDATOR}, supports_el_(false), is_transient_(false) {}
 
 nonstd::expected<std::string_view, std::error_code> Property::getValue() const {
   if (!values_.empty()) { return values_.back(); }
