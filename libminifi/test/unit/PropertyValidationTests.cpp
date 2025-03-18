@@ -26,7 +26,7 @@ namespace org::apache::nifi::minifi::core {
 
 TEST_CASE("Converting invalid PropertyValue") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
   Property property{property_definition};
@@ -36,7 +36,7 @@ TEST_CASE("Converting invalid PropertyValue") {
 
 TEST_CASE("Parsing int has baggage after") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
   Property property{property_definition};
@@ -46,7 +46,7 @@ TEST_CASE("Parsing int has baggage after") {
 
 TEST_CASE("Parsing int has spaces") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
   Property property{property_definition};
@@ -57,7 +57,7 @@ TEST_CASE("Parsing int has spaces") {
 
 TEST_CASE("Parsing bool has baggage after") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   Property property{property_definition};
@@ -67,7 +67,7 @@ TEST_CASE("Parsing bool has baggage after") {
 
 TEST_CASE("NON_BLANK_VALIDATOR test") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .withDefaultValue("true")
       .build();
   Property property{property_definition};
@@ -77,7 +77,7 @@ TEST_CASE("NON_BLANK_VALIDATOR test") {
 
 TEST_CASE("UNSIGNED_INTEGER_VALIDATOR test") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("true")
       .build();
   Property property{property_definition};
@@ -88,7 +88,7 @@ TEST_CASE("UNSIGNED_INTEGER_VALIDATOR test") {
 
 TEST_CASE("DATA_SIZE_VALIDATOR test") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::DATA_SIZE_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::DATA_SIZE_VALIDATOR)
       .withDefaultValue("true")
       .build();
   Property property{property_definition};
@@ -101,7 +101,7 @@ TEST_CASE("DATA_SIZE_VALIDATOR test") {
 
 TEST_CASE("PORT_VALIDATOR test") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::PORT_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::PORT_VALIDATOR)
       .withDefaultValue("true")
       .build();
   Property property{property_definition};
@@ -168,7 +168,7 @@ TEST_CASE("Valid Optional Without Default") {
 
 TEST_CASE("Invalid With Default") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   const Property property{property_definition};
@@ -180,7 +180,7 @@ TEST_CASE("Invalid With Default") {
 
 TEST_CASE("Valid With Default") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("55")
       .build();
   const Property property{property_definition};
@@ -192,7 +192,7 @@ TEST_CASE("Valid With Default") {
 
 TEST_CASE("Write Invalid Then Override With Valid") {
   static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
-      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("55")
       .build();
   const Property property{property_definition};
@@ -206,7 +206,7 @@ TEST_CASE("Write Invalid Then Override With Valid") {
 TEST_CASE("TimePeriodValue Property") {
   using namespace std::literals::chrono_literals;
   static constexpr auto property_definition =
-      PropertyDefinitionBuilder<>::createProperty("prop").withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR).withDefaultValue("10 minutes").build();
+      PropertyDefinitionBuilder<>::createProperty("prop").withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR).withDefaultValue("10 minutes").build();
   const Property property{property_definition};
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});

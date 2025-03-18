@@ -44,7 +44,7 @@ class FetchModbusTcp final : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
       .withDescription("The port or service on the destination.")
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .withDefaultValue("502")
       .isRequired(true)
       .supportsExpressionLanguage(true)
@@ -57,21 +57,21 @@ class FetchModbusTcp final : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto IdleConnectionExpiration = core::PropertyDefinitionBuilder<>::createProperty("Idle Connection Expiration")
       .withDescription("The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature.")
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("15 seconds")
       .isRequired(true)
       .supportsExpressionLanguage(false)
       .build();
   EXTENSIONAPI static constexpr auto ConnectionPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Connection Per FlowFile")
       .withDescription("Specifies whether to send each FlowFile's content on an individual connection.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .isRequired(true)
       .supportsExpressionLanguage(false)
       .build();
   EXTENSIONAPI static constexpr auto Timeout = core::PropertyDefinitionBuilder<>::createProperty("Timeout")
       .withDescription("The timeout for connecting to and communicating with the destination.")
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("15 seconds")
       .isRequired(true)
       .supportsExpressionLanguage(false)

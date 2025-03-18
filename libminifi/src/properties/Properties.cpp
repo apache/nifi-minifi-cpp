@@ -81,7 +81,7 @@ bool allDigitsOrSpaces(const std::string& value) {
 }
 
 std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, const std::string& value) {
-  if (validator != &core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR) {
+  if (validator != &core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR) {
     return std::nullopt;
   }
   if (value.empty() || !allDigits(value)) {
@@ -92,7 +92,7 @@ std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(cons
 }
 
 std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, const std::string& value) {
-  if (validator != &core::StandardPropertyTypes::DATA_SIZE_VALIDATOR) {
+  if (validator != &core::StandardPropertyValidators::DATA_SIZE_VALIDATOR) {
     return std::nullopt;
   }
   if (value.empty() || !allDigits(value)) {
@@ -103,8 +103,8 @@ std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const 
 }
 
 bool integerValidatedProperty(const core::PropertyValidator* const validator) {
-  return validator == &core::StandardPropertyTypes::INTEGER_VALIDATOR
-      || validator == &core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR;
+  return validator == &core::StandardPropertyValidators::INTEGER_VALIDATOR
+      || validator == &core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR;
 }
 
 std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, const std::string& value) {

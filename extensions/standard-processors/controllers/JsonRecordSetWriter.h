@@ -74,7 +74,7 @@ class JsonRecordSetWriter final : public core::RecordSetWriterImpl {
 
   EXTENSIONAPI static constexpr auto PrettyPrint = core::PropertyDefinitionBuilder<>::createProperty("Pretty Print JSON")
     .withDescription("Specifies whether or not the JSON should be pretty printed (only used when Array output is selected)")
-    .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+    .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
     .withDefaultValue("false")
     .build();
 

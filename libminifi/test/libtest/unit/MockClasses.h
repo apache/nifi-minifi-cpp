@@ -98,7 +98,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
   static constexpr const char* Description = "An example processor";
   static constexpr auto LinkedService = minifi::core::PropertyDefinitionBuilder<>::createProperty("linkedService").withDescription("Linked service").build();
   static constexpr auto InSubProcessGroup = minifi::core::PropertyDefinitionBuilder<>::createProperty("InSubProcessGroup")
-    .withValidator(minifi::core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+    .withValidator(minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
     .withDefaultValue("false")
     .withDescription("Is in sub process group")
     .build();

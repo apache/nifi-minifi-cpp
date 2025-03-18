@@ -211,7 +211,7 @@ class SSLContextServiceImpl : public core::controller::ControllerServiceImpl, pu
   MINIFIAPI static constexpr auto UseSystemCertStore = core::PropertyDefinitionBuilder<>::createProperty("Use System Cert Store")
       .withDescription("Whether to use the certificates in the OS's certificate store")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   MINIFIAPI static constexpr auto Properties =

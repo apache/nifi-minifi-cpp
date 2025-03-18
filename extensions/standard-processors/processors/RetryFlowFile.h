@@ -64,27 +64,27 @@ class RetryFlowFile : public core::ProcessorImpl {
         "The name of the attribute that contains the current retry count for the FlowFile."
         "WARNING: If the name matches an attribute already on the FlowFile that does not contain a numerical value, "
         "the processor will either overwrite that attribute with '1' or fail based on configuration.")
-      .withValidator(core::StandardPropertyTypes::NON_BLANK_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .withDefaultValue("flowfile.retries")
       .supportsExpressionLanguage(true)
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaximumRetries = core::PropertyDefinitionBuilder<>::createProperty("Maximum Retries")
       .withDescription("The maximum number of times a FlowFile can be retried before being passed to the 'retries_exceeded' relationship.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("3")
       .supportsExpressionLanguage(true)
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto PenalizeRetries = core::PropertyDefinitionBuilder<>::createProperty("Penalize Retries")
       .withDescription("If set to 'true', this Processor will penalize input FlowFiles before passing them to the 'retry' relationship. This does not apply to the 'retries_exceeded' relationship.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto FailOnNonNumericalOverwrite = core::PropertyDefinitionBuilder<>::createProperty("Fail on Non-numerical Overwrite")
       .withDescription("If the FlowFile already has the attribute defined in 'Retry Attribute' that is *not* a number, fail the FlowFile instead of resetting that value to '1'")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .isRequired(true)
       .build();
