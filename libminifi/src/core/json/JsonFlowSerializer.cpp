@@ -90,7 +90,7 @@ void JsonFlowSerializer::addProviderCreatedParameterContexts(rapidjson::Value& f
 }
 
 void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc,
-    const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
+    const std::map<std::string, Property, std::less<>>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
     const core::flow::Overrides& overrides) const {
   std::unordered_set<std::string> processed_property_names;
 
