@@ -32,6 +32,7 @@
 #include "utils/TimeUtil.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "utils/PropertyErrors.h"
+#include "utils/Error.h"  // for more readable std::error_code fmt::formatter
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -787,13 +788,21 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
       logger_->log_debug("Found property {}", property_name);
 
       const auto append_prop_result = component.appendProperty(property_name, rawValueString);
-      if (!append_prop_result && append_prop_result.error() == make_error_code(PropertyErrorCode::NotSupportedProperty)) {
+      if (append_prop_result) {
+        continue;
+      }
+
+      if (append_prop_result.error() == make_error_code(PropertyErrorCode::NotSupportedProperty)) {
         logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, component.getName());
-        if (!component.appendDynamicProperty(property_name, rawValueString)) {
-          logger_->log_warn("Unable to set the dynamic property {}", property_name);
+        const auto append_dynamic_prop_result = component.appendDynamicProperty(property_name, rawValueString);
+        if (!append_dynamic_prop_result) {
+          logger_->log_error("Unable to set the dynamic property {} due to {}", property_name, append_dynamic_prop_result.error());
         } else {
           logger_->log_warn("Dynamic property {} has been set", property_name);
         }
+      } else {
+        logger_->log_error("Failed to set {} property due to {}", property_name, append_prop_result.error());
+        raiseComponentError(component.getName(), "", append_prop_result.error().message());
       }
     }
   }
