@@ -23,10 +23,12 @@
 namespace org::apache::nifi::minifi::core::controller {
 
 bool StandardControllerServiceNode::enable() {
-  controller_service_->setState(ENABLED);
   logger_->log_trace("Enabling CSN {}", getName());
+  if (active) {
+    logger_->log_debug("CSN {} is already enabled", getName());
+    return true;
+  }
   if (auto linked_services = getAllPropertyValues("Linked Services")) {
-    active = true;
     for (const auto& linked_service : *linked_services) {
       ControllerServiceNode* csNode = provider->getControllerServiceNode(linked_service, controller_service_->getUUID());
       if (nullptr != csNode) {
