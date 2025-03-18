@@ -249,8 +249,8 @@ nonstd::expected<void, std::error_code> ExecutePythonProcessor::setProperty(std:
   return nonstd::make_unexpected(core::PropertyErrorCode::NotSupportedProperty);
 }
 
-nonstd::expected<core::PropertyReference, std::error_code> ExecutePythonProcessor::getPropertyReference(std::string_view name) const {
-  if (const auto non_python_property = ConfigurableComponentImpl::getPropertyReference(name)) {
+nonstd::expected<core::Property, std::error_code> ExecutePythonProcessor::getSupportedProperty(std::string_view name) const {
+  if (const auto non_python_property = ConfigurableComponentImpl::getSupportedProperty(name)) {
     return *non_python_property;
   }
   std::lock_guard<std::mutex> lock(python_properties_mutex_);
@@ -258,12 +258,12 @@ nonstd::expected<core::PropertyReference, std::error_code> ExecutePythonProcesso
     return item.getName() == name;
   });
   if (it != python_properties_.end()) {
-    return it->getReference();
+    return *it;
   }
   return nonstd::make_unexpected(core::PropertyErrorCode::NotSupportedProperty);
 }
 
-std::map<std::string, core::Property> ExecutePythonProcessor::getSupportedProperties() const {
+std::map<std::string, core::Property, std::less<>> ExecutePythonProcessor::getSupportedProperties() const {
   auto result = ConfigurableComponentImpl::getSupportedProperties();
 
   std::lock_guard<std::mutex> lock(python_properties_mutex_);
