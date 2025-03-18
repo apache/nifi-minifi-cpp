@@ -133,10 +133,14 @@ void PersistentMapStateStorage::onEnable() {
     return;
   }
 
-  const auto always_persist = (getProperty(AlwaysPersist.name) | utils::andThen(parsing::parseBool)).value_or(false);
+  const auto always_persist = getProperty(AlwaysPersist.name)
+      | utils::andThen(parsing::parseBool)
+      | utils::orThrow("AlwaysPersist is required property");
   logger_->log_info("Always Persist property: {}", always_persist);
 
-  const auto auto_persistence_interval = (getProperty(AutoPersistenceInterval.name) | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)).value_or(1min);
+  const auto auto_persistence_interval = getProperty(AutoPersistenceInterval.name)
+      | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)
+      | utils::orThrow("AutoPersistenceInterval is required property");
   logger_->log_info("Auto Persistence Interval property: {}", auto_persistence_interval);
 
   if (auto file = getProperty(File.name)) {
