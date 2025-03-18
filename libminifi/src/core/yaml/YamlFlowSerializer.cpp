@@ -76,7 +76,9 @@ void YamlFlowSerializer::addProviderCreatedParameterContexts(YAML::Node flow_def
   }
 }
 
-void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
+void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls,
+    const std::map<std::string, Property, std::less<>>& properties,
+    const utils::crypto::EncryptionProvider& encryption_provider,
     const core::flow::Overrides& overrides) const {
   std::unordered_set<std::string> processed_property_names;
 

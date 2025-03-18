@@ -26,12 +26,12 @@
 namespace org::apache::nifi::minifi::core {
 
 nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(const std::string_view name, const FlowFile* flow_file) const {
-  const auto property = getProcessor().getPropertyReference(name);
+  const auto property = getProcessor().getSupportedProperty(name);
   if (!property) {
     return nonstd::make_unexpected(PropertyErrorCode::NotSupportedProperty);
   }
 
-  if (!property->supports_expression_language) {
+  if (!property->supportsExpressionLanguage()) {
     return ProcessContextImpl::getProperty(name, flow_file);
   }
   if (!cached_expressions_.contains(name)) {
@@ -41,7 +41,7 @@ nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(c
   }
   expression::Parameters p(this, flow_file);
   auto result = cached_expressions_[std::string{name}](p).asString();
-  if (!property->validator->validate(result)) {
+  if (!property->getValidator().validate(result)) {
     return nonstd::make_unexpected(PropertyErrorCode::ValidationFailed);
   }
   return result;

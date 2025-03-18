@@ -42,7 +42,7 @@ class JsonFlowSerializer : public core::flow::FlowSerializer {
   void encryptSensitiveControllerServiceProperties(rapidjson::Value& root_group, rapidjson::Document::AllocatorType& alloc, const core::ProcessGroup& process_group,
     const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider, const std::unordered_map<utils::Identifier, core::flow::Overrides>& overrides) const;
   void encryptSensitiveProperties(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc,
-      const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
+      const std::map<std::string, Property, std::less<>>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
       const core::flow::Overrides& overrides) const;
 
   rapidjson::Document flow_definition_json_;

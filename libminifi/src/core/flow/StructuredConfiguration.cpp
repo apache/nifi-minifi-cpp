@@ -761,8 +761,9 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 
 void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component,
     ParameterContext* parameter_context) {
-  const auto property_reference = component.getPropertyReference(property_name);
-  const bool is_sensitive = property_reference ? property_reference->is_sensitive : false;
+  const bool is_sensitive = component.getSupportedProperty(property_name)
+      | utils::transform([](const auto& prop) -> bool { return prop.isSensitive(); })
+      | utils::valueOrElse([]{ return false; });
 
   for (const auto& nodeVal : property_value_node) {
     if (nodeVal) {
@@ -832,9 +833,9 @@ std::optional<std::string> StructuredConfiguration::getReplacedParametersValueOr
 
 void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component,
     ParameterContext* parameter_context) {
-  auto my_prop = component.getPropertyReference(property_name);
-  const bool is_sensitive = my_prop ? my_prop->is_sensitive : false;
-  const std::optional<std::string_view> default_value = my_prop ? my_prop->default_value : std::nullopt;
+  auto my_prop = component.getSupportedProperty(property_name);
+  const bool is_sensitive = my_prop ? my_prop->isSensitive() : false;
+  const std::optional<std::string_view> default_value = my_prop ? my_prop->getDefaultValue() : std::nullopt;
 
   const auto value_to_set = getReplacedParametersValueOrDefault(property_name, is_sensitive, default_value, property_value_node, parameter_context);
   if (!value_to_set) {

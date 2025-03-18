@@ -38,12 +38,11 @@ class ConfigurableComponentImpl : public virtual ConfigurableComponent {
 
  void setSupportedProperties(std::span<const PropertyReference> properties);
 
- [[nodiscard]] std::map<std::string, Property> getSupportedProperties() const override;
+ [[nodiscard]] std::map<std::string, Property, std::less<>> getSupportedProperties() const override;
+ [[nodiscard]] nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const override;
  [[nodiscard]] std::vector<std::string> getDynamicPropertyKeys() const override;
 
  [[nodiscard]] std::map<std::string, std::string> getDynamicProperties() const override;
-
- [[nodiscard]] nonstd::expected<PropertyReference, std::error_code> getPropertyReference(std::string_view name) const override;
 
 
  // for property sequences

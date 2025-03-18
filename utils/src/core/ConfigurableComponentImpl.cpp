@@ -113,13 +113,6 @@ std::map<std::string, std::string> ConfigurableComponentImpl::getDynamicProperti
   return result;
 }
 
-nonstd::expected<PropertyReference, std::error_code> ConfigurableComponentImpl::getPropertyReference(const std::string_view name) const {
-  const auto it = supported_properties_.find(name);
-  if (it == supported_properties_.end()) { return nonstd::make_unexpected(PropertyErrorCode::NotSupportedProperty); }
-  const Property& prop = it->second;
-  return prop.getReference();
-}
-
 [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> ConfigurableComponentImpl::getAllPropertyValues(const std::string_view name) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
@@ -138,14 +131,20 @@ nonstd::expected<PropertyReference, std::error_code> ConfigurableComponentImpl::
   return prop.getAllValues() | utils::transform([](const auto& values) -> std::vector<std::string> { return std::vector<std::string>{values.begin(), values.end()}; });
 }
 
-[[nodiscard]] std::map<std::string, Property> ConfigurableComponentImpl::getSupportedProperties() const {
+[[nodiscard]] std::map<std::string, Property, std::less<>> ConfigurableComponentImpl::getSupportedProperties() const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
-  std::map<std::string, Property> supported_properties;
+  std::map<std::string, Property, std::less<>> supported_properties;
   for (const auto& [name, prop]: supported_properties_) {
     supported_properties.emplace(name, prop);
   }
   return supported_properties;
+}
 
+[[nodiscard]] nonstd::expected<Property, std::error_code> ConfigurableComponentImpl::getSupportedProperty(const std::string_view name) const {
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+  const auto it = supported_properties_.find(name);
+  if (it == supported_properties_.end()) { return nonstd::make_unexpected(PropertyErrorCode::NotSupportedProperty); }
+  return it->second;
 }
 
 }  // namespace org::apache::nifi::minifi::core

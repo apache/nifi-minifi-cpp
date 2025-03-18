@@ -44,15 +44,14 @@ public:
   virtual nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) = 0;
   virtual nonstd::expected<void, std::error_code> appendDynamicProperty(std::string_view name, std::string value) = 0;
 
-  [[nodiscard]] virtual nonstd::expected<PropertyReference, std::error_code> getPropertyReference(std::string_view name) const = 0;
-
   [[nodiscard]] virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
   [[nodiscard]] virtual std::map<std::string, std::string> getDynamicProperties() const = 0;
 
   [[nodiscard]] virtual bool supportsDynamicProperties() const = 0;
   [[nodiscard]] virtual bool supportsDynamicRelationships() const = 0;
 
-  [[nodiscard]] virtual std::map<std::string, Property> getSupportedProperties() const = 0;
+  [[nodiscard]] virtual std::map<std::string, Property, std::less<>> getSupportedProperties() const = 0;
+  [[nodiscard]] virtual nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core
