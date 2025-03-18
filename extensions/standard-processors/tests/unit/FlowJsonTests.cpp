@@ -32,6 +32,8 @@
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "unit/TestUtils.h"
 #include "unit/DummyParameterProvider.h"
+#include "catch2/generators/catch_generators.hpp"
+
 
 using namespace std::literals::chrono_literals;
 
@@ -188,6 +190,43 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   CHECK(connection2->getSource() == funnel);
   CHECK(connection2->getDestination() == port);
   CHECK(connection2->getRelationships() == (std::set<core::Relationship>{{"success", ""}}));
+}
+
+TEST_CASE("Cannot use invalid property values") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+  auto [file_size_property_str, throws] = GENERATE(
+    std::make_tuple(R"("1 kB")", false),
+    std::make_tuple(R"([{"value": "1 kB"},{"value": "2 kB"}])", false),
+    std::make_tuple(R"("foo")", true),
+    std::make_tuple(R"([{"value": "1 kB"},{"value": "bar"}])", true));
+  const std::string CONFIG_JSON = fmt::format(
+      R"(
+{{
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [{{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyGenFF",
+      "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+      "concurrentlySchedulableTaskCount": 15,
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "penaltyDuration": "12 sec",
+      "yieldDuration": "4 sec",
+      "runDurationMillis": 12,
+      "autoTerminatedRelationships": ["success"],
+      "properties": {{
+        "File Size": {}
+      }}
+    }}]
+  }}
+}})", file_size_property_str);
+  if (throws) {
+    REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Unable to parse configuration file for component named 'MyGenFF' because ValidationFailed");
+  } else {
+    REQUIRE_NOTHROW(config.getRootFromPayload(CONFIG_JSON));
+  }
 }
 
 TEST_CASE("Parameters from different parameter contexts should not be replaced") {
