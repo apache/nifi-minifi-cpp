@@ -51,6 +51,7 @@ TEST_CASE("Test data size parsing") {
 
   CHECK(nonstd::make_unexpected(core::ParsingErrorCode::LargerThanMaximum) == parseDataSizeMinMax("9 MB", 3000, 8000));
   CHECK(nonstd::make_unexpected(core::ParsingErrorCode::SmallerThanMinimum) == parseDataSizeMinMax("0 GB", 3000, 8000));
+  CHECK(nonstd::make_unexpected(core::ParsingErrorCode::OverflowError) == parseDataSize("20000 PB"));
 }
 
 TEST_CASE("Test Permissions Parsing") {

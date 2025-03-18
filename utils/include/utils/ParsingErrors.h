@@ -28,6 +28,7 @@ enum class ParsingErrorCode : std::underlying_type_t<std::byte> {
   GeneralParsingError,
   SmallerThanMinimum,
   LargerThanMaximum,
+  OverflowError,
 };
 
 
