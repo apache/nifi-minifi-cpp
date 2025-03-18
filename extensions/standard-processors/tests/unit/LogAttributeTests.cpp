@@ -85,8 +85,8 @@ TEST_CASE("LogAttribute filtering attributes", "[LogAttribute]") {
   const auto log_attribute = controller.getProcessor();
   LogTestController::getInstance().setTrace<LogAttribute>();
 
-  std::string_view attrs_to_log = "";
-  std::string_view attrs_to_ignore = "";
+  std::string_view attrs_to_log;
+  std::string_view attrs_to_ignore;
   auto expected_eng = true;
   auto expected_ger = true;
   auto expected_fra = true;
