@@ -41,13 +41,13 @@ static constexpr auto Apple = core::RelationshipDefinition{"apple", ""};
 static constexpr auto Banana = core::RelationshipDefinition{"banana", ""};
 // The probability that this processor routes to Apple
 static constexpr auto AppleProbability = core::PropertyDefinitionBuilder<>::createProperty("AppleProbability")
-    .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+    .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
     .withDefaultValue("100")
     .isRequired(true)
     .build();
 // The probability that this processor routes to Banana
 static constexpr auto BananaProbability = core::PropertyDefinitionBuilder<>::createProperty("BananaProbability")
-    .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+    .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
     .withDefaultValue("0")
     .isRequired(true)
     .build();

@@ -39,19 +39,19 @@ class ListenUDP : public NetworkListenerProcessor {
 
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")
       .withDescription("The port to listen on for communication.")
-      .withValidator(core::StandardPropertyTypes::PORT_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::PORT_VALIDATOR)
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaxBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Size")
       .withDescription("The maximum number of messages to process at a time.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("500")
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaxQueueSize = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Message Queue")
       .withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
           "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("10000")
       .isRequired(true)
       .build();

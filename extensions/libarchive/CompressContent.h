@@ -102,7 +102,7 @@ class CompressContent : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto CompressLevel = core::PropertyDefinitionBuilder<>::createProperty("Compression Level")
       .withDescription("The compression level to use; this is valid only when using GZIP compression.")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("1")
       .build();
   EXTENSIONAPI static constexpr auto CompressFormat = core::PropertyDefinitionBuilder<magic_enum::enum_count<compress_content::ExtendedCompressionFormat>()>::createProperty("Compression Format")
@@ -114,7 +114,7 @@ class CompressContent : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto UpdateFileName = core::PropertyDefinitionBuilder<>::createProperty("Update Filename")
       .withDescription("Determines if filename extension need to be updated")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto EncapsulateInTar = core::PropertyDefinitionBuilder<>::createProperty("Encapsulate in TAR")
@@ -123,12 +123,12 @@ class CompressContent : public core::ProcessorImpl {
           "If false, on compression the content of the FlowFile simply gets compressed, and on decompression a simple compressed content is expected.\n"
           "true is the behaviour compatible with older MiNiFi C++ versions, false is the behaviour compatible with NiFi.")
       .isRequired(false)
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
       .withDescription("Maximum number of FlowFiles processed in a single session")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("1")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

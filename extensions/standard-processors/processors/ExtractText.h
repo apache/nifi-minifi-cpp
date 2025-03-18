@@ -54,35 +54,35 @@ class ExtractText : public core::ProcessorImpl {
   // despite there being a size value, ExtractText was initially built with a numeric for this property
   EXTENSIONAPI static constexpr auto SizeLimit = core::PropertyDefinitionBuilder<>::createProperty("Size Limit")
       .withDescription("Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.")
-      .withValidator(core::StandardPropertyTypes::UNSIGNED_INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue(DEFAULT_SIZE_LIMIT_STR)
       .build();
   EXTENSIONAPI static constexpr auto RegexMode = core::PropertyDefinitionBuilder<>::createProperty("Regex Mode")
       .withDescription("Set this to extract parts of flowfile content using regular experssions in dynamic properties")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto IncludeCaptureGroupZero = core::PropertyDefinitionBuilder<>::createProperty("Include Capture Group 0")
       .withDescription("Indicates that Capture Group 0 should be included as an attribute. "
          "Capture Group 0 represents the entirety of the regular expression match, is typically not used, and could have considerable length.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto InsensitiveMatch = core::PropertyDefinitionBuilder<>::createProperty("Enable Case-insensitive Matching")
       .withDescription("Indicates that two characters match even if they are in a different case. ")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto MaxCaptureGroupLen = core::PropertyDefinitionBuilder<>::createProperty("Maximum Capture Group Length")
       .withDescription("Specifies the maximum number of characters a given capture group value can have. "
         "Any characters beyond the max will be truncated.")
-      .withValidator(core::StandardPropertyTypes::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue(MAX_CAPTURE_GROUP_SIZE_STR)
       .build();
   EXTENSIONAPI static constexpr auto EnableRepeatingCaptureGroup = core::PropertyDefinitionBuilder<>::createProperty("Enable repeating capture group")
       .withDescription("f set to true, every string matching the capture groups will be extracted. "
                       "Otherwise, if the Regular Expression matches more than once, only the first match will be extracted.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

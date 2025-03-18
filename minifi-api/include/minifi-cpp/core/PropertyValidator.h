@@ -123,7 +123,7 @@ public:
  }
 };
 
-namespace StandardPropertyTypes {
+namespace StandardPropertyValidators {
 inline constexpr auto ALWAYS_VALID_VALIDATOR = AlwaysValidValidator{};
 inline constexpr auto NON_BLANK_VALIDATOR = NonBlankValidator{};
 inline constexpr auto TIME_PERIOD_VALIDATOR = TimePeriodValidator{};

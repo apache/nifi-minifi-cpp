@@ -42,7 +42,7 @@ class SplunkHECProcessor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
       .withDescription("The HTTP Event Collector HTTP Port Number.")
-      .withValidator(core::StandardPropertyTypes::PORT_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::PORT_VALIDATOR)
       .withDefaultValue("8088")
       .isRequired(true)
       .build();

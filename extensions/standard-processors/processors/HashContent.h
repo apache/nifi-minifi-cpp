@@ -155,7 +155,7 @@ class HashContent : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto FailOnEmpty = core::PropertyDefinitionBuilder<>::createProperty("Fail on empty")
       .withDescription("Route to failure relationship in case of empty content")
       .withDefaultValue("false")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       HashAttribute,

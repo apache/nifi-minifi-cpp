@@ -113,7 +113,7 @@ struct PropertyDefinitionBuilder {
     .dependent_properties = {},
     .exclusive_of_properties = {},
     .default_value = {},
-    .validator = gsl::make_not_null(&StandardPropertyTypes::ALWAYS_VALID_VALIDATOR),
+    .validator = gsl::make_not_null(&StandardPropertyValidators::ALWAYS_VALID_VALIDATOR),
     .supports_expression_language = false,
     .version = 1
   };
