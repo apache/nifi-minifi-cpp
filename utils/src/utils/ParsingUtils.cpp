@@ -69,7 +69,12 @@ nonstd::expected<uint64_t, std::error_code> parseDataSizeMinMax(const std::strin
   nonstd::expected<uint64_t, std::error_code> num_part = parseIntegral<uint64_t>(num_str);
   if (!num_part) { return nonstd::make_unexpected(num_part.error()); }
 
+  const auto unit_multiplier = getUnitMultiplier(utils::string::trim(unit_str));
   uint64_t result = *num_part * getUnitMultiplier(utils::string::trim(unit_str));
+  gsl_Assert(unit_multiplier != 0);
+  if ((result / unit_multiplier) != *num_part) {
+    return nonstd::make_unexpected(core::ParsingErrorCode::OverflowError);
+  }
   if (result < minimum) { return nonstd::make_unexpected(core::ParsingErrorCode::SmallerThanMinimum); }
   if (result > maximum) { return nonstd::make_unexpected(core::ParsingErrorCode::LargerThanMaximum); }
 
