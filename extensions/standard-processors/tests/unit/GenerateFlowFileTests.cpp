@@ -42,14 +42,14 @@ TEST_CASE("GenerateFlowFileWithBinaryData") {
   auto generate_flow_file = test_controller.getProcessor();
   LogTestController::getInstance().setWarn<GenerateFlowFile>();
 
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::FileSize, "10");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::BatchSize, "2");
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::FileSize, "10"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::BatchSize, "2"));
 
   // This property will be ignored if binary files are used
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "Current time: ${now()}");
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "Current time: ${now()}"));
 
   REQUIRE(is_unique.has_value());
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, fmt::format("{}", *is_unique));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, fmt::format("{}", *is_unique)));
 
   auto first_batch = test_controller.trigger();
   REQUIRE(first_batch.at(GenerateFlowFile::Success).size() == 2);
@@ -70,9 +70,9 @@ TEST_CASE("GenerateFlowFileTestEmpty") {
   minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
 
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::FileSize, "0");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::FileSize, "0"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text"));
 
   auto result = test_controller.trigger();
   REQUIRE(result.at(GenerateFlowFile::Success).size() == 1);
@@ -86,9 +86,9 @@ TEST_CASE("GenerateFlowFileCustomTextTest") {
 
   constexpr auto uuid_string_length = 36;
 
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${UUID()}");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${UUID()}"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text"));
 
   auto result = test_controller.trigger();
   REQUIRE(result.at(GenerateFlowFile::Success).size() == 1);
@@ -103,10 +103,10 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest") {
   constexpr int32_t file_size = 10;
 
   CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::FileSize, std::to_string(file_size)));
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text"));
   SECTION("Empty custom data") {
-    test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "");
+    CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, ""));
   }
 
   SECTION("No custom data") {
@@ -121,10 +121,10 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest") {
 TEST_CASE("GenerateFlowFile reevaluating CustomText") {
   minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${nextInt()}");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::BatchSize, "2");
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${nextInt()}"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::BatchSize, "2"));
 
   for (auto i = 0; i < 100; ++i) {
     auto batch = test_controller.trigger();
@@ -138,10 +138,10 @@ TEST_CASE("GenerateFlowFile reevaluating CustomText") {
 TEST_CASE("GenerateFlowFile CustomText evaluates to empty string") {
   minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${invalid_variable}");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::BatchSize, "2");
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${invalid_variable}"));
+  CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::BatchSize, "2"));
 
   auto batch = test_controller.trigger();
   auto batch_0 = test_controller.plan->getContent(batch.at(GenerateFlowFile::Success)[0]);
