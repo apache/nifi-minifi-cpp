@@ -33,7 +33,7 @@
 #include "utils/ProxyOptions.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/Processor.h"
 
 
@@ -121,7 +121,7 @@ class AwsProcessor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto CommunicationsTimeout = core::PropertyDefinitionBuilder<>::createProperty("Communications Timeout")
       .isRequired(true)
-      .withValidator(core::StandardPropertyTypes::TIME_PERIOD_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("30 sec")
       .withDescription("Sets the timeout of the communication between the AWS server and the client")
       .build();
@@ -151,7 +151,7 @@ class AwsProcessor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
       .withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
-      .withValidator(core::StandardPropertyTypes::BOOLEAN_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .isRequired(true)
       .build();
