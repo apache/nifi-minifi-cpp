@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 #include <ctime>
 #include <cctype>
@@ -37,7 +37,6 @@
 #include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
 #include "Exception.h"
-#include "core/Processor.h"
 #include "core/ProcessorMetrics.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
 

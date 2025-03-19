@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
