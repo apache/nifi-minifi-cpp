@@ -25,7 +25,7 @@
 #include <utility>
 
 #include "io/InputStream.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "utils/Export.h"
 #include "controllers/SSLContextService.h"
 #include "core/Core.h"

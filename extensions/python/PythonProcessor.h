@@ -23,7 +23,7 @@
 #include <memory>
 #include <optional>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::python {

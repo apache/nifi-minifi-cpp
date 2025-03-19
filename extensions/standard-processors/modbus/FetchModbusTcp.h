@@ -18,7 +18,7 @@
 
 #include "controllers/SSLContextService.h"
 #include "controllers/RecordSetWriter.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/net/AsioCoro.h"
