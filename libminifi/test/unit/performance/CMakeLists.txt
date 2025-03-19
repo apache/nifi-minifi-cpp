@@ -17,23 +17,17 @@
 # under the License.
 #
 
-GETSOURCEFILES(UNIT_TESTS "${TEST_DIR}/unit/")
+find_package(benchmark REQUIRED)
 
-if (NOT WIN32)
-    list(REMOVE_ITEM UNIT_TESTS WindowsCertStoreLocationTests.cpp)
-endif()
+GETSOURCEFILES(PERF_TESTS "${TEST_DIR}/unit/performance")
 
-SET(UNIT_TEST_COUNT 0)
-FOREACH(testfile ${UNIT_TESTS})
+SET(PERF_TEST_COUNT 0)
+FOREACH(testfile ${PERF_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_minifi_executable("${testfilename}" "${TEST_DIR}/unit/${testfile}")
-    target_compile_definitions("${testfilename}" PRIVATE TZ_DATA_DIR="${CMAKE_BINARY_DIR}/tzdata")
-    target_compile_definitions("${testfilename}" PRIVATE TEST_RESOURCES="${TEST_RESOURCES}")
-    createTests("${testfilename}")
-    target_link_libraries(${testfilename} Catch2WithMain)
-    MATH(EXPR UNIT_TEST_COUNT "${UNIT_TEST_COUNT}+1")
+    add_minifi_executable("${testfilename}" "${TEST_DIR}/unit/performance/${testfile}")
+    target_link_libraries(${testfilename} benchmark::benchmark core-minifi)
+    target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include")
+    MATH(EXPR PERF_TEST_COUNT "${PERF_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}")
 ENDFOREACH()
-message("-- Finished building ${UNIT_TEST_COUNT} unit test file(s)...")
-
-add_subdirectory(performance)
+message("-- Finished building ${PERF_TEST_COUNT} performance test file(s)...")
