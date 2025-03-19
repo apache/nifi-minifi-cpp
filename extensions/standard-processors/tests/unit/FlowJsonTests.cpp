@@ -196,6 +196,7 @@ TEST_CASE("Cannot use invalid property values") {
   ConfigurationTestController test_controller;
   core::flow::AdaptiveConfiguration config(test_controller.getContext());
   auto [file_size_property_str, throws] = GENERATE(
+    std::make_tuple(R"("12 dogBytes")", true),
     std::make_tuple(R"("1 kB")", false),
     std::make_tuple(R"([{"value": "1 kB"},{"value": "2 kB"}])", false),
     std::make_tuple(R"("foo")", true),
