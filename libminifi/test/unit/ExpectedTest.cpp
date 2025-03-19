@@ -91,7 +91,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     auto ret = e | utils::transform(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
+        (std::is_same_v<decltype(ret), nonstd::expected<void, int>>));
   }
 
   {
@@ -99,7 +99,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     auto ret = e | utils::transform(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
+        (std::is_same_v<decltype(ret), nonstd::expected<void, int>>));
   }
 
   {
@@ -107,7 +107,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     auto ret = std::move(e) | utils::transform(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
+        (std::is_same_v<decltype(ret), nonstd::expected<void, int>>));
   }
 
   {
@@ -115,7 +115,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     auto ret = std::move(e) | utils::transform(ret_void);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
+        (std::is_same_v<decltype(ret), nonstd::expected<void, int>>));
   }
 
   {
@@ -123,7 +123,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     auto ret = e | utils::transform(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
+        (std::is_same_v<decltype(ret), nonstd::expected<void, int>>));
   }
 
   {
@@ -131,7 +131,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     auto ret = e | utils::transform(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
+        (std::is_same_v<decltype(ret), nonstd::expected<void, int>>));
   }
 
   {
@@ -139,7 +139,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     auto ret = std::move(e) | utils::transform(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
+        (std::is_same_v<decltype(ret), nonstd::expected<void, int>>));
   }
 
   {
@@ -147,7 +147,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     auto ret = std::move(e) | utils::transform(ret_void);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
+        (std::is_same_v<decltype(ret), nonstd::expected<void, int>>));
   }
 
 
@@ -473,7 +473,7 @@ TEST_CASE("expected valueOrElse", "[expected][valueOrElse]") {
   REQUIRE(gsl::narrow<int>("hello"sv.size()) == (ex | utils::valueOrElse([](const std::string& err) { return gsl::narrow<int>(err.size()); })));
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw std::exception(); }), std::exception);  // NOLINT(performance-unnecessary-value-param)
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](const std::string&) -> int { throw std::exception(); }), std::exception);
-  REQUIRE_THROWS_WITH(std::move(ex) | utils::valueOrElse([](std::string&& error) -> int { throw std::runtime_error(std::move(error)); }), "hello");
+  REQUIRE_THROWS_WITH(std::move(ex) | utils::valueOrElse([](std::string&& error) -> int { throw std::runtime_error(error); }), "hello");
 }
 
 TEST_CASE("expected transformError", "[expected][transformError]") {
@@ -559,5 +559,5 @@ TEST_CASE("expected orThrow") {
   nonstd::expected<int, std::string> expected{5};
 
   REQUIRE_THROWS_WITH(std::move(unexpected) | utils::orThrow("should throw"), "should throw: hello");
-  CHECK((std::move(expected) | utils::orThrow("should be 5")) == 5);
+  CHECK((expected | utils::orThrow("should be 5")) == 5);
 }
