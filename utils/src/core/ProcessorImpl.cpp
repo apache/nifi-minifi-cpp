@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 #include <ctime>
 #include <cctype>

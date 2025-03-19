@@ -29,7 +29,7 @@
 #include "core/PropertyDefinition.h"
 #include "core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/logging/Logger.h"
 #include "storage/AzureStorageCredentials.h"
 

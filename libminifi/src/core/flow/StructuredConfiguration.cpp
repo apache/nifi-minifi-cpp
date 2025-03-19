@@ -24,7 +24,7 @@
 
 #include "Funnel.h"
 #include "core/ParameterContext.h"
-#include "core/ProcessorProxy.h"
+#include "core/Processor.h"
 #include "core/ParameterTokenParser.h"
 #include "core/ReferenceParser.h"
 #include "core/flow/CheckRequiredField.h"
@@ -584,7 +584,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
 
   auto report_task_impl = createProvenanceReportTask();
   auto* reportTask = report_task_impl.get();
-  auto report_task_wrapper = std::make_unique<core::ProcessorProxy>("", std::move(report_task_impl));
+  auto report_task_wrapper = std::make_unique<core::Processor>("", std::move(report_task_impl));
 
   checkRequiredField(node, schema_.scheduling_strategy);
   auto schedulingStrategyStr = node[schema_.scheduling_strategy].getString().value();
@@ -747,7 +747,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   auto port_impl = std::make_unique<minifi::RemoteProcessorGroupPort>(
           nameStr, parent->getURL(), this->configuration_, uuid);
   auto* port = port_impl.get();
-  auto port_wrapper = std::make_unique<core::ProcessorProxy>(nameStr, uuid, std::move(port_impl));
+  auto port_wrapper = std::make_unique<core::Processor>(nameStr, uuid, std::move(port_impl));
   port->setDirection(direction);
   port->setTimeout(parent->getTimeout());
   port->setTransmitting(true);
@@ -952,7 +952,7 @@ void StructuredConfiguration::parseFunnels(const Node& node, core::ProcessGroup*
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect funnel UUID format.");
     });
 
-    auto funnel = std::make_unique<core::ProcessorProxy>(name, uuid.value(), std::make_unique<minifi::Funnel>(name, uuid.value()));
+    auto funnel = std::make_unique<core::Processor>(name, uuid.value(), std::make_unique<minifi::Funnel>(name, uuid.value()));
     logger_->log_debug("Created funnel with UUID {} and name {}", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);
@@ -980,7 +980,7 @@ void StructuredConfiguration::parsePorts(const flow::Node& node, core::ProcessGr
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect port UUID format.");
     });
 
-    auto port = std::make_unique<PortProxy>(name, uuid.value(), std::make_unique<PortImpl>(name, uuid.value(), port_type));
+    auto port = std::make_unique<Port>(name, uuid.value(), std::make_unique<PortImpl>(name, uuid.value(), port_type));
     logger_->log_debug("Created port UUID {} and name {}", id, name);
     port->setScheduledState(core::RUNNING);
     port->setSchedulingStrategy(core::EVENT_DRIVEN);
