@@ -37,18 +37,18 @@ namespace org::apache::nifi::minifi::core::repository {
  * Purpose: Stages content into a volatile area of memory. Note that when the maximum number
  * of entries is consumed we will rollback a session to wait for others to be freed.
  */
-class VolatileContentRepository : public core::ContentRepositoryImpl {
+class LegacyVolatileContentRepository : public core::ContentRepositoryImpl {
  public:
   static const char *minimal_locking;
 
-  explicit VolatileContentRepository(std::string_view name = className<VolatileContentRepository>())
+  explicit LegacyVolatileContentRepository(std::string_view name = className<LegacyVolatileContentRepository>())
     : core::ContentRepositoryImpl(name),
       repo_data_(15000, static_cast<size_t>(10_MiB * 0.75)),
       minimize_locking_(true),
-      logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()) {
+      logger_(logging::LoggerFactory<LegacyVolatileContentRepository>::getLogger()) {
   }
 
-  ~VolatileContentRepository() override {
+  ~LegacyVolatileContentRepository() override {
     logger_->log_debug("Clearing repository");
     if (!minimize_locking_) {
       std::lock_guard<std::mutex> lock(map_mutex_);

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "core/repository/VolatileContentRepository.h"
+#include "core/repository/LegacyVolatileContentRepository.h"
 
 #include <cstdio>
 #include <memory>
@@ -31,9 +31,9 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core::repository {
 
-const char *VolatileContentRepository::minimal_locking = "minimal.locking";
+const char *LegacyVolatileContentRepository::minimal_locking = "minimal.locking";
 
-bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &configure) {
+bool LegacyVolatileContentRepository::initialize(const std::shared_ptr<Configure> &configure) {
   repo_data_.initialize(configure, getName());
 
   logger_->log_info("Resizing repo_data_.value_vector for {} count is {}", getName(), repo_data_.max_count);
@@ -54,7 +54,7 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &con
   return true;
 }
 
-std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::ResourceClaim &claim, bool /*append*/) {
+std::shared_ptr<io::BaseStream> LegacyVolatileContentRepository::write(const minifi::ResourceClaim &claim, bool /*append*/) {
   logger_->log_info("enter write for {}", claim.getContentFullPath());
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
@@ -97,7 +97,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::R
   return nullptr;
 }
 
-bool VolatileContentRepository::exists(const minifi::ResourceClaim &claim) {
+bool LegacyVolatileContentRepository::exists(const minifi::ResourceClaim &claim) {
   std::lock_guard<std::mutex> lock(map_mutex_);
   auto claim_check = master_list_.find(claim.getContentFullPath());
   if (claim_check != master_list_.end()) {
@@ -108,7 +108,7 @@ bool VolatileContentRepository::exists(const minifi::ResourceClaim &claim) {
   return false;
 }
 
-std::shared_ptr<io::BaseStream> VolatileContentRepository::read(const minifi::ResourceClaim &claim) {
+std::shared_ptr<io::BaseStream> LegacyVolatileContentRepository::read(const minifi::ResourceClaim &claim) {
   std::lock_guard<std::mutex> lock(map_mutex_);
   auto claim_check = master_list_.find(claim.getContentFullPath());
   if (claim_check != master_list_.end()) {
@@ -122,7 +122,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::read(const minifi::Re
   return nullptr;
 }
 
-bool VolatileContentRepository::removeKey(const std::string& content_path) {
+bool LegacyVolatileContentRepository::removeKey(const std::string& content_path) {
   if (LIKELY(minimize_locking_ == true)) {
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto ent = master_list_.find(content_path);
