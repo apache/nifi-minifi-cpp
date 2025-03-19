@@ -28,23 +28,84 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-std::optional<std::string> parseOptionalProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
-std::string parseProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
+inline std::string parseProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file) | orThrow(fmt::format("Expected valid value from {}::{}", ctx.getProcessor().getName(), property.name));
+}
 
-std::optional<bool> parseOptionalBoolProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
-bool parseBoolProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
+inline bool parseBoolProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file) | andThen(parsing::parseBool) | orThrow(fmt::format("Expected parsable bool from {}::{}", ctx.getProcessor().getName(), property.name));
+}
 
-std::optional<uint64_t> parseOptionalU64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
-uint64_t parseU64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
+inline uint64_t parseU64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file) | andThen(parsing::parseIntegral<uint64_t>) | orThrow(fmt::format("Expected parsable uint64_t from {}::{}", ctx.getProcessor().getName(), property.name));
+}
 
-std::optional<int64_t> parseOptionalI64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
-int64_t parseI64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
+inline int64_t parseI64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file) | andThen(parsing::parseIntegral<int64_t>) | orThrow(fmt::format("Expected parsable int64_t from {}::{}", ctx.getProcessor().getName(), property.name));
+}
 
-std::optional<std::chrono::milliseconds> parseOptionalDurationProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
-std::chrono::milliseconds parseDurationProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
+inline std::chrono::milliseconds parseDurationProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file) | andThen(parsing::parseDuration<std::chrono::milliseconds>) | orThrow(fmt::format("Expected parsable duration from {}::{}", ctx.getProcessor().getName(), property.name));
+}
 
-std::optional<uint64_t> parseOptionalDataSizeProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
-uint64_t parseDataSizeProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr);
+inline uint64_t parseDataSizeProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file) | andThen(parsing::parseDataSize) | orThrow(fmt::format("Expected parsable data size from {}::{}", ctx.getProcessor().getName(), property.name));
+}
+
+inline std::optional<std::string> parseOptionalProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file) | utils::toOptional();
+}
+
+inline std::optional<bool> parseOptionalBoolProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  if (const auto property_str = ctx.getProperty(property.name, flow_file)) {
+    return parsing::parseBool(*property_str) | utils::orThrow(fmt::format("Expected parsable bool from {}::{}", ctx.getProcessor().getName(), property.name));
+  }
+  return std::nullopt;
+}
+
+inline std::optional<uint64_t> parseOptionalU64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  if (const auto property_str = ctx.getProperty(property.name, flow_file)) {
+    if (property_str->empty()) {
+      return std::nullopt;
+    }
+    return parsing::parseIntegral<uint64_t>(*property_str) | utils::orThrow(fmt::format("Expected parsable uint64_t from {}::{}", ctx.getProcessor().getName(), property.name));
+  }
+
+  return std::nullopt;
+}
+
+inline std::optional<int64_t> parseOptionalI64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  if (const auto property_str = ctx.getProperty(property.name, flow_file)) {
+    if (property_str->empty()) {
+      return std::nullopt;
+    }
+    return parsing::parseIntegral<int64_t>(*property_str) | utils::orThrow(fmt::format("Expected parsable int64_t from {}::{}", ctx.getProcessor().getName(), property.name));
+  }
+
+  return std::nullopt;
+}
+
+inline std::optional<std::chrono::milliseconds> parseOptionalDurationProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  if (const auto property_str = ctx.getProperty(property.name, flow_file)) {
+    if (property_str->empty()) {
+      return std::nullopt;
+    }
+    return parsing::parseDuration(*property_str) | utils::orThrow(fmt::format("Expected parsable duration from {}::{}", ctx.getProcessor().getName(), property.name));
+  }
+
+  return std::nullopt;
+}
+
+inline std::optional<uint64_t> parseOptionalDataSizeProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  if (const auto property_str = ctx.getProperty(property.name, flow_file)) {
+    if (property_str->empty()) {
+      return std::nullopt;
+    }
+    return parsing::parseDataSize(*property_str) | utils::orThrow(fmt::format("Expected parsable data size from {}::{}", ctx.getProcessor().getName(), property.name));
+  }
+
+  return std::nullopt;
+}
 
 template<typename T>
 T parseEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop, const core::FlowFile* flow_file = nullptr) {
