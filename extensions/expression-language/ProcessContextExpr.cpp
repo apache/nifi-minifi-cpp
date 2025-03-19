@@ -48,6 +48,7 @@ nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(c
 }
 
 nonstd::expected<std::string, std::error_code> ProcessContextExpr::getDynamicProperty(const std::string_view name, const FlowFile* flow_file) const {
+  // all dynamic properties support EL
   if (!cached_dynamic_expressions_.contains(name)) {
     auto expression_str = ProcessContextImpl::getDynamicProperty(name, flow_file);
     if (!expression_str) { return expression_str; }
