@@ -47,7 +47,7 @@ class ListAzureBlobStorageTestsFixture {
     mock_blob_storage_ptr_ = mock_blob_storage.get();
     auto uuid = utils::IdGenerator::getIdGenerator()->generate();
     auto impl = std::make_unique<minifi::azure::processors::ListAzureBlobStorage>(core::ProcessorMetadata{.uuid = uuid, .name = "ListAzureBlobStorage", .logger = logging::LoggerFactory<minifi::azure::processors::ListAzureBlobStorage>::getLogger(uuid)}, std::move(mock_blob_storage));
-    auto list_azure_blob_storage_unique_ptr = std::make_unique<core::ProcessorProxy>(impl->getName(), impl->getUUID(), std::move(impl));
+    auto list_azure_blob_storage_unique_ptr = std::make_unique<core::Processor>(impl->getName(), impl->getUUID(), std::move(impl));
     list_azure_blob_storage_ = list_azure_blob_storage_unique_ptr.get();
 
     plan_->addProcessor(std::move(list_azure_blob_storage_unique_ptr), "ListAzureBlobStorage", { {"success", "d"} });

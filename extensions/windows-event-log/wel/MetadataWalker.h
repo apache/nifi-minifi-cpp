@@ -32,7 +32,7 @@
 #include <utility>
 
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "FlowFileRecord.h"
 #include "WindowsEventLog.h"

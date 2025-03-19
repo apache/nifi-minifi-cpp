@@ -42,7 +42,7 @@
 #include "utils/gsl.h"
 #include "utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
-#include "minifi-cpp/core/Processor.h"
+#include "minifi-cpp/core/ProcessorApi.h"
 #include "utils/PropertyErrors.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
 #include "Exception.h"

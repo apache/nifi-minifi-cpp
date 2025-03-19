@@ -21,7 +21,7 @@
 #include <utility>
 
 #include "ForwardingNode.h"
-#include "core/ProcessorProxy.h"
+#include "core/Processor.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -30,10 +30,7 @@ enum class PortType {
   OUTPUT
 };
 
-class Port : public virtual core::Processor {
- public:
-  virtual PortType getPortType() const = 0;
-};
+class Port;
 
 class PortImpl final : public ForwardingNode {
  public:
@@ -49,11 +46,11 @@ class PortImpl final : public ForwardingNode {
   PortType port_type_;
 };
 
-class PortProxy : public virtual Port, public core::ProcessorProxy {
+class Port : public core::Processor {
  public:
-  PortProxy(std::string_view name, const utils::Identifier& uuid, std::unique_ptr<PortImpl> impl): ProcessorProxy(name, uuid, std::move(impl)) {}
+  Port(std::string_view name, const utils::Identifier& uuid, std::unique_ptr<PortImpl> impl): Processor(name, uuid, std::move(impl)) {}
 
-  PortType getPortType() const override {
+  PortType getPortType() const {
     auto* port_impl = dynamic_cast<const PortImpl*>(impl_.get());
     gsl_Assert(port_impl);
     return port_impl->getPortType();

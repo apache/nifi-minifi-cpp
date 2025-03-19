@@ -22,7 +22,6 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "ProcessContext.h"
-#include "Processor.h"
 #include "minifi-cpp/core/Repository.h"
 
 namespace org::apache::nifi::minifi::core {

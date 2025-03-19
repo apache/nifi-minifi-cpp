@@ -23,7 +23,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "range/v3/action/sort.hpp"
 #include "range/v3/action/unique.hpp"
-#include "core/ProcessorProxy.h"
+#include "core/Processor.h"
 
 namespace org {
 namespace apache {
@@ -120,7 +120,7 @@ class ProcessorFactoryWrapper : public ObjectFactoryImpl {
 
   CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
     auto logger = logging::LoggerFactoryBase::getAliasedLogger(getClassName(), uuid);
-    return new ProcessorProxy(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = logger}));
+    return new Processor(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = logger}));
   }
 
   std::string getGroupName() const override {

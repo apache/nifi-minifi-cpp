@@ -30,7 +30,7 @@
 #include <string_view>
 
 #include "SFTPProcessorBase.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
