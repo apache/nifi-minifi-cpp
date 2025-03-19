@@ -47,8 +47,8 @@ TEST_CASE("Test integral parsing") {
 TEST_CASE("Test data size parsing") {
   CHECK(8000U == parseDataSize("8000"));
   CHECK(8192000U == parseDataSize("8000 kB"));
-  CHECK(8000U == parseDataSize("8000 banana"));  // TODO(1.0) deprecate this behaviour
 
+  CHECK(nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError) == parseDataSize("8000 banana"));
   CHECK(nonstd::make_unexpected(core::ParsingErrorCode::LargerThanMaximum) == parseDataSizeMinMax("9 MB", 3000, 8000));
   CHECK(nonstd::make_unexpected(core::ParsingErrorCode::SmallerThanMinimum) == parseDataSizeMinMax("0 GB", 3000, 8000));
   CHECK(nonstd::make_unexpected(core::ParsingErrorCode::OverflowError) == parseDataSize("20000 PB"));

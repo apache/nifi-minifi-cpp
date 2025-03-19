@@ -92,7 +92,7 @@ TEST_CASE("DATA_SIZE_VALIDATOR test") {
       .withDefaultValue("true")
       .build();
   Property property{property_definition};
-  CHECK(property.setValue("100 MaciBytes"));
+  CHECK_FALSE(property.setValue("100 MaciBytes"));
   CHECK(property.setValue("100 KB "));
   CHECK(property.setValue("  100 KB  "));
   CHECK_FALSE(property.setValue("GB"));

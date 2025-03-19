@@ -28,7 +28,8 @@ nonstd::expected<bool, std::error_code> parseBool(const std::string_view input) 
 }
 
 namespace {
-uint64_t getUnitMultiplier(const std::string_view unit_str) {
+std::optional<uint64_t> getUnitMultiplier(const std::string_view unit_str) {
+  if (unit_str.empty()) { return 1; }
   static std::map<std::string_view, int64_t, std::less<>> unit_map{
           {"B", 1},
           {"K", 1_KB},
@@ -51,7 +52,7 @@ uint64_t getUnitMultiplier(const std::string_view unit_str) {
   if (unit_multiplier != unit_map.end()) { return unit_multiplier->second; }
 
 
-  return 1;
+  return std::nullopt;
 }
 }  // namespace
 
@@ -70,9 +71,10 @@ nonstd::expected<uint64_t, std::error_code> parseDataSizeMinMax(const std::strin
   if (!num_part) { return nonstd::make_unexpected(num_part.error()); }
 
   const auto unit_multiplier = getUnitMultiplier(utils::string::trim(unit_str));
-  uint64_t result = *num_part * getUnitMultiplier(utils::string::trim(unit_str));
+  if (!unit_multiplier) { return nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError); }
+  uint64_t result = *num_part * *unit_multiplier;
   gsl_Assert(unit_multiplier != 0);
-  if ((result / unit_multiplier) != *num_part) {
+  if ((result / *unit_multiplier) != *num_part) {
     return nonstd::make_unexpected(core::ParsingErrorCode::OverflowError);
   }
   if (result < minimum) { return nonstd::make_unexpected(core::ParsingErrorCode::SmallerThanMinimum); }

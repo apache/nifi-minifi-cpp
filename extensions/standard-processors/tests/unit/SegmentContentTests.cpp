@@ -65,7 +65,7 @@ TEST_CASE("Invalid segmentSize tests") {
   }
   SECTION("10 foo") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize.name, "10 foo"), "General Operation: Segment Size value validation failed");
-    REQUIRE_NOTHROW(controller.trigger("bar"));
+    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Expected parsable data size from SegmentContent::Segment Size: parsing error: GeneralParsingError (0)");
   }
   SECTION("0") {
     REQUIRE_NOTHROW(segment_content->setProperty(SegmentContent::SegmentSize.name, "0"), "General Operation: Segment Size value validation failed");
