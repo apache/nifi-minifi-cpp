@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/FlowFileStore.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
