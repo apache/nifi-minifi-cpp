@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "SmbConnectionControllerService.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"
 #include "core/PropertyDefinition.h"

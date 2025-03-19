@@ -20,10 +20,11 @@
 #include <string>
 #include <memory>
 #include <utility>
-#include "minifi-cpp/core/Processor.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
 
 namespace org::apache::nifi::minifi::core {
+
+class ProcessorApi;
 
 class ProcessorFactory {
  public:

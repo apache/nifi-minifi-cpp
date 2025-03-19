@@ -24,7 +24,6 @@
 #include "minifi-cpp/core/Core.h"
 #include "minifi-cpp/core/ContentRepository.h"
 #include "minifi-cpp/core/controller/ControllerServiceLookup.h"
-#include "minifi-cpp/core/Processor.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Repository.h"
 #include "minifi-cpp/core/FlowFile.h"

@@ -28,7 +28,7 @@
 #include "FocusArchiveEntry.h"
 #include "FlowFileRecord.h"
 #include "ArchiveMetadata.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"

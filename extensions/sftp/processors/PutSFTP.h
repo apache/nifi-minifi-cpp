@@ -27,7 +27,7 @@
 #include "SFTPProcessorBase.h"
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"

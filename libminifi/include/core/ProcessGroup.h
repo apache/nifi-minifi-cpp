@@ -29,7 +29,7 @@
 #include <utility>
 #include <tuple>
 
-#include "minifi-cpp/core/Processor.h"
+#include "core/Processor.h"
 #include "Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"

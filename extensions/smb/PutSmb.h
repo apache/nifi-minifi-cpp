@@ -21,7 +21,7 @@
 #include <string>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "utils/Enum.h"
 #include "SmbConnectionControllerService.h"

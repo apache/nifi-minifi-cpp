@@ -45,7 +45,7 @@ class ListAzureDataLakeStorageTestsFixture {
     auto uuid = utils::IdGenerator::getIdGenerator()->generate();
     auto impl = std::unique_ptr<minifi::azure::processors::ListAzureDataLakeStorage>(
       new minifi::azure::processors::ListAzureDataLakeStorage({.uuid = uuid, .name = "ListAzureDataLakeStorage", .logger = logging::LoggerFactory<minifi::azure::processors::ListAzureDataLakeStorage>::getLogger(uuid)}, std::move(mock_data_lake_storage_client)));
-    auto list_azure_data_lake_storage_unique_ptr = std::make_unique<core::ProcessorProxy>(impl->getName(), impl->getUUID(), std::move(impl));
+    auto list_azure_data_lake_storage_unique_ptr = std::make_unique<core::Processor>(impl->getName(), impl->getUUID(), std::move(impl));
     list_azure_data_lake_storage_ = list_azure_data_lake_storage_unique_ptr.get();
 
     plan_->addProcessor(std::move(list_azure_data_lake_storage_unique_ptr), "ListAzureDataLakeStorage", { {"success", "d"} });

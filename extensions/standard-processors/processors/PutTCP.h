@@ -25,6 +25,9 @@
 #include <utility>
 #include <vector>
 
+#include "io/InputStream.h"
+#include "core/ProcessorImpl.h"
+#include "utils/Export.h"
 #include "asio/io_context.hpp"
 #include "asio/ssl/context.hpp"
 #include "controllers/SSLContextServiceInterface.h"

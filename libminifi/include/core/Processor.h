@@ -16,23 +16,34 @@
  */
 #pragma once
 
+#include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include "minifi-cpp/core/ConfigurableComponent.h"
-#include "minifi-cpp/core/Connectable.h"
-#include "minifi-cpp/core/Property.h"
-#include "minifi-cpp/core/DynamicProperty.h"
-#include "minifi-cpp/core/Core.h"
+#include "core/ConfigurableComponentImpl.h"
+#include "core/Connectable.h"
+#include "core/Property.h"
+#include "core/Core.h"
 #include "minifi-cpp/core/Annotation.h"
+#include "minifi-cpp/core/DynamicProperty.h"
 #include "minifi-cpp/core/Scheduling.h"
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "minifi-cpp/core/ProcessorMetrics.h"
 #include "utils/gsl.h"
+#include "utils/Id.h"
+#include "minifi-cpp/core/OutputAttributeDefinition.h"
+#include "Processor.h"
+#include "minifi-cpp/core/ProcessorApi.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -40,55 +51,78 @@ class Connection;
 
 namespace core {
 
-class ProcessorApi;
 class ProcessContext;
 class ProcessSession;
 class ProcessSessionFactory;
 
-class Processor : public virtual Connectable, public virtual ConfigurableComponent, public virtual state::response::ResponseNodeSource {
+class Processor : public ConnectableImpl, public ConfigurableComponentImpl, public state::response::ResponseNodeSource {
  public:
-  ~Processor() override = default;
+  Processor(std::string_view name, const utils::Identifier& uuid, std::unique_ptr<ProcessorApi> impl);
+  explicit Processor(std::string_view name, std::unique_ptr<ProcessorApi> impl);
 
-  virtual void setScheduledState(ScheduledState state) = 0;
-  virtual ScheduledState getScheduledState() const = 0;
-  virtual void setSchedulingStrategy(SchedulingStrategy strategy) = 0;
-  virtual SchedulingStrategy getSchedulingStrategy() const = 0;
-  virtual void setSchedulingPeriod(std::chrono::steady_clock::duration period) = 0;
-  virtual std::chrono::steady_clock::duration getSchedulingPeriod() const = 0;
-  virtual void setCronPeriod(const std::string &period) = 0;
-  virtual std::string getCronPeriod() const = 0;
-  virtual void setRunDurationNano(std::chrono::steady_clock::duration period) = 0;
-  virtual std::chrono::steady_clock::duration getRunDurationNano() const = 0;
-  virtual void setYieldPeriodMsec(std::chrono::milliseconds period) = 0;
-  virtual std::chrono::steady_clock::duration getYieldPeriod() const = 0;
-  virtual void setPenalizationPeriod(std::chrono::milliseconds period) = 0;
-  virtual bool isSingleThreaded() const = 0;
-  virtual std::string getProcessorType() const = 0;
-  virtual bool getTriggerWhenEmpty() const = 0;
-  virtual uint8_t getActiveTasks() const = 0;
-  virtual void incrementActiveTasks() = 0;
-  virtual void decrementActiveTask() = 0;
-  virtual void clearActiveTask() = 0;
-  using Connectable::yield;
-  virtual void yield(std::chrono::steady_clock::duration delta_time) = 0;
-  virtual bool isYield() = 0;
-  virtual void clearYield() = 0;
-  virtual std::chrono::steady_clock::time_point getYieldExpirationTime() const = 0;
-  virtual std::chrono::steady_clock::duration getYieldTime() const = 0;
-  virtual bool addConnection(Connectable* connection) = 0;
-  virtual void triggerAndCommit(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory) = 0;
-  virtual void trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session) = 0;
-  virtual void onTrigger(ProcessContext&, ProcessSession&) = 0;
-  virtual void onSchedule(ProcessContext&, ProcessSessionFactory&) = 0;
-  virtual void onUnSchedule() = 0;
-  virtual bool isThrottledByBackpressure() const = 0;
-  virtual void validateAnnotations() const = 0;
-  virtual annotation::Input getInputRequirement() const = 0;
-  virtual gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const = 0;
-  virtual std::string getProcessGroupUUIDStr() const = 0;
-  virtual void setProcessGroupUUIDStr(const std::string &uuid) = 0;
+  Processor(const Processor& parent) = delete;
+  Processor& operator=(const Processor& parent) = delete;
 
-  virtual ProcessorApi& getImpl() const = 0;
+  bool isRunning() const override;
+
+  ~Processor() override;
+
+  void setScheduledState(ScheduledState state);
+  ScheduledState getScheduledState() const;
+  void setSchedulingStrategy(SchedulingStrategy strategy);
+  SchedulingStrategy getSchedulingStrategy() const;
+  void setSchedulingPeriod(std::chrono::steady_clock::duration period);
+  std::chrono::steady_clock::duration getSchedulingPeriod() const;
+  void setCronPeriod(const std::string &period);
+  std::string getCronPeriod() const;
+  void setRunDurationNano(std::chrono::steady_clock::duration period);
+  std::chrono::steady_clock::duration getRunDurationNano() const;
+  void setYieldPeriodMsec(std::chrono::milliseconds period);
+  std::chrono::steady_clock::duration getYieldPeriod() const;
+  void setPenalizationPeriod(std::chrono::milliseconds period);
+  void setMaxConcurrentTasks(uint8_t tasks) override;
+  bool isSingleThreaded() const;
+  std::string getProcessorType() const;
+  bool getTriggerWhenEmpty() const;
+  uint8_t getActiveTasks() const;
+  void incrementActiveTasks();
+  void decrementActiveTask();
+  void clearActiveTask();
+  std::string getProcessGroupUUIDStr() const;
+  void setProcessGroupUUIDStr(const std::string &uuid);
+  void yield() override;
+  void yield(std::chrono::steady_clock::duration delta_time);
+  bool isYield();
+  void clearYield();
+  std::chrono::steady_clock::time_point getYieldExpirationTime() const;
+  std::chrono::steady_clock::duration getYieldTime() const;
+  bool addConnection(Connectable* connection);
+  bool canEdit() override;
+  void initialize() override;
+  void triggerAndCommit(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory);
+  void trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session);
+  void onTrigger(ProcessContext& context, ProcessSession& session);
+  void onSchedule(ProcessContext& context, ProcessSessionFactory& session_factory);
+  void onUnSchedule();
+  bool isWorkAvailable() override;
+  bool isThrottledByBackpressure() const;
+  Connectable* pickIncomingConnection() override;
+  void validateAnnotations() const;
+  annotation::Input getInputRequirement() const;
+  [[nodiscard]] bool supportsDynamicProperties() const override;
+  [[nodiscard]] bool supportsDynamicRelationships() const override;
+  state::response::SharedResponseNode getResponseNode() override;
+  gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const;
+  void restore(const std::shared_ptr<FlowFile>& file) override;
+
+  static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
+
+  static constexpr auto OutputAttributes = std::array<OutputAttributeReference, 0>{};
+
+  ProcessorApi& getImpl() const {
+    gsl_Assert(impl_);
+    return *impl_;
+  }
 
   template<typename T>
   T& getImpl() const {
@@ -97,8 +131,37 @@ class Processor : public virtual Connectable, public virtual ConfigurableCompone
     return *res;
   }
 
-  virtual void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false) = 0;
-  virtual const std::unordered_map<Connection*, std::unordered_set<Processor*>>& reachable_processors() const = 0;
+ protected:
+  std::atomic<ScheduledState> state_;
+
+  std::atomic<std::chrono::steady_clock::duration> scheduling_period_;
+  std::atomic<std::chrono::steady_clock::duration> run_duration_;
+  std::atomic<std::chrono::steady_clock::duration> yield_period_;
+
+  std::atomic<uint8_t> active_tasks_;
+
+  std::string cron_period_;
+
+  std::shared_ptr<logging::Logger> logger_;
+
+ private:
+  mutable std::mutex mutex_;
+  std::atomic<std::chrono::steady_clock::time_point> yield_expiration_{};
+
+  // must hold the graphMutex
+  void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false);
+
+  const std::unordered_map<Connection*, std::unordered_set<Processor*>>& reachable_processors() const;
+
+  static bool partOfCycle(Connection* conn);
+
+  // an outgoing connection allows us to reach these nodes
+  std::unordered_map<Connection*, std::unordered_set<Processor*>> reachable_processors_;
+
+  std::string process_group_uuid_;
+
+ protected:
+  std::unique_ptr<ProcessorApi> impl_;
 };
 
 }  // namespace core

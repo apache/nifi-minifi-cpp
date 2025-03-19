@@ -26,7 +26,6 @@
 #include "processors/ProcessorUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "core/ProcessorProxy.h"
 
 namespace org::apache::nifi::minifi::core {
 

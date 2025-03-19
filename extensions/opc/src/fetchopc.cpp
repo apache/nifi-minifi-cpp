@@ -23,7 +23,6 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/Processor.h"
 #include "core/Resource.h"
 #include "opc.h"
 #include "utils/Enum.h"

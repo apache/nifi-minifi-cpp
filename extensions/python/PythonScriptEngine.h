@@ -26,7 +26,7 @@
 #include <filesystem>
 
 #include "core/ProcessSession.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 #include "PythonBindings.h"
 #include "PyException.h"
