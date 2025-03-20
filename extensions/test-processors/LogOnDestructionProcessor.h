@@ -23,15 +23,13 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 class LogOnDestructionProcessor : public core::ProcessorImpl {
  public:
-  explicit LogOnDestructionProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
-    : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   ~LogOnDestructionProcessor() override {
     logger_->log_info("LogOnDestructionProcessor is being destructed");
@@ -45,9 +43,6 @@ class LogOnDestructionProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LogOnDestructionProcessor>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

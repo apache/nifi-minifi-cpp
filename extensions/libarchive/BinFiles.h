@@ -27,7 +27,7 @@
 #include <utility>
 
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -262,8 +262,6 @@ class BinFiles : public core::ProcessorImpl {
 
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
 
-  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
-
  protected:
   // Allows general pre-processing of a flow file before it is offered to a bin. This is called before getGroupId().
   virtual void preprocessFlowFile(const std::shared_ptr<core::FlowFile>& flow);
@@ -286,7 +284,6 @@ class BinFiles : public core::ProcessorImpl {
   BinManager binManager_;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinFiles>::getLogger(uuid_)};
   uint32_t batchSize_{1};
   uint32_t maxBinCount_{100};
   core::FlowFileStore file_store_;

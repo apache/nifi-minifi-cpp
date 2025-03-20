@@ -24,7 +24,6 @@
 #include "minifi-cpp/core/Core.h"
 #include "minifi-cpp/core/ContentRepository.h"
 #include "minifi-cpp/core/controller/ControllerServiceLookup.h"
-#include "minifi-cpp/core/Processor.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Repository.h"
 #include "minifi-cpp/core/FlowFile.h"
@@ -33,13 +32,36 @@
 
 namespace org::apache::nifi::minifi::core {
 
+namespace detail {
+template<typename T>
+concept NotAFlowFile = !std::convertible_to<T &, const FlowFile &> && !std::convertible_to<T &, const std::shared_ptr<FlowFile> &>;
+}  // namespace detail
+
+class ProcessorInfo {
+ public:
+  virtual std::string getName() const = 0;
+  virtual utils::Identifier getUUID() const = 0;
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const = 0;
+  virtual std::map<std::string, core::Property, std::less<>> getSupportedProperties() const = 0;
+  virtual nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const = 0;
+
+  virtual ~ProcessorInfo() = default;
+};
+
+class Processor;
+
 class ProcessContext : public virtual core::VariableRegistry, public virtual utils::EnableSharedFromThis {
  public:
+  virtual const ProcessorInfo& getProcessorInfo() const = 0;
   virtual Processor& getProcessor() const = 0;
+
+  virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
 
   virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
   nonstd::expected<std::string, std::error_code> getProperty(const Property& property, const FlowFile* flow_file = nullptr) const { return getProperty(property.getName(), flow_file); }
   nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const { return getProperty(property_reference.name, flow_file); }
+
+  virtual nonstd::expected<std::string, std::error_code> getRawProperty(std::string_view name) const = 0;
 
   virtual nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) = 0;
   nonstd::expected<void, std::error_code> setProperty(const Property& property, std::string value) { return setProperty(property.getName(), std::move(value)); };
@@ -53,6 +75,11 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
   virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file = nullptr) const = 0;
 
+  [[nodiscard]] virtual nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const = 0;
+
+  virtual void addAutoTerminatedRelationship(const core::Relationship& relationship) = 0;
+
+  virtual bool isRunning() const = 0;
   virtual bool isAutoTerminated(Relationship relationship) const = 0;
   virtual uint8_t getMaxConcurrentTasks() const = 0;
   virtual void yield() = 0;
@@ -61,6 +88,8 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual std::shared_ptr<core::Repository> getFlowFileRepository() const = 0;
   virtual void initializeContentRepository(const std::string& home) = 0;
   virtual bool isInitialized() const = 0;
+
+  virtual bool hasIncomingConnections() const = 0;
 
   virtual std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const = 0;
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";

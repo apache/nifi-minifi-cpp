@@ -26,7 +26,7 @@
 
 #include "core/Core.h"
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"

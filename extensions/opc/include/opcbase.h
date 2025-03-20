@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "opc.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -68,10 +68,7 @@ class BaseOPCProcessor : public core::ProcessorImpl {
       TrustedPath
   });
 
-
-  explicit BaseOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
-  : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
 

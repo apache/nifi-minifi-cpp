@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "core/RelationshipDefinition.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
@@ -39,8 +39,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
-  explicit PublishMQTT(std::string_view name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(name, uuid) {
+  explicit PublishMQTT(core::ProcessorMetadata info)
+      : processors::AbstractMQTTProcessor(info) {
     metrics_ = gsl::make_not_null(std::make_shared<PublishMQTTMetrics>(*this, in_flight_message_counter_));
   }
 
@@ -110,7 +110,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   class PublishMQTTMetrics : public core::ProcessorMetricsImpl {
    public:
-    PublishMQTTMetrics(const core::Processor& source_processor, const InFlightMessageCounter& in_flight_message_counter);
+    PublishMQTTMetrics(const core::ProcessorImpl& source_processor, const InFlightMessageCounter& in_flight_message_counter);
     std::vector<state::response::SerializedResponseNode> serialize() override;
     std::vector<state::PublishedMetric> calculateMetrics() override;
 
@@ -185,13 +185,12 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     // there is no need to do anything like subscribe in the beginning
   }
 
-  void checkProperties() override;
+  void checkProperties(core::ProcessContext& context) override;
   void checkBrokerLimitsImpl() override;
 
   bool retain_ = false;
   std::optional<std::chrono::seconds> message_expiry_interval_;
   InFlightMessageCounter in_flight_message_counter_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

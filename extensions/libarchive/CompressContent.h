@@ -31,7 +31,7 @@
 #include "archive.h"
 
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/PropertyDefinition.h"
@@ -85,9 +85,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class CompressContent : public core::ProcessorImpl {
  public:
-  explicit CompressContent(std::string_view name, const utils::Identifier& uuid = {})
-    : core::ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~CompressContent() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm "
@@ -214,7 +212,6 @@ class CompressContent : public core::ProcessorImpl {
 
   void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, core::ProcessSession& session);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger(uuid_);
   int compressLevel_{};
   compress_content::CompressionMode compressMode_;
   compress_content::ExtendedCompressionFormat compressFormat_;

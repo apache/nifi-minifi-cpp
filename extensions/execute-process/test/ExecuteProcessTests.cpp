@@ -20,6 +20,7 @@
 #include "../ExecuteProcess.h"
 #include "unit/SingleProcessorTestController.h"
 #include "utils/file/FileUtils.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -28,13 +29,13 @@ namespace org::apache::nifi::minifi::test {
 class ExecuteProcessTestsFixture {
  public:
   ExecuteProcessTestsFixture()
-      : controller_(std::make_unique<processors::ExecuteProcess>("ExecuteProcess")),
-        execute_process_(controller_.getProcessor<processors::ExecuteProcess>()) {
+      : controller_(minifi::test::utils::make_processor<processors::ExecuteProcess>("ExecuteProcess")),
+        execute_process_(controller_.getProcessor()) {
     LogTestController::getInstance().setTrace<processors::ExecuteProcess>();
   }
  protected:
   test::SingleProcessorTestController controller_;
-  processors::ExecuteProcess* execute_process_;
+  core::Processor* execute_process_;
 };
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run a single command", "[ExecuteProcess]") {

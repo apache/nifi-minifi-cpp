@@ -27,7 +27,6 @@
 #include <CivetServer.h>
 
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -40,6 +39,7 @@
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
 #include "core/FlowFileStore.h"
+#include "core/ProcessorImpl.h"
 
 namespace org::apache::nifi::minifi::test {
 struct ListenHTTPTestAccessor;
@@ -55,8 +55,8 @@ class ListenHTTP : public core::ProcessorImpl {
  public:
   friend struct ::org::apache::nifi::minifi::test::ListenHTTPTestAccessor;
 
-  explicit ListenHTTP(std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
+  explicit ListenHTTP(core::ProcessorMetadata info)
+      : ProcessorImpl(info) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }
@@ -153,8 +153,6 @@ class ListenHTTP : public core::ProcessorImpl {
   bool isWorkAvailable() override {
     return handler_ ? !handler_->empty() : false;
   }
-
-  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
 
   struct ResponseBody {
     std::string uri;
@@ -285,7 +283,6 @@ class ListenHTTP : public core::ProcessorImpl {
     return handler_ ? handler_->requestCount() : 0;
   }
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger(uuid_);
   CivetCallbacks callbacks_;
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;

@@ -62,8 +62,8 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorB
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit DeleteAzureBlobStorage(std::string_view name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : DeleteAzureBlobStorage(name, uuid, nullptr) {
+  explicit DeleteAzureBlobStorage(core::ProcessorMetadata info)
+    : DeleteAzureBlobStorage(info, nullptr) {
   }
 
   void initialize() override;
@@ -73,8 +73,8 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorB
  private:
   friend class ::AzureBlobStorageTestsFixture<DeleteAzureBlobStorage>;
 
-  explicit DeleteAzureBlobStorage(std::string_view name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageSingleBlobProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+  explicit DeleteAzureBlobStorage(core::ProcessorMetadata info, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
+    : AzureBlobStorageSingleBlobProcessorBase(info, std::move(blob_storage_client)) {
   }
 
   std::optional<storage::DeleteAzureBlobStorageParameters> buildDeleteAzureBlobStorageParameters(
