@@ -1532,7 +1532,7 @@ TEST_CASE("Parameter providers can be used for parameter values") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
+  auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
   CHECK((*values)[0] == "value2");

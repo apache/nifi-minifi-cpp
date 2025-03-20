@@ -125,7 +125,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
       // and verify that we can execute it.
     }
 
-    bool in_sub_process_group = context.getProperty("InSubProcessGroup") | minifi::utils::andThen(minifi::parsing::parseBool) | minifi::utils::expect("");
+    bool in_sub_process_group = context.getProperty("InSubProcessGroup") | minifi::utils::andThen(minifi::parsing::parseBool) | minifi::utils::orThrow("");
     auto sub_service = context.getControllerService("SubMockController", getUUID());
     if (in_sub_process_group) {
       REQUIRE(nullptr != sub_service);
