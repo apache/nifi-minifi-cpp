@@ -29,8 +29,8 @@ class StandardProcessorInfo : public ProcessorInfo {
   std::string getName() const override {return proc_.getName();}
   utils::Identifier getUUID() const override {return proc_.getUUID();}
   std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const override {return proc_.getFlowIdentifier();}
-  std::map<std::string, core::Property> getSupportedProperties() const override {return proc_.getSupportedProperties();}
-  nonstd::expected<PropertyReference, std::error_code> getPropertyReference(std::string_view name) const override {return proc_.getPropertyReference(name);}
+  std::map<std::string, core::Property, std::less<>> getSupportedProperties() const override {return proc_.getSupportedProperties();}
+  nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const override {return proc_.getSupportedProperty(name);}
 
  private:
   Processor& proc_;
