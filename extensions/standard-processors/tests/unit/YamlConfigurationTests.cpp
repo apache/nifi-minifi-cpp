@@ -2150,7 +2150,7 @@ Parameter Context Name: dummycontext
   std::unique_ptr<core::ProcessGroup> flow = yaml_config.getRootFromPayload(TEST_CONFIG_YAML);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("DummyProcessor"));
+  auto* proc = flow->findProcessorByName("DummyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
   CHECK((*values)[0] == "value2");

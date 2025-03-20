@@ -42,8 +42,8 @@ class ProcessorInfo {
   virtual std::string getName() const = 0;
   virtual utils::Identifier getUUID() const = 0;
   virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const = 0;
-  virtual std::map<std::string, core::Property> getSupportedProperties() const = 0;
-  virtual nonstd::expected<PropertyReference, std::error_code> getPropertyReference(std::string_view name) const = 0;
+  virtual std::map<std::string, core::Property, std::less<>> getSupportedProperties() const = 0;
+  virtual nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const = 0;
 
   virtual ~ProcessorInfo() = default;
 };
