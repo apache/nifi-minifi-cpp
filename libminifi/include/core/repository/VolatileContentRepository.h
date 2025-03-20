@@ -44,7 +44,7 @@ class VolatileContentRepository : public ContentRepositoryImpl {
 
  private:
   mutable std::mutex data_mtx_;
-  std::unordered_map<std::string, std::string> data_;
+  std::unordered_map<std::string, std::shared_ptr<std::string>> data_;
   std::atomic<size_t> total_size_;
   std::shared_ptr<logging::Logger> logger_;
 };

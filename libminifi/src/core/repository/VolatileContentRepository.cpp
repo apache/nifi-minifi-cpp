@@ -24,30 +24,35 @@ namespace {
 
 class StringRefStream : public io::BaseStream {
  public:
-  StringRefStream(std::string& data_ref, std::atomic<size_t>& total_size)
-      : data_ref_(data_ref), total_size_(total_size) {}
+  StringRefStream(std::shared_ptr<std::string> data, std::mutex& data_store_mtx, std::shared_ptr<std::string>& data_store, std::atomic<size_t>& total_size)
+      : data_(std::move(data)), data_store_mtx_(data_store_mtx), data_store_(data_store), total_size_(total_size) {}
 
   [[nodiscard]] size_t size() const override {
-    return data_ref_.size();
+    return data_->size();
   }
 
   size_t read(std::span<std::byte> out_buffer) override {
-    auto read_size = std::min(data_ref_.size() - read_offset_, out_buffer.size());
-    std::copy_n(reinterpret_cast<const std::byte*>(data_ref_.data()) + read_offset_, read_size, out_buffer.data());
+    auto read_size = std::min(data_->size() - read_offset_, out_buffer.size());
+    std::copy_n(reinterpret_cast<const std::byte*>(data_->data()) + read_offset_, read_size, out_buffer.data());
     read_offset_ += read_size;
     return read_size;
   }
 
   size_t write(const uint8_t *value, size_t len) override {
-    data_ref_.append(reinterpret_cast<const char*>(value), len);
+    data_ = std::make_shared<std::string>(*data_);
+    data_->append(reinterpret_cast<const char*>(value), len);
     total_size_ += len;
+    {
+      std::lock_guard lock(data_store_mtx_);
+      data_store_ = data_;
+    }
     return len;
   }
 
   void close() override {}
 
   void seek(size_t offset) override {
-    read_offset_ = std::min(offset, data_ref_.size());
+    read_offset_ = std::min(offset, data_->size());
   }
 
   size_t tell() const override {
@@ -59,12 +64,14 @@ class StringRefStream : public io::BaseStream {
   }
 
   std::span<const std::byte> getBuffer() const override {
-    return as_bytes(std::span{data_ref_});
+    return as_bytes(std::span{*data_});
   }
 
  private:
   size_t read_offset_{0};
-  std::string& data_ref_;
+  std::shared_ptr<std::string> data_;
+  std::mutex& data_store_mtx_;
+  std::shared_ptr<std::string>& data_store_;
   std::atomic<size_t>& total_size_;
 };
 
@@ -98,17 +105,19 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure>& /*c
 std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::ResourceClaim &claim, bool append) {
   std::lock_guard lock(data_mtx_);
   auto& value_ref = data_[claim.getContentFullPath()];
-  if (!append) {
-    total_size_ -= value_ref.size();
-    value_ref.clear();
+  if (!value_ref) {
+    value_ref = std::make_shared<std::string>();
+  } else if (!append) {
+    total_size_ -= value_ref->size();
+    value_ref = std::make_shared<std::string>();
   }
-  return std::make_shared<StringRefStream>(value_ref, total_size_);
+  return std::make_shared<StringRefStream>(value_ref, data_mtx_, value_ref, total_size_);
 }
 
 std::shared_ptr<io::BaseStream> VolatileContentRepository::read(const minifi::ResourceClaim &claim) {
   std::lock_guard lock(data_mtx_);
   if (auto it = data_.find(claim.getContentFullPath()); it != data_.end()) {
-    return std::make_shared<StringRefStream>(it->second, total_size_);
+    return std::make_shared<StringRefStream>(it->second, data_mtx_, it->second, total_size_);
   }
   return nullptr;
 }
@@ -129,7 +138,7 @@ void VolatileContentRepository::clearOrphans() {
 bool VolatileContentRepository::removeKey(const std::string& content_path) {
   std::lock_guard lock(data_mtx_);
   if (auto it = data_.find(content_path); it != data_.end()) {
-    total_size_ -= it->second.size();
+    total_size_ -= it->second->size();
     data_.erase(it);
     logger_->log_info("Deleting resource {}", content_path);
   }
