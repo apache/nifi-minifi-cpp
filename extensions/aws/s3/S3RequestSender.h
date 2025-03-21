@@ -55,13 +55,6 @@
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
-struct ProxyOptions {
-  std::string host;
-  uint32_t port = 0;
-  std::string username;
-  std::string password;
-};
-
 class S3RequestSender {
  public:
   virtual std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
