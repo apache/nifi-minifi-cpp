@@ -34,7 +34,11 @@ class AwsChecker:
         (code, output) = self.container_communicator.execute_command(container_name, ["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
         if code != 0:
             return False
-        s3_mock_dir = output.strip()
+        dir_candidates = output.split("\n")
+        for candidate in dir_candidates:
+            if "multiparts" not in candidate:
+                s3_mock_dir = candidate
+                break
         (code, md5_output) = self.container_communicator.execute_command(container_name, ["md5sum", s3_mock_dir + "/binaryData"])
         if code != 0:
             return False

@@ -130,7 +130,8 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
       .WithBucket(put_object_params.bucket)
       .WithKey(put_object_params.object_key)
       .WithPartNumber(gsl::narrow<int>(part_number))
-      .WithUploadId(upload_state.upload_id);
+      .WithUploadId(upload_state.upload_id)
+      .WithChecksumAlgorithm(put_object_params.checksum_algorithm);
     upload_part_request.SetBody(stream_ptr);
 
     Aws::Utils::ByteBuffer part_md5(Aws::Utils::HashingUtils::CalculateMD5(*stream_ptr));
@@ -269,7 +270,12 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>&
     attributes.is_latest = version.GetIsLatest();
     attributes.last_modified = version.GetLastModified().UnderlyingTimestamp();
     attributes.length = version.GetSize();
-    attributes.store_class = minifi::utils::at(VERSION_STORAGE_CLASS_MAP, version.GetStorageClass());
+    try {
+      attributes.store_class = minifi::utils::at(VERSION_STORAGE_CLASS_MAP, version.GetStorageClass());
+    } catch (const std::out_of_range&) {
+      logger_->log_warn("Unknown storage class '{}' for object version with key '{}'", magic_enum::enum_name(version.GetStorageClass()), version.GetKey());
+      attributes.store_class = "Unknown";
+    }
     attributes.version = version.GetVersionId();
     listed_objects.push_back(attributes);
   }
@@ -288,7 +294,12 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::Object>& conten
     attributes.is_latest = true;
     attributes.last_modified = object.GetLastModified().UnderlyingTimestamp();
     attributes.length = object.GetSize();
-    attributes.store_class = minifi::utils::at(OBJECT_STORAGE_CLASS_MAP, object.GetStorageClass());
+    try {
+      attributes.store_class = minifi::utils::at(OBJECT_STORAGE_CLASS_MAP, object.GetStorageClass());
+    } catch (const std::out_of_range&) {
+      logger_->log_warn("Unknown storage class '{}' for object with key '{}'", magic_enum::enum_name(object.GetStorageClass()), object.GetKey());
+      attributes.store_class = "Unknown";
+    }
     listed_objects.push_back(attributes);
   }
 }

@@ -36,6 +36,7 @@
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
+#include "utils/Enum.h"
 
 template<typename T>
 class FlowProcessorS3TestsFixture;
@@ -47,6 +48,7 @@ class PutS3Object : public S3Processor {
   static constexpr auto CANNED_ACLS = minifi::utils::getKeys(minifi::aws::s3::CANNED_ACL_MAP);
   static constexpr auto STORAGE_CLASSES = minifi::utils::getKeys(minifi::aws::s3::STORAGE_CLASS_MAP);
   static constexpr auto SERVER_SIDE_ENCRYPTIONS = minifi::utils::getKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP);
+  static constexpr auto CHECKSUM_ALGORITHMS = minifi::utils::getKeys(minifi::aws::s3::CHECKSUM_ALGORITHM_MAP);
 
   EXTENSIONAPI static constexpr const char* Description = "Puts FlowFiles to an Amazon S3 Bucket. The upload uses either the PutS3Object method or the PutS3MultipartUpload method. "
       "The PutS3Object method sends the file in a single synchronous call, but it has a 5GB size limit. Larger files are sent using the PutS3MultipartUpload method. "
@@ -138,6 +140,12 @@ class PutS3Object : public S3Processor {
       .withDefaultValue("7 days")
       .isRequired(true)
       .build();
+  EXTENSIONAPI static constexpr auto ChecksumAlgorithm = core::PropertyDefinitionBuilder<CHECKSUM_ALGORITHMS.size()>::createProperty("Checksum Algorithm")
+      .withDescription("Checksum algorithm used to verify the uploaded object.")
+      .withAllowedValues(CHECKSUM_ALGORITHMS)
+      .withDefaultValue("CRC64NVME")
+      .isRequired(true)
+      .build();
   EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::to_array<core::PropertyReference>({
       ObjectKey,
       ContentType,
@@ -152,7 +160,8 @@ class PutS3Object : public S3Processor {
       MultipartThreshold,
       MultipartPartSize,
       MultipartUploadAgeOffInterval,
-      MultipartUploadMaxAgeThreshold
+      MultipartUploadMaxAgeThreshold,
+      ChecksumAlgorithm
   }));
 
 
@@ -221,6 +230,7 @@ class PutS3Object : public S3Processor {
   std::chrono::milliseconds multipart_upload_max_age_threshold_;
   std::mutex last_ageoff_mutex_;
   std::chrono::time_point<std::chrono::system_clock> last_ageoff_time_;
+  Aws::S3::Model::ChecksumAlgorithm checksum_algorithm_{Aws::S3::Model::ChecksumAlgorithm::CRC64NVME};
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

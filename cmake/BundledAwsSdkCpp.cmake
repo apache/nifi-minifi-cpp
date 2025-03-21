@@ -19,10 +19,12 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     set(PATCH_FILE1 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/dll-export-injection.patch")
     set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/shutdown-fix.patch")
     set(PATCH_FILE3 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/bundle-openssl.patch")
+    set(PATCH_FILE4 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/fix-finding-s2n.patch")
     set(AWS_SDK_CPP_PATCH_COMMAND ${Bash_EXECUTABLE} -c "set -x &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") ")
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE4}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE4}\") ")
 
     if (WIN32)
         set(LIBDIR "lib")
@@ -81,8 +83,8 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             aws-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/aws/aws-sdk-cpp.git"
-            GIT_TAG "1.11.396"
-            UPDATE_COMMAND git submodule update --init --recursive
+            GIT_TAG "1.11.530"
+            UPDATE_COMMAND git submodule update --init --recursive && git -C "${BINARY_DIR}/thirdparty/aws-sdk-cpp-src/crt/aws-crt-cpp/crt/s2n" checkout v1.5.15
             SOURCE_DIR "${BINARY_DIR}/thirdparty/aws-sdk-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
