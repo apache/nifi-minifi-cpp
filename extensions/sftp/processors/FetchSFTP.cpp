@@ -27,6 +27,7 @@
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -89,11 +90,13 @@ void FetchSFTP::onTrigger(core::ProcessContext& context, core::ProcessSession& s
                                                                       common_properties.proxy_host,
                                                                       common_properties.proxy_port,
                                                                       common_properties.proxy_username};
+  const auto buffer_size = utils::configuration::getBufferSize(*context.getConfiguration());
   auto client = getOrCreateConnection(connection_cache_key,
                                       common_properties.password,
                                       common_properties.private_key_path,
                                       common_properties.private_key_passphrase,
-                                      common_properties.proxy_password);
+                                      common_properties.proxy_password,
+                                      buffer_size);
   if (client == nullptr) {
     context.yield();
     return;

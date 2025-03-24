@@ -22,18 +22,19 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-constexpr uint64_t BUFFER_TARGET_SIZE = 1024;
 
 void SegmentContent::initialize() {
   setSupportedProperties(Properties);
   setSupportedRelationships(Relationships);
 }
 
-void SegmentContent::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {}
+void SegmentContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  buffer_size_ = utils::configuration::getBufferSize(*context.getConfiguration());
+}
 
 namespace {
 void updateSplitAttributesAndTransfer(core::ProcessSession& session, const std::vector<std::shared_ptr<core::FlowFile>>& splits, const core::FlowFile& original) {
@@ -75,7 +76,7 @@ void SegmentContent::onTrigger(core::ProcessContext& context, core::ProcessSessi
   bool needs_new_segment = true;
   while (true) {
     const uint64_t segment_remaining_size = max_segment_size - current_segment_size;
-    const uint64_t buffer_size = std::min(BUFFER_TARGET_SIZE, segment_remaining_size);
+    const uint64_t buffer_size = (std::min)(uint64_t{buffer_size_}, segment_remaining_size);
     buffer.resize(buffer_size);
     num_bytes_read = ff_content_stream->read(buffer);
     if (io::isError(num_bytes_read)) {

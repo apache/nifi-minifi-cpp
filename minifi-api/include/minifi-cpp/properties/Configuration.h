@@ -41,8 +41,6 @@ class Configuration : public virtual Properties {
   static constexpr const char *nifi_content_repository_rocksdb_options = "nifi.content.repository.rocksdb.options.";
   static constexpr const char *nifi_provenance_repository_rocksdb_options = "nifi.provenance.repository.rocksdb.options.";
   static constexpr const char *nifi_state_storage_rocksdb_options = "nifi.state.storage.rocksdb.options.";
-
-  // nifi.flow.configuration.file
   static constexpr const char *nifi_default_directory = "nifi.default.directory";
   static constexpr const char *nifi_flow_configuration_file = "nifi.flow.configuration.file";
   static constexpr const char *nifi_flow_configuration_encrypt = "nifi.flow.configuration.encrypt";
@@ -72,6 +70,7 @@ class Configuration : public virtual Properties {
   static constexpr const char *nifi_provenance_repository_directory_default = "nifi.provenance.repository.directory.default";
   static constexpr const char *nifi_flowfile_repository_directory_default = "nifi.flowfile.repository.directory.default";
   static constexpr const char *nifi_dbcontent_repository_directory_default = "nifi.database.content.repository.directory.default";
+  static constexpr const char *nifi_default_internal_buffer_size = "nifi.default.internal.buffer.size";
 
   // these are internal properties related to the rocksdb backend
   static constexpr const char *nifi_flowfile_repository_rocksdb_compaction_period = "nifi.flowfile.repository.rocksdb.compaction.period";

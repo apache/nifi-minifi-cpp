@@ -34,7 +34,12 @@
 #include "core/Resource.h"
 #include "Exception.h"
 #include "SmartArchivePtrs.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/gsl.h"
+
+namespace {
+inline constexpr auto BUFFER_SIZE = org::apache::nifi::minifi::utils::configuration::DEFAULT_BUFFER_SIZE;
+}  // namespace
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -127,7 +132,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext& context, core::ProcessSe
 struct FocusArchiveEntryReadData {
   std::shared_ptr<io::InputStream> stream;
   core::Processor *processor = nullptr;
-  std::array<std::byte, 8196> buf{};
+  std::array<std::byte, BUFFER_SIZE> buf{};
 };
 
 // Read callback which reads from the flowfile stream
@@ -140,7 +145,7 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
   do {
     last_read = data->stream->read(data->buf);
     read += last_read;
-  } while (data->processor->isRunning() && last_read > 0 && !io::isError(last_read) && read < 8196);
+  } while (data->processor->isRunning() && last_read > 0 && !io::isError(last_read) && read < BUFFER_SIZE);
 
   if (!data->processor->isRunning()) {
     archive_set_error(a, EINTR, "Processor shut down during read");

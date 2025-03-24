@@ -30,6 +30,7 @@
 #include "io/AsioStream.h"
 #include "asio/ssl/stream.hpp"
 #include "asio/detached.hpp"
+#include "utils/ConfigurationUtils.h"
 #include "utils/net/AsioSocketUtils.h"
 #include "c2/C2Utils.h"
 
@@ -396,7 +397,7 @@ void ControllerSocketProtocol::writeDebugBundleResponse(io::BaseStream &stream) 
 
   size_t bundle_size = bundle.value()->size();
   resp.write(bundle_size);
-  const size_t BUFFER_SIZE = 4096;
+  static constexpr auto BUFFER_SIZE = utils::configuration::DEFAULT_BUFFER_SIZE;
   std::array<std::byte, BUFFER_SIZE> out_buffer{};
   while (bundle_size > 0) {
     const auto next_write_size = (std::min)(bundle_size, BUFFER_SIZE);

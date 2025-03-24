@@ -25,10 +25,10 @@
 #include "io/ArchiveStream.h"
 #include "io/InputStream.h"
 #include "core/logging/LoggerFactory.h"
-
 #include "archive_entry.h"
 #include "archive.h"
 #include "SmartArchivePtrs.h"
+#include "utils/ConfigurationUtils.h"
 
 namespace org::apache::nifi::minifi::io {
 
@@ -47,7 +47,7 @@ class ReadArchiveStreamImpl final : public InputStreamImpl, public ReadArchiveSt
 
    private:
     std::shared_ptr<InputStream> input_;
-    std::array<std::byte, 4096> buffer_{};
+    std::array<std::byte, utils::configuration::DEFAULT_BUFFER_SIZE> buffer_{};
   };
 
   processors::archive_read_unique_ptr createReadArchive();

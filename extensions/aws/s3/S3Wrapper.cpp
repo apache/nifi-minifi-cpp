@@ -74,7 +74,7 @@ std::shared_ptr<Aws::StringStream> S3Wrapper::readFlowFileStream(const std::shar
   auto data_stream = std::make_shared<Aws::StringStream>();
   uint64_t read_size = 0;
   while (read_size < read_limit) {
-    const auto next_read_size = (std::min)(read_limit - read_size, BUFFER_SIZE);
+    const auto next_read_size = (std::min)(read_limit - read_size, uint64_t{BUFFER_SIZE});
     const auto read_ret = stream->read(std::span(buffer).subspan(0, next_read_size));
     if (io::isError(read_ret)) {
       throw StreamReadException("Reading flow file inputstream failed!");
@@ -229,11 +229,11 @@ bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
 }
 
 int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::OutputStream& output) {
-  std::vector<uint8_t> buffer(4096);
+  std::vector<uint8_t> buffer(BUFFER_SIZE);
   size_t write_size = 0;
   if (data_size < 0) return 0;
   while (write_size < gsl::narrow<uint64_t>(data_size)) {
-    const auto next_write_size = (std::min)(gsl::narrow<size_t>(data_size) - write_size, size_t{4096});
+    const auto next_write_size = (std::min)(gsl::narrow<size_t>(data_size) - write_size, BUFFER_SIZE);
     if (!source.read(reinterpret_cast<char*>(buffer.data()), gsl::narrow<std::streamsize>(next_write_size))) {
       return -1;
     }

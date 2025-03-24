@@ -30,7 +30,12 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/gsl.h"
+
+namespace {
+inline constexpr auto BUFFER_SIZE = org::apache::nifi::minifi::utils::configuration::DEFAULT_BUFFER_SIZE;
+}  // namespace
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -157,7 +162,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
   archive_write_open(output_archive.get(), &data, ok_cb, write_cb, ok_cb);
 
   // Iterate entries & write from tmp file to archive
-  std::array<char, 8192> buf{};
+  std::array<char, BUFFER_SIZE> buf{};
   struct stat st{};
   auto entry = archive_entry_unique_ptr{archive_entry_new()};
 

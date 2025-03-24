@@ -48,41 +48,32 @@ namespace org::apache::nifi::minifi::core {
 
 class ProcessContextImpl : public core::VariableRegistryImpl, public virtual ProcessContext {
  public:
-  /*!
-   * Create a new process context associated with the processor/controller service/state manager
-   */
   ProcessContextImpl(Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
       const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<core::ContentRepository>& content_repo = repository::createFileSystemRepository())
-      : VariableRegistryImpl(Configure::create()),
+      : VariableRegistryImpl(static_cast<std::shared_ptr<Configure>>(minifi::Configure::create())),
+        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
         controller_service_provider_(controller_service_provider),
+        state_storage_(getStateStorage(logger_, controller_service_provider_, nullptr)),
+        repo_(repo),
         flow_repo_(flow_repo),
         content_repo_(content_repo),
         processor_(processor),
-        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
         configure_(minifi::Configure::create()),
-        initialized_(false) {
-    repo_ = repo;
-    state_storage_ = getStateStorage(logger_, controller_service_provider_, nullptr);
-  }
+        initialized_(false) {}
 
-  /*!
-   * Create a new process context associated with the processor/controller service/state manager
-   */
   ProcessContextImpl(Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
       const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<minifi::Configure>& configuration,
       const std::shared_ptr<core::ContentRepository>& content_repo = repository::createFileSystemRepository())
       : VariableRegistryImpl(configuration),
+        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
         controller_service_provider_(controller_service_provider),
+        state_storage_(getStateStorage(logger_, controller_service_provider_, configuration)),
+        repo_(repo),
         flow_repo_(flow_repo),
         content_repo_(content_repo),
         processor_(processor),
-        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
-        configure_(configuration),
-        initialized_(false) {
-    repo_ = repo;
-    state_storage_ = getStateStorage(logger_, controller_service_provider_, configuration);
-    if (!configure_) { configure_ = minifi::Configure::create(); }
-  }
+        configure_(configuration ? gsl::make_not_null(configuration) : minifi::Configure::create()),
+        initialized_(false) {}
 
   // Get Processor associated with the Process Context
   Processor& getProcessor() const override { return processor_; }
@@ -216,9 +207,10 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
     }
   }
 
-  std::shared_ptr<Configure> getConfiguration() const override { return configure_; }
+  gsl::not_null<Configure*> getConfiguration() const override { return gsl::make_not_null(configure_.get()); }
 
  private:
+  std::shared_ptr<logging::Logger> logger_;
   controller::ControllerServiceProvider* controller_service_provider_;
   std::shared_ptr<core::StateStorage> state_storage_;
   std::unique_ptr<StateManager> state_manager_;
@@ -226,8 +218,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   std::shared_ptr<core::Repository> flow_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;
   Processor& processor_;
-  std::shared_ptr<logging::Logger> logger_;
-  std::shared_ptr<Configure> configure_;
+  gsl::not_null<std::shared_ptr<Configure>> configure_;
   bool initialized_;
 };
 

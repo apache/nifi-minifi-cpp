@@ -28,7 +28,7 @@
 #include "FlowFileRecord.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "utils/gsl.h"
+#include "utils/ConfigurationUtils.h"
 
 template<typename ContentRepositoryClass>
 class ContentSessionController : public TestController {
@@ -61,7 +61,7 @@ const std::shared_ptr<minifi::io::OutputStream>& operator<<(const std::shared_pt
 
 const std::shared_ptr<minifi::io::InputStream>& operator>>(const std::shared_ptr<minifi::io::InputStream>& stream, std::string& str) {
   str = "";
-  std::array<std::byte, 4096> buffer{};
+  std::array<std::byte, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
   while (true) {
     const auto ret = stream->read(buffer);
     REQUIRE_FALSE(minifi::io::isError(ret));
