@@ -283,6 +283,7 @@ class TailFile : public core::ProcessorImpl {
   controllers::AttributeProviderService* attribute_provider_service_ = nullptr;
   std::unordered_map<std::string, controllers::AttributeProviderService::AttributeMap> extra_attributes_;
   std::optional<uint32_t> batch_size_;
+  size_t buffer_size_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger(uuid_);
 };
 

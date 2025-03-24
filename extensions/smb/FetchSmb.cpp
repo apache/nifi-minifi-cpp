@@ -17,6 +17,7 @@
 
 #include "FetchSmb.h"
 #include "core/Resource.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/file/FileReaderCallback.h"
 
 namespace org::apache::nifi::minifi::extensions::smb {
@@ -28,6 +29,7 @@ void FetchSmb::initialize() {
 
 void FetchSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(context, FetchSmb::ConnectionControllerService);
+  buffer_size_ = utils::configuration::getBufferSize(*context.getConfiguration());
 }
 
 namespace {
@@ -58,7 +60,7 @@ void FetchSmb::onTrigger(core::ProcessContext& context, core::ProcessSession& se
   }
 
   try {
-    session.write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / getTargetRelativePath(context, *flow_file)});
+    session.write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / getTargetRelativePath(context, *flow_file), buffer_size_});
     session.transfer(flow_file, Success);
   } catch (const utils::FileReaderCallbackIOError& io_error) {
     flow_file->addAttribute(ErrorCode.name, std::to_string(io_error.error_code));

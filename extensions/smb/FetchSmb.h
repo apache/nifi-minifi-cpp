@@ -83,6 +83,7 @@ class FetchSmb final : public core::ProcessorImpl {
 
  private:
   std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service_;
+  size_t buffer_size_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchSmb>::getLogger(uuid_);
 };
 

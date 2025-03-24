@@ -30,6 +30,7 @@
 #include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/file/FileReaderCallback.h"
 #include "utils/file/FileUtils.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -44,6 +45,8 @@ void GetFile::initialize() {
 }
 
 void GetFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  buffer_size_ = utils::configuration::getBufferSize(*context.getConfiguration());
+
   request_.batchSize = utils::parseU64Property(context, BatchSize);
   request_.ignoreHiddenFile = utils::parseBoolProperty(context, IgnoreHiddenFile);
   request_.keepSourceFile = utils::parseBoolProperty(context, KeepSourceFile);
@@ -101,7 +104,7 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, (relative_path / "").string());
 
   try {
-    session.write(flow_file, utils::FileReaderCallback{file_path});
+    session.write(flow_file, utils::FileReaderCallback{file_path, buffer_size_});
     session.transfer(flow_file, Success);
     if (!request_.keepSourceFile) {
       std::error_code remove_error;

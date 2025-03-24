@@ -37,6 +37,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/AWSInitializer.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/ListingStateManager.h"
@@ -249,7 +250,7 @@ class StreamReadException : public Exception {
 
 class S3Wrapper {
  public:
-  static constexpr uint64_t BUFFER_SIZE = 4_KiB;
+  static constexpr auto BUFFER_SIZE = minifi::utils::configuration::DEFAULT_BUFFER_SIZE;
 
   S3Wrapper();
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);

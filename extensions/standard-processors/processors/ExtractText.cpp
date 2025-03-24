@@ -20,7 +20,6 @@
 #include "ExtractText.h"
 
 #include <algorithm>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -31,13 +30,12 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/RegexUtils.h"
 #include "utils/gsl.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-inline constexpr size_t MAX_BUFFER_SIZE = 4096;
 
 void ExtractText::initialize() {
   setSupportedProperties(Properties);
@@ -51,31 +49,28 @@ void ExtractText::onTrigger(core::ProcessContext& context, core::ProcessSession&
     return;
   }
 
-  session.read(flowFile, ReadCallback{flowFile, &context, logger_});
+  session.read(flowFile, ReadCallback{flowFile, context, logger_});
   session.transfer(flowFile, Success);
 }
 
 int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
-  size_t read_size = 0;
-  size_t size_limit = flowFile_->getSize();
-  std::vector<std::byte> buffer;
-  buffer.resize(std::min(gsl::narrow<size_t>(flowFile_->getSize()), MAX_BUFFER_SIZE));
+  const auto flow_file_size = gsl::narrow<size_t>(flowFile_->getSize());
+  const auto default_buffer_size = utils::configuration::getBufferSize(*ctx_->getConfiguration());
+  std::vector<std::byte> buffer((std::min)(flow_file_size, default_buffer_size));
 
-  std::string attrKey = ctx_->getProperty(Attribute).value_or("");
-  std::string sizeLimitStr = ctx_->getProperty(SizeLimit).value_or("");
-  bool regex_mode = ctx_->getProperty(RegexMode) | utils::andThen(parsing::parseBool) | utils::orThrow("Missing ExtractText::RegexMode despite default value");
-
-  if (sizeLimitStr.empty())
-    sizeLimitStr = DEFAULT_SIZE_LIMIT_STR;
-
-  if (sizeLimitStr != "0")
-    size_limit = static_cast<size_t>(std::stoi(sizeLimitStr));
+  std::string attrKey = utils::parseOptionalProperty(*ctx_, Attribute).value_or("");
+  bool regex_mode = utils::parseBoolProperty(*ctx_, RegexMode);
+  auto size_limit = gsl::narrow<size_t>(utils::parseU64Property(*ctx_, SizeLimit));
+  if (size_limit == 0) {
+    size_limit = flow_file_size;
+  }
 
   std::ostringstream contentStream;
 
+  size_t read_size = 0;
   while (read_size < size_limit) {
     // Don't read more than config limit or the size of the buffer
-    const auto length = std::min(size_limit - read_size, buffer.size());
+    const auto length = (std::min)(size_limit - read_size, buffer.size());
     const auto ret = stream->read(std::span(buffer).subspan(0, length));
 
     if (io::isError(ret)) {
@@ -145,9 +140,9 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
   return gsl::narrow<int64_t>(read_size);
 }
 
-ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx,  std::shared_ptr<core::logging::Logger> lgr)
+ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext& ctx,  std::shared_ptr<core::logging::Logger> lgr)
     : flowFile_(std::move(flowFile)),
-      ctx_(ctx),
+      ctx_(gsl::make_not_null(&ctx)),
       logger_(std::move(lgr)) {
 }
 

@@ -135,8 +135,8 @@ bool ConfigureImpl::commitChanges() {
   return success;
 }
 
-std::shared_ptr<Configure> Configure::create() {
-  return std::make_shared<ConfigureImpl>();
+gsl::not_null<std::shared_ptr<Configure>> Configure::create() {
+  return gsl::make_not_null<std::shared_ptr<Configure>>(std::make_shared<ConfigureImpl>());
 }
 
 }  // namespace org::apache::nifi::minifi

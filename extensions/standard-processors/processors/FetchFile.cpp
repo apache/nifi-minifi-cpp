@@ -20,6 +20,7 @@
 #include <filesystem>
 #include <utility>
 
+#include "utils/ConfigurationUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/file/FileReaderCallback.h"
 #include "utils/file/FileUtils.h"
@@ -41,6 +42,7 @@ void FetchFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   move_conflict_strategy_ = utils::parseEnumProperty<fetch_file::MoveConflictStrategyOption>(context, MoveConflictStrategy);
   log_level_when_file_not_found_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(context, LogLevelWhenFileNotFound);
   log_level_when_permission_denied_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(context, LogLevelWhenPermissionDenied);
+  buffer_size_ = utils::configuration::getBufferSize(*context.getConfiguration());
 }
 
 std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
@@ -139,7 +141,7 @@ void FetchFile::onTrigger(core::ProcessContext& context, core::ProcessSession& s
   }
 
   try {
-    utils::FileReaderCallback callback(file_to_fetch_path);
+    utils::FileReaderCallback callback(file_to_fetch_path, buffer_size_);
     session.write(flow_file, std::move(callback));
     logger_->log_debug("Fetching file '{}' successful!", file_to_fetch_path);
     session.transfer(flow_file, Success);

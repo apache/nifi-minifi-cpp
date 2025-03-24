@@ -29,6 +29,7 @@
 #include "FlowController.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
+#include "catch2/generators/catch_generators.hpp"
 #include "core/Core.h"
 #include "../../include/core/FlowFile.h"
 #include "unit/ProvenanceTestHelper.h"
@@ -151,6 +152,7 @@ class CompressDecompressionTestController : public TestController {
 
   [[nodiscard]] std::shared_ptr<core::FlowFile> importFlowFile(const std::filesystem::path& content_path) const {
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(helper_session->create());
+    REQUIRE(std::filesystem::exists(content_path));
     helper_session->import(content_path.string(), flow, true, 0);
     helper_session->flushContent();
     input->put(flow);
@@ -293,6 +295,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1);
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
@@ -325,6 +328,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1);
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
@@ -340,6 +344,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3]") {
+  if (!archive_bzlib_version()) { return; }  // minifi was compiled without BZip2 support
+
   context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::compress)});
   context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::BZIP2)});
   context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9");
@@ -351,6 +357,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1);
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
@@ -369,6 +376,8 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfiletest4]") {
+  if (!archive_bzlib_version()) { return; }  // minifi was compiled without BZip2 support
+
   context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)});
   context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::BZIP2)});
   context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9");
@@ -381,6 +390,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1);
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
@@ -394,6 +404,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5]") {
+  if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
+
   context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::compress)});
   context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::LZMA)});
   context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9");
@@ -402,15 +414,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
   auto flow = importFlowFile(rawContentPath());
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
-    // platform not support LZMA
-    LogTestController::getInstance().reset();
-    return;
-  }
-
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1);
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
@@ -429,6 +436,8 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfiletest6]") {
+  if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
+
   context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)});
   context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::USE_MIME_TYPE)});
   context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9");
@@ -438,15 +447,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
   flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-lzma");
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
-    // platform not support LZMA
-    LogTestController::getInstance().reset();
-    return;
-  }
-
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1);
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
@@ -460,6 +464,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletest7]") {
+  if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
+
   context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::compress)});
   context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::XZ_LZMA2)});
   context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9");
@@ -468,15 +474,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
   auto flow = importFlowFile(rawContentPath());
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
-    // platform not support LZMA
-    LogTestController::getInstance().reset();
-    return;
-  }
-
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1);
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
@@ -495,6 +496,8 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfiletest8]") {
+  if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
+
   context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)});
   context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::USE_MIME_TYPE)});
   context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9");
@@ -504,15 +507,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
   flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-xz");
   trigger();
 
-  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
-    // platform not support LZMA
-    LogTestController::getInstance().reset();
-    return;
-  }
-
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
+  REQUIRE(flow1);
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
@@ -675,7 +673,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   REQUIRE(outFiles.size() == flowFileContents.size());
 
   for (std::size_t idx = 0; idx < outFiles.size(); ++idx) {
-    auto file = outFiles[idx];
+    const auto& file = outFiles[idx];
     std::string mime;
     file->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/gzip");
@@ -688,28 +686,18 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
 }
 
 TEST_CASE_METHOD(DecompressTestController, "Invalid archive decompression", "[compressfiletest9]") {
+  const auto compression_format = GENERATE(CompressionFormat::GZIP, CompressionFormat::LZMA, CompressionFormat::XZ_LZMA2, CompressionFormat::BZIP2);
+  if (((compression_format == CompressionFormat::LZMA || compression_format == CompressionFormat::XZ_LZMA2) && !archive_liblzma_version()) ||
+      (compression_format == CompressionFormat::BZIP2 && !archive_bzlib_version())) {
+    return;
+  }
+  context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(compression_format)});
   context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)});
-  SECTION("GZIP") {
-    context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::GZIP)});
-  }
-  SECTION("LZMA") {
-    context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::LZMA)});
-  }
-  SECTION("XZ_LZMA2") {
-    context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::XZ_LZMA2)});
-  }
-  SECTION("BZIP2") {
-    context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::BZIP2)});
-  }
   context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true");
 
   importFlowFileFrom(minifi::io::BufferStream(std::string{"banana bread"}));
   trigger();
-
-  if (LogTestController::getInstance().contains("compression not supported on this platform", 20ms, 5ms)) {
-    return;
-  }
 
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;

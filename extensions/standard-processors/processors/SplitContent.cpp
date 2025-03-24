@@ -24,6 +24,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
 
@@ -34,6 +35,7 @@ void SplitContent::initialize() {
 }
 
 void SplitContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  buffer_size_ = utils::configuration::getBufferSize(*context.getConfiguration());
   auto byte_sequence_str = utils::parseProperty(context, ByteSequence);
   const auto byte_sequence_format = utils::parseEnumProperty<ByteSequenceFormat>(context, ByteSequenceFormatProperty);
   std::vector<std::byte> byte_sequence{};
@@ -53,13 +55,14 @@ namespace {
 class Splitter {
  public:
   explicit Splitter(core::ProcessSession& session, std::optional<std::string> original_filename, SplitContent::ByteSequenceMatcher& byte_sequence_matcher, const bool keep_byte_sequence,
-      const SplitContent::ByteSequenceLocation byte_sequence_location)
+      const SplitContent::ByteSequenceLocation byte_sequence_location, const size_t buffer_size)
       : session_(session),
         original_filename_(std::move(original_filename)),
         byte_sequence_matcher_(byte_sequence_matcher),
         keep_trailing_byte_sequence_(keep_byte_sequence && byte_sequence_location == SplitContent::ByteSequenceLocation::Trailing),
-        keep_leading_byte_sequence_(keep_byte_sequence && byte_sequence_location == SplitContent::ByteSequenceLocation::Leading) {
-    data_before_byte_sequence_.reserve(SplitContent::BUFFER_TARGET_SIZE);
+        keep_leading_byte_sequence_(keep_byte_sequence && byte_sequence_location == SplitContent::ByteSequenceLocation::Leading),
+        buffer_size_(buffer_size) {
+    data_before_byte_sequence_.reserve(buffer_size_);
   }
 
   Splitter(const Splitter&) = delete;
@@ -99,7 +102,7 @@ class Splitter {
   }
 
   void flushIfBufferTooLarge() {
-    if (data_before_byte_sequence_.size() >= SplitContent::BUFFER_TARGET_SIZE) { appendDataBeforeByteSequenceToSplit(); }
+    if (data_before_byte_sequence_.size() >= buffer_size_) { appendDataBeforeByteSequenceToSplit(); }
   }
 
  private:
@@ -158,9 +161,9 @@ class Splitter {
   std::shared_ptr<core::FlowFile> current_split_ = nullptr;
   std::vector<std::shared_ptr<core::FlowFile>> completed_splits_;
   SplitContent::size_type matching_bytes_ = 0;
-
   const bool keep_trailing_byte_sequence_ = false;
   const bool keep_leading_byte_sequence_ = false;
+  size_t buffer_size_{};
 };
 }  // namespace
 
@@ -209,7 +212,7 @@ void SplitContent::onTrigger(core::ProcessContext& context, core::ProcessSession
   const auto ff_content_stream = session.getFlowFileContentStream(*original);
   if (!ff_content_stream) { throw Exception(PROCESSOR_EXCEPTION, fmt::format("Couldn't access the ContentStream of {}", original->getUUID().to_string())); }
 
-  Splitter splitter{session, original->getAttribute(core::SpecialFlowAttribute::FILENAME), *byte_sequence_matcher_, keep_byte_sequence, byte_sequence_location_};
+  Splitter splitter{session, original->getAttribute(core::SpecialFlowAttribute::FILENAME), *byte_sequence_matcher_, keep_byte_sequence, byte_sequence_location_, buffer_size_};
 
   while (auto latest_byte = ff_content_stream->readByte()) {
     splitter.digest(*latest_byte);
