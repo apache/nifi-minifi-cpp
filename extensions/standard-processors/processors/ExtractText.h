@@ -110,12 +110,12 @@ class ExtractText : public core::ProcessorImpl {
 
   class ReadCallback {
    public:
-    ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ct, std::shared_ptr<core::logging::Logger> lgr);
+    ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext& ctx, std::shared_ptr<core::logging::Logger> lgr);
     int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const;
 
    private:
     std::shared_ptr<core::FlowFile> flowFile_;
-    core::ProcessContext *ctx_;
+    gsl::not_null<core::ProcessContext*> ctx_;
     std::shared_ptr<core::logging::Logger> logger_;
   };
 

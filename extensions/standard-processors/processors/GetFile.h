@@ -195,6 +195,7 @@ class GetFile : public core::ProcessorImpl {
   std::queue<std::filesystem::path> directory_listing_;
   mutable std::mutex directory_listing_mutex_;
   std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_listing_time_{};
+  size_t buffer_size_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetFile>::getLogger(uuid_);
 };
 

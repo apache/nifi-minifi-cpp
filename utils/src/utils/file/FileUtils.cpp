@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "utils/ConfigurationUtils.h"
 #include "utils/Literals.h"
 #include "utils/Searcher.h"
 
@@ -32,8 +33,8 @@
 namespace org::apache::nifi::minifi::utils::file {
 
 uint64_t computeChecksum(const std::filesystem::path& file_name, uint64_t up_to_position) {
-  constexpr uint64_t BUFFER_SIZE = 4096U;
-  std::array<char, std::size_t{BUFFER_SIZE}> buffer{};
+  static constexpr auto BUFFER_SIZE = utils::configuration::DEFAULT_BUFFER_SIZE;
+  std::array<char, BUFFER_SIZE> buffer{};
 
   std::ifstream stream{file_name, std::ios::in | std::ios::binary};
 
@@ -41,7 +42,7 @@ uint64_t computeChecksum(const std::filesystem::path& file_name, uint64_t up_to_
   uint64_t remaining_bytes_to_be_read = up_to_position;
 
   while (stream && remaining_bytes_to_be_read > 0) {
-    stream.read(buffer.data(), gsl::narrow<std::streamsize>(std::min(BUFFER_SIZE, remaining_bytes_to_be_read)));
+    stream.read(buffer.data(), gsl::narrow<std::streamsize>((std::min)(uint64_t{BUFFER_SIZE}, remaining_bytes_to_be_read)));
     uInt bytes_read = gsl::narrow<uInt>(stream.gcount());
     checksum = crc32(checksum, reinterpret_cast<unsigned char*>(buffer.data()), bytes_read);
     remaining_bytes_to_be_read -= bytes_read;

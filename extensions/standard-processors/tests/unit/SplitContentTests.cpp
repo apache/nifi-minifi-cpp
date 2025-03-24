@@ -22,6 +22,7 @@
 #include "unit/Catch.h"
 #include "unit/SingleProcessorTestController.h"
 #include "unit/TestBase.h"
+#include "utils/ConfigurationUtils.h"
 
 namespace org::apache::nifi::minifi::processors::test {
 
@@ -418,7 +419,8 @@ TEST_CASE("ByteSequenceAtBufferTargetSize") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  auto x = SplitContent::BUFFER_TARGET_SIZE-10;
+  static_assert(utils::configuration::DEFAULT_BUFFER_SIZE >= 10);
+  auto x = utils::configuration::DEFAULT_BUFFER_SIZE - 10;
 
   auto [pre_fix_size, separator_size, post_fix_size] = GENERATE_COPY(
     std::make_tuple(x, x, x),

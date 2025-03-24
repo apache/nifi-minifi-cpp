@@ -176,6 +176,7 @@ class FetchFile final : public core::ProcessorImpl {
   fetch_file::MoveConflictStrategyOption move_conflict_strategy_{};
   utils::LogUtils::LogLevelOption log_level_when_file_not_found_{};
   utils::LogUtils::LogLevelOption log_level_when_permission_denied_{};
+  size_t buffer_size_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchFile>::getLogger(uuid_);
 };
 

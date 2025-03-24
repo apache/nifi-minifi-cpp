@@ -23,6 +23,7 @@
 
 #include "Configuration.h"
 #include "minifi-cpp/core/AgentIdentificationProvider.h"
+#include "utils/gsl.h"
 
 struct ConfigTestAccessor;
 
@@ -40,10 +41,10 @@ class Configure : public virtual Configuration, public virtual core::AgentIdenti
   virtual void setFallbackAgentIdentifier(const std::string& id) = 0;
 
   using Configuration::set;
-  virtual void set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) override = 0;
-  virtual bool commitChanges() override = 0;
+  void set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) override = 0;
+  bool commitChanges() override = 0;
 
-  static std::shared_ptr<Configure> create();
+  static gsl::not_null<std::shared_ptr<Configure>> create();
 };
 
 }  // namespace org::apache::nifi::minifi
