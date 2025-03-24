@@ -44,8 +44,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
 
 
   Scenario: A MiNiFi instance transfers data to a Splunk HEC with SSL enabled
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a Splunk HEC is set up and running
+    Given a Splunk HEC is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "foobar" is present in "/tmp/input"
     And a PutSplunkHTTP processor set up to communicate with the Splunk HEC instance

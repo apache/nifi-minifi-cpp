@@ -20,8 +20,7 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     Given the content of "/tmp/output" is monitored
 
   Scenario Outline: MiNiFi instance creates a document on Opensearch using Basic Authentication
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And an Opensearch server is set up and running
+    Given an Opensearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "{ "field1" : "value1" }" is present in "/tmp/input"
     And a PostElasticsearch processor
@@ -45,8 +44,7 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
       | "create" |
 
   Scenario: MiNiFi instance deletes a document from Opensearch using Basic Authentication
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index"
+    Given an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "hello world" is present in "/tmp/input"
     And a PostElasticsearch processor
@@ -65,8 +63,7 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     And Opensearch is empty
 
   Scenario: MiNiFi instance partially updates a document in Opensearch using Basic Authentication
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"
+    Given an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "{ "field2" : "value2" }" is present in "/tmp/input"
     And a PostElasticsearch processor

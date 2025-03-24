@@ -33,6 +33,9 @@ function(ADD_PACKAGE_VERIFY TAG_PREFIX)
     add_custom_target(
             docker-verify-${TAG_PREFIX}
             COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} --parallel_processes=${DOCKER_VERIFY_THREADS})
+    add_custom_target(
+            docker-verify-${TAG_PREFIX}-fips
+            COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} --parallel_processes=${DOCKER_VERIFY_THREADS} --fips)
 endfunction()
 
 

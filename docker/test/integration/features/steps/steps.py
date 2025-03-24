@@ -377,6 +377,11 @@ def step_impl(context):
     context.test.enable_openssl_fips_mode_in_minifi()
 
 
+@given("OpenSSL FIPS mode is disabled in MiNiFi")
+def step_impl(context):
+    context.test.disable_openssl_fips_mode_in_minifi()
+
+
 # HTTP proxy setup
 @given("the http proxy server is set up")
 @given("a http proxy server is set up accordingly")

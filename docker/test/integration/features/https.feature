@@ -131,8 +131,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
 
 
   Scenario: InvokeHTTP to ListenHTTP with mutual TLS, using the system certificate store, requires a server cert signed by a CA
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a GenerateFlowFile processor with the "Data Format" property set to "Text"
+    Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
     And the "Custom Text" property of the GenerateFlowFile processor is set to "Duis aute irure dolor in reprehenderit in voluptate"
     And a InvokeHTTP processor with the "Remote URL" property set to "https://server-${feature_id}:4430/contentListener"

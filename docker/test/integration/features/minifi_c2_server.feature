@@ -30,8 +30,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
     And the Minifi logs do not contain the following message: "Failed to parse json response: The document is empty. at 0" after 0 seconds
 
   Scenario: MiNiFi flow config is updated from MiNiFi C2 server through SSL with SSL controller service
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a file with the content "test" is present in "/tmp/input"
+    Given a file with the content "test" is present in "/tmp/input"
     And a ssl context service is set up for MiNiFi C2 server
     And a MiNiFi C2 server is set up with SSL
     When all instances start up
@@ -48,8 +47,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
     And a flowfile with the content "test" is placed in the monitored directory in less than 10 seconds
 
   Scenario: MiNiFi flow config is updated from MiNiFi C2 server through SSL with SSL properties
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a file with the content "test" is present in "/tmp/input"
+    Given a file with the content "test" is present in "/tmp/input"
     And a GenerateFlowFile processor
     And ssl properties are set up for MiNiFi C2 server
     And a MiNiFi C2 server is set up with SSL

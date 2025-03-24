@@ -22,7 +22,4 @@ FetchContent_Declare(jolt_tests
         URL_HASH SHA256=7423c5b98244260f89a975f5e21150c02a6a1fa88e3af07c90d43fef0eebdcbb
         )
 
-FetchContent_GetProperties(jolt_tests)
-if (NOT jolt_tests_POPULATED)
-    FetchContent_Populate(jolt_tests)
-endif()
+FetchContent_MakeAvailable(jolt_tests)
