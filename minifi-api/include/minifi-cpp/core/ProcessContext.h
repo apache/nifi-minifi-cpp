@@ -67,7 +67,7 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
 
   virtual StateManager* getStateManager() = 0;
   virtual bool hasStateManager() const = 0;
-  virtual std::shared_ptr<Configure> getConfiguration() const = 0;
+  virtual gsl::not_null<Configure*> getConfiguration() const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

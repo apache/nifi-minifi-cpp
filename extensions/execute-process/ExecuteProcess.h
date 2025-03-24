@@ -122,6 +122,7 @@ class ExecuteProcess final : public core::ProcessorImpl {
   std::string full_command_;
   int pipefd_[2]{};
   pid_t pid_{};
+  size_t buffer_size_{};
 };
 
 }  // namespace org::apache::nifi::minifi::processors

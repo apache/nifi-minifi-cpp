@@ -51,6 +51,7 @@ const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyVal
   {Configuration::nifi_provenance_repository_directory_default, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
   {Configuration::nifi_flowfile_repository_directory_default, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
   {Configuration::nifi_dbcontent_repository_directory_default, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
+  {Configuration::nifi_default_internal_buffer_size, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
   {Configuration::nifi_flowfile_repository_rocksdb_compaction_period, gsl::make_not_null(&core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)},
   {Configuration::nifi_dbcontent_repository_rocksdb_compaction_period, gsl::make_not_null(&core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)},
   {Configuration::nifi_content_repository_rocksdb_use_synchronous_writes, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},
