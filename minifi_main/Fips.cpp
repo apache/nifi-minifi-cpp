@@ -29,6 +29,14 @@
 namespace org::apache::nifi::minifi::fips {
 
 namespace {
+#ifdef WIN32
+constexpr std::string_view FIPS_LIB = "fips.dll";
+#elif defined(__APPLE__)
+constexpr std::string_view FIPS_LIB = "fips.dylib";
+#else
+constexpr std::string_view FIPS_LIB = "fips.so";
+#endif
+
 bool replaceMinifiHomeVariable(const std::filesystem::path& file_path, const std::filesystem::path& minifi_home_path, const std::shared_ptr<core::logging::Logger>& logger) {
   std::ifstream input_file(file_path);
   if (!input_file) {
@@ -63,6 +71,23 @@ bool replaceMinifiHomeVariable(const std::filesystem::path& file_path, const std
   output_file.close();
   return true;
 }
+
+bool generateFipsModuleConfig(const std::filesystem::path& minifi_home, const std::shared_ptr<core::logging::Logger>& logger) {
+  std::filesystem::path output_file(minifi_home / "fips" / "fipsmodule.cnf");
+  logger->log_info("fipsmodule.cnf was not found, trying to run fipsinstall command to generate the file");
+
+#ifdef WIN32
+  std::string command = "\"\"" + (minifi_home / "fips" / "openssl.exe").string() + "\" fipsinstall -out \"" + output_file.string() + "\" -module \"" + (minifi_home / "fips" / FIPS_LIB).string() + "\"\"";
+#else
+  std::string command = "\"" + (minifi_home / "fips" / "openssl").string() + "\" fipsinstall -out \"" + output_file.string() + "\" -module \"" + (minifi_home / "fips" / FIPS_LIB).string() + "\"";
+#endif
+  auto ret = std::system(command.c_str());
+  if (ret != 0) {
+    logger->log_error("Failed to generate fipsmodule.cnf file");
+    return false;
+  }
+  return true;
+}
 }  // namespace
 
 void initializeFipsMode(const std::shared_ptr<minifi::Configure>& configure, const std::filesystem::path& minifi_home, const std::shared_ptr<core::logging::Logger>& logger) {
@@ -70,22 +95,14 @@ void initializeFipsMode(const std::shared_ptr<minifi::Configure>& configure, con
     return;
   }
 
-#ifdef WIN32
-  static constexpr std::string_view FIPS_LIB = "fips.dll";
-#elif defined(__APPLE__)
-  static constexpr std::string_view FIPS_LIB = "fips.dylib";
-#else
-  static constexpr std::string_view FIPS_LIB = "fips.so";
-#endif
-
   if (!std::filesystem::exists(minifi_home / "fips" / FIPS_LIB)) {
     logger->log_error("FIPS mode is enabled, but {} is not available in MINIFI_HOME/fips directory", FIPS_LIB);
     std::exit(1);
   }
 
-  if (!std::filesystem::exists(minifi_home / "fips" / "fipsmodule.cnf")) {
-    logger->log_error("FIPS mode is enabled, but fipsmodule.cnf is not available in MINIFI_HOME/fips directory. "
-      "Run MINIFI_HOME/fips/openssl fipsinstall -out fipsmodule.cnf -module MINIFI_HOME/fips/{} command to generate the configuration file", FIPS_LIB);
+  if (!std::filesystem::exists(minifi_home / "fips" / "fipsmodule.cnf") && !generateFipsModuleConfig(minifi_home, logger)) {
+    logger->log_error("FIPS mode is enabled, but fipsmodule.cnf is not available in $MINIFI_HOME/fips directory. "
+      "Run $MINIFI_HOME/fips/openssl fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME/fips/{} command to generate the configuration file", FIPS_LIB);
     std::exit(1);
   }
 

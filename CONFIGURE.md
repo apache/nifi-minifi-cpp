@@ -43,6 +43,8 @@
   - [Configuring Repository storage locations](#configuring-repository-storage-locations)
   - [Configuring compression for rocksdb database](#configuring-compression-for-rocksdb-database)
   - [Configuring compaction for rocksdb database](#configuring-compaction-for-rocksdb-database)
+  - [Configuring synchronous or asynchronous writes for RocksDB content repository](#configuring-synchronous-or-asynchronous-writes-for-rocksdb-content-repository)
+  - [Configuring checksum verification for RocksDB reads](#configuring-checksum-verification-for-rocksdb-reads)
   - [Global RocksDB options](#global-rocksdb-options)
     - [Shared database](#shared-database)
   - [Configuring Repository encryption](#configuring-repository-encryption)
@@ -61,6 +63,9 @@
   - [Disk space watchdog](#disk-space-watchdog)
   - [Extension configuration](#extension-configuration)
   - [Python processors](#python-processors)
+  - [Enabling FIPS support](#enabling-fips-support)
+    - [Generating the fipsmodule.cnf file automatically](#generating-the-fipsmodulecnf-file-automatically)
+    - [Generating the fipsmodule.cnf file manually](#generating-the-fipsmodulecnf-file-manually)
 - [Log configuration](#log-configuration)
   - [Log appenders](#log-appenders)
   - [Log levels](#log-levels)
@@ -938,7 +943,15 @@ To enable FIPS support, and use MiNiFi C++ in FIPS compliant mode, there are a f
     # in minifi.properties
     nifi.openssl.fips.support.enable=true
 
-Before first starting the application, the fipsmodule.cnf needs to be generated. To do this run the following command with the openssl binary (openssl on Unix and openssl.exe on windows) with the following parameters provided in the $MINIFI_HOME/fips directory:
+Before first starting the application, the fipsmodule.cnf needs to be generated. This can be done in two ways, either automatically or manually.
+
+#### Generating the fipsmodule.cnf file automatically
+
+If the application is started with the nifi.openssl.fips.support.enable property set to true, and the fipsmodule.cnf file is not found in the $MINIFI_HOME/fips directory, the application will try to generate the fipsmodule.cnf file automatically. This is done by running the manual steps described in the next section, but this is done from the MiNiFi C++ process before loading the OpenSSL configuration. If the automatic generation is successful, the application will start in FIPS mode.
+
+#### Generating the fipsmodule.cnf file manually
+
+To do this run the following command with the openssl binary (openssl on Unix and openssl.exe on windows) with the following parameters provided in the $MINIFI_HOME/fips directory:
 
     # on Unix platform
     ./openssl fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME/fips/fips.so
