@@ -86,6 +86,7 @@ bool generateFipsModuleConfig(const std::filesystem::path& minifi_home, const st
     logger->log_error("Failed to generate fipsmodule.cnf file");
     return false;
   }
+  logger->log_info("Successfully generated fipsmodule.cnf file");
   return true;
 }
 }  // namespace
