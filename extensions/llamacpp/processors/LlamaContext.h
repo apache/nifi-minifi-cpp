@@ -22,21 +22,40 @@
 #include <string_view>
 #include <string>
 #include <functional>
+#include <optional>
+#include "utils/expected.h"
 
-namespace org::apache::nifi::minifi::processors::llamacpp {
+namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
 struct LlamaChatMessage {
   std::string role;
   std::string content;
 };
 
+struct LlamaSamplerParams {
+  std::optional<float> temperature;
+  std::optional<int32_t> top_k;
+  std::optional<float> top_p;
+  std::optional<float> min_p;
+  uint64_t min_keep{};
+};
+
+struct LlamaContextParams {
+  uint32_t n_ctx{};
+  uint32_t n_batch{};
+  uint32_t n_ubatch{};
+  uint32_t n_seq_max{};
+  int32_t n_threads{};
+  int32_t n_threads_batch{};
+};
+
 class LlamaContext {
  public:
-  static void testSetProvider(std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path&, float)> provider);
-  static std::unique_ptr<LlamaContext> create(const std::filesystem::path& model_path, float temperature);
+  static void testSetProvider(std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path&, const LlamaSamplerParams&, const LlamaContextParams&)> provider);
+  static std::unique_ptr<LlamaContext> create(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params);
   virtual std::string applyTemplate(const std::vector<LlamaChatMessage>& messages) = 0;
-  virtual void generate(const std::string& input, std::function<bool(std::string_view/*token*/)> cb) = 0;
+  virtual nonstd::expected<uint64_t, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) = 0;
   virtual ~LlamaContext() = default;
 };
 
-}  // namespace org::apache::nifi::minifi::processors::llamacpp
+}  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors
