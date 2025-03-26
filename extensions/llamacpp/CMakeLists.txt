@@ -21,8 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_LLAMACPP))
     return()
 endif()
 
-include(BundledLlamaCpp)
-use_bundled_llamacpp(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+include(LlamaCpp)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
@@ -30,8 +29,9 @@ file(GLOB SOURCES "processors/*.cpp")
 
 add_minifi_library(minifi-llamacpp SHARED ${SOURCES})
 target_include_directories(minifi-llamacpp PUBLIC "${CMAKE_SOURCE_DIR}/extensions/llamacpp")
+target_include_directories(minifi-llamacpp PUBLIC "${LLAMACPP_INCLUDE_DIRS}")
 
-target_link_libraries(minifi-llamacpp ${LIBMINIFI} llamacpp)
+target_link_libraries(minifi-llamacpp ${LIBMINIFI} llama)
 
 register_extension(minifi-llamacpp "LLAMACPP EXTENSION" LLAMACPP-EXTENSION "Provides LlamaCpp support" "extensions/llamacpp/tests")
 

@@ -14,26 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
 #include "LlamaContext.h"
-#include "Exception.h"
-#include "fmt/format.h"
 #include "llama.h"
-#include "DefaultLlamaContext.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
-static std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path&, const LlamaSamplerParams&, const LlamaContextParams&)> test_provider;
+class DefaultLlamaContext : public LlamaContext {
+ public:
+  DefaultLlamaContext(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params);
+  DefaultLlamaContext(const DefaultLlamaContext&) = delete;
+  DefaultLlamaContext(DefaultLlamaContext&&) = delete;
+  DefaultLlamaContext& operator=(const DefaultLlamaContext&) = delete;
+  DefaultLlamaContext& operator=(DefaultLlamaContext&&) = delete;
+  ~DefaultLlamaContext() override;
 
-void LlamaContext::testSetProvider(std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path&, const LlamaSamplerParams&, const LlamaContextParams&)> provider) {
-  test_provider = std::move(provider);
-}
+  std::string applyTemplate(const std::vector<LlamaChatMessage>& messages) override;
+  nonstd::expected<uint64_t, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) override;
 
-std::unique_ptr<LlamaContext> LlamaContext::create(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params) {
-  if (test_provider) {
-    return test_provider(model_path, llama_sampler_params, llama_ctx_params);
-  }
-  return std::make_unique<DefaultLlamaContext>(model_path, llama_sampler_params, llama_ctx_params);
-}
+ private:
+  llama_model* llama_model_{};
+  llama_context* llama_ctx_{};
+  llama_sampler* llama_sampler_{};
+};
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors

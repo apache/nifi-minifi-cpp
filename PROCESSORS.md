@@ -65,6 +65,7 @@ limitations under the License.
 - [ListS3](#ListS3)
 - [ListSFTP](#ListSFTP)
 - [ListSmb](#ListSmb)
+- [RunLlamaCppInference](#RunLlamaCppInference)
 - [LogAttribute](#LogAttribute)
 - [ManipulateArchive](#ManipulateArchive)
 - [MergeContent](#MergeContent)
@@ -1742,7 +1743,42 @@ In the list below, the names of required properties appear in bold. Any other pr
 | lastModifiedTime | success      | The timestamp of when the file's content changed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                               |
 | creationTime     | success      | The timestamp of when the file was created in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                                     |
 | lastAccessTime   | success      | The timestamp of when the file was accessed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                                    |
-| size             | success      | The size of the file in bytes.                                                                                                                                                                                                                                                                                                                               |
+| size             | success      | The size of the file in bytes.
+
+                                                                                       |
+## RunLlamaCppInference
+
+### Description
+
+LlamaCpp processor to use llama.cpp library for running langage model inference. The final prompt used for the inference created using the System Prompt and Prompt proprerty values and the content of the flowfile referred to as input data or flow file content.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                             | Default Value                                                                                                                                                                                               | Allowable Values | Description                                                                                                             |
+|----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------|
+| **Model Path**                   |                                                                                                                                                                                                             |                  | The filesystem path of the model file in gguf format.                                                                   |
+| Temperature                      | 0.8                                                                                                                                                                                                         |                  | The temperature to use for sampling.                                                                                    |
+| Top K                            | 40                                                                                                                                                                                                          |                  | Limit the next token selection to the K most probable tokens. Set <= 0 value to use vocab size.                         |
+| Top P                            | 0.9                                                                                                                                                                                                         |                  | Limit the next token selection to a subset of tokens with a cumulative probability above a threshold P. 1.0 = disabled. |
+| Min P                            |                                                                                                                                                                                                             |                  | Sets a minimum base probability threshold for token selection. 0.0 = disabled.                                          |
+| **Min Keep**                     | 0                                                                                                                                                                                                           |                  | If greater than 0, force samplers to return N possible tokens at minimum.                                               |
+| **Text Context Size**            | 4096                                                                                                                                                                                                        |                  | Size of the text context, use 0 to use size set in model.                                                               |
+| **Logical Maximum Batch Size**   | 2048                                                                                                                                                                                                        |                  | Logical maximum batch size that can be submitted to the llama.cpp decode function.                                      |
+| **Physical Maximum Batch Size**  | 512                                                                                                                                                                                                         |                  | Physical maximum batch size.                                                                                            |
+| **Max Number Of Sequences**      | 1                                                                                                                                                                                                           |                  | Maximum number of sequences (i.e. distinct states for recurrent models).                                                |
+| **Threads For Generation**       | 4                                                                                                                                                                                                           |                  | Number of threads to use for generation.                                                                                |
+| **Threads For Batch Processing** | 4                                                                                                                                                                                                           |                  | Number of threads to use for batch processing.                                                                          |
+| **Prompt**                       |                                                                                                                                                                                                             |                  | The user prompt for the inference.<br/>**Supports Expression Language: true**                                           |
+| **System Prompt**                | You are a helpful assisstant. You are given a question with some possible input data otherwise called flow file content. You are expected to generate a response based on the quiestion and the input data. |                  | The system prompt for the inference.                                                                                    |
+
+### Relationships
+
+| Name    | Description                      |
+|---------|----------------------------------|
+| success | Generated results from the model |
+| failure | Generation failed                |
 
 
 ## LogAttribute
