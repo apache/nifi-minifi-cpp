@@ -31,7 +31,7 @@ class S3ServerContainer(Container):
 
         logging.info('Creating and running s3 server docker container...')
         self.client.containers.run(
-            "adobe/s3mock:2.11.0",
+            "adobe/s3mock:3.12.0",
             detach=True,
             name=self.name,
             network=self.network.name,

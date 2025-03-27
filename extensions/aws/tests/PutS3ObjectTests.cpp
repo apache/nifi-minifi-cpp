@@ -443,4 +443,11 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Do not continue mul
   }
 }
 
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test checksum algorithm property", "[awsS3checksum]") {
+  setRequiredProperties();
+  plan->setProperty(s3_processor, "Checksum Algorithm", "SHA256");
+  test_controller.runSession(plan);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetChecksumAlgorithm() == Aws::S3::Model::ChecksumAlgorithm::SHA256);
+}
+
 }  // namespace

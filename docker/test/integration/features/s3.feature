@@ -39,6 +39,24 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the object content type on the s3 server is "application/octet-stream" and the object metadata matches use metadata
     And the Minifi logs contain the following message: "in a single upload" in less than 10 seconds
 
+  Scenario: A MiNiFi instance transfers encoded data to s3 in FIPS mode
+    Given OpenSSL FIPS mode is enabled in MiNiFi
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" is present in "/tmp/input"
+    And a PutS3Object processor set up to communicate with an s3 server
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GetFile processor is connected to the PutS3Object
+    And the "success" relationship of the PutS3Object processor is connected to the PutFile
+
+    And a s3 server is set up in correspondence with the PutS3Object
+
+    When both instances start up
+
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And the object on the s3 server is "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{"
+    And the object content type on the s3 server is "application/octet-stream" and the object metadata matches use metadata
+    And the Minifi logs contain the following message: "in a single upload" in less than 10 seconds
+
   Scenario: A MiNiFi instance transfers encoded data through a http proxy to s3
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" is present in "/tmp/input"

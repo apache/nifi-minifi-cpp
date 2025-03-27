@@ -32,6 +32,7 @@
 #include "aws/s3/model/StorageClass.h"
 #include "aws/s3/model/ServerSideEncryption.h"
 #include "aws/s3/model/ObjectCannedACL.h"
+#include "aws/s3/model/ChecksumAlgorithm.h"
 
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
@@ -50,34 +51,43 @@
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
-inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::StorageClass>, 7> STORAGE_CLASS_MAP {{
+inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::StorageClass>, 11> STORAGE_CLASS_MAP {{
   {"Standard", Aws::S3::Model::StorageClass::STANDARD},
   {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY},
   {"StandardIA", Aws::S3::Model::StorageClass::STANDARD_IA},
   {"OnezoneIA", Aws::S3::Model::StorageClass::ONEZONE_IA},
   {"IntelligentTiering", Aws::S3::Model::StorageClass::INTELLIGENT_TIERING},
   {"Glacier", Aws::S3::Model::StorageClass::GLACIER},
-  {"DeepArchive", Aws::S3::Model::StorageClass::DEEP_ARCHIVE}
+  {"DeepArchive", Aws::S3::Model::StorageClass::DEEP_ARCHIVE},
+  {"Outposts", Aws::S3::Model::StorageClass::OUTPOSTS},
+  {"GlacierIR", Aws::S3::Model::StorageClass::GLACIER_IR},
+  {"Snow", Aws::S3::Model::StorageClass::SNOW},
+  {"ExpressOneZone", Aws::S3::Model::StorageClass::EXPRESS_ONEZONE}
 }};
 
-inline constexpr std::array<std::pair<Aws::S3::Model::ObjectStorageClass, std::string_view>, 7> OBJECT_STORAGE_CLASS_MAP {{
+inline constexpr std::array<std::pair<Aws::S3::Model::ObjectStorageClass, std::string_view>, 11> OBJECT_STORAGE_CLASS_MAP {{
   {Aws::S3::Model::ObjectStorageClass::STANDARD, "Standard"},
   {Aws::S3::Model::ObjectStorageClass::REDUCED_REDUNDANCY, "ReducedRedundancy"},
+  {Aws::S3::Model::ObjectStorageClass::GLACIER, "Glacier"},
   {Aws::S3::Model::ObjectStorageClass::STANDARD_IA, "StandardIA"},
   {Aws::S3::Model::ObjectStorageClass::ONEZONE_IA, "OnezoneIA"},
   {Aws::S3::Model::ObjectStorageClass::INTELLIGENT_TIERING, "IntelligentTiering"},
-  {Aws::S3::Model::ObjectStorageClass::GLACIER, "Glacier"},
-  {Aws::S3::Model::ObjectStorageClass::DEEP_ARCHIVE, "DeepArchive"}
+  {Aws::S3::Model::ObjectStorageClass::DEEP_ARCHIVE, "DeepArchive"},
+  {Aws::S3::Model::ObjectStorageClass::OUTPOSTS, "Outposts"},
+  {Aws::S3::Model::ObjectStorageClass::GLACIER_IR, "GlacierIR"},
+  {Aws::S3::Model::ObjectStorageClass::SNOW, "Snow"},
+  {Aws::S3::Model::ObjectStorageClass::EXPRESS_ONEZONE, "ExpressOneZone"}
 }};
 
 inline constexpr std::array<std::pair<Aws::S3::Model::ObjectVersionStorageClass, std::string_view>, 1> VERSION_STORAGE_CLASS_MAP {{
   {Aws::S3::Model::ObjectVersionStorageClass::STANDARD, "Standard"}
 }};
 
-inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ServerSideEncryption>, 3> SERVER_SIDE_ENCRYPTION_MAP {{
+inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ServerSideEncryption>, 4> SERVER_SIDE_ENCRYPTION_MAP {{
   {"None", Aws::S3::Model::ServerSideEncryption::NOT_SET},
   {"AES256", Aws::S3::Model::ServerSideEncryption::AES256},
   {"aws_kms", Aws::S3::Model::ServerSideEncryption::aws_kms},
+  {"aws_kms_dsse", Aws::S3::Model::ServerSideEncryption::aws_kms_dsse}
 }};
 
 inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ObjectCannedACL>, 7> CANNED_ACL_MAP {{
@@ -88,6 +98,14 @@ inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ObjectCa
   {"PublicRead", Aws::S3::Model::ObjectCannedACL::public_read},
   {"Private", Aws::S3::Model::ObjectCannedACL::private_},
   {"AwsExecRead", Aws::S3::Model::ObjectCannedACL::aws_exec_read},
+}};
+
+inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ChecksumAlgorithm>, 5> CHECKSUM_ALGORITHM_MAP {{
+  {"CRC32", Aws::S3::Model::ChecksumAlgorithm::CRC32},
+  {"CRC32C", Aws::S3::Model::ChecksumAlgorithm::CRC32C},
+  {"SHA1", Aws::S3::Model::ChecksumAlgorithm::SHA1},
+  {"SHA256", Aws::S3::Model::ChecksumAlgorithm::SHA256},
+  {"CRC64NVME", Aws::S3::Model::ChecksumAlgorithm::CRC64NVME}
 }};
 
 struct Expiration {
@@ -132,6 +150,7 @@ struct PutObjectRequestParameters : public RequestParameters {
   std::string read_acl_user_list;
   std::string write_acl_user_list;
   std::string canned_acl;
+  Aws::S3::Model::ChecksumAlgorithm checksum_algorithm;
   bool use_virtual_addressing = true;
 };
 
@@ -273,7 +292,8 @@ class S3Wrapper {
     auto request = RequestType{}
       .WithBucket(put_object_params.bucket)
       .WithKey(put_object_params.object_key)
-      .WithStorageClass(minifi::utils::at(STORAGE_CLASS_MAP, put_object_params.storage_class));
+      .WithStorageClass(minifi::utils::at(STORAGE_CLASS_MAP, put_object_params.storage_class))
+      .WithChecksumAlgorithm(put_object_params.checksum_algorithm);
     if (!put_object_params.server_side_encryption.empty() && put_object_params.server_side_encryption != "None") {
       request.SetServerSideEncryption(minifi::utils::at(SERVER_SIDE_ENCRYPTION_MAP, put_object_params.server_side_encryption));
     }

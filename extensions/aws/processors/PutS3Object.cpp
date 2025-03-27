@@ -93,6 +93,16 @@ void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSession
   multipart_upload_max_age_threshold_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(context, MultipartUploadMaxAgeThreshold.name).getMilliseconds();
   logger_->log_debug("PutS3Object: Multipart Upload Max Age Threshold {}", multipart_upload_max_age_threshold_);
 
+  std::string value;
+  if (!context.getProperty(ChecksumAlgorithm, value)
+      || value.empty()
+      || !ranges::contains(CHECKSUM_ALGORITHMS, value)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Checksum Algorithm property missing or invalid");
+  }
+
+  checksum_algorithm_ = minifi::utils::at(aws::s3::CHECKSUM_ALGORITHM_MAP, value);
+  logger_->log_debug("PutS3Object: Checksum Algorithm {}", magic_enum::enum_name(checksum_algorithm_));
+
   fillUserMetadata(context);
 
   auto state_manager = context.getStateManager();
@@ -180,6 +190,7 @@ std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3Reques
   }
 
   params.use_virtual_addressing = use_virtual_addressing_;
+  params.checksum_algorithm = checksum_algorithm_;
   return params;
 }
 
