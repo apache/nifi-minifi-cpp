@@ -23,7 +23,6 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "integration/TestServer.h"
-#include "protocols/RESTReceiver.h"
 #include "c2/C2Agent.h"
 #include "processors/LogAttribute.h"
 #include "integration/HTTPIntegrationBase.h"
@@ -42,7 +41,6 @@ class VerifyC2Server : public HTTPIntegrationBase {
   void testSetup() override {
     LogTestController::getInstance().setDebug<minifi::http::HTTPClient>();
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
-    LogTestController::getInstance().setDebug<c2::RESTReceiver>();
     LogTestController::getInstance().setDebug<c2::C2Agent>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
