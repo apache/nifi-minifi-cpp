@@ -102,7 +102,7 @@ void initializeFipsMode(const std::shared_ptr<minifi::Configure>& configure, con
   }
 
   if (!std::filesystem::exists(minifi_home / "fips" / "fipsmodule.cnf") && !generateFipsModuleConfig(minifi_home, logger)) {
-    logger->log_error("FIPS mode is enabled, but fipsmodule.cnf is not available in $MINIFI_HOME/fips directory. "
+    logger->log_error("FIPS mode is enabled, but fipsmodule.cnf is not available in $MINIFI_HOME/fips directory, and minifi couldn't generate it automatically.  "
       "Run $MINIFI_HOME/fips/openssl fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME/fips/{} command to generate the configuration file", FIPS_LIB);
     std::exit(1);
   }
