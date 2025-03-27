@@ -43,6 +43,7 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/Export.h"
 #include "utils/tls/CertificateUtils.h"
 #include "minifi-cpp/controllers/SSLContextService.h"
@@ -254,13 +255,14 @@ class SSLContextServiceImpl : public core::controller::ControllerServiceImpl, pu
 #endif  // WIN32
 
   static std::string getLatestOpenSSLErrorString() {
-    unsigned long err = ERR_peek_last_error(); // NOLINT
-    if (err == 0U) {
+    const auto err = ERR_peek_last_error();
+    if (err == 0) {
       return "";
     }
-    char buf[4096];
-    ERR_error_string_n(err, buf, sizeof(buf));
-    return buf;
+    static_assert(utils::configuration::DEFAULT_BUFFER_SIZE >= 1);
+    std::array<char, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
+    ERR_error_string_n(err, buffer.data(), buffer.size() - 1);
+    return {buffer.data()};
   }
 
   static bool isFileTypeP12(const std::filesystem::path& filename) {

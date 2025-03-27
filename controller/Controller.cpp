@@ -26,6 +26,7 @@
 #include "asio/ssl/stream.hpp"
 #include "asio/connect.hpp"
 #include "core/logging/Logger.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/net/AsioSocketUtils.h"
 #include "utils/file/FileUtils.h"
 
@@ -255,7 +256,7 @@ nonstd::expected<void, std::string> getDebugBundle(const utils::net::SocketData&
   }
 
   std::ofstream out_file(target_dir / "debug.tar.gz");
-  const size_t BUFFER_SIZE = 4096;
+  static constexpr auto BUFFER_SIZE = utils::configuration::DEFAULT_BUFFER_SIZE;
   std::array<char, BUFFER_SIZE> out_buffer{};
   while (bundle_size > 0) {
     const auto next_read_size = (std::min)(bundle_size, BUFFER_SIZE);

@@ -23,21 +23,16 @@
 #include "core/logging/LoggerFactory.h"
 #include "utils/StringUtils.h"
 
-namespace {
-
-constexpr std::size_t BUFFER_SIZE = 4096;
-
-}  // namespace
-
 namespace org::apache::nifi::minifi::utils {
 
-FileReaderCallback::FileReaderCallback(std::filesystem::path file_path)
-    : file_path_{std::move(file_path)},
+FileReaderCallback::FileReaderCallback(std::filesystem::path file_path, const size_t buffer_size)
+  : file_path_{std::move(file_path)},
+    buffer_size_{buffer_size},
     logger_(core::logging::LoggerFactory<FileReaderCallback>::getLogger()) {
 }
 
 int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& output_stream) const {
-  std::array<char, BUFFER_SIZE> buffer{};
+  std::vector<char> buffer(buffer_size_);
   uint64_t num_bytes_written = 0;
 
   std::ifstream input_stream{file_path_, std::ifstream::in | std::ifstream::binary};
@@ -46,7 +41,7 @@ int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& 
   }
   logger_->log_debug("Opening {}", file_path_);
   while (input_stream.good()) {
-    input_stream.read(buffer.data(), buffer.size());
+    input_stream.read(buffer.data(), gsl::narrow<std::streamsize>(buffer.size()));
     if (input_stream.bad()) {
       throw FileReaderCallbackIOError(string::join_pack("Error reading file: ", std::strerror(errno)), errno);
     }

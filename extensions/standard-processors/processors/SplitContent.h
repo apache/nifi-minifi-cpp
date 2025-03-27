@@ -96,8 +96,6 @@ class SplitContent final : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  static constexpr size_type BUFFER_TARGET_SIZE = 4096;
-
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
@@ -124,6 +122,7 @@ class SplitContent final : public core::ProcessorImpl {
   std::optional<ByteSequenceMatcher> byte_sequence_matcher_;
   bool keep_byte_sequence = false;
   ByteSequenceLocation byte_sequence_location_ = ByteSequenceLocation::Trailing;
+  size_t buffer_size_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SplitContent>::getLogger(uuid_);
 };
 

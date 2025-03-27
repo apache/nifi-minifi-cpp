@@ -30,6 +30,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/Environment.h"
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"
@@ -45,6 +46,7 @@ void ExecuteProcess::initialize() {
 }
 
 void ExecuteProcess::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  buffer_size_ = utils::configuration::getBufferSize(*context.getConfiguration());
   if (auto command = context.getProperty(Command)) {
     command_ = *command;
   }
@@ -112,9 +114,9 @@ void ExecuteProcess::executeChildProcess() const {
 }
 
 void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) const {
+  std::vector<char> buffer(buffer_size_);
   while (true) {
     std::this_thread::sleep_for(batch_duration_);
-    std::array<char, 4096> buffer;  // NOLINT(cppcoreguidelines-pro-type-member-init)
     const auto num_read = read(pipefd_[0], buffer.data(), buffer.size());
     if (num_read <= 0) {
       break;
@@ -150,7 +152,7 @@ bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_
 }
 
 void ExecuteProcess::readOutput(core::ProcessSession& session) const {
-  std::array<char, 4096> buffer;  // NOLINT(cppcoreguidelines-pro-type-member-init)
+  std::vector<char> buffer(buffer_size_);
   char *buf_ptr = buffer.data();
   size_t read_to_buffer = 0;
   std::shared_ptr<core::FlowFile> flow_file;

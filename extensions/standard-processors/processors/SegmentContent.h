@@ -73,6 +73,7 @@ class SegmentContent final : public core::ProcessorImpl {
   void initialize() override;
 
  private:
+  size_t buffer_size_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SegmentContent>::getLogger(uuid_);
 };
 
