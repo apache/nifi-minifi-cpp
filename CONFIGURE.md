@@ -61,6 +61,7 @@
   - [Disk space watchdog](#disk-space-watchdog)
   - [Extension configuration](#extension-configuration)
   - [Python processors](#python-processors)
+  - [Enabling FIPS support](#enabling-fips-support)
 - [Log configuration](#log-configuration)
   - [Log appenders](#log-appenders)
   - [Log levels](#log-levels)

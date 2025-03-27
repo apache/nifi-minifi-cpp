@@ -595,7 +595,7 @@ if (NOT WIN32)
         DESTINATION conf
         COMPONENT bin)
 
-    install(FILES fips/openssl.cnf
+    install(FILES fips/openssl.cnf fips/README.md
         DESTINATION fips
         COMPONENT bin)
 

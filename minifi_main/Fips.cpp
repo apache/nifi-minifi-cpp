@@ -67,6 +67,7 @@ bool replaceMinifiHomeVariable(const std::filesystem::path& file_path, const std
 
 void initializeFipsMode(const std::shared_ptr<minifi::Configure>& configure, const std::filesystem::path& minifi_home, const std::shared_ptr<core::logging::Logger>& logger) {
   if (!(configure->get(minifi::Configure::nifi_openssl_fips_support_enable) | utils::andThen(utils::string::toBool)).value_or(false)) {
+    logger->log_info("FIPS mode is disabled. FIPS configs and modules will NOT be loaded.");
     return;
   }
 
