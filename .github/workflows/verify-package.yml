@@ -1,180 +1,106 @@
 name: "MiNiFi-CPP Verify Package"
+
 on:
   schedule:
     - cron: '0 0 * * 0'
   workflow_dispatch:
+    inputs:
+      enable_fips:
+        type: boolean
+        description: Enable FIPS mode (some tests override this)
+        default: false
+
 env:
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
     -DENABLE_ELASTICSEARCH=OFF -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DDOCKER_BUILD_ONLY=ON
+
 jobs:
-  rocky-x86-64-build:
-    name: "Build package (Rocky 8 x86_64)"
-    runs-on: ubuntu-24.04
+  build-packages:
+    name: "Build package (${{ matrix.platform.arch }})"
+    runs-on: ${{ matrix.platform.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 180
-    steps:
-      - id: checkout
-        uses: actions/checkout@v4
-      - id: install_deps
-        run: |
-          sudo apt update
-          sudo apt install -y cmake
-      - id: build
-        run: |
-          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} .. && make rocky
-      - uses: actions/upload-artifact@v4
-        with:
-          name: minifi-x86-64-tar
-          path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
-          if-no-files-found: error
-
-  rocky-aarch64-build:
-    name: "Build package (Rocky 8 aarch64)"
-    runs-on: ubuntu-24.04-arm
-    timeout-minutes: 180
-    steps:
-      - id: checkout
-        uses: actions/checkout@v4
-      - id: install_deps
-        run: |
-          sudo apt update
-          sudo apt install -y cmake
-      - id: build
-        run: |
-          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} .. && make rocky
-      - uses: actions/upload-artifact@v4
-        with:
-          name: minifi-aarch64-tar
-          path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
-          if-no-files-found: error
-
-  docker-x86-64-tests:
-    name: "${{ matrix.platform.name }}"
-    runs-on: ubuntu-24.04
-    timeout-minutes: 180
-    needs: rocky-x86-64-build
     strategy:
       fail-fast: false
       matrix:
         platform: [
-          { name: "Rocky Linux 8 x86-64",
-            id: "rocky8",
-            build_cmd: "make rocky8_from_rocky_package",
-            verify_cmd: "make docker-verify-rocky8" },
-          { name: "Rocky Linux 9 x86-64",
-            id: "rocky9",
-            build_cmd: "make rocky9_from_rocky_package",
-            verify_cmd: "make docker-verify-rocky9" },
-          { name: "Ubuntu 22.04 x86-64",
-            id: "ubuntu_jammy",
-            build_cmd: "make jammy_from_rocky_package",
-            verify_cmd: "make docker-verify-jammy" },
-          { name: "Ubuntu 24.04 x86-64",
-            id: "ubuntu_noble",
-            build_cmd: "make noble_from_rocky_package",
-            verify_cmd: "make docker-verify-noble" },
-          { name: "Debian 11 x86-64",
-            id: "debian_bullseye",
-            build_cmd: "make bullseye_from_rocky_package",
-            verify_cmd: "make docker-verify-bullseye" },
-          { name: "Debian 12 x86-64",
-            id: "debian_bookworm",
-            build_cmd: "make bookworm_from_rocky_package",
-            verify_cmd: "make docker-verify-bookworm" },
+          { arch: "x86_64", artifact: "minifi-x86_64-tar" },
+          { arch: "aarch64", artifact: "minifi-aarch64-tar" }
         ]
 
     steps:
       - id: checkout
         uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: minifi-x86-64-tar
-          path: build
+
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y python3-virtualenv
-      - run: cd build && cmake ${DOCKER_CMAKE_FLAGS} .. \
-                && ${{ matrix.platform.build_cmd }} && ${{ matrix.platform.verify_cmd }}
-      - name: Test Reporter
-        if: always()
-        uses: phoenix-actions/test-reporting@v15
-        with:
-          name: "${{ matrix.platform.name }}"
-          path: build/behavex_output/behave/*.xml
-          reporter: java-junit
-          output-to: 'step-summary'
-          list-tests: 'failed'
-          list-suites: 'failed'
-      - name: Upload artifact
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform.id }}_x86_64_behavex_output
-          path: build/behavex_output
+          sudo apt install -y cmake
 
+      - id: build
+        run: |
+          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} .. && make rocky
 
-  docker-aarch64-tests:
-    name: "${{ matrix.platform.name }}"
-    runs-on: ubuntu-24.04-arm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.artifact }}
+          path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
+          if-no-files-found: error
+
+  docker-tests:
+    name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
+    runs-on: ${{ matrix.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 180
-    needs: rocky-aarch64-build
+    needs: build-packages
     strategy:
       fail-fast: false
       matrix:
+        arch: [x86_64, aarch64]
         platform: [
-          { name: "Rocky Linux 8 aarch64",
-            id: "rocky8",
-            build_cmd: "make rocky8_from_rocky_package",
-            verify_cmd: "make docker-verify-rocky8" },
-          { name: "Rocky Linux 9 aarch64",
-            id: "rocky9",
-            build_cmd: "make rocky9_from_rocky_package",
-            verify_cmd: "make docker-verify-rocky9" },
-          { name: "Ubuntu 22.04 aarch64",
-            id: "ubuntu_jammy",
-            build_cmd: "make jammy_from_rocky_package",
-            verify_cmd: "make docker-verify-jammy" },
-          { name: "Ubuntu 24.04 aarch64",
-            id: "ubuntu_noble",
-            build_cmd: "make noble_from_rocky_package",
-            verify_cmd: "make docker-verify-noble" },
-          { name: "Debian 11 aarch64",
-            id: "debian_bullseye",
-            build_cmd: "make bullseye_from_rocky_package",
-            verify_cmd: "make docker-verify-bullseye" },
-          { name: "Debian 12 aarch64",
-            id: "debian_bookworm",
-            build_cmd: "make bookworm_from_rocky_package",
-            verify_cmd: "make docker-verify-bookworm" },
+          { name: "Rocky Linux 8", id: "rocky8", build_cmd: "make rocky8_from_rocky_package", verify_cmd: "make docker-verify-rocky8" },
+          { name: "Rocky Linux 9", id: "rocky9", build_cmd: "make rocky9_from_rocky_package", verify_cmd: "make docker-verify-rocky9" },
+          { name: "Ubuntu 22.04", id: "ubuntu_jammy", build_cmd: "make jammy_from_rocky_package", verify_cmd: "make docker-verify-jammy" },
+          { name: "Ubuntu 24.04", id: "ubuntu_noble", build_cmd: "make noble_from_rocky_package", verify_cmd: "make docker-verify-noble" },
+          { name: "Debian 11", id: "debian_bullseye", build_cmd: "make bullseye_from_rocky_package", verify_cmd: "make docker-verify-bullseye" },
+          { name: "Debian 12", id: "debian_bookworm", build_cmd: "make bookworm_from_rocky_package", verify_cmd: "make docker-verify-bookworm" },
         ]
 
     steps:
       - id: checkout
         uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
-          name: minifi-aarch64-tar
+          name: minifi-${{ matrix.arch }}-tar
           path: build
+
       - id: install_deps
         run: |
           sudo apt update
           sudo apt install -y python3-virtualenv
-      - run: cd build && cmake ${DOCKER_CMAKE_FLAGS} .. \
-          && ${{ matrix.platform.build_cmd }} && ${{ matrix.platform.verify_cmd }}
+
+      - run: |
+          cd build && cmake ${DOCKER_CMAKE_FLAGS} ..
+          VERIFY_CMD="${{ matrix.platform.verify_cmd }}"
+          if [[ "${{ inputs.enable_fips }}" == "true" ]]; then
+            VERIFY_CMD="${VERIFY_CMD}-fips"
+          fi
+          ${{ matrix.platform.build_cmd }} && $VERIFY_CMD
+
       - name: Test Reporter
         if: always()
         uses: phoenix-actions/test-reporting@v15
         with:
-          name: "${{ matrix.platform.name }}"
+          name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
           path: build/behavex_output/behave/*.xml
           reporter: java-junit
           output-to: 'step-summary'
           list-tests: 'failed'
           list-suites: 'failed'
+
       - name: Upload artifact
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform.id }}_aarch64_behavex_output
+          name: ${{ matrix.platform.id }}_${{ matrix.arch }}_behavex_output${{ inputs.enable_fips && '_fips' || '' }}
           path: build/behavex_output
