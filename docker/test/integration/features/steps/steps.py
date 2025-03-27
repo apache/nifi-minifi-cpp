@@ -1331,7 +1331,7 @@ def step_impl(context):
 
 
 # Python
-@given("python is installed on the MiNiFi agent {install_mode}")
+@given("python with langchain is installed on the MiNiFi agent {install_mode}")
 def step_impl(context, install_mode):
     if install_mode == "with required python packages":
         context.test.use_nifi_python_processors_with_system_python_packages_installed_in_minifi()
@@ -1343,6 +1343,11 @@ def step_impl(context, install_mode):
         context.test.remove_python_requirements_txt_in_minifi()
     else:
         raise Exception("Unknown python install mode.")
+
+
+@given("python virtualenv is installed on the MiNiFi agent")
+def step_impl(context):
+    context.test.use_nifi_python_processors_without_dependencies_in_minifi()
 
 
 @given("the example MiNiFi python processors are present")

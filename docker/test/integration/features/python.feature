@@ -76,7 +76,7 @@ Feature: MiNiFi can use python processors in its flows
     And the "Chunk Overlap" property of the ChunkDocument processor is set to "3"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
-    And python is installed on the MiNiFi agent <python_install_mode>
+    And python with langchain is installed on the MiNiFi agent <python_install_mode>
 
     And the "success" relationship of the GetFile processor is connected to the ParseDocument
     And the "success" relationship of the ParseDocument processor is connected to the ChunkDocument
@@ -101,7 +101,7 @@ Feature: MiNiFi can use python processors in its flows
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "space" relationship of the CreateFlowFile processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
     When the MiNiFi instance starts up
     Then a flowfile with the content "Hello World!" is placed in the monitored directory in less than 10 seconds
     And the Minifi logs contain the following message: "key:filename value:" in less than 60 seconds
@@ -116,7 +116,7 @@ Feature: MiNiFi can use python processors in its flows
     And a file with filename "test_file4.log" and content "test_data_four" is present in "/tmp/input"
     And a RotatingForwarder processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
 
     And the "success" relationship of the GetFile processor is connected to the RotatingForwarder
     And the "first" relationship of the RotatingForwarder processor is connected to the PutFile
@@ -133,7 +133,7 @@ Feature: MiNiFi can use python processors in its flows
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a SpecialPropertyTypeChecker processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
     And a SSL context service is set up for the following processor: "SpecialPropertyTypeChecker"
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the SpecialPropertyTypeChecker
@@ -148,7 +148,7 @@ Feature: MiNiFi can use python processors in its flows
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a ProcessContextInterfaceChecker processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the ProcessContextInterfaceChecker
     And the "myrelationship" relationship of the ProcessContextInterfaceChecker processor is connected to the PutFile
@@ -164,7 +164,7 @@ Feature: MiNiFi can use python processors in its flows
     And the "error.message" property of the UpdateAttribute processor is set to "Old error"
     And a FailureWithAttributes processor
     And a LogAttribute processor
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the FailureWithAttributes
@@ -180,7 +180,7 @@ Feature: MiNiFi can use python processors in its flows
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a RelativeImporterProcessor processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the RelativeImporterProcessor
     And the "success" relationship of the RelativeImporterProcessor processor is connected to the PutFile
@@ -194,7 +194,7 @@ Feature: MiNiFi can use python processors in its flows
     Given a CreateNothing processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the CreateNothing processor is connected to the PutFile
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
     When the MiNiFi instance starts up
     Then no files are placed in the monitored directory in 10 seconds of running time
     And the Minifi logs do not contain the following message: "Caught Exception during SchedulingAgent::onTrigger of processor CreateNothing" after 1 seconds
@@ -203,7 +203,7 @@ Feature: MiNiFi can use python processors in its flows
   Scenario: NiFi native python processor cannot specify content of failure result
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a FailureWithContent processor
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the FailureWithContent
 
@@ -215,7 +215,7 @@ Feature: MiNiFi can use python processors in its flows
   Scenario: NiFi native python processor cannot transfer to original relationship
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a TransferToOriginal processor
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the TransferToOriginal
 
@@ -234,7 +234,7 @@ Feature: MiNiFi can use python processors in its flows
     And a JsonRecordSetWriter controller service is set up with "Array" output grouping
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "Log Payload" property of the LogAttribute processor is set to "true"
-    And python is installed on the MiNiFi agent with a pre-created virtualenv
+    And python virtualenv is installed on the MiNiFi agent
 
     And the "success" relationship of the GetFile processor is connected to the SetRecordField
     And the "success" relationship of the SetRecordField processor is connected to the LogAttribute
@@ -246,3 +246,13 @@ Feature: MiNiFi can use python processors in its flows
     And the Minifi logs contain the following message: '[{"name":"Zoe"}]' in less than 5 seconds
     And the Minifi logs contain the following message: '[{"group":"group1","name":"Steve"}]' in less than 5 seconds
     And the Minifi logs contain the following message: '[{}]' in less than 5 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: MiNiFi C++ can use state manager commands in native NiFi python processors
+    Given a TestStateManager processor
+    And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
+    And the "success" relationship of the TestStateManager processor is connected to the LogAttribute
+    And python virtualenv is installed on the MiNiFi agent
+    When the MiNiFi instance starts up
+    Then the Minifi logs contain the following message: "key:state_key value:1" in less than 60 seconds
+    And the Minifi logs contain the following message: "key:state_key value:2" in less than 60 seconds

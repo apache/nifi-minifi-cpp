@@ -392,6 +392,9 @@ class MiNiFi_integration_test:
     def remove_python_requirements_txt_in_minifi(self):
         self.cluster.remove_python_requirements_txt_in_minifi()
 
+    def use_nifi_python_processors_without_dependencies_in_minifi(self):
+        self.cluster.use_nifi_python_processors_without_dependencies_in_minifi()
+
     def set_yaml_in_minifi(self):
         self.cluster.set_yaml_in_minifi()
 
