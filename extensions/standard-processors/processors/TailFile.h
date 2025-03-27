@@ -104,8 +104,9 @@ enum class Mode {
 
 class TailFile : public core::ProcessorImpl {
  public:
-  explicit TailFile(std::string_view name, const utils::Identifier& uuid = {})
+  explicit TailFile(const std::string_view name, const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<TailFile>::getLogger(uuid_);
   }
 
   ~TailFile() override = default;
@@ -283,7 +284,6 @@ class TailFile : public core::ProcessorImpl {
   controllers::AttributeProviderService* attribute_provider_service_ = nullptr;
   std::unordered_map<std::string, controllers::AttributeProviderService::AttributeMap> extra_attributes_;
   std::optional<uint32_t> batch_size_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors
