@@ -523,7 +523,8 @@ std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::strin
 }
 
 std::string HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(std::string field_body) {
-  std::erase_if(field_body, [](const char ch) { return ch >= 33 && ch <= 126; });
+  // removing invalid/control characters, to avoid making a mess in the text-based protocol
+  std::erase_if(field_body, [](const char ch) { return ch < 32; });
   return field_body;
 }
 
