@@ -124,7 +124,7 @@ void PutFile::putFile(core::ProcessSession& session,
 
   bool success = false;
 
-  utils::FileWriterCallback file_writer_callback(dest_file);
+  utils::FileWriterCallback file_writer_callback(dest_file, logger_.get());
   auto read_result = session.read(flow_file, std::ref(file_writer_callback));
   if (io::isError(read_result)) {
     logger_->log_error("Failed to write to {}", dest_file);

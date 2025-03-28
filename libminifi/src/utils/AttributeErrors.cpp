@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,28 +15,17 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "utils/AttributeErrors.h"
 
-#include <memory>
-#include <filesystem>
-#include "io/StreamPipe.h"
-#include "utils/expected.h"
-#include "core/logging/LoggerFactory.h"
+namespace org::apache::nifi::minifi::core {
 
-namespace org::apache::nifi::minifi::utils {
-
-class FileWriterCallback {
- public:
-  explicit FileWriterCallback(std::filesystem::path dest_path, core::logging::Logger* logger = nullptr);
-  ~FileWriterCallback();
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
-  bool commit();
-
-
- private:
-  bool write_succeeded_ = false;
-  std::filesystem::path temp_path_;
-  std::filesystem::path dest_path_;
-  core::logging::Logger* logger_;
+const AttributeErrorCategory& attribute_error_category() noexcept {
+  static AttributeErrorCategory category;
+  return category;
 };
-}  // namespace org::apache::nifi::minifi::utils
+
+std::error_code make_error_code(AttributeErrorCode c) {
+  return {static_cast<int>(c), attribute_error_category()};
+}
+
+}  // namespace org::apache::nifi::minifi::core

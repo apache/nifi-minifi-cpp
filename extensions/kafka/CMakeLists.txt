@@ -25,7 +25,7 @@ include(Fetchlibrdkafka)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-file(GLOB SOURCES "*.cpp")
+file(GLOB SOURCES "*.cpp" "poc/*.cpp")
 
 add_minifi_library(minifi-rdkafka-extensions SHARED ${SOURCES})
 

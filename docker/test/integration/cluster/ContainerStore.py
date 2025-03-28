@@ -18,7 +18,6 @@ from .containers.MinifiContainer import MinifiOptions
 from .containers.MinifiContainer import MinifiContainer
 from .containers.NifiContainer import NifiContainer
 from .containers.NifiContainer import NiFiOptions
-from .containers.ZookeeperContainer import ZookeeperContainer
 from .containers.KafkaBrokerContainer import KafkaBrokerContainer
 from .containers.S3ServerContainer import S3ServerContainer
 from .containers.AzureStorageServerContainer import AzureStorageServerContainer
@@ -121,15 +120,6 @@ class ContainerStore:
                                                                              image_store=self.image_store,
                                                                              command=command))
         elif engine == 'kafka-broker':
-            zookeeper_name = self.get_container_name_with_postfix('zookeeper')
-            if zookeeper_name not in self.containers:
-                self.containers.setdefault(zookeeper_name,
-                                           ZookeeperContainer(feature_context=feature_context,
-                                                              name=zookeeper_name,
-                                                              vols=self.vols,
-                                                              network=self.network,
-                                                              image_store=self.image_store,
-                                                              command=command))
             return self.containers.setdefault(container_name,
                                               KafkaBrokerContainer(feature_context=feature_context,
                                                                    name=container_name,

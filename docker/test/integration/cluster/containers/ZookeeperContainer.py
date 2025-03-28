@@ -35,6 +35,5 @@ class ZookeeperContainer(Container):
             detach=True,
             name=self.name,
             network=self.network.name,
-            ports={'2181/tcp': 2181},
             entrypoint=self.command)
         logging.info('Added container \'%s\'', self.name)

@@ -1,0 +1,16 @@
+Index: include/fmt/std.h
+<+>UTF-8
+===================================================================
+diff --git a/include/fmt/std.h b/include/fmt/std.h
+--- a/include/fmt/std.h	(revision 123913715afeb8a437e6388b4473fcc4753e1c9a)
++++ b/include/fmt/std.h	(date 1742549286281)
+@@ -444,6 +444,9 @@
+     buf.append(string_view(ec.category().name()));
+     buf.push_back(':');
+     detail::write<char>(appender(buf), ec.value());
++    buf.append(string_view(" ("));
++    buf.append(string_view(ec.message()));
++    buf.push_back(')');
+     return detail::write<char>(ctx.out(), string_view(buf.data(), buf.size()),
+                                specs);
+   }
