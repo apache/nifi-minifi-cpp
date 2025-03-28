@@ -121,9 +121,6 @@ nonstd::expected<void, std::string> FlowController::applyConfiguration(const std
   if (newRoot == nullptr)
     return nonstd::make_unexpected("Could not create root process group");
 
-  if (!isRunning())
-    return nonstd::make_unexpected("FlowController is not running");
-
   logger_->log_info("Starting to reload Flow Controller with flow control name {}, version {}", newRoot->getName(), newRoot->getVersion());
 
   bool started = false;
