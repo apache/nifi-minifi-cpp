@@ -51,10 +51,15 @@ namespace { // NOLINT
     ret_val.second = 0;
     std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
     EVP_MD_CTX *context = EVP_MD_CTX_new();
-    const auto guard = gsl::finally([&context]() {
+    EVP_MD *md5 = EVP_MD_fetch(nullptr, "MD5", "-fips");
+    const auto guard = gsl::finally([&context, &md5]() {
+      EVP_MD_free(md5);
       EVP_MD_CTX_free(context);
     });
-    EVP_DigestInit_ex(context, EVP_md5(), nullptr);
+    if (!md5) {
+      return ret_val;
+    }
+    EVP_DigestInit_ex(context, md5, nullptr);
 
     size_t ret = 0;
     do {

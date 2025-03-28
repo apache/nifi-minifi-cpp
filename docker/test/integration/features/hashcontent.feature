@@ -51,3 +51,15 @@ Feature: Hash value is added to Flowfiles by HashContent processor
     And the "failure" relationship of the HashContent processor is connected to the PutFile
     When the MiNiFi instance starts up
     Then at least one empty flowfile is placed in the monitored directory in less than 10 seconds
+
+  Scenario Outline: HashContent can use MD5 in FIPS mode
+    Given OpenSSL FIPS mode is enabled in MiNiFi
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content apple is present in "/tmp/input"
+    And a HashContent processor with the "Hash Attribute" property set to "hash"
+    And the "Hash Algorithm" property of the HashContent processor is set to "MD5"
+    And a LogAttribute processor
+    And the "success" relationship of the GetFile processor is connected to the HashContent
+    And the "success" relationship of the HashContent processor is connected to the LogAttribute
+    When the MiNiFi instance starts up
+    Then the Minifi logs contain the following message: "key:hash value:1F3870BE274F6C49B3E31A0C6728957F" in less than 60 seconds
