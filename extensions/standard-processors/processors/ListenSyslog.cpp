@@ -15,12 +15,14 @@
  * limitations under the License.
  */
 
-
 #include "ListenSyslog.h"
+
+
+#include "controllers/SSLContextService.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "controllers/SSLContextService.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -47,13 +49,9 @@ void ListenSyslog::initialize() {
 }
 
 void ListenSyslog::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  context.getProperty(ParseMessages, parse_messages_);
+  parse_messages_ = utils::parseBoolProperty(context, ParseMessages);
 
-  std::string protocol_name;
-  context.getProperty(ProtocolProperty, protocol_name);
-  auto protocol = utils::enumCast<utils::net::IpProtocol>(protocol_name);
-
-  if (protocol == utils::net::IpProtocol::TCP) {
+  if (const auto protocol = utils::parseEnumProperty<utils::net::IpProtocol>(context, ProtocolProperty); protocol == utils::net::IpProtocol::TCP) {
     startTcpServer(context, SSLContextService, ClientAuth, true, "\n");
   } else if (protocol == utils::net::IpProtocol::UDP) {
     startUdpServer(context);

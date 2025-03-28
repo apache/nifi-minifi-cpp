@@ -17,6 +17,7 @@
 #include "core/ProcessorMetrics.h"
 
 #include "core/Processor.h"
+#include "core/state/Value.h"
 #include "utils/gsl.h"
 #include "range/v3/numeric/accumulate.hpp"
 

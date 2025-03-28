@@ -32,10 +32,8 @@ TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
 
   auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine, "");
-  plan->setProperty(executeScript, ExecuteScript::ScriptFile, "/path/to/script");
-
-  REQUIRE_THROWS_WITH(testController.runSession(plan, true), "Process Schedule Operation: Missing or invalid script engine name");
+  CHECK_FALSE(plan->setProperty(executeScript, ExecuteScript::ScriptEngine, ""));
+  CHECK(plan->setProperty(executeScript, ExecuteScript::ScriptFile, "/path/to/script"));
 }
 
 TEST_CASE("Script engine is not available", "[executescriptMisconfiguration]") {

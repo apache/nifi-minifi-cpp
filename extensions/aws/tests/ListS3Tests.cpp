@@ -64,12 +64,12 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test required property not set", "[awsS3Er
     setAccesKeyCredentialsInProcessor();
   }
 
-  SECTION("Test region is empty") {
-    setRequiredProperties();
-    plan->setProperty(s3_processor, "Region", "");
-  }
-
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(ListS3TestsFixture, "Non blank validator tests") {
+  setRequiredProperties();
+  CHECK_FALSE(plan->setProperty(s3_processor, "Region", ""));
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test proxy setting", "[awsS3Proxy]") {

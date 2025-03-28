@@ -15,19 +15,22 @@
  * limitations under the License.
  */
 #include "MergeContent.h"
-#include <cstdio>
-#include <memory>
-#include <string>
-#include <map>
-#include <deque>
-#include <utility>
+
 #include <algorithm>
+#include <cstdio>
+#include <deque>
+#include <map>
+#include <memory>
 #include <numeric>
+#include <string>
+#include <utility>
+
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "serialization/PayloadSerializer.h"
 #include "serialization/FlowFileV3Serializer.h"
+#include "serialization/PayloadSerializer.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -52,15 +55,15 @@ std::string MergeContent::readContent(const std::string& path) {
 void MergeContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   BinFiles::onSchedule(context, session_factory);
 
-  context.getProperty(MergeStrategy, mergeStrategy_);
-  context.getProperty(MergeFormat, mergeFormat_);
-  context.getProperty(CorrelationAttributeName, correlationAttributeName_);
-  context.getProperty(DelimiterStrategy, delimiterStrategy_);
-  context.getProperty(Header, header_);
-  context.getProperty(Footer, footer_);
-  context.getProperty(Demarcator, demarcator_);
-  context.getProperty(KeepPath, keepPath_);
-  context.getProperty(AttributeStrategy, attributeStrategy_);
+  mergeStrategy_ = context.getProperty(MergeStrategy).value_or("");
+  mergeFormat_ = context.getProperty(MergeFormat).value_or("");
+  correlationAttributeName_ = context.getProperty(CorrelationAttributeName).value_or("");
+  delimiterStrategy_ = context.getProperty(DelimiterStrategy).value_or("");
+  header_ = context.getProperty(Header).value_or("");
+  footer_ = context.getProperty(Footer).value_or("");
+  demarcator_ = context.getProperty(Demarcator).value_or("");
+  keepPath_ = utils::parseBoolProperty(context, KeepPath);
+  attributeStrategy_ = context.getProperty(AttributeStrategy).value_or("");
 
   validatePropertyOptions();
 

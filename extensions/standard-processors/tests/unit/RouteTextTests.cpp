@@ -130,7 +130,7 @@ struct RouteTextController : public TestController {
 };
 
 TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Matching Strategies") {
-  proc_->setProperty(processors::RouteText::RoutingStrategy, "Dynamic Routing");
+  proc_->setProperty(processors::RouteText::RoutingStrategy.name, "Dynamic Routing");
 
   std::map<std::string, FlowFilePatternVec> expected{
       {"here", {}},
@@ -139,85 +139,85 @@ TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Matching Stra
   };
 
   SECTION("Starts With") {
-    proc_->setProperty(processors::RouteText::MatchingStrategy, "Starts With");
+    proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Starts With");
     proc_->setDynamicProperty("here", "se");
     SECTION("Case sensitive") {
       expected["here"] = {"seven"};
       expected["unmatched"] = {"Seven", "even"};
     }
     SECTION("Case insensitive") {
-      proc_->setProperty(processors::RouteText::IgnoreCase, "true");
+      proc_->setProperty(processors::RouteText::IgnoreCase.name, "true");
       expected["here"] = {"seven", "Seven"};
       expected["unmatched"] = {"even"};
     }
   }
   SECTION("Ends With") {
-    proc_->setProperty(processors::RouteText::MatchingStrategy, "Ends With");
+    proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Ends With");
     proc_->setDynamicProperty("here", "ven");
     SECTION("Case sensitive") {
       expected["here"] = {"seven"};
       expected["unmatched"] = {"SeveN", "seten"};
     }
     SECTION("Case insensitive") {
-      proc_->setProperty(processors::RouteText::IgnoreCase, "true");
+      proc_->setProperty(processors::RouteText::IgnoreCase.name, "true");
       expected["here"] = {"seven", "SeveN"};
       expected["unmatched"] = {"seten"};
     }
   }
   SECTION("Contains") {
-    proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
+    proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Contains");
     proc_->setDynamicProperty("here", "eve");
     SECTION("Case sensitive") {
       expected["here"] = {"seven"};
       expected["unmatched"] = {"SeVeN", "seren"};
     }
     SECTION("Case insensitive") {
-      proc_->setProperty(processors::RouteText::IgnoreCase, "true");
+      proc_->setProperty(processors::RouteText::IgnoreCase.name, "true");
       expected["here"] = {"seven", "SeVeN"};
       expected["unmatched"] = {"seren"};
     }
   }
   SECTION("Equals") {
-    proc_->setProperty(processors::RouteText::MatchingStrategy, "Equals");
+    proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Equals");
     proc_->setDynamicProperty("here", "seven");
     SECTION("Case sensitive") {
       expected["here"] = {"seven"};
       expected["unmatched"] = {"Seven", "seven1"};
     }
     SECTION("Case insensitive") {
-      proc_->setProperty(processors::RouteText::IgnoreCase, "true");
+      proc_->setProperty(processors::RouteText::IgnoreCase.name, "true");
       expected["here"] = {"seven", "Seven"};
       expected["unmatched"] = {"seven1"};
     }
   }
   SECTION("Matches Regex") {
-    proc_->setProperty(processors::RouteText::MatchingStrategy, "Matches Regex");
+    proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Matches Regex");
     proc_->setDynamicProperty("here", "se.en");
     SECTION("Case sensitive") {
       expected["here"] = {"seven"};
       expected["unmatched"] = {"Seven", "sevena"};
     }
     SECTION("Case insensitive") {
-      proc_->setProperty(processors::RouteText::IgnoreCase, "true");
+      proc_->setProperty(processors::RouteText::IgnoreCase.name, "true");
       expected["here"] = {"seven", "Seven"};
       expected["unmatched"] = {"sevena"};
     }
   }
   SECTION("Contains Regex") {
-    proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains Regex");
+    proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Contains Regex");
     proc_->setDynamicProperty("here", ".ve");
     SECTION("Case sensitive") {
       expected["here"] = {"seven"};
       expected["unmatched"] = {"SeVeN", "ven"};
     }
     SECTION("Case insensitive") {
-      proc_->setProperty(processors::RouteText::IgnoreCase, "true");
+      proc_->setProperty(processors::RouteText::IgnoreCase.name, "true");
       expected["here"] = {"seven", "SeVeN"};
       expected["unmatched"] = {"ven"};
     }
   }
   SECTION("Satisfies Expression") {
-    proc_->setProperty(processors::RouteText::MatchingStrategy, "Satisfies Expression");
+    proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Satisfies Expression");
     proc_->setDynamicProperty("here", "${segment:equals('seven')}");
     // case sensitivity does not matter here
     SECTION("Case sensitive") {
@@ -225,7 +225,7 @@ TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Matching Stra
       expected["unmatched"] = {"SeVeN", "ven"};
     }
     SECTION("Case insensitive matching does not apply in Satisfy Expression mode") {
-      proc_->setProperty(processors::RouteText::IgnoreCase, "true");
+      proc_->setProperty(processors::RouteText::IgnoreCase.name, "true");
       expected["here"] = {"seven"};
       expected["unmatched"] = {"SeVeN", "ven"};
     }
@@ -245,7 +245,7 @@ TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Matching Stra
 }
 
 TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Routing Strategies") {
-  proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
+  proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Contains");
   proc_->setDynamicProperty("one", "apple");
   proc_->setDynamicProperty("two", "banana");
 
@@ -260,20 +260,20 @@ TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Routing Strat
   };
 
   SECTION("Dynamic Routing") {
-    proc_->setProperty(processors::RouteText::RoutingStrategy, "Dynamic Routing");
+    proc_->setProperty(processors::RouteText::RoutingStrategy.name, "Dynamic Routing");
 
     expected["one"] = {"apple"};
     expected["two"] = {"banana"};
     expected["unmatched"] = {"other"};
   }
   SECTION("Route On All") {
-    proc_->setProperty(processors::RouteText::RoutingStrategy, "Route On All");
+    proc_->setProperty(processors::RouteText::RoutingStrategy.name, "Route On All");
 
     expected["matched"] = {"apple-banana"};
     expected["unmatched"] = {"apple", "none"};
   }
   SECTION("Route On Any") {
-    proc_->setProperty(processors::RouteText::RoutingStrategy, "Route On Any");
+    proc_->setProperty(processors::RouteText::RoutingStrategy.name, "Route On Any");
 
     expected["matched"] = {"apple", "banana", "apple-banana"};
     expected["unmatched"] = {"none"};
@@ -291,8 +291,8 @@ TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Routing Strat
 }
 
 TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation") {
-  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
-  proc_->setProperty(processors::RouteText::MatchingStrategy, "Equals");
+  proc_->setProperty(processors::RouteText::SegmentationStrategy.name, "Per Line");
+  proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Equals");
   proc_->setDynamicProperty("A", "A");
   proc_->setDynamicProperty("B", "B");
 
@@ -312,14 +312,14 @@ TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation") {
 
 
   SECTION("Without trim") {
-    proc_->setProperty(processors::RouteText::TrimWhitespace, "false");
+    proc_->setProperty(processors::RouteText::TrimWhitespace.name, "false");
     expected["A"] = {"A\n"};
     expected["B"] = {"B\r\n"};
     expected["unmatched"] = {" A \r\n\r\rA"};
   }
 
   SECTION("With trim") {
-    proc_->setProperty(processors::RouteText::TrimWhitespace, "true");
+    proc_->setProperty(processors::RouteText::TrimWhitespace.name, "true");
     expected["A"] = {"A\n A \r\n\r\rA"};
     expected["B"] = {"B\r\n"};
   }
@@ -330,9 +330,9 @@ TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation") {
 }
 
 TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation ignores trailing empty line") {
-  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
-  proc_->setProperty(processors::RouteText::RoutingStrategy, "Route On All");
-  proc_->setProperty(processors::RouteText::MatchingStrategy, "Equals");
+  proc_->setProperty(processors::RouteText::SegmentationStrategy.name, "Per Line");
+  proc_->setProperty(processors::RouteText::RoutingStrategy.name, "Route On All");
+  proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Equals");
   proc_->setDynamicProperty("A", "A");
 
   std::string content;
@@ -358,11 +358,11 @@ TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation ignores
 }
 
 TEST_CASE_METHOD(RouteTextController, "RouteText can group segments") {
-  proc_->setProperty(processors::RouteText::RoutingStrategy, "Dynamic Routing");
-  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
-  proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
-  proc_->setProperty(processors::RouteText::GroupingRegex, "group(.).*");
-  proc_->setProperty(processors::RouteText::GroupingFallbackValue, "GROUPING_FAILURE :(");
+  proc_->setProperty(processors::RouteText::RoutingStrategy.name, "Dynamic Routing");
+  proc_->setProperty(processors::RouteText::SegmentationStrategy.name, "Per Line");
+  proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Contains");
+  proc_->setProperty(processors::RouteText::GroupingRegex.name, "group(.).*");
+  proc_->setProperty(processors::RouteText::GroupingFallbackValue.name, "GROUPING_FAILURE :(");
 
   proc_->setDynamicProperty("A", "toA");
   proc_->setDynamicProperty("B", "toB");
@@ -399,10 +399,10 @@ TEST_CASE_METHOD(RouteTextController, "RouteText can group segments") {
 }
 
 TEST_CASE_METHOD(RouteTextController, "RouteText grouping uses empty strings for unused capture groups") {
-  proc_->setProperty(processors::RouteText::RoutingStrategy, "Dynamic Routing");
-  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
-  proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
-  proc_->setProperty(processors::RouteText::GroupingRegex, "group(.)(\\..)?.*");
+  proc_->setProperty(processors::RouteText::RoutingStrategy.name, "Dynamic Routing");
+  proc_->setProperty(processors::RouteText::SegmentationStrategy.name, "Per Line");
+  proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Contains");
+  proc_->setProperty(processors::RouteText::GroupingRegex.name, "group(.)(\\..)?.*");
 
   proc_->setDynamicProperty("A", "toA");
 
@@ -430,8 +430,8 @@ TEST_CASE_METHOD(RouteTextController, "RouteText grouping uses empty strings for
 }
 
 TEST_CASE_METHOD(RouteTextController, "RouteText can match on Full Text") {
-  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Full Text");
-  proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
+  proc_->setProperty(processors::RouteText::SegmentationStrategy.name, "Full Text");
+  proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Contains");
 
   proc_->setDynamicProperty("A", "toA");
 
@@ -454,8 +454,8 @@ TEST_CASE_METHOD(RouteTextController, "RouteText can match on Full Text") {
 }
 
 TEST_CASE_METHOD(RouteTextController, "Expressions have access to injected variables") {
-  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
-  proc_->setProperty(processors::RouteText::MatchingStrategy, "Satisfies Expression");
+  proc_->setProperty(processors::RouteText::SegmentationStrategy.name, "Per Line");
+  proc_->setProperty(processors::RouteText::MatchingStrategy.name, "Satisfies Expression");
 
   SECTION("Segment") {
     proc_->setDynamicProperty("A1", "${segment:startsWith('toA'):and(${segmentNo:equals('1')})}");

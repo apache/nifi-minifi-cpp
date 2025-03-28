@@ -30,16 +30,14 @@
 namespace org::apache::nifi::minifi::expression {
 
 struct Parameters {
-  const core::FlowFile* const flow_file;
-  std::weak_ptr<core::VariableRegistry> registry_;
-  explicit Parameters(const std::shared_ptr<core::VariableRegistry>& reg, const core::FlowFile* const ff = nullptr)
+  const core::FlowFile* const flow_file = nullptr;
+  const core::VariableRegistry* const registry_ = nullptr;
+  explicit Parameters(const core::VariableRegistry* const reg, const core::FlowFile* const ff = nullptr)
       : flow_file(ff),
       registry_(reg) {
   }
 
-  explicit Parameters(const core::FlowFile* const ff = nullptr)
-      : flow_file(ff) {
-  }
+  explicit Parameters(const core::FlowFile *const ff = nullptr) : flow_file(ff) {}
 };
 
 class Expression;

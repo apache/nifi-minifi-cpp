@@ -17,9 +17,9 @@
 
 #include "FetchSFTP.h"
 
-#include <memory>
 #include <algorithm>
 #include <cstdint>
+#include <memory>
 #include <utility>
 
 #include "core/FlowFile.h"
@@ -29,6 +29,7 @@
 #include "io/BufferStream.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -49,23 +50,10 @@ FetchSFTP::~FetchSFTP() = default;
 void FetchSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   parseCommonPropertiesOnSchedule(context);
 
-  std::string value;
-  context.getProperty(CompletionStrategy, completion_strategy_);
-  if (!context.getProperty(CreateDirectory, value)) {
-    logger_->log_error("Create Directory attribute is missing or invalid");
-  } else {
-    create_directory_ = utils::string::toBool(value).value_or(false);
-  }
-  if (!context.getProperty(DisableDirectoryListing, value)) {
-    logger_->log_error("Disable Directory Listing attribute is missing or invalid");
-  } else {
-    disable_directory_listing_ = utils::string::toBool(value).value_or(false);
-  }
-  if (!context.getProperty(UseCompression, value)) {
-    logger_->log_error("Use Compression attribute is missing or invalid");
-  } else {
-    use_compression_ = utils::string::toBool(value).value_or(false);
-  }
+  completion_strategy_ = utils::parseProperty(context, CompletionStrategy);
+  create_directory_ = utils::parseBoolProperty(context, CreateDirectory);
+  disable_directory_listing_ = utils::parseBoolProperty(context, DisableDirectoryListing);
+  use_compression_ =  utils::parseBoolProperty(context, UseCompression);
 
   startKeepaliveThreadIfNeeded();
 }

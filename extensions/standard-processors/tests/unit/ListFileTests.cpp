@@ -98,8 +98,8 @@ ListFileTestFixture::ListFileTestFixture()
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Input Directory is empty", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::InputDirectory, "");
-  REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
+  CHECK(list_file_processor_->clearProperty(minifi::processors::ListFile::InputDirectory.name));
+  REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), std::runtime_error);
 }
 
 std::string get_last_modified_time_formatted_string(const std::filesystem::path& path) {
@@ -231,7 +231,7 @@ TEST_CASE("ListFile sets attributes correctly") {
   minifi::test::SingleProcessorTestController test_controller(std::make_unique<ListFile>("ListFile"));
   const auto list_file = test_controller.getProcessor();
   std::filesystem::path dir = test_controller.createTempDirectory();
-  list_file->setProperty(ListFile::InputDirectory, dir.string());
+  list_file->setProperty(ListFile::InputDirectory.name, dir.string());
   SECTION("File in subdirectory of input directory") {
     std::filesystem::create_directories(dir / "a" / "b");
     minifi::test::utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
@@ -260,7 +260,7 @@ TEST_CASE("If a second file with the same modification time shows up later, then
   const auto list_file = test_controller.getProcessor();
 
   const auto input_dir = test_controller.createTempDirectory();
-  list_file->setProperty(ListFile::InputDirectory, input_dir.string());
+  list_file->setProperty(ListFile::InputDirectory.name, input_dir.string());
 
   const auto common_timestamp = std::chrono::file_clock::now();
 

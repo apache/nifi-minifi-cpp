@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,25 +15,17 @@
  * limitations under the License.
  */
 
-#include "core/ProcessorNode.h"
-#include <memory>
-#include <utility>
+#include "utils/PropertyErrors.h"
+
 namespace org::apache::nifi::minifi::core {
 
-ProcessorNodeImpl::ProcessorNodeImpl(Connectable* processor)
-    : ConnectableImpl(processor->getName()),
-      processor_(processor) {
-  setUUID(processor->getUUID());
-}
+const PropertyErrorCategory& property_error_category() noexcept {
+  static PropertyErrorCategory category;
+  return category;
+};
 
-ProcessorNodeImpl::~ProcessorNodeImpl() = default;
-
-bool ProcessorNodeImpl::isWorkAvailable() {
-  return processor_->isWorkAvailable();
-}
-
-bool ProcessorNodeImpl::isRunning() const {
-  return processor_->isRunning();
+std::error_code make_error_code(PropertyErrorCode c) {
+  return {static_cast<int>(c), property_error_category()};
 }
 
 }  // namespace org::apache::nifi::minifi::core

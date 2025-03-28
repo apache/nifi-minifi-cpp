@@ -28,9 +28,8 @@ bool StandardControllerServiceNode::enable() {
     logger_->log_debug("CSN {} is already enabled", getName());
     return true;
   }
-  Property property("Linked Services", "Referenced Controller Services");
-  if (getProperty(property.getName(), property)) {
-    for (const auto& linked_service : property.getValues()) {
+  if (auto linked_services = getAllPropertyValues("Linked Services")) {
+    for (const auto& linked_service : *linked_services) {
       ControllerServiceNode* csNode = provider->getControllerServiceNode(linked_service, controller_service_->getUUID());
       if (nullptr != csNode) {
         std::lock_guard<std::mutex> lock(mutex_);

@@ -27,7 +27,7 @@
 #include "core/OutputAttributeDefinition.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 
@@ -58,7 +58,7 @@ class ListGCSBucket : public GCSProcessor {
       .build();
   EXTENSIONAPI static constexpr auto ListAllVersions = core::PropertyDefinitionBuilder<>::createProperty("List all versions")
       .withDescription("Set this option to `true` to get all the previous versions separately.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(GCSProcessor::Properties, std::to_array<core::PropertyReference>({

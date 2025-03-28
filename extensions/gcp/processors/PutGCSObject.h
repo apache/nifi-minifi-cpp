@@ -24,7 +24,7 @@
 #include "../GCPAttributes.h"
 #include "GCSProcessor.h"
 #include "core/PropertyDefinition.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
@@ -118,7 +118,7 @@ class PutGCSObject : public GCSProcessor {
       .build();
   EXTENSIONAPI static constexpr auto OverwriteObject = core::PropertyDefinitionBuilder<>::createProperty("Overwrite Object")
       .withDescription("If false, the upload to GCS will succeed only if the object does not exist.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(GCSProcessor::Properties, std::to_array<core::PropertyReference>({

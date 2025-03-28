@@ -97,8 +97,8 @@ TEST_CASE("JsonRecordSetWriter tests") {
       std::make_tuple("Array", "false", array_compressed_str),
       std::make_tuple("Array", "true", array_pretty_str));
   json_record_set_writer.initialize();
-  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::OutputGrouping, output_grouping));
-  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::PrettyPrint, prety_print));
+  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::OutputGrouping.name, output_grouping));
+  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::PrettyPrint.name, prety_print));
   json_record_set_writer.onEnable();
   CHECK(core::test::testRecordWriter(json_record_set_writer, record_set, [expected = output_str](auto serialized_record_set) -> bool {
     return testJsonEquality(expected, serialized_record_set);

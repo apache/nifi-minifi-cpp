@@ -24,8 +24,8 @@ namespace org::apache::nifi::minifi::processors {
 namespace {
 template<typename RecordSetIO>
 std::shared_ptr<RecordSetIO> getRecordSetIO(core::ProcessContext& context, const core::PropertyReference& property, const utils::Identifier& processor_uuid) {
-  std::string service_name;
-  if (context.getProperty(property, service_name) && !IsNullOrEmpty(service_name)) {
+  std::string service_name = context.getProperty(property).value_or("");
+  if (!IsNullOrEmpty(service_name)) {
     auto record_set_io = std::dynamic_pointer_cast<RecordSetIO>(context.getControllerService(service_name, processor_uuid));
     if (!record_set_io)
       return nullptr;
@@ -47,18 +47,11 @@ void SplitRecord::onSchedule(core::ProcessContext& context, core::ProcessSession
 }
 
 nonstd::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file) {
-  std::string value;
-  std::size_t records_per_split = 0;
-  if (context.getProperty(RecordsPerSplit, value, &original_flow_file)) {
-    if (!core::Property::StringToInt(value, records_per_split)) {
-      return nonstd::make_unexpected("Failed to convert Records Per Split property to an integer");
-    } else if (records_per_split < 1) {
-      return nonstd::make_unexpected("Records Per Split should be set to a number larger than 0");
-    }
-  } else {
-    return nonstd::make_unexpected("Records Per Split should be set to a valid number larger than 0");
-  }
-  return records_per_split;
+  return context.getProperty(RecordsPerSplit, &original_flow_file)
+      | utils::andThen([](const auto records_per_split_str) {
+            return parsing::parseIntegralMinMax<std::size_t>(records_per_split_str, 1, std::numeric_limits<std::size_t>::max());
+          })
+      | utils::transformError([](std::error_code) -> std::string { return std::string{"Records Per Split should be set to a number larger than 0"}; });
 }
 
 void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {

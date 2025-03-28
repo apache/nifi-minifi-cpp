@@ -22,7 +22,7 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "ProcessContext.h"
-#include "ProcessorNode.h"
+#include "Processor.h"
 #include "minifi-cpp/core/Repository.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -41,7 +41,7 @@ class ProcessContextBuilder : public virtual core::CoreComponent, public virtual
   virtual std::shared_ptr<ProcessContextBuilder> withFlowFileRepository(const std::shared_ptr<core::Repository> &repo) = 0;
   virtual std::shared_ptr<ProcessContextBuilder> withContentRepository(const std::shared_ptr<core::ContentRepository> &repo) = 0;
   virtual std::shared_ptr<ProcessContextBuilder> withConfiguration(const std::shared_ptr<minifi::Configure> &configuration) = 0;
-  virtual std::shared_ptr<core::ProcessContext> build(const std::shared_ptr<ProcessorNode> &processor) = 0;
+  virtual std::shared_ptr<core::ProcessContext> build(Processor& processor) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

@@ -35,7 +35,6 @@
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "unit/TestUtils.h"
-#include "core/ProcessorNode.h"
 #include "core/repository/FileSystemRepository.h"
 
 using ConnectionImpl = minifi::ConnectionImpl;
@@ -65,15 +64,13 @@ struct TestFlow{
     auto processor = processorGenerator(mainProcUUID());
     {
       processor_ = processor.get();
-      auto node = std::make_shared<core::ProcessorNodeImpl>(processor_);
-      processorContext = std::make_shared<core::ProcessContextImpl>(node, nullptr, prov_repo, ff_repository, content_repo);
+      processorContext = std::make_shared<core::ProcessContextImpl>(*processor_, nullptr, prov_repo, ff_repository, content_repo);
     }
 
     // setup INPUT processor
     {
       inputProcessor = std::make_shared<TestProcessor>("source", inputProcUUID());
-      auto node = std::make_shared<core::ProcessorNodeImpl>(inputProcessor.get());
-      inputContext = std::make_shared<core::ProcessContextImpl>(node, nullptr, prov_repo,
+      inputContext = std::make_shared<core::ProcessContextImpl>(*inputProcessor, nullptr, prov_repo,
                                                             ff_repository, content_repo);
     }
 
@@ -152,14 +149,14 @@ std::unique_ptr<MergeContent> setupMergeProcessor(const utils::Identifier& id) {
   processor->initialize();
   processor->setAutoTerminatedRelationships(std::array{core::Relationship{"original", "d"}});
 
-  processor->setProperty(MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
-  processor->setProperty(MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
-  processor->setProperty(MergeContent::DelimiterStrategy, org::apache::nifi::minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  processor->setProperty(MergeContent::MinEntries, "3");
-  processor->setProperty(MergeContent::Header, "_Header_");
-  processor->setProperty(MergeContent::Footer, "_Footer_");
-  processor->setProperty(MergeContent::Demarcator, "_Demarcator_");
-  processor->setProperty(MergeContent::MaxBinAge, "1 h");
+  processor->setProperty(MergeContent::MergeFormat.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE});
+  processor->setProperty(MergeContent::MergeStrategy.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK});
+  processor->setProperty(MergeContent::DelimiterStrategy.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT});
+  processor->setProperty(MergeContent::MinEntries.name, "3");
+  processor->setProperty(MergeContent::Header.name, "_Header_");
+  processor->setProperty(MergeContent::Footer.name, "_Footer_");
+  processor->setProperty(MergeContent::Demarcator.name, "_Demarcator_");
+  processor->setProperty(MergeContent::MaxBinAge.name, "1 h");
 
   return processor;
 }

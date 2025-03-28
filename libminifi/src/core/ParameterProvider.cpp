@@ -22,7 +22,7 @@ namespace org::apache::nifi::minifi::core {
 ParameterProviderConfig ParameterProvider::readParameterProviderConfig() const {
   ParameterProviderConfig config;
 
-  auto sensitive_parameter_scope_str = getProperty(SensitiveParameterScope);
+  auto sensitive_parameter_scope_str = getProperty(SensitiveParameterScope.name);
   if (!sensitive_parameter_scope_str) {
     throw ParameterException("Sensitive Parameter Scope is required");
   }
@@ -33,7 +33,7 @@ ParameterProviderConfig ParameterProvider::readParameterProviderConfig() const {
   config.sensitive_parameter_scope = sensitive_parameter_scope.value();
 
   if (config.sensitive_parameter_scope == SensitiveParameterScopeOptions::selected) {
-    if (auto sensitive_parameter_list = getProperty(SensitiveParameterList)) {
+    if (auto sensitive_parameter_list = getProperty(SensitiveParameterList.name)) {
       for (const auto& sensitive_parameter : minifi::utils::string::splitAndTrimRemovingEmpty(*sensitive_parameter_list, ",")) {
         config.sensitive_parameters.insert(sensitive_parameter);
       }
