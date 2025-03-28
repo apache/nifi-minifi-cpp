@@ -348,11 +348,23 @@ TEST_CASE("Test Keepalive", "[InvokeHTTP]") {
   CHECK(1 == connection_counting_server.getConnectionCounter());
 }
 
-TEST_CASE("InvokeHTTP: invalid characters are removed from headers", "[InvokeHTTP][http][attribute][header][sanitize]") {
+TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers", "[InvokeHTTP][http][attribute][header][sanitize]") {
   using processors::InvokeHTTP;
   constexpr std::string_view test_content = "flow file content";
-  constexpr std::string_view test_attr_value_in = "400 Bad Request\r\n";
-  constexpr std::string_view test_attr_value_out = "400 Bad Request";
+  std::string_view test_attr_value_in;
+  std::string_view test_attr_value_out;
+  SECTION("HTTP status message: CR and LF removed") {
+    test_attr_value_in = "400 Bad Request\r\n";
+    test_attr_value_out = "400 Bad Request";
+  };
+  SECTION("UTF-8 case 1: accented characters are kept") {
+    test_attr_value_in = "árvíztűrő tükörfúrógép";
+    test_attr_value_out = test_attr_value_in;
+  };
+  SECTION("UTF-8 case 2: chinese characters are kept") {
+    test_attr_value_in = "你知道吗？最近我开始注重健康饮了";
+    test_attr_value_out = test_attr_value_in;
+  };
 
   SingleProcessorTestController controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   const TestHTTPServer http_server(controller);
