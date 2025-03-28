@@ -49,6 +49,7 @@ class TestHTTPServer {
     log_attribute_ = dynamic_cast<processors::LogAttribute*>(test_plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true));
     REQUIRE(listen_http_);
     REQUIRE(log_attribute_);
+    log_attribute_->setProperty(processors::LogAttribute::LogPayload, "true");
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "testytesttest");
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::Port, "8681");
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::HeadersAsAttributesRegex, ".*");
@@ -345,6 +346,42 @@ TEST_CASE("Test Keepalive", "[InvokeHTTP]") {
   }
 
   CHECK(1 == connection_counting_server.getConnectionCounter());
+}
+
+TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers", "[InvokeHTTP][http][attribute][header][sanitize]") {
+  using processors::InvokeHTTP;
+  constexpr std::string_view test_content = "flow file content";
+  std::string_view test_attr_value_in;
+  std::string_view test_attr_value_out;
+  SECTION("HTTP status message: CR and LF removed") {
+    test_attr_value_in = "400 Bad Request\r\n";
+    test_attr_value_out = "400 Bad Request";
+  };
+  SECTION("UTF-8 case 1: accented characters are kept") {
+    test_attr_value_in = "árvíztűrő tükörfúrógép";
+    test_attr_value_out = test_attr_value_in;
+  };
+  SECTION("UTF-8 case 2: chinese characters are kept") {
+    test_attr_value_in = "你知道吗？最近我开始注重健康饮了";
+    test_attr_value_out = test_attr_value_in;
+  };
+
+  SingleProcessorTestController controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  const TestHTTPServer http_server(controller);
+  auto* const invoke_http = controller.getProcessor<InvokeHTTP>();
+  invoke_http->setProperty(InvokeHTTP::Method, "POST");
+  invoke_http->setProperty(InvokeHTTP::URL, http_server.URL);
+  invoke_http->setProperty(InvokeHTTP::AttributesToSend, ".*");
+  const auto result = controller.trigger(InputFlowFileData{.content = test_content, .attributes = {
+    {std::string{InvokeHTTP::STATUS_MESSAGE}, std::string{test_attr_value_in}},
+  }});
+  CHECK(result.at(InvokeHTTP::RelFailure).empty());
+  CHECK(result.at(InvokeHTTP::RelNoRetry).empty());
+  CHECK(result.at(InvokeHTTP::RelRetry).empty());
+  CHECK(!result.at(InvokeHTTP::Success).empty());
+  CHECK(!result.at(InvokeHTTP::RelResponse).empty());
+  CHECK(utils::verifyLogLinePresenceInPollTime(1s, fmt::format("key:{} value:{}", InvokeHTTP::STATUS_MESSAGE, test_attr_value_out)));
+  CHECK(utils::verifyLogLinePresenceInPollTime(1s, fmt::format("Payload:\n{}\n----", test_content)));
 }
 
 }  // namespace org::apache::nifi::minifi::test

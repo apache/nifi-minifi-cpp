@@ -522,6 +522,12 @@ std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::strin
   return field_name;
 }
 
+std::string HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(std::string field_body) {
+  // removing invalid/control characters, to avoid making a mess in the text-based protocol
+  std::erase_if(field_body, [](const char ch) { return static_cast<unsigned char>(ch) < 32; });
+  return field_body;
+}
+
 void HTTPClient::CurlEasyCleanup::operator()(CURL* curl) const {
   curl_easy_cleanup(curl);
 }

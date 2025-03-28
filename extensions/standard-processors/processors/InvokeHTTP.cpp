@@ -208,16 +208,16 @@ bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable
   switch (invalid_http_header_field_handling_strategy_) {
     case invoke_http::InvalidHTTPHeaderFieldHandlingOption::fail:
       if (ranges::any_of(matching_attributes, std::not_fn(&http::HTTPClient::isValidHttpHeaderField), key_fn)) return false;
-      for (const auto& header: matching_attributes) append_header(header.first, header.second);
+      for (const auto& header: matching_attributes) append_header(header.first, http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
       return true;
     case invoke_http::InvalidHTTPHeaderFieldHandlingOption::drop:
       for (const auto& header: matching_attributes | ranges::views::filter(&http::HTTPClient::isValidHttpHeaderField, key_fn)) {
-        append_header(header.first, header.second);
+        append_header(header.first, http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
       }
       return true;
     case invoke_http::InvalidHTTPHeaderFieldHandlingOption::transform:
       for (const auto& header: matching_attributes) {
-        append_header(http::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(header.first), header.second);
+        append_header(http::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(header.first), http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
       }
       return true;
   }
@@ -312,7 +312,7 @@ void InvokeHTTP::onTriggerWithClient(core::ProcessContext& context, core::Proces
     int64_t http_code = client.getResponseCode();
     const char* content_type = client.getContentType();
     flow_file->addAttribute(STATUS_CODE, std::to_string(http_code));
-    if (!response_headers.empty()) { flow_file->addAttribute(STATUS_MESSAGE, response_headers.at(0)); }
+    if (!response_headers.empty()) { flow_file->addAttribute(STATUS_MESSAGE, utils::string::trim(response_headers.at(0))); }
     flow_file->addAttribute(REQUEST_URL, client.getURL());
     flow_file->addAttribute(TRANSACTION_ID, transaction_id);
 
@@ -329,7 +329,7 @@ void InvokeHTTP::onTriggerWithClient(core::ProcessContext& context, core::Proces
         // as per RFC 2046 -- 4.5.1
         response_flow->addAttribute(core::SpecialFlowAttribute::MIME_TYPE, content_type ? std::string(content_type) : DefaultContentType);
         response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
-        if (!response_headers.empty()) { response_flow->addAttribute(STATUS_MESSAGE, response_headers.at(0)); }
+        if (!response_headers.empty()) { response_flow->addAttribute(STATUS_MESSAGE, utils::string::trim(response_headers.at(0))); }
         response_flow->addAttribute(REQUEST_URL, client.getURL());
         response_flow->addAttribute(TRANSACTION_ID, transaction_id);
         io::BufferStream stream(gsl::make_span(response_body).as_span<const std::byte>());
