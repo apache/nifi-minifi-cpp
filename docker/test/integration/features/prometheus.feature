@@ -37,8 +37,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And all Prometheus metric types are only defined once
 
   Scenario: Published metrics are scraped by Prometheus server through SSL connection
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "/tmp/input"
+    Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile1 processor is connected to the PutFile

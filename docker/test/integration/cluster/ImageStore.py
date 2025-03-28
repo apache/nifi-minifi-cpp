@@ -237,7 +237,7 @@ class ImageStore:
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (5, 'ApPlE');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (6, 'BaNaNa');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
-                """.format(base_image='postgres:13.2'))
+                """.format(base_image='postgres:17.4'))
         return self.__build_image(dockerfile)
 
     def __build_mqtt_broker_image(self):

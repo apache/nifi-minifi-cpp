@@ -43,7 +43,10 @@ class MinifiOptions:
         self.enable_controller_socket = False
         self.enable_log_metrics_publisher = False
         self.enable_example_minifi_python_processors = False
-        self.enable_openssl_fips_mode = False
+        if "true" in os.environ['MINIFI_FIPS']:
+            self.enable_openssl_fips_mode = True
+        else:
+            self.enable_openssl_fips_mode = False
 
 
 class MinifiContainer(FlowContainer):
@@ -161,6 +164,8 @@ class MinifiContainer(FlowContainer):
 
             if self.options.enable_openssl_fips_mode:
                 f.write("nifi.openssl.fips.support.enable=true\n")
+            else:
+                f.write("nifi.openssl.fips.support.enable=false\n")
 
     def _setup_config(self):
         self._create_properties()

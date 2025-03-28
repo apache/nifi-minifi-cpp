@@ -440,6 +440,9 @@ class MiNiFi_integration_test:
     def enable_openssl_fips_mode_in_minifi(self):
         self.cluster.enable_openssl_fips_mode_in_minifi()
 
+    def disable_openssl_fips_mode_in_minifi(self):
+        self.cluster.disable_openssl_fips_mode_in_minifi()
+
     def debug_bundle_can_be_retrieved_through_minifi_controller(self, container_name: str):
         assert self.cluster.debug_bundle_can_be_retrieved_through_minifi_controller(container_name) or self.cluster.log_app_output()
 

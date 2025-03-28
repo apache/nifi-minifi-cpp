@@ -102,6 +102,12 @@ class DockerTestCluster:
     def enable_prometheus_with_ssl_in_minifi(self):
         self.container_store.enable_prometheus_with_ssl_in_minifi()
 
+    def enable_openssl_fips_mode_in_minifi(self):
+        self.container_store.enable_openssl_fips_mode_in_minifi()
+
+    def disable_openssl_fips_mode_in_minifi(self):
+        self.container_store.disable_openssl_fips_mode_in_minifi()
+
     def enable_sql_in_minifi(self):
         self.container_store.enable_sql_in_minifi()
 
@@ -137,9 +143,6 @@ class DockerTestCluster:
 
     def enable_example_minifi_python_processors(self):
         self.container_store.enable_example_minifi_python_processors()
-
-    def enable_openssl_fips_mode_in_minifi(self):
-        self.container_store.enable_openssl_fips_mode_in_minifi()
 
     def get_app_log(self, container_name):
         container_name = self.container_store.get_container_name_with_postfix(container_name)

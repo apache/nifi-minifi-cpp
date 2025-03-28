@@ -79,8 +79,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     Then no files are placed in the monitored directory in 50 seconds of running time
 
   Scenario: A MiNiFi instance produces and transfers data to a NiFi instance via s2s using SSL
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a RemoteProcessGroup node opened on "https://nifi-${feature_id}:8443/nifi"
@@ -97,8 +96,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
   Scenario: A MiNiFi instance produces and transfers data to a NiFi instance via s2s using SSL with YAML config
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a MiNiFi CPP server with yaml config
+    Given a MiNiFi CPP server with yaml config
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
@@ -116,8 +114,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
   Scenario: A MiNiFi instance produces and transfers data to a NiFi instance via s2s using SSL config defined in minifi.properties
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a RemoteProcessGroup node opened on "https://nifi-${feature_id}:8443/nifi"
@@ -134,8 +131,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
   Scenario: A MiNiFi instance produces and transfers data to a NiFi instance via s2s using YAML config and SSL config defined in minifi.properties
-    Given OpenSSL FIPS mode is enabled in MiNiFi
-    And a MiNiFi CPP server with yaml config
+    Given a MiNiFi CPP server with yaml config
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"

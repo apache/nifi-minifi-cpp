@@ -39,6 +39,7 @@ print_help()
   printf '\t%s\n' "--tags_to_exclude: optional tags that should be skipped (no default)"
   printf '\t%s\n' "--image-tag-prefix: optional prefix to the docker tag (no default)"
   printf '\t%s\n' "--parallel_processes: optional argument that specifies the number of parallel processes that can be executed simultaneously. (default: 3)"
+  printf '\t%s\n' "--fips: enables FIPS mode by default"
   printf '\t%s\n' "-h, --help: Prints help"
 }
 
@@ -46,6 +47,7 @@ print_help()
 parse_commandline()
 {
   _positionals_count=0
+  _arg_fips=false  # Default to false
   while test $# -gt 0
   do
     _key="$1"
@@ -74,6 +76,9 @@ parse_commandline()
       --parallel_processes=*)
         _arg_parallel_processes="${_key##--parallel_processes=}"
         ;;
+      --fips)
+        _arg_fips=true  # Set boolean flag to true when argument is present
+        ;;
       -h|--help)
         print_help
         exit 0
@@ -91,6 +96,7 @@ parse_commandline()
     shift
   done
 }
+
 
 
 handle_passed_args_count()
@@ -128,6 +134,12 @@ then
 else
   export MINIFI_TAG_PREFIX=${_arg_image_tag_prefix}-
 fi
+
+  if [ "$_arg_fips" = true ]; then
+    export MINIFI_FIPS="true"
+  else
+    export MINIFI_FIPS="false"
+  fi
 
 # Create virtual environment for testing
 if [[ ! -d ./test-env-py3 ]]; then
