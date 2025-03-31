@@ -24,7 +24,7 @@
 namespace org::apache::nifi::minifi::core::yaml {
 
 void YamlFlowSerializer::addProviderCreatedParameterContexts(YAML::Node flow_definition_yaml, const core::flow::FlowSchema& schema,
-    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) const {
+    const std::unordered_map<std::string, gsl::not_null<std::unique_ptr<ParameterContext>>>& parameter_contexts) {
   std::vector<gsl::not_null<ParameterContext*>> provided_parameter_contexts;
   for (const auto& [parameter_context_name, parameter_context] : parameter_contexts) {
     if (!parameter_context->getParameterProvider().empty()) {
@@ -36,23 +36,13 @@ void YamlFlowSerializer::addProviderCreatedParameterContexts(YAML::Node flow_def
     return;
   }
 
-  std::unordered_set<std::string> parameter_context_names;
   auto parameter_contexts_node = flow_definition_yaml[schema.parameter_contexts[0]];
 
-  if (parameter_contexts_node.IsDefined() && parameter_contexts_node.IsSequence()) {
-    for (const auto& parameter_context : parameter_contexts_node) {
-      parameter_context_names.insert(parameter_context[schema.name[0]].as<std::string>());
-    }
-  } else {
+  if (!parameter_contexts_node.IsDefined() || !parameter_contexts_node.IsSequence()) {
     parameter_contexts_node = YAML::Node(YAML::NodeType::Sequence);
   }
 
   for (const auto& parameter_context : provided_parameter_contexts) {
-    if (parameter_context_names.contains(parameter_context->getName())) {
-      logger_->log_warn("Parameter context '{}' already exists in the flow definition, will not be updated!", parameter_context->getName());
-      continue;
-    }
-
     YAML::Node parameter_context_node;
     parameter_context_node[schema.identifier[0]] = std::string(parameter_context->getUUIDStr());
     parameter_context_node[schema.name[0]] = parameter_context->getName();
@@ -72,7 +62,19 @@ void YamlFlowSerializer::addProviderCreatedParameterContexts(YAML::Node flow_def
     }
 
     parameter_context_node[schema.parameters[0]] = parameters_node;
-    parameter_contexts_node.push_back(parameter_context_node);
+
+    int64_t index = -1;
+    for (int64_t i = 0; i < gsl::narrow<int64_t>(parameter_contexts_node.size()); ++i) {
+      if (parameter_contexts_node[i][schema.name[0]].as<std::string>() == parameter_context->getName()) {
+        index = i;
+        break;
+      }
+    }
+    if (index != -1) {
+      parameter_contexts_node[index] = parameter_context_node;
+    } else {
+      parameter_contexts_node.push_back(parameter_context_node);
+    }
   }
 }
 
