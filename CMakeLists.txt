@@ -19,7 +19,6 @@
 
 cmake_minimum_required(VERSION 3.24)
 cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_VERSION_{MAJOR,MINOR,PATCH,TWEAK}
-cmake_policy(SET CMP0065 OLD) # default export policy, required for self-dlopen
 cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
 
 project(nifi-minifi-cpp VERSION 1.0.0)
