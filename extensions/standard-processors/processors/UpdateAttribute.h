@@ -35,8 +35,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class UpdateAttribute : public core::ProcessorImpl {
  public:
-  UpdateAttribute(std::string_view name,  const utils::Identifier& uuid = {}) // NOLINT
+  explicit UpdateAttribute(const std::string_view name,  const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<UpdateAttribute>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This processor updates the attributes of a FlowFile using properties that are added by the user. "
@@ -60,7 +61,6 @@ class UpdateAttribute : public core::ProcessorImpl {
   void initialize() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdateAttribute>::getLogger(uuid_);
   std::vector<core::Property> attributes_;
 };
 

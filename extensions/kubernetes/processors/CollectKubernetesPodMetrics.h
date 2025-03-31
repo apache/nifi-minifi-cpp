@@ -31,6 +31,7 @@ class CollectKubernetesPodMetrics : public core::ProcessorImpl {
  public:
   explicit CollectKubernetesPodMetrics(const std::string_view name, const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<CollectKubernetesPodMetrics>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "A processor which collects pod metrics when MiNiFi is run inside Kubernetes.";
@@ -55,7 +56,6 @@ class CollectKubernetesPodMetrics : public core::ProcessorImpl {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  private:
-  gsl::not_null<std::shared_ptr<core::logging::Logger>> logger_ = gsl::make_not_null(core::logging::LoggerFactory<CollectKubernetesPodMetrics>::getLogger(uuid_));
   std::shared_ptr<controllers::KubernetesControllerService> kubernetes_controller_service_;
 };
 
