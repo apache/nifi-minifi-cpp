@@ -130,7 +130,7 @@ void writeJsonSchema(const std::shared_ptr<minifi::Configure>& configuration, st
     pythoncreator->configure(configuration);
   }
 
-  out << minifi::docs::generateJsonSchema();
+  out << minifi::docs::generateJsonSchema() << '\n';
 }
 
 void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
@@ -146,42 +146,42 @@ void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, c
   }
 }
 
-void dumpDocsIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
+[[nodiscard]] std::optional<int /* exit code */> dumpDocsIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
   if (!parser.is_used("--docs")) {
-    return;
+    return std::nullopt;  // don't exit
   }
   const auto& docs_params = parser.get<std::vector<std::string>>("--docs");
   if (utils::file::create_dir(docs_params[0]) != 0) {
     std::cerr << "Working directory doesn't exist and cannot be created: " << docs_params[0] << std::endl;
-    std::exit(1);
+    return 1;
   }
 
   std::cout << "Dumping docs to " << docs_params[0] << std::endl;
   dumpDocs(configure, docs_params[0]);
-  std::exit(0);
+  return 0;
 }
 
-void writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
+[[nodiscard]] std::optional<int /* exit code */> writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
   if (!parser.is_used("--schema")) {
-    return;
+    return std::nullopt;
   }
   const auto& schema_path = parser.get("--schema");
-  if (std::filesystem::exists(schema_path) && !std::filesystem::is_regular_file(schema_path)) {
-    std::cerr << "JSON schema target path already exists, but it is not a regular file: " << schema_path << std::endl;
-    std::exit(1);
+  if (schema_path == "-") {
+    writeJsonSchema(configure, std::cout);
+    return 0;
   }
 
-  const auto parent_dir = std::filesystem::path(schema_path).parent_path();
-  if (utils::file::create_dir(parent_dir) != 0) {
-    std::cerr << "JSON schema parent directory doesn't exist and cannot be created: " << parent_dir << std::endl;
-    std::exit(1);
-  }
   std::cout << "Writing json schema to " << schema_path << std::endl;
   {
     std::ofstream schema_file{schema_path};
+    if (!schema_file) {
+      std::cerr << "Failed to open file \"" << schema_path << "\" for writing: " << std::system_category().default_error_condition(errno).message()
+                << "\n";
+      return 1;
+    }
     writeJsonSchema(configure, schema_file);
   }
-  std::exit(0);
+  return 0;
 }
 
 int main(int argc, char **argv) {
@@ -196,6 +196,7 @@ int main(int argc, char **argv) {
     .help("Generate documentation in the specified directory");
   argument_parser.add_argument("-s", "--schema")
     .metavar("PATH")
+    .default_value("-")
     .help("Generate JSON schema to the specified path");
 
   try {
@@ -281,7 +282,6 @@ int main(int argc, char **argv) {
   }
   // chdir to MINIFI_HOME
   std::error_code current_path_error;
-  std::filesystem::current_path(minifiHome, current_path_error);
   if (current_path_error) {
     logger->log_error("Failed to change working directory to MINIFI_HOME ({})", minifiHome);
     return -1;
@@ -338,8 +338,8 @@ int main(int argc, char **argv) {
 
     minifi::core::extension::ExtensionManagerImpl::get().initialize(configure);
 
-    dumpDocsIfRequested(argument_parser, configure);
-    writeSchemaIfRequested(argument_parser, configure);
+    if (const auto maybe_exit_code = dumpDocsIfRequested(argument_parser, configure)) { return *maybe_exit_code; }
+    if (const auto maybe_exit_code = writeSchemaIfRequested(argument_parser, configure)) { return *maybe_exit_code; }
 
     std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
         | utils::andThen(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
