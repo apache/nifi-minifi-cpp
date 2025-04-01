@@ -24,8 +24,8 @@
 #include "core/logging/LoggerFactory.h"
 #include "core/extension/Extension.h"
 
-#if defined(WIN32) || defined(__APPLE__)
-static_assert(false, "The Python library loader should only be used on Linux.");
+#if defined(WIN32)
+static_assert(false, "The Python library loader should only be used on Linux or macOS.");
 #endif
 
 namespace minifi = org::apache::nifi::minifi;
@@ -37,8 +37,13 @@ class PythonLibLoader {
     if (auto python_binary = config->get(minifi::Configure::nifi_python_env_setup_binary)) {
       python_command = python_binary.value();
     }
+#if defined(__APPLE__)
+    std::string command = python_command +
+      R"###( -c "import sysconfig, os, glob; v = sysconfig.get_config_vars(); lib_dir = v['LIBDIR']; so_paths = glob.glob(f'{lib_dir}/*.dylib'); print(list(filter(os.path.exists, so_paths))[0])")###";
+#else
     std::string command = python_command +
       R"###( -c "import sysconfig, os, glob; v = sysconfig.get_config_vars(); lib_dir = v['LIBDIR']; ld_lib = v['LDLIBRARY']; so_paths = glob.glob(f'{lib_dir}/*{ld_lib}*'); so_paths.extend(glob.glob(f'{lib_dir}/*/*{ld_lib}*')); print(list(filter(os.path.exists, so_paths))[0])")###";
+#endif
     auto lib_python_path = execCommand(command);
     if (lib_python_path.empty()) {
       logger_->log_error("Failed to find libpython path from specified python binary: {}", python_command);
