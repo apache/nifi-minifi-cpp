@@ -23,7 +23,7 @@ endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-if (NOT WIN32 AND NOT APPLE)
+if (NOT WIN32)
     add_minifi_library(minifi-python-lib-loader-extension SHARED pythonlibloader/PythonLibLoader.cpp)
     target_link_libraries(minifi-python-lib-loader-extension PRIVATE ${LIBMINIFI})
 endif()
@@ -36,7 +36,9 @@ target_link_libraries(minifi-python-script-extension PRIVATE ${LIBMINIFI} Thread
 
 include(GenericPython)
 if(APPLE)
+    target_compile_definitions(minifi-python-lib-loader-extension PUBLIC Py_LIMITED_API=0x03090000)
     target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03090000)
+    target_link_options(minifi-python-script-extension PRIVATE "-Wl,-undefined,dynamic_lookup")
 elseif(WIN32)
     target_compile_definitions(minifi-python-script-extension PUBLIC Py_LIMITED_API=0x03060000)
 else()
@@ -47,8 +49,8 @@ target_compile_definitions(minifi-python-script-extension PUBLIC PY_SSIZE_T_CLEA
 
 target_sources(minifi-python-script-extension PRIVATE ${PY_SOURCES})
 
-# On Linux the python library is loaded dynamically in the minifi-python-loader extension before the python script extension is loaded
-if (WIN32 OR APPLE)
+# On Linux and macOS the python library is loaded dynamically in the minifi-python-loader extension before the python script extension is loaded
+if (WIN32)
     target_link_libraries(minifi-python-script-extension PUBLIC ${Python_LIBRARIES})
 endif()
 
@@ -89,7 +91,7 @@ else()
     )
 endif()
 
-if (NOT WIN32 AND NOT APPLE)
+if (NOT WIN32)
     register_extension(minifi-python-lib-loader-extension "PYTHON LIB LOADER" PYTHON-LIB-LOADER-EXTENSIONS "This enables library that loads python library for python symbols")
 endif()
 register_extension(minifi-python-script-extension "PYTHON SCRIPTING ENGINE" PYTHON-SCRIPTING-EXTENSIONS "This enables python script engine" "extensions/python/tests")
