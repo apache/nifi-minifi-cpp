@@ -670,8 +670,8 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
 
   SECTION("VolatileContentRepository") {
     content_repo = std::make_shared<core::repository::VolatileContentRepository>("content");
-    expected_is_full = true;
-    expected_max_repo_size = content.size();
+    expected_is_full = false;
+    expected_max_repo_size = std::numeric_limits<uint64_t>::max();
   }
 
   SECTION("DatabaseContentRepository") {
