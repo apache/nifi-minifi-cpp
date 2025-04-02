@@ -31,6 +31,7 @@
 #include "openssl/ssl.h"
 #endif  // WIN32
 
+#include "utils/ConfigurationUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/tls/TLSUtils.h"
 #include "utils/TimeUtil.h"
@@ -43,13 +44,14 @@ const ssl_error_category& ssl_error_category::get() {
 }
 
 std::string ssl_error_category::message(int value) const {
-  auto err = gsl::narrow<unsigned long>(value);  // NOLINT
+  const auto err = gsl::narrow<unsigned long>(value);  // NOLINT(runtime/int,google-runtime-int) long due to SSL lib API
   if (err == 0) {
     return "";
   }
-  std::array<char, 4096> buf{};
-  ERR_error_string_n(err, buf.data(), buf.size());
-  return buf.data();
+  static_assert(utils::configuration::DEFAULT_BUFFER_SIZE >= 1);
+  std::array<char, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
+  ERR_error_string_n(err, buffer.data(), buffer.size() - 1);
+  return {buffer.data()};
 }
 
 std::error_code get_last_ssl_error_code() {

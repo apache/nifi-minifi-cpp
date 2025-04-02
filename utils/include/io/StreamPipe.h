@@ -26,13 +26,14 @@
 #include "InputStream.h"
 #include "OutputStream.h"
 #include "minifi-cpp/io/StreamCallback.h"
+#include "utils/ConfigurationUtils.h"
 
 namespace org::apache::nifi::minifi {
 namespace internal {
 
 inline int64_t pipe(io::InputStream& src, io::OutputStream& dst) {
-  std::array<std::byte, 4096> buffer{};
-  int64_t totalTransferred = 0;
+  std::array<std::byte, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
+  size_t totalTransferred = 0;
   while (true) {
     const auto readRet = src.read(buffer);
     if (io::isError(readRet)) return -1;
@@ -54,7 +55,7 @@ inline int64_t pipe(io::InputStream& src, io::OutputStream& dst) {
     }
     totalTransferred += transferred;
   }
-  return totalTransferred;
+  return gsl::narrow<int64_t>(totalTransferred);
 }
 
 }  // namespace internal

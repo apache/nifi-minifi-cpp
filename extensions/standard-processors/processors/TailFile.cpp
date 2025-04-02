@@ -19,7 +19,6 @@
  */
 
 #include <algorithm>
-#include <array>
 #include <iostream>
 #include <map>
 #include <unordered_map>
@@ -31,6 +30,7 @@
 #include "range/v3/action/sort.hpp"
 
 #include "io/CRCStream.h"
+#include "utils/ConfigurationUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
 #include "utils/StringUtils.h"
@@ -98,16 +98,16 @@ void openFile(const std::filesystem::path& file_path, uint64_t offset, std::ifst
   }
 }
 
-constexpr std::size_t BUFFER_SIZE = 4096;
-
 class FileReaderCallback {
  public:
   FileReaderCallback(const std::filesystem::path& file_path,
                      uint64_t offset,
                      char input_delimiter,
-                     uint64_t checksum)
+                     uint64_t checksum,
+                     size_t buffer_size)
     : input_delimiter_(input_delimiter),
-      checksum_(checksum) {
+      checksum_(checksum),
+      buffer_size_(buffer_size) {
     openFile(file_path, offset, input_stream_, logger_);
   }
 
@@ -159,12 +159,13 @@ class FileReaderCallback {
   }
 
  private:
-  char input_delimiter_;
-  uint64_t checksum_;
+  char input_delimiter_{};
+  uint64_t checksum_{};
   std::ifstream input_stream_;
+  size_t buffer_size_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 
-  std::array<char, BUFFER_SIZE> buffer_{};
+  std::vector<char> buffer_ = std::vector<char>(buffer_size_);
   char *begin_ = buffer_.data();
   char *end_ = buffer_.data();
 
@@ -175,8 +176,10 @@ class WholeFileReaderCallback {
  public:
   WholeFileReaderCallback(const std::filesystem::path& file_path,
                           uint64_t offset,
-                          uint64_t checksum)
-    : checksum_(checksum) {
+                          uint64_t checksum,
+                          size_t buffer_size)
+    : checksum_(checksum),
+      buffer_size_(buffer_size) {
     openFile(file_path, offset, input_stream_, logger_);
   }
 
@@ -185,14 +188,14 @@ class WholeFileReaderCallback {
   }
 
   int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
-    std::array<char, BUFFER_SIZE> buffer{};
+    std::vector<char> buffer(buffer_size_);
 
     io::CRCStream<io::OutputStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
 
     uint64_t num_bytes_written = 0;
 
     while (input_stream_.good()) {
-      input_stream_.read(buffer.data(), buffer.size());
+      input_stream_.read(buffer.data(), gsl::narrow<std::streamsize>(buffer.size()));
 
       const auto num_bytes_read = input_stream_.gcount();
       logger_->log_trace("Read {} bytes of input", std::intmax_t{num_bytes_read});
@@ -211,6 +214,7 @@ class WholeFileReaderCallback {
  private:
   uint64_t checksum_;
   std::ifstream input_stream_;
+  size_t buffer_size_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 };
 
@@ -234,6 +238,7 @@ void TailFile::initialize() {
 }
 
 void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  buffer_size_ = utils::configuration::getBufferSize(*context.getConfiguration());
   tail_states_.clear();
 
   state_manager_ = context.getStateManager();
@@ -464,9 +469,9 @@ bool TailFile::getStateFromLegacyStateFile(const core::ProcessContext& context,
   }
 
   std::map<std::filesystem::path, TailState> legacy_tail_states;
-  std::array<char, BUFFER_SIZE> buf{};
-  for (file.getline(buf.data(), BUFFER_SIZE); file.good(); file.getline(buf.data(), BUFFER_SIZE)) {
-    parseStateFileLine(buf.data(), legacy_tail_states);
+  std::vector<char> buffer(buffer_size_);
+  for (file.getline(buffer.data(), gsl::narrow<std::streamsize>(buffer_size_)); file.good(); file.getline(buffer.data(), gsl::narrow<std::streamsize>(buffer_size_))) {
+    parseStateFileLine(buffer.data(), legacy_tail_states);
   }
 
   new_tail_states = update_keys_in_legacy_states(legacy_tail_states);
@@ -676,7 +681,7 @@ void TailFile::processSingleFile(core::ProcessSession& session,
     logger_->log_trace("Looking for delimiter 0x{:X}", *delimiter_);
 
     std::size_t num_flow_files = 0;
-    FileReaderCallback file_reader{full_file_name, state.position_, *delimiter_, state.checksum_};
+    FileReaderCallback file_reader{full_file_name, state.position_, *delimiter_, state.checksum_, buffer_size_};
     TailState state_copy{state};
 
     while (file_reader.hasMoreToRead() && (!batch_size_ || *batch_size_ > num_flow_files)) {
@@ -699,7 +704,7 @@ void TailFile::processSingleFile(core::ProcessSession& session,
     logger_->log_info("{} flowfiles were received from TailFile input", num_flow_files);
 
   } else {
-    WholeFileReaderCallback file_reader{full_file_name, state.position_, state.checksum_};
+    WholeFileReaderCallback file_reader{full_file_name, state.position_, state.checksum_, buffer_size_};
     auto flow_file = session.create();
     session.write(flow_file, std::ref(file_reader));
 

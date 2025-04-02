@@ -45,8 +45,6 @@ struct SplitTextConfiguration {
 
 namespace detail {
 
-inline constexpr size_t SPLIT_TEXT_BUFFER_SIZE = 8192;
-
 enum class StreamReadState {
   Ok,
   StreamReadError,
@@ -64,9 +62,9 @@ class LineReader {
     bool operator==(const LineInfo& line_info) const = default;
   };
 
-  explicit LineReader(const std::shared_ptr<io::InputStream>& stream);
+  explicit LineReader(const std::shared_ptr<io::InputStream>& stream, size_t buffer_size);
   std::optional<LineInfo> readNextLine(const std::optional<std::string>& starts_with = std::nullopt);
-  StreamReadState getState() const { return state_; }
+  [[nodiscard]] StreamReadState getState() const { return state_; }
 
  private:
   uint8_t getEndLineSize(size_t newline_position);
@@ -78,8 +76,9 @@ class LineReader {
   uint64_t current_buffer_count_ = 0;
   size_t last_read_size_ = 0;
   uint64_t read_size_ = 0;
-  std::array<char, SPLIT_TEXT_BUFFER_SIZE> buffer_{};
   std::shared_ptr<io::InputStream> stream_;
+  size_t buffer_size_;
+  std::vector<char> buffer_ = std::vector<char>(buffer_size_);
   std::optional<LineInfo> last_line_info_;
   StreamReadState state_ = StreamReadState::Ok;
 };
@@ -174,6 +173,7 @@ class SplitText : public core::ProcessorImpl {
 
  private:
   SplitTextConfiguration split_text_config_;
+  size_t buffer_size_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SplitText>::getLogger(uuid_);
 };
 

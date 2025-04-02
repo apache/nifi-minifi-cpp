@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,6 +16,7 @@
  */
 #include "SFTPClient.h"
 #include <algorithm>
+#include <array>
 #include <exception>
 #include <memory>
 #include <optional>
@@ -24,9 +24,9 @@
 #include <sstream>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
+#include "utils/ConfigurationUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"
 #include "minifi-cpp/io/OutputStream.h"
@@ -719,8 +719,8 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
   });
 
   LIBSSH2_SFTP_ATTRIBUTES attrs;
-  std::vector<char> filename(4096U);
-  std::vector<char> longentry(4096U);
+  std::array<char, utils::configuration::DEFAULT_BUFFER_SIZE> filename{};
+  std::array<char, utils::configuration::DEFAULT_BUFFER_SIZE> longentry{};
   do {
     int ret = libssh2_sftp_readdir_ex(dir_handle,
                                       filename.data(),

@@ -74,10 +74,10 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
     ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
     std::string original_password = test_file.getValue(Configuration::nifi_rest_api_password).value();
 
-    uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
+    uint32_t initial_num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
-    REQUIRE(num_properties_encrypted == 1);
-    REQUIRE(test_file.size() == 104);
+    REQUIRE(initial_num_properties_encrypted == 1);
+    REQUIRE(test_file.size() == 110);
     REQUIRE(check_encryption(test_file, Configuration::nifi_rest_api_password, original_password.length()));
 
     SECTION("calling encryptSensitiveValuesInMinifiProperties a second time does nothing") {

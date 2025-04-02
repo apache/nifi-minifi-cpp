@@ -22,18 +22,21 @@
 #include "processors/SplitText.h"
 #include "unit/SingleProcessorTestController.h"
 #include "io/BufferStream.h"
+#include "utils/ConfigurationUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
+inline constexpr auto BUFFER_SIZE = minifi::utils::configuration::DEFAULT_BUFFER_SIZE;
+
 TEST_CASE("Test LineReader with nullptr") {
-  processors::detail::LineReader reader{nullptr};
+  processors::detail::LineReader reader{nullptr, BUFFER_SIZE};
   CHECK(reader.readNextLine() == std::nullopt);
   CHECK(reader.getState() == processors::detail::StreamReadState::EndOfStream);
 }
 
 TEST_CASE("Test LineReader with empty stream") {
   auto stream = std::make_shared<io::BufferStream>();
-  processors::detail::LineReader reader{stream};
+  processors::detail::LineReader reader{stream, BUFFER_SIZE};
   CHECK(reader.readNextLine() == std::nullopt);
   CHECK(reader.getState() == processors::detail::StreamReadState::EndOfStream);
 }
@@ -42,7 +45,7 @@ TEST_CASE("Test LineReader with trailing endline") {
   auto stream = std::make_shared<io::BufferStream>();
   std::string input = "this is a new line\nand another line\r\nthirdline\n";
   stream->write(reinterpret_cast<const uint8_t*>(input.data()), input.size());
-  processors::detail::LineReader reader{stream};
+  processors::detail::LineReader reader{stream, BUFFER_SIZE};
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = 19, .endline_size = 1});
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 19, .size = 18, .endline_size = 2});
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 37, .size = 10, .endline_size = 1});
@@ -54,7 +57,7 @@ TEST_CASE("Test LineReader without trailing endlines") {
   auto stream = std::make_shared<io::BufferStream>();
   std::string input = "this is a new line\nand another line\r\nthirdline";
   stream->write(reinterpret_cast<const uint8_t*>(input.data()), input.size());
-  processors::detail::LineReader reader{stream};
+  processors::detail::LineReader reader{stream, BUFFER_SIZE};
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = 19, .endline_size = 1});
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 19, .size = 18, .endline_size = 2});
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 37, .size = 9, .endline_size = 0});
@@ -64,11 +67,11 @@ TEST_CASE("Test LineReader without trailing endlines") {
 
 TEST_CASE("Test LineReader with input larger than buffer length") {
   auto stream = std::make_shared<io::BufferStream>();
-  const auto first_line_size = static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.5);
-  const auto second_line_size = static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.7);
+  const auto first_line_size = static_cast<size_t>(BUFFER_SIZE * 1.5);
+  const auto second_line_size = static_cast<size_t>(BUFFER_SIZE * 1.7);
   std::string input = std::string(first_line_size, 'a') + "\n" + std::string(second_line_size, 'b') + "\n";
   stream->write(reinterpret_cast<const uint8_t*>(input.data()), input.size());
-  processors::detail::LineReader reader{stream};
+  processors::detail::LineReader reader{stream, BUFFER_SIZE};
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = first_line_size + 1, .endline_size = 1});
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = first_line_size +1 , .size = second_line_size + 1, .endline_size = 1});
   CHECK(reader.readNextLine() == std::nullopt);
@@ -77,23 +80,23 @@ TEST_CASE("Test LineReader with input larger than buffer length") {
 
 TEST_CASE("Test LineReader with input of same size as buffer length") {
   auto stream = std::make_shared<io::BufferStream>();
-  std::string input = std::string(processors::detail::SPLIT_TEXT_BUFFER_SIZE - 1, 'a') + "\n" + std::string(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 2 - 1, 'b') + "\n";
+  std::string input = std::string(BUFFER_SIZE - 1, 'a') + "\n" + std::string(BUFFER_SIZE * 2 - 1, 'b') + "\n";
   stream->write(reinterpret_cast<const uint8_t*>(input.data()), input.size());
-  processors::detail::LineReader reader{stream};
-  CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = processors::detail::SPLIT_TEXT_BUFFER_SIZE, .endline_size = 1});
+  processors::detail::LineReader reader{stream, BUFFER_SIZE};
+  CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = BUFFER_SIZE, .endline_size = 1});
   CHECK(reader.readNextLine() ==
-    processors::detail::LineReader::LineInfo{.offset = processors::detail::SPLIT_TEXT_BUFFER_SIZE, .size = processors::detail::SPLIT_TEXT_BUFFER_SIZE * 2, .endline_size = 1});
+    processors::detail::LineReader::LineInfo{.offset = BUFFER_SIZE, .size = BUFFER_SIZE * 2, .endline_size = 1});
   CHECK(reader.readNextLine() == std::nullopt);
   CHECK(reader.getState() == processors::detail::StreamReadState::EndOfStream);
 }
 
 TEST_CASE("Test LineReader with input larger than buffer length without trailing endline") {
   auto stream = std::make_shared<io::BufferStream>();
-  const auto first_line_size = static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.5);
-  const auto second_line_size = static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.7);
+  const auto first_line_size = static_cast<size_t>(BUFFER_SIZE * 1.5);
+  const auto second_line_size = static_cast<size_t>(BUFFER_SIZE * 1.7);
   std::string input = std::string(first_line_size, 'a') + "\n" + std::string(second_line_size, 'b');
   stream->write(reinterpret_cast<const uint8_t*>(input.data()), input.size());
-  processors::detail::LineReader reader{stream};
+  processors::detail::LineReader reader{stream, BUFFER_SIZE};
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = first_line_size + 1, .endline_size = 1});
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = first_line_size + 1, .size = second_line_size, .endline_size = 0});
   CHECK(reader.readNextLine() == std::nullopt);
@@ -102,12 +105,12 @@ TEST_CASE("Test LineReader with input larger than buffer length without trailing
 
 TEST_CASE("Test LineReader with input of same size as buffer length without trailing endline") {
   auto stream = std::make_shared<io::BufferStream>();
-  std::string input = std::string(processors::detail::SPLIT_TEXT_BUFFER_SIZE - 1, 'a') + "\n" + std::string(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 2, 'b');
+  std::string input = std::string(BUFFER_SIZE - 1, 'a') + "\n" + std::string(BUFFER_SIZE * 2, 'b');
   stream->write(reinterpret_cast<const uint8_t*>(input.data()), input.size());
-  processors::detail::LineReader reader{stream};
-  CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = processors::detail::SPLIT_TEXT_BUFFER_SIZE, .endline_size = 1});
+  processors::detail::LineReader reader{stream, BUFFER_SIZE};
+  CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = BUFFER_SIZE, .endline_size = 1});
   CHECK(reader.readNextLine() ==
-    processors::detail::LineReader::LineInfo{.offset = processors::detail::SPLIT_TEXT_BUFFER_SIZE, .size = processors::detail::SPLIT_TEXT_BUFFER_SIZE * 2, .endline_size = 0});
+    processors::detail::LineReader::LineInfo{.offset = BUFFER_SIZE, .size = BUFFER_SIZE * 2, .endline_size = 0});
   CHECK(reader.readNextLine() == std::nullopt);
   CHECK(reader.getState() == processors::detail::StreamReadState::EndOfStream);
 }
@@ -116,7 +119,7 @@ TEST_CASE("Test LineReader with starts with filter") {
   auto stream = std::make_shared<io::BufferStream>();
   std::string input = "header this is a new line\nheader and another line\r\nthirdline\nheader line\n";
   stream->write(reinterpret_cast<const uint8_t*>(input.data()), input.size());
-  processors::detail::LineReader reader{stream};
+  processors::detail::LineReader reader{stream, BUFFER_SIZE};
   CHECK(reader.readNextLine("header") == processors::detail::LineReader::LineInfo{.offset = 0, .size = 26, .endline_size = 1, .matches_starts_with = true});
   CHECK(reader.readNextLine("header") == processors::detail::LineReader::LineInfo{.offset = 26, .size = 25, .endline_size = 2, .matches_starts_with = true});
   CHECK(reader.readNextLine("header") == processors::detail::LineReader::LineInfo{.offset = 51, .size = 10, .endline_size = 1, .matches_starts_with = false});
@@ -211,7 +214,7 @@ TEST_CASE("Header Line Marker Characters size cannot be equal or larger than spl
   SingleProcessorTestController controller{std::make_unique<processors::SplitText>("SplitText")};
   const auto split_text = controller.getProcessor();
   split_text->setProperty(processors::SplitText::LineSplitCount.name, "1");
-  std::string header_marker_character(processors::detail::SPLIT_TEXT_BUFFER_SIZE, 'A');
+  std::string header_marker_character(BUFFER_SIZE, 'A');
   split_text->setProperty(processors::SplitText::HeaderLineMarkerCharacters.name, header_marker_character);
   REQUIRE_THROWS_AS(controller.trigger("", {}), minifi::Exception);
 }
@@ -249,7 +252,7 @@ TEST_CASE("SplitText creates new flow file for a single line") {
     expected_results[0].content = line;
   }
   SECTION("Line size larger than buffer size") {
-    line = std::string(static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.5), 'a') + "\n";
+    line = std::string(static_cast<size_t>(BUFFER_SIZE * 1.5), 'a') + "\n";
     expected_results[0].content = line;
   }
   SECTION("Content without endline is a single line") {
@@ -294,12 +297,12 @@ TEST_CASE("SplitText creates new flow file with 2 lines") {
     expected_results[0].content = "this is a new line\r\nand another line";
   }
   SECTION("Line size larger than buffer size") {
-    std::string str(static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.5), 'a');
+    std::string str(static_cast<size_t>(BUFFER_SIZE * 1.5), 'a');
     input = str + "\n" + str + "\n";
     expected_results[0].content = input;
   }
   SECTION("Line size larger than buffer size without endline at the end") {
-    std::string str(static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.5), 'a');
+    std::string str(static_cast<size_t>(BUFFER_SIZE * 1.5), 'a');
     input = str + "\n" + str;
     expected_results[0].content = input;
   }
@@ -337,13 +340,13 @@ TEST_CASE("SplitText creates separate flow files from 2 lines") {
     expected_results[1].content = "and another line\r\n";
   }
   SECTION("Line size larger than buffer size") {
-    std::string str(static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.5), 'a');
+    std::string str(static_cast<size_t>(BUFFER_SIZE * 1.5), 'a');
     input = str + "\n" + str + "\n";
     expected_results[0].content = str + "\n";
     expected_results[1].content = str + "\n";
   }
   SECTION("Line size larger than buffer size without endline at the end") {
-    std::string str(static_cast<size_t>(processors::detail::SPLIT_TEXT_BUFFER_SIZE * 1.5), 'a');
+    std::string str(static_cast<size_t>(BUFFER_SIZE * 1.5), 'a');
     input = str + "\n" + str;
     expected_results[0].content = str + "\n";
     expected_results[1].content = str;
