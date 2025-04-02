@@ -48,7 +48,7 @@ class TestHTTPServer {
     log_attribute_ = dynamic_cast<processors::LogAttribute*>(test_plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true));
     REQUIRE(listen_http_);
     REQUIRE(log_attribute_);
-    log_attribute_->setProperty(processors::LogAttribute::LogPayload, "true");
+    log_attribute_->setProperty(processors::LogAttribute::LogPayload.name, "true");
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "testytesttest");
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::Port, "8681");
     test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::HeadersAsAttributesRegex, ".*");
@@ -385,9 +385,9 @@ TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers
   SingleProcessorTestController controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
   const TestHTTPServer http_server(controller);
   auto* const invoke_http = controller.getProcessor<InvokeHTTP>();
-  invoke_http->setProperty(InvokeHTTP::Method, "POST");
-  invoke_http->setProperty(InvokeHTTP::URL, http_server.URL);
-  invoke_http->setProperty(InvokeHTTP::AttributesToSend, ".*");
+  invoke_http->setProperty(InvokeHTTP::Method.name, "POST");
+  invoke_http->setProperty(InvokeHTTP::URL.name, http_server.URL);
+  invoke_http->setProperty(InvokeHTTP::AttributesToSend.name, ".*");
   const auto result = controller.trigger(InputFlowFileData{.content = test_content, .attributes = {
     {std::string{InvokeHTTP::STATUS_MESSAGE}, std::string{test_attr_value_in}},
   }});
