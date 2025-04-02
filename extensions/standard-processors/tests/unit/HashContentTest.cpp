@@ -29,7 +29,6 @@
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessorNode.h"
 
 #include "GetFile.h"
 #include "HashContent.h"
@@ -169,7 +168,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
 TEST_CASE("Invalid hash algorithm throws in onSchedule", "[HashContent]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<HashContent>("HashContent")};
   auto hash_content = controller.getProcessor();
-  hash_content->setProperty(HashContent::HashAlgorithm, "My-Algo");
+  hash_content->setProperty(HashContent::HashAlgorithm.name, "My-Algo");
   REQUIRE_THROWS_WITH(controller.plan->scheduleProcessor(hash_content), "Process Schedule Operation: MYALGO is not supported, supported algorithms are: MD5, SHA1, SHA256");
 }
 

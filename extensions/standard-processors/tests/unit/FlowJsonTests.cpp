@@ -21,6 +21,7 @@
 #include <chrono>
 #include "core/repository/VolatileContentRepository.h"
 #include "core/ProcessGroup.h"
+#include "core/Processor.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "TailFile.h"
 #include "unit/Catch.h"
@@ -31,6 +32,8 @@
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "unit/TestUtils.h"
 #include "unit/DummyParameterProvider.h"
+#include "catch2/generators/catch_generators.hpp"
+
 
 using namespace std::literals::chrono_literals;
 
@@ -139,33 +142,33 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   // verify processor
   auto* proc = flow->findProcessorByName("MyGenFF");
   REQUIRE(proc);
-  REQUIRE(proc->getUUIDStr() == "00000000-0000-0000-0000-000000000001");
-  REQUIRE(15 == proc->getMaxConcurrentTasks());
-  REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == proc->getSchedulingStrategy());
-  REQUIRE(3s == proc->getSchedulingPeriod());
-  REQUIRE(12s == proc->getPenalizationPeriod());
-  REQUIRE(4s == proc->getYieldPeriod());
-  REQUIRE(proc->isAutoTerminated({"one", ""}));
-  REQUIRE(proc->isAutoTerminated({"two", ""}));
-  REQUIRE_FALSE(proc->isAutoTerminated({"three", ""}));
-  REQUIRE(proc->getProperty("File Size") == "10 B");
-  REQUIRE(proc->getProperty("Batch Size") == "12");
+  CHECK(proc->getUUIDStr() == "00000000-0000-0000-0000-000000000001");
+  CHECK(15 == proc->getMaxConcurrentTasks());
+  CHECK(core::SchedulingStrategy::TIMER_DRIVEN == proc->getSchedulingStrategy());
+  CHECK(3s == proc->getSchedulingPeriod());
+  CHECK(12s == proc->getPenalizationPeriod());
+  CHECK(4s == proc->getYieldPeriod());
+  CHECK(proc->isAutoTerminated({"one", ""}));
+  CHECK(proc->isAutoTerminated({"two", ""}));
+  CHECK_FALSE(proc->isAutoTerminated({"three", ""}));
+  CHECK(proc->getProperty("File Size") == "10 B");
+  CHECK(proc->getProperty("Batch Size") == "12");
 
   // verify funnel
   auto* funnel = dynamic_cast<minifi::Funnel*>(flow->findProcessorByName("CoolFunnel"));
   REQUIRE(funnel);
-  REQUIRE(funnel->getUUIDStr() == "00000000-0000-0000-0000-000000000010");
+  CHECK(funnel->getUUIDStr() == "00000000-0000-0000-0000-000000000010");
 
   // verify RPG input port
   auto* port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(flow->findProcessorByName("AmazingInputPort"));
   REQUIRE(port);
-  REQUIRE(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
-  REQUIRE(port->getMaxConcurrentTasks() == 7);
-  REQUIRE(port->getInstances().size() == 1);
-  REQUIRE(port->getInstances().front().host_ == "localhost");
-  REQUIRE(port->getInstances().front().port_ == 8090);
-  REQUIRE(port->getInstances().front().protocol_ == "https://");
-  REQUIRE(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
+  CHECK(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
+  CHECK(port->getMaxConcurrentTasks() == 7);
+  CHECK(port->getInstances().size() == 1);
+  CHECK(port->getInstances().front().host_ == "localhost");
+  CHECK(port->getInstances().front().port_ == 8090);
+  CHECK(port->getInstances().front().protocol_ == "https://");
+  CHECK(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 
   // verify connection
   std::map<std::string, minifi::Connection*> connection_map;
@@ -173,20 +176,58 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   REQUIRE(4 == connection_map.size());
   auto connection1 = connection_map.at("00000000-0000-0000-0000-000000000002");
   REQUIRE(connection1);
-  REQUIRE("GenToFunnel" == connection1->getName());
-  REQUIRE(connection1->getSource() == proc);
-  REQUIRE(connection1->getDestination() == funnel);
-  REQUIRE(connection1->getRelationships() == (std::set<core::Relationship>{{"a", ""}, {"b", ""}}));
-  REQUIRE(connection1->getBackpressureThresholdCount() == 7);
-  REQUIRE(connection1->getBackpressureThresholdDataSize() == 11_KiB);
-  REQUIRE(13s == connection1->getFlowExpirationDuration());
+  CHECK("GenToFunnel" == connection1->getName());
+  CHECK(connection1->getSource() == proc);
+  CHECK(connection1->getDestination() == funnel);
+  CHECK(connection1->getRelationships() == (std::set<core::Relationship>{{"a", ""}, {"b", ""}}));
+  CHECK(connection1->getBackpressureThresholdCount() == 7);
+  CHECK(connection1->getBackpressureThresholdDataSize() == 11_KiB);
+  CHECK(13s == connection1->getFlowExpirationDuration());
 
   auto connection2 = connection_map.at("00000000-0000-0000-0000-000000000008");
   REQUIRE(connection2);
-  REQUIRE("FunnelToS2S" == connection2->getName());
-  REQUIRE(connection2->getSource() == funnel);
-  REQUIRE(connection2->getDestination() == port);
-  REQUIRE(connection2->getRelationships() == (std::set<core::Relationship>{{"success", ""}}));
+  CHECK("FunnelToS2S" == connection2->getName());
+  CHECK(connection2->getSource() == funnel);
+  CHECK(connection2->getDestination() == port);
+  CHECK(connection2->getRelationships() == (std::set<core::Relationship>{{"success", ""}}));
+}
+
+TEST_CASE("Cannot use invalid property values") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+  auto [file_size_property_str, throws] = GENERATE(
+    std::make_tuple(R"("12 dogBytes")", true),
+    std::make_tuple(R"("1 kB")", false),
+    std::make_tuple(R"([{"value": "1 kB"},{"value": "2 kB"}])", false),
+    std::make_tuple(R"("foo")", true),
+    std::make_tuple(R"([{"value": "1 kB"},{"value": "bar"}])", true));
+  const std::string CONFIG_JSON = fmt::format(
+      R"(
+{{
+  "rootGroup": {{
+    "name": "MiNiFi Flow",
+    "processors": [{{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "MyGenFF",
+      "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+      "concurrentlySchedulableTaskCount": 15,
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "3 sec",
+      "penaltyDuration": "12 sec",
+      "yieldDuration": "4 sec",
+      "runDurationMillis": 12,
+      "autoTerminatedRelationships": ["success"],
+      "properties": {{
+        "File Size": {}
+      }}
+    }}]
+  }}
+}})", file_size_property_str);
+  if (throws) {
+    REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), "Unable to parse configuration file for component named 'MyGenFF' because ValidationFailed");
+  } else {
+    REQUIRE_NOTHROW(config.getRootFromPayload(CONFIG_JSON));
+  }
 }
 
 TEST_CASE("Parameters from different parameter contexts should not be replaced") {
@@ -710,14 +751,13 @@ TEST_CASE("Property value sequences can use parameters") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("MyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
   REQUIRE(proc);
-  core::Property property("Simple Property", "");
-  proc->getProperty("Simple Property", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
+  auto values = proc->getAllPropertyValues("Simple Property");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
 }
 
 TEST_CASE("Dynamic properties can use parameters") {
@@ -772,17 +812,15 @@ TEST_CASE("Dynamic properties can use parameters") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("MyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
   REQUIRE(proc);
-  core::Property property("My Dynamic Property Sequence", "");
-  proc->getDynamicProperty("My Dynamic Property Sequence", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
+  auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
   std::string value;
-  REQUIRE(proc->getDynamicProperty("My Dynamic Property", value));
-  CHECK(value == "value1");
+  REQUIRE("value1" == proc->getDynamicProperty("My Dynamic Property"));
 }
 
 TEST_CASE("Test sensitive parameters in sensitive properties") {
@@ -831,7 +869,7 @@ TEST_CASE("Test sensitive parameters in sensitive properties") {
 
   auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
-  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+  CHECK(proc->getProperty("Sensitive Property") == "value1");
 }
 
 TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
@@ -890,14 +928,14 @@ TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("MyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
   REQUIRE(proc);
   core::Property property("Sensitive Property", "");
-  proc->getProperty("Sensitive Property", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value1");
-  CHECK(values[1] == "value2");
+  auto values = proc->getAllPropertyValues("Sensitive Property");
+  REQUIRE(values);
+  REQUIRE(values->size() == 2);
+  CHECK((*values)[0] == "value1");
+  CHECK((*values)[1] == "value2");
 }
 
 TEST_CASE("NiFi flow json can use alternative targetUris field") {
@@ -993,17 +1031,17 @@ TEST_CASE("NiFi flow json can use alternative targetUris field") {
   // verify RPG input port
   auto* port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(flow->findProcessorByName("AmazingInputPort"));
   REQUIRE(port);
-  REQUIRE(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
-  REQUIRE(port->getMaxConcurrentTasks() == 7);
+  CHECK(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
+  CHECK(port->getMaxConcurrentTasks() == 7);
   if (target_uri_valid) {
-    REQUIRE(port->getInstances().size() == 1);
-    REQUIRE(port->getInstances().front().host_ == "localhost");
-    REQUIRE(port->getInstances().front().port_ == 8090);
-    REQUIRE(port->getInstances().front().protocol_ == "https://");
+    CHECK(port->getInstances().size() == 1);
+    CHECK(port->getInstances().front().host_ == "localhost");
+    CHECK(port->getInstances().front().port_ == 8090);
+    CHECK(port->getInstances().front().protocol_ == "https://");
   } else {
-    REQUIRE(port->getInstances().empty());
+    CHECK(port->getInstances().empty());
   }
-  REQUIRE(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
+  CHECK(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 }
 
 TEST_CASE("Test parameters in controller services") {
@@ -1186,8 +1224,8 @@ TEST_CASE("Test parameter context inheritance") {
 
   auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
-  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
-  REQUIRE(proc->getProperty("Simple Property") == "old_value");
+  CHECK(proc->getProperty("Sensitive Property") == "value1");
+  CHECK(proc->getProperty("Simple Property") == "old_value");
 }
 
 TEST_CASE("Parameter context can not inherit from a itself") {
@@ -1359,7 +1397,7 @@ TEST_CASE("Cycles are not allowed in parameter context inheritance") {
 })";
 
   REQUIRE_THROWS_AS(config.getRootFromPayload(CONFIG_JSON), std::invalid_argument);
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Circular references in Parameter Context inheritance are not allowed. Inheritance cycle was detected in parameter context"));
+  CHECK(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Circular references in Parameter Context inheritance are not allowed. Inheritance cycle was detected in parameter context"));
 }
 
 TEST_CASE("Parameter context inheritance order is respected") {
@@ -1445,13 +1483,9 @@ TEST_CASE("Parameter context inheritance order is respected") {
   REQUIRE(flow);
 
   auto* proc = flow->findProcessorByName("MyProcessor");
-  std::string value;
-  REQUIRE(proc->getDynamicProperty("My A Property", value));
-  CHECK(value == "1");
-  REQUIRE(proc->getDynamicProperty("My B Property", value));
-  CHECK(value == "3");
-  REQUIRE(proc->getDynamicProperty("My C Property", value));
-  CHECK(value == "5");
+  CHECK("1" == proc->getDynamicProperty("My A Property"));
+  CHECK("3" == proc->getDynamicProperty("My B Property"));
+  CHECK("5" == proc->getDynamicProperty("My C Property"));
 }
 
 TEST_CASE("Parameter providers can be used for parameter values") {
@@ -1496,15 +1530,11 @@ TEST_CASE("Parameter providers can be used for parameter values") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = flow->findProcessorByName("MyProcessor");
+  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
   REQUIRE(proc);
-  REQUIRE(proc->getProperty("Simple Property") == "value1");
-  core::Property property("My Dynamic Property Sequence", "");
-  proc->getDynamicProperty("My Dynamic Property Sequence", property);
-  auto values = property.getValues();
-  REQUIRE(values.size() == 2);
-  CHECK(values[0] == "value2");
-  CHECK(values[1] == "value3");
+  auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
+  CHECK((*values)[0] == "value2");
+  CHECK((*values)[1] == "value3");
 }
 
 TEST_CASE("Parameter providers can be configured to select which parameters to be sensitive") {
@@ -1551,8 +1581,8 @@ TEST_CASE("Parameter providers can be configured to select which parameters to b
 
   auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
-  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
-  REQUIRE(proc->getProperty("Simple Property") == "value3");
+  CHECK(proc->getProperty("Sensitive Property") == "value1");
+  CHECK(proc->getProperty("Simple Property") == "value3");
 }
 
 TEST_CASE("If sensitive parameter scope is set to selected sensitive parameter list is required") {
@@ -1638,7 +1668,7 @@ TEST_CASE("Parameter providers can be configured to make all parameters sensitiv
 
   auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
-  REQUIRE(proc->getProperty("Sensitive Property") == "value1");
+  CHECK(proc->getProperty("Sensitive Property") == "value1");
 }
 
 TEST_CASE("Parameter context can be inherited from parameter provider generated parameter context") {
@@ -1697,7 +1727,7 @@ TEST_CASE("Parameter context can be inherited from parameter provider generated 
 
   auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
-  REQUIRE(proc->getProperty("Simple Property") == "value1");
+  CHECK(proc->getProperty("Simple Property") == "value1");
 }
 
 TEST_CASE("Parameter context names cannot conflict with parameter provider generated parameter context names") {

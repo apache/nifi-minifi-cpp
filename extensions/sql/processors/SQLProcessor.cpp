@@ -28,8 +28,7 @@
 namespace org::apache::nifi::minifi::processors {
 
 void SQLProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string controllerService;
-  context.getProperty(DBControllerService, controllerService);
+  std::string controllerService = context.getProperty(DBControllerService).value_or("");
 
   if (auto service = context.getControllerService(controllerService, getUUID())) {
     db_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(service);

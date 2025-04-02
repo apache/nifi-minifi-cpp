@@ -26,7 +26,7 @@
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
 #include "utils/Export.h"
 
@@ -54,13 +54,13 @@ class SplitContent final : public core::ProcessorImpl {
       core::PropertyDefinitionBuilder<>::createProperty("Byte Sequence")
           .withDescription("A representation of bytes to look for and upon which to split the source file into separate files")
           .isRequired(true)
-          .withPropertyType(core::StandardPropertyTypes::NON_BLANK_TYPE)
+          .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
           .build();
 
   EXTENSIONAPI static constexpr auto KeepByteSequence =
       core::PropertyDefinitionBuilder<>::createProperty("Keep Byte Sequence")
           .withDescription("Determines whether or not the Byte Sequence should be included with each Split")
-          .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+          .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
           .withDefaultValue("false")
           .isRequired(true)
           .build();

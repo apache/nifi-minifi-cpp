@@ -24,7 +24,6 @@
 #include <optional>
 #include <unordered_map>
 
-#include "core/state/Value.h"
 #include "core/state/PublishedMetricProvider.h"
 #include "core/Core.h"
 #include "core/Connectable.h"

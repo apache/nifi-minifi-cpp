@@ -40,7 +40,7 @@
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
 #include "FlowFileRecord.h"
 
@@ -74,12 +74,12 @@ class ExecuteProcess final : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto BatchDuration = core::PropertyDefinitionBuilder<>::createProperty("Batch Duration")
       .withDescription("If the process is expected to be long-running and produce textual output, a batch duration can be specified.")
-      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("0 sec")
       .build();
   EXTENSIONAPI static constexpr auto RedirectErrorStream = core::PropertyDefinitionBuilder<>::createProperty("Redirect Error Stream")
       .withDescription("If true will redirect any error stream output of the process to the output stream.")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

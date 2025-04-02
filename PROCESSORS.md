@@ -118,8 +118,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name                     | Default Value   | Allowable Values                 | Description                                                                            |
 |--------------------------|-----------------|----------------------------------|----------------------------------------------------------------------------------------|
 | Network Interface Filter |                 |                                  | A regular expression to filter ip addresses based on the name of the network interface |
-| Hostname Attribute       | source.hostname |                                  | Flowfile attribute used to record the agent's hostname                                 |
-| IP Attribute             | source.ipv4     |                                  | Flowfile attribute used to record the agent's IP addresses in a comma separated list   |
+| **Hostname Attribute**   | source.hostname |                                  | Flowfile attribute used to record the agent's hostname                                 |
+| **IP Attribute**         | source.ipv4     |                                  | Flowfile attribute used to record the agent's IP addresses in a comma separated list   |
 | Refresh Policy           | On schedule     | On schedule<br/>On every trigger | When to recalculate the host info                                                      |
 
 ### Relationships
@@ -669,10 +669,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description     |
-|---------|-----------------|
-| success | Script succeeds |
-| failure | Script fails    |
+| Name     | Description        |
+|----------|--------------------|
+| success  | Script succeeds    |
+| failure  | Script fails       |
+| original | Original flow file |
 
 
 ## ExecuteScript
@@ -694,10 +695,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description      |
-|---------|------------------|
-| success | Script successes |
-| failure | Script failures  |
+| Name     | Description        |
+|----------|--------------------|
+| success  | Script successes   |
+| failure  | Script failures    |
+| original | Original flow file |
 
 
 ## ExecuteSQL
@@ -891,7 +893,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |--------------------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Hostname**                   |               |                  | The ip address or hostname of the destination.<br/>**Supports Expression Language: true**                                                             |
 | **Port**                       | 502           |                  | The port or service on the destination.<br/>**Supports Expression Language: true**                                                                    |
-| **Unit Identifier**            | 0             |                  | Unit identifier<br/>**Supports Expression Language: true**                                                                                            |
+| **Unit Identifier**            | 1             |                  | Unit identifier<br/>**Supports Expression Language: true**                                                                                            |
 | **Idle Connection Expiration** | 15 seconds    |                  | The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature. |
 | **Connection Per FlowFile**    | false         | true<br/>false   | Specifies whether to send each FlowFile's content on an individual connection.                                                                        |
 | **Timeout**                    | 15 seconds    |                  | The timeout for connecting to and communicating with the destination.                                                                                 |
@@ -1212,11 +1214,11 @@ HashContent calculates the checksum of the content of the flowfile and adds it a
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name           | Default Value | Allowable Values | Description                                            |
-|----------------|---------------|------------------|--------------------------------------------------------|
-| Hash Attribute | Checksum      |                  | Attribute to store checksum to                         |
-| Hash Algorithm | SHA256        |                  | Name of the algorithm used to generate checksum        |
-| Fail on empty  | false         |                  | Route to failure relationship in case of empty content |
+| Name               | Default Value | Allowable Values | Description                                            |
+|--------------------|---------------|------------------|--------------------------------------------------------|
+| Hash Attribute     | Checksum      |                  | Attribute to store checksum to                         |
+| **Hash Algorithm** | SHA256        |                  | Name of the algorithm used to generate checksum        |
+| Fail on empty      | false         | true<br/>false   | Route to failure relationship in case of empty content |
 
 ### Relationships
 
@@ -1374,7 +1376,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                                          | Default Value   | Allowable Values | Description                                                                                                                                                                                        |
 |-----------------------------------------------|-----------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Base Path                                     | contentListener |                  | Base path for incoming connections                                                                                                                                                                 |
+| **Base Path**                                 | contentListener |                  | Base path for incoming connections                                                                                                                                                                 |
 | **Listening Port**                            | 80              |                  | The Port to listen on for incoming connections. 0 means port is going to be selected randomly.                                                                                                     |
 | Authorized DN Pattern                         | .*              |                  | A Regular Expression to apply against the Distinguished Name of incoming connections. If the Pattern does not match the DN, the connection will be refused.                                        |
 | SSL Certificate                               |                 |                  | File containing PEM-formatted file including TLS/SSL certificate and key                                                                                                                           |
@@ -1382,8 +1384,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 | SSL Verify Peer                               | no              | yes<br/>no       | Whether or not to verify the client's certificate (yes/no)                                                                                                                                         |
 | SSL Minimum Version                           | TLS1.2          | TLS1.2           | Minimum TLS/SSL version allowed (TLS1.2)                                                                                                                                                           |
 | HTTP Headers to receive as Attributes (Regex) |                 |                  | Specifies the Regular Expression that determines the names of HTTP Headers that should be passed along as FlowFile attributes                                                                      |
-| Batch Size                                    | 20000           |                  | Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.                                                                         |
-| Buffer Size                                   | 20000           |                  | Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. If the buffer full, the request is refused. If set to zero the buffer is unlimited. |
+| Batch Size                                    | 5               |                  | Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.                                                                         |
+| Buffer Size                                   | 5               |                  | Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. If the buffer full, the request is refused. If set to zero the buffer is unlimited. |
 
 ### Relationships
 
@@ -1740,16 +1742,16 @@ Logs attributes of flow files in the MiNiFi application log.
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                        | Default Value | Allowable Values                                     | Description                                                                                                                                                    |
-|-----------------------------|---------------|------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Log Level                   |               | trace<br>debug<br>info<br>warn<br>error<br>critical  | The Log Level to use when logging the Attributes                                                                                                               |
-| Attributes to Log           |               |                                                      | A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.                                                                  |
-| Attributes to Ignore        |               |                                                      | A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.                                                               |
-| Log Payload                 | false         | true<br/>false                                       | If true, the FlowFile's payload will be logged, in addition to its attributes. Otherwise, just the Attributes will be logged.                                  |
-| Hexencode Payload           | false         | true<br/>false                                       | If true, the FlowFile's payload will be logged in a hexencoded format                                                                                          |
-| Maximum Payload Line Length | 0             |                                                      | The logged payload will be broken into lines this long. 0 means no newlines will be added.                                                                     |
-| Log Prefix                  |               |                                                      | Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.                                                  |
-| FlowFiles To Log            | 1             |                                                      | Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously. |
+| Name                        | Default Value | Allowable Values                                         | Description                                                                                                                                                    |
+|-----------------------------|---------------|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Log Level                   |               | trace<br/>debug<br/>info<br/>warn<br/>error<br/>critical | The Log Level to use when logging the Attributes                                                                                                               |
+| Attributes to Log           |               |                                                          | A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.                                                                  |
+| Attributes to Ignore        |               |                                                          | A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.                                                               |
+| Log Payload                 | false         | true<br/>false                                           | If true, the FlowFile's payload will be logged, in addition to its attributes. Otherwise, just the Attributes will be logged.                                  |
+| Hexencode Payload           | false         | true<br/>false                                           | If true, the FlowFile's payload will be logged in a hexencoded format                                                                                          |
+| Maximum Payload Line Length | 0             |                                                          | The logged payload will be broken into lines this long. 0 means no newlines will be added.                                                                     |
+| Log Prefix                  |               |                                                          | Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.                                                  |
+| FlowFiles To Log            | 1             |                                                          | Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously. |
 
 ### Relationships
 
@@ -2302,7 +2304,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Directory Permissions          |               |                             | Sets the permissions on the directories being created if 'Create Missing Directories' property is set. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems. |
 | Directory                      | .             |                             | The output directory to which to put files<br/>**Supports Expression Language: true**                                                                                                |
 | Conflict Resolution Strategy   | fail          | fail<br/>replace<br/>ignore | Indicates what should happen when a file with the same name already exists in the output directory                                                                                   |
-| **Create Missing Directories** | true          |                             | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.                                                                |
+| **Create Missing Directories** | true          | true<br/>false              | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.                                                                |
 | Maximum File Count             | -1            |                             | Specifies the maximum number of files that can exist in the output directory                                                                                                         |
 
 ### Relationships
@@ -3005,12 +3007,12 @@ Splits a text file into multiple smaller text files on line boundaries limited b
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                          | Default Value | Allowable Values | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-|-------------------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Line Split Count**          |               |                  | The number of lines that will be added to each split file, excluding header lines. A value of zero requires Maximum Fragment Size to be set, and line count will not be considered in determining splits.                                                                                                                                                                                                                                                                                             |
-| Maximum Fragment Size         |               |                  | The maximum size of each split file, including header lines. NOTE: in the case where a single line exceeds this property (including headers, if applicable), that line will be output in a split of its own which exceeds this Maximum Fragment Size setting.                                                                                                                                                                                                                                         |
-| **Header Line Count**         | 0             |                  | The number of lines that should be considered part of the header; the header lines will be duplicated to all split files.                                                                                                                                                                                                                                                                                                                                                                             |
-| Header Line Marker Characters |               |                  | The first character(s) on the line of the datafile which signifies a header line. This value is ignored when Header Line Count is non-zero. The first line not containing the Header Line Marker Characters and all subsequent lines are considered non-header                                                                                                                                                                                                                                        |
+| Name                          | Default Value | Allowable Values | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|-------------------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Line Split Count**          |               |                  | The number of lines that will be added to each split file, excluding header lines. A value of zero requires Maximum Fragment Size to be set, and line count will not be considered in determining splits.                                                                                                                                                                                                                                                                                                   |
+| Maximum Fragment Size         |               |                  | The maximum size of each split file, including header lines. NOTE: in the case where a single line exceeds this property (including headers, if applicable), that line will be output in a split of its own which exceeds this Maximum Fragment Size setting.                                                                                                                                                                                                                                               |
+| **Header Line Count**         | 0             |                  | The number of lines that should be considered part of the header; the header lines will be duplicated to all split files.                                                                                                                                                                                                                                                                                                                                                                                   |
+| Header Line Marker Characters |               |                  | The first character(s) on the line of the datafile which signifies a header line. This value is ignored when Header Line Count is non-zero. The first line not containing the Header Line Marker Characters and all subsequent lines are considered non-header                                                                                                                                                                                                                                              |
 | **Remove Trailing Newlines**  | true          | true<br/>false   | Whether to remove newlines at the end of each split file. This should be false if you intend to merge the split files later. If this is set to 'true' and a FlowFile is generated that contains only 'empty lines' (i.e., consists only of \r and \n characters), the FlowFile will not be emitted. Note, however, that if header lines are specified, the resultant FlowFile will never be empty as it will consist of the header lines, so a FlowFile may be emitted that contains only the header lines. |
 
 ### Relationships

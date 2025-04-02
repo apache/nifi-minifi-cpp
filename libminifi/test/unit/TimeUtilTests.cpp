@@ -193,6 +193,7 @@ TEST_CASE("Test string to duration conversion", "[timedurationtests]") {
   CHECK(StringToDuration<std::chrono::nanoseconds>("2 years") == std::chrono::years(2));
 
   CHECK(StringToDuration<std::chrono::seconds>("5 apples") == std::nullopt);
+  CHECK(StringToDuration<std::chrono::seconds>("20") == std::nullopt);
 }
 
 namespace {

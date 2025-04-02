@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "core/state/nodes/SchedulingNodes.h"
+#include "core/state/Value.h"
 
 namespace org::apache::nifi::minifi::state::response {
 

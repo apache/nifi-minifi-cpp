@@ -26,7 +26,7 @@
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "google/cloud/storage/oauth2/credentials.h"
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"
@@ -46,7 +46,7 @@ class GCSProcessor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto NumberOfRetries = core::PropertyDefinitionBuilder<>::createProperty("Number of retries")
       .withDescription("How many retry attempts should be made before routing to the failure relationship.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("6")
       .isRequired(true)
       .supportsExpressionLanguage(false)
