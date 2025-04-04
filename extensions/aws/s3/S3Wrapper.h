@@ -29,25 +29,26 @@
 #include <utility>
 #include <vector>
 
-#include "aws/s3/model/StorageClass.h"
-#include "aws/s3/model/ServerSideEncryption.h"
+#include "Exception.h"
+#include "MultipartUploadStateStorage.h"
+#include "S3RequestSender.h"
 #include "aws/s3/model/ObjectCannedACL.h"
+#include "aws/s3/model/ServerSideEncryption.h"
+#include "aws/s3/model/StorageClass.h"
 #include "aws/s3/model/ChecksumAlgorithm.h"
 
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
-#include "utils/AWSInitializer.h"
-#include "utils/OptionalUtils.h"
-#include "utils/StringUtils.h"
-#include "utils/ListingStateManager.h"
-#include "utils/gsl.h"
-#include "S3RequestSender.h"
-#include "Exception.h"
-#include "MultipartUploadStateStorage.h"
-#include "range/v3/algorithm/find.hpp"
-#include "utils/Literals.h"
 #include "io/InputStream.h"
 #include "io/OutputStream.h"
+#include "range/v3/algorithm/find.hpp"
+#include "utils/AWSInitializer.h"
+#include "utils/ListingStateManager.h"
+#include "utils/Literals.h"
+#include "utils/OptionalUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/gsl.h"
+#include "utils/ProxyOptions.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -127,7 +128,7 @@ struct RequestParameters {
   Aws::Auth::AWSCredentials credentials;
   Aws::Client::ClientConfiguration client_config;
 
-  void setClientConfig(const aws::s3::ProxyOptions& proxy, const std::string& endpoint_override_url) {
+  void setClientConfig(const aws::ProxyOptions& proxy, const std::string& endpoint_override_url) {
     client_config.proxyHost = proxy.host;
     client_config.proxyPort = proxy.port;
     client_config.proxyUserName = proxy.username;
