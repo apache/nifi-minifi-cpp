@@ -55,7 +55,7 @@ uint64_t ListingStateManager::getLatestListedKeyTimestampInMilliseconds(const st
     return *stored_listed_key_timestamp;
   }
 
-  logger_->log_error("Invalid listed key timestamp, returning 0");
+  logger_->log_error("Invalid listed key timestamp '{}', returning 0", stored_listed_key_timestamp_str);
   return 0;
 }
 
