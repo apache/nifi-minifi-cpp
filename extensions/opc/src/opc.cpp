@@ -347,6 +347,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   logger->log_trace("Trying to find node ids for {}", path.c_str());
 
   auto tokens = utils::string::splitAndTrimRemovingEmpty(path, "/");
+  gsl_Expects(!tokens.empty());
 
   UA_BrowsePath browse_path;
   UA_BrowsePath_init(&browse_path);

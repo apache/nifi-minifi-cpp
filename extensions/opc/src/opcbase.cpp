@@ -116,7 +116,7 @@ void BaseOPCProcessor::readPathReferenceTypes(core::ProcessContext& context, con
     return;
   }
   auto path_reference_types = utils::string::splitAndTrimRemovingEmpty(value, "/");
-  if (path_reference_types.size() != utils::string::splitAndTrimRemovingEmpty(node_id, "/").size() - 1) {
+  if (path_reference_types.size() + 1 != utils::string::splitAndTrimRemovingEmpty(node_id, "/").size()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Path reference types must be provided for each node pair in the path!");
   }
   for (const auto& reference_type : path_reference_types) {

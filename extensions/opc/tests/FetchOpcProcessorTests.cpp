@@ -24,11 +24,11 @@
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("Test fetching using path node id", "[fetchopcprocessor]") {
-  OpcUaTestServer server;
+  OpcUaTestServer server(4841);
   server.start();
   SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto fetch_opc_processor = controller.getProcessor();
-  fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType, "Path");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID, "Simulator/Default/Device1");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex, std::to_string(server.getNamespaceIndex()));
@@ -60,11 +60,11 @@ TEST_CASE("Test fetching using path node id", "[fetchopcprocessor]") {
 }
 
 TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocessor]") {
-  OpcUaTestServer server;
+  OpcUaTestServer server(4841);
   server.start();
   SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto fetch_opc_processor = controller.getProcessor();
-  fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType, "Path");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID, "Simulator/Default/Device1/INT3");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex, std::to_string(server.getNamespaceIndex()));
@@ -96,7 +96,7 @@ TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocess
 TEST_CASE("Test missing path reference types", "[fetchopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto fetch_opc_processor = controller.getProcessor();
-  fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType, "Path");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID, "Simulator/Default/Device1/INT3");
   fetch_opc_processor->setProperty(processors::FetchOPCProcessor::PathReferenceTypes, "Organizes/Organizes");
@@ -106,7 +106,7 @@ TEST_CASE("Test missing path reference types", "[fetchopcprocessor]") {
 TEST_CASE("Test username and password should both be provided", "[fetchopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::Username, "user");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::Password, "");
 
@@ -116,7 +116,7 @@ TEST_CASE("Test username and password should both be provided", "[fetchopcproces
 TEST_CASE("Test certificate path and key path should both be provided", "[fetchopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::CertificatePath, "cert");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::KeyPath, "");
 
@@ -126,7 +126,7 @@ TEST_CASE("Test certificate path and key path should both be provided", "[fetcho
 TEST_CASE("Test application uri should be provided if certificate is provided", "[fetchopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::CertificatePath, "cert");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::KeyPath, "key");
 
@@ -136,7 +136,7 @@ TEST_CASE("Test application uri should be provided if certificate is provided", 
 TEST_CASE("Test certificate path must be valid", "[fetchopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::CertificatePath, "/invalid/cert/path");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::KeyPath, "key");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::ApplicationURI, "appuri");
@@ -153,7 +153,7 @@ TEST_CASE("Test key path must be valid", "[fetchopcprocessor]") {
     cert_file << "test";
     cert_file.close();
   }
-  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::CertificatePath, test_cert_path.string());
   put_opc_processor->setProperty(processors::FetchOPCProcessor::KeyPath, "/invalid/key");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::ApplicationURI, "appuri");
@@ -170,7 +170,7 @@ TEST_CASE("Test trusted certs path must be valid", "[fetchopcprocessor]") {
     cert_file << "test";
     cert_file.close();
   }
-  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4840/");
+  put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint, "opc.tcp://127.0.0.1:4841/");
   put_opc_processor->setProperty(processors::FetchOPCProcessor::CertificatePath, test_cert_path.string());
   put_opc_processor->setProperty(processors::FetchOPCProcessor::KeyPath, test_cert_path.string());
   put_opc_processor->setProperty(processors::FetchOPCProcessor::TrustedPath, "/invalid/trusted");

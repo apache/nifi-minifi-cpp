@@ -30,10 +30,11 @@ namespace org::apache::nifi::minifi::test {
 
 class OpcUaTestServer {
  public:
-  OpcUaTestServer() : server_(UA_Server_new()) {
+  OpcUaTestServer(UA_UInt16 port = 4840) : server_(UA_Server_new()) {
     UA_ServerConfig_setDefault(UA_Server_getConfig(server_));
 
     auto config = UA_Server_getConfig(server_);
+    UA_ServerConfig_setMinimal(config, port, nullptr);
     config->logging->log = [] (void *log_context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {
       char buffer[1024];
       vsnprintf(buffer, sizeof(buffer), msg, args);
