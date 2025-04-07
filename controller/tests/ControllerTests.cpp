@@ -204,7 +204,7 @@ class TestControllerSocketReporter : public c2::ControllerSocketReporter {
   void setRoot(core::ProcessGroup* /*root*/) override {
   }
 
-  void setFlowStatusDependencies(core::BulletinStore* /*bulletin_store*/, const std::filesystem::path& /*flowile_repo_dir*/, const std::filesystem::path& /*flowile_repo_dir*/) override {
+  void setFlowStatusDependencies(core::BulletinStore* /*bulletin_store*/, const std::filesystem::path& /*flowfile_repo_dir*/, const std::filesystem::path& /*flowfile_repo_dir*/) override {
   }
 
   std::string getFlowStatus(const std::vector<c2::FlowStatusRequest>& /*requests*/) override {

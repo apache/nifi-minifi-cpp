@@ -44,7 +44,7 @@ class ControllerSocketMetricsPublisher : public state::MetricsPublisherImpl, pub
   std::string getAgentManifest() override;
 
   void setRoot(core::ProcessGroup* root) override;
-  void setFlowStatusDependencies(core::BulletinStore* bulletin_store, const std::filesystem::path& flowile_repo_dir, const std::filesystem::path& content_repo_dir) override;
+  void setFlowStatusDependencies(core::BulletinStore* bulletin_store, const std::filesystem::path& flowfile_repo_dir, const std::filesystem::path& content_repo_dir) override;
   std::string getFlowStatus(const std::vector<FlowStatusRequest>& requests) override;
 
  protected:

@@ -41,7 +41,7 @@ class ControllerSocketReporter {
   virtual std::unordered_set<std::string> getConnections() = 0;
   virtual std::string getAgentManifest() = 0;
   virtual void setRoot(core::ProcessGroup* root) = 0;
-  virtual void setFlowStatusDependencies(core::BulletinStore* bulletin_store, const std::filesystem::path& flowile_repo_dir, const std::filesystem::path& content_repo_dir) = 0;
+  virtual void setFlowStatusDependencies(core::BulletinStore* bulletin_store, const std::filesystem::path& flowfile_repo_dir, const std::filesystem::path& content_repo_dir) = 0;
   virtual std::string getFlowStatus(const std::vector<FlowStatusRequest>& requests) = 0;
   virtual ~ControllerSocketReporter() = default;
 };
