@@ -160,6 +160,11 @@ class VerifyC2AssetSync : public VerifyC2Base {
     configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation");
   }
 
+  void testSetup() override {
+    LogTestController::getInstance().setTrace<minifi::utils::file::AssetManager>();
+    VerifyC2Base::testSetup();
+  }
+
   void runAssertions() override {
     verify_();
   }
@@ -233,17 +238,20 @@ TEST_CASE("C2AssetSync", "[c2test]") {
           {(asset_dir / "nested" / "C.txt").string(), file_C},
           {(asset_dir / ".state").string(), hb_handler.assetState()}
       };
-      auto actual_assets = get_asset_structure();
-      if (actual_assets != expected_assets) {
-        controller.getLogger()->log_error("Mismatch between expected and actual assets");
-        for (auto& [path, content] : expected_assets) {
-          controller.getLogger()->log_error("Expected asset at {}: {}", path, content);
+      REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&] {
+        auto actual_assets = get_asset_structure();
+        if (actual_assets != expected_assets) {
+          controller.getLogger()->log_error("Mismatch between expected and actual assets");
+          for (auto& [path, content] : expected_assets) {
+            controller.getLogger()->log_error("Expected asset at {}: {}", path, content);
+          }
+          for (auto& [path, content] : actual_assets) {
+            controller.getLogger()->log_error("Actual asset at {}: {}", path, content);
+          }
+          return false;
         }
-        for (auto& [path, content] : actual_assets) {
-          controller.getLogger()->log_error("Actual asset at {}: {}", path, content);
-        }
-        REQUIRE(false);
-      }
+        return true;
+      }));
     }
 
     hb_handler.removeAsset("Av1");
@@ -260,17 +268,20 @@ TEST_CASE("C2AssetSync", "[c2test]") {
           {(asset_dir / ".state").string(), hb_handler.assetState()}
       };
 
-      auto actual_assets = get_asset_structure();
-      if (actual_assets != expected_assets) {
-        controller.getLogger()->log_error("Mismatch between expected and actual assets");
-        for (auto& [path, content] : expected_assets) {
-          controller.getLogger()->log_error("Expected asset at {}: {}", path, content);
+      REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&] {
+        auto actual_assets = get_asset_structure();
+        if (actual_assets != expected_assets) {
+          controller.getLogger()->log_error("Mismatch between expected and actual assets");
+          for (auto& [path, content] : expected_assets) {
+            controller.getLogger()->log_error("Expected asset at {}: {}", path, content);
+          }
+          for (auto& [path, content] : actual_assets) {
+            controller.getLogger()->log_error("Actual asset at {}: {}", path, content);
+          }
+          return false;
         }
-        for (auto& [path, content] : actual_assets) {
-          controller.getLogger()->log_error("Actual asset at {}: {}", path, content);
-        }
-        REQUIRE(false);
-      }
+        return true;
+      }));
     }
   });
 
