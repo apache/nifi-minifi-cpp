@@ -38,7 +38,7 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   }
   ~RunLlamaCppInference() override = default;
 
-  EXTENSIONAPI static constexpr const char* Description = "LlamaCpp processor to use llama.cpp library for running langage model inference. "
+  EXTENSIONAPI static constexpr const char* Description = "LlamaCpp processor to use llama.cpp library for running language model inference. "
       "The final prompt used for the inference created using the System Prompt and Prompt proprerty values and the content of the flowfile referred to as input data or flow file content.";
 
   EXTENSIONAPI static constexpr auto ModelPath = core::PropertyDefinitionBuilder<>::createProperty("Model Path")
@@ -109,8 +109,8 @@ class RunLlamaCppInference : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto SystemPrompt = core::PropertyDefinitionBuilder<>::createProperty("System Prompt")
       .withDescription("The system prompt for the inference.")
-      .withDefaultValue("You are a helpful assisstant. You are given a question with some possible input data otherwise called flow file content. "
-                        "You are expected to generate a response based on the quiestion and the input data.")
+      .withDefaultValue("You are a helpful assistant. You are given a question with some possible input data otherwise called flow file content. "
+                        "You are expected to generate a response based on the question and the input data.")
       .isRequired(true)
       .build();
 
