@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::test {
 
 class OpcUaTestServer {
  public:
-  OpcUaTestServer(UA_UInt16 port = 4840) : server_(UA_Server_new()) {
+  explicit OpcUaTestServer(UA_UInt16 port = 4840) : server_(UA_Server_new()) {
     UA_ServerConfig_setDefault(UA_Server_getConfig(server_));
 
     auto config = UA_Server_getConfig(server_);
