@@ -93,9 +93,9 @@ void ControllerSocketMetricsPublisher::setRoot(core::ProcessGroup* root) {
   flow_status_builder_.setRoot(root);
 }
 
-void ControllerSocketMetricsPublisher::setFlowStatusDependencies(core::BulletinStore* bulletin_store, const std::filesystem::path& flowile_repo_dir, const std::filesystem::path& content_repo_dir) {
+void ControllerSocketMetricsPublisher::setFlowStatusDependencies(core::BulletinStore* bulletin_store, const std::filesystem::path& flowfile_repo_dir, const std::filesystem::path& content_repo_dir) {
   flow_status_builder_.setBulletinStore(bulletin_store);
-  flow_status_builder_.setRepositoryPaths(flowile_repo_dir, content_repo_dir);
+  flow_status_builder_.setRepositoryPaths(flowfile_repo_dir, content_repo_dir);
 }
 
 std::string ControllerSocketMetricsPublisher::getFlowStatus(const std::vector<FlowStatusRequest>& requests) {
