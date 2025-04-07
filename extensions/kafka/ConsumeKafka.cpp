@@ -203,10 +203,10 @@ void ConsumeKafka::configureNewConnection(core::ProcessContext &context) {
   //
   // As far as I understand, instead of rd_kafka_position() an rd_kafka_committed() call if preferred here,
   // as it properly fetches offsets from the broker
-  if (const auto retrieved_commited = rd_kafka_committed(consumer_.get(), kf_topic_partition_list_.get(), METADATA_COMMUNICATIONS_TIMEOUT_MS); RD_KAFKA_RESP_ERR_NO_ERROR != retrieved_commited) {
+  if (const auto retrieved_committed = rd_kafka_committed(consumer_.get(), kf_topic_partition_list_.get(), METADATA_COMMUNICATIONS_TIMEOUT_MS); RD_KAFKA_RESP_ERR_NO_ERROR != retrieved_committed) {
     logger_->log_error("Retrieving committed offsets for topics+partitions failed {}: {}",
-      magic_enum::enum_underlying(retrieved_commited),
-      rd_kafka_err2str(retrieved_commited));
+      magic_enum::enum_underlying(retrieved_committed),
+      rd_kafka_err2str(retrieved_committed));
   }
 
   if (rd_kafka_resp_err_t poll_set_consumer_response = rd_kafka_poll_set_consumer(consumer_.get()); RD_KAFKA_RESP_ERR_NO_ERROR != poll_set_consumer_response) {
@@ -335,7 +335,7 @@ void ConsumeKafka::commitOffsetsFromMessages(const std::unordered_map<KafkaMessa
 
 void ConsumeKafka::commitOffsetsFromIncomingFlowFiles(core::ProcessSession& session) const {
   std::vector<std::pair<std::shared_ptr<core::FlowFile>, core::Relationship>> flow_files;
-  while (auto ff = session.get()) { flow_files.push_back({ff, Commited}); }
+  while (auto ff = session.get()) { flow_files.push_back({ff, Committed}); }
   if (flow_files.empty()) { return; }
 
   std::unordered_map<KafkaMessageLocation, int64_t> max_offsets;
