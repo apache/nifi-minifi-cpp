@@ -39,7 +39,7 @@ class PythonLibLoader {
     }
 #if defined(__APPLE__)
     std::string command = python_command +
-      R"###( -c "import sysconfig, os, glob; v = sysconfig.get_config_vars(); lib_dir = v['LIBDIR']; so_paths = glob.glob(f'{lib_dir}/*.dylib'); print(list(filter(os.path.exists, so_paths))[0])")###";
+      R"###( -c "import sysconfig, os, glob; v = sysconfig.get_config_vars(); lib_dir = v['LIBDIR']; version = v['VERSION']; so_paths = glob.glob(f'{lib_dir}/libpython{version}.dylib'); print(list(filter(os.path.exists, so_paths))[0])")###";
 #else
     std::string command = python_command +
       R"###( -c "import sysconfig, os, glob; v = sysconfig.get_config_vars(); lib_dir = v['LIBDIR']; ld_lib = v['LDLIBRARY']; so_paths = glob.glob(f'{lib_dir}/*{ld_lib}*'); so_paths.extend(glob.glob(f'{lib_dir}/*/*{ld_lib}*')); print(list(filter(os.path.exists, so_paths))[0])")###";
