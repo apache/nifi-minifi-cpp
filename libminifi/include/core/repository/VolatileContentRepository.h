@@ -17,8 +17,11 @@
 
 #pragma once
 
+#include <unordered_map>
+#include <string>
+#include <memory>
+#include <mutex>
 #include "core/ContentRepository.h"
-#include <map>
 
 namespace org::apache::nifi::minifi::core::repository {
 

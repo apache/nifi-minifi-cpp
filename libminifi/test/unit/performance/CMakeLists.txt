@@ -17,7 +17,7 @@
 # under the License.
 #
 
-find_package(benchmark REQUIRED)
+include(FetchBenchmark)
 
 GETSOURCEFILES(PERF_TESTS "${TEST_DIR}/unit/performance")
 
