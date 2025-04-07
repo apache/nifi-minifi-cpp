@@ -58,11 +58,11 @@ struct to_expected_wrapper {
 };
 
 struct or_throw_wrapper {
-  std::string reason;
+  std::string_view reason{};
 };
 
 struct or_terminate_wrapper {
-  std::string reason;
+  std::string_view reason{};
 };
 }  // namespace detail
 
@@ -121,12 +121,12 @@ inline detail::to_optional_wrapper toOptional() noexcept { return {}; }
  * For optional-like types, returns the present value or throws with the provided message
  * It is recommended that expect messages are used to describe the reason you expect the optional-like to have value.
  */
-inline detail::or_throw_wrapper orThrow(std::string&& exception_message) noexcept { return {std::forward<std::string>(std::move(exception_message))}; }
+inline detail::or_throw_wrapper orThrow(const std::string_view exception_message) noexcept { return {exception_message}; }
 
 /**
  * For optional-like types, returns the present value or aborts with the provided message
  */
-inline detail::or_terminate_wrapper orTerminate(std::string&& exception_message) noexcept { return {std::forward<std::string>(std::move(exception_message))}; }
+inline detail::or_terminate_wrapper orTerminate(const std::string_view exception_message) noexcept { return {exception_message}; }
 
 
 /**

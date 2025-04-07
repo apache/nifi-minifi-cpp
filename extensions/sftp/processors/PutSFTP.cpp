@@ -101,7 +101,7 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
   auto last_modified_ = utils::parseOptionalProperty(context, LastModifiedTime, flow_file.get())
       | utils::andThen(utils::timeutils::parseDateTimeStr);
 
-  std::optional<uint32_t> permissions = context.getProperty(Permissions, flow_file.get()) | utils::andThen(parsing::parsePermissions) | utils::toOptional();
+  std::optional<uint32_t> permissions = context.getProperty(Permissions, flow_file.get()) | utils::andThen(parsing::parseUnixOctalPermissions) | utils::toOptional();
   std::optional<uint64_t> remote_owner = utils::parseOptionalU64Property(context, RemoteOwner, flow_file.get());
   std::optional<uint64_t> remote_group = utils::parseOptionalU64Property(context, RemoteGroup, flow_file.get());
 

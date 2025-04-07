@@ -55,25 +55,25 @@ TEST_CASE("Test data size parsing") {
 }
 
 TEST_CASE("Test Permissions Parsing") {
-  CHECK(0777U == parsePermissions("0777"));
-  CHECK(0000U == parsePermissions("0000"));
-  CHECK(0644U == parsePermissions("0644"));
+  CHECK(0777U == parseUnixOctalPermissions("0777"));
+  CHECK(0000U == parseUnixOctalPermissions("0000"));
+  CHECK(0644U == parseUnixOctalPermissions("0644"));
 
-  CHECK_FALSE(parsePermissions("0999"));
-  CHECK_FALSE(parsePermissions("999"));
-  CHECK_FALSE(parsePermissions("0644a"));
-  CHECK_FALSE(parsePermissions("07777"));
+  CHECK_FALSE(parseUnixOctalPermissions("0999"));
+  CHECK_FALSE(parseUnixOctalPermissions("999"));
+  CHECK_FALSE(parseUnixOctalPermissions("0644a"));
+  CHECK_FALSE(parseUnixOctalPermissions("07777"));
 
-  CHECK(0777U == parsePermissions("rwxrwxrwx"));
-  CHECK(0000U == parsePermissions("---------"));
-  CHECK(0764U == parsePermissions("rwxrw-r--"));
-  CHECK(0444U == parsePermissions("r--r--r--"));
+  CHECK(0777U == parseUnixOctalPermissions("rwxrwxrwx"));
+  CHECK(0000U == parseUnixOctalPermissions("---------"));
+  CHECK(0764U == parseUnixOctalPermissions("rwxrw-r--"));
+  CHECK(0444U == parseUnixOctalPermissions("r--r--r--"));
 
-  CHECK_FALSE(parsePermissions("wxrwxrwxr"));
-  CHECK_FALSE(parsePermissions("foobarfoo"));
-  CHECK_FALSE(parsePermissions("foobar"));
+  CHECK_FALSE(parseUnixOctalPermissions("wxrwxrwxr"));
+  CHECK_FALSE(parseUnixOctalPermissions("foobarfoo"));
+  CHECK_FALSE(parseUnixOctalPermissions("foobar"));
 
-  CHECK_FALSE(parsePermissions("0644 banana"));
+  CHECK_FALSE(parseUnixOctalPermissions("0644 banana"));
 }
 
 TEST_CASE("Test Duration Parsing") {

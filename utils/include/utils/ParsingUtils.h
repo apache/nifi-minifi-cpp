@@ -40,7 +40,7 @@ nonstd::expected<TargetDuration, std::error_code> parseDuration(std::string_view
 nonstd::expected<uint64_t, std::error_code> parseDataSizeMinMax(std::string_view input, uint64_t minimum, uint64_t maximum);
 nonstd::expected<uint64_t, std::error_code> parseDataSize(std::string_view input);
 
-nonstd::expected<uint32_t, std::error_code> parsePermissions(std::string_view input);
+nonstd::expected<uint32_t, std::error_code> parseUnixOctalPermissions(std::string_view input);
 
 
 template<std::integral T>

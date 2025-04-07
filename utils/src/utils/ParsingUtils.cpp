@@ -87,7 +87,7 @@ nonstd::expected<uint64_t, std::error_code> parseDataSize(const std::string_view
   return parseDataSizeMinMax(input, std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
 }
 
-nonstd::expected<uint32_t, std::error_code> parsePermissions(const std::string_view input) {
+nonstd::expected<uint32_t, std::error_code> parseUnixOctalPermissions(const std::string_view input) {
   uint32_t result = 0U;
   if (input.size() == 9U) {
     /* Probably rwxrwxrwx formatted */
