@@ -261,7 +261,7 @@ class ConsumeKafka final : public KafkaProcessorBase {
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
       "Incoming Kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple messages per flowfile."};
-  EXTENSIONAPI static constexpr auto Commited = core::RelationshipDefinition{"commited",
+  EXTENSIONAPI static constexpr auto Committed = core::RelationshipDefinition{"committed",
       "Only when using \"Commit from incoming flowfiles\" policy. Flowfiles that were used for commiting offsets are routed here."};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure",
       "Only when using \"Commit from incoming flowfiles\" policy. Flowfiles that were malformed for commiting offsets are routed here."};

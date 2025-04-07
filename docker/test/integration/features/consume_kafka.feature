@@ -280,17 +280,17 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
   Scenario Outline: MiNiFi commit policy tests with incoming flowfiles
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And there is a "processed" subdirectory in the monitored directory
-    And there is a "commited" subdirectory in the monitored directory
+    And there is a "committed" subdirectory in the monitored directory
     And the "Topic Names" property of the ConsumeKafka processor is set to "ConsumeKafkaTest"
     And the "Commit Offsets Policy" property of the ConsumeKafka processor is set to "<commit_policy>"
     And the "Offset Reset" property of the ConsumeKafka processor is set to "<offset_reset>"
     And the "Security Protocol" property of the ConsumeKafka processor is set to "plaintext"
     And the "SASL Mechanism" property of the ConsumeKafka processor is set to "PLAIN"
     And a PutFile processor with the name "Consumed" and the "Directory" property set to "/tmp/output/processed" in the "kafka-consumer-flow" flow
-    And a PutFile processor with the name "Commited" and the "Directory" property set to "/tmp/output/commited" in the "kafka-consumer-flow" flow
+    And a PutFile processor with the name "Committed" and the "Directory" property set to "/tmp/output/committed" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the Consumed
     And the "success" relationship of the Consumed processor is connected to the ConsumeKafka
-    And the "commited" relationship of the ConsumeKafka processor is connected to the Commited
+    And the "committed" relationship of the ConsumeKafka processor is connected to the Committed
 
     And a kafka broker is set up in correspondence with the third-party kafka publisher
     And the kafka broker is started
@@ -303,7 +303,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
 
     When a message with content "Tiberius" is published to the "ConsumeKafkaTest" topic
     Then exactly these flowfiles are in the monitored directory's "processed" subdirectory in less than 15 seconds: "<contents_after_tiberius>"
-    And exactly these flowfiles are in the monitored directory's "commited" subdirectory in less than 15 seconds: "<contents_after_tiberius>"
+    And exactly these flowfiles are in the monitored directory's "committed" subdirectory in less than 15 seconds: "<contents_after_tiberius>"
 
     When a message with content "Caligula" is published to the "ConsumeKafkaTest" topic
     Then exactly these flowfiles are in the monitored directory's "processed" subdirectory in less than 15 seconds: "<contents_after_caligula>"
