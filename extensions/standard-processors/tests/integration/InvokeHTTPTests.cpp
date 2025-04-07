@@ -41,13 +41,15 @@ namespace org::apache::nifi::minifi::test {
 class TestHandler : public CivetHandler {
  public:
   bool handleGet(CivetServer*, struct mg_connection* conn) override {
-    headers_.clear();
-    auto req_info = mg_get_request_info(conn);
-    for (int i = 0; i < req_info->num_headers; ++i) {
-      auto header = &req_info->http_headers[i];
-      headers_[std::string(header->name)] = std::string(header->value);
-    }
+    storeHeaders(conn);
     mg_printf(conn, "HTTP/1.1 200 OK\r\n");
+    return true;
+  }
+
+  bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) override {
+    storeHeaders(conn);
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                    "text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
     return true;
   }
 
@@ -56,6 +58,15 @@ class TestHandler : public CivetHandler {
   }
 
  private:
+  void storeHeaders(struct mg_connection* conn) {
+    headers_.clear();
+    auto req_info = mg_get_request_info(conn);
+    for (int i = 0; i < req_info->num_headers; ++i) {
+      auto header = &req_info->http_headers[i];
+      headers_[std::string(header->name)] = std::string(header->value);
+    }
+  }
+
   std::unordered_map<std::string, std::string> headers_;
 };
 
@@ -383,7 +394,6 @@ TEST_CASE("Data transfer speed parsing") {
 
 TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers", "[InvokeHTTP][http][attribute][header][sanitize]") {
   using processors::InvokeHTTP;
-  log_attribute_->setProperty(processors::LogAttribute::LogPayload, "true");
   constexpr std::string_view test_content = "flow file content";
   std::string_view test_attr_value_in;
   std::string_view test_attr_value_out;
@@ -401,10 +411,10 @@ TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers
   };
 
   SingleProcessorTestController controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
-  const TestHTTPServer http_server(controller);
   auto* const invoke_http = controller.getProcessor<InvokeHTTP>();
+  const TestHTTPServer http_server;
   invoke_http->setProperty(InvokeHTTP::Method.name, "POST");
-  invoke_http->setProperty(InvokeHTTP::URL.name, http_server.URL);
+  invoke_http->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL);
   invoke_http->setProperty(InvokeHTTP::AttributesToSend.name, ".*");
   const auto result = controller.trigger(InputFlowFileData{.content = test_content, .attributes = {
     {std::string{InvokeHTTP::STATUS_MESSAGE}, std::string{test_attr_value_in}},
@@ -414,9 +424,9 @@ TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers
   CHECK(result.at(InvokeHTTP::RelRetry).empty());
   CHECK(!result.at(InvokeHTTP::Success).empty());
   CHECK(!result.at(InvokeHTTP::RelResponse).empty());
-  auto flow_file = result.at(InvokeHTTP::Success)[0];
-  CHECK(flow_file->getAttribute(InvokeHTTP::STATUS_MESSAGE).value() == test_attr_value_out);
-  CHECK(controller.plan->getContent(flow_file) == test_content);
+  CHECK(controller.plan->getContent(result.at(InvokeHTTP::Success)[0]) == test_content);
+  auto headers = http_server.getHeaders();
+  CHECK(headers.at(std::string{InvokeHTTP::STATUS_MESSAGE}) == test_attr_value_out);
 }
 
 }  // namespace org::apache::nifi::minifi::test
