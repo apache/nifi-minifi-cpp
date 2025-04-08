@@ -16,7 +16,6 @@
  */
 #include "SFTPClient.h"
 #include <algorithm>
-#include <array>
 #include <exception>
 #include <memory>
 #include <optional>
