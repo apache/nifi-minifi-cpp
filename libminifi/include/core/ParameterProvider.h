@@ -70,7 +70,7 @@ class ParameterProvider : public ConfigurableComponentImpl, public CoreComponent
       .build();
   MINIFIAPI static constexpr auto ReloadValuesOnRestart = core::PropertyDefinitionBuilder<>::createProperty("Reload Values On Restart")
       .withDescription("Reload provider-generated parameter context values when MiNiFi is restarted")
-      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .isRequired(true)
       .build();

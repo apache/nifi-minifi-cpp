@@ -20,8 +20,10 @@
 namespace org::apache::nifi::minifi::core {
 
 bool ParameterProvider::reloadValuesOnRestart() const {
-  if (auto reload_values_on_restart = getProperty<bool>(ReloadValuesOnRestart)) {
-    return *reload_values_on_restart;
+  if (auto reload_values_on_restart_str = getProperty(ReloadValuesOnRestart.name)) {
+    if (auto reload_values_on_restart = parsing::parseBool(*reload_values_on_restart_str)) {
+      return reload_values_on_restart.value();
+    }
   }
   throw ParameterException("Reload Values On Restart property is required");
 }
