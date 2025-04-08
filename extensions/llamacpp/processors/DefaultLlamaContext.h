@@ -31,7 +31,7 @@ class DefaultLlamaContext : public LlamaContext {
   ~DefaultLlamaContext() override;
 
   std::optional<std::string> applyTemplate(const std::vector<LlamaChatMessage>& messages) override;
-  nonstd::expected<uint64_t, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) override;
+  nonstd::expected<GenerationResult, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) override;
 
  private:
   llama_model* llama_model_{};

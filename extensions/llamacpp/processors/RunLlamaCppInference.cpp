@@ -58,6 +58,32 @@ void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::Proce
   llama_ctx_ = LlamaContext::create(model_path_, llama_sampler_params, llama_ctx_params);
 }
 
+void RunLlamaCppInference::increaseTokensIn(uint64_t token_count) {
+  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_.get());
+  gsl_Assert(llamacpp_metrics);
+  std::lock_guard<std::mutex> lock(llamacpp_metrics->tokens_in_mutex_);
+  if (llamacpp_metrics->tokens_in > std::numeric_limits<uint64_t>::max() - token_count) {
+    logger_->log_warn("Tokens in count overflow detected, resetting to 0");
+    llamacpp_metrics->tokens_in = token_count;
+    return;
+  }
+
+  llamacpp_metrics->tokens_in += token_count;
+}
+
+void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
+  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_.get());
+  gsl_Assert(llamacpp_metrics);
+  std::lock_guard<std::mutex> lock(llamacpp_metrics->tokens_out_mutex_);
+  if (llamacpp_metrics->tokens_out > std::numeric_limits<uint64_t>::max() - token_count) {
+    logger_->log_warn("Tokens out count overflow detected, resetting to 0");
+    llamacpp_metrics->tokens_out = token_count;
+    return;
+  }
+
+  llamacpp_metrics->tokens_out += token_count;
+}
+
 void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto flow_file = session.get();
   if (!flow_file) {
@@ -103,21 +129,27 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
   auto start_time = std::chrono::steady_clock::now();
 
   std::string text;
-  auto number_of_tokens_generated = llama_ctx_->generate(*input, [&] (std::string_view token) {
+  auto generation_result = llama_ctx_->generate(*input, [&] (std::string_view token) {
     text += token;
   });
 
   auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count();
 
-  if (!number_of_tokens_generated) {
-    logger_->log_error("Inference failed with generation error: '{}'", number_of_tokens_generated.error());
+  if (!generation_result) {
+    logger_->log_error("Inference failed with generation error: '{}'", generation_result.error());
     session.transfer(flow_file, Failure);
     return;
   }
 
-  logger_->log_debug("Number of tokens generated: {}", *number_of_tokens_generated);
+  increaseTokensIn(generation_result->num_tokens_in);
+  increaseTokensOut(generation_result->num_tokens_out);
+
+  logger_->log_debug("Number of tokens generated: {}", generation_result->num_tokens_out);
   logger_->log_debug("AI model inference time: {} ms", elapsed_time);
   logger_->log_debug("AI model output: {}", text);
+
+  flow_file->setAttribute(LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
+  flow_file->setAttribute(LlamaCppTokensPerSecond.name, std::to_string(generation_result->tokens_per_second));
 
   session.writeBuffer(flow_file, text);
   session.transfer(flow_file, Success);

@@ -32,6 +32,7 @@ This readme defines the metrics published by Apache NiFi. All options defined ar
   - [Processor Metrics](#processor-metrics)
     - [General Metrics](#general-metrics)
     - [GetFileMetrics](#getfilemetrics)
+    - [RunLlamaCppInferenceMetrics](#runllamacppinferencemetrics)
 
 ## Description
 
@@ -282,6 +283,21 @@ Processor level metric that reports metrics for the GetFile processor if defined
 |-----------------------|----------------------------------------------|------------------------------------------------|
 | accepted_files        | metric_class, processor_name, processor_uuid | Number of files that matched the set criterias |
 | input_bytes           | metric_class, processor_name, processor_uuid | Sum of file sizes processed                    |
+
+| Label          | Description                                                    |
+|----------------|----------------------------------------------------------------|
+| metric_class   | Class name to filter for this metric, set to GetFileMetrics    |
+| processor_name | Name of the processor                                          |
+| processor_uuid | UUID of the processor                                          |
+
+### RunLlamaCppInferenceMetrics
+
+Processor level metric that reports metrics for the RunLlamaCppInference processor if defined in the flow configuration.
+
+| Metric name           | Labels                                       | Description                                                                |
+|-----------------------|----------------------------------------------|----------------------------------------------------------------------------|
+| tokens_in             | metric_class, processor_name, processor_uuid | Number of tokens parsed from the input prompts in the processor's lifetime |
+| tokens_out            | metric_class, processor_name, processor_uuid | Number of tokens generated in the completion in the processor's lifetime   |
 
 | Label          | Description                                                    |
 |----------------|----------------------------------------------------------------|

@@ -17,17 +17,54 @@
 
 #pragma once
 
+#include <mutex>
+#include <atomic>
+
 #include "core/Processor.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "LlamaContext.h"
+#include "core/ProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
+
+class RunLlamaCppInferenceMetrics : public core::ProcessorMetricsImpl {
+ public:
+  explicit RunLlamaCppInferenceMetrics(const core::Processor& source_processor)
+  : core::ProcessorMetricsImpl(source_processor) {
+  }
+
+  std::vector<state::response::SerializedResponseNode> serialize() override {
+    auto resp = core::ProcessorMetricsImpl::serialize();
+    auto& root_node = resp[0];
+
+    state::response::SerializedResponseNode tokens_in_node{"TokensIn", tokens_in.load()};
+    root_node.children.push_back(tokens_in_node);
+
+    state::response::SerializedResponseNode tokens_out_node{"TokensOut", tokens_out.load()};
+    root_node.children.push_back(tokens_out_node);
+
+    return resp;
+  }
+
+  std::vector<state::PublishedMetric> calculateMetrics() override {
+    auto metrics = core::ProcessorMetricsImpl::calculateMetrics();
+    metrics.push_back({"tokens_in", static_cast<double>(tokens_in.load()), getCommonLabels()});
+    metrics.push_back({"tokens_out", static_cast<double>(tokens_out.load()), getCommonLabels()});
+    return metrics;
+  }
+
+  std::mutex tokens_in_mutex_;
+  std::mutex tokens_out_mutex_;
+  std::atomic<uint64_t> tokens_in{0};
+  std::atomic<uint64_t> tokens_out{0};
+};
 
 class RunLlamaCppInference : public core::ProcessorImpl {
  public:
   explicit RunLlamaCppInference(std::string_view name, const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
+    metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>(*this));
   }
   ~RunLlamaCppInference() override = default;
 
@@ -128,6 +165,10 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Generation failed"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
+  EXTENSIONAPI static constexpr auto LlamaCppTimeToFirstToken = core::OutputAttributeDefinition<>{"llamacpp.time.to.first.token", {Success}, "Time to first token generated in milliseconds."};
+  EXTENSIONAPI static constexpr auto LlamaCppTokensPerSecond = core::OutputAttributeDefinition<>{"llamacpp.tokens.per.second", {Success}, "Tokens generated per second."};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 2>{LlamaCppTimeToFirstToken, LlamaCppTokensPerSecond};
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
@@ -141,6 +182,8 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   void notifyStop() override;
 
  private:
+  void increaseTokensIn(uint64_t token_count);
+  void increaseTokensOut(uint64_t token_count);
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RunLlamaCppInference>::getLogger(uuid_);
 
   std::string model_path_;

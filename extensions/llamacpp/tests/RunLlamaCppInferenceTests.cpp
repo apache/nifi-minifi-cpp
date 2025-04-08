@@ -33,15 +33,20 @@ class MockLlamaContext : public processors::LlamaContext {
     return "Test input";
   }
 
-  nonstd::expected<uint64_t, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) override {
+  nonstd::expected<processors::GenerationResult, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) override {
     if (fail_generation_) {
       return nonstd::make_unexpected("Generation failed");
     }
+    processors::GenerationResult result;
     input_ = input;
     token_handler("Test ");
     token_handler("generated");
     token_handler(" content");
-    return 3;
+    result.time_to_first_token = std::chrono::milliseconds(100);
+    result.num_tokens_in = 10;
+    result.num_tokens_out = 3;
+    result.tokens_per_second = 2.0;
+    return result;
   }
 
   [[nodiscard]] const std::vector<processors::LlamaChatMessage>& getMessages() const {
@@ -101,6 +106,8 @@ TEST_CASE("Prompt is generated correctly with default parameters") {
 
   REQUIRE(results.at(processors::RunLlamaCppInference::Success).size() == 1);
   auto& output_flow_file = results.at(processors::RunLlamaCppInference::Success)[0];
+  CHECK(*output_flow_file->getAttribute(processors::RunLlamaCppInference::LlamaCppTimeToFirstToken.name) == "100 ms");
+  CHECK(*output_flow_file->getAttribute(processors::RunLlamaCppInference::LlamaCppTokensPerSecond.name) == "2.000000");
   CHECK(controller.plan->getContent(output_flow_file) == "Test generated content");
   CHECK(mock_llama_context_ptr->getInput() == "Test input");
   REQUIRE(mock_llama_context_ptr->getMessages().size() == 2);
@@ -311,6 +318,34 @@ TEST_CASE("System prompt is optional") {
   REQUIRE(mock_llama_context_ptr->getMessages().size() == 1);
   CHECK(mock_llama_context_ptr->getMessages()[0].role == "user");
   CHECK(mock_llama_context_ptr->getMessages()[0].content == "Input data (or flow file content):\n42\n\nQuestion: What is the answer to life, the universe and everything?");
+}
+
+TEST_CASE("Test output metrics") {
+  processors::LlamaContext::testSetProvider(
+    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+      return std::make_unique<MockLlamaContext>();
+    });
+  auto processor = std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference");
+  auto processor_metrics = processor->getMetrics();
+  minifi::test::SingleProcessorTestController controller(std::move(processor));
+  LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
+  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
+  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
+
+  controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
+  auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
+
+  REQUIRE(results.at(processors::RunLlamaCppInference::Success).size() == 1);
+  auto prometheus_metrics = processor_metrics->calculateMetrics();
+  CHECK(prometheus_metrics[prometheus_metrics.size() - 2].name == "tokens_in");
+  CHECK(prometheus_metrics[prometheus_metrics.size() - 2].value == 20);
+  CHECK(prometheus_metrics[prometheus_metrics.size() - 1].name == "tokens_out");
+  CHECK(prometheus_metrics[prometheus_metrics.size() - 1].value == 6);
+  auto c2_metrics = processor_metrics->serialize();
+  CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 2].name == "TokensIn");
+  CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 2].value.to_string() == "20");
+  CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 1].name == "TokensOut");
+  CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 1].value.to_string() == "6");
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::test

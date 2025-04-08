@@ -110,13 +110,16 @@ std::optional<std::string> DefaultLlamaContext::applyTemplate(const std::vector<
   return text;
 }
 
-nonstd::expected<uint64_t, std::string> DefaultLlamaContext::generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) {
+nonstd::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) {
+  GenerationResult result{};
+  auto start_time = std::chrono::steady_clock::now();
   const llama_vocab * vocab = llama_model_get_vocab(llama_model_);
   std::vector<llama_token> tokenized_input = tokenizeInput(vocab, input);
+  result.num_tokens_in = gsl::narrow<uint64_t>(tokenized_input.size());
 
   llama_batch batch = llama_batch_get_one(tokenized_input.data(), gsl::narrow<int32_t>(tokenized_input.size()));
   llama_token new_token_id = 0;
-  uint64_t tokens_generated = 0;
+  bool first_token_generated = false;
   while (true) {
     int32_t res = llama_decode(llama_ctx_, batch);
     if (res == 1) {
@@ -126,12 +129,16 @@ nonstd::expected<uint64_t, std::string> DefaultLlamaContext::generate(const std:
     }
 
     new_token_id = llama_sampler_sample(llama_sampler_, llama_ctx_, -1);
+    if (!first_token_generated) {
+      result.time_to_first_token = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
+      first_token_generated = true;
+    }
 
     if (llama_vocab_is_eog(vocab, new_token_id)) {
       break;
     }
 
-    ++tokens_generated;
+    ++result.num_tokens_out;
     llama_sampler_accept(llama_sampler_, new_token_id);
 
     std::array<char, 128> buf{};
@@ -146,7 +153,9 @@ nonstd::expected<uint64_t, std::string> DefaultLlamaContext::generate(const std:
     token_handler(token_str);
   }
 
-  return tokens_generated;
+  result.tokens_per_second =
+    gsl::narrow<double>(result.num_tokens_out) / gsl::narrow<double>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count()) / 1000.0;
+  return result;
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors
