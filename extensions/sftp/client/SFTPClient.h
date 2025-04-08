@@ -111,7 +111,7 @@ class LastSFTPError {
 
 class SFTPClient {
  public:
-  SFTPClient(std::string hostname, uint16_t port, std::string username);
+  SFTPClient(std::string hostname, uint16_t port, std::string username, size_t buffer_size);
 
   ~SFTPClient();
 
@@ -196,9 +196,10 @@ class SFTPClient {
 
   std::shared_ptr<core::logging::Logger> logger_;
 
-  const std::string hostname_;
-  const uint16_t port_;
-  const std::string username_;
+  std::string hostname_;
+  uint16_t port_;
+  std::string username_;
+  size_t buffer_size_;
 
   LIBSSH2_KNOWNHOSTS *ssh_known_hosts_ = nullptr;
   bool strict_host_checking_ = false;

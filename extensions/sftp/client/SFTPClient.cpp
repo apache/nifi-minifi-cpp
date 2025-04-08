@@ -154,11 +154,12 @@ LastSFTPError::operator SFTPError() const {
 }
 
 
-SFTPClient::SFTPClient(std::string hostname, uint16_t port, std::string username)
+SFTPClient::SFTPClient(std::string hostname, uint16_t port, std::string username, const size_t buffer_size)
     : logger_(core::logging::LoggerFactory<SFTPClient>::getLogger()),
       hostname_(std::move(hostname)),
       port_(port),
       username_(std::move(username)),
+      buffer_size_(buffer_size),
       curl_errorbuffer_(CURL_ERROR_SIZE, '\0'),
       easy_(curl_easy_init()) {
   if (easy_ == nullptr) {
@@ -719,8 +720,8 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
   });
 
   LIBSSH2_SFTP_ATTRIBUTES attrs;
-  std::array<char, utils::configuration::DEFAULT_BUFFER_SIZE> filename{};
-  std::array<char, utils::configuration::DEFAULT_BUFFER_SIZE> longentry{};
+  std::vector<char> filename(buffer_size_);
+  std::vector<char> longentry(buffer_size_);
   do {
     int ret = libssh2_sftp_readdir_ex(dir_handle,
                                       filename.data(),

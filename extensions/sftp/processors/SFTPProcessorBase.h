@@ -217,7 +217,8 @@ class SFTPProcessorBase : public core::ProcessorImpl {
       const std::string& password,
       const std::string& private_key_path,
       const std::string& private_key_passphrase,
-      const std::string& proxy_password);
+      const std::string& proxy_password,
+      size_t buffer_size);
 
   enum class CreateDirectoryHierarchyError : uint8_t {
     CREATE_DIRECTORY_HIERARCHY_ERROR_OK = 0,
