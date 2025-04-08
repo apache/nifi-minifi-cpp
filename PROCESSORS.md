@@ -1780,6 +1780,13 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | Generated results from the model |
 | failure | Generation failed                |
 
+### Output Attributes
+
+| Attribute                    | Relationship | Description                                    |
+|------------------------------|--------------|------------------------------------------------|
+| llamacpp.time.to.first.token | success      | Time to first token generated in milliseconds. |
+| llamacpp.tokens.per.second   | success      | Tokens generated per second.                   |
+
 
 ## LogAttribute
 
