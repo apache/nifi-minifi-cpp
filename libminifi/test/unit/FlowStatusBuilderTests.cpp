@@ -21,7 +21,6 @@
 #include "unit/Catch.h"
 #include "c2/FlowStatusBuilder.h"
 #include "unit/DummyProcessor.h"
-#include "core/ProcessorNode.h"
 #include "core/BulletinStore.h"
 #include "properties/Configure.h"
 
