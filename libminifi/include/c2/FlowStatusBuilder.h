@@ -21,6 +21,7 @@
 
 #include "FlowStatusRequest.h"
 #include "rapidjson/rapidjson.h"
+#include "rapidjson/document.h"
 #include "core/ProcessGroup.h"
 #include "core/BulletinStore.h"
 #include "core/logging/LoggerFactory.h"
