@@ -59,9 +59,8 @@ class DummyController : public core::controller::ControllerServiceImpl {
   }
 
   void onEnable() override {
-    std::string dummy_controller_property;
-    getProperty(DummyControllerProperty, dummy_controller_property);
-    if (dummy_controller_property.empty()) {
+    auto dummy_controller_property = getProperty(DummyControllerProperty.name);
+    if (!dummy_controller_property || dummy_controller_property->empty()) {
       throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing dummy property");
     }
   }
