@@ -18,6 +18,7 @@
 #include "core/controller/StandardControllerServiceProvider.h"
 
 #include "core/controller/StandardControllerServiceNode.h"
+#include "core/TypedValues.h"
 
 using namespace std::literals::chrono_literals;
 
