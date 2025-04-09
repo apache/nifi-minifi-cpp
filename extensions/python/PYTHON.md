@@ -172,7 +172,7 @@ Due to some differences between the NiFi and MiNiFi C++ processors and implement
 - The interface of the `ProcessContext` class is a bit more limited in MiNiFi C++ compared to NiFi. The available methods in `ProcessContext` are `getProperty`, `getStateManager`, `getName` and `getProperties`.
 - Success relationship is always present in all Python processors even if custom relationships are defined in the Python processor with the `getRelationships` method.
 - MiNiFi C++ uses a single embedded Python interpreter for all Python processors, so the Python processors share the same Python interpreter. This means that the Python processors cannot have different Python versions or use different Python packages. The Python packages are installed on the system or in a single virtualenv that is shared by all Python processors.
-- State manager API is available with the same interface as in NiFi, but MiNiFi C++ uses transactional state management, due to this when a state is changed in a processor trigger the state cannot be read due to the dirty read protection. The state can be read in the next trigger after the state is commited at the end of a session.
+- State manager API is available with the same interface as in NiFi, but MiNiFi C++ uses transactional state management, due to this when a state is changed in a processor trigger the state cannot be read due to the dirty read protection. The state can be read in the next trigger after the state is committed at the end of a session.
 
 ## Use Python processors from virtualenv
 
