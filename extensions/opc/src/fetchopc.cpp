@@ -44,7 +44,7 @@ void FetchOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessS
 
   BaseOPCProcessor::onSchedule(context, factory);
 
-  nodeID_ = context.getProperty(NodeID).value_or("");
+  node_id_ = context.getProperty(NodeID).value_or("");
   max_depth_ = utils::parseU64Property(context, MaxDepth);
 
   parseIdType(context, NodeIDType);

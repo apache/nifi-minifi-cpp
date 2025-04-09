@@ -201,7 +201,7 @@ void PutOPCProcessor::updateNode(const UA_NodeId& target_node, const std::string
 void PutOPCProcessor::createNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessContext& context, core::ProcessSession& session,
     const std::shared_ptr<core::FlowFile>& flow_file) const {
   logger_->log_trace("Node doesn't exist, trying to create new node");
-  const auto browse_name = context.getProperty(TargetNodeBrowseName, flowFile.get()).value_or("");
+  const auto browse_name = context.getProperty(TargetNodeBrowseName, flow_file.get()).value_or("");
   if (browse_name.empty()) {
     logger_->log_error("Target node browse name is required for flowfile ({}) as new node is to be created",
                        flow_file->getUUIDStr());

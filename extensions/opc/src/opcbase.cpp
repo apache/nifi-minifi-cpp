@@ -110,8 +110,7 @@ bool BaseOPCProcessor::reconnect() {
 }
 
 void BaseOPCProcessor::readPathReferenceTypes(core::ProcessContext& context, const std::string& node_id) {
-  std::string value;
-  context.getProperty(PathReferenceTypes, value);
+  const auto value = context.getProperty(PathReferenceTypes).value_or("");
   if (value.empty()) {
     return;
   }
