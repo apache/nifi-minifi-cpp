@@ -101,16 +101,16 @@ void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::Proce
 }
 
 void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  auto input_ff = session.get();
-  if (!input_ff) {
+  auto flow_file = session.get();
+  if (!flow_file) {
     context.yield();
     return;
   }
 
   std::string prompt;
-  context.getProperty(Prompt, prompt, input_ff.get());
+  context.getProperty(Prompt, prompt, flow_file.get());
 
-  auto read_result = session.readBuffer(input_ff);
+  auto read_result = session.readBuffer(flow_file);
   std::string input_data_and_prompt;
   if (!read_result.buffer.empty()) {
     input_data_and_prompt.append("Input data (or flow file content):\n");
@@ -119,7 +119,7 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
   }
   input_data_and_prompt.append(prompt);
 
-  std::string input = [&] {
+  auto input = [&] {
     std::vector<LlamaChatMessage> messages;
     messages.push_back({.role = "system", .content = system_prompt_});
     messages.push_back({.role = "user", .content = input_data_and_prompt});
@@ -127,12 +127,18 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
     return llama_ctx_->applyTemplate(messages);
   }();
 
-  logger_->log_debug("AI model input: {}", input);
+  if (!input) {
+    logger_->log_error("Inference failed with while applying template");
+    session.transfer(flow_file, Failure);
+    return;
+  }
+
+  logger_->log_debug("AI model input: {}", *input);
 
   auto start_time = std::chrono::steady_clock::now();
 
   std::string text;
-  auto number_of_tokens_generated = llama_ctx_->generate(input, [&] (std::string_view token) {
+  auto number_of_tokens_generated = llama_ctx_->generate(*input, [&] (std::string_view token) {
     text += token;
   });
 
@@ -140,21 +146,16 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
 
   if (!number_of_tokens_generated) {
     logger_->log_error("Inference failed with generation error: '{}'", number_of_tokens_generated.error());
-    session.transfer(input_ff, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
-
-  auto ff_guard = gsl::finally([&] {
-    session.remove(input_ff);
-  });
 
   logger_->log_debug("Number of tokens generated: {}", *number_of_tokens_generated);
   logger_->log_debug("AI model inference time: {} ms", elapsed_time);
   logger_->log_debug("AI model output: {}", text);
 
-  auto result = session.create();
-  session.writeBuffer(result, text);
-  session.transfer(result, Success);
+  session.writeBuffer(flow_file, text);
+  session.transfer(flow_file, Success);
 }
 
 void RunLlamaCppInference::notifyStop() {

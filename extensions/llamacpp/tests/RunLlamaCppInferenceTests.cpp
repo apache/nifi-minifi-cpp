@@ -25,7 +25,10 @@ namespace org::apache::nifi::minifi::extensions::llamacpp::test {
 
 class MockLlamaContext : public processors::LlamaContext {
  public:
-  std::string applyTemplate(const std::vector<processors::LlamaChatMessage>& messages) override {
+  std::optional<std::string> applyTemplate(const std::vector<processors::LlamaChatMessage>& messages) override {
+    if (fail_apply_template_) {
+      return std::nullopt;
+    }
     messages_ = messages;
     return "Test input";
   }
@@ -49,12 +52,17 @@ class MockLlamaContext : public processors::LlamaContext {
     return input_;
   }
 
-  void setFailure() {
+  void setGenerationFailure() {
     fail_generation_ = true;
+  }
+
+  void setApplyTemplateFailure() {
+    fail_apply_template_ = true;
   }
 
  private:
   bool fail_generation_{false};
+  bool fail_apply_template_{false};
   std::vector<processors::LlamaChatMessage> messages_;
   std::string input_;
 };
@@ -213,7 +221,7 @@ TEST_CASE("Invalid values for optional double type properties throw exception") 
 }
 
 TEST_CASE("Top K property empty and invalid values are handled properly") {
-  std::optional<int32_t> test_top_k;
+  std::optional<int32_t> test_top_k = 0;
   processors::LlamaContext::testSetProvider(
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams&) {
       test_top_k = sampler_params.top_k;
@@ -234,9 +242,17 @@ TEST_CASE("Top K property empty and invalid values are handled properly") {
   }
 }
 
-TEST_CASE("Generation failed with error") {
+TEST_CASE("Error handling during generation and applying template") {
   auto mock_llama_context = std::make_unique<MockLlamaContext>();
-  mock_llama_context->setFailure();
+
+  SECTION("Generation fails with error") {
+    mock_llama_context->setGenerationFailure();
+  }
+
+  SECTION("Applying template fails with error") {
+    mock_llama_context->setApplyTemplateFailure();
+  }
+
   processors::LlamaContext::testSetProvider(
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
