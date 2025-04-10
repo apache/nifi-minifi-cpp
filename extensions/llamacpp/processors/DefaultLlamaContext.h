@@ -30,7 +30,7 @@ class DefaultLlamaContext : public LlamaContext {
   DefaultLlamaContext& operator=(DefaultLlamaContext&&) = delete;
   ~DefaultLlamaContext() override;
 
-  std::string applyTemplate(const std::vector<LlamaChatMessage>& messages) override;
+  std::optional<std::string> applyTemplate(const std::vector<LlamaChatMessage>& messages) override;
   nonstd::expected<uint64_t, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) override;
 
  private:

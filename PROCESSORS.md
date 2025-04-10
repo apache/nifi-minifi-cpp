@@ -1743,14 +1743,14 @@ In the list below, the names of required properties appear in bold. Any other pr
 | lastModifiedTime | success      | The timestamp of when the file's content changed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                               |
 | creationTime     | success      | The timestamp of when the file was created in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                                     |
 | lastAccessTime   | success      | The timestamp of when the file was accessed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                                    |
-| size             | success      | The size of the file in bytes.
+| size             | success      | The size of the file in bytes.                                                                                                                                                                                                                                                                                                                               |
 
-                                                                                       |
+
 ## RunLlamaCppInference
 
 ### Description
 
-LlamaCpp processor to use llama.cpp library for running language model inference. The final prompt used for the inference created using the System Prompt and Prompt proprerty values and the content of the flowfile referred to as input data or flow file content.
+LlamaCpp processor to use llama.cpp library for running language model inference. The inference will be based on the System Prompt and the Prompt property values, together with the content of the incoming flow file. In the Prompt, the content of the incoming flow file can be referred to as 'the input data' or 'the flow file content'.
 
 ### Properties
 

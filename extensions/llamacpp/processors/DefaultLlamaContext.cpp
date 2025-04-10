@@ -84,18 +84,25 @@ DefaultLlamaContext::~DefaultLlamaContext() {
   llama_backend_free();
 }
 
-std::string DefaultLlamaContext::applyTemplate(const std::vector<LlamaChatMessage>& messages) {
+std::optional<std::string> DefaultLlamaContext::applyTemplate(const std::vector<LlamaChatMessage>& messages) {
   std::vector<llama_chat_message> llama_messages;
   llama_messages.reserve(messages.size());
   for (auto& msg : messages) {
     llama_messages.push_back(llama_chat_message{.role = msg.role.c_str(), .content = msg.content.c_str()});
   }
   std::string text;
+  text.resize(4096);
   const char * chat_template = llama_model_chat_template(llama_model_, nullptr);
   int32_t res_size = llama_chat_apply_template(chat_template, llama_messages.data(), llama_messages.size(), true, text.data(), gsl::narrow<int32_t>(text.size()));
+  if (res_size < 0) {
+    return std::nullopt;
+  }
   if (res_size > gsl::narrow<int32_t>(text.size())) {
     text.resize(res_size);
-    llama_chat_apply_template(chat_template, llama_messages.data(), llama_messages.size(), true, text.data(), gsl::narrow<int32_t>(text.size()));
+    res_size = llama_chat_apply_template(chat_template, llama_messages.data(), llama_messages.size(), true, text.data(), gsl::narrow<int32_t>(text.size()));
+    if (res_size < 0) {
+      return std::nullopt;
+    }
   }
   text.resize(res_size);
 

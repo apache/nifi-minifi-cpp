@@ -48,7 +48,7 @@ class MinifiOptions:
             self.enable_openssl_fips_mode = True
         else:
             self.enable_openssl_fips_mode = False
-        self.download_llama_model = True
+        self.download_llama_model = False
 
 
 class MinifiContainer(FlowContainer):

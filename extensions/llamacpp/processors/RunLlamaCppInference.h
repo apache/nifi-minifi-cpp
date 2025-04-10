@@ -25,13 +25,6 @@
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
 class RunLlamaCppInference : public core::ProcessorImpl {
-  struct LLMExample {
-    std::string input_role;
-    std::string input;
-    std::string output_role;
-    std::string output;
-  };
-
  public:
   explicit RunLlamaCppInference(std::string_view name, const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
@@ -39,7 +32,8 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   ~RunLlamaCppInference() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "LlamaCpp processor to use llama.cpp library for running language model inference. "
-      "The final prompt used for the inference created using the System Prompt and Prompt proprerty values and the content of the flowfile referred to as input data or flow file content.";
+      "The inference will be based on the System Prompt and the Prompt property values, together with the content of the incoming flow file. "
+      "In the Prompt, the content of the incoming flow file can be referred to as 'the input data' or 'the flow file content'.";
 
   EXTENSIONAPI static constexpr auto ModelPath = core::PropertyDefinitionBuilder<>::createProperty("Model Path")
       .withDescription("The filesystem path of the model file in gguf format.")
@@ -137,7 +131,7 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
 
@@ -152,7 +146,6 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RunLlamaCppInference>::getLogger(uuid_);
 
   std::string model_path_;
-  std::vector<LLMExample> examples_;
   std::string system_prompt_;
 
   std::unique_ptr<LlamaContext> llama_ctx_;
