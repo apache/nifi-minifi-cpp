@@ -18,6 +18,7 @@
 #include "DefaultLlamaContext.h"
 #include "Exception.h"
 #include "fmt/format.h"
+#include "utils/ConfigurationUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
@@ -91,7 +92,7 @@ std::optional<std::string> DefaultLlamaContext::applyTemplate(const std::vector<
     llama_messages.push_back(llama_chat_message{.role = msg.role.c_str(), .content = msg.content.c_str()});
   }
   std::string text;
-  text.resize(4096);
+  text.resize(utils::configuration::DEFAULT_BUFFER_SIZE);
   const char * chat_template = llama_model_chat_template(llama_model_, nullptr);
   int32_t res_size = llama_chat_apply_template(chat_template, llama_messages.data(), llama_messages.size(), true, text.data(), gsl::narrow<int32_t>(text.size()));
   if (res_size < 0) {
