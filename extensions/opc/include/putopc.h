@@ -34,12 +34,13 @@
 #include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Id.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 class PutOPCProcessor : public BaseOPCProcessor {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "Creates/updates  OPC nodes";
+  EXTENSIONAPI static constexpr const char* Description = "Creates/updates OPC nodes";
 
   EXTENSIONAPI static constexpr auto ParentNodeIDType = core::PropertyDefinitionBuilder<3>::createProperty("Parent node ID type")
       .withDescription("Specifies the type of the provided node ID")
@@ -51,30 +52,41 @@ class PutOPCProcessor : public BaseOPCProcessor {
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto ParentNameSpaceIndex = core::PropertyDefinitionBuilder<>::createProperty("Parent node namespace index")
-      .withDescription("The index of the namespace. Used only if node ID type is not path.")
+      .withDescription("The index of the namespace of the parent node.")
       .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
       .withDefaultValue("0")
-      .build();
-  EXTENSIONAPI static constexpr auto ValueType = core::PropertyDefinitionBuilder<opc::StringToOPCDataTypeMap.size()>::createProperty("Value type")
-      .withDescription("Set the OPC value type of the created nodes")
-      .withAllowedValues(utils::getKeys(opc::StringToOPCDataTypeMap))
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto TargetNodeIDType = core::PropertyDefinitionBuilder<>::createProperty("Target node ID type")
+  EXTENSIONAPI static constexpr auto ValueType = core::PropertyDefinitionBuilder<magic_enum::enum_count<opc::OPCNodeDataType>()>::createProperty("Value type")
+      .withDescription("Set the OPC value type of the created nodes")
+      .withAllowedValues(magic_enum::enum_names<opc::OPCNodeDataType>())
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto TargetNodeIDType = core::PropertyDefinitionBuilder<2>::createProperty("Target node ID type")
       .withDescription("ID type of target node. Allowed values are: Int, String.")
+      .withAllowedValues({"Int", "String"})
       .supportsExpressionLanguage(true)
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto TargetNodeID = core::PropertyDefinitionBuilder<>::createProperty("Target node ID")
       .withDescription("ID of target node.")
       .supportsExpressionLanguage(true)
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto TargetNodeBrowseName = core::PropertyDefinitionBuilder<>::createProperty("Target node browse name")
       .withDescription("Browse name of target node. Only used when new node is created.")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto TargetNodeNameSpaceIndex = core::PropertyDefinitionBuilder<>::createProperty("Target node namespace index")
-      .withDescription("The index of the namespace. Used only if node ID type is not path.")
+      .withDescription("The index of the namespace of the target node.")
       .supportsExpressionLanguage(true)
+      .withDefaultValue("0")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto CreateNodeReferenceType = core::PropertyDefinitionBuilder<4>::createProperty("Create node reference type")
+      .withDescription("Reference type used when a new node is created.")
+      .withAllowedValues({"Organizes", "HasComponent", "HasProperty", "HasSubtype"})
+      .withDefaultValue("HasComponent")
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::to_array<core::PropertyReference>({
       ParentNodeIDType,
@@ -84,7 +96,8 @@ class PutOPCProcessor : public BaseOPCProcessor {
       TargetNodeIDType,
       TargetNodeID,
       TargetNodeBrowseName,
-      TargetNodeNameSpaceIndex
+      TargetNodeNameSpaceIndex,
+      CreateNodeReferenceType
   }));
 
 
@@ -109,12 +122,14 @@ class PutOPCProcessor : public BaseOPCProcessor {
   void initialize() override;
 
  private:
-  std::string nodeID_;
-  int32_t nameSpaceIdx_{};
-  opc::OPCNodeIDType idType_{};
-  UA_NodeId parentNodeID_{};
-  bool parentExists_{};
-  opc::OPCNodeDataType nodeDataType_{};
+  bool readParentNodeId();
+  nonstd::expected<std::pair<bool, UA_NodeId>, std::string> configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const;
+  void updateNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
+  void createNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
+
+  UA_NodeId parent_node_id_{};
+  opc::OPCNodeDataType node_data_type_{};
+  UA_UInt32 create_node_reference_type_ = UA_NS0ID_HASCOMPONENT;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

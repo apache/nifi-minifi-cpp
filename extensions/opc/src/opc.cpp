@@ -109,44 +109,44 @@ core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
  * End of internal functions
  */
 
-Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
-               const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
-               const std::vector<std::vector<char>>& trustBuffers)
+Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
+               const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
+               const std::vector<std::vector<char>>& trust_buffers)
     : client_(UA_Client_new()) {
-  if (certBuffer.empty()) {
+  if (cert_buffer.empty()) {
     UA_ClientConfig_setDefault(UA_Client_getConfig(client_));
   } else {
     UA_ClientConfig *cc = UA_Client_getConfig(client_);
     cc->securityMode = UA_MESSAGESECURITYMODE_SIGNANDENCRYPT;
 
     // Certificate
-    UA_ByteString certByteString = UA_STRING_NULL;
-    certByteString.length = certBuffer.size();
-    certByteString.data = reinterpret_cast<UA_Byte*>(UA_malloc(certByteString.length * sizeof(UA_Byte)));  // NOLINT(cppcoreguidelines-owning-memory)
-    memcpy(certByteString.data, certBuffer.data(), certByteString.length);
+    UA_ByteString cert_byte_string = UA_STRING_NULL;
+    cert_byte_string.length = cert_buffer.size();
+    cert_byte_string.data = reinterpret_cast<UA_Byte*>(UA_malloc(cert_byte_string.length * sizeof(UA_Byte)));  // NOLINT(cppcoreguidelines-owning-memory)
+    memcpy(cert_byte_string.data, cert_buffer.data(), cert_byte_string.length);
 
     // Key
-    UA_ByteString keyByteString = UA_STRING_NULL;
-    keyByteString.length = keyBuffer.size();
-    keyByteString.data = reinterpret_cast<UA_Byte*>(UA_malloc(keyByteString.length * sizeof(UA_Byte)));  // NOLINT(cppcoreguidelines-owning-memory)
-    memcpy(keyByteString.data, keyBuffer.data(), keyByteString.length);
+    UA_ByteString key_byte_string = UA_STRING_NULL;
+    key_byte_string.length = key_buffer.size();
+    key_byte_string.data = reinterpret_cast<UA_Byte*>(UA_malloc(key_byte_string.length * sizeof(UA_Byte)));  // NOLINT(cppcoreguidelines-owning-memory)
+    memcpy(key_byte_string.data, key_buffer.data(), key_byte_string.length);
 
     // Trusted certificates
-    std::vector<UA_ByteString> trustList;
-    trustList.resize(trustBuffers.size());
-    for (size_t i = 0; i < trustBuffers.size(); i++) {
-      trustList[i] = UA_STRING_NULL;
-      trustList[i].length = trustBuffers[i].size();
-      trustList[i].data = reinterpret_cast<UA_Byte*>(UA_malloc(trustList[i].length * sizeof(UA_Byte)));  // NOLINT(cppcoreguidelines-owning-memory)
-      memcpy(trustList[i].data, trustBuffers[i].data(), trustList[i].length);
+    std::vector<UA_ByteString> trust_list;
+    trust_list.resize(trust_buffers.size());
+    for (size_t i = 0; i < trust_buffers.size(); i++) {
+      trust_list[i] = UA_STRING_NULL;
+      trust_list[i].length = trust_buffers[i].size();
+      trust_list[i].data = reinterpret_cast<UA_Byte*>(UA_malloc(trust_list[i].length * sizeof(UA_Byte)));  // NOLINT(cppcoreguidelines-owning-memory)
+      memcpy(trust_list[i].data, trust_buffers[i].data(), trust_list[i].length);
     }
-    UA_StatusCode sc = UA_ClientConfig_setDefaultEncryption(cc, certByteString, keyByteString,
-                                                            trustList.data(), trustBuffers.size(),
+    UA_StatusCode sc = UA_ClientConfig_setDefaultEncryption(cc, cert_byte_string, key_byte_string,
+                                                            trust_list.data(), trust_buffers.size(),
                                                             nullptr, 0);
-    UA_ByteString_clear(&certByteString);
-    UA_ByteString_clear(&keyByteString);
-    for (size_t i = 0; i < trustBuffers.size(); i++) {
-      UA_ByteString_clear(&trustList[i]);
+    UA_ByteString_clear(&cert_byte_string);
+    UA_ByteString_clear(&key_byte_string);
+    for (size_t i = 0; i < trust_buffers.size(); i++) {
+      UA_ByteString_clear(&trust_list[i]);
     }
     if (sc != UA_STATUSCODE_GOOD) {
       logger->log_error("Configuring the client for encryption failed: {}", UA_StatusCode_name(sc));
@@ -155,14 +155,14 @@ Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::
     }
   }
 
-  const UA_Logger MinifiUALogger = {logFunc, logger.get(), [](void*){}};
+  minifi_ua_logger_ = {logFunc, logger.get(), [](UA_Logger*){}};
 
-  UA_ClientConfig *configPtr = UA_Client_getConfig(client_);
-  configPtr->logger = MinifiUALogger;
+  UA_ClientConfig *config_ptr = UA_Client_getConfig(client_);
+  config_ptr->logging = &minifi_ua_logger_;
 
-  if (applicationURI.length() > 0) {
-    UA_String_clear(&configPtr->clientDescription.applicationUri);
-    configPtr->clientDescription.applicationUri = UA_STRING_ALLOC(applicationURI.c_str());
+  if (application_uri.length() > 0) {
+    UA_String_clear(&config_ptr->clientDescription.applicationUri);
+    config_ptr->clientDescription.applicationUri = UA_STRING_ALLOC(application_uri.c_str());
   }
 
   logger_ = logger;
@@ -202,7 +202,7 @@ UA_StatusCode Client::connect(const std::string& url, const std::string& usernam
   }
 }
 
-NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::string& basePath) {
+NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::string& base_path) {
   if (ref->nodeClass == UA_NODECLASS_VARIABLE) {
     opc::NodeData nodedata;
     std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
@@ -222,8 +222,14 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       nodedata.attributes["NodeID type"] = "numeric";
     }
     nodedata.attributes["Browsename"] = browsename;
-    nodedata.attributes["Full path"] = basePath + "/" + browsename;
-    nodedata.dataTypeID = static_cast<UA_DataTypeKind>(UA_DATATYPEKINDS);
+
+    auto splitted_base_path = utils::string::splitAndTrimRemovingEmpty(base_path, "/");
+    if (!splitted_base_path.empty() && splitted_base_path.back() == browsename) {
+      nodedata.attributes["Full path"] = base_path;
+    } else {
+      nodedata.attributes["Full path"] = base_path + "/" + browsename;
+    }
+    nodedata.data_type_id = static_cast<UA_DataTypeKind>(UA_DATATYPEKINDS);
     UA_Variant* var = UA_Variant_new();
     if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != nullptr && var->data != nullptr) {
       // Because the timestamps are eliminated in readValueAttribute for simplification
@@ -245,7 +251,7 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       nodedata.attributes["Sourcetimestamp"] = source_timestamp;
       UA_ReadResponse_clear(&response);
 
-      nodedata.dataTypeID = static_cast<UA_DataTypeKind>(var->type->typeKind);
+      nodedata.data_type_id = static_cast<UA_DataTypeKind>(var->type->typeKind);
       nodedata.addVariant(var);
       if (var->type->typeName) {
         nodedata.attributes["Typename"] = std::string(var->type->typeName);
@@ -264,59 +270,60 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
   }
 }
 
-UA_ReferenceDescription * Client::getNodeReference(UA_NodeId nodeId) {
+UA_ReferenceDescription * Client::getNodeReference(UA_NodeId node_id) {
   UA_ReferenceDescription *ref = UA_ReferenceDescription_new();
   UA_ReferenceDescription_init(ref);
-  UA_NodeId_copy(&nodeId, &ref->nodeId.nodeId);
-  auto sc = UA_Client_readNodeClassAttribute(client_, nodeId, &ref->nodeClass);
+  UA_NodeId_copy(&node_id, &ref->nodeId.nodeId);
+  auto sc = UA_Client_readNodeClassAttribute(client_, node_id, &ref->nodeClass);
   if (sc == UA_STATUSCODE_GOOD) {
-    sc = UA_Client_readBrowseNameAttribute(client_, nodeId, &ref->browseName);
+    sc = UA_Client_readBrowseNameAttribute(client_, node_id, &ref->browseName);
   }
   if (sc == UA_STATUSCODE_GOOD) {
-    UA_Client_readDisplayNameAttribute(client_, nodeId, &ref->displayName);
+    UA_Client_readDisplayNameAttribute(client_, node_id, &ref->displayName);
   }
   return ref;
 }
 
-void Client::traverse(UA_NodeId nodeId, const std::function<nodeFoundCallBackFunc>& cb, const std::string& basePath, uint64_t maxDepth, bool fetchRoot) {
-  if (fetchRoot) {
-    UA_ReferenceDescription *rootRef = getNodeReference(nodeId);
+void Client::traverse(UA_NodeId node_id, const std::function<NodeFoundCallBackFunc>& cb, const std::string& base_path, uint64_t max_depth, bool fetch_root) {
+  if (fetch_root) {
+    UA_ReferenceDescription *rootRef = getNodeReference(node_id);
     if ((rootRef->nodeClass == UA_NODECLASS_VARIABLE || rootRef->nodeClass == UA_NODECLASS_OBJECT) && rootRef->browseName.name.length > 0) {
-      cb(*this, rootRef, basePath);
+      cb(rootRef, base_path);
     }
     UA_ReferenceDescription_delete(rootRef);
   }
 
-  if (maxDepth != 0) {
-    maxDepth--;
-    if (maxDepth == 0) {
+  if (max_depth != 0) {
+    max_depth--;
+    if (max_depth == 0) {
       return;
     }
   }
-  UA_BrowseRequest bReq;
-  UA_BrowseRequest_init(&bReq);
-  bReq.requestedMaxReferencesPerNode = 0;
-  bReq.nodesToBrowse = UA_BrowseDescription_new();
-  bReq.nodesToBrowseSize = 1;
+  UA_BrowseRequest browse_request;
+  UA_BrowseRequest_init(&browse_request);
+  browse_request.requestedMaxReferencesPerNode = 0;
+  browse_request.nodesToBrowse = UA_BrowseDescription_new();
+  browse_request.nodesToBrowseSize = 1;
 
-  UA_NodeId_copy(&nodeId, &bReq.nodesToBrowse[0].nodeId);
-  bReq.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
+  UA_NodeId_copy(&node_id, &browse_request.nodesToBrowse[0].nodeId);
+  browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_ALL;
 
-  UA_BrowseResponse bResp = UA_Client_Service_browse(client_, bReq);
+  UA_BrowseResponse browse_response = UA_Client_Service_browse(client_, browse_request);
 
-  const auto guard = gsl::finally([&bResp]() {
-    UA_BrowseResponse_clear(&bResp);
+  const auto guard = gsl::finally([&browse_response]() {
+    UA_BrowseResponse_clear(&browse_response);
   });
 
-  UA_BrowseRequest_clear(&bReq);
+  UA_BrowseRequest_clear(&browse_request);
 
-  for (size_t i = 0; i < bResp.resultsSize; ++i) {
-    for (size_t j = 0; j < bResp.results[i].referencesSize; ++j) {
-      UA_ReferenceDescription *ref = &(bResp.results[i].references[j]);
-      if (cb(*this, ref, basePath)) {
+  for (size_t i = 0; i < browse_response.resultsSize; ++i) {
+    for (size_t j = 0; j < browse_response.results[i].referencesSize; ++j) {
+      UA_ReferenceDescription *ref = &(browse_response.results[i].references[j]);
+      if (cb(ref, base_path)) {
         if (ref->nodeClass == UA_NODECLASS_VARIABLE || ref->nodeClass == UA_NODECLASS_OBJECT) {
-          std::string browse_name(reinterpret_cast<char *>(ref->browseName.name.data), ref->browseName.name.length);
-          traverse(ref->nodeId.nodeId, cb, basePath + browse_name, maxDepth, false);
+          std::string new_base_path = base_path;
+          new_base_path.append("/").append(reinterpret_cast<char *>(ref->browseName.name.data), ref->browseName.name.length);
+          traverse(ref->nodeId.nodeId, cb, new_base_path, max_depth, false);
         }
       } else {
         return;
@@ -325,72 +332,81 @@ void Client::traverse(UA_NodeId nodeId, const std::function<nodeFoundCallBackFun
   }
 }
 
-bool Client::exists(UA_NodeId nodeId) {
+bool Client::exists(UA_NodeId node_id) {
   bool retval = false;
-  auto callback = [&retval](Client& /*client*/, const UA_ReferenceDescription* /*ref*/, const std::string& /*pat*/) -> bool {
+  auto callback = [&retval](const UA_ReferenceDescription* /*ref*/, const std::string& /*pat*/) -> bool {
     retval = true;
     return false;  // If any node is found, the given node exists, so traverse can be stopped
   };
-  traverse(nodeId, callback, "", 1);
+  traverse(node_id, callback, "", 1);
   return retval;
 }
 
-UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& foundNodeIDs, const std::shared_ptr<core::logging::Logger>& logger) {
-  logger->log_trace("Trying to find node id for {}", path.c_str());
+UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& found_node_ids, int32_t namespace_index,
+    const std::vector<UA_UInt32>& path_reference_types, const std::shared_ptr<core::logging::Logger>& logger) {
+  logger->log_trace("Trying to find node ids for {}", path.c_str());
 
-  auto tokens = utils::string::split(path, "/");
+  auto tokens = utils::string::splitAndTrimRemovingEmpty(path, "/");
+  gsl_Expects(!tokens.empty());
+
+  UA_BrowsePath browse_path;
+  UA_BrowsePath_init(&browse_path);
+  browse_path.startingNode = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER);
+
+  browse_path.relativePath.elements = reinterpret_cast<UA_RelativePathElement*>(UA_Array_new(tokens.size(), &UA_TYPES[UA_TYPES_RELATIVEPATHELEMENT]));
+  browse_path.relativePath.elementsSize = tokens.size();
+
   std::vector<UA_UInt32> ids;
-  for (size_t i = 0; i < tokens.size(); ++i) {
-    UA_UInt32 val = (i ==0) ? UA_NS0ID_ORGANIZES : UA_NS0ID_HASCOMPONENT;
-    ids.push_back(val);
+  ids.push_back(UA_NS0ID_ORGANIZES);
+  for (size_t i = 0; i < tokens.size() - 1; ++i) {
+    if (!path_reference_types.empty()) {
+      ids.push_back(path_reference_types[i]);
+    } else {
+      ids.push_back(UA_NS0ID_ORGANIZES);
+    }
   }
 
-  UA_BrowsePath browsePath;
-  UA_BrowsePath_init(&browsePath);
-  browsePath.startingNode = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER);
-
-  browsePath.relativePath.elements = reinterpret_cast<UA_RelativePathElement*>(UA_Array_new(tokens.size(), &UA_TYPES[UA_TYPES_RELATIVEPATHELEMENT]));
-  browsePath.relativePath.elementsSize = tokens.size();
-
   for (size_t i = 0; i < tokens.size(); ++i) {
-    UA_RelativePathElement *elem = &browsePath.relativePath.elements[i];
+    UA_RelativePathElement *elem = &browse_path.relativePath.elements[i];
     elem->referenceTypeId = UA_NODEID_NUMERIC(0, ids[i]);
-    elem->targetName = UA_QUALIFIEDNAME_ALLOC(0, tokens[i].c_str());
+    elem->targetName = UA_QUALIFIEDNAME_ALLOC(namespace_index, tokens[i].c_str());
   }
 
   UA_TranslateBrowsePathsToNodeIdsRequest request;
   UA_TranslateBrowsePathsToNodeIdsRequest_init(&request);
-  request.browsePaths = &browsePath;
+  request.browsePaths = &browse_path;
   request.browsePathsSize = 1;
 
   UA_TranslateBrowsePathsToNodeIdsResponse response = UA_Client_Service_translateBrowsePathsToNodeIds(client_, request);
 
-  const auto guard = gsl::finally([&browsePath]() {
-    UA_BrowsePath_clear(&browsePath);
+  const auto guard = gsl::finally([&browse_path, &tokens, &response]() {
+    for (size_t i = 0; i < tokens.size(); ++i) {
+      UA_RelativePathElement *elem = &browse_path.relativePath.elements[i];
+      UA_QualifiedName_clear(&elem->targetName);
+    }
+    UA_BrowsePath_clear(&browse_path);
+    UA_TranslateBrowsePathsToNodeIdsResponse_clear(&response);
   });
 
-  if (response.resultsSize < 1) {
+  if (response.resultsSize < 1 || response.results[0].statusCode != UA_STATUSCODE_GOOD) {
     logger->log_warn("No node id in response for {}", path.c_str());
     return UA_STATUSCODE_BADNODATAAVAILABLE;
   }
 
-  bool foundData = false;
+  bool found_data = false;
 
   for (size_t i = 0; i < response.resultsSize; ++i) {
     UA_BrowsePathResult res = response.results[i];
     for (size_t j = 0; j < res.targetsSize; ++j) {
-      foundData = true;
+      found_data = true;
       UA_NodeId resultId;
       UA_NodeId_copy(&res.targets[j].targetId.nodeId, &resultId);
-      foundNodeIDs.push_back(resultId);
-      std::string namespaceUri(reinterpret_cast<char*>(res.targets[j].targetId.namespaceUri.data), res.targets[j].targetId.namespaceUri.length);
+      found_node_ids.push_back(resultId);
     }
   }
 
-  UA_TranslateBrowsePathsToNodeIdsResponse_clear(&response);
-
-  if (foundData) {
-    logger->log_debug("Found {} nodes for path {}", foundNodeIDs.size(), path.c_str());
+  if (found_data) {
+    logger->log_debug("Found {} nodes for path {}", found_node_ids.size(), path.c_str());
     return UA_STATUSCODE_GOOD;
   } else {
     logger->log_warn("No node id found for path {}", path.c_str());
@@ -399,67 +415,74 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 }
 
 template<typename T>
-UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, T value, UA_NodeId *receivedNodeId) {
+UA_StatusCode Client::add_node(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name, T value, UA_NodeId *received_node_id) {
   UA_VariableAttributes attr = UA_VariableAttributes_default;
   add_value_to_variant(&attr.value, value);
   char local[6] = "en-US";  // NOLINT(cppcoreguidelines-avoid-c-arrays)
-  attr.displayName = UA_LOCALIZEDTEXT(local, const_cast<char*>(browseName.data()));
+  attr.displayName = UA_LOCALIZEDTEXT(local, const_cast<char*>(browse_name.data()));
   UA_StatusCode sc = UA_Client_addVariableNode(client_,
-                                               targetNodeId,
-                                               parentNodeId,
-                                               UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
-                                               UA_QUALIFIEDNAME(1, const_cast<char*>(browseName.data())),
+                                               target_node_id,
+                                               parent_node_id,
+                                               UA_NODEID_NUMERIC(0, ref_type_id),
+                                               UA_QUALIFIEDNAME(target_node_id.namespaceIndex, const_cast<char*>(browse_name.data())),
                                                UA_NODEID_NULL,
-                                               attr, receivedNodeId);
+                                               attr, received_node_id);
   UA_Variant_clear(&attr.value);
   return sc;
 }
 
 template<typename T>
-UA_StatusCode Client::update_node(const UA_NodeId nodeId, T value) {
+UA_StatusCode Client::update_node(const UA_NodeId node_id, T value) {
   UA_Variant *variant = UA_Variant_new();
   add_value_to_variant(variant, value);
-  UA_StatusCode sc = UA_Client_writeValueAttribute(client_, nodeId, variant);
+  UA_StatusCode sc = UA_Client_writeValueAttribute(client_, node_id, variant);
   UA_Variant_delete(variant);
   return sc;
 }
 
-std::unique_ptr<Client> Client::createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
-                                             const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
-                                             const std::vector<std::vector<char>>& trustBuffers) {
+std::unique_ptr<Client> Client::createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
+                                             const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
+                                             const std::vector<std::vector<char>>& trust_buffers) {
   try {
-    return ClientPtr(new Client(logger, applicationURI, certBuffer, keyBuffer, trustBuffers));
+    return ClientPtr(new Client(logger, application_uri, cert_buffer, key_buffer, trust_buffers));
   } catch (const std::exception& exception) {
     logger->log_error("Failed to create client: {}", exception.what());
   }
   return nullptr;
 }
 
-template UA_StatusCode Client::update_node<int64_t>(const UA_NodeId nodeId, int64_t value);
-template UA_StatusCode Client::update_node<uint64_t>(const UA_NodeId nodeId, uint64_t value);
-template UA_StatusCode Client::update_node<int32_t>(const UA_NodeId nodeId, int32_t value);
-template UA_StatusCode Client::update_node<uint32_t>(const UA_NodeId nodeId, uint32_t value);
-template UA_StatusCode Client::update_node<float>(const UA_NodeId nodeId, float value);
-template UA_StatusCode Client::update_node<double>(const UA_NodeId nodeId, double value);
-template UA_StatusCode Client::update_node<bool>(const UA_NodeId nodeId, bool value);
-template UA_StatusCode Client::update_node<const char *>(const UA_NodeId nodeId, const char * value);
-template UA_StatusCode Client::update_node<std::string>(const UA_NodeId nodeId, std::string value);
+template UA_StatusCode Client::update_node<int64_t>(const UA_NodeId node_id, int64_t value);
+template UA_StatusCode Client::update_node<uint64_t>(const UA_NodeId node_id, uint64_t value);
+template UA_StatusCode Client::update_node<int32_t>(const UA_NodeId node_id, int32_t value);
+template UA_StatusCode Client::update_node<uint32_t>(const UA_NodeId node_id, uint32_t value);
+template UA_StatusCode Client::update_node<float>(const UA_NodeId node_id, float value);
+template UA_StatusCode Client::update_node<double>(const UA_NodeId node_id, double value);
+template UA_StatusCode Client::update_node<bool>(const UA_NodeId node_id, bool value);
+template UA_StatusCode Client::update_node<const char *>(const UA_NodeId node_id, const char * value);
+template UA_StatusCode Client::update_node<std::string>(const UA_NodeId node_id, std::string value);
 
-template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, int64_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, uint64_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, int32_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, uint32_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, float value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<double>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, double value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<bool>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, bool value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName,
-    const char * value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName,
-    std::string value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  int64_t value, UA_NodeId *received_node_id);
+template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  uint64_t value, UA_NodeId *received_node_id);
+template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  int32_t value, UA_NodeId *received_node_id);
+template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  uint32_t value, UA_NodeId *received_node_id);
+template UA_StatusCode Client::add_node<float>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  float value, UA_NodeId *received_node_id);
+template UA_StatusCode Client::add_node<double>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  double value, UA_NodeId *received_node_id);
+template UA_StatusCode Client::add_node<bool>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  bool value, UA_NodeId *received_node_id);
+template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  const char * value, UA_NodeId *received_node_id);
+template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
+  std::string value, UA_NodeId *received_node_id);
 
 std::string nodeValue2String(const NodeData& nd) {
   std::string ret_val;
-  switch (nd.dataTypeID) {
+  switch (nd.data_type_id) {
     case UA_DATATYPEKIND_STRING:
     case UA_DATATYPEKIND_LOCALIZEDTEXT:
     case UA_DATATYPEKIND_BYTESTRING: {
@@ -567,6 +590,20 @@ void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, cons
   (void)vsnprintf(buffer.data(), buffer.size(), msg, args);
   auto loggerPtr = reinterpret_cast<core::logging::Logger*>(context);
   loggerPtr->log_string(MapOPCLogLevel(level), buffer.data());
+}
+
+std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type) {
+  if (ref_type == "Organizes") {
+    return UA_NS0ID_ORGANIZES;
+  } else if (ref_type == "HasComponent") {
+    return UA_NS0ID_HASCOMPONENT;
+  } else if (ref_type == "HasProperty") {
+    return UA_NS0ID_HASPROPERTY;
+  } else if (ref_type == "HasSubtype") {
+    return UA_NS0ID_HASSUBTYPE;
+  }
+
+  return std::nullopt;
 }
 
 }  // namespace org::apache::nifi::minifi::opc
