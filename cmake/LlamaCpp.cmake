@@ -22,12 +22,12 @@ set(LLAMA_BUILD_TESTS "OFF" CACHE STRING "" FORCE)
 set(LLAMA_BUILD_EXAMPLES "OFF" CACHE STRING "" FORCE)
 set(LLAMA_BUILD_SERVER "OFF" CACHE STRING "" FORCE)
 set(GGML_OPENMP "OFF" CACHE STRING "" FORCE)
+set(GGML_METAL "OFF" CACHE STRING "" FORCE)
+set(GGML_BLAS "OFF" CACHE STRING "" FORCE)
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/llamacpp/metal.patch")
-set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/llamacpp/lu8_macro_fix.patch")  # https://github.com/ggml-org/llama.cpp/issues/12740
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/llamacpp/lu8_macro_fix.patch")  # https://github.com/ggml-org/llama.cpp/issues/12740
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\")")
 
 FetchContent_Declare(llamacpp
         URL https://github.com/ggerganov/llama.cpp/archive/refs/tags/b5038.tar.gz
