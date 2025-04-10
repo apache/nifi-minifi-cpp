@@ -271,4 +271,46 @@ TEST_CASE("Error handling during generation and applying template") {
   CHECK(controller.plan->getContent(output_flow_file) == "42");
 }
 
+TEST_CASE("Route flow file to failure when prompt and input data is empty") {
+  processors::LlamaContext::testSetProvider(
+    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+      return std::make_unique<MockLlamaContext>();
+    });
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+  LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
+  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model");
+  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "");
+
+  auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "", .attributes = {}});
+
+  REQUIRE(results.at(processors::RunLlamaCppInference::Success).empty());
+  REQUIRE(results.at(processors::RunLlamaCppInference::Failure).size() == 1);
+  auto& output_flow_file = results.at(processors::RunLlamaCppInference::Failure)[0];
+  CHECK(controller.plan->getContent(output_flow_file) == "");
+}
+
+TEST_CASE("System prompt is optional") {
+  auto mock_llama_context = std::make_unique<MockLlamaContext>();
+  auto mock_llama_context_ptr = mock_llama_context.get();
+  processors::LlamaContext::testSetProvider(
+    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+      return std::move(mock_llama_context);
+    });
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+  LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
+  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
+  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
+  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::SystemPrompt.name, "");
+
+  auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
+
+  REQUIRE(results.at(processors::RunLlamaCppInference::Success).size() == 1);
+  auto& output_flow_file = results.at(processors::RunLlamaCppInference::Success)[0];
+  CHECK(controller.plan->getContent(output_flow_file) == "Test generated content");
+  CHECK(mock_llama_context_ptr->getInput() == "Test input");
+  REQUIRE(mock_llama_context_ptr->getMessages().size() == 1);
+  CHECK(mock_llama_context_ptr->getMessages()[0].role == "user");
+  CHECK(mock_llama_context_ptr->getMessages()[0].content == "Input data (or flow file content):\n42\n\nQuestion: What is the answer to life, the universe and everything?");
+}
+
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::test
