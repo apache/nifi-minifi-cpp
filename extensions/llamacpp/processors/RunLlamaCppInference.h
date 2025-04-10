@@ -99,13 +99,11 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Prompt = core::PropertyDefinitionBuilder<>::createProperty("Prompt")
       .withDescription("The user prompt for the inference.")
       .supportsExpressionLanguage(true)
-      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto SystemPrompt = core::PropertyDefinitionBuilder<>::createProperty("System Prompt")
       .withDescription("The system prompt for the inference.")
       .withDefaultValue("You are a helpful assistant. You are given a question with some possible input data otherwise called flow file content. "
                         "You are expected to generate a response based on the question and the input data.")
-      .isRequired(true)
       .build();
 
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({

@@ -36,7 +36,7 @@ void RunLlamaCppInference::initialize() {
 void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   model_path_.clear();
   model_path_ = utils::parseProperty(context, ModelPath);
-  system_prompt_ = utils::parseProperty(context, SystemPrompt);
+  system_prompt_ = context.getProperty(SystemPrompt).value_or("");
 
   LlamaSamplerParams llama_sampler_params;
   llama_sampler_params.temperature = utils::parseOptionalFloatProperty(context, Temperature);
@@ -65,7 +65,7 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
     return;
   }
 
-  auto prompt = context.getProperty(Prompt, flow_file.get());
+  auto prompt = context.getProperty(Prompt, flow_file.get()).value_or("");
 
   auto read_result = session.readBuffer(flow_file);
   std::string input_data_and_prompt;
@@ -74,11 +74,19 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
     input_data_and_prompt.append({reinterpret_cast<const char*>(read_result.buffer.data()), read_result.buffer.size()});
     input_data_and_prompt.append("\n\n");
   }
-  input_data_and_prompt.append(*prompt);
+  input_data_and_prompt.append(prompt);
+
+  if (input_data_and_prompt.empty()) {
+    logger_->log_error("Input data and prompt are empty");
+    session.transfer(flow_file, Failure);
+    return;
+  }
 
   auto input = [&] {
     std::vector<LlamaChatMessage> messages;
-    messages.push_back({.role = "system", .content = system_prompt_});
+    if (!system_prompt_.empty()) {
+      messages.push_back({.role = "system", .content = system_prompt_});
+    }
     messages.push_back({.role = "user", .content = input_data_and_prompt});
 
     return llama_ctx_->applyTemplate(messages);
