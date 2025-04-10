@@ -107,6 +107,16 @@ inline std::optional<uint64_t> parseOptionalDataSizeProperty(const core::Process
   return std::nullopt;
 }
 
+inline std::optional<float> parseOptionalFloatProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  if (const auto property_str = ctx.getProperty(property.name, flow_file)) {
+    if (property_str->empty()) {
+      return std::nullopt;
+    }
+    return parsing::parseFloat(*property_str) | utils::orThrow(fmt::format("Expected parsable float from {}::{}", ctx.getProcessor().getName(), property.name));
+  }
+  return std::nullopt;
+}
+
 template<typename T>
 T parseEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop, const core::FlowFile* flow_file = nullptr) {
   const auto enum_str = context.getProperty(prop.name, flow_file);
