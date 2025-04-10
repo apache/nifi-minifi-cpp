@@ -24,36 +24,9 @@
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 #include "LlamaContext.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
-
-namespace {
-
-std::optional<float> parseOptionalFloatProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
-  std::string str_value;
-  if (!context.getProperty(property, str_value) || str_value.empty()) {
-    return std::nullopt;
-  }
-  try {
-    return std::stof(str_value);
-  } catch(const std::exception&) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Property '{}' has invalid value '{}'", property.name, str_value));
-  }
-}
-
-std::optional<int32_t> parseOptionalInt32Property(const core::ProcessContext& context, const core::PropertyReference& property) {
-  std::string str_value;
-  if (!context.getProperty(property, str_value) || str_value.empty()) {
-    return std::nullopt;
-  }
-  try {
-    return gsl::narrow<int32_t>(std::stoi(str_value));
-  } catch(const std::exception&) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Property '{}' has invalid value '{}'", property.name, str_value));
-  }
-}
-
-}  // namespace
 
 void RunLlamaCppInference::initialize() {
   setSupportedProperties(Properties);
@@ -62,40 +35,25 @@ void RunLlamaCppInference::initialize() {
 
 void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   model_path_.clear();
-  context.getProperty(ModelPath, model_path_);
-  context.getProperty(SystemPrompt, system_prompt_);
+  model_path_ = utils::parseProperty(context, ModelPath);
+  system_prompt_ = utils::parseProperty(context, SystemPrompt);
 
   LlamaSamplerParams llama_sampler_params;
-  llama_sampler_params.temperature = parseOptionalFloatProperty(context, Temperature);
-  llama_sampler_params.top_k = parseOptionalInt32Property(context, TopK);
-  llama_sampler_params.top_p = parseOptionalFloatProperty(context, TopP);
-  llama_sampler_params.min_p = parseOptionalFloatProperty(context, MinP);
-
-  uint64_t uint_value = 0;
-  if (context.getProperty(MinKeep, uint_value)) {
-    llama_sampler_params.min_keep = uint_value;
+  llama_sampler_params.temperature = utils::parseOptionalFloatProperty(context, Temperature);
+  if (auto top_k = utils::parseOptionalI64Property(context, TopK)) {
+    llama_sampler_params.top_k = gsl::narrow<int32_t>(*top_k);
   }
+  llama_sampler_params.top_p = utils::parseOptionalFloatProperty(context, TopP);
+  llama_sampler_params.min_p = utils::parseOptionalFloatProperty(context, MinP);
+  llama_sampler_params.min_keep = utils::parseU64Property(context, MinKeep);
 
   LlamaContextParams llama_ctx_params;
-  if (context.getProperty(TextContextSize, uint_value)) {
-    llama_ctx_params.n_ctx = gsl::narrow_cast<uint32_t>(uint_value);
-  }
-  if (context.getProperty(LogicalMaximumBatchSize, uint_value)) {
-    llama_ctx_params.n_batch = gsl::narrow_cast<uint32_t>(uint_value);
-  }
-  if (context.getProperty(PhysicalMaximumBatchSize, uint_value)) {
-    llama_ctx_params.n_ubatch = gsl::narrow_cast<uint32_t>(uint_value);
-  }
-  if (context.getProperty(MaxNumberOfSequences, uint_value)) {
-    llama_ctx_params.n_seq_max = gsl::narrow_cast<uint32_t>(uint_value);
-  }
-  int32_t int_value = 0;
-  if (context.getProperty(ThreadsForGeneration, int_value)) {
-    llama_ctx_params.n_threads = gsl::narrow_cast<int32_t>(int_value);
-  }
-  if (context.getProperty(ThreadsForBatchProcessing, int_value)) {
-    llama_ctx_params.n_threads_batch = gsl::narrow_cast<int32_t>(int_value);
-  }
+  llama_ctx_params.n_ctx = gsl::narrow<uint32_t>(utils::parseU64Property(context, TextContextSize));
+  llama_ctx_params.n_batch = gsl::narrow<uint32_t>(utils::parseU64Property(context, LogicalMaximumBatchSize));
+  llama_ctx_params.n_ubatch = gsl::narrow<uint32_t>(utils::parseU64Property(context, PhysicalMaximumBatchSize));
+  llama_ctx_params.n_seq_max = gsl::narrow<uint32_t>(utils::parseU64Property(context, MaxNumberOfSequences));
+  llama_ctx_params.n_threads = gsl::narrow<int32_t>(utils::parseI64Property(context, ThreadsForGeneration));
+  llama_ctx_params.n_threads_batch = gsl::narrow<int32_t>(utils::parseI64Property(context, ThreadsForBatchProcessing));
 
   llama_ctx_ = LlamaContext::create(model_path_, llama_sampler_params, llama_ctx_params);
 }
@@ -107,8 +65,7 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
     return;
   }
 
-  std::string prompt;
-  context.getProperty(Prompt, prompt, flow_file.get());
+  auto prompt = context.getProperty(Prompt, flow_file.get());
 
   auto read_result = session.readBuffer(flow_file);
   std::string input_data_and_prompt;
@@ -117,7 +74,7 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
     input_data_and_prompt.append({reinterpret_cast<const char*>(read_result.buffer.data()), read_result.buffer.size()});
     input_data_and_prompt.append("\n\n");
   }
-  input_data_and_prompt.append(prompt);
+  input_data_and_prompt.append(*prompt);
 
   auto input = [&] {
     std::vector<LlamaChatMessage> messages;
