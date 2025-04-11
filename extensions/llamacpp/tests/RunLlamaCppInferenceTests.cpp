@@ -107,7 +107,7 @@ TEST_CASE("Prompt is generated correctly with default parameters") {
   REQUIRE(results.at(processors::RunLlamaCppInference::Success).size() == 1);
   auto& output_flow_file = results.at(processors::RunLlamaCppInference::Success)[0];
   CHECK(*output_flow_file->getAttribute(processors::RunLlamaCppInference::LlamaCppTimeToFirstToken.name) == "100 ms");
-  CHECK(*output_flow_file->getAttribute(processors::RunLlamaCppInference::LlamaCppTokensPerSecond.name) == "2.000000");
+  CHECK(*output_flow_file->getAttribute(processors::RunLlamaCppInference::LlamaCppTokensPerSecond.name) == "2.00");
   CHECK(controller.plan->getContent(output_flow_file) == "Test generated content");
   CHECK(mock_llama_context_ptr->getInput() == "Test input");
   REQUIRE(mock_llama_context_ptr->getMessages().size() == 2);
@@ -337,11 +337,14 @@ TEST_CASE("Test output metrics") {
 
   REQUIRE(results.at(processors::RunLlamaCppInference::Success).size() == 1);
   auto prometheus_metrics = processor_metrics->calculateMetrics();
+  REQUIRE(prometheus_metrics.size() >= 2);
   CHECK(prometheus_metrics[prometheus_metrics.size() - 2].name == "tokens_in");
   CHECK(prometheus_metrics[prometheus_metrics.size() - 2].value == 20);
   CHECK(prometheus_metrics[prometheus_metrics.size() - 1].name == "tokens_out");
   CHECK(prometheus_metrics[prometheus_metrics.size() - 1].value == 6);
   auto c2_metrics = processor_metrics->serialize();
+  REQUIRE_FALSE(c2_metrics.empty());
+  REQUIRE(c2_metrics[0].children.size() >= 2);
   CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 2].name == "TokensIn");
   CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 2].value.to_string() == "20");
   CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 1].name == "TokensOut");

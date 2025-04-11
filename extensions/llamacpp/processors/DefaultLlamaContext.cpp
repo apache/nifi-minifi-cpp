@@ -154,7 +154,7 @@ nonstd::expected<GenerationResult, std::string> DefaultLlamaContext::generate(co
   }
 
   result.tokens_per_second =
-    gsl::narrow<double>(result.num_tokens_out) / gsl::narrow<double>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count()) / 1000.0;
+    gsl::narrow<double>(result.num_tokens_out) / (gsl::narrow<double>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count()) / 1000.0);
   return result;
 }
 
