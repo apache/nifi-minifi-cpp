@@ -299,8 +299,8 @@ Processor level metric that reports metrics for the RunLlamaCppInference process
 | tokens_in             | metric_class, processor_name, processor_uuid | Number of tokens parsed from the input prompts in the processor's lifetime |
 | tokens_out            | metric_class, processor_name, processor_uuid | Number of tokens generated in the completion in the processor's lifetime   |
 
-| Label          | Description                                                    |
-|----------------|----------------------------------------------------------------|
-| metric_class   | Class name to filter for this metric, set to GetFileMetrics    |
-| processor_name | Name of the processor                                          |
-| processor_uuid | UUID of the processor                                          |
+| Label          | Description                                                              |
+|----------------|--------------------------------------------------------------------------|
+| metric_class   | Class name to filter for this metric, set to RunLlamaCppInferenceMetrics |
+| processor_name | Name of the processor                                                    |
+| processor_uuid | UUID of the processor                                                    |

@@ -149,7 +149,7 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
   logger_->log_debug("AI model output: {}", text);
 
   flow_file->setAttribute(LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
-  flow_file->setAttribute(LlamaCppTokensPerSecond.name, std::to_string(generation_result->tokens_per_second));
+  flow_file->setAttribute(LlamaCppTokensPerSecond.name, fmt::format("{:.2f}", generation_result->tokens_per_second));
 
   session.writeBuffer(flow_file, text);
   session.transfer(flow_file, Success);
