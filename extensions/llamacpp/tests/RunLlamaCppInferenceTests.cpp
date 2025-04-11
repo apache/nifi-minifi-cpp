@@ -286,7 +286,7 @@ TEST_CASE("Route flow file to failure when prompt and input data is empty") {
   REQUIRE(results.at(processors::RunLlamaCppInference::Success).empty());
   REQUIRE(results.at(processors::RunLlamaCppInference::Failure).size() == 1);
   auto& output_flow_file = results.at(processors::RunLlamaCppInference::Failure)[0];
-  CHECK(controller.plan->getContent(output_flow_file) == "");
+  CHECK(controller.plan->getContent(output_flow_file).empty());
 }
 
 TEST_CASE("System prompt is optional") {
