@@ -50,6 +50,7 @@
 #include "unit/TestUtils.h"
 #include "io/BufferStream.h"
 #include "fmt/format.h"
+#include "processors/TailFile.h"
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;
@@ -788,6 +789,7 @@ TEST_CASE("isSingleThreaded - one thread for a single threaded processor", "[isS
 TEST_CASE("isSingleThreaded - two threads for a single threaded processor", "[isSingleThreaded]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::core::Processor>();
+  LogTestController::getInstance().setDebug<minifi::processors::TailFile>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   auto processor = plan->addProcessor("TailFile", "myProc");

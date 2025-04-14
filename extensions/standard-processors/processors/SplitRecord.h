@@ -89,8 +89,6 @@ class SplitRecord final : public core::AbstractProcessor<SplitRecord> {
 
   std::shared_ptr<core::RecordSetReader> record_set_reader_;
   std::shared_ptr<core::RecordSetWriter> record_set_writer_;
-
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<SplitRecord>::getLogger(uuid_)};
 };
 
 }  // namespace org::apache::nifi::minifi::processors

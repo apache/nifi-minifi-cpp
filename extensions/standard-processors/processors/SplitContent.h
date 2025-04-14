@@ -34,7 +34,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class SplitContent final : public core::ProcessorImpl {
  public:
-  explicit SplitContent(const std::string_view name, const utils::Identifier& uuid = {}) : ProcessorImpl(name, uuid) {}
+  explicit SplitContent(const std::string_view name, const utils::Identifier& uuid = {}) : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<SplitContent>::getLogger(uuid_);
+  }
 
   using size_type = std::vector<std::byte>::size_type;
   enum class ByteSequenceFormat { Hexadecimal, Text };
@@ -123,7 +125,6 @@ class SplitContent final : public core::ProcessorImpl {
   bool keep_byte_sequence = false;
   ByteSequenceLocation byte_sequence_location_ = ByteSequenceLocation::Trailing;
   size_t buffer_size_{};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SplitContent>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

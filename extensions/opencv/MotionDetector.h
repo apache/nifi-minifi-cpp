@@ -37,6 +37,7 @@ class MotionDetector final : public core::ProcessorImpl {
  public:
   explicit MotionDetector(const std::string_view name, const utils::Identifier &uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<MotionDetector>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Detect motion from captured images.";
@@ -99,7 +100,6 @@ class MotionDetector final : public core::ProcessorImpl {
  private:
   bool detectAndDraw(cv::Mat &frame);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MotionDetector>::getLogger(uuid_);
   std::mutex mutex_;
   cv::Mat background_;
   cv::Mat bg_img_;

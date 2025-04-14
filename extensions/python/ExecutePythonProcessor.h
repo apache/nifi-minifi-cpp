@@ -45,6 +45,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
         processor_initialized_(false),
         python_dynamic_(false),
         reload_on_script_change_(true) {
+    logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "
@@ -153,8 +154,6 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
 
   bool processor_initialized_;
   bool python_dynamic_;
-
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger(uuid_);
 
   std::string script_to_exec_;
   bool reload_on_script_change_;

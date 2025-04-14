@@ -46,8 +46,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class GetTCP : public core::ProcessorImpl {
  public:
-  explicit GetTCP(std::string_view name, const utils::Identifier& uuid = {})
-    : ProcessorImpl(name, uuid) {
+  explicit GetTCP(const std::string_view name, const utils::Identifier& uuid = {})
+      : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<GetTCP>::getLogger(uuid_);
   }
 
   ~GetTCP() override {
@@ -185,7 +186,6 @@ class GetTCP : public core::ProcessorImpl {
   std::optional<TcpClient> client_;
   size_t max_batch_size_{500};
   std::thread client_thread_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

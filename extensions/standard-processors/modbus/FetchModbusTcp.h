@@ -33,6 +33,7 @@ class FetchModbusTcp final : public core::ProcessorImpl {
  public:
   explicit FetchModbusTcp(const std::string_view name, const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<FetchModbusTcp>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr auto Description = "Processor able to read data from industrial PLCs using Modbus TCP/IP";
@@ -136,7 +137,6 @@ class FetchModbusTcp final : public core::ProcessorImpl {
   std::optional<size_t> max_size_of_socket_send_buffer_;
   std::chrono::milliseconds timeout_duration_ = std::chrono::seconds(15);
   std::optional<asio::ssl::context> ssl_context_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchModbusTcp>::getLogger(uuid_);
   std::shared_ptr<core::RecordSetWriter> record_set_writer_;
 };
 }  // namespace org::apache::nifi::minifi::modbus

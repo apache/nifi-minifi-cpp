@@ -26,12 +26,16 @@
 #include "core/PropertyDefinition.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "utils/StringUtils.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core {
 template<typename ProcessorT>
 class AbstractProcessor : public ProcessorImpl {
  public:
-  using ProcessorImpl::ProcessorImpl;
+  explicit AbstractProcessor(std::string_view name, const utils::Identifier& uuid = {})
+      : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<ProcessorT>::getLogger(uuid_);
+  }
 
   void initialize() final {
     static_assert(std::is_same_v<typename decltype(ProcessorT::Properties)::value_type, PropertyReference>);

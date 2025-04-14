@@ -38,8 +38,9 @@ class PostElasticsearch : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "An Elasticsearch/Opensearch post processor that uses the Elasticsearch/Opensearch _bulk REST API.";
 
-  explicit PostElasticsearch(const std::string& name, const utils::Identifier& uuid = {})
+  explicit PostElasticsearch(const std::string_view name, const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger(uuid_);
   }
   ~PostElasticsearch() override = default;
 
@@ -118,7 +119,6 @@ class PostElasticsearch : public core::ProcessorImpl {
   std::string host_url_;
   std::shared_ptr<ElasticsearchCredentialsControllerService> credentials_service_;
   http::HTTPClient client_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::elasticsearch

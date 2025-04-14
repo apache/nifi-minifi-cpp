@@ -38,8 +38,10 @@ namespace org::apache::nifi::minifi::processors {
 
 class JoltTransformJSON : public core::ProcessorImpl {
  public:
-  explicit JoltTransformJSON(std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {}
+  explicit JoltTransformJSON(const std::string_view name, const utils::Identifier& uuid = {})
+      : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<JoltTransformJSON>::getLogger(uuid_);
+  }
 
 
   EXTENSIONAPI static constexpr const char* Description = "Applies a list of Jolt specifications to the flowfile JSON payload. A new FlowFile is created "
@@ -85,7 +87,6 @@ class JoltTransformJSON : public core::ProcessorImpl {
  private:
   jolt_transform_json::JoltTransform transform_;
   std::optional<utils::jolt::Spec> spec_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JoltTransformJSON>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

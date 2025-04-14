@@ -37,7 +37,8 @@ namespace org::apache::nifi::minifi::processors {
 class CaptureRTSPFrame final : public core::ProcessorImpl {
  public:
   explicit CaptureRTSPFrame(const std::string_view name, const utils::Identifier &uuid = {})
-      : ProcessorImpl(name, uuid) {
+      : ProcessorImpl(std::move(name), uuid) {
+    logger_ = core::logging::LoggerFactory<CaptureRTSPFrame>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Captures a frame from the RTSP stream at specified intervals.";
@@ -90,7 +91,6 @@ class CaptureRTSPFrame final : public core::ProcessorImpl {
   void notifyStop() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CaptureRTSPFrame>::getLogger(uuid_);
   std::mutex mutex_;
   std::string rtsp_username_;
   std::string rtsp_password_;

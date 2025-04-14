@@ -61,9 +61,9 @@ namespace org::apache::nifi::minifi::processors {
 
 const int EVT_NEXT_TIMEOUT_MS = 500;
 
-ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid)
-  : core::ProcessorImpl(name, uuid),
-    logger_(core::logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger(uuid_)) {
+ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string_view name, const utils::Identifier& uuid)
+    : core::ProcessorImpl(name, uuid) {
+  logger_ = core::logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger(uuid_);
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
   if (GetComputerName(buff, &size)) {

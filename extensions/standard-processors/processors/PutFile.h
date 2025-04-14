@@ -37,8 +37,9 @@ namespace org::apache::nifi::minifi::processors {
 
 class PutFile : public core::ProcessorImpl {
  public:
-  explicit PutFile(std::string_view name,  const utils::Identifier& uuid = {})
+  explicit PutFile(const std::string_view name,  const utils::Identifier& uuid = {})
       : core::ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<PutFile>::getLogger(uuid_);
   }
 
   ~PutFile() override = default;
@@ -121,7 +122,6 @@ class PutFile : public core::ProcessorImpl {
   bool directoryIsFull(const std::filesystem::path& directory) const;
   std::optional<std::filesystem::path> getDestinationPath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
   void putFile(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file, const std::filesystem::path& dest_file);
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutFile>::getLogger(uuid_);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 
 #ifndef WIN32

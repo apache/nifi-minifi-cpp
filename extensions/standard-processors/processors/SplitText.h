@@ -87,8 +87,9 @@ class LineReader {
 
 class SplitText : public core::ProcessorImpl {
  public:
-  explicit SplitText(std::string_view name,  const utils::Identifier& uuid = {})
+  explicit SplitText(const std::string_view name,  const utils::Identifier& uuid = {})
       : ProcessorImpl(name, uuid) {
+    logger_ = core::logging::LoggerFactory<SplitText>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Splits a text file into multiple smaller text files on line boundaries limited by maximum number of lines or total size of fragment. "
@@ -174,7 +175,6 @@ class SplitText : public core::ProcessorImpl {
  private:
   SplitTextConfiguration split_text_config_;
   size_t buffer_size_{};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SplitText>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors
