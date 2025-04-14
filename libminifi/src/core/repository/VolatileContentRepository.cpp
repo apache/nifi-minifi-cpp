@@ -142,6 +142,8 @@ bool VolatileContentRepository::removeKey(const std::string& content_path) {
     total_size_ -= it->second->size();
     data_.erase(it);
     logger_->log_info("Deleting resource {}", content_path);
+  } else {
+    logger_->log_error("Could not find key {}", content_path);
   }
 
   return true;
