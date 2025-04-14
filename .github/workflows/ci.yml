@@ -533,7 +533,7 @@ jobs:
       run: |
         python3 -m venv venv && source venv/bin/activate \
           && pip install -r requirements.txt \
-          && python main.py --run-configuration --skip-compiler-install --minifi-options="-DENABLE_ALL=ON"
+          && python main.py --run-configuration --noconfirm --skip-compiler-install --minifi-options="-DENABLE_ALL=ON"
       working-directory: bootstrap
     - name: linter
       run: cmake --build . --target linter
@@ -600,7 +600,7 @@ jobs:
         shell: cmd
       - name: build
         run: |
-          python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --run-configuration --skip-compiler-install --minifi-options="%WINDOWS_MINIFI_LINTER_OPTIONS%"
+          python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --run-configuration --noconfirm --skip-compiler-install --minifi-options="%WINDOWS_MINIFI_LINTER_OPTIONS%"
         shell: cmd
         working-directory: bootstrap
       - name: Run linter

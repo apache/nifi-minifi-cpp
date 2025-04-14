@@ -36,7 +36,7 @@ if __name__ == '__main__':
         parser.add_argument('--run-configuration', action="store_true", default=False,
                             help="Runs configuration")
         args = parser.parse_args()
-        no_confirm = args.noconfirm or args.noninteractive or args.run_configuration
+        no_confirm = args.noconfirm or args.noninteractive
 
         package_manager = get_package_manager(no_confirm)
         if not args.skip_compiler_install:
