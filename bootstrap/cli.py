@@ -62,6 +62,12 @@ def do_one_click_build(minifi_options: MinifiOptions, package_manager: PackageMa
     return True
 
 
+def do_one_click_configuration(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
+    assert install_dependencies(minifi_options, package_manager)
+    assert run_cmake(minifi_options, package_manager)
+    return True
+
+
 def main_menu(minifi_options: MinifiOptions, package_manager: PackageManager):
     done = False
     while not done:
