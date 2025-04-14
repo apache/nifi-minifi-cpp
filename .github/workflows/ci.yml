@@ -94,9 +94,6 @@ jobs:
           ulimit -c unlimited
           ctest --timeout 300 -j4 --output-on-failure --timeout 300
         working-directory: build
-      - name: linter
-        run: ninja linter
-        working-directory: build
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
@@ -210,10 +207,6 @@ jobs:
         run: ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
         shell: cmd
         working-directory: ./build
-      - name: Run linter
-        run: cmake --build . --target linter --config Release -j 8
-        shell: cmd
-        working-directory: ./build
       - name: Upload artifact
         if: failure()
         uses: actions/upload-artifact@v4
@@ -289,7 +282,7 @@ jobs:
           echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install -y ccache libfl-dev clang-16 clang-tidy-16 libc++-16-dev libc++abi-16-dev libc++1-16 libc++abi1-16 libunwind-16 libsqliteodbc flake8 parallel
+          sudo apt install -y ccache libfl-dev clang-16 clang-tidy-16 libc++-16-dev libc++abi-16-dev libc++1-16 libc++abi1-16 libunwind-16 libsqliteodbc parallel
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - id: free_disk_space
@@ -325,15 +318,6 @@ jobs:
           ulimit -c unlimited
           ctest --timeout 300 -j$(nproc) --output-on-failure
         working-directory: build
-      - name: linter
-        run: cmake --build . --target linter
-        working-directory: ./build
-      - name: shellcheck
-        run: cmake --build . --target shellcheck
-        working-directory: ./build
-      - id: flake8_check
-        run: cmake --build . --target flake8
-        working-directory: ./build
       - id: files
         uses: Ana06/get-changed-files@v2.3.0
         continue-on-error: true
@@ -538,3 +522,108 @@ jobs:
         with:
           name: behavex_output
           path: build/behavex_output
+  unix_linter:
+    name: "Unix linter"
+    runs-on: ubuntu-22.04-arm
+    timeout-minutes: 15
+    steps:
+    - id: checkout
+      uses: actions/checkout@v4
+    - name: configuration
+      run: |
+        python3 -m venv venv && source venv/bin/activate \
+          && pip install -r requirements.txt \
+          && python main.py --run-configuration --skip-compiler-install --minifi-options="-DENABLE_ALL=ON"
+      working-directory: bootstrap
+    - name: linter
+      run: cmake --build . --target linter
+      working-directory: ./build
+  windows_linter:
+    name: "Windows extensions linter"
+    runs-on: windows-2025
+    timeout-minutes: 15
+    env:
+      WINDOWS_MINIFI_LINTER_OPTIONS: >-
+        -DCMAKE_BUILD_TYPE=Release
+        -DCI_BUILD=ON
+        -DCUSTOM_MALLOC=OFF
+        -DDOCKER_BUILD_ONLY=OFF
+        -DDOCKER_PUSH=OFF
+        -DDOCKER_SKIP_TESTS=ON
+        -DENABLE_ALL=OFF
+        -DENABLE_AWS=OFF
+        -DENABLE_AZURE=OFF
+        -DENABLE_BUSTACHE=OFF
+        -DENABLE_BZIP2=OFF
+        -DENABLE_CIVET=OFF
+        -DENABLE_CONTROLLER=OFF
+        -DENABLE_COUCHBASE=OFF
+        -DENABLE_ELASTICSEARCH=OFF
+        -DENABLE_ENCRYPT_CONFIG=OFF
+        -DENABLE_EXPRESSION_LANGUAGE=OFF
+        -DENABLE_GCP=OFF
+        -DENABLE_KUBERNETES=OFF
+        -DENABLE_LIBARCHIVE=OFF
+        -DENABLE_KAFKA=OFF
+        -DENABLE_LUA_SCRIPTING=OFF
+        -DENABLE_LZMA=OFF
+        -DENABLE_MQTT=OFF
+        -DENABLE_OPC=OFF
+        -DENABLE_OPENCV=OFF
+        -DENABLE_OPS=OFF
+        -DENABLE_PDH=ON
+        -DENABLE_PROMETHEUS=OFF
+        -DENABLE_PYTHON_SCRIPTING=OFF
+        -DENABLE_ROCKSDB=OFF
+        -DENABLE_SFTP=OFF
+        -DENABLE_SMB=ON
+        -DENABLE_SPLUNK=OFF
+        -DENABLE_SQL=OFF
+        -DENABLE_TEST_PROCESSORS=OFF
+        -DENABLE_WEL=ON
+        -DFORCE_COLORED_OUTPUT=OFF
+        -DLIBC_STATIC=OFF
+        -DMINIFI_ADVANCED_ASAN_BUILD=OFF
+        -DMINIFI_ADVANCED_CODE_COVERAGE=OFF
+        -DMINIFI_FAIL_ON_WARNINGS=OFF
+        -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF
+        -DPORTABLE=ON
+        -DSKIP_TESTS=OFF
+        -DUSE_SHARED_LIBS=ON
+    steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Set up Python
+        run: choco -y install python & refreshenv
+        shell: cmd
+      - name: build
+        run: |
+          python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --run-configuration --skip-compiler-install --minifi-options="%WINDOWS_MINIFI_LINTER_OPTIONS%"
+        shell: cmd
+        working-directory: bootstrap
+      - name: Run linter
+        run: cmake --build . --target linter --config Release -j 8
+        shell: cmd
+        working-directory: ./build
+  shellcheck:
+    name: "Shellcheck"
+    runs-on: ubuntu-22.04-arm
+    timeout-minutes: 10
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+      - name: shellcheck
+        run: ./run_shellcheck.sh .
+  Flake8:
+    name: "Flake8"
+    runs-on: ubuntu-22.04-arm
+    timeout-minutes: 10
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+      - id: install_deps
+        run: sudo apt update && sudo apt install -y flake8
+      - id: flake8_check
+        run: ./run_flake8.sh .

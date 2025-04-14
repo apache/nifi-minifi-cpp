@@ -17,7 +17,7 @@ import tempfile
 import argparse
 import pathlib
 
-from cli import main_menu, do_one_click_build
+from cli import main_menu, do_one_click_build, do_one_click_configuration
 from minifi_option import parse_minifi_options
 from package_manager import get_package_manager
 
@@ -33,8 +33,10 @@ if __name__ == '__main__':
                             help="Skips the installation of the default compiler")
         parser.add_argument('--noninteractive', action="store_true", default=False,
                             help="Initiates the one click build")
+        parser.add_argument('--run-configuration', action="store_true", default=False,
+                            help="Runs configuration")
         args = parser.parse_args()
-        no_confirm = args.noconfirm or args.noninteractive
+        no_confirm = args.noconfirm or args.noninteractive or args.run_configuration
 
         package_manager = get_package_manager(no_confirm)
         if not args.skip_compiler_install:
@@ -58,5 +60,7 @@ if __name__ == '__main__':
 
         if args.noninteractive:
             do_one_click_build(minifi_options, package_manager)
+        elif args.run_configuration:
+            do_one_click_configuration(minifi_options, package_manager)
         else:
             main_menu(minifi_options, package_manager)
