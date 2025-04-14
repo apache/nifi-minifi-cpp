@@ -570,7 +570,6 @@ set(CPACK_SOURCE_IGNORE_FILES
     "content_repository"
     "provenance_repository"
     "corecomponentstate"
-    "thirdparty/apache-rat/apache-rat"
     "compile_commands\\\\.json"
     "/venv/"
     "__pycache__"
@@ -784,12 +783,6 @@ add_custom_target(shellcheck
 add_custom_target(flake8
     COMMAND ${CMAKE_SOURCE_DIR}/run_flake8.sh ${CMAKE_SOURCE_DIR})
 endif(NOT WIN32)
-
-# Custom target to download and run Apache Release Audit Tool (RAT)
-add_custom_target(
-    apache-rat
-    ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/RunApacheRAT.cmake
-    COMMAND java -jar ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/apache-rat-0.13/apache-rat-0.13.jar -E ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/.rat-excludes -d ${CMAKE_SOURCE_DIR} | grep -B 1 -A 15 Summary )
 
 feature_summary(WHAT ALL FILENAME ${CMAKE_BINARY_DIR}/all.log)
 
