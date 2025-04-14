@@ -201,12 +201,55 @@ class TempDirectory {
   bool is_owner_;
 };
 
+template<typename T>
+class TypedProcessorWrapper {
+ public:
+  TypedProcessorWrapper() = default;
+  TypedProcessorWrapper(core::Processor* proc): proc_(proc) {
+    if (proc_) {
+      proc_->getImpl<T>();
+    }
+  }
+
+  explicit operator bool() const {
+    return proc_ != nullptr;
+  }
+
+  operator core::Processor*() const {
+    gsl_Assert(proc_);
+    return proc_;
+  }
+
+  T& get() const {
+    gsl_Assert(proc_);
+    return proc_->getImpl<T>();
+  }
+
+  core::Processor* operator->() const {
+    gsl_Assert(proc_);
+    return proc_;
+  }
+
+ private:
+  core::Processor* proc_{nullptr};
+};
+
 class TestPlan {
  public:
   explicit TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo, std::shared_ptr<minifi::core::Repository> prov_repo,
                     std::shared_ptr<minifi::state::response::FlowVersion> flow_version, std::shared_ptr<minifi::Configure> configuration, const char* state_dir);
 
   virtual ~TestPlan();
+
+  template<typename T>
+  TypedProcessorWrapper<T> addProcessor(const std::string& name) {
+    auto processor_type = std::string{core::className<T>()};
+    auto pos = processor_type.find_last_of(':');
+    if (pos != std::string::npos) {
+      processor_type = processor_type.substr(pos + 1);
+    }
+    return TypedProcessorWrapper<T>{addProcessor(processor_type, name)};
+  }
 
   minifi::core::Processor* addProcessor(std::unique_ptr<minifi::core::Processor> processor, const std::string &name,
       const minifi::core::Relationship& relationship = minifi::core::Relationship("success", "description"), bool linkToPrevious = false) {

@@ -32,7 +32,7 @@
 
 #include "core/Core.h"
 #include "concurrentqueue.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "utils/OsUtils.h"
 #include "FlowFileRecord.h"

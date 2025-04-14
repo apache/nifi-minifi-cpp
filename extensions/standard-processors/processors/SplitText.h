@@ -24,7 +24,7 @@
 #include <utility>
 #include <optional>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyDefinition.h"
@@ -87,9 +87,7 @@ class LineReader {
 
 class SplitText : public core::ProcessorImpl {
  public:
-  explicit SplitText(std::string_view name,  const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Splits a text file into multiple smaller text files on line boundaries limited by maximum number of lines or total size of fragment. "
     "Each output split file will contain no more than the configured number of lines or bytes. If both Line Split Count and Maximum Fragment Size are specified, the split occurs at whichever "
@@ -174,7 +172,6 @@ class SplitText : public core::ProcessorImpl {
  private:
   SplitTextConfiguration split_text_config_;
   size_t buffer_size_{};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SplitText>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

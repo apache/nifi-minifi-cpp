@@ -20,7 +20,7 @@
 #include <string>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -84,9 +84,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class FetchFile final : public core::ProcessorImpl {
  public:
-  explicit FetchFile(const std::string_view name, const utils::Identifier& uuid = {})
-    : core::ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Reads the contents of a file from disk and streams it into the contents of an incoming FlowFile. "
       "Once this is done, the file is optionally moved elsewhere or deleted to help keep the file system organized.";
@@ -177,7 +175,6 @@ class FetchFile final : public core::ProcessorImpl {
   utils::LogUtils::LogLevelOption log_level_when_file_not_found_{};
   utils::LogUtils::LogLevelOption log_level_when_permission_denied_{};
   size_t buffer_size_{};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchFile>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

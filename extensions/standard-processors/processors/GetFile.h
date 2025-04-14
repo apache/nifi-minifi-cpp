@@ -24,7 +24,7 @@
 #include <atomic>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -54,7 +54,7 @@ struct GetFileRequest {
 
 class GetFileMetrics : public core::ProcessorMetricsImpl {
  public:
-  explicit GetFileMetrics(const core::Processor& source_processor)
+  explicit GetFileMetrics(const core::ProcessorImpl& source_processor)
     : core::ProcessorMetricsImpl(source_processor) {
   }
 
@@ -84,8 +84,8 @@ class GetFileMetrics : public core::ProcessorMetricsImpl {
 
 class GetFile : public core::ProcessorImpl {
  public:
-  explicit GetFile(std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
+  explicit GetFile(core::ProcessorMetadata info)
+      : ProcessorImpl(info) {
     metrics_ = gsl::make_not_null(std::make_shared<GetFileMetrics>(*this));
   }
   ~GetFile() override = default;
@@ -196,7 +196,6 @@ class GetFile : public core::ProcessorImpl {
   mutable std::mutex directory_listing_mutex_;
   std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_listing_time_{};
   size_t buffer_size_{};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetFile>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

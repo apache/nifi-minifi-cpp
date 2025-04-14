@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "unit/TestBase.h"
+#include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "SQLTestController.h"
 
@@ -28,7 +29,7 @@
 TEST_CASE("Test Creation of PutSQL", "[PutSQLCreate]") {
   TestController testController;
   std::shared_ptr<core::Processor>
-      processor = std::make_shared<org::apache::nifi::minifi::processors::PutSQL>("processorname");
+      processor = minifi::test::utils::make_processor<org::apache::nifi::minifi::processors::PutSQL>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 

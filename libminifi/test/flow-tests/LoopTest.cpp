@@ -89,17 +89,17 @@ TEST_CASE("Flow with a single loop", "[SingleLoopFlow]") {
   auto controller = testController.controller_;
   auto root = testController.root_;
 
-  auto procGenerator = dynamic_cast<org::apache::nifi::minifi::processors::TestFlowFileGenerator*>(root->findProcessorByName("Generator"));
+  TypedProcessorWrapper<org::apache::nifi::minifi::processors::TestFlowFileGenerator> procGenerator = root->findProcessorByName("Generator");
   gsl_Assert(procGenerator);
-  auto procA = dynamic_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("A"));
+  TypedProcessorWrapper<org::apache::nifi::minifi::processors::TestProcessor> procA = root->findProcessorByName("A");
   gsl_Assert(procA);
 
   int tryCount = 0;
   // wait for the procA to get triggered 15 times
-  while (tryCount++ < 10 && !(procA->trigger_count.load() >= 15)) {
+  while (tryCount++ < 10 && !(procA.get().trigger_count.load() >= 15)) {
     std::this_thread::sleep_for(std::chrono::milliseconds{1000});
   }
 
-  REQUIRE(procGenerator->trigger_count.load() <= 2);
-  REQUIRE(procA->trigger_count.load() >= 15);
+  REQUIRE(procGenerator.get().trigger_count.load() <= 2);
+  REQUIRE(procA.get().trigger_count.load() >= 15);
 }

@@ -18,7 +18,7 @@
 
 #include "controllers/SSLContextService.h"
 #include "controllers/RecordSetWriter.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/net/AsioCoro.h"
@@ -31,9 +31,7 @@ class ReadModbusFunction;
 
 class FetchModbusTcp final : public core::ProcessorImpl {
  public:
-  explicit FetchModbusTcp(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr auto Description = "Processor able to read data from industrial PLCs using Modbus TCP/IP";
 
@@ -126,7 +124,7 @@ class FetchModbusTcp final : public core::ProcessorImpl {
   asio::awaitable<nonstd::expected<core::RecordField, std::error_code>> sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
       const ReadModbusFunction& read_modbus_function);
   std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> getAddressMap(core::ProcessContext& context, const core::FlowFile& flow_file);
-  std::shared_ptr<core::FlowFile> getOrCreateFlowFile(core::ProcessSession& session) const;
+  std::shared_ptr<core::FlowFile> getOrCreateFlowFile(core::ProcessContext& context, core::ProcessSession& session) const;
   void removeExpiredConnections();
 
   asio::io_context io_context_;
@@ -136,7 +134,6 @@ class FetchModbusTcp final : public core::ProcessorImpl {
   std::optional<size_t> max_size_of_socket_send_buffer_;
   std::chrono::milliseconds timeout_duration_ = std::chrono::seconds(15);
   std::optional<asio::ssl::context> ssl_context_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchModbusTcp>::getLogger(uuid_);
   std::shared_ptr<core::RecordSetWriter> record_set_writer_;
 };
 }  // namespace org::apache::nifi::minifi::modbus

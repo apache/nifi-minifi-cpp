@@ -28,7 +28,7 @@
 #include "FocusArchiveEntry.h"
 #include "FlowFileRecord.h"
 #include "ArchiveMetadata.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
@@ -40,9 +40,7 @@ using core::logging::Logger;
 
 class UnfocusArchiveEntry : public core::ProcessorImpl {
  public:
-  explicit UnfocusArchiveEntry(std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~UnfocusArchiveEntry() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.";
@@ -74,9 +72,6 @@ class UnfocusArchiveEntry : public core::ProcessorImpl {
     static int ok_cb(struct archive *, void* /*d*/) { return ARCHIVE_OK; }
     static la_ssize_t write_cb(struct archive *, void *d, const void *buffer, size_t length);
   };
-
- private:
-  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<UnfocusArchiveEntry>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors
