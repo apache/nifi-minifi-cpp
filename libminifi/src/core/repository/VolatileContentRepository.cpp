@@ -33,7 +33,8 @@ class StringRefStream : public io::BaseStream {
 
   size_t read(std::span<std::byte> out_buffer) override {
     auto read_size = std::min(data_->size() - read_offset_, out_buffer.size());
-    std::copy_n(reinterpret_cast<const std::byte*>(data_->data()) + read_offset_, read_size, out_buffer.data());
+    const auto source_span = as_bytes(std::span{*data_}.subspan(read_offset_, read_size));
+    std::copy_n(source_span.data(), source_span.size(), out_buffer.data());
     read_offset_ += read_size;
     return read_size;
   }
