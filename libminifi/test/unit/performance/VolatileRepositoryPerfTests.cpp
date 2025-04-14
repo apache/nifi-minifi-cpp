@@ -23,6 +23,9 @@
 #include "core/logging/LoggerFactory.h"
 #include "core/logging/LoggerConfiguration.h"
 
+// clang-tidy does not appreciate how the google benchmark macros are written
+// NOLINTBEGIN
+
 static bool initializeLogger = [] {
   auto log_props = std::make_shared<org::apache::nifi::minifi::core::logging::LoggerProperties>();
   log_props->set("logger.root", "OFF");
@@ -251,3 +254,5 @@ static void BM_VolatileContentRepository_Read3(benchmark::State& state) {
 BENCHMARK(BM_VolatileContentRepository_Read3);
 
 BENCHMARK_MAIN();
+
+// NOLINTEND

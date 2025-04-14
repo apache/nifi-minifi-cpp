@@ -56,7 +56,7 @@ class StringRefStream : public io::BaseStream {
     read_offset_ = std::min(offset, data_->size());
   }
 
-  size_t tell() const override {
+  [[nodiscard]] size_t tell() const override {
     return read_offset_;
   }
 
@@ -64,7 +64,7 @@ class StringRefStream : public io::BaseStream {
     return 1;
   }
 
-  std::span<const std::byte> getBuffer() const override {
+  [[nodiscard]] std::span<const std::byte> getBuffer() const override {
     return as_bytes(std::span{*data_});
   }
 
