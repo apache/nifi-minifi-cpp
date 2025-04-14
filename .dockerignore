@@ -52,7 +52,6 @@ logs
 compile_commands.json
 
 thirdparty/uuid/tst_uuid*
-thirdparty/apache-rat/apache-rat*
 thirdparty/**/*.o
 thirdparty/**/*.a
 libminifi/test/**/*.a
