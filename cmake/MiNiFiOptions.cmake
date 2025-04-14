@@ -44,6 +44,7 @@ endfunction()
 
 add_minifi_option(CI_BUILD "Build is used for CI." OFF)
 add_minifi_option(SKIP_TESTS "Skips building all tests." OFF)
+add_minifi_option(MINIFI_PERFORMANCE_TESTS "Build performance tests" OFF)
 add_minifi_option(DOCKER_BUILD_ONLY "Disables all targets except docker build scripts. Ideal for systems without an up-to-date compiler." OFF)
 add_minifi_option(DOCKER_SKIP_TESTS "Skip building tests in docker image targets." ON)
 add_minifi_option(DOCKER_PUSH "Push created images to the specified tags" OFF)

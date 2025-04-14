@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if (NOT MINIFI_PERFORMANCE_TESTS)
+    return()
+endif()
+
 include(FetchBenchmark)
 
 GETSOURCEFILES(PERF_TESTS "${TEST_DIR}/unit/performance")
@@ -29,5 +33,6 @@ FOREACH(testfile ${PERF_TESTS})
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include")
     MATH(EXPR PERF_TEST_COUNT "${PERF_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}")
+    set_tests_properties(${testfilename} PROPERTIES LABELS "performance")
 ENDFOREACH()
 message("-- Finished building ${PERF_TEST_COUNT} performance test file(s)...")

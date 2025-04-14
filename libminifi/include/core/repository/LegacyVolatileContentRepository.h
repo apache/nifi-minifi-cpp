@@ -75,32 +75,14 @@ class LegacyVolatileContentRepository : public core::ContentRepositoryImpl {
     return repo_data_.isFull();
   }
 
-  /**
-   * Initialize the volatile content repo
-   * @param configure configuration
-   */
   bool initialize(const std::shared_ptr<Configure> &configure) override;
 
-  /**
-   * Creates writable stream.
-   * @param claim resource claim
-   * @return BaseStream shared pointer that represents the stream the consumer will write to.
-   */
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append) override;
 
-  /**
-   * Creates readable stream.
-   * @param claim resource claim
-   * @return BaseStream shared pointer that represents the stream from which the consumer will read..
-   */
   std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim) override;
 
   bool exists(const minifi::ResourceClaim &claim) override;
 
-  /**
-   * Closes the claim.
-   * @return whether or not the claim is associated with content stored in volatile memory.
-   */
   bool close(const minifi::ResourceClaim &claim) override {
     return remove(claim);
   }
@@ -110,10 +92,6 @@ class LegacyVolatileContentRepository : public core::ContentRepositoryImpl {
   }
 
  protected:
-  /**
-   * Closes the claim.
-   * @return whether or not the claim is associated with content stored in volatile memory.
-   */
   bool removeKey(const std::string& content_path) override;
 
  private:

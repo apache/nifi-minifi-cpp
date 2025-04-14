@@ -3,7 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 env:
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
-    -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DDOCKER_BUILD_ONLY=ON
+    -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON
   SCCACHE_GHA_ENABLE: true
   CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
@@ -56,6 +56,7 @@ jobs:
         -DPORTABLE=ON
         -DSKIP_TESTS=OFF
         -DUSE_SHARED_LIBS=ON
+        -DMINIFI_PERFORMANCE_TESTS=ON
     steps:
       - id: checkout
         uses: actions/checkout@v4
@@ -92,7 +93,7 @@ jobs:
         run: |
           # Set core file size limit to unlimited
           ulimit -c unlimited
-          ctest --timeout 300 -j4 --output-on-failure --timeout 300
+          ctest --timeout 300 -j4 --output-on-failure --timeout 300 -LE performance
         working-directory: build
       - name: linter
         run: ninja linter
@@ -167,6 +168,7 @@ jobs:
         -DSTATIC_BUILD=ON
         -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=ON
         -DUSE_SHARED_LIBS=OFF
+        -DMINIFI_PERFORMANCE_TESTS=ON
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
@@ -207,7 +209,7 @@ jobs:
           path: ~/AppData/Local/Mozilla/sccache/cache
           key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
       - name: Run tests
-        run: ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
+        run: ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure -LE performance
         shell: cmd
         working-directory: ./build
       - name: Run linter
@@ -270,6 +272,7 @@ jobs:
         -DSKIP_TESTS=OFF
         -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF
         -DUSE_SHARED_LIBS=ON
+        -DMINIFI_PERFORMANCE_TESTS=ON
     steps:
       - id: checkout
         uses: actions/checkout@v4
@@ -323,7 +326,7 @@ jobs:
         run: |
           # Set core file size limit to unlimited
           ulimit -c unlimited
-          ctest --timeout 300 -j$(nproc) --output-on-failure
+          ctest --timeout 300 -j$(nproc) --output-on-failure -LE performance
         working-directory: build
       - name: linter
         run: cmake --build . --target linter
