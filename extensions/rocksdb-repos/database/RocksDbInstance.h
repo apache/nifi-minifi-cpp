@@ -76,7 +76,7 @@ class RocksDbInstance {
 
   std::unordered_map<std::string, ColumnConfig> column_configs_;
 
-  static std::shared_ptr<core::logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::internal
