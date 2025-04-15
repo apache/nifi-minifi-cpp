@@ -148,6 +148,20 @@ if (MINIFI_ADVANCED_CODE_COVERAGE)
     append_coverage_compiler_flags()
 endif()
 
+if (MINIFI_ADVANCED_LINK_TIME_OPTIMIZATION)
+    if (WIN32)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /GL")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GL")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /LTCG")
+    else()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto")
+    endif()
+endif()
+
 #### Third party dependencies ####
 
 # Define function for passing dependencies
