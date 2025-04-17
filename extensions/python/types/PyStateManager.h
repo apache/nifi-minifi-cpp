@@ -35,6 +35,8 @@ struct PyStateManager {
 
   static PyObject* set(PyStateManager* self, PyObject* args);
   static PyObject* get(PyStateManager* self, PyObject* args);
+  static PyObject* clear(PyStateManager* self, PyObject* args);
+  static PyObject* replace(PyStateManager* self, PyObject* args);
 
   static PyTypeObject* typeObject();
 };

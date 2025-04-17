@@ -382,6 +382,9 @@ class ContainerStore:
     def remove_python_requirements_txt_in_minifi(self):
         self.minifi_options.remove_python_requirements_txt = True
 
+    def use_nifi_python_processors_without_dependencies_in_minifi(self):
+        self.minifi_options.use_nifi_python_processors_without_dependencies = True
+
     def set_yaml_in_minifi(self):
         self.minifi_options.config_format = "yaml"
 
