@@ -81,6 +81,7 @@ void ControllerServiceNodeMap::clear() {
     node->disable();
   }
   controller_service_nodes_.clear();
+  process_groups_.clear();
 }
 
 std::vector<std::shared_ptr<ControllerServiceNode>> ControllerServiceNodeMap::getAllControllerServices() const {
