@@ -55,6 +55,7 @@ set ucrt=OFF
 set real_odbc=OFF
 set sccache_arg=
 set vc_redist=OFF
+set performance_tests=OFF
 
 set arg_counter=0
 for %%x in (%*) do (
@@ -94,6 +95,7 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NINJA]            set generator="Ninja"
     if [%%~x] EQU [/SCCACHE]          set "sccache_arg=-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
     if [%%~x] EQU [/VC_REDIST]        set vc_redist=ON
+    if [%%~x] EQU [/PERF]             set performance_tests=ON
 )
 
 mkdir %builddir%
@@ -115,6 +117,7 @@ cmake -G %generator% %build_platform_cmd% -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODUL
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPS=%enable_ops% ^
         -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% -DENABLE_COUCHBASE=%enable_couchbase% ^
         -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% -DMINIFI_INCLUDE_VC_REDIST_DLLS=%vc_redist% ^
+        -DMINIFI_PERFORMANCE_TESTS=%performance_tests% ^
         %strict_gsl_checks% -DMINIFI_INCLUDE_UCRT_DLLS=%ucrt% %sccache_arg% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 if [%cpack%] EQU [ON] (
@@ -123,7 +126,7 @@ if [%cpack%] EQU [ON] (
 )
 if [%skiptests%] NEQ [ON] (
     if [%skiptestrun%] NEQ [ON] (
-        ctest --timeout 300 --parallel 8 -C %cmake_build_type% --output-on-failure
+        ctest --timeout 300 --parallel 8 -C %cmake_build_type% --output-on-failure -LE performance
         IF !ERRORLEVEL! NEQ 0 ( popd & exit /b !ERRORLEVEL! )
     )
 )

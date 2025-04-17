@@ -215,6 +215,7 @@ This project bundles a configuration file from 'Kubernetes Metrics Server' (kube
 This project bundles 'OpenSSL' which is available under an ALv2 license
 This project bundles 'gRPC' which is available under an ALv2 license
 This project bundles 'couchbase-cxx-client' which is available under an ALv2 license
+This project bundles 'benchmark' which is available under an ALv2 license
 
 The Apache NiFi - MiNiFi C++ project contains subcomponents with separate copyright
 notices and license terms. Your use of the source code for the these
