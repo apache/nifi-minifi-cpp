@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,14 +15,17 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "utils/AttributeErrors.h"
 
-#include <system_error>
+namespace org::apache::nifi::minifi::core {
 
-namespace org::apache::nifi::minifi::utils {
+const AttributeErrorCategory& attribute_error_category() noexcept {
+  static AttributeErrorCategory category;
+  return category;
+};
 
-std::error_code getLastError();
+std::error_code make_error_code(AttributeErrorCode c) {
+  return {static_cast<int>(c), attribute_error_category()};
+}
 
-[[nodiscard]] bool compareErrors(std::error_code lhs, std::error_code rhs);
-
-}  // namespace org::apache::nifi::minifi::utils
+}  // namespace org::apache::nifi::minifi::core

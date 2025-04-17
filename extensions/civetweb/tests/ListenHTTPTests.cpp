@@ -198,7 +198,7 @@ class ListenHTTPTestsFixture {
 
   void test_connect(
       const std::vector<HttpResponseExpectations>& response_expectations = {HttpResponseExpectations{}},
-      std::size_t expected_commited_requests = 1,
+      std::size_t expected_committed_requests = 1,
       std::unique_ptr<minifi::http::HTTPClient> client_to_use = {}) {
     if (client_to_use) {
       REQUIRE(response_expectations.size() == 1);
@@ -231,10 +231,10 @@ class ListenHTTPTestsFixture {
       thread.join();
     }
 
-    if (expected_commited_requests > 0 && (method == HttpRequestMethod::GET || method == HttpRequestMethod::POST)) {
+    if (expected_committed_requests > 0 && (method == HttpRequestMethod::GET || method == HttpRequestMethod::POST)) {
       REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(payload.size()) + " Offset:0"));
     }
-    REQUIRE(LogTestController::getInstance().contains("Logged " + std::to_string(expected_commited_requests) + " flow files"));
+    REQUIRE(LogTestController::getInstance().contains("Logged " + std::to_string(expected_committed_requests) + " flow files"));
   }
 
   std::unique_ptr<minifi::http::HTTPClient> initialize_client() {
@@ -330,8 +330,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP no body", "[basic]") {
   }
 
   run_server();
-  const std::size_t expected_commited_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
-  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP body with different mime type", "[basic][mime]") {
@@ -349,8 +349,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP body with different mime type", "
   }
 
   run_server();
-  const std::size_t expected_commited_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
-  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP all headers", "[basic][headers]") {
@@ -471,8 +471,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without CA", "[basic][https]") {
   }
 
   run_server();
-  const std::size_t expected_commited_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
-  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without client cert", "[basic][https]") {
@@ -494,8 +494,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without client cert", "[basic][h
   }
 
   run_server();
-  const std::size_t expected_commited_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
-  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from good CA", "[https]") {
@@ -518,8 +518,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from good CA", 
   }
 
   run_server();
-  const std::size_t expected_commited_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
-  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with PKCS12 client cert from good CA", "[https]") {
@@ -542,8 +542,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with PKCS12 client cert from goo
   }
 
   run_server();
-  const std::size_t expected_commited_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
-  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "[https]") {
@@ -553,7 +553,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
 
   bool should_succeed = false;
   int64_t response_code = 0;
-  std::size_t expected_commited_requests = 0;
+  std::size_t expected_committed_requests = 0;
   SECTION("verify peer") {
     should_succeed = false;
     plan->setProperty(listen_http, minifi::processors::ListenHTTP::SSLVerifyPeer, "yes");
@@ -575,12 +575,12 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
 
     SECTION("GET") {
       method = HttpRequestMethod::GET;
-      expected_commited_requests = 1;
+      expected_committed_requests = 1;
     }
     SECTION("POST") {
       method = HttpRequestMethod::POST;
       payload = "Test payload";
-      expected_commited_requests = 1;
+      expected_committed_requests = 1;
     }
     SECTION("HEAD") {
       method = HttpRequestMethod::HEAD;
@@ -590,7 +590,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
   create_ssl_context_service("goodCA.crt", "badCA_goodClient.pem");
 
   run_server();
-  test_connect({HttpResponseExpectations{should_succeed, response_code}}, expected_commited_requests);
+  test_connect({HttpResponseExpectations{should_succeed, response_code}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with matching DN", "[https][DN]") {
@@ -614,8 +614,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with matching D
   }
 
   run_server();
-  const std::size_t expected_commited_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
-  test_connect({HttpResponseExpectations{}}, expected_commited_requests);
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matching DN", "[https][DN]") {
@@ -625,7 +625,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
   plan->setProperty(listen_http, minifi::processors::ListenHTTP::AuthorizedDNPattern, ".*/CN=good\\..*");
 
   int64_t response_code = 0;
-  std::size_t expected_commited_requests = 0;
+  std::size_t expected_committed_requests = 0;
   SECTION("verify peer") {
     plan->setProperty(listen_http, minifi::processors::ListenHTTP::SSLVerifyPeer, "yes");
     response_code = 403;
@@ -646,12 +646,12 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
 
     SECTION("GET") {
       method = HttpRequestMethod::GET;
-      expected_commited_requests = 1;
+      expected_committed_requests = 1;
     }
     SECTION("POST") {
       method = HttpRequestMethod::POST;
       payload = "Test payload";
-      expected_commited_requests = 1;
+      expected_committed_requests = 1;
     }
     SECTION("HEAD") {
       method = HttpRequestMethod::HEAD;
@@ -661,7 +661,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
   create_ssl_context_service("goodCA.crt", "goodCA_badClient.pem");
 
   run_server();
-  test_connect({HttpResponseExpectations{true, response_code}}, expected_commited_requests);
+  test_connect({HttpResponseExpectations{true, response_code}}, expected_committed_requests);
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]") {

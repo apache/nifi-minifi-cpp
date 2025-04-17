@@ -28,7 +28,6 @@
 #include "utils/gsl.h"
 #include "utils/detail/MonadicOperationWrappers.h"
 #include "fmt/format.h"
-#include "utils/Error.h"  // for more readable std::error_code fmt::formatter
 
 
 namespace org::apache::nifi::minifi::utils {
