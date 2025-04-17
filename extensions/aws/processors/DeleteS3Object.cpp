@@ -32,9 +32,10 @@ void DeleteS3Object::initialize() {
 }
 
 std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDeleteS3RequestParams(
-    core::ProcessContext& context,
+    const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties) const {
+    const CommonProperties& common_properties,
+    const std::string_view bucket) const {
   gsl_Expects(client_config_);
   aws::s3::DeleteObjectRequestParameters params(common_properties.credentials, *client_config_);
   if (const auto object_key = context.getProperty(ObjectKey, &flow_file)) {
@@ -51,7 +52,7 @@ std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDelet
   }
   logger_->log_debug("DeleteS3Object: Version [{}]", params.version);
 
-  params.bucket = common_properties.bucket;
+  params.bucket = bucket;
   params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   return params;
 }
@@ -70,17 +71,25 @@ void DeleteS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessi
     return;
   }
 
-  auto params = buildDeleteS3RequestParams(context, *flow_file, *common_properties);
+  auto bucket = context.getProperty(Bucket.name, flow_file.get());
+  if (!bucket) {
+    logger_->log_error("Bucket is invalid due to {}", bucket.error().message());
+    session.transfer(flow_file, Failure);
+    return;
+  }
+  logger_->log_debug("S3Processor: Bucket [{}]", *bucket);
+
+  auto params = buildDeleteS3RequestParams(context, *flow_file, *common_properties, *bucket);
   if (!params) {
     session.transfer(flow_file, Failure);
     return;
   }
 
   if (s3_wrapper_.deleteObject(*params)) {
-    logger_->log_debug("Successfully deleted S3 object '{}' from bucket '{}'", params->object_key, common_properties->bucket);
+    logger_->log_debug("Successfully deleted S3 object '{}' from bucket '{}'", params->object_key, *bucket);
     session.transfer(flow_file, Success);
   } else {
-    logger_->log_error("Failed to delete S3 object '{}' from bucket '{}'", params->object_key, common_properties->bucket);
+    logger_->log_error("Failed to delete S3 object '{}' from bucket '{}'", params->object_key, *bucket);
     session.transfer(flow_file, Failure);
   }
 }

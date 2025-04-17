@@ -210,18 +210,19 @@ class PutS3Object : public S3Processor {
 
   void fillUserMetadata(core::ProcessContext& context);
   static std::string parseAccessControlList(const std::string &comma_separated_list);
-  bool setCannedAcl(core::ProcessContext& context, const core::FlowFile& flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params) const;
-  bool setAccessControl(core::ProcessContext& context, const core::FlowFile& flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params) const;
+  bool setCannedAcl(const core::ProcessContext& context, const core::FlowFile& flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params) const;
+  bool setAccessControl(const core::ProcessContext& context, const core::FlowFile& flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params) const;
   void setAttributes(
     core::ProcessSession& session,
     core::FlowFile& flow_file,
     const aws::s3::PutObjectRequestParameters &put_s3_request_params,
     const minifi::aws::s3::PutObjectResult &put_object_result) const;
   std::optional<aws::s3::PutObjectRequestParameters> buildPutS3RequestParams(
-    core::ProcessContext& context,
+    const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties) const;
-  void ageOffMultipartUploads(const CommonProperties &common_properties);
+    const CommonProperties &common_properties,
+    std::string_view bucket) const;
+  void ageOffMultipartUploads(const CommonProperties &common_properties, const std::string_view bucket);
 
   std::string user_metadata_;
   std::map<std::string, std::string> user_metadata_map_;
