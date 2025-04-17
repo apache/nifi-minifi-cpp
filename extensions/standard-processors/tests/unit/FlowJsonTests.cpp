@@ -79,6 +79,7 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
       "schedulingPeriod": "3 sec",
       "penaltyDuration": "12 sec",
       "yieldDuration": "4 sec",
+      "bulletinLevel": "ERROR",
       "runDurationMillis": 12,
       "autoTerminatedRelationships": ["one", "two"],
       "properties": {
@@ -148,6 +149,7 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   CHECK(3s == proc->getSchedulingPeriod());
   CHECK(12s == proc->getPenalizationPeriod());
   CHECK(4s == proc->getYieldPeriod());
+  CHECK(proc->getLogBulletinLevel() == logging::LOG_LEVEL::err);
   CHECK(proc->isAutoTerminated({"one", ""}));
   CHECK(proc->isAutoTerminated({"two", ""}));
   CHECK_FALSE(proc->isAutoTerminated({"three", ""}));

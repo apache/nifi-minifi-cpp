@@ -33,6 +33,7 @@
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "ProcessorMetrics.h"
 #include "utils/gsl.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -88,6 +89,13 @@ class Processor : public virtual Connectable, public virtual ConfigurableCompone
   virtual gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const = 0;
   virtual std::string getProcessGroupUUIDStr() const = 0;
   virtual void setProcessGroupUUIDStr(const std::string &uuid) = 0;
+  virtual std::string getProcessGroupName() const = 0;
+  virtual void setProcessGroupName(const std::string &name) = 0;
+  virtual std::string getProcessGroupPath() const = 0;
+  virtual void setProcessGroupPath(const std::string &path) = 0;
+  virtual logging::LOG_LEVEL getLogBulletinLevel() const = 0;
+  virtual void setLogBulletinLevel(logging::LOG_LEVEL level) = 0;
+  virtual void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) = 0;
 
   virtual void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false) = 0;
   virtual const std::unordered_map<Connection*, std::unordered_set<Processor*>>& reachable_processors() const = 0;
