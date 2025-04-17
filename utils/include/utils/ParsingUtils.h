@@ -42,6 +42,7 @@ nonstd::expected<uint64_t, std::error_code> parseDataSize(std::string_view input
 
 nonstd::expected<uint32_t, std::error_code> parseUnixOctalPermissions(std::string_view input);
 
+nonstd::expected<float, std::error_code> parseFloat(std::string_view input);
 
 template<std::integral T>
 nonstd::expected<T, std::error_code> parseIntegralMinMax(const std::string_view input, const T minimum, const T maximum) {
