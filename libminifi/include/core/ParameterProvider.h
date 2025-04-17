@@ -40,7 +40,7 @@ enum class SensitiveParameterScopeOptions {
   selected
 };
 
-struct ParameterProviderConfig {
+struct SensitiveParameterConfig {
   SensitiveParameterScopeOptions sensitive_parameter_scope = SensitiveParameterScopeOptions::none;
   std::unordered_set<std::string> sensitive_parameters;
 
@@ -68,16 +68,23 @@ class ParameterProvider : public ConfigurableComponentImpl, public CoreComponent
   MINIFIAPI static constexpr auto SensitiveParameterList = core::PropertyDefinitionBuilder<>::createProperty("Sensitive Parameter List")
       .withDescription("List of sensitive parameters, if 'Sensitive Parameter Scope' is set to 'selected'.")
       .build();
+  MINIFIAPI static constexpr auto ReloadValuesOnRestart = core::PropertyDefinitionBuilder<>::createProperty("Reload Values On Restart")
+      .withDescription("Reload provider-generated parameter context values when MiNiFi is restarted")
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
+      .withDefaultValue("false")
+      .isRequired(true)
+      .build();
 
-  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({SensitiveParameterScope, SensitiveParameterList});
+  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({SensitiveParameterScope, SensitiveParameterList, ReloadValuesOnRestart});
 
   bool supportsDynamicProperties() const override { return false; }
   bool supportsDynamicRelationships() const override { return false; };
 
+  bool reloadValuesOnRestart() const;
   std::vector<gsl::not_null<std::unique_ptr<ParameterContext>>> createParameterContexts();
 
  protected:
-  ParameterProviderConfig readParameterProviderConfig() const;
+  SensitiveParameterConfig readSensitiveParameterConfig() const;
   virtual std::vector<ParameterGroup> buildParameterGroups() = 0;
 
   bool canEdit() override { return true; }

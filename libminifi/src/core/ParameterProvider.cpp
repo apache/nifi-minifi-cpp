@@ -19,8 +19,17 @@
 
 namespace org::apache::nifi::minifi::core {
 
-ParameterProviderConfig ParameterProvider::readParameterProviderConfig() const {
-  ParameterProviderConfig config;
+bool ParameterProvider::reloadValuesOnRestart() const {
+  if (auto reload_values_on_restart_str = getProperty(ReloadValuesOnRestart.name)) {
+    if (auto reload_values_on_restart = parsing::parseBool(*reload_values_on_restart_str)) {
+      return reload_values_on_restart.value();
+    }
+  }
+  throw ParameterException("Reload Values On Restart property is required");
+}
+
+SensitiveParameterConfig ParameterProvider::readSensitiveParameterConfig() const {
+  SensitiveParameterConfig config;
 
   auto sensitive_parameter_scope_str = getProperty(SensitiveParameterScope.name);
   if (!sensitive_parameter_scope_str) {
@@ -47,7 +56,7 @@ ParameterProviderConfig ParameterProvider::readParameterProviderConfig() const {
 }
 
 std::vector<gsl::not_null<std::unique_ptr<ParameterContext>>> ParameterProvider::createParameterContexts() {
-  auto config = readParameterProviderConfig();
+  auto config = readSensitiveParameterConfig();
 
   auto parameter_groups = buildParameterGroups();
   std::vector<gsl::not_null<std::unique_ptr<ParameterContext>>> result;

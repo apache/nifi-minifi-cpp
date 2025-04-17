@@ -489,4 +489,77 @@ Parameter Context Name: environment-variable-parameter-context
   }
 }
 
+TEST_CASE("Parameter provider generated parameter context is reserialized if Reload Values On Restart is set to true") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_values_encryptor = encryption_provider;
+  core::flow::AdaptiveConfiguration yaml_configuration_before{configuration_context};
+
+  const auto schema = core::flow::FlowSchema::getDefault();
+  static const std::string config_yaml =
+      R"(
+Flow Controller:
+  name: root
+  comment: ""
+Parameter Providers:
+  - id: d26ee5f5-0192-1000-0482-4e333725e089
+    name: EnvironmentVariableParameterProvider
+    type: EnvironmentVariableParameterProvider
+    Properties:
+      Environment Variable Inclusion Strategy: Comma-Separated
+      Include Environment Variables: MINIFI_DATA,SECRET_MINIFI_DATA
+      Sensitive Parameter Scope: selected
+      Sensitive Parameter List: SECRET_MINIFI_DATA
+      Parameter Group Name: environment-variable-parameter-context
+      Reload Values On Restart: true
+Parameter Contexts:
+  - id: 123ee5f5-0192-1000-0482-4e333725e345
+    name: environment-variable-parameter-context
+    description: my parameter context
+    Parameters:
+      - name: SECRET_MINIFI_DATA
+        description: ''
+        sensitive: true
+        provided: true
+        value: old_secret_minifi_data_value
+      - name: MINIFI_DATA
+        description: ''
+        sensitive: false
+        provided: true
+        value: old_minifi_data_value
+    Parameter Provider: d26ee5f5-0192-1000-0482-4e333725e089
+Processors:
+  - name: DummyProcessor
+    id: aabb6d26-8a8d-4338-92c9-1b8c67ec18e0
+    type: DummyProcessor
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: "15 sec"
+    Properties:
+      Simple Property: "#{MINIFI_DATA}"
+      Sensitive Property: "#{SECRET_MINIFI_DATA}"
+Parameter Context Name: environment-variable-parameter-context
+)";
+
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("SECRET_MINIFI_DATA", "secret_minifi_data_value");
+  const auto process_group_before = yaml_configuration_before.getRootFromPayload(std::string{config_yaml});
+  REQUIRE(process_group_before);
+
+  std::string reserialized_config = yaml_configuration_before.serialize(*process_group_before);
+  YAML::Node result_yaml_node = YAML::Load(std::string{reserialized_config});
+
+  REQUIRE(result_yaml_node["Parameter Contexts"].IsDefined());
+  auto parameters = result_yaml_node["Parameter Contexts"][0]["Parameters"];
+  REQUIRE(parameters.size() == 2);
+  for (const auto& parameter : parameters) {
+    auto name = parameter["name"].as<std::string>();
+    auto value = parameter["value"].as<std::string>();
+    if (name == "MINIFI_DATA") {
+      CHECK(value == "minifi_data_value");
+    } else if (name == "SECRET_MINIFI_DATA") {
+      CHECK(minifi::utils::crypto::property_encryption::decrypt(value, encryption_provider) == "secret_minifi_data_value");
+    }
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::test
