@@ -18,6 +18,8 @@
 #
 include(FetchContent)
 
+set(BENCHMARK_ENABLE_TESTING "OFF" CACHE STRING "" FORCE)
+
 FetchContent_Declare(
         benchmark
         URL      https://github.com/google/benchmark/archive/refs/tags/v1.9.1.tar.gz

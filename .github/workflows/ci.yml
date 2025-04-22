@@ -328,6 +328,10 @@ jobs:
           ulimit -c unlimited
           ctest --timeout 300 -j$(nproc) --output-on-failure -LE performance
         working-directory: build
+      - name: performance-test
+        id: performance-test
+        run: ctest -j1 --verbose -L performance
+        working-directory: build
       - name: linter
         run: cmake --build . --target linter
         working-directory: ./build
