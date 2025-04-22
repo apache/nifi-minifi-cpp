@@ -278,12 +278,12 @@ void PutOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSess
 
   if (!reconnect()) {
     logger_->log_warn("Could not connect to OPC server, yielding");
-    yield();
+    context.yield();
     return;
   }
 
   if (!readParentNodeId()) {
-    yield();
+    context.yield();
     return;
   }
 

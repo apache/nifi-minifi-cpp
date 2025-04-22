@@ -46,18 +46,18 @@ class DummyProcessorDescriptor : public core::ProcessorDescriptor {
  public:
   ~DummyProcessorDescriptor() override = default;
 
-  void setSupportedRelationships(std::span<const core::RelationshipDefinition> relationships) override {}
-  void setSupportedProperties(std::span<const core::PropertyReference> properties) override {}
+  void setSupportedRelationships(std::span<const core::RelationshipDefinition> /*relationships*/) override {}
+  void setSupportedProperties(std::span<const core::PropertyReference> /*properties*/) override {}
 };
 
 class DummyLogger : public core::logging::Logger {
  public:
-  void set_max_log_size(int size) override {}
+  void set_max_log_size(int /*size*/) override {}
   std::optional<std::string> get_id() override {
     return std::nullopt;
   }
-  void log_string(core::logging::LOG_LEVEL level, std::string str) override {}
-  bool should_log(core::logging::LOG_LEVEL level) override {
+  void log_string(core::logging::LOG_LEVEL /*level*/, std::string /*str*/) override {}
+  bool should_log(core::logging::LOG_LEVEL /*level*/) override {
     return false;
   }
   [[nodiscard]] virtual core::logging::LOG_LEVEL level() const override {
