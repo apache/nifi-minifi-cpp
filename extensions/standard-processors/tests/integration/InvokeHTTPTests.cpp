@@ -410,8 +410,8 @@ TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers
     test_attr_value_out = test_attr_value_in;
   };
 
-  SingleProcessorTestController controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
-  auto* const invoke_http = controller.getProcessor<InvokeHTTP>();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
+  auto const invoke_http = controller.getProcessor<InvokeHTTP>();
   const TestHTTPServer http_server;
   REQUIRE(invoke_http->setProperty(InvokeHTTP::Method.name, "POST"));
   REQUIRE(invoke_http->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL));

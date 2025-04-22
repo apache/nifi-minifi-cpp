@@ -41,36 +41,33 @@ class StandardProcessorInfo : public ProcessorInfo {
 ProcessContextImpl::ProcessContextImpl(
     Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
     const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<core::ContentRepository>& content_repo)
-    : VariableRegistryImpl(Configure::create()),
+    : VariableRegistryImpl(static_cast<std::shared_ptr<Configure>>(minifi::Configure::create())),
+      logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
       controller_service_provider_(controller_service_provider),
+      state_storage_(getStateStorage(logger_, controller_service_provider_, nullptr)),
+      repo_(repo),
       flow_repo_(flow_repo),
       content_repo_(content_repo),
       processor_(processor),
-      logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
       configure_(minifi::Configure::create()),
-      initialized_(false) {
-  repo_ = repo;
-  state_storage_ = getStateStorage(logger_, controller_service_provider_, nullptr);
-  info_ = std::make_unique<StandardProcessorInfo>(processor);
-}
+      info_(std::make_unique<StandardProcessorInfo>(processor)),
+      initialized_(false) {}
 
 ProcessContextImpl::ProcessContextImpl(
     Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
     const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<minifi::Configure>& configuration,
     const std::shared_ptr<core::ContentRepository>& content_repo)
     : VariableRegistryImpl(configuration),
+      logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
       controller_service_provider_(controller_service_provider),
+      state_storage_(getStateStorage(logger_, controller_service_provider_, configuration)),
+      repo_(repo),
       flow_repo_(flow_repo),
       content_repo_(content_repo),
       processor_(processor),
-      logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
-      configure_(configuration),
-      initialized_(false) {
-  repo_ = repo;
-  state_storage_ = getStateStorage(logger_, controller_service_provider_, configuration);
-  if (!configure_) { configure_ = minifi::Configure::create(); }
-  info_ = std::make_unique<StandardProcessorInfo>(processor);
-}
+      configure_(configuration ? gsl::make_not_null(configuration) : minifi::Configure::create()),
+      info_(std::make_unique<StandardProcessorInfo>(processor)),
+      initialized_(false) {}
 
 bool ProcessContextImpl::hasNonEmptyProperty(std::string_view name) const {
   auto val = getProcessor().getProperty(name);
