@@ -78,7 +78,7 @@ void verifyCreatedNode(const NodeData& expected_node, SingleProcessorTestControl
 TEST_CASE("Test creating a new node with path node id", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
 
   NodeData expected_node{42, server.getNamespaceIndex(), 9999, "everything", "Simulator/Default/Device1", {}};
@@ -103,7 +103,7 @@ TEST_CASE("Test creating a new node with path node id", "[putopcprocessor]") {
 TEST_CASE("Test fetching using custom reference type id path", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
 
   NodeData expected_node{42, server.getNamespaceIndex(), 9999, "everything", "Simulator/Default/Device1/INT3/INT4", "Organizes/Organizes/HasComponent/HasComponent"};
@@ -129,7 +129,7 @@ TEST_CASE("Test fetching using custom reference type id path", "[putopcprocessor
 TEST_CASE("Test fetching using custom target reference type id", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
 
   NodeData expected_node{42, server.getNamespaceIndex(), 9999, "everything", "Simulator/Default/Device1/INT3", "Organizes/Organizes/HasComponent", "Organizes"};
@@ -154,7 +154,7 @@ TEST_CASE("Test fetching using custom target reference type id", "[putopcprocess
 }
 
 TEST_CASE("Test missing path reference types", "[putopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
@@ -173,7 +173,7 @@ TEST_CASE("Test namespace cannot be empty", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
   LogTestController::getInstance().setTrace<processors::PutOPCProcessor>();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
@@ -196,7 +196,7 @@ TEST_CASE("Test valid namespace being required", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
   LogTestController::getInstance().setTrace<processors::PutOPCProcessor>();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
@@ -216,7 +216,7 @@ TEST_CASE("Test valid namespace being required", "[putopcprocessor]") {
 }
 
 TEST_CASE("Test username and password should both be provided", "[putopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::Username.name, "user"));
@@ -226,7 +226,7 @@ TEST_CASE("Test username and password should both be provided", "[putopcprocesso
 }
 
 TEST_CASE("Test certificate path and key path should both be provided", "[putopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "cert"));
@@ -236,7 +236,7 @@ TEST_CASE("Test certificate path and key path should both be provided", "[putopc
 }
 
 TEST_CASE("Test application uri should be provided if certificate is provided", "[putopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "cert"));
@@ -246,7 +246,7 @@ TEST_CASE("Test application uri should be provided if certificate is provided", 
 }
 
 TEST_CASE("Test certificate path must be valid", "[putopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "/invalid/cert/path"));
@@ -257,7 +257,7 @@ TEST_CASE("Test certificate path must be valid", "[putopcprocessor]") {
 }
 
 TEST_CASE("Test key path must be valid", "[putopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   auto test_cert_path = controller.createTempDirectory() / "test_cert.pem";
   {
@@ -274,7 +274,7 @@ TEST_CASE("Test key path must be valid", "[putopcprocessor]") {
 }
 
 TEST_CASE("Test trusted certs path must be valid", "[putopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   auto test_cert_path = controller.createTempDirectory() / "test_cert.pem";
   {
@@ -292,7 +292,7 @@ TEST_CASE("Test trusted certs path must be valid", "[putopcprocessor]") {
 }
 
 TEST_CASE("Test invalid int node id", "[putopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Int"));
@@ -305,7 +305,7 @@ TEST_CASE("Test invalid int node id", "[putopcprocessor]") {
 TEST_CASE("Test invalid parent node id path", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
@@ -326,7 +326,7 @@ TEST_CASE("Test invalid parent node id path", "[putopcprocessor]") {
 TEST_CASE("Test missing target node id", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
@@ -349,7 +349,7 @@ TEST_CASE("Test missing target node id", "[putopcprocessor]") {
 TEST_CASE("Test invalid target node id", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
@@ -372,7 +372,7 @@ TEST_CASE("Test invalid target node id", "[putopcprocessor]") {
 TEST_CASE("Test missing target node type", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
@@ -395,7 +395,7 @@ TEST_CASE("Test missing target node type", "[putopcprocessor]") {
 TEST_CASE("Test value type mismatch", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
