@@ -118,7 +118,19 @@ TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Fetch a range of the fi
 TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Number of Retries is set", "[azureDataLakeStorageFetch]") {
   plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::FetchAzureDataLakeStorage::NumberOfRetries, "1");
   test_controller_.runSession(plan_, true);
-  REQUIRE(mock_data_lake_storage_client_ptr_->getPassedFetchParams().number_of_retries == 1);
+  CHECK(mock_data_lake_storage_client_ptr_->getPassedFetchParams().number_of_retries == 1);
+}
+
+TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Valid Number of Retries is set via EL", "[azureDataLakeStorageFetch]") {
+  plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::FetchAzureDataLakeStorage::NumberOfRetries, "${literal(10):multiply(2):plus(1):multiply(2)}");
+  test_controller_.runSession(plan_, true);
+  CHECK(mock_data_lake_storage_client_ptr_->getPassedFetchParams().number_of_retries == 42);
+}
+
+TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Invalid Number of Retries is set via EL", "[azureDataLakeStorageFetch]") {
+  plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::FetchAzureDataLakeStorage::NumberOfRetries, "${literal(\"asd\")}");
+  REQUIRE_THROWS_WITH(test_controller_.runSession(plan_, true), "Expected parsable uint64_t from AzureDataLakeStorageProcessor::Number of Retries: parsing error: GeneralParsingError (0)");
+  CHECK_FALSE(mock_data_lake_storage_client_ptr_->getPassedFetchParams().number_of_retries);
 }
 
 TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Fetch full file fails", "[azureDataLakeStorageFetch]") {
