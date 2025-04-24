@@ -282,6 +282,7 @@ int main(int argc, char **argv) {
   }
   // chdir to MINIFI_HOME
   std::error_code current_path_error;
+  std::filesystem::current_path(minifiHome, current_path_error);
   if (current_path_error) {
     logger->log_error("Failed to change working directory to MINIFI_HOME ({})", minifiHome);
     return -1;
