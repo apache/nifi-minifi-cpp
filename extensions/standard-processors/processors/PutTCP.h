@@ -71,14 +71,11 @@ class PutTCP final : public core::ProcessorImpl {
       .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("15 seconds")
       .isRequired(true)
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto Timeout = core::PropertyDefinitionBuilder<>::createProperty("Timeout")
       .withDescription("The timeout for connecting to and communicating with the destination.")
       .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
-      .withDefaultValue("15 seconds")
       .isRequired(true)
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ConnectionPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Connection Per FlowFile")
       .withDescription("Specifies whether to send each FlowFile's content on an individual connection.")

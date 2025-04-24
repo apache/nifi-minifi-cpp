@@ -26,6 +26,7 @@
 #include "core/ProcessContext.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/Enum.h"
+#include "utils/PropertyErrors.h"
 #include "utils/expected.h"
 #include "utils/OptionalUtils.h"
 #include "minifi-cpp/Exception.h"
@@ -77,7 +78,13 @@ inline std::optional<bool> parseOptionalBoolProperty(const core::ProcessContext&
     return parsing::parseBool(*property_str)
         | utils::orThrow(fmt::format("Expected parsable bool from \"{}::{}\"", ctx.getProcessorInfo().getName(), property.name));
   }
-  return std::nullopt;
+  if (!property_str && property_str.error() == core::PropertyErrorCode::PropertyNotSet) {
+    return std::nullopt;
+  }
+
+  return property_str
+      | andThen(parsing::parseBool)
+      | orThrow(fmt::format("Expected parsable bool from \"{}::{}\"", ctx.getProcessor().getName(), property.name));
 }
 
 inline std::optional<uint64_t> parseOptionalU64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
@@ -88,8 +95,13 @@ inline std::optional<uint64_t> parseOptionalU64Property(const core::ProcessConte
     return parsing::parseIntegral<uint64_t>(*property_str)
         | utils::orThrow(fmt::format("Expected parsable uint64_t from \"{}::{}\"", ctx.getProcessorInfo().getName(), property.name));
   }
+  if (!property_str && property_str.error() == core::PropertyErrorCode::PropertyNotSet) {
+    return std::nullopt;
+  }
 
-  return std::nullopt;
+  return property_str
+      | andThen(parsing::parseIntegral<uint64_t>)
+      | orThrow(fmt::format("Expected parsable uint64_t from \"{}::{}\"", ctx.getProcessor().getName(), property.name));
 }
 
 inline std::optional<int64_t> parseOptionalI64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
@@ -100,8 +112,13 @@ inline std::optional<int64_t> parseOptionalI64Property(const core::ProcessContex
     return parsing::parseIntegral<int64_t>(*property_str)
         | utils::orThrow(fmt::format("Expected parsable int64_t from \"{}::{}\"", ctx.getProcessorInfo().getName(), property.name));
   }
+  if (!property_str && property_str.error() == core::PropertyErrorCode::PropertyNotSet) {
+    return std::nullopt;
+  }
 
-  return std::nullopt;
+  return property_str
+      | andThen(parsing::parseIntegral<int64_t>)
+      | orThrow(fmt::format("Expected parsable int64_t from \"{}::{}\"", ctx.getProcessor().getName(), property.name));
 }
 
 inline std::optional<std::chrono::milliseconds> parseOptionalDurationProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
@@ -112,8 +129,13 @@ inline std::optional<std::chrono::milliseconds> parseOptionalDurationProperty(co
     return parsing::parseDuration(*property_str)
         | utils::orThrow(fmt::format("Expected parsable duration from \"{}::{}\"", ctx.getProcessorInfo().getName(), property.name));
   }
+  if (!property_str && property_str.error() == core::PropertyErrorCode::PropertyNotSet) {
+    return std::nullopt;
+  }
 
-  return std::nullopt;
+  return property_str
+      | andThen(parsing::parseDuration<std::chrono::milliseconds>)
+      | orThrow(fmt::format("Expected parsable duration from \"{}::{}\"", ctx.getProcessor().getName(), property.name));
 }
 
 inline std::optional<uint64_t> parseOptionalDataSizeProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
@@ -124,8 +146,13 @@ inline std::optional<uint64_t> parseOptionalDataSizeProperty(const core::Process
     return parsing::parseDataSize(*property_str)
         | utils::orThrow(fmt::format("Expected parsable data size from \"{}::{}\"", ctx.getProcessorInfo().getName(), property.name));
   }
+  if (!property_str && property_str.error() == core::PropertyErrorCode::PropertyNotSet) {
+    return std::nullopt;
+  }
 
-  return std::nullopt;
+  return property_str
+      | andThen(parsing::parseDataSize)
+      | orThrow(fmt::format("Expected parsable data size from \"{}::{}\"", ctx.getProcessor().getName(), property.name));
 }
 
 inline std::optional<float> parseOptionalFloatProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
@@ -136,34 +163,32 @@ inline std::optional<float> parseOptionalFloatProperty(const core::ProcessContex
     return parsing::parseFloat(*property_str)
         | utils::orThrow(fmt::format("Expected parsable float from {}::{}", ctx.getProcessorInfo().getName(), property.name));
   }
-  return std::nullopt;
+  if (!property_str && property_str.error() == core::PropertyErrorCode::PropertyNotSet) {
+    return std::nullopt;
+  }
+
+  return property_str
+      | andThen(parsing::parseFloat)
+      | orThrow(fmt::format("Expected parsable float from \"{}::{}\"", ctx.getProcessor().getName(), property.name));
 }
 
 template<typename T>
 T parseEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop, const core::FlowFile* flow_file = nullptr) {
-  const auto enum_str = context.getProperty(prop.name, flow_file);
-  if (!enum_str) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' is missing");
-  }
-  auto result = magic_enum::enum_cast<T>(*enum_str);
-  if (!result) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' has invalid value: '" + *enum_str + "'");
-  }
-  return result.value();
+  return context.getProperty(prop.name, flow_file) | andThen(parsing::parseEnum<T>) | orThrow(fmt::format("Expected valid enum from {}::{}", context.getProcessor().getName(), prop.name));
 }
 
 template<typename T>
-std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop) {
-  const auto enum_str = context.getProperty(prop.name);
-
-  if (!enum_str) {
+std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  const auto property_str = ctx.getProperty(property.name, flow_file);
+  if (property_str && property_str->empty()) {
     return std::nullopt;
   }
-  auto result = magic_enum::enum_cast<T>(*enum_str);
-  if (!result) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' has invalid value: '" + *enum_str + "'");
+  if (!property_str && property_str.error() == core::PropertyErrorCode::PropertyNotSet) {
+    return std::nullopt;
   }
-  return result.value();
+  return property_str
+    | andThen(parsing::parseEnum<T>)
+    | orThrow(fmt::format("Expected valid enum from {}::{}", ctx.getProcessor().getName(), property.name));
 }
 
 template<typename ControllerServiceType>

@@ -30,8 +30,19 @@ TEST_CASE("Converting invalid PropertyValue") {
       .withDefaultValue("0")
       .build();
   Property property{property_definition};
-  CHECK_FALSE(property.setValue("not int").has_value());
+  CHECK_FALSE(property.setValue("not int"));
   CHECK(property.getValue() == "0");
+}
+
+TEST_CASE("Allowed values") {
+  static constexpr auto abc_without_el = PropertyDefinitionBuilder<3>::createProperty("prop")
+      .supportsExpressionLanguage(false)
+      .withAllowedValues({"a", "b", "c"})
+      .build();
+
+  Property property{abc_without_el};
+  CHECK_FALSE(property.setValue("d"));
+  CHECK_FALSE(property.getValue());
 }
 
 TEST_CASE("Parsing int has baggage after") {
@@ -50,7 +61,7 @@ TEST_CASE("Parsing int has spaces") {
       .withDefaultValue("0")
       .build();
   Property property{property_definition};
-  CHECK(property.setValue("  55  ").has_value());
+  CHECK(property.setValue("  55  "));
   CHECK(property.getValue() == "  55  ");
   CHECK_FALSE(property.setValue("  10000000000000000000  "));
 }
@@ -61,7 +72,7 @@ TEST_CASE("Parsing bool has baggage after") {
       .withDefaultValue("true")
       .build();
   Property property{property_definition};
-  CHECK_FALSE(property.setValue("false almost bool").has_value());
+  CHECK_FALSE(property.setValue("false almost bool"));
   CHECK(property.getValue() == "true");
 }
 

@@ -62,7 +62,6 @@ class FlowFileSource {
   EXTENSIONAPI static constexpr auto OutputFormat = core::PropertyDefinitionBuilder<magic_enum::enum_count<flow_file_source::OutputType>()>::createProperty("Output Format")
       .withDescription("Set the output format type.")
       .isRequired(true)
-      .supportsExpressionLanguage(true)
       .withDefaultValue(magic_enum::enum_name(flow_file_source::OutputType::JSONPretty))
       .withAllowedValues(magic_enum::enum_names<flow_file_source::OutputType>())
       .build();
@@ -71,7 +70,6 @@ class FlowFileSource {
         "The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. "
         "If the value specified is zero, then all rows are returned in a single FlowFile.")
       .isRequired(true)
-      .supportsExpressionLanguage(true)
       .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .build();
