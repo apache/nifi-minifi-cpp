@@ -120,7 +120,7 @@ class TcpTestServer {
     }
     co_await sendMessages(ssl_socket);
     asio::error_code ec;
-    ssl_socket.lowest_layer().cancel(ec);
+    [[maybe_unused]] auto e = ssl_socket.lowest_layer().cancel(ec);
     co_await ssl_socket.async_shutdown(minifi::utils::net::use_nothrow_awaitable);
   }
 

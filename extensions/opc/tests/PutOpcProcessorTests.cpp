@@ -379,7 +379,7 @@ TEST_CASE("Test missing target node type", "[putopcprocessor]") {
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
-  REQUIRE_FALSE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "${invalid_type}"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "${invalid_type}"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
   REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
@@ -389,7 +389,7 @@ TEST_CASE("Test missing target node type", "[putopcprocessor]") {
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
   auto flow_file = results.at(processors::PutOPCProcessor::Failure)[0];
   CHECK(controller.plan->getContent(flow_file) == "42");
-  REQUIRE(LogTestController::getInstance().contains("has invalid target node id type, routing to failure"));
+  REQUIRE(LogTestController::getInstance().contains("target node ID type is invalid: invalid. Routing to failure!"));
 }
 
 TEST_CASE("Test value type mismatch", "[putopcprocessor]") {
@@ -397,15 +397,15 @@ TEST_CASE("Test value type mismatch", "[putopcprocessor]") {
   server.start();
   SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Boolean"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Boolean"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
 
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());

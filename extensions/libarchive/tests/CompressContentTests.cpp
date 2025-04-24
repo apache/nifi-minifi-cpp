@@ -17,39 +17,37 @@
  */
 
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <memory>
-#include <utility>
-#include <string>
-#include <set>
 #include <random>
+#include <set>
 #include <sstream>
-#include <iostream>
+#include <string>
+#include <utility>
 
+#include "CompressContent.h"
 #include "FlowController.h"
-#include "unit/TestBase.h"
-#include "unit/Catch.h"
 #include "catch2/generators/catch_generators.hpp"
 #include "core/Core.h"
-#include "../../include/core/FlowFile.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "core/Processor.h"
+#include "core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "CompressContent.h"
+#include "core/Processor.h"
 #include "io/FileStream.h"
-#include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
+#include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
-#include "utils/file/FileUtils.h"
+#include "unit/Catch.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "unit/TestBase.h"
 #include "unit/TestUtils.h"
+#include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
 
 class ReadCallback {
  public:
-  explicit ReadCallback(size_t size)
-      :buffer_{size}
-  {}
+  explicit ReadCallback(size_t size) : buffer_{size} {}
   ReadCallback(const ReadCallback&) = delete;
   ReadCallback(ReadCallback&&) = delete;
   ReadCallback& operator=(const ReadCallback&) = delete;
@@ -60,8 +58,8 @@ class ReadCallback {
     int64_t total_read = 0;
     do {
       const auto ret = stream->read(std::span(buffer_).subspan(read_size_));
-      if (ret == 0) break;
-      if (minifi::io::isError(ret)) return -1;
+      if (ret == 0) { break; }
+      if (minifi::io::isError(ret)) { return -1; }
       read_size_ += gsl::narrow<size_t>(ret);
       total_read += gsl::narrow<int64_t>(ret);
     } while (buffer_.size() != read_size_);
@@ -96,7 +94,7 @@ class ReadCallback {
  * CompressTestController or a DecompressTestController.
  */
 class CompressDecompressionTestController : public TestController {
- protected:
+ public:
   static std::filesystem::path tempDir_;
   static std::filesystem::path raw_content_path_;
   static std::filesystem::path compressed_content_path_;
@@ -176,31 +174,21 @@ class CompressDecompressionTestController : public TestController {
     session.commit();
   }
 
-  void read(const std::shared_ptr<core::FlowFile>& file, ReadCallback& reader) const {
-    helper_session->read(file, std::ref(reader));
-  }
+  void read(const std::shared_ptr<core::FlowFile>& file, ReadCallback& reader) const { helper_session->read(file, std::ref(reader)); }
 
- public:
-  class RawContent{
+  class RawContent {
     std::string content_;
-    explicit RawContent(std::string&& content_): content_(std::move(content_)) {}
+    explicit RawContent(std::string&& content_) : content_(std::move(content_)) {}
     friend class CompressDecompressionTestController;
+
    public:
-    bool operator==(const std::string& actual) const noexcept {
-      return content_ == actual;
-    }
-    bool operator!=(const std::string& actual) const noexcept {
-      return content_ != actual;
-    }
+    bool operator==(const std::string& actual) const noexcept { return content_ == actual; }
+    bool operator!=(const std::string& actual) const noexcept { return content_ != actual; }
   };
 
-  [[nodiscard]] static std::filesystem::path rawContentPath() {
-    return raw_content_path_;
-  }
+  [[nodiscard]] static std::filesystem::path rawContentPath() { return raw_content_path_; }
 
-  [[nodiscard]] static std::filesystem::path compressedPath() {
-    return compressed_content_path_;
-  }
+  [[nodiscard]] static std::filesystem::path compressedPath() { return compressed_content_path_; }
 
   [[nodiscard]] static RawContent getRawContent() {
     std::ifstream file;
@@ -233,6 +221,7 @@ std::filesystem::path CompressDecompressionTestController::raw_content_path_;
 std::filesystem::path CompressDecompressionTestController::compressed_content_path_;
 
 class CompressTestController : public CompressDecompressionTestController {
+ public:
   static void initContentWithRandomData() {
     int random_seed = 0x454;
     std::ofstream file;
@@ -240,12 +229,9 @@ class CompressTestController : public CompressDecompressionTestController {
 
     std::mt19937 gen(random_seed);
     std::uniform_int_distribution<> dis(0, 99);
-    for (int i = 0; i < 100000; i++) {
-      file << std::to_string(dis(gen));
-    }
+    for (int i = 0; i < 100000; i++) { file << std::to_string(dis(gen)); }
   }
 
- public:
   CompressTestController() {
     tempDir_ = get_global_controller().createTempDirectory();
     REQUIRE(!tempDir_.empty());
@@ -255,18 +241,16 @@ class CompressTestController : public CompressDecompressionTestController {
     setupFlow();
   }
 
-  template<class ...Args>
-  void writeCompressed(Args&& ...args) {
+  template<class... Args>
+  void writeCompressed(Args&&... args) {
     std::ofstream file(compressed_content_path_, std::ios::binary);
     file.write(std::forward<Args>(args)...);
   }
 };
 
-class DecompressTestController : public CompressDecompressionTestController{
+class DecompressTestController : public CompressDecompressionTestController {
  public:
-  DecompressTestController() {
-    setupFlow();
-  }
+  DecompressTestController() { setupFlow(); }
   DecompressTestController(DecompressTestController&&) = delete;
   DecompressTestController(const DecompressTestController&) = delete;
   DecompressTestController& operator=(DecompressTestController&&) = delete;
@@ -281,245 +265,267 @@ class DecompressTestController : public CompressDecompressionTestController{
 using CompressionFormat = minifi::processors::compress_content::ExtendedCompressionFormat;
 using CompressionMode = minifi::processors::compress_content::CompressionMode;
 
-TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1]") {
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::compress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
-
-  auto flow = importFlowFile(rawContentPath());
-  flow->setAttribute(core::SpecialFlowAttribute::FILENAME, "inputfile");
-
-  trigger();
-
-  // validate the compress content
-  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-  REQUIRE(flow1);
-  REQUIRE(flow1->getSize() > 0);
+TEST_CASE("Compress and decompress GZip", "[compressfiletest1]") {
   {
-    REQUIRE(flow1->getSize() != flow->getSize());
-    std::string attribute_value;
-    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attribute_value);
-    REQUIRE(attribute_value == "application/gzip");
-    flow1->getAttribute(core::SpecialFlowAttribute::FILENAME, attribute_value);
-    REQUIRE(attribute_value == "inputfile.tar.gz");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    read(flow1, callback);
-    callback.archive_read();
-    std::string content(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
-    REQUIRE(getRawContent() == content);
-    // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
+    CompressTestController controller;
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+        std::string{magic_enum::enum_name(CompressionMode::compress)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+        std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+    auto flow = controller.importFlowFile(controller.rawContentPath());
+    flow->setAttribute(core::SpecialFlowAttribute::FILENAME, "inputfile");
+
+    controller.trigger();
+
+    // validate the compress content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = controller.output->poll(expiredFlowRecords);
+    REQUIRE(flow1);
+    REQUIRE(flow1->getSize() > 0);
+    {
+      REQUIRE(flow1->getSize() != flow->getSize());
+      std::string attribute_value;
+      flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attribute_value);
+      REQUIRE(attribute_value == "application/gzip");
+      flow1->getAttribute(core::SpecialFlowAttribute::FILENAME, attribute_value);
+      REQUIRE(attribute_value == "inputfile.tar.gz");
+      ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
+      controller.read(flow1, callback);
+      callback.archive_read();
+      std::string content(reinterpret_cast<char*>(callback.archive_buffer_.data()), callback.archive_buffer_.size());
+      REQUIRE(controller.getRawContent() == content);
+      // write the compress content for next test
+      controller.writeCompressed(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
+    }
+  }
+  {
+    DecompressTestController controller;
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+        std::string{magic_enum::enum_name(CompressionMode::decompress)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+        std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+    auto flow = controller.importFlowFile(controller.compressedPath());
+    flow->setAttribute(core::SpecialFlowAttribute::FILENAME, "inputfile.tar.gz");
+
+    controller.trigger();
+
+    // validate the compress content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = controller.output->poll(expiredFlowRecords);
+    REQUIRE(flow1);
+    REQUIRE(flow1->getSize() > 0);
+    {
+      REQUIRE(flow1->getSize() != flow->getSize());
+      std::string attribute_value;
+      REQUIRE_FALSE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attribute_value));
+      flow1->getAttribute(core::SpecialFlowAttribute::FILENAME, attribute_value);
+      REQUIRE(attribute_value == "inputfile");
+      ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
+      controller.read(flow1, callback);
+      std::string content(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
+      REQUIRE(controller.getRawContent() == content);
+    }
   }
 }
-
-TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfiletest2]") {
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
-
-  auto flow = importFlowFile(compressedPath());
-  flow->setAttribute(core::SpecialFlowAttribute::FILENAME, "inputfile.tar.gz");
-
-  trigger();
-
-  // validate the compress content
-  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-  REQUIRE(flow1);
-  REQUIRE(flow1->getSize() > 0);
-  {
-    REQUIRE(flow1->getSize() != flow->getSize());
-    std::string attribute_value;
-    REQUIRE_FALSE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attribute_value));
-    flow1->getAttribute(core::SpecialFlowAttribute::FILENAME, attribute_value);
-    REQUIRE(attribute_value == "inputfile");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    read(flow1, callback);
-    std::string content(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
-    REQUIRE(getRawContent() == content);
-  }
-}
-
-TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3]") {
+TEST_CASE("Compress and decompress BZip", "[compressfiletest3]") {
   if (!archive_bzlib_version()) { return; }  // minifi was compiled without BZip2 support
 
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::compress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::BZIP2)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
-
-  auto flow = importFlowFile(rawContentPath());
-  trigger();
-
-  // validate the compress content
-  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-  REQUIRE(flow1);
-  REQUIRE(flow1->getSize() > 0);
   {
-    REQUIRE(flow1->getSize() != flow->getSize());
-    std::string mime;
-    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
-    REQUIRE(mime == "application/bzip2");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    read(flow1, callback);
-    callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
-    REQUIRE(getRawContent() == contents);
-    // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
+    CompressTestController controller;
+
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+        std::string{magic_enum::enum_name(CompressionMode::compress)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+        std::string{magic_enum::enum_name(CompressionFormat::BZIP2)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+    auto flow = controller.importFlowFile(controller.rawContentPath());
+    controller.trigger();
+
+    // validate the compress content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = controller.output->poll(expiredFlowRecords);
+    REQUIRE(flow1);
+    REQUIRE(flow1->getSize() > 0);
+    {
+      REQUIRE(flow1->getSize() != flow->getSize());
+      std::string mime;
+      flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
+      REQUIRE(mime == "application/bzip2");
+      ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
+      controller.read(flow1, callback);
+      callback.archive_read();
+      std::string contents(reinterpret_cast<char*>(callback.archive_buffer_.data()), callback.archive_buffer_.size());
+      REQUIRE(controller.getRawContent() == contents);
+      // write the compress content for next test
+      controller.writeCompressed(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
+    }
+  }
+  {
+    DecompressTestController controller;
+
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+        std::string{magic_enum::enum_name(CompressionMode::decompress)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+        std::string{magic_enum::enum_name(CompressionFormat::BZIP2)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+    auto flow = controller.importFlowFile(controller.compressedPath());
+
+    controller.trigger();
+
+    // validate the compress content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = controller.output->poll(expiredFlowRecords);
+    REQUIRE(flow1);
+    REQUIRE(flow1->getSize() > 0);
+    {
+      REQUIRE(flow1->getSize() != flow->getSize());
+      std::string mime;
+      REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
+      ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
+      controller.read(flow1, callback);
+      std::string contents(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
+      REQUIRE(controller.getRawContent() == contents);
+    }
   }
 }
 
-
-TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfiletest4]") {
-  if (!archive_bzlib_version()) { return; }  // minifi was compiled without BZip2 support
-
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::BZIP2)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
-
-  auto flow = importFlowFile(compressedPath());
-
-  trigger();
-
-  // validate the compress content
-  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-  REQUIRE(flow1);
-  REQUIRE(flow1->getSize() > 0);
-  {
-    REQUIRE(flow1->getSize() != flow->getSize());
-    std::string mime;
-    REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    read(flow1, callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
-    REQUIRE(getRawContent() == contents);
-  }
-}
-
-TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5]") {
+TEST_CASE("Compress and decompress LZMA", "[compressfiletest5]") {
   if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
 
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::compress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::LZMA)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
-
-  auto flow = importFlowFile(rawContentPath());
-  trigger();
-
-  // validate the compress content
-  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-  REQUIRE(flow1);
-  REQUIRE(flow1->getSize() > 0);
   {
-    REQUIRE(flow1->getSize() != flow->getSize());
-    std::string mime;
-    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
-    REQUIRE(mime == "application/x-lzma");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    read(flow1, callback);
-    callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
-    REQUIRE(getRawContent() == contents);
-    // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
+    CompressTestController controller;
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+        std::string{magic_enum::enum_name(CompressionMode::compress)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+        std::string{magic_enum::enum_name(CompressionFormat::LZMA)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+    auto flow = controller.importFlowFile(controller.rawContentPath());
+    controller.trigger();
+
+    // validate the compress content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = controller.output->poll(expiredFlowRecords);
+    REQUIRE(flow1);
+    REQUIRE(flow1->getSize() > 0);
+    {
+      REQUIRE(flow1->getSize() != flow->getSize());
+      std::string mime;
+      flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
+      REQUIRE(mime == "application/x-lzma");
+      ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
+      controller.read(flow1, callback);
+      callback.archive_read();
+      std::string contents(reinterpret_cast<char*>(callback.archive_buffer_.data()), callback.archive_buffer_.size());
+      REQUIRE(controller.getRawContent() == contents);
+      // write the compress content for next test
+      controller.writeCompressed(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
+    }
   }
-}
-
-
-TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfiletest6]") {
-  if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
-
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::USE_MIME_TYPE)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
-
-  auto flow = importFlowFile(compressedPath());
-  flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-lzma");
-  trigger();
-
-  // validate the compress content
-  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-  REQUIRE(flow1);
-  REQUIRE(flow1->getSize() > 0);
   {
-    REQUIRE(flow1->getSize() != flow->getSize());
-    std::string mime;
-    REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    read(flow1, callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
-    REQUIRE(getRawContent() == contents);
+    DecompressTestController controller;
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+        std::string{magic_enum::enum_name(CompressionMode::decompress)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+        std::string{magic_enum::enum_name(CompressionFormat::USE_MIME_TYPE)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+    auto flow = controller.importFlowFile(controller.compressedPath());
+    flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-lzma");
+    controller.trigger();
+
+    // validate the compress content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = controller.output->poll(expiredFlowRecords);
+    REQUIRE(flow1);
+    REQUIRE(flow1->getSize() > 0);
+    {
+      REQUIRE(flow1->getSize() != flow->getSize());
+      std::string mime;
+      REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
+      ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
+      controller.read(flow1, callback);
+      std::string contents(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
+      REQUIRE(controller.getRawContent() == contents);
+    }
   }
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletest7]") {
   if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
 
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::compress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::XZ_LZMA2)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
-
-  auto flow = importFlowFile(rawContentPath());
-  trigger();
-
-  // validate the compress content
-  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-  REQUIRE(flow1);
-  REQUIRE(flow1->getSize() > 0);
   {
-    REQUIRE(flow1->getSize() != flow->getSize());
-    std::string mime;
-    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
-    REQUIRE(mime == "application/x-xz");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    read(flow1, callback);
-    callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
-    REQUIRE(getRawContent() == contents);
-    // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
+    CompressTestController controller;
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+        std::string{magic_enum::enum_name(CompressionMode::compress)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+        std::string{magic_enum::enum_name(CompressionFormat::XZ_LZMA2)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+    auto flow = controller.importFlowFile(controller.rawContentPath());
+    controller.trigger();
+
+    // validate the compress content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = controller.output->poll(expiredFlowRecords);
+    REQUIRE(flow1);
+    REQUIRE(flow1->getSize() > 0);
+    {
+      REQUIRE(flow1->getSize() != flow->getSize());
+      std::string mime;
+      flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
+      REQUIRE(mime == "application/x-xz");
+      ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
+      controller.read(flow1, callback);
+      callback.archive_read();
+      std::string contents(reinterpret_cast<char*>(callback.archive_buffer_.data()), callback.archive_buffer_.size());
+      REQUIRE(controller.getRawContent() == contents);
+      // write the compress content for next test
+      controller.writeCompressed(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
+    }
   }
-}
-
-
-TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfiletest8]") {
-  if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
-
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::USE_MIME_TYPE)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
-
-  auto flow = importFlowFile(compressedPath());
-  flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-xz");
-  trigger();
-
-  // validate the compress content
-  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-  std::shared_ptr<core::FlowFile> flow1 = output->poll(expiredFlowRecords);
-  REQUIRE(flow1);
-  REQUIRE(flow1->getSize() > 0);
   {
-    REQUIRE(flow1->getSize() != flow->getSize());
-    std::string mime;
-    REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    read(flow1, callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
-    REQUIRE(getRawContent() == contents);
+    DecompressTestController controller;
+    if (!archive_liblzma_version()) { return; }  // minifi was compiled without LZMA support
+
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+        std::string{magic_enum::enum_name(CompressionMode::decompress)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+        std::string{magic_enum::enum_name(CompressionFormat::USE_MIME_TYPE)}));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+    REQUIRE(controller.context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+    auto flow = controller.importFlowFile(controller.compressedPath());
+    flow->setAttribute(core::SpecialFlowAttribute::MIME_TYPE, "application/x-xz");
+    controller.trigger();
+
+    // validate the compress content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = controller.output->poll(expiredFlowRecords);
+    REQUIRE(flow1);
+    REQUIRE(flow1->getSize() > 0);
+    {
+      REQUIRE(flow1->getSize() != flow->getSize());
+      std::string mime;
+      REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
+      ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
+      controller.read(flow1, callback);
+      std::string contents(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
+      REQUIRE(controller.getRawContent() == contents);
+    }
   }
 }
 
@@ -541,36 +547,22 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
 
   // Build MiNiFi processing graph
   auto plan = createPlan();
-  auto get_file = plan->addProcessor(
-      "GetFile",
-      "GetFile");
-  auto compress_content = plan->addProcessor(
-      "CompressContent",
-      "CompressContent",
-      core::Relationship("success", "d"),
-      true);
-  auto put_compressed = plan->addProcessor(
-      "PutFile",
-      "PutFile",
-      core::Relationship("success", "d"),
-      true);
-  auto decompress_content = plan->addProcessor(
-      "CompressContent",
-      "CompressContent",
-      core::Relationship("success", "d"),
-      true);
-  auto put_decompressed = plan->addProcessor(
-      "PutFile",
-      "PutFile",
-      core::Relationship("success", "d"),
-      true);
+  auto get_file = plan->addProcessor("GetFile", "GetFile");
+  auto compress_content = plan->addProcessor("CompressContent", "CompressContent", core::Relationship("success", "d"), true);
+  auto put_compressed = plan->addProcessor("PutFile", "PutFile", core::Relationship("success", "d"), true);
+  auto decompress_content = plan->addProcessor("CompressContent", "CompressContent", core::Relationship("success", "d"), true);
+  auto put_decompressed = plan->addProcessor("PutFile", "PutFile", core::Relationship("success", "d"), true);
 
   // Configure GetFile processor
   REQUIRE(plan->setProperty(get_file, minifi::processors::GetFile::Directory, src_dir.string()));
 
   // Configure CompressContent processor for compression
-  REQUIRE(plan->setProperty(compress_content, minifi::processors::CompressContent::CompressMode, std::string{magic_enum::enum_name(CompressionMode::compress)}));
-  REQUIRE(plan->setProperty(compress_content, minifi::processors::CompressContent::CompressFormat, std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
+  REQUIRE(plan->setProperty(compress_content,
+      minifi::processors::CompressContent::CompressMode,
+      std::string{magic_enum::enum_name(CompressionMode::compress)}));
+  REQUIRE(plan->setProperty(compress_content,
+      minifi::processors::CompressContent::CompressFormat,
+      std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
   REQUIRE(plan->setProperty(compress_content, minifi::processors::CompressContent::UpdateFileName, "true"));
   REQUIRE(plan->setProperty(compress_content, minifi::processors::CompressContent::EncapsulateInTar, "false"));
 
@@ -578,8 +570,12 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   REQUIRE(plan->setProperty(put_compressed, minifi::processors::PutFile::Directory, dst_dir.string()));
 
   // Configure CompressContent processor for decompression
-  REQUIRE(plan->setProperty(decompress_content, minifi::processors::CompressContent::CompressMode, std::string{magic_enum::enum_name(CompressionMode::decompress)}));
-  REQUIRE(plan->setProperty(decompress_content, minifi::processors::CompressContent::CompressFormat, std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
+  REQUIRE(plan->setProperty(decompress_content,
+      minifi::processors::CompressContent::CompressMode,
+      std::string{magic_enum::enum_name(CompressionMode::decompress)}));
+  REQUIRE(plan->setProperty(decompress_content,
+      minifi::processors::CompressContent::CompressFormat,
+      std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
   REQUIRE(plan->setProperty(decompress_content, minifi::processors::CompressContent::UpdateFileName, "true"));
   REQUIRE(plan->setProperty(decompress_content, minifi::processors::CompressContent::EncapsulateInTar, "false"));
 
@@ -588,8 +584,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
 
   // Create source file
   std::string content;
-  SECTION("Empty content") {
-  }
+  SECTION("Empty content") {}
   SECTION("Short content") {
     content = "Repeated repeated repeated repeated repeated stuff.";
   }
@@ -597,13 +592,11 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
     std::stringstream content_ss;
     // if only this part fails VolatileContentRepository's fixed max size
     // and some change in the cleanup logic might interfere
-    for (size_t i = 0U; i < 512 * 1024U; i++) {
-      content_ss << "foobar";
-    }
+    for (size_t i = 0U; i < 512 * 1024U; i++) { content_ss << "foobar"; }
     content = content_ss.str();
   }
 
-  std::ofstream{ src_file } << content;
+  std::ofstream{src_file} << content;
 
   // Run flow
   runSession(plan, true);
@@ -626,20 +619,22 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
 
 TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFileBatchTest]") {
   std::vector<std::string> flowFileContents{
-    utils::string::repeat("0", 1000), utils::string::repeat("1", 1000),
-    utils::string::repeat("2", 1000), utils::string::repeat("3", 1000),
+      utils::string::repeat("0", 1000),
+      utils::string::repeat("1", 1000),
+      utils::string::repeat("2", 1000),
+      utils::string::repeat("3", 1000),
   };
   constexpr std::size_t batchSize = 3;
 
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::compress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
+  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name,
+      std::string{magic_enum::enum_name(CompressionMode::compress)}));
+  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name,
+      std::string{magic_enum::enum_name(CompressionFormat::GZIP)}));
   REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
   REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
   REQUIRE(context->setProperty(minifi::processors::CompressContent::BatchSize.name, std::to_string(batchSize)));
 
-  for (const auto& content : flowFileContents) {
-    importFlowFileFrom(minifi::io::BufferStream(content));
-  }
+  for (const auto& content: flowFileContents) { importFlowFileFrom(minifi::io::BufferStream(content)); }
 
   REQUIRE(processor->getName() == "compresscontent");
   auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
@@ -655,9 +650,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   // validate the compress content
   std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
   std::vector<std::shared_ptr<core::FlowFile>> outFiles;
-  while (std::shared_ptr<core::FlowFile> file = output->poll(expiredFlowRecords)) {
-    outFiles.push_back(std::move(file));
-  }
+  while (std::shared_ptr<core::FlowFile> file = output->poll(expiredFlowRecords)) { outFiles.push_back(std::move(file)); }
   REQUIRE(outFiles.size() == batchSize);
 
   // Trigger a second time to process the remaining files
@@ -667,9 +660,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
     session->commit();
   }
 
-  while (std::shared_ptr<core::FlowFile> file = output->poll(expiredFlowRecords)) {
-    outFiles.push_back(std::move(file));
-  }
+  while (std::shared_ptr<core::FlowFile> file = output->poll(expiredFlowRecords)) { outFiles.push_back(std::move(file)); }
   REQUIRE(outFiles.size() == flowFileContents.size());
 
   for (std::size_t idx = 0; idx < outFiles.size(); ++idx) {
@@ -680,21 +671,25 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
     ReadCallback callback(gsl::narrow<size_t>(file->getSize()));
     read(file, callback);
     callback.archive_read();
-    std::string content(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
+    std::string content(reinterpret_cast<char*>(callback.archive_buffer_.data()), callback.archive_buffer_.size());
     REQUIRE(flowFileContents[idx] == content);
   }
 }
 
 TEST_CASE_METHOD(DecompressTestController, "Invalid archive decompression", "[compressfiletest9]") {
   const auto compression_format = GENERATE(CompressionFormat::GZIP, CompressionFormat::LZMA, CompressionFormat::XZ_LZMA2, CompressionFormat::BZIP2);
-  if (((compression_format == CompressionFormat::LZMA || compression_format == CompressionFormat::XZ_LZMA2) && !archive_liblzma_version()) ||
-      (compression_format == CompressionFormat::BZIP2 && !archive_bzlib_version())) {
+  if (compression_format == CompressionFormat::BZIP2 && !archive_bzlib_version()) {
     return;
   }
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(compression_format)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)}));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
-  REQUIRE(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
+
+  if ((compression_format == CompressionFormat::LZMA || compression_format == CompressionFormat::XZ_LZMA2) && !archive_liblzma_version()) {
+    return;
+  }
+
+  CHECK(context->setProperty(minifi::processors::CompressContent::CompressFormat.name, std::string{magic_enum::enum_name(compression_format)}));
+  CHECK(context->setProperty(minifi::processors::CompressContent::CompressMode.name, std::string{magic_enum::enum_name(CompressionMode::decompress)}));
+  CHECK(context->setProperty(minifi::processors::CompressContent::CompressLevel.name, "9"));
+  CHECK(context->setProperty(minifi::processors::CompressContent::UpdateFileName.name, "true"));
 
   importFlowFileFrom(minifi::io::BufferStream(std::string{"banana bread"}));
   trigger();
@@ -710,7 +705,7 @@ TEST_CASE_METHOD(DecompressTestController, "Invalid archive decompression", "[co
   {
     ReadCallback callback(gsl::narrow<size_t>(invalid_flow->getSize()));
     read(invalid_flow, callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
+    std::string contents(reinterpret_cast<char*>(callback.buffer_.data()), callback.read_size_);
     REQUIRE(contents == "banana bread");
   }
 }

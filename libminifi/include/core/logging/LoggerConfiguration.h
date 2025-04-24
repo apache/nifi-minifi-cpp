@@ -77,7 +77,7 @@ class LoggerConfiguration {
   static LoggerConfiguration& getConfiguration();
 
   static std::unique_ptr<LoggerConfiguration> newInstance() {
-    return std::unique_ptr<LoggerConfiguration>(new LoggerConfiguration());
+    return std::unique_ptr<LoggerConfiguration>(new LoggerConfiguration());  // NOLINT(modernize-make-unique, cppcoreguidelines-owning-memory
   }
 
   void disableLogging() {

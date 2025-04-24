@@ -52,6 +52,7 @@ class LogPublisherTestFixture {
   ~LogPublisherTestFixture() {
     minifi::utils::file::delete_dir(provenance_repo_->getDirectory());
     minifi::utils::file::delete_dir(flow_file_repo_->getDirectory());
+    LogTestController::getInstance().reset();
   }
 
  protected:
@@ -220,7 +221,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify changing log level property fo
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
   using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-  std::string expected_log = R"([info] {
+  std::string expected_log = R"([debug] {
     "LogMetrics": {
         "RepositoryMetrics": {
             "provenancerepository": {
