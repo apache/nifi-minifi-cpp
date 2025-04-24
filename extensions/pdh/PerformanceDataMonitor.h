@@ -49,9 +49,9 @@ class PerformanceDataMonitor final : public core::ProcessorImpl {
   static constexpr const char* PRETTY_FORMAT_STR = "Pretty";
   static constexpr const char* COMPACT_FORMAT_STR = "Compact";
 
-  explicit PerformanceDataMonitor(const std::string_view name, utils::Identifier uuid = utils::Identifier())
-      : ProcessorImpl(name, uuid), output_format_(OutputFormat::JSON), pretty_output_(false),
-        decimal_places_(std::nullopt), logger_(core::logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
+  explicit PerformanceDataMonitor(core::ProcessorMetadata info)
+      : ProcessorImpl(info), output_format_(OutputFormat::JSON), pretty_output_(false),
+        decimal_places_(std::nullopt),
         pdh_query_(nullptr), resource_consumption_counters_() {}
 
   ~PerformanceDataMonitor() override;

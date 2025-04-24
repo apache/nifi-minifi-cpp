@@ -21,7 +21,7 @@
 
 #include "../controllerservice/KubernetesControllerService.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 
@@ -29,10 +29,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class CollectKubernetesPodMetrics : public core::ProcessorImpl {
  public:
-  explicit CollectKubernetesPodMetrics(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<CollectKubernetesPodMetrics>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "A processor which collects pod metrics when MiNiFi is run inside Kubernetes.";
 
