@@ -44,10 +44,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
       : ProcessorImpl(info),
         processor_initialized_(false),
         python_dynamic_(false),
-        reload_on_script_change_(true) {
-    logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger(uuid_);
-    python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
-  }
+        reload_on_script_change_(true) {}
 
   EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "
       "The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as "
@@ -160,7 +157,6 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   bool reload_on_script_change_;
   std::optional<std::chrono::file_clock::time_point> last_script_write_time_;
   std::string script_file_path_;
-  std::shared_ptr<core::logging::Logger> python_logger_;
   std::unique_ptr<PythonScriptEngine> python_script_engine_;
   std::optional<std::string> python_class_name_;
   std::vector<std::filesystem::path> python_paths_;
