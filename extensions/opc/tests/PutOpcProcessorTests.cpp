@@ -397,15 +397,15 @@ TEST_CASE("Test value type mismatch", "[putopcprocessor]") {
   server.start();
   SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Boolean"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
-  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Boolean"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  CHECK(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
 
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());

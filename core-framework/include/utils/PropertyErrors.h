@@ -30,8 +30,7 @@ enum class PropertyErrorCode : std::underlying_type_t<std::byte> {
   NotSupportedProperty,
   DynamicPropertiesNotSupported,
   PropertyNotSet,
-  ValidationFailed,
-  EmptyString
+  ValidationFailed
 };
 
 struct PropertyErrorCategory final : std::error_category {
