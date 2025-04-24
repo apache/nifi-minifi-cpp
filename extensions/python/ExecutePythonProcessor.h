@@ -44,9 +44,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
       : ProcessorImpl(info),
         processor_initialized_(false),
         python_dynamic_(false),
-        reload_on_script_change_(true) {
-    logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger(uuid_);
-  }
+        reload_on_script_change_(true) {}
 
   EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "
       "The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as "
