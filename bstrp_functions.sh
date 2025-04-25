@@ -183,6 +183,7 @@ save_state(){
   echo_state_variable USE_SHARED_LIBS
   echo_state_variable ASAN_ENABLED
   echo_state_variable MINIFI_FAIL_ON_WARNINGS
+  echo_state_variable LTO_ENABLED
   for option in "${OPTIONS[@]}" ; do
     echo_state_variable "${option}"
   done
@@ -407,10 +408,11 @@ show_supported_features() {
   echo "****************************************"
   echo "1. Enable Tests ................$(print_feature_status TESTS_ENABLED)"
   echo "2. Enable all extensions"
-  echo "4. Use Shared Dependency Links .$(print_feature_status USE_SHARED_LIBS)"
-  echo "5. Build Profile ...............$(print_multi_option_status BUILD_PROFILE)"
-  echo "6. Create ASAN build ...........$(print_feature_status ASAN_ENABLED)"
-  echo "7. Treat warnings as errors.....$(print_feature_status MINIFI_FAIL_ON_WARNINGS)"
+  echo "4. Use Shared Dependency Links ...$(print_feature_status USE_SHARED_LIBS)"
+  echo "5. Build Profile .................$(print_multi_option_status BUILD_PROFILE)"
+  echo "6. Create ASAN build .............$(print_feature_status ASAN_ENABLED)"
+  echo "7. Treat warnings as errors.......$(print_feature_status MINIFI_FAIL_ON_WARNINGS)"
+  echo "8. Enable link time optimization .$(print_feature_status LTO_ENABLED)"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -456,6 +458,7 @@ read_feature_options(){
     5) ToggleMultiOption BUILD_PROFILE;;
     6) ToggleFeature ASAN_ENABLED;;
     7) ToggleFeature MINIFI_FAIL_ON_WARNINGS;;
+    8) ToggleFeature LTO_ENABLED;;
     p) export FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         export MENU="main"
