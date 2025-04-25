@@ -57,6 +57,8 @@ class ImageStore:
             image = self.__build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(PythonWithDependenciesOptions.INLINE_DEFINED_PACKAGES)
         elif container_engine == "minifi-cpp-nifi-with-python-without-dependencies":
             image = self.__build_minifi_cpp_image_with_nifi_python_processors()
+        elif container_engine == "minifi-cpp-with-llamacpp-model":
+            image = self.__build_minifi_cpp_image_with_llamacpp_model()
         elif container_engine == "http-proxy":
             image = self.__build_http_proxy_image()
         elif container_engine == "postgresql-server":
@@ -224,6 +226,14 @@ class ImageStore:
             build_full_python_resource_path("SetRecordField.py"),
             build_full_python_resource_path("TestStateManager.py"),
         ])
+
+    def __build_minifi_cpp_image_with_llamacpp_model(self):
+        dockerfile = dedent("""\
+                FROM {base_image}
+                RUN mkdir /opt/minifi/minifi-current/models && wget https://huggingface.co/bartowski/Qwen2-0.5B-Instruct-GGUF/resolve/main/Qwen2-0.5B-Instruct-IQ3_M.gguf --directory-prefix=/opt/minifi/minifi-current/models
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION))
+
+        return self.__build_image(dockerfile)
 
     def __build_http_proxy_image(self):
         dockerfile = dedent("""\

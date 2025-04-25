@@ -1430,3 +1430,8 @@ def step_impl(context, service_name):
         connection_string="couchbases://{server_hostname}".format(server_hostname=context.test.get_container_name_with_postfix("couchbase-server")),
         ssl_context_service=ssl_context_service)
     container.add_controller(couchbase_cluster_controller_service)
+
+
+@given("a LlamaCpp model is present on the MiNiFi host")
+def step_impl(context):
+    context.test.llama_model_is_downloaded_in_minifi()

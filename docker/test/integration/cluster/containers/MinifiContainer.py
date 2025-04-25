@@ -48,6 +48,7 @@ class MinifiOptions:
             self.enable_openssl_fips_mode = True
         else:
             self.enable_openssl_fips_mode = False
+        self.download_llama_model = False
 
 
 class MinifiContainer(FlowContainer):
@@ -196,6 +197,8 @@ class MinifiContainer(FlowContainer):
             image = self.image_store.get_image('minifi-cpp-nifi-with-inline-python-dependencies')
         elif self.options.use_nifi_python_processors_without_dependencies:
             image = self.image_store.get_image('minifi-cpp-nifi-with-python-without-dependencies')
+        elif self.options.download_llama_model:
+            image = self.image_store.get_image('minifi-cpp-with-llamacpp-model')
         else:
             image = 'apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION
 
