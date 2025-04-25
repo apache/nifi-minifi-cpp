@@ -99,6 +99,8 @@ class Logger {
 
   virtual ~Logger() = default;
 
+  virtual void setLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback) = 0;
+
  protected:
   virtual int getMaxLogSize() = 0;
 
