@@ -23,6 +23,8 @@ namespace org::apache::nifi::minifi::extensions::python {
 static PyMethodDef PyStateManager_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"get", (PyCFunction) PyStateManager::get, METH_VARARGS, nullptr},
     {"set", (PyCFunction) PyStateManager::set, METH_VARARGS, nullptr},
+    {"clear", (PyCFunction) PyStateManager::clear, METH_VARARGS, nullptr},
+    {"replace", (PyCFunction) PyStateManager::replace, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -90,6 +92,55 @@ PyObject* PyStateManager::get(PyStateManager* self, PyObject*) {
   } else {
     Py_RETURN_NONE;
   }
+}
+
+PyObject* PyStateManager::clear(PyStateManager* self, PyObject* /*args*/) {
+  if (!self->state_manager_) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading state manager outside 'on_trigger'");
+    return nullptr;
+  }
+
+  self->state_manager_->clear();
+  Py_RETURN_NONE;
+}
+
+PyObject* PyStateManager::replace(PyStateManager* self, PyObject* args) {
+  if (!self->state_manager_) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading state manager outside 'on_trigger'");
+    return nullptr;
+  }
+  core::StateManager::State old_cpp_state;
+
+  auto old_state = BorrowedDict::fromTuple(args, 0);
+
+  auto old_state_keys = OwnedList(PyDict_Keys(old_state.get()));
+  for (size_t i = 0; i < old_state_keys.length(); ++i) {
+    BorrowedStr key{old_state_keys[i]};
+    if (auto value = old_state[key.toUtf8String()]) {
+      BorrowedStr value_str{*value};
+      old_cpp_state[key.toUtf8String()] = value_str.toUtf8String();
+    }
+  }
+
+  auto current_cpp_state = self->state_manager_->get();
+  if ((!current_cpp_state && old_state_keys.length() > 0) || (current_cpp_state && old_cpp_state != *current_cpp_state)) {
+    return object::returnReference(false);
+  }
+
+  core::StateManager::State new_cpp_state;
+
+  auto new_python_state = BorrowedDict::fromTuple(args, 1);
+
+  auto new_python_state_keys = OwnedList(PyDict_Keys(new_python_state.get()));
+  for (size_t i = 0; i < new_python_state_keys.length(); ++i) {
+    BorrowedStr key{new_python_state_keys[i]};
+    if (auto value = new_python_state[key.toUtf8String()]) {
+      BorrowedStr value_str{*value};
+      new_cpp_state[key.toUtf8String()] = value_str.toUtf8String();
+    }
+  }
+
+  return object::returnReference(self->state_manager_->set(new_cpp_state));
 }
 
 PyTypeObject* PyStateManager::typeObject() {
