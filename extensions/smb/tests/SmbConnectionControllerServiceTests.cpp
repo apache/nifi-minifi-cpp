@@ -35,7 +35,7 @@ struct SmbConnectionControllerServiceFixture {
 
 
 TEST_CASE_METHOD(SmbConnectionControllerServiceFixture, "SmbConnectionControllerService onEnable throws when empty") {
-  REQUIRE_THROWS(plan_->finalize());
+  REQUIRE_THROWS(smb_connection_node_->getControllerServiceImplementation()->onEnable());
 }
 
 TEST_CASE_METHOD(SmbConnectionControllerServiceFixture, "SmbConnectionControllerService anonymous connection") {
