@@ -28,6 +28,7 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
   - [Bootstrapping](#bootstrapping)
   - [Building For Other Distros](#building-for-other-distros)
   - [Installation](#installation)
+  - [Tests](#tests)
   - [Configuring](#configuring)
   - [Running](#running)
   - [Deploying](#deploying)
@@ -479,6 +480,19 @@ $ MINIFI_PACKAGE="$(pwd)"/build/nifi-minifi-cpp-*.tar.gz
 $ pushd /opt
 $ sudo tar xvzf "$MINIFI_PACKAGE"
 $ cd nifi-minifi-cpp-*
+```
+
+### Tests
+If you have enabled tests to be built during the bootstrap process, you can run them
+in the build directory. (See `ctest --help` for selecting tests or running them in parallel)
+```
+$ ctest --output-on-failure
+```
+
+The performance tests can similarly be enabled. To execute them and see their output.
+
+```
+$ ctest --verbose -L performance
 ```
 
 ### Configuring
