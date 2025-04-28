@@ -24,7 +24,7 @@
 #include "google/cloud/storage/internal/object_metadata_parser.h"
 #include "google/cloud/storage/retry_policy.h"
 #include "google/cloud/storage/testing/canonical_errors.h"
-#include "unit/TestUtils.h"
+#include "unit/ProcessorUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
