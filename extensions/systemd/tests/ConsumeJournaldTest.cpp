@@ -160,7 +160,8 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
       {"systemd", "Starting Rule-based Manager for Device Events and Files...", 1},
   }});
   auto* const libwrapper_observer = libwrapper.get();
-  const TypedProcessorWrapper<ConsumeJournald> consume_journald = plan->addProcessor(minifi::test::utils::make_custom_processor<ConsumeJournald>("ConsumeJournald", utils::Identifier{},
+  const TypedProcessorWrapper<ConsumeJournald> consume_journald = plan->addProcessor(minifi::test::utils::make_custom_processor<ConsumeJournald>(
+      minifi::core::ProcessorMetadata{utils::Identifier{}, "ConsumeJournald", core::logging::LoggerFactory<ConsumeJournald>::getLogger()},
       std::move(libwrapper)), "ConsumeJournald");
   REQUIRE(consume_journald->setProperty(ConsumeJournald::TimestampFormat.name, "ISO8601"));
   const auto get_cursor_position = [&consume_journald]() -> std::string {
