@@ -319,7 +319,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   {
     std::string data = "banana";
     minifi::io::BufferStream content(data);
-    std::shared_ptr<core::Processor> processor = std::make_shared<TestProcessor>("dummy");
+    std::shared_ptr<core::Processor> processor = minifi::test::utils::make_processor<TestProcessor>("dummy");
     utils::Identifier uuid = processor->getUUID();
     REQUIRE(uuid);
     inputPtr->setSourceUUID(uuid);

@@ -27,7 +27,7 @@
 #include <utility>
 
 #include "core/Property.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessContext.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -42,10 +42,7 @@ class AppendHostInfo : public core::ProcessorImpl {
   static constexpr const char* REFRESH_POLICY_ON_TRIGGER = "On every trigger";
   static constexpr const char* REFRESH_POLICY_ON_SCHEDULE = "On schedule";
 
-  explicit AppendHostInfo(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<AppendHostInfo>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~AppendHostInfo() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.";

@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "SmbConnectionControllerService.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"
 #include "core/PropertyDefinition.h"
@@ -39,10 +39,7 @@ namespace org::apache::nifi::minifi::extensions::smb {
 
 class FetchSmb final : public core::ProcessorImpl {
  public:
-  explicit FetchSmb(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<FetchSmb>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches files from a SMB Share. Designed to be used in tandem with ListSmb.";
 

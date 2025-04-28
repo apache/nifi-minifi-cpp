@@ -26,7 +26,7 @@
 #include "FlowFileRecord.h"
 #include "core/Core.h"
 #include "core/OutputAttributeDefinition.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/logging/LoggerFactory.h"
@@ -39,10 +39,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
-  explicit ConsumeMQTT(std::string_view name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(name, uuid) {
-    logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger(uuid_);
-  }
+  using AbstractMQTTProcessor::AbstractMQTTProcessor;
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
       "The the payload of the MQTT message becomes content of a FlowFile";
@@ -163,7 +160,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
    */
   void startupClient() override;
 
-  void checkProperties() override;
+  void checkProperties(core::ProcessContext& context) override;
   void checkBrokerLimitsImpl() override;
 
   /**

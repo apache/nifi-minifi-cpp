@@ -23,16 +23,13 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 class LogOnDestructionProcessor : public core::ProcessorImpl {
  public:
-  explicit LogOnDestructionProcessor(const std::string_view name, const utils::Identifier& uuid = utils::Identifier())
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<LogOnDestructionProcessor>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   ~LogOnDestructionProcessor() override {
     logger_->log_info("LogOnDestructionProcessor is being destructed");
