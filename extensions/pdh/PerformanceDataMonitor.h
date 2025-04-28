@@ -124,7 +124,6 @@ class PerformanceDataMonitor final : public core::ProcessorImpl {
   bool pretty_output_;
 
   std::optional<uint8_t> decimal_places_;
-  std::shared_ptr<core::logging::Logger> logger_;
   PDH_HQUERY pdh_query_;
   std::vector<std::unique_ptr<PerformanceDataCounter>> resource_consumption_counters_;
 };
