@@ -48,7 +48,7 @@ enum class ModbusExceptionCode : std::underlying_type_t<std::byte> {
 };
 
 struct ModbusErrorCategory final : std::error_category {
-  [[nodiscard]] const char* name() const noexcept override { return "MiNiFi Modbus Error Category"; }
+  [[nodiscard]] const char* name() const noexcept override { return "Modbus Error"; }
 
   [[nodiscard]] std::string message(int ev) const override {
     const auto modbus_exception_code = static_cast<ModbusExceptionCode>(ev);

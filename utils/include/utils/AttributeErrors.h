@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::core {
 enum class AttributeErrorCode : std::underlying_type_t<std::byte> { MissingAttribute };
 
 struct AttributeErrorCategory final : std::error_category {
-  [[nodiscard]] const char* name() const noexcept override { return "MiNiFi Attribute Error Category"; }
+  [[nodiscard]] const char* name() const noexcept override { return "Attribute Error"; }
 
   [[nodiscard]] std::string message(int ev) const override {
     const auto ec = static_cast<AttributeErrorCode>(ev);

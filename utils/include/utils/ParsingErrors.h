@@ -34,7 +34,7 @@ enum class ParsingErrorCode : std::underlying_type_t<std::byte> {
 };
 
 struct ParsingErrorCategory final : std::error_category {
-  [[nodiscard]] const char* name() const noexcept override { return "MiNiFi Parsing Error Category"; }
+  [[nodiscard]] const char* name() const noexcept override { return "Parsing Error"; }
 
   [[nodiscard]] std::string message(int ev) const override {
     const auto ec = static_cast<ParsingErrorCode>(ev);

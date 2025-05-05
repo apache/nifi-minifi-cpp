@@ -35,7 +35,7 @@ enum class PropertyErrorCode : std::underlying_type_t<std::byte> {
 };
 
 struct PropertyErrorCategory final : std::error_category {
-  [[nodiscard]] const char* name() const noexcept override { return "MiNiFi Property Error Category"; }
+  [[nodiscard]] const char* name() const noexcept override { return "Property Error"; }
 
   [[nodiscard]] std::string message(int ev) const override {
     const auto ec = static_cast<PropertyErrorCode>(ev);

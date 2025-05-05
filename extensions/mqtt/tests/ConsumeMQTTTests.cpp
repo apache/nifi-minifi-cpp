@@ -49,13 +49,13 @@ using namespace std::literals::chrono_literals;
 TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_EmptyTopic", "[consumeMQTTTest]") {
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883");
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_),
-      Catch::Matchers::EndsWith("Expected valid value from \"consumeMqttProcessor::Topic\", but got MiNiFi Property Error Category:2 (PropertyNotSet)"));
+      Catch::Matchers::EndsWith("Expected valid value from \"consumeMqttProcessor::Topic\", but got Property Error:2 (PropertyNotSet)"));
 }
 
 TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_EmptyBrokerURI", "[consumeMQTTTest]") {
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic");
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_),
-      Catch::Matchers::EndsWith("Expected valid value from \"consumeMqttProcessor::Broker URI\", but got MiNiFi Property Error Category:2 (PropertyNotSet)"));
+      Catch::Matchers::EndsWith("Expected valid value from \"consumeMqttProcessor::Broker URI\", but got Property Error:2 (PropertyNotSet)"));
 }
 
 TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithoutID", "[consumeMQTTTest]") {
