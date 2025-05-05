@@ -378,7 +378,7 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
     const auto& input_ports = ProcessGroupTestAccessor::get_processors_(*rpg);
     REQUIRE(input_ports.size() == expected.input_ports.size());
     for (auto& expected_input_port : expected.input_ports) {
-      auto input_port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(findByName(input_ports, expected_input_port.name));
+      auto input_port = dynamic_cast<minifi::RemoteProcessGroupPort*>(findByName(input_ports, expected_input_port.name));
       REQUIRE(input_port);
       REQUIRE(input_port->getName() == expected_input_port.name);
     }

@@ -63,7 +63,7 @@ class CRCStreamBase : public virtual StreamImpl {
     crc_ = crc32(crc_, buffer, length);
   }
 
-  uint64_t getCRC() {
+  uint64_t getCRC() const {
     return gsl::narrow<uint64_t>(crc_);
   }
 
