@@ -65,3 +65,6 @@ class Connectable(object):
 
     def set_uuid(self, uuid):
         self.uuid = uuid
+
+    def id_for_connection(self):
+        return self.uuid
