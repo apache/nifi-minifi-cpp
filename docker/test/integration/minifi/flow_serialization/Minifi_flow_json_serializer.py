@@ -19,6 +19,7 @@ import json
 
 from ..core.Processor import Processor
 from ..core.InputPort import InputPort
+from ..core.OutputPort import OutputPort
 from ..core.Funnel import Funnel
 
 
@@ -32,7 +33,9 @@ class Minifi_flow_json_serializer:
                 'funnels': [],
                 'connections': [],
                 'remoteProcessGroups': [],
-                'controllerServices': []
+                'controllerServices': [],
+                'inputPorts': [],
+                'outputPorts': []
             }
         }
         visited = []
@@ -73,30 +76,72 @@ class Minifi_flow_json_serializer:
 
         if isinstance(connectable, InputPort):
             group = connectable.remote_process_group
-            res_group = None
+            if group is None:
+                root['inputPorts'].append({
+                    'name': connectable_name,
+                    'identifier': str(connectable.instance_id),
+                    'properties': connectable.properties
+                })
+            else:
+                res_group = None
 
-            for res_group_candidate in root['remoteProcessGroups']:
-                assert isinstance(res_group_candidate, dict)
-                if res_group_candidate['identifier'] == str(group.uuid):
-                    res_group = res_group_candidate
+                for res_group_candidate in root['remoteProcessGroups']:
+                    assert isinstance(res_group_candidate, dict)
+                    if res_group_candidate['identifier'] == str(group.uuid):
+                        res_group = res_group_candidate
 
-            if res_group is None:
-                res_group = {
-                    'name': group.name,
-                    'identifier': str(group.uuid),
-                    'targetUri': group.url,
-                    'communicationsTimeout': '30 sec',
-                    'yieldDuration': '3 sec',
-                    'inputPorts': []
-                }
+                if res_group is None:
+                    res_group = {
+                        'name': group.name,
+                        'identifier': str(group.uuid),
+                        'targetUri': group.url,
+                        'communicationsTimeout': '30 sec',
+                        'yieldDuration': '3 sec',
+                        'transportProtocol': group.transport_protocol,
+                        'inputPorts': []
+                    }
 
-                root['remoteProcessGroups'].append(res_group)
+                    root['remoteProcessGroups'].append(res_group)
 
-            res_group['inputPorts'].append({
-                'identifier': str(connectable.instance_id),
-                'name': connectable.name,
-                'properties': connectable.properties
-            })
+                res_group['inputPorts'].append({
+                    'identifier': str(connectable.instance_id),
+                    'name': connectable.name,
+                    'properties': connectable.properties
+                })
+
+        if isinstance(connectable, OutputPort):
+            group = connectable.remote_process_group
+            if group is None:
+                root['outputPorts'].append({
+                    'name': connectable_name,
+                    'identifier': str(connectable.instance_id),
+                    'properties': connectable.properties
+                })
+            else:
+                res_group = None
+
+                for res_group_candidate in root['remoteProcessGroups']:
+                    assert isinstance(res_group_candidate, dict)
+                    if res_group_candidate['identifier'] == str(group.uuid):
+                        res_group = res_group_candidate
+
+                if res_group is None:
+                    res_group = {
+                        'name': group.name,
+                        'identifier': str(group.uuid),
+                        'targetUri': group.url,
+                        'communicationsTimeout': '30 sec',
+                        'yieldDuration': '3 sec',
+                        'outputPorts': []
+                    }
+
+                    root['remoteProcessGroups'].append(res_group)
+
+                res_group['outputPorts'].append({
+                    'identifier': str(connectable.instance_id),
+                    'name': connectable.name,
+                    'properties': connectable.properties
+                })
 
         if isinstance(connectable, Processor):
             root['processors'].append({
@@ -134,8 +179,8 @@ class Minifi_flow_json_serializer:
             for proc in conn_procs:
                 root['connections'].append({
                     'name': str(uuid.uuid4()),
-                    'source': {'id': str(connectable.uuid)},
-                    'destination': {'id': str(proc.uuid) if not isinstance(proc, InputPort) else str(proc.instance_id)}
+                    'source': {'id': str(connectable.uuid) if not isinstance(connectable, InputPort) and not isinstance(connectable, OutputPort) else str(connectable.instance_id)},
+                    'destination': {'id': str(proc.uuid) if not isinstance(proc, InputPort) and not isinstance(proc, OutputPort) else str(proc.instance_id)}
                 })
                 if (all(str(connectable.uuid) != x['identifier'] for x in root['funnels'])):
                     root['connections'][-1]['selectedRelationships'] = [conn_name]

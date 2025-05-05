@@ -1,6 +1,6 @@
 /**
- * @file RemoteProcessorGroupPort.h
- * RemoteProcessorGroupPort class declaration
+ * @file RemoteProcessGroupPort.h
+ * RemoteProcessGroupPort class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -51,7 +51,7 @@ namespace org::apache::nifi::minifi {
 class RPGLatch {
  public:
   RPGLatch(bool increment = true) { // NOLINT
-    static std::atomic<int> latch_count(0);
+    static std::atomic<int64_t> latch_count(0);
     count = &latch_count;
     if (increment)
       count++;
@@ -61,39 +61,35 @@ class RPGLatch {
     count--;
   }
 
-  int getCount() {
+  int64_t getCount() {
     return *count;
   }
 
  private:
-  std::atomic<int> *count;
+  std::atomic<int64_t> *count;
 };
 
 struct RPG {
-  std::string host_;
-  int port_;
-  std::string protocol_;
+  std::string host;
+  int port;
+  std::string protocol;
 };
 
-class RemoteProcessorGroupPort : public core::ProcessorImpl {
+class RemoteProcessGroupPort : public core::ProcessorImpl {
  public:
-  RemoteProcessorGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
+  RemoteProcessGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
       : core::ProcessorImpl(name, uuid),
         configure_(std::move(configure)),
-        direction_(sitetosite::SEND),
+        direction_(sitetosite::TransferDirection::SEND),
         transmitting_(false),
-        timeout_(0),
-        bypass_rest_api_(false),
-        ssl_service(nullptr),
-        logger_(core::logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger(uuid)) {
-    client_type_ = sitetosite::CLIENT_TYPE::RAW;
-    protocol_uuid_ = uuid;
-    site2site_secure_ = false;
-    peer_index_ = -1;
+        protocol_uuid_(uuid),
+        client_type_(sitetosite::ClientType::RAW),
+        peer_index_(-1),
+        logger_(core::logging::LoggerFactory<RemoteProcessGroupPort>::getLogger(uuid)) {
     // REST API port and host
     setURL(std::move(url));
   }
-  virtual ~RemoteProcessorGroupPort() = default;
+  virtual ~RemoteProcessGroupPort() = default;
 
   MINIFIAPI static constexpr auto hostName = core::PropertyDefinitionBuilder<>::createProperty("Host Name")
       .withDescription("Remote Host Name.")
@@ -122,9 +118,8 @@ class RemoteProcessorGroupPort : public core::ProcessorImpl {
       idleTimeout
   });
 
-
-  MINIFIAPI static constexpr auto relation = core::RelationshipDefinition{"", ""};
-  MINIFIAPI static constexpr auto Relationships = std::array{relation};
+  MINIFIAPI static constexpr auto DefaultRelationship = core::RelationshipDefinition{"undefined", ""};
+  MINIFIAPI static constexpr auto Relationships = std::array{DefaultRelationship};
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -139,12 +134,19 @@ class RemoteProcessorGroupPort : public core::ProcessorImpl {
 
   void setDirection(sitetosite::TransferDirection direction) {
     direction_ = direction;
-    if (direction_ == sitetosite::RECEIVE)
-      this->setTriggerWhenEmpty(true);
+    if (direction_ == sitetosite::TransferDirection::RECEIVE) {
+      setTriggerWhenEmpty(true);
+    } else {
+      setTriggerWhenEmpty(false);
+    }
   }
 
-  void setTimeout(uint64_t timeout) {
+  void setTimeout(std::chrono::milliseconds timeout) {
     timeout_ = timeout;
+  }
+
+  std::optional<std::chrono::milliseconds> getTimeout() const {
+    return timeout_;
   }
 
   void setTransmitting(bool val) {
@@ -155,102 +157,90 @@ class RemoteProcessorGroupPort : public core::ProcessorImpl {
     local_network_interface_ = ifc;
   }
 
-  std::string getInterface() {
-    return local_network_interface_;
-  }
-
-  /**
-   * Sets the url. Supports a CSV
-   */
-  void setURL(std::string val) {
-    auto urls = utils::string::split(val, ",");
-    for (const auto& url : urls) {
-      http::URL parsed_url{utils::string::trim(url)};
-      if (parsed_url.isValid()) {
-        logger_->log_debug("Parsed RPG URL '{}' -> '{}'", url, parsed_url.hostPort());
-        nifi_instances_.push_back({parsed_url.host(), parsed_url.port(), parsed_url.protocol()});
-      } else {
-        logger_->log_error("Could not parse RPG URL '{}'", url);
-      }
-    }
-  }
+  void setURL(const std::string& val);
 
   std::vector<RPG> getInstances() const {
     return nifi_instances_;
   }
 
   void setHTTPProxy(const http::HTTPProxy &proxy) {
-    this->proxy_ = proxy;
+    proxy_ = proxy;
   }
-  http::HTTPProxy getHTTPProxy() {
-    return this->proxy_;
-  }
-  // refresh remoteSite2SiteInfo via nifi rest api
-  std::pair<std::string, int> refreshRemoteSite2SiteInfo();
 
-  // refresh site2site peer list
-  void refreshPeerList();
+  http::HTTPProxy getHTTPProxy() {
+    return proxy_;
+  }
 
   void notifyStop() override;
 
   void enableHTTP() {
-    client_type_ = sitetosite::HTTP;
+    client_type_ = sitetosite::ClientType::HTTP;
+  }
+
+  void setUseCompression(bool use_compression) {
+    use_compression_ = use_compression;
+  }
+
+  bool getUseCompression() const {
+    return use_compression_;
+  }
+
+  void setBatchCount(uint64_t count) {
+    batch_count_ = count;
+  }
+
+  std::optional<uint64_t> getBatchCount() const {
+    return batch_count_;
+  }
+
+  void setBatchSize(uint64_t size) {
+    batch_size_ = size;
+  }
+
+  std::optional<uint64_t> getBatchSize() const {
+    return batch_size_;
+  }
+
+  void setBatchDuration(std::chrono::milliseconds duration) {
+    batch_duration_ = duration;
+  }
+
+  std::optional<std::chrono::milliseconds> getBatchDuration() const {
+    return batch_duration_;
   }
 
  protected:
-  /**
-   * Non static in case anything is loaded when this object is re-scheduled
-   */
-  bool is_http_disabled() {
-    auto ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
-    if (ptr != nullptr) {
-      delete ptr;
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol(bool create);
+  std::optional<std::pair<std::string, uint16_t>> refreshRemoteSiteToSiteInfo();
+  void refreshPeerList();
+  std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol();
   void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
 
   moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
-
   std::shared_ptr<Configure> configure_;
-  // Transaction Direction
   sitetosite::TransferDirection direction_;
-  // Transmitting
   std::atomic<bool> transmitting_;
-  // timeout
-  uint64_t timeout_;
-  // local network interface
+  std::optional<std::chrono::milliseconds> timeout_;
   std::string local_network_interface_;
-
   utils::Identifier protocol_uuid_;
-
-  std::chrono::milliseconds idle_timeout_ = std::chrono::seconds(15);
-
-  // rest API end point info
-  std::vector<struct RPG> nifi_instances_;
-
-  // http proxy
+  std::chrono::milliseconds idle_timeout_ = 15s;
+  std::vector<RPG> nifi_instances_;
   http::HTTPProxy proxy_;
-
-  bool bypass_rest_api_;
-
-  sitetosite::CLIENT_TYPE client_type_;
-
-  // Remote Site2Site Info
-  bool site2site_secure_;
+  sitetosite::ClientType client_type_;
   std::vector<sitetosite::PeerStatus> peers_;
-  std::atomic<int> peer_index_;
+  std::atomic<int64_t> peer_index_;
   std::mutex peer_mutex_;
-  std::string rest_user_name_;
-  std::string rest_password_;
-
-  std::shared_ptr<controllers::SSLContextService> ssl_service;
+  std::shared_ptr<controllers::SSLContextService> ssl_service_;
+  bool use_compression_{false};
+  std::optional<uint64_t> batch_count_;
+  std::optional<uint64_t> batch_size_;
+  std::optional<std::chrono::milliseconds> batch_duration_;
 
  private:
+  std::unique_ptr<sitetosite::SiteToSiteClient> initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const;
+  std::optional<std::string> getRestApiToken(const RPG& nifi) const;
+  std::optional<std::pair<std::string, uint16_t>> parseSiteToSiteDataFromControllerConfig(const RPG& nifi, const std::string& controller) const;
+  std::optional<std::pair<std::string, uint16_t>> tryRefreshSiteToSiteInstance(RPG nifi) const;
+
   std::shared_ptr<core::logging::Logger> logger_;
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };

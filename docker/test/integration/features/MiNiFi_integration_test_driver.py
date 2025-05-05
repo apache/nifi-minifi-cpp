@@ -20,6 +20,7 @@ import uuid
 from typing import List
 from pydoc import locate
 from minifi.core.InputPort import InputPort
+from minifi.core.OutputPort import OutputPort
 from cluster.DockerTestCluster import DockerTestCluster
 from minifi.validators.OutputValidator import OutputValidator
 from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidator
@@ -151,6 +152,13 @@ class MiNiFi_integration_test:
         # Generate an MD5 hash unique to the remote process group id
         input_port_node.set_uuid(uuid.uuid3(remote_process_group.get_uuid(), "input_port"))
         return input_port_node
+
+    @staticmethod
+    def generate_output_port_for_remote_process_group(remote_process_group, name):
+        output_port_node = OutputPort(name, remote_process_group)
+        # Generate an MD5 hash unique to the remote process group id
+        output_port_node.set_uuid(uuid.uuid3(remote_process_group.get_uuid(), "output_port"))
+        return output_port_node
 
     def add_test_data(self, path, test_data, file_name=None):
         if file_name is None:

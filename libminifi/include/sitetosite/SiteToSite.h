@@ -31,27 +31,24 @@
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
 
-// Resource Negotiated Status Code
-#define RESOURCE_OK 20
-#define DIFFERENT_RESOURCE_VERSION 21
-#define NEGOTIATED_ABORT 255
-// ! Max attributes
-#define MAX_NUM_ATTRIBUTES 25000
+enum class ResourceNegotiationStatusCode : uint8_t {
+  RESOURCE_OK = 20,
+  DIFFERENT_RESOURCE_VERSION = 21,
+  NEGOTIATED_ABORT = 255
+};
 
-// Respond Code Sequence Pattern
-static const uint8_t CODE_SEQUENCE_VALUE_1 = (uint8_t) 'R';
-static const uint8_t CODE_SEQUENCE_VALUE_2 = (uint8_t) 'C';
+static constexpr uint32_t MAX_NUM_ATTRIBUTES = 25000;
+
+// Response Code Sequence Pattern
+static constexpr uint8_t CODE_SEQUENCE_VALUE_1 = static_cast<uint8_t>('R');
+static constexpr uint8_t CODE_SEQUENCE_VALUE_2 = static_cast<uint8_t>('C');
 
 /**
  * Enumeration of Properties that can be used for the Site-to-Site Socket
  * Protocol.
  */
-typedef enum {
+enum class HandshakeProperty {
   /**
    * Boolean value indicating whether or not the contents of a FlowFile should
    * be GZipped when transferred.
@@ -87,95 +84,44 @@ typedef enum {
    */
   BATCH_DURATION,
   MAX_HANDSHAKE_PROPERTY
-} HandshakeProperty;
+};
 
-typedef enum {
+enum class ClientType {
   RAW,
   HTTP
-} CLIENT_TYPE;
+};
 
-/**
- * An enumeration for specifying the direction in which data should be
- * transferred between a client and a remote NiFi instance.
- */
-typedef enum {
-  /**
-   * * The client is to send data to the remote instance.
-   * */
+enum class TransferDirection {
   SEND,
-  /**
-   * * The client is to receive data from the remote instance.
-   * */
   RECEIVE
-} TransferDirection;
+};
 
-// Peer State
-typedef enum {
-  /**
-   * * IDLE
-   * */
+enum class PeerState {
   IDLE = 0,
-  /**
-   * * Socket Established
-   * */
   ESTABLISHED,
-  /**
-   * * HandShake Done
-   * */
   HANDSHAKED,
-  /**
-   * * After CodeDec Completion
-   * */
   READY
-} PeerState;
+};
 
-// Transaction State
-typedef enum {
-  /**
-   * * Transaction has been started but no data has been sent or received.
-   * */
+enum class TransactionState {
   TRANSACTION_STARTED,
-  /**
-   * * Transaction has been started and data has been sent or received.
-   * */
   DATA_EXCHANGED,
-  /**
-   * * Data that has been transferred has been confirmed via its CRC.
-   * * Transaction is ready to be completed.
-   * */
   TRANSACTION_CONFIRMED,
-  /**
-   * * Transaction has been successfully completed.
-   * */
   TRANSACTION_COMPLETED,
-  /**
-   * * The Transaction has been canceled.
-   * */
   TRANSACTION_CANCELED,
-
-  /**
-   * * Transaction has been successfully closed.
-   * */
   TRANSACTION_CLOSED,
-  /**
-   * * The Transaction ended in an error.
-   * */
   TRANSACTION_ERROR
-} TransactionState;
+};
 
-// Request Type
-typedef enum {
+enum class RequestType {
   NEGOTIATE_FLOWFILE_CODEC = 0,
   REQUEST_PEER_LIST,
   SEND_FLOWFILES,
   RECEIVE_FLOWFILES,
-  SHUTDOWN,
-  MAX_REQUEST_TYPE
-} RequestType;
+  SHUTDOWN
+};
 
-
-// Respond Code
-typedef enum {
+enum class ResponseCode : uint8_t {
   RESERVED = 0,
   // ResponseCode, so that we can indicate a 0 followed by some other bytes
 
@@ -205,46 +151,54 @@ typedef enum {
   ABORT = 250,
   UNRECOGNIZED_RESPONSE_CODE = 254,
   END_OF_STREAM = 255
-}RespondCode;
-
-// Respond Code Class
-typedef struct {
-  RespondCode code;
-  const char *description;
-  bool hasDescription;
-} RespondCodeContext;
-
-
-
-// Request Type Str
-class SiteToSiteRequest {
- public:
-  MINIFIAPI static const char *RequestTypeStr[MAX_REQUEST_TYPE];
-  MINIFIAPI static RespondCodeContext respondCodeContext[21];
 };
 
+struct ResponseCodeContext {
+  ResponseCode code = ResponseCode::UNRECOGNIZED_RESPONSE_CODE;
+  const std::string_view description;
+  bool has_description = false;
+};
 
-// Transaction Class
+static constexpr std::array<ResponseCodeContext, 21> respond_code_contexts = {{
+  { ResponseCode::RESERVED, "Reserved for Future Use", false },
+  { ResponseCode::PROPERTIES_OK, "Properties OK", false },
+  { ResponseCode::UNKNOWN_PROPERTY_NAME, "Unknown Property Name", true },
+  { ResponseCode::ILLEGAL_PROPERTY_VALUE, "Illegal Property Value", true },
+  { ResponseCode::MISSING_PROPERTY, "Missing Property", true },
+  { ResponseCode::CONTINUE_TRANSACTION, "Continue Transaction", false },
+  { ResponseCode::FINISH_TRANSACTION, "Finish Transaction", false },
+  { ResponseCode::CONFIRM_TRANSACTION, "Confirm Transaction", true },
+  { ResponseCode::TRANSACTION_FINISHED, "Transaction Finished", false },
+  { ResponseCode::TRANSACTION_FINISHED_BUT_DESTINATION_FULL, "Transaction Finished But Destination is Full", false },
+  { ResponseCode::CANCEL_TRANSACTION, "Cancel Transaction", true },
+  { ResponseCode::BAD_CHECKSUM, "Bad Checksum", false },
+  { ResponseCode::MORE_DATA, "More Data Exists", false },
+  { ResponseCode::NO_MORE_DATA, "No More Data Exists", false },
+  { ResponseCode::UNKNOWN_PORT, "Unknown Port", false },
+  { ResponseCode::PORT_NOT_IN_VALID_STATE, "Port Not in a Valid State", true },
+  { ResponseCode::PORTS_DESTINATION_FULL, "Port's Destination is Full", false },
+  { ResponseCode::UNAUTHORIZED, "User Not Authorized", true },
+  { ResponseCode::ABORT, "Abort", true },
+  { ResponseCode::UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", false },
+  { ResponseCode::END_OF_STREAM, "End of Stream", false }
+}};
+
 class Transaction {
  public:
-  // Constructor
-  /*!
-   * Create a new transaction
-   */
   explicit Transaction(TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &&stream)
       : closed_(false),
-        crcStream(std::move(stream)),
-        uuid_(id_generator_->generate()) {
-    _state = TRANSACTION_STARTED;
-    _direction = direction;
-    _dataAvailable = false;
+        crc_stream_(std::move(stream)),
+        uuid_(utils::IdGenerator::getIdGenerator()->generate()) {
+    state_ = TransactionState::TRANSACTION_STARTED;
+    direction_ = direction;
+    data_available_ = false;
     current_transfers_ = 0;
     total_transfers_ = 0;
-    _bytes = 0;
+    bytes_ = 0;
   }
-  // Destructor
+
   virtual ~Transaction() = default;
-  // getUUIDStr
+
   utils::SmallString<36> getUUIDStr() const {
     return uuid_.to_string();
   }
@@ -254,91 +208,127 @@ class Transaction {
   }
 
   void setTransactionId(const utils::Identifier& id) {
-    setUUID(id);
-  }
-
-  void setUUID(const utils::Identifier &id) {
     uuid_ = id;
   }
 
-  // getState
-  TransactionState getState() {
-    return _state;
-  }
-  // isDataAvailable
-  bool isDataAvailable() {
-    return _dataAvailable;
-  }
-  // setDataAvailable()
-  void setDataAvailable(bool value) {
-    _dataAvailable = value;
-  }
-  // getDirection
-  TransferDirection getDirection() {
-    return _direction;
-  }
-  // getCRC
-  uint64_t getCRC() {
-    return crcStream.getCRC();
-  }
-  // updateCRC
-  void updateCRC(uint8_t *buffer, uint32_t length) {
-    crcStream.updateCRC(buffer, length);
+  void setState(TransactionState state) {
+    state_ = state;
   }
 
-  org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &getStream() {
-    return crcStream;
+  TransactionState getState() const {
+    return state_;
+  }
+
+  bool isDataAvailable() const {
+    return data_available_;
+  }
+
+  void setDataAvailable(bool value) {
+    data_available_ = value;
+  }
+
+  TransferDirection getDirection() const {
+    return direction_;
+  }
+
+  uint64_t getCRC() const {
+    return crc_stream_.getCRC();
+  }
+
+  void updateCRC(uint8_t *buffer, uint32_t length) {
+    crc_stream_.updateCRC(buffer, length);
+  }
+
+  org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer>& getStream() {
+    return crc_stream_;
+  }
+
+  uint64_t getCurrentTransfers() const {
+    return current_transfers_;
+  }
+
+  uint64_t getTotalTransfers() const {
+    return total_transfers_;
+  }
+
+  uint64_t getBytes() const {
+    return bytes_;
+  }
+
+  void addBytes(uint64_t bytes) {
+    bytes_ += bytes;
+  }
+
+  void incrementCurrentTransfers() {
+    current_transfers_++;
+  }
+
+  void decrementCurrentTransfers() {
+    if (current_transfers_ > 0) {
+      current_transfers_--;
+    }
+  }
+
+  void incrementTotalTransfers() {
+    total_transfers_++;
+  }
+
+  bool isClosed() const {
+    return closed_;
+  }
+
+  void close() {
+    closed_ = true;
   }
 
   Transaction(const Transaction &parent) = delete;
   Transaction &operator=(const Transaction &parent) = delete;
 
-  // Number of current transfers
-  int current_transfers_;
-  // number of total seen transfers
-  int total_transfers_;
-
-  // Number of content bytes
-  uint64_t _bytes;
-
-  // Transaction State
-  TransactionState _state;
-
-  bool closed_;
-
-  // Whether received data is available
-  bool _dataAvailable;
-
  protected:
-  org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcStream;
+  uint64_t current_transfers_;
+  uint64_t total_transfers_;
+  uint64_t bytes_;
+  TransactionState state_;
+  bool closed_;
+  bool data_available_;
+  org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crc_stream_;
 
  private:
-  // Transaction Direction
-  TransferDirection _direction;
-
-  // A global unique identifier
+  TransferDirection direction_;
   utils::Identifier uuid_;
-
-  MINIFIAPI static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 class SiteToSiteClientConfiguration {
  public:
-  SiteToSiteClientConfiguration(const std::shared_ptr<Peer> &peer, const std::string &ifc, CLIENT_TYPE type = RAW)
-      : peer_(peer),
+  SiteToSiteClientConfiguration(const utils::Identifier &port_id, std::string host, uint16_t port, const std::string &ifc, ClientType type)
+      : port_id_(port_id),
+        host_(std::move(host)),
+        port_(port),
         local_network_interface_(ifc),
         ssl_service_(nullptr) {
     client_type_ = type;
   }
 
   SiteToSiteClientConfiguration(const SiteToSiteClientConfiguration &other) = delete;
+  SiteToSiteClientConfiguration &operator=(const SiteToSiteClientConfiguration &other) = delete;
+  SiteToSiteClientConfiguration(SiteToSiteClientConfiguration &&other) = delete;
+  SiteToSiteClientConfiguration &operator=(SiteToSiteClientConfiguration &&other) = delete;
+  ~SiteToSiteClientConfiguration() = default;
 
-  CLIENT_TYPE getClientType() const {
+  ClientType getClientType() const {
     return client_type_;
   }
 
-  const std::shared_ptr<Peer> &getPeer() const {
-    return peer_;
+  const utils::Identifier& getPortId() const {
+    return port_id_;
+  }
+
+  const std::string& getHost() const {
+    return host_;
+  }
+
+  uint16_t getPort() const {
+    return port_;
   }
 
   void setSecurityContext(const std::shared_ptr<controllers::SSLContextService> &ssl_service) {
@@ -357,37 +347,76 @@ class SiteToSiteClientConfiguration {
     return idle_timeout_;
   }
 
-  // setInterface
-  void setInterface(std::string &ifc) {
+  void setInterface(const std::string &ifc) {
     local_network_interface_ = ifc;
   }
+
   std::string getInterface() const {
     return local_network_interface_;
   }
+
   void setHTTPProxy(const http::HTTPProxy &proxy) {
     proxy_ = proxy;
   }
+
   http::HTTPProxy getHTTPProxy() const {
-    return this->proxy_;
+    return proxy_;
   }
 
- protected:
-  std::shared_ptr<Peer> peer_;
+  void setUseCompression(bool use_compression) {
+    use_compression_ = use_compression;
+  }
 
-  CLIENT_TYPE client_type_;
+  bool getUseCompression() const {
+    return use_compression_;
+  }
 
+  void setBatchCount(std::optional<uint64_t> count) {
+    batch_count_ = count;
+  }
+
+  std::optional<uint64_t> getBatchCount() const {
+    return batch_count_;
+  }
+
+  void setBatchSize(std::optional<uint64_t> size) {
+    batch_size_ = size;
+  }
+
+  std::optional<uint64_t> getBatchSize() const {
+    return batch_size_;
+  }
+
+  void setBatchDuration(std::optional<std::chrono::milliseconds> duration) {
+    batch_duration_ = duration;
+  }
+
+  std::optional<std::chrono::milliseconds> getBatchDuration() const {
+    return batch_duration_;
+  }
+
+  void setTimeout(std::optional<std::chrono::milliseconds> timeout) {
+    timeout_ = timeout;
+  }
+
+  std::optional<std::chrono::milliseconds> getTimeout() const {
+    return timeout_;
+  }
+
+ private:
+  utils::Identifier port_id_;
+  std::string host_;
+  uint16_t port_;
+  ClientType client_type_;
   std::string local_network_interface_;
-
   std::chrono::milliseconds idle_timeout_{15000};
-
-  // secore comms
-
   std::shared_ptr<controllers::SSLContextService> ssl_service_;
-
   http::HTTPProxy proxy_;
+  bool use_compression_{false};
+  std::optional<uint64_t> batch_count_;
+  std::optional<uint64_t> batch_size_;
+  std::optional<std::chrono::milliseconds> batch_duration_;
+  std::optional<std::chrono::milliseconds> timeout_;
 };
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic pop
-#endif
 
 }  // namespace org::apache::nifi::minifi::sitetosite

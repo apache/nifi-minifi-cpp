@@ -29,6 +29,8 @@
 #include "range/v3/view/filter.hpp"
 #include "range/v3/view/view.hpp"
 #include "utils/net/DNS.h"
+#include "sitetosite/HttpSiteToSiteClient.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -93,6 +95,25 @@ TransactionResponder::TransactionResponder(std::string base_url, std::string por
 }
 
 bool TransactionResponder::handlePost(CivetServer* /*server*/, struct mg_connection *conn) {
+  auto req_info = mg_get_request_info(conn);
+  std::unordered_map<std::string, std::string> expected_headers {
+    {std::string{minifi::sitetosite::HttpSiteToSiteClient::PROTOCOL_VERSION_HEADER}, "1"},
+    {std::string{minifi::sitetosite::HttpSiteToSiteClient::HANDSHAKE_PROPERTY_USE_COMPRESSION}, "false"},
+    {std::string{minifi::sitetosite::HttpSiteToSiteClient::HANDSHAKE_PROPERTY_REQUEST_EXPIRATION}, "20000"},
+    {std::string{minifi::sitetosite::HttpSiteToSiteClient::HANDSHAKE_PROPERTY_BATCH_COUNT}, "5"},
+    {std::string{minifi::sitetosite::HttpSiteToSiteClient::HANDSHAKE_PROPERTY_BATCH_SIZE}, "100"},
+    {std::string{minifi::sitetosite::HttpSiteToSiteClient::HANDSHAKE_PROPERTY_BATCH_DURATION}, "30000"}
+  };
+  std::unordered_map<std::string, std::string> received_headers;
+  for (int i = 0; i < req_info->num_headers; ++i) {
+    auto header = &req_info->http_headers[i];
+    received_headers[std::string(header->name)] = std::string(header->value);
+  }
+  for (const auto& header : expected_headers) {
+    CHECK(received_headers.contains(header.first));
+    CHECK(received_headers[header.first] == header.second);
+  }
+
   std::string site2site_rest_resp;
   std::stringstream headers;
   headers << "HTTP/1.1 201 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nX-Location-Uri-Intent: ";
@@ -280,7 +301,7 @@ void HeartbeatHandler::verifyJsonHasAgentManifest(const rapidjson::Document& roo
   REQUIRE(manifestHash.length() == 128);
 
   // throws if not a valid hexadecimal hash
-  const auto hashVec = utils::string::from_hex(manifestHash);
+  const auto hashVec = minifi::utils::string::from_hex(manifestHash);
   REQUIRE(hashVec.size() == 64);
 
   for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {
@@ -426,7 +447,7 @@ void HeartbeatHandler::verifySupportedOperations(const rapidjson::Document& root
   for (const auto& operation_node : agent_manifest["supportedOperations"].GetArray()) {
     REQUIRE(operation_node.HasMember("type"));
     operations.insert(operation_node["type"].GetString());
-    verifyProperties(operation_node, utils::enumCast<minifi::c2::Operation>(operation_node["type"].GetString(), true), verify_components, disallowed_properties);
+    verifyProperties(operation_node, minifi::utils::enumCast<minifi::c2::Operation>(operation_node["type"].GetString(), true), verify_components, disallowed_properties);
   }
 
   REQUIRE(operations == std::set<std::string>(magic_enum::enum_names<minifi::c2::Operation>().begin(), magic_enum::enum_names<minifi::c2::Operation>().end()));

@@ -27,15 +27,15 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "RemoteProcessorGroupPort.h"
+#include "RemoteProcessGroupPort.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core::reporting {
 
-class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPort {
+class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessGroupPort {
  public:
   explicit SiteToSiteProvenanceReportingTask(std::shared_ptr<Configure> configure)
-      : minifi::RemoteProcessorGroupPort(ReportTaskName, "", std::move(configure)),
+      : minifi::RemoteProcessGroupPort(ReportTaskName, "", std::move(configure)),
         logger_(logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
     this->setTriggerWhenEmpty(true);
     batch_size_ = 100;

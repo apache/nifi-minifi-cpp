@@ -28,35 +28,28 @@
 
 namespace org::apache::nifi::minifi::sitetosite {
 
-/**
- * Purpose: HTTP Transaction is an implementation that exposes the site to site client.
- * Includes the transaction URL.
- */
-class HttpTransaction : public sitetosite::Transaction {
+class HttpTransaction final : public sitetosite::Transaction {
  public:
   explicit HttpTransaction(sitetosite::TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<sitetosite::SiteToSitePeer> &&stream)
-      : Transaction(direction, std::move(stream)),
-        client_ref_(nullptr) {
+      : Transaction(direction, std::move(stream)) {}
+
+  ~HttpTransaction() override {
+    if (auto stream = dynamic_cast<http::HttpStream*>(dynamic_cast<sitetosite::SiteToSitePeer*>(crc_stream_.getstream())->getStream())) {
+      stream->forceClose();
+    }
   }
 
-  ~HttpTransaction() {
-    auto stream = dynamic_cast<http::HttpStream*>(dynamic_cast<sitetosite::SiteToSitePeer*>(crcStream.getstream())->getStream() );
-  if (stream)
-    stream->forceClose();
-  }
-
-  void initialize(sitetosite::SiteToSiteClient *client, const std::string &url) {
-    client_ref_ = client;
+  void initialize(sitetosite::SiteToSiteClient* client, const std::string &url) {
+    client_ = client;
     transaction_url_ = url;
   }
-
 
   const std::string &getTransactionUrl() {
     return transaction_url_;
   }
 
  protected:
-  sitetosite::SiteToSiteClient *client_ref_;
+  sitetosite::SiteToSiteClient* client_ = nullptr;
   std::string transaction_url_;
 };
 
