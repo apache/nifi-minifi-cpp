@@ -56,7 +56,7 @@ class StructuredConnectionParser {
 
  private:
   void addNewRelationshipToConnection(std::string_view relationship_name, minifi::Connection& connection) const;
-  void addFunnelRelationshipToConnection(minifi::Connection& connection) const;
+  void addFunnelOrPortRelationshipToConnection(minifi::Connection& connection) const;
 
   const Node& connectionNode_;
   const std::string& name_;

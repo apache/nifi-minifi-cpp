@@ -27,7 +27,7 @@
 
 #include "core/Core.h"
 #include "Connection.h"
-#include "RemoteProcessorGroupPort.h"
+#include "RemoteProcessGroupPort.h"
 #include "core/controller/ControllerServiceNode.h"
 #include "core/controller/StandardControllerServiceProvider.h"
 #include "provenance/Provenance.h"

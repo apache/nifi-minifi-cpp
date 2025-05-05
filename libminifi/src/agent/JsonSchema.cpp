@@ -25,7 +25,7 @@
 #include "agent/build_description.h"
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
-#include "RemoteProcessorGroupPort.h"
+#include "RemoteProcessGroupPort.h"
 #include "utils/gsl.h"
 
 #include "range/v3/view/filter.hpp"
@@ -124,11 +124,11 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     all_rels << "\"relationships-" << escape(name) << "\": " << rels << ", ";
   }
 
-  const auto rpg_property_refs = minifi::RemoteProcessorGroupPort::Properties;
+  const auto rpg_property_refs = minifi::RemoteProcessGroupPort::Properties;
   std::vector<core::Property> rpg_properties(rpg_property_refs.begin(), rpg_property_refs.end());
 
   std::stringstream remote_port_props;
-  writeProperties(rpg_properties, minifi::RemoteProcessorGroupPort::SupportsDynamicProperties, remote_port_props);
+  writeProperties(rpg_properties, minifi::RemoteProcessGroupPort::SupportsDynamicProperties, remote_port_props);
 
   std::string process_group_properties = R"(
     "Processors": {
