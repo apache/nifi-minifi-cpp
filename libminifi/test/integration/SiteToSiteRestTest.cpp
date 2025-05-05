@@ -21,13 +21,19 @@
 
 #include "CivetServer.h"
 #include "FlowController.h"
-#include "RemoteProcessorGroupPort.h"
 #include "controllers/SSLContextService.h"
 #include "core/ConfigurableComponentImpl.h"
 #include "core/logging/Logger.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "processors/InvokeHTTP.h"
 #include "unit/TestBase.h"
+#include "core/logging/Logger.h"
+#include "FlowController.h"
+#include "CivetServer.h"
+#include "RemoteProcessGroupPort.h"
+#include "core/ConfigurableComponentImpl.h"
+#include "controllers/SSLContextService.h"
+#include "integration/HTTPIntegrationBase.h"
 #include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -68,7 +74,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
   }
 
   void testSetup() override {
-    LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
+    LogTestController::getInstance().setTrace<minifi::RemoteProcessGroupPort>();
     LogTestController::getInstance().setDebug<minifi::http::HTTPClient>();
     LogTestController::getInstance().setTrace<minifi::controllers::SSLContextServiceInterface>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
@@ -93,7 +99,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
     } else {
       REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "process group remote site2site port 10001, is secure false"));
     }
-    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed "));
+    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "ProcessGroup::refreshRemoteSiteToSiteInfo -- curl_easy_perform() failed "));
   }
 
  protected:

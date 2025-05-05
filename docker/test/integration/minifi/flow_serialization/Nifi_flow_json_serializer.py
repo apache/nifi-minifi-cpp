@@ -19,6 +19,7 @@ import json
 
 from ..core.Processor import Processor
 from ..core.InputPort import InputPort
+from ..core.OutputPort import OutputPort
 
 
 class Nifi_flow_json_serializer:
@@ -103,6 +104,25 @@ class Nifi_flow_json_serializer:
                 "groupIdentifier": "9802c873-3322-3b60-a71d-732d02bd60f8"
             })
 
+        if isinstance(connectable, OutputPort):
+            root['outputPorts'].append({
+                'identifier': str(connectable.uuid),
+                'instanceIdentifier': str(connectable.instance_id),
+                'name': connectable_name_text,
+                "comments": "",
+                'position': {
+                    'x': 0,
+                    'y': 0
+                },
+                'type': 'OUTPUT_PORT',
+                'concurrentlySchedulableTaskCount': 1,
+                'scheduledState': 'RUNNING',
+                'allowRemoteAccess': True,
+                'portFunction': 'STANDARD',
+                'componentType': 'OUTPUT_PORT',
+                "groupIdentifier": "9802c873-3322-3b60-a71d-732d02bd60f8"
+            })
+
         if isinstance(connectable, Processor):
             root['processors'].append({
                 "identifier": str(connectable.uuid),
@@ -175,6 +195,8 @@ class Nifi_flow_json_serializer:
                 source_type = 'PROCESSOR'
             elif isinstance(connectable, InputPort):
                 source_type = 'INPUT_PORT'
+            elif isinstance(connectable, OutputPort):
+                source_type = 'OUTPUT_PORT'
             else:
                 raise Exception('Unexpected source type: %s' % type(connectable))
 
@@ -184,6 +206,8 @@ class Nifi_flow_json_serializer:
                     dest_type = 'PROCESSOR'
                 elif isinstance(proc, InputPort):
                     dest_type = 'INPUT_PORT'
+                elif isinstance(proc, OutputPort):
+                    dest_type = 'OUTPUT_PORT'
                 else:
                     raise Exception('Unexpected destination type: %s' % type(proc))
 
@@ -209,7 +233,7 @@ class Nifi_flow_json_serializer:
                     },
                     "labelIndex": 1,
                     "zIndex": 0,
-                    "selectedRelationships": [conn_name] if not isinstance(connectable, InputPort) else [""],
+                    "selectedRelationships": [conn_name] if not isinstance(connectable, InputPort) and not isinstance(connectable, OutputPort) else [""],
                     "backPressureObjectThreshold": 10,
                     "backPressureDataSizeThreshold": "50 B",
                     "flowFileExpiration": "0 sec",

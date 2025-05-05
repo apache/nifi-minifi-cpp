@@ -100,6 +100,10 @@ The next table outlines CMAKE flags that correspond with MiNiFi extensions. Exte
 
  Please see our [Python guide](extensions/python/PYTHON.md) on how to write Python processors and use them within MiNiFi C++.
 
+### Site-to-Site communication
+
+Communicating with Apache NiFi can be done using the Site-to-Site protocol. More information on configuring it in MiNiFi C++ can be found in the [Site-to-Site documentation](SITE_TO_SITE.md).
+
 ## Caveats
 * We follow semver with regards to API compatibility, but no ABI compatibility is provided. See [semver's website](https://semver.org/) for more information
 * Build and usage currently only supports Windows, Linux and macOS environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
