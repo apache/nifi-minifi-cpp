@@ -59,6 +59,8 @@ class AssetManager {
 
   std::filesystem::path getRoot() const;
 
+  std::optional<std::filesystem::path> findAssetById(const std::string& id) const;
+
  private:
   void refreshState();
 

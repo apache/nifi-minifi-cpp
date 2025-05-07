@@ -39,6 +39,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessGroup.h"
 #include "core/state/nodes/FlowInformation.h"
+#include "utils/file/AssetManager.h"
 #include "utils/file/FileSystem.h"
 #include "utils/ChecksumCalculator.h"
 #include "ParameterContext.h"
@@ -61,6 +62,7 @@ struct ConfigurationContext {
   std::optional<std::filesystem::path> path{std::nullopt};
   std::shared_ptr<utils::file::FileSystem> filesystem{std::make_shared<utils::file::FileSystem>()};
   std::optional<utils::crypto::EncryptionProvider> sensitive_values_encryptor{std::nullopt};
+  utils::file::AssetManager* asset_manager{nullptr};
 };
 
 enum class FlowSerializationType { Json, NifiJson, Yaml };
@@ -153,6 +155,7 @@ class FlowConfiguration : public CoreComponentImpl {
   std::shared_ptr<utils::file::FileSystem> filesystem_;
   utils::crypto::EncryptionProvider sensitive_values_encryptor_;
   utils::ChecksumCalculator checksum_calculator_;
+  utils::file::AssetManager* asset_manager_{nullptr};
 
  private:
   virtual std::string serialize(const ProcessGroup&) { return ""; }

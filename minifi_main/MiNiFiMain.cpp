@@ -394,6 +394,8 @@ int main(int argc, char **argv) {
         should_encrypt_flow_config,
         utils::crypto::EncryptionProvider::create(minifiHome));
 
+    auto asset_manager = std::make_unique<utils::file::AssetManager>(*configure);
+
     std::shared_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
         core::ConfigurationContext{
           .flow_file_repo = flow_repo,
@@ -401,10 +403,9 @@ int main(int argc, char **argv) {
           .configuration = configure,
           .path = configure->get(minifi::Configure::nifi_flow_configuration_file),
           .filesystem = filesystem,
-          .sensitive_values_encryptor = utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(minifiHome)
+          .sensitive_values_encryptor = utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(minifiHome),
+          .asset_manager = asset_manager.get()
       }, nifi_configuration_class_name);
-
-    auto asset_manager = std::make_unique<utils::file::AssetManager>(*configure);
 
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, flow_repo, content_repo};
     auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration, asset_manager.get());
