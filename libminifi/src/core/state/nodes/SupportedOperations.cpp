@@ -39,24 +39,11 @@ std::string SupportedOperations::getName() const {
 }
 
 void SupportedOperations::addProperty(SerializedResponseNode& properties, const std::string& operand, const Metadata& metadata) {
-  SerializedResponseNode operand_node{.name = operand, .keep_empty = true};
-
-  for (const auto& [key, value_array] : metadata) {
-    SerializedResponseNode metadata_item{.name = key, .array = true};
-    for (const auto& value_object : value_array) {
-      SerializedResponseNode value_child;
-      for (const auto& pair: value_object) {
-        value_child.children.push_back({.name = pair.first, .value = pair.second});
-      }
-      metadata_item.children.push_back(value_child);
-    }
-    operand_node.children.push_back(metadata_item);
-  }
-  properties.children.push_back(operand_node);
+  properties.children.push_back(SerializedResponseNode{.name = operand, .keep_empty = true, .children = metadata});
 }
 
 SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata() const {
-  std::vector<std::unordered_map<std::string, std::string>> supported_config_updates;
+  SerializedResponseNode supported_config_updates{.name = "availableProperties", .array = true};
   auto sensitive_properties = Configuration::getSensitiveProperties(configuration_reader_);
   auto updatable_not_sensitive_configuration_properties = minifi::Configuration::CONFIGURATION_PROPERTIES | ranges::views::filter([&](const auto& configuration_property) {
     const auto& configuration_property_name = configuration_property.first;
@@ -65,19 +52,17 @@ SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata
   });
 
   for (const auto& [config_property_name, config_property_validator] : updatable_not_sensitive_configuration_properties) {
-    std::unordered_map<std::string, std::string> property;
-    property.emplace("propertyName", config_property_name);
-    property.emplace("validator", config_property_validator->getEquivalentNifiStandardValidatorName().value_or("VALID"));
+    SerializedResponseNode property;
+    property.children.push_back({.name = "propertyName", .value = std::string{config_property_name}});
+    property.children.push_back({.name = "validator", .value = std::string{config_property_validator->getEquivalentNifiStandardValidatorName().value_or("VALID")}});
     if (configuration_reader_) {
       if (auto property_value = configuration_reader_(std::string(config_property_name))) {
-        property.emplace("propertyValue", *property_value);
+        property.children.push_back({.name = "propertyValue", .value = *property_value});
       }
     }
-    supported_config_updates.push_back(property);
+    supported_config_updates.children.push_back(property);
   }
-  Metadata available_properties;
-  available_properties.emplace("availableProperties", supported_config_updates);
-  return available_properties;
+  return {supported_config_updates};
 }
 
 void SupportedOperations::fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const {
@@ -111,7 +96,9 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
       break;
     }
     case minifi::c2::Operation::sync: {
-      serializeProperty<minifi::c2::SyncOperand>(properties);
+      std::unordered_map<std::string, Metadata> operand_with_metadata;
+      operand_with_metadata.emplace("resource", Metadata{SerializedResponseNode{.name = "resolveAssetReferences", .value = true}});
+      serializeProperty<minifi::c2::SyncOperand>(properties, operand_with_metadata);
       break;
     }
     default:

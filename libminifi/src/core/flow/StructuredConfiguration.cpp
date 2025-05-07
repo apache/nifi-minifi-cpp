@@ -25,6 +25,7 @@
 #include "Funnel.h"
 #include "core/ParameterContext.h"
 #include "core/ParameterTokenParser.h"
+#include "core/ReferenceParser.h"
 #include "core/flow/CheckRequiredField.h"
 #include "core/flow/StructuredConnectionParser.h"
 #include "core/state/Value.h"
@@ -761,6 +762,10 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   }
 }
 
+static std::string resolveAssetReferences(std::string_view str, utils::file::AssetManager *asset_manager) {
+  return resolveIdentifier(str, {getAssetResolver(asset_manager)});
+}
+
 void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component,
     ParameterContext* parameter_context) {
   const bool is_sensitive = component.getSupportedProperty(property_name)
@@ -783,6 +788,13 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
         rawValueString = token_parser->replaceParameters(parameter_context);
       } catch (const ParameterException& e) {
         logger_->log_error("Error while substituting parameters in property '{}': {}", property_name, e.what());
+        throw;
+      }
+
+      try {
+        rawValueString = resolveAssetReferences(rawValueString, asset_manager_);
+      } catch (const AssetException& e) {
+        logger_->log_error("Error while resolving asset in property '{}': {}", property_name, e.what());
         throw;
       }
 
@@ -825,12 +837,16 @@ std::optional<std::string> StructuredConfiguration::getReplacedParametersValueOr
       token_parser = std::make_unique<core::NonSensitiveParameterTokenParser>(std::move(property_value_string));
     }
     auto replaced_property_value_string = token_parser->replaceParameters(parameter_context);
+    replaced_property_value_string = resolveAssetReferences(replaced_property_value_string, asset_manager_);
     return replaced_property_value_string;
   } catch (const utils::crypto::EncryptionError& e) {
     logger_->log_error("Fetching property failed with a decryption error: {}", e.what());
     throw;
   } catch (const ParameterException& e) {
     logger_->log_error("Error while substituting parameters in property '{}': {}", property_name, e.what());
+    throw;
+  } catch (const AssetException& e) {
+    logger_->log_error("Error while resolving asset in property '{}': {}", property_name, e.what());
     throw;
   } catch (const std::exception& e) {
     logger_->log_error("Fetching property failed with an exception of {}", e.what());

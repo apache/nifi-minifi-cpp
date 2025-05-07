@@ -187,4 +187,14 @@ std::filesystem::path AssetManager::getRoot() const {
   return root_;
 }
 
+std::optional<std::filesystem::path> AssetManager::findAssetById(std::string_view id) const {
+  std::lock_guard lock(mtx_);
+  for (auto& asset : state_.assets) {
+    if (asset.id == id) {
+      return root_ / asset.path;
+    }
+  }
+  return std::nullopt;
+}
+
 }  // namespace org::apache::nifi::minifi::utils::file
