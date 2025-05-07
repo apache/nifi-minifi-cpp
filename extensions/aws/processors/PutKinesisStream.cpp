@@ -26,6 +26,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "range/v3/view.hpp"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -52,25 +53,27 @@ void PutKinesisStream::onSchedule(core::ProcessContext& context, core::ProcessSe
   endpoint_override_url_ = context.getProperty(EndpointOverrideURL.name) | minifi::utils::toOptional();
 }
 
-struct StreamBatch {
-  uint64_t batch_size = 0;
-  std::vector<std::shared_ptr<core::FlowFile>> flow_files;
-};
-
-void PutKinesisStream::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  logger_->log_trace("PutKinesisStream onTrigger");
-
-  constexpr uint64_t SINGLE_RECORD_MAX_SIZE = 1_MB;
-  std::unordered_map<std::string, StreamBatch> stream_batches;
-  auto credentials = getAWSCredentials(context, nullptr);
-
-  if (!credentials) {
-    logger_->log_error("Failed to get credentials for PutKinesisStream");
-    context.yield();
-    return;
+nonstd::expected<Aws::Kinesis::Model::PutRecordsRequestEntry, PutKinesisStream::BatchItemError> PutKinesisStream::createEntryFromFlowFile(const core::ProcessContext& context,
+    core::ProcessSession& session,
+    const std::shared_ptr<core::FlowFile>& flow_file) const {
+  Aws::Kinesis::Model::PutRecordsRequestEntry entry;
+  const auto partition_key = context.getProperty(AmazonKinesisStreamPartitionKey.name, flow_file.get()) | minifi::utils::valueOrElse([&flow_file] { return flow_file->getUUID().to_string(); });
+  entry.SetPartitionKey(partition_key);
+  const auto [status, buffer] = session.readBuffer(flow_file);
+  if (io::isError(status)) {
+    logger_->log_error("Couldn't read content from {}", flow_file->getUUIDStr());
+    return nonstd::make_unexpected(BatchItemError{.error_message = "Failed to read content", .error_code = std::nullopt});
   }
+  Aws::Utils::ByteBuffer aws_buffer(reinterpret_cast<const unsigned char*>(buffer.data()), buffer.size());
+  entry.SetData(aws_buffer);
+  return entry;
+}
 
-  for (uint64_t i = 0; i < batch_size_; i++) {
+std::unordered_map<std::string, PutKinesisStream::StreamBatch> PutKinesisStream::createStreamBatches(const core::ProcessContext& context, core::ProcessSession& session) const {
+  static constexpr uint64_t SINGLE_RECORD_MAX_SIZE = 1_MB;
+  std::unordered_map<std::string, StreamBatch> stream_batches;
+  uint64_t ff_count_in_batches = 0;
+  while (ff_count_in_batches < batch_size_) {
     std::shared_ptr<core::FlowFile> flow_file = session.get();
     if (!flow_file) { break; }
     const auto flow_file_size = flow_file->getSize();
@@ -84,69 +87,97 @@ void PutKinesisStream::onTrigger(core::ProcessContext& context, core::ProcessSes
     auto stream_name = context.getProperty(AmazonKinesisStreamName.name, flow_file.get());
     if (!stream_name) {
       logger_->log_error("Stream name is invalid due to {}", stream_name.error().message());
+      flow_file->setAttribute(AwsKinesisErrorMessage.name, fmt::format("Stream name is invalid due to {}", stream_name.error().message()));
       session.transfer(flow_file, Failure);
       continue;
     }
-    auto partition_key = context.getProperty(AmazonKinesisStreamPartitionKey.name, flow_file.get())
-        | minifi::utils::valueOrElse([&flow_file]() -> std::string { return flow_file->getUUID().to_string(); });
 
-    stream_batches[*stream_name].flow_files.push_back(std::move(flow_file));
+    auto entry = createEntryFromFlowFile(context, session, flow_file);
+    if (!entry) {
+      flow_file->addAttribute(AwsKinesisErrorMessage.name, entry.error().error_message);
+      if (entry.error().error_code) {
+        flow_file->addAttribute(AwsKinesisErrorCode.name, *entry.error().error_code);
+      }
+      session.transfer(flow_file, Failure);
+      continue;
+    }
+
+    auto [stream_batch, newly_created] = stream_batches.emplace(*stream_name, StreamBatch{});
+    if (newly_created) {
+      stream_batch->second.request.SetStreamName(*stream_name);
+    }
+    stream_batch->second.request.AddRecords(*entry);
+    stream_batch->second.items.push_back(BatchItem{.flow_file = std::move(flow_file), .error = std::nullopt});
     stream_batches[*stream_name].batch_size += flow_file_size;
+    ++ff_count_in_batches;
 
     if (stream_batches[*stream_name].batch_size > batch_data_size_soft_cap_) {
       break;
     }
   }
+  return stream_batches;
+}
 
-  std::unique_ptr<Aws::Kinesis::KinesisClient> kinesis_client = getClient(*credentials);
+void PutKinesisStream::processBatch(core::ProcessSession& session, StreamBatch& stream_batch, const Aws::Kinesis::KinesisClient& client) const {
+  const auto put_record_result = client.PutRecords(stream_batch.request);
 
-  for (const auto& [stream_name, stream_batch]: stream_batches) {
-    Aws::Kinesis::Model::PutRecordsRequest request;
-    request.SetStreamName(stream_name);
-    Aws::Vector<Aws::Kinesis::Model::PutRecordsRequestEntry> records;
-    for (const auto& flow_file : stream_batch.flow_files) {
-      Aws::Kinesis::Model::PutRecordsRequestEntry entry;
-      const auto partition_key = context.getProperty(AmazonKinesisStreamPartitionKey.name, flow_file.get()) | minifi::utils::valueOrElse([&flow_file] { return flow_file->getUUID().to_string(); });
-      entry.SetPartitionKey(partition_key);
-      const auto [status, buffer] = session.readBuffer(flow_file);
-      Aws::Utils::ByteBuffer aws_buffer(reinterpret_cast<const unsigned char*>(buffer.data()), buffer.size());
-      entry.SetData(aws_buffer);
-      records.push_back(entry);
+  if (!put_record_result.IsSuccess()) {
+    for (auto& [flow_file, error] : stream_batch.items) {
+      error = BatchItemError{.error_message = put_record_result.GetError().GetMessage(), .error_code = std::to_string(static_cast<int>(put_record_result.GetError().GetErrorType()))};
     }
-    request.SetRecords(records);
+    return;
+  }
 
-    const auto outcome = kinesis_client->PutRecords(request);
+  const auto result_records = put_record_result.GetResult().GetRecords();
+  if (result_records.size() != stream_batch.items.size()) {
+    logger_->log_critical("PutKinesisStream record size ({}) and result size ({}) mismatch in {} cannot tell which record succeeded and which didnt",
+        stream_batch.items.size(), result_records.size(), stream_batch.request.GetStreamName());
+    for (auto& [flow_file, error] : stream_batch.items) {
+      error = std::make_optional(BatchItemError{.error_message = "Record size mismatch", .error_code = std::nullopt});
+    }
+    return;
+  }
 
-    if (!outcome.IsSuccess()) {
-      for (const auto& flow_file : stream_batch.flow_files) {
-        flow_file->addAttribute(AwsKinesisErrorMessage.name, outcome.GetError().GetMessage());
-        flow_file->addAttribute(AwsKinesisErrorCode.name, std::to_string(static_cast<int>(outcome.GetError().GetErrorType())));
-        session.transfer(flow_file, Failure);
+  for (uint64_t i = 0; i < result_records.size(); i++) {
+    auto& [flow_file, error] = stream_batch.items[i];
+    const auto& result_record = result_records[i];
+    if (!result_record.GetErrorCode().empty()) {
+      error = std::make_optional(BatchItemError{.error_message = result_record.GetErrorMessage(), .error_code = result_record.GetErrorCode()});
+    }
+
+    if (error.has_value()) {
+      flow_file->addAttribute(AwsKinesisErrorMessage.name, error->error_message);
+      if (error->error_code) {
+        flow_file->addAttribute(AwsKinesisErrorCode.name, *error->error_code);
       }
+      session.transfer(flow_file, Failure);
     } else {
-      const auto result_records = outcome.GetResult().GetRecords();
-      if (result_records.size() != stream_batch.flow_files.size()) {
-        logger_->log_critical("PutKinesisStream record size mismatch cannot tell which record succeeded and which didnt");
-        for (const auto& flow_file : stream_batch.flow_files) {
-          flow_file->addAttribute(AwsKinesisErrorMessage.name, "Record size mismatch");
-          session.transfer(flow_file, Failure);
-        }
-        continue;
-      }
-      for (uint64_t i = 0; i < stream_batch.flow_files.size(); i++) {
-        const auto& flow_file = stream_batch.flow_files[i];
-        const auto& result_record = result_records[i];
-        if (result_record.GetErrorCode().empty()) {
-          flow_file->addAttribute(AwsKinesisShardId.name, result_record.GetShardId());
-          flow_file->addAttribute(AwsKinesisSequenceNumber.name, result_record.GetSequenceNumber());
-          session.transfer(flow_file, Success);
-        } else {
-          flow_file->addAttribute(AwsKinesisErrorMessage.name, result_record.GetErrorMessage());
-          flow_file->addAttribute(AwsKinesisErrorCode.name, result_record.GetErrorCode());
-          session.transfer(flow_file, Failure);
-        }
-      }
+      flow_file->addAttribute(AwsKinesisShardId.name, result_record.GetShardId());
+      flow_file->addAttribute(AwsKinesisSequenceNumber.name, result_record.GetSequenceNumber());
+      session.transfer(flow_file, Success);
     }
+  }
+}
+
+void PutKinesisStream::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  logger_->log_trace("PutKinesisStream onTrigger");
+
+  const auto credentials = getAWSCredentials(context, nullptr);
+  if (!credentials) {
+    logger_->log_error("Failed to get credentials for PutKinesisStream");
+    context.yield();
+    return;
+  }
+
+  auto stream_batches = createStreamBatches(context, session);
+  if (stream_batches.empty()) {
+    context.yield();
+    return;
+  }
+  const auto kinesis_client = getClient(*credentials);
+
+  for (auto& [stream_name, stream_batch]: stream_batches) {
+    processBatch(session, stream_batch, *kinesis_client);
   }
 }
 

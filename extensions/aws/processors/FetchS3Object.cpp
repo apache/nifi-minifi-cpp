@@ -1,6 +1,4 @@
 /**
- * @file FetchS3Object.cpp
- * FetchS3Object class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

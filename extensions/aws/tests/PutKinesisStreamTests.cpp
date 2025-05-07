@@ -75,7 +75,7 @@ TEST_CASE("PutKinesisStream simple happy path") {
 
   const auto result = controller.trigger({{.content = "foo"}, {.content = "bar"}});
   CHECK(result.at(PutKinesisStream::Failure).empty());
-  CHECK(result.at(PutKinesisStream::Success).size() == 2);
+  REQUIRE(result.at(PutKinesisStream::Success).size() == 2);
   const auto res_ff_1 = result.at(PutKinesisStream::Success).at(0);
   const auto res_ff_2 = result.at(PutKinesisStream::Success).at(1);
 
@@ -140,7 +140,10 @@ TEST_CASE("PutKinesisStream max batch data size fills up") {
     {.content = "bibendum"},
     {.content = "luctus"}});
 
-  CHECK(result.at(PutKinesisStream::Success).size() == 3);
+  REQUIRE(result.at(PutKinesisStream::Success).size() == 3);
+  CHECK(controller.plan->getContent(result.at(PutKinesisStream::Success).at(0)) == "Lorem");
+  CHECK(controller.plan->getContent(result.at(PutKinesisStream::Success).at(1)) == "ipsum");
+  CHECK(controller.plan->getContent(result.at(PutKinesisStream::Success).at(2)) == "dolor");
 }
 
 TEST_CASE("PutKinesisStream max batch data size to different streams") {
@@ -148,7 +151,6 @@ TEST_CASE("PutKinesisStream max batch data size to different streams") {
   auto put_kinesis_stream = controller.getProcessor();
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
-  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AmazonKinesisStreamName, "stream_name");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::MessageBatchSize, "10");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::MaxBatchDataSize, "12 B");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AmazonKinesisStreamName, "${stream_name}");
@@ -181,7 +183,7 @@ TEST_CASE("PutKinesisStream with too large message") {
 
   std::string too_large_msg((1_MB + 10), 'x');
   const auto result = controller.trigger(too_large_msg);
-  CHECK(result.at(PutKinesisStream::Failure).size() == 1);
+  REQUIRE(result.at(PutKinesisStream::Failure).size() == 1);
   CHECK(result.at(PutKinesisStream::Success).empty());
 
   const auto res_ff_1 = result.at(PutKinesisStream::Failure).at(0);

@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <aws/kinesis/model/PutRecordsRequest.h>
 
 #include <memory>
 #include <optional>
@@ -25,10 +26,10 @@
 #include <utility>
 
 #include "S3Processor.h"
+#include "aws/kinesis/KinesisClient.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/ArrayUtils.h"
-#include "aws/kinesis/KinesisClient.h"
-
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
 
@@ -73,9 +74,13 @@ class PutKinesisStream : public AwsProcessor {
     "Sequence number for the message when posting to AWS Kinesis"};
   EXTENSIONAPI static constexpr auto AwsKinesisShardId = core::OutputAttributeDefinition<>{"aws.kinesis.shard.id", { Success },
     "Shard id of the message posted to AWS Kinesis"};
-  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 4>{AwsKinesisErrorMessage, AwsKinesisErrorCode, AwsKinesisSequenceNumber, AwsKinesisShardId};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::to_array<core::OutputAttributeReference>({
+    AwsKinesisErrorMessage,
+    AwsKinesisErrorCode,
+    AwsKinesisSequenceNumber,
+    AwsKinesisShardId});
 
-  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr auto InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
@@ -85,7 +90,10 @@ class PutKinesisStream : public AwsProcessor {
   explicit PutKinesisStream(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : AwsProcessor(name, uuid, core::logging::LoggerFactory<PutKinesisStream>::getLogger(uuid)) {
   }
-
+  PutKinesisStream(const PutKinesisStream&) = delete;
+  PutKinesisStream(PutKinesisStream&&) = delete;
+  PutKinesisStream& operator=(const PutKinesisStream&) = delete;
+  PutKinesisStream& operator=(PutKinesisStream&&) = delete;
   ~PutKinesisStream() override = default;
 
   void initialize() override;
@@ -96,6 +104,27 @@ class PutKinesisStream : public AwsProcessor {
   virtual std::unique_ptr<Aws::Kinesis::KinesisClient> getClient(const Aws::Auth::AWSCredentials& credentials);
 
  private:
+  struct BatchItemError {
+    std::string error_message;
+    std::optional<std::string> error_code;
+  };
+  struct BatchItem {
+    std::shared_ptr<core::FlowFile> flow_file;
+    std::optional<BatchItemError> error;
+  };
+  struct StreamBatch {
+    uint64_t batch_size = 0;
+    std::vector<BatchItem> items;
+    Aws::Kinesis::Model::PutRecordsRequest request;
+  };
+
+  nonstd::expected<Aws::Kinesis::Model::PutRecordsRequestEntry, BatchItemError> createEntryFromFlowFile(const core::ProcessContext& context,
+      core::ProcessSession& session,
+      const std::shared_ptr<core::FlowFile>& flow_file) const;
+
+  std::unordered_map<std::string, StreamBatch> createStreamBatches(const core::ProcessContext& context, core::ProcessSession& session) const;
+  void processBatch(core::ProcessSession& session, StreamBatch& stream_batch, const Aws::Kinesis::KinesisClient& client) const;
+
   uint64_t batch_size_ = 250;
   uint64_t batch_data_size_soft_cap_ = 1_MB;
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();

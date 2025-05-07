@@ -40,7 +40,7 @@ endif()
 get_target_property(AWS_SDK_S3_INCLUDE_DIRS AWS::aws-cpp-sdk-s3 INTERFACE_INCLUDE_DIRECTORIES)
 get_target_property(AWS_SDK_KINESIS_INCLUDE_DIRS AWS::aws-cpp-sdk-kinesis INTERFACE_INCLUDE_DIRECTORIES)
 
-target_include_directories(minifi-aws INTERFACE ${AWS_SDK_INCLUDE_DIRS})
+target_include_directories(minifi-aws INTERFACE ${AWS_SDK_S3_INCLUDE_DIRS})
 target_include_directories(minifi-aws INTERFACE ${AWS_SDK_KINESIS_INCLUDE_DIRS})
 
 if(WIN32)

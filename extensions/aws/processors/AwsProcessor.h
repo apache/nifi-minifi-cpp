@@ -1,6 +1,4 @@
 /**
- * @file S3Processor.h
- * Base S3 processor class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -130,6 +128,7 @@ class AwsProcessor : public core::ProcessorImpl {
           "port, and path. The AWS libraries select an endpoint URL based on the AWS "
           "region, but this property overrides the selected endpoint URL, allowing use "
           "with other S3-compatible endpoints.")
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
