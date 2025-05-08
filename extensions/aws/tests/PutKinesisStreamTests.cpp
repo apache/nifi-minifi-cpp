@@ -28,17 +28,57 @@
 namespace org::apache::nifi::minifi::aws::processors::test {
 
 class MockKinesisClient final : public Aws::Kinesis::KinesisClient {
+ public:
+  enum class KinesisBehaviour {
+    HappyPath,
+    Failure,
+    RecordSizeMismatch,
+    OddsFail,
+  };
+
   Aws::Kinesis::Model::PutRecordsOutcome PutRecords(const Aws::Kinesis::Model::PutRecordsRequest& request) const override {
-    Aws::Kinesis::Model::PutRecordsResult result;
-    for ([[maybe_unused]] const auto& request_entry : request.GetRecords()) {
-      Aws::Kinesis::Model::PutRecordsResultEntry result_entry;
-      result_entry.SetSequenceNumber(fmt::format("sequence_number_{}", ++sequence_number_));
-      result_entry.SetShardId("shard_id");
-      result.AddRecords(result_entry);
+    switch (behaviour_) {
+      case KinesisBehaviour::HappyPath: {
+        Aws::Kinesis::Model::PutRecordsResult result;
+        for ([[maybe_unused]] const auto& request_entry : request.GetRecords()) {
+          Aws::Kinesis::Model::PutRecordsResultEntry result_entry;
+          result_entry.SetSequenceNumber(fmt::format("sequence_number_{}", ++sequence_number_));
+          result_entry.SetShardId("shard_id");
+          result.AddRecords(result_entry);
+        }
+        return result;
+      }
+      case KinesisBehaviour::Failure: {
+        auto err = Aws::Kinesis::KinesisError();
+        err.SetResponseCode(Aws::Http::HttpResponseCode::UNAUTHORIZED);
+        err.SetMessage("Unauthorized");
+        return err;
+      }
+      case KinesisBehaviour::RecordSizeMismatch: {
+        Aws::Kinesis::Model::PutRecordsResult result;
+        return result;
+      }
+      case KinesisBehaviour::OddsFail: {
+        Aws::Kinesis::Model::PutRecordsResult result;
+        uint8_t i = 0;
+        for ([[maybe_unused]] const auto& request_entry : request.GetRecords()) {
+          Aws::Kinesis::Model::PutRecordsResultEntry result_entry;
+          if (++i%2 == 0) {
+            result_entry.SetErrorCode("8");
+            result_entry.SetErrorMessage("Some error message");
+          } else {
+            result_entry.SetSequenceNumber(fmt::format("sequence_number_{}", ++sequence_number_));
+            result_entry.SetShardId("shard_id");
+          }
+          result.AddRecords(result_entry);
+        }
+        return result;
+      }
+      default: { throw std::invalid_argument("Unknown behaviour"); }
     }
-    return result;
   }
 
+  KinesisBehaviour behaviour_ = KinesisBehaviour::HappyPath;
   mutable uint32_t sequence_number_ = 0;
 };
 
@@ -60,10 +100,91 @@ class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   std::unique_ptr<Aws::Kinesis::KinesisClient> getClient(const Aws::Auth::AWSCredentials&) override {
-    return std::make_unique<MockKinesisClient>();
+    auto client = std::make_unique<MockKinesisClient>();
+    client->behaviour_ = behaviour_;
+    return client;
   }
+
+  MockKinesisClient::KinesisBehaviour behaviour_ = MockKinesisClient::KinesisBehaviour::HappyPath;
 };
 REGISTER_RESOURCE(PutKinesisStreamMocked, Processor);
+
+TEST_CASE("PutKinesisStream record size mismatch path") {
+  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
+  auto put_kinesis_stream = dynamic_cast<PutKinesisStreamMocked*>(controller.getProcessor());
+  REQUIRE(put_kinesis_stream);
+  put_kinesis_stream->behaviour_ = MockKinesisClient::KinesisBehaviour::RecordSizeMismatch;
+
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AmazonKinesisStreamName, "stream_name");
+
+
+  const auto result = controller.trigger({{.content = "foo"}, {.content = "bar"}});
+  CHECK(result.at(PutKinesisStream::Success).empty());
+  REQUIRE(result.at(PutKinesisStream::Failure).size() == 2);
+  const auto res_ff_1 = result.at(PutKinesisStream::Failure).at(0);
+  const auto res_ff_2 = result.at(PutKinesisStream::Failure).at(1);
+
+  CHECK(controller.plan->getContent(res_ff_1) == "foo");
+  CHECK(controller.plan->getContent(res_ff_2) == "bar");
+
+  CHECK(res_ff_1->getAttribute(PutKinesisStream::AwsKinesisErrorMessage.name) == "Record size mismatch");
+  CHECK(res_ff_2->getAttribute(PutKinesisStream::AwsKinesisErrorMessage.name) == "Record size mismatch");
+}
+
+TEST_CASE("PutKinesisStream record size failure path") {
+  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
+  auto put_kinesis_stream = dynamic_cast<PutKinesisStreamMocked*>(controller.getProcessor());
+  REQUIRE(put_kinesis_stream);
+  put_kinesis_stream->behaviour_ = MockKinesisClient::KinesisBehaviour::Failure;
+
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AmazonKinesisStreamName, "stream_name");
+
+
+  const auto result = controller.trigger({{.content = "foo"}, {.content = "bar"}});
+  CHECK(result.at(PutKinesisStream::Success).empty());
+  REQUIRE(result.at(PutKinesisStream::Failure).size() == 2);
+  const auto res_ff_1 = result.at(PutKinesisStream::Failure).at(0);
+  const auto res_ff_2 = result.at(PutKinesisStream::Failure).at(1);
+
+  CHECK(controller.plan->getContent(res_ff_1) == "foo");
+  CHECK(controller.plan->getContent(res_ff_2) == "bar");
+
+  CHECK(res_ff_1->getAttribute(PutKinesisStream::AwsKinesisErrorMessage.name) == "Unauthorized");
+  CHECK(res_ff_1->getAttribute(PutKinesisStream::AwsKinesisErrorCode.name) == "401");
+  CHECK(res_ff_2->getAttribute(PutKinesisStream::AwsKinesisErrorCode.name) == "401");
+  CHECK(res_ff_2->getAttribute(PutKinesisStream::AwsKinesisErrorMessage.name) == "Unauthorized");
+}
+
+TEST_CASE("PutKinesisStream partial failure path") {
+  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
+  auto put_kinesis_stream = dynamic_cast<PutKinesisStreamMocked*>(controller.getProcessor());
+  REQUIRE(put_kinesis_stream);
+  put_kinesis_stream->behaviour_ = MockKinesisClient::KinesisBehaviour::OddsFail;
+
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
+  controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AmazonKinesisStreamName, "stream_name");
+
+
+  const auto result = controller.trigger({{.content = "foo"}, {.content = "bar"}});
+  REQUIRE(result.at(PutKinesisStream::Success).size() == 1);
+  REQUIRE(result.at(PutKinesisStream::Failure).size() == 1);
+  const auto succ_ff = result.at(PutKinesisStream::Success).at(0);
+  const auto fail_ff = result.at(PutKinesisStream::Failure).at(0);
+
+  CHECK(controller.plan->getContent(succ_ff) == "foo");
+  CHECK(controller.plan->getContent(fail_ff) == "bar");
+
+  CHECK(succ_ff->getAttribute(PutKinesisStream::AwsKinesisSequenceNumber.name) == "sequence_number_1");
+  CHECK(succ_ff->getAttribute(PutKinesisStream::AwsKinesisShardId.name) == "shard_id");
+  CHECK(fail_ff->getAttribute(PutKinesisStream::AwsKinesisErrorCode.name) == "8");
+  CHECK(fail_ff->getAttribute(PutKinesisStream::AwsKinesisErrorMessage.name) == "Some error message");
+}
+
 
 TEST_CASE("PutKinesisStream simple happy path") {
   minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));

@@ -121,9 +121,21 @@ std::unordered_map<std::string, PutKinesisStream::StreamBatch> PutKinesisStream:
 void PutKinesisStream::processBatch(core::ProcessSession& session, StreamBatch& stream_batch, const Aws::Kinesis::KinesisClient& client) const {
   const auto put_record_result = client.PutRecords(stream_batch.request);
 
+  auto transfer_failed_flow_files = gsl::finally([&] {
+    for (auto& [flow_file, error] : stream_batch.items) {
+      if (error) {
+        flow_file->addAttribute(AwsKinesisErrorMessage.name, error->error_message);
+        if (error->error_code) {
+          flow_file->addAttribute(AwsKinesisErrorCode.name, *(error->error_code));
+        }
+        session.transfer(flow_file, Failure);
+      }
+    }
+  });
+
   if (!put_record_result.IsSuccess()) {
     for (auto& [flow_file, error] : stream_batch.items) {
-      error = BatchItemError{.error_message = put_record_result.GetError().GetMessage(), .error_code = std::to_string(static_cast<int>(put_record_result.GetError().GetErrorType()))};
+      error = BatchItemError{.error_message = put_record_result.GetError().GetMessage(), .error_code = std::to_string(static_cast<int>(put_record_result.GetError().GetResponseCode()))};
     }
     return;
   }
@@ -138,20 +150,14 @@ void PutKinesisStream::processBatch(core::ProcessSession& session, StreamBatch& 
     return;
   }
 
-  for (uint64_t i = 0; i < result_records.size(); i++) {
+  for (uint64_t i = 0; i < stream_batch.items.size(); i++) {
     auto& [flow_file, error] = stream_batch.items[i];
     const auto& result_record = result_records[i];
     if (!result_record.GetErrorCode().empty()) {
       error = std::make_optional(BatchItemError{.error_message = result_record.GetErrorMessage(), .error_code = result_record.GetErrorCode()});
     }
 
-    if (error.has_value()) {
-      flow_file->addAttribute(AwsKinesisErrorMessage.name, error->error_message);
-      if (error->error_code) {
-        flow_file->addAttribute(AwsKinesisErrorCode.name, *error->error_code);
-      }
-      session.transfer(flow_file, Failure);
-    } else {
+    if (!error.has_value()) {
       flow_file->addAttribute(AwsKinesisShardId.name, result_record.GetShardId());
       flow_file->addAttribute(AwsKinesisSequenceNumber.name, result_record.GetSequenceNumber());
       session.transfer(flow_file, Success);
