@@ -26,12 +26,7 @@
 #include "aws/core/platform/Environment.h"
 #include "AWSSdkLogger.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace utils {
+namespace org::apache::nifi::minifi::aws::utils {
 
 AWSInitializer& AWSInitializer::get() {
   static AWSInitializer instance;
@@ -45,13 +40,7 @@ AWSInitializer::~AWSInitializer() {
 
 AWSInitializer::AWSInitializer() {
   Aws::InitAPI(options_);
-  Aws::Utils::Logging::InitializeAWSLogging(
-      std::make_shared<AWSSdkLogger>());
+  Aws::Utils::Logging::InitializeAWSLogging(std::make_shared<AWSSdkLogger>());
 }
 
-}  // namespace utils
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::utils
