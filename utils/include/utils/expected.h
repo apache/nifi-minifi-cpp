@@ -49,6 +49,16 @@ inline constexpr bool is_valid_unexpected_type_v<nonstd::unexpected_type<E>> = f
 template<typename T>
 concept valid_unexpected_type = is_valid_unexpected_type_v<T>;
 
+template<typename E>
+std::string formatErrorType(const E& error) {
+  return fmt::format("{}", error);
+}
+
+template<>
+inline std::string formatErrorType(const std::error_code& error) {
+  return fmt::format("{} ({})", error, error.message());
+}
+
 
 // transform implementation
 template<expected Expected, typename F>
@@ -187,7 +197,7 @@ auto operator|(Expected&& object, transform_error_wrapper<F> f) {
 }
 
 template<expected Expected>
-std::optional<typename std::remove_cvref_t<Expected>::value_type> operator|(Expected&& object, to_optional_wrapper) {
+std::optional<typename std::remove_cvref_t<Expected>::value_type> operator|(Expected object, to_optional_wrapper) {
   if (object) {
     return std::move(*object);
   }
@@ -195,19 +205,19 @@ std::optional<typename std::remove_cvref_t<Expected>::value_type> operator|(Expe
 }
 
 template<expected Expected>
-typename std::remove_cvref_t<Expected>::value_type operator|(Expected&& object, or_throw_wrapper e) {
+typename std::remove_cvref_t<Expected>::value_type operator|(Expected object, or_throw_wrapper e) {
   if (object) {
     return std::move(*object);
   }
-  throw std::runtime_error(fmt::format("{}, but got {}", e.reason, object.error()));
+  throw std::runtime_error(fmt::format("{}, but got {}", e.reason, formatErrorType(object.error())));
 }
 
 template<expected Expected>
-typename std::remove_cvref_t<Expected>::value_type operator|(Expected&& object, detail::or_terminate_wrapper e) {
+typename std::remove_cvref_t<Expected>::value_type operator|(Expected object, detail::or_terminate_wrapper e) {
   if (object) {
     return std::move(*object);
   }
-  std::cerr << fmt::format("Aborting due to {}: {}", e.reason, object.error()) << std::endl;
+  std::cerr << fmt::format("Aborting due to {}: {}", e.reason, formatErrorType(object.error())) << std::endl;
   std::abort();
 }
 }  // namespace detail

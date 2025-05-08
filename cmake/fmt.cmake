@@ -17,14 +17,10 @@
 # under the License.
 #
 include(FetchContent)
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/fmt/add_error_message_to_std__error_code_formatter.patch")
-set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
 
 FetchContent_Declare(Fmt
-        URL  https://github.com/fmtlib/fmt/archive/refs/tags/11.0.2.tar.gz
-        URL_HASH SHA256=6cb1e6d37bdcb756dbbe59be438790db409cdb4868c66e888d5df9f13f7c027f
-        PATCH_COMMAND "${PC}"
+        URL  https://github.com/fmtlib/fmt/archive/refs/tags/11.2.0.tar.gz
+        URL_HASH SHA256=bc23066d87ab3168f27cef3e97d545fa63314f5c79df5ea444d41d56f962c6af
         OVERRIDE_FIND_PACKAGE
         )
 FetchContent_MakeAvailable(Fmt)
