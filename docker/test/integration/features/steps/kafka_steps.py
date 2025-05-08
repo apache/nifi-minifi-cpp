@@ -31,11 +31,10 @@ def publish_producer_workflow(context, directory):
 
 @given("the \"{property_name}\" property of the {processor_name} processor is set to match {key_attribute_encoding} encoded kafka message key \"{message_key}\"")
 def set_property_to_match_message_key(context, property_name, processor_name, key_attribute_encoding, message_key):
-    encoded_key = ""
-    if (key_attribute_encoding.lower() == "hex"):
+    if key_attribute_encoding.lower() == "hex":
         # Hex is presented upper-case to be in sync with NiFi
         encoded_key = binascii.hexlify(message_key.encode("utf-8")).upper()
-    elif (key_attribute_encoding.lower() == "(not set)"):
+    elif key_attribute_encoding.lower() == "(not set)":
         encoded_key = message_key.encode("utf-8")
     else:
         encoded_key = message_key.encode(key_attribute_encoding)
@@ -70,6 +69,19 @@ def init_topic(context, topic_name):
 def publish_to_topic(context, content, topic_name):
     container_name = context.test.get_container_name_with_postfix("kafka-broker")
     assert context.test.cluster.kafka_checker.produce_message(container_name, topic_name, content) or context.test.cluster.log_app_output()
+
+
+@when("two messages with content \"{content_one}\" and \"{content_two}\" is published to the \"{topic_name}\" topic")
+def publish_two_messages_to_topic(context, content_one, content_two, topic_name):
+    python_code = f"""
+from confluent_kafka import Producer
+import uuid
+producer = Producer({{"bootstrap.servers": "kafka-broker-{context.feature_id}:9092"}})
+producer.produce("{topic_name}", "{content_one}")
+producer.produce("{topic_name}", "{content_two}")
+producer.flush(10)
+    """
+    assert context.test.cluster.kafka_checker.run_python_in_kafka_helper_docker(python_code) or context.test.cluster.log_app_output()
 
 
 @when("the publisher performs a {transaction_type} transaction publishing to the \"{topic_name}\" topic these messages: {messages}")

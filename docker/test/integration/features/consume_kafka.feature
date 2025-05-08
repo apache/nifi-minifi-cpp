@@ -140,8 +140,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And the topic "ConsumeKafkaTest" is initialized on the kafka broker
 
     When all instances start up
-    And a message with content "Barbapapa" is published to the "ConsumeKafkaTest" topic
-    And a message with content "Anette Tison and Talus Taylor" is published to the "ConsumeKafkaTest" topic
+    And two messages with content "Barbapapa" and "Anette Tison and Talus Taylor" is published to the "ConsumeKafkaTest" topic
 
     Then a flowfile with the content "Barbapapa,Anette Tison and Talus Taylor" is placed in the monitored directory in less than 45 seconds
 
