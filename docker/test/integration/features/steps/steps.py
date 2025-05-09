@@ -12,11 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import tempfile
 
 from filesystem_validation.FileSystemObserver import FileSystemObserver
 from minifi.core.RemoteProcessGroup import RemoteProcessGroup
-from ssl_utils.SSL_cert_utils import make_client_cert, make_server_cert
+from ssl_utils.SSL_cert_utils import make_server_cert
 from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
@@ -35,13 +34,9 @@ from pydoc import locate
 import logging
 import time
 import uuid
-import binascii
 import humanfriendly
 import OpenSSL.crypto
 
-from confluent_kafka.admin import AdminClient, NewTopic
-from confluent_kafka import Producer
-import socket
 import os
 
 
@@ -49,6 +44,13 @@ import os
 @given("the content of \"{directory}\" is monitored")
 def step_impl(context, directory):
     context.test.add_file_system_observer(FileSystemObserver(context.directory_bindings.docker_path_to_local_path(directory)))
+
+
+@given("there is a \"{subdir}\" subdirectory in the monitored directory")
+def step_impl(context, subdir):
+    output_dir = context.test.file_system_observer.get_output_dir() + "/" + subdir
+    os.mkdir(output_dir)
+    os.chmod(output_dir, 0o777)
 
 
 def __create_processor(context, processor_type, processor_name, property_name, property_value, container_name, engine='minifi-cpp'):
@@ -166,15 +168,6 @@ def step_impl(context, address):
     context.test.add_remote_process_group(remote_process_group)
 
 
-@given("a kafka producer workflow publishing files placed in \"{directory}\" to a broker exactly once")
-def step_impl(context, directory):
-    context.execute_steps("""
-        given a GetFile processor with the \"Input Directory\" property set to \"{directory}\"
-        and the \"Keep Source File\" property of the GetFile processor is set to \"false\"
-        and a PublishKafka processor set up to communicate with a kafka broker instance
-        and the "success" relationship of the GetFile processor is connected to the PublishKafka""".format(directory=directory))
-
-
 @given("the \"{property_name}\" property of the {processor_name} processor is set to \"{property_value}\"")
 def step_impl(context, property_name, processor_name, property_value):
     processor = context.test.get_node_by_name(processor_name)
@@ -195,23 +188,6 @@ def step_impl(context, property_name, processor_name_one, processor_name_two):
 def step_impl(context, processor_name, max_concurrent_tasks):
     processor = context.test.get_node_by_name(processor_name)
     processor.set_max_concurrent_tasks(max_concurrent_tasks)
-
-
-@given("the \"{property_name}\" property of the {processor_name} processor is set to match {key_attribute_encoding} encoded kafka message key \"{message_key}\"")
-def step_impl(context, property_name, processor_name, key_attribute_encoding, message_key):
-    encoded_key = ""
-    if (key_attribute_encoding.lower() == "hex"):
-        # Hex is presented upper-case to be in sync with NiFi
-        encoded_key = binascii.hexlify(message_key.encode("utf-8")).upper()
-    elif (key_attribute_encoding.lower() == "(not set)"):
-        encoded_key = message_key.encode("utf-8")
-    else:
-        encoded_key = message_key.encode(key_attribute_encoding)
-    logging.info("%s processor is set up to match encoded key \"%s\"", processor_name, encoded_key)
-    filtering = "${kafka.key:equals('" + encoded_key.decode("utf-8") + "')}"
-    logging.info("Filter: \"%s\"", filtering)
-    processor = context.test.get_node_by_name(processor_name)
-    processor.set_property(property_name, filtering)
 
 
 @given("the \"{property_name}\" property of the {processor_name} processor is set to match the attribute \"{attribute_key}\" to \"{attribute_value}\"")
@@ -448,14 +424,6 @@ def step_impl(context, processor_name, service_property_name, property_name, pro
     __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {property_name: property_value})
 
 
-# Kafka setup
-@given("a kafka broker is set up in correspondence with the PublishKafka")
-@given("a kafka broker is set up in correspondence with the third-party kafka publisher")
-@given("a kafka broker is set up in correspondence with the publisher flow")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="kafka-broker", engine="kafka-broker")
-
-
 # MQTT setup
 @when("an MQTT broker is set up in correspondence with the PublishMQTT")
 @given("an MQTT broker is set up in correspondence with the PublishMQTT")
@@ -619,25 +587,6 @@ def step_impl(context, processor_one, processor_two):
     processor_two.set_property("Endpoint Override URL", f"fake-gcs-server-{context.feature_id}:4443")
 
 
-@given("the kafka broker is started")
-def step_impl(context):
-    context.test.start_kafka_broker(context)
-
-
-@given("the topic \"{topic_name}\" is initialized on the kafka broker")
-def step_impl(context, topic_name):
-    admin = AdminClient({'bootstrap.servers': "localhost:29092"})
-    new_topics = [NewTopic(topic_name, num_partitions=3, replication_factor=1)]
-    futures = admin.create_topics(new_topics)
-    # Block until the topic is created
-    for topic, future in futures.items():
-        try:
-            future.result()
-            print("Topic {} created".format(topic))
-        except Exception as e:
-            print("Failed to create topic {}: {}".format(topic, e))
-
-
 # SQL
 @given("an ODBCService is setup up for {processor_name} with the name \"{service_name}\"")
 def step_impl(context, processor_name, service_name):
@@ -673,6 +622,16 @@ def step_impl(context):
     context.test.start()
 
 
+@when("\"{container_name}\" flow is stopped")
+def step_impl(context, container_name):
+    context.test.stop(container_name)
+
+
+@when("\"{container_name}\" flow is restarted")
+def step_impl(context, container_name):
+    context.test.restart(container_name)
+
+
 @then("\"{container_name}\" flow is stopped")
 def step_impl(context, container_name):
     context.test.stop(container_name)
@@ -705,126 +664,6 @@ def step_impl(context, content, file_name, path, seconds):
     context.test.add_test_data(path, content, file_name)
 
 
-# Kafka
-def delivery_report(err, msg):
-    if err is not None:
-        logging.info('Message delivery failed: {}'.format(err))
-    else:
-        logging.info('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
-
-
-@when("a message with content \"{content}\" is published to the \"{topic_name}\" topic")
-def step_impl(context, content, topic_name):
-    producer = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
-    producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-    producer.flush(10)
-
-
-@when("a message with content \"{content}\" is published to the \"{topic_name}\" topic using an ssl connection")
-def step_impl(context, content, topic_name):
-    ca_cert_file = tempfile.NamedTemporaryFile(delete=False)
-    ca_cert_file.write(OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM, cert=context.root_ca_cert))
-    ca_cert_file.close()
-    os.chmod(ca_cert_file.name, 0o644)
-
-    client_cert, client_key = make_client_cert(socket.gethostname(), context.root_ca_cert, context.root_ca_key)
-    client_cert_file = tempfile.NamedTemporaryFile(delete=False)
-    client_cert_file.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, client_cert))
-    client_cert_file.close()
-    os.chmod(client_cert_file.name, 0o644)
-
-    client_key_file = tempfile.NamedTemporaryFile(delete=False)
-    client_key_file.write(OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, client_key))
-    client_key_file.close()
-    os.chmod(client_key_file.name, 0o644)
-
-    producer = Producer({
-        "bootstrap.servers": "localhost:29093",
-        "security.protocol": "SSL",
-        "ssl.ca.location": ca_cert_file.name,
-        "ssl.certificate.location": client_cert_file.name,
-        "ssl.key.location": client_key_file.name,
-        "ssl.key.password": "",
-        "client.id": socket.gethostname(),
-        "ssl.endpoint.identification.algorithm": "none"})
-    producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-    producer.flush(10)
-
-
-# Used for testing transactional message consumption
-@when("the publisher performs a {transaction_type} transaction publishing to the \"{topic_name}\" topic these messages: {messages}")
-def step_impl(context, transaction_type, topic_name, messages):
-    producer = Producer({"bootstrap.servers": "localhost:29092", "transactional.id": "1001"})
-    producer.init_transactions()
-    logging.info("Transaction type: %s", transaction_type)
-    logging.info("Messages: %s", messages.split(", "))
-    if transaction_type == "SINGLE_COMMITTED_TRANSACTION":
-        producer.begin_transaction()
-        for content in messages.split(", "):
-            producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-        producer.commit_transaction()
-        producer.flush(10)
-    elif transaction_type == "TWO_SEPARATE_TRANSACTIONS":
-        for content in messages.split(", "):
-            producer.begin_transaction()
-            producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-            producer.commit_transaction()
-        producer.flush(10)
-    elif transaction_type == "NON_COMMITTED_TRANSACTION":
-        producer.begin_transaction()
-        for content in messages.split(", "):
-            producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-        producer.flush(10)
-    elif transaction_type == "CANCELLED_TRANSACTION":
-        producer.begin_transaction()
-        for content in messages.split(", "):
-            producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report)
-        producer.flush(10)
-        producer.abort_transaction()
-    else:
-        raise Exception("Unknown transaction type.")
-
-
-@when("a message with content \"{content}\" is published to the \"{topic_name}\" topic with key \"{message_key}\"")
-def step_impl(context, content, topic_name, message_key):
-    producer = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
-    # Asynchronously produce a message, the delivery report callback
-    # will be triggered from poll() above, or flush() below, when the message has
-    # been successfully delivered or failed permanently.
-    producer.produce(topic_name, content.encode("utf-8"), callback=delivery_report, key=message_key.encode("utf-8"))
-    # Wait for any outstanding messages to be delivered and delivery report
-    # callbacks to be triggered.
-    producer.flush(10)
-
-
-@when("{number_of_messages} kafka messages are sent to the topic \"{topic_name}\"")
-def step_impl(context, number_of_messages, topic_name):
-    producer = Producer({"bootstrap.servers": "localhost:29092", "client.id": socket.gethostname()})
-    for i in range(0, int(number_of_messages)):
-        producer.produce(topic_name, str(uuid.uuid4()).encode("utf-8"))
-    producer.flush(10)
-
-
-@when("a message with content \"{content}\" is published to the \"{topic_name}\" topic with headers \"{semicolon_separated_headers}\"")
-def step_impl(context, content, topic_name, semicolon_separated_headers):
-    # Confluent kafka does not support multiple headers with same key, another API must be used here.
-    headers = []
-    for header in semicolon_separated_headers.split(";"):
-        kv = header.split(":")
-        headers.append((kv[0].strip(), kv[1].strip().encode("utf-8")))
-    producer = Producer({"bootstrap.servers": "localhost:29092"})
-    producer.produce(topic_name, content.encode("utf-8"), headers=headers)
-    producer.flush(10)
-
-
-@when("the Kafka consumer is registered in kafka broker")
-def step_impl(context):
-    context.test.wait_for_kafka_consumer_to_be_registered("kafka-broker")
-    # After the consumer is registered there is still some time needed for consumer-broker synchronization
-    # Unfortunately there are no additional log messages that could be checked for this
-    time.sleep(2)
-
-
 @then("a flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
 @then("a flowfile with the content '{content}' is placed in the monitored directory in less than {duration}")
 @then("{number_of_flow_files:d} flowfiles with the content \"{content}\" are placed in the monitored directory in less than {duration}")
@@ -848,6 +687,16 @@ def step_impl(context, regex: str, duration: str):
 @then("at least one flowfile with the content '{content}' is placed in the monitored directory in less than {duration}")
 def step_impl(context, content, duration):
     context.test.check_for_at_least_one_file_with_content_generated(content, humanfriendly.parse_timespan(duration))
+
+
+@then("no files are placed in the monitored directory in {duration} of running time")
+def step_impl(context, duration):
+    context.test.check_for_no_files_generated(humanfriendly.parse_timespan(duration))
+
+
+@then("there is exactly {num_flowfiles} files in the monitored directory")
+def step_impl(context, num_flowfiles):
+    context.test.check_for_num_files_generated(int(num_flowfiles), humanfriendly.parse_timespan("1"))
 
 
 @then("{num_flowfiles} flowfiles are placed in the monitored directory in less than {duration}")
@@ -878,6 +727,28 @@ def step_impl(context, content_1, content_2, duration):
     context.test.check_for_multiple_files_generated(2, humanfriendly.parse_timespan(duration), [content_1, content_2])
 
 
+@then("exactly these flowfiles are in the monitored directory in less than {duration}: \"\"")
+def step_impl(context, duration):
+    context.execute_steps(f"Then no files are placed in the monitored directory in {duration} of running time")
+
+
+@then("exactly these flowfiles are in the monitored directory's \"{subdir}\" subdirectory in less than {duration}: \"\"")
+def step_impl(context, duration, subdir):
+    assert context.test.check_subdirectory(sub_directory=subdir, expected_contents=[], timeout=humanfriendly.parse_timespan(duration)) or context.test.cluster.log_app_output()
+
+
+@then("exactly these flowfiles are in the monitored directory in less than {duration}: \"{contents}\"")
+def step_impl(context, duration, contents):
+    contents_arr = contents.split(",")
+    context.test.check_for_multiple_files_generated(len(contents_arr), humanfriendly.parse_timespan(duration), contents_arr)
+
+
+@then("exactly these flowfiles are in the monitored directory's \"{subdir}\" subdirectory in less than {duration}: \"{contents}\"")
+def step_impl(context, duration, subdir, contents):
+    contents_arr = contents.split(",")
+    assert context.test.check_subdirectory(sub_directory=subdir, expected_contents=contents_arr, timeout=humanfriendly.parse_timespan(duration)) or context.test.cluster.log_app_output()
+
+
 @then("flowfiles with these contents are placed in the monitored directory in less than {duration}: \"{contents}\"")
 def step_impl(context, duration, contents):
     contents_arr = contents.split(",")
@@ -898,11 +769,6 @@ def step_impl(context, number_of_files, duration):
 @then("at least one empty flowfile is placed in the monitored directory in less than {duration}")
 def step_impl(context, duration):
     context.test.check_for_an_empty_file_generated(humanfriendly.parse_timespan(duration))
-
-
-@then("no files are placed in the monitored directory in {duration} of running time")
-def step_impl(context, duration):
-    context.test.check_for_no_files_generated(humanfriendly.parse_timespan(duration))
 
 
 @then("no errors were generated on the http-proxy regarding \"{url}\"")
