@@ -128,6 +128,7 @@ def step_impl(context, processor_type, minifi_container_name):
 @given("a {processor_type} processor set up to communicate with a kafka broker instance")
 @given("a {processor_type} processor set up to communicate with an MQTT broker instance")
 @given("a {processor_type} processor set up to communicate with the Splunk HEC instance")
+@given("a {processor_type} processor set up to communicate with the kinesis server")
 def step_impl(context, processor_type):
     __create_processor(context, processor_type, processor_type, None, None, "minifi-cpp-flow")
 
@@ -471,6 +472,11 @@ def step_impl(context):
 @given("a s3 server is set up in correspondence with the DeleteS3Object")
 def step_impl(context):
     context.test.acquire_container(context=context, name="s3-server", engine="s3-server")
+
+
+@given("a kinesis server is set up in correspondence with the PutKinesisStream")
+def step_impl(context):
+    context.test.acquire_container(context=context, name="kinesis-server", engine="kinesis-server")
 
 
 # azure storage setup
@@ -908,6 +914,11 @@ def step_impl(context, duration):
 @then("no errors were generated on the http-proxy regarding \"{url}\"")
 def step_impl(context, url):
     context.test.check_http_proxy_access('http-proxy', url)
+
+
+@then("there is a record on the kinesis server with \"{record_data}\"")
+def step_impl(context, record_data):
+    context.test.check_kinesis_server_record_data("kinesis-server", record_data)
 
 
 @then("the object on the s3 server is \"{object_data}\"")
