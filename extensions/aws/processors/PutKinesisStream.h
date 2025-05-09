@@ -128,7 +128,7 @@ class PutKinesisStream : public AwsProcessor {
 
   std::unordered_map<std::string, StreamBatch> createStreamBatches(const core::ProcessContext& context, core::ProcessSession& session) const;
   void processBatch(StreamBatch& stream_batch, const Aws::Kinesis::KinesisClient& client) const;
-  static void transferFlowFiles(core::ProcessSession& session, const StreamBatch& stream_batch) ;
+  static void transferFlowFiles(core::ProcessSession& session, const StreamBatch& stream_batch);
 
   uint64_t batch_size_ = 250;
   uint64_t batch_data_size_soft_cap_ = 1_MB;
