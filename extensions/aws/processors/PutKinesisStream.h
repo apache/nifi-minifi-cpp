@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <aws/kinesis/model/PutRecordsRequest.h>
 
 #include <memory>
 #include <optional>
@@ -27,6 +26,7 @@
 
 #include "S3Processor.h"
 #include "aws/kinesis/KinesisClient.h"
+#include "aws/kinesis/model/PutRecordsRequest.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/ArrayUtils.h"
 #include "utils/expected.h"

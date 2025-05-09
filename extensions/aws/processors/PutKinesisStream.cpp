@@ -41,12 +41,12 @@ void PutKinesisStream::onSchedule(core::ProcessContext& context, core::ProcessSe
 
   batch_size_ = parseU64Property(context, MessageBatchSize);
   if (batch_size_ == 0 || batch_size_ > 500) {
-    logger_->log_warn("PutKinesisStream::MessageBatchSize is invalid. Setting it to the maximum 500 value.");
+    logger_->log_warn("{} is invalid. Setting it to the maximum 500 value.", MessageBatchSize.name);
     batch_size_ = 500;
   }
   batch_data_size_soft_cap_ = parseDataSizeProperty(context, MaxBatchDataSize);
   if (batch_data_size_soft_cap_ > 4_MB) {
-    logger_->log_warn("PutKinesisStream::MaxMessageBufferSize is invalid. Setting it to the maximum 4 MB value.");
+    logger_->log_warn("{} is invalid. Setting it to the maximum 4 MB value.", MaxBatchDataSize.name);
     batch_data_size_soft_cap_ = 4_MB;
   }
 
