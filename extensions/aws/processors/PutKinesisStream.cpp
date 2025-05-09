@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <random>
+#include <ranges>
 #include <unordered_map>
 
 #include "aws/kinesis/KinesisClient.h"
@@ -26,6 +27,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "range/v3/algorithm/for_each.hpp"
 #include "range/v3/view.hpp"
 #include "utils/ProcessorConfigUtils.h"
 
@@ -107,7 +109,7 @@ std::unordered_map<std::string, PutKinesisStream::StreamBatch> PutKinesisStream:
       stream_batch->second.request.SetStreamName(*stream_name);
     }
     stream_batch->second.request.AddRecords(*entry);
-    stream_batch->second.items.push_back(BatchItem{.flow_file = std::move(flow_file), .error = std::nullopt});
+    stream_batch->second.items.push_back(BatchItem{.flow_file = std::move(flow_file), .result = BatchItemResult{}});
     stream_batches[*stream_name].batch_size += flow_file_size;
     ++ff_count_in_batches;
 
@@ -118,25 +120,14 @@ std::unordered_map<std::string, PutKinesisStream::StreamBatch> PutKinesisStream:
   return stream_batches;
 }
 
-void PutKinesisStream::processBatch(core::ProcessSession& session, StreamBatch& stream_batch, const Aws::Kinesis::KinesisClient& client) const {
+void PutKinesisStream::processBatch(StreamBatch& stream_batch, const Aws::Kinesis::KinesisClient& client) const {
   const auto put_record_result = client.PutRecords(stream_batch.request);
-
-  auto transfer_failed_flow_files = gsl::finally([&] {
-    for (auto& [flow_file, error] : stream_batch.items) {
-      if (error) {
-        flow_file->addAttribute(AwsKinesisErrorMessage.name, error->error_message);
-        if (error->error_code) {
-          flow_file->addAttribute(AwsKinesisErrorCode.name, *(error->error_code));
-        }
-        session.transfer(flow_file, Failure);
-      }
-    }
-  });
-
   if (!put_record_result.IsSuccess()) {
-    for (auto& [flow_file, error] : stream_batch.items) {
-      error = BatchItemError{.error_message = put_record_result.GetError().GetMessage(), .error_code = std::to_string(static_cast<int>(put_record_result.GetError().GetResponseCode()))};
-    }
+    ranges::for_each(stream_batch.items, [&](auto& item) {
+      item.result = nonstd::make_unexpected(BatchItemError{
+        .error_message = put_record_result.GetError().GetMessage(),
+        .error_code = std::to_string(static_cast<int>(put_record_result.GetError().GetResponseCode()))});
+    });
     return;
   }
 
@@ -144,26 +135,41 @@ void PutKinesisStream::processBatch(core::ProcessSession& session, StreamBatch& 
   if (result_records.size() != stream_batch.items.size()) {
     logger_->log_critical("PutKinesisStream record size ({}) and result size ({}) mismatch in {} cannot tell which record succeeded and which didnt",
         stream_batch.items.size(), result_records.size(), stream_batch.request.GetStreamName());
-    for (auto& [flow_file, error] : stream_batch.items) {
-      error = std::make_optional(BatchItemError{.error_message = "Record size mismatch", .error_code = std::nullopt});
-    }
+    ranges::for_each(stream_batch.items, [&](auto& item) {
+      item.result = nonstd::make_unexpected(BatchItemError{
+        .error_message = "Record size mismatch",
+        .error_code = std::nullopt});
+    });
     return;
   }
 
   for (uint64_t i = 0; i < stream_batch.items.size(); i++) {
-    auto& [flow_file, error] = stream_batch.items[i];
+    auto& [flow_file, result] = stream_batch.items[i];
     const auto& result_record = result_records[i];
     if (!result_record.GetErrorCode().empty()) {
-      error = std::make_optional(BatchItemError{.error_message = result_record.GetErrorMessage(), .error_code = result_record.GetErrorCode()});
-    }
-
-    if (!error.has_value()) {
-      flow_file->addAttribute(AwsKinesisShardId.name, result_record.GetShardId());
-      flow_file->addAttribute(AwsKinesisSequenceNumber.name, result_record.GetSequenceNumber());
-      session.transfer(flow_file, Success);
+      result = nonstd::make_unexpected(BatchItemError{.error_message = result_record.GetErrorMessage(), .error_code = result_record.GetErrorCode()});
+    } else {
+      result = BatchItemResult{.sequence_number = result_record.GetSequenceNumber(), .shard_id = result_record.GetShardId()};
     }
   }
 }
+
+void PutKinesisStream::transferFlowFiles(core::ProcessSession& session, const StreamBatch& stream_batch) {
+  for (const auto& batch_item : stream_batch.items) {
+    if (batch_item.result) {
+      batch_item.flow_file->setAttribute(AwsKinesisSequenceNumber.name, batch_item.result->sequence_number);
+      batch_item.flow_file->setAttribute(AwsKinesisShardId.name, batch_item.result->shard_id);
+      session.transfer(batch_item.flow_file, Success);
+    } else {
+      batch_item.flow_file->setAttribute(AwsKinesisErrorMessage.name, batch_item.result.error().error_message);
+      if (batch_item.result.error().error_code) {
+        batch_item.flow_file->setAttribute(AwsKinesisErrorCode.name, *batch_item.result.error().error_code);
+      }
+      session.transfer(batch_item.flow_file, Failure);
+    }
+  }
+}
+
 
 void PutKinesisStream::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("PutKinesisStream onTrigger");
@@ -182,8 +188,9 @@ void PutKinesisStream::onTrigger(core::ProcessContext& context, core::ProcessSes
   }
   const auto kinesis_client = getClient(*credentials);
 
-  for (auto& [stream_name, stream_batch]: stream_batches) {
-    processBatch(session, stream_batch, *kinesis_client);
+  for (auto& stream_batch: stream_batches | std::views::values) {
+    processBatch(stream_batch, *kinesis_client);
+    transferFlowFiles(session, stream_batch);
   }
 }
 

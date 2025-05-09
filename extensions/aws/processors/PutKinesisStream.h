@@ -104,13 +104,17 @@ class PutKinesisStream : public AwsProcessor {
   virtual std::unique_ptr<Aws::Kinesis::KinesisClient> getClient(const Aws::Auth::AWSCredentials& credentials);
 
  private:
+  struct BatchItemResult {
+    std::string sequence_number;
+    std::string shard_id;
+  };
   struct BatchItemError {
     std::string error_message;
     std::optional<std::string> error_code;
   };
   struct BatchItem {
     std::shared_ptr<core::FlowFile> flow_file;
-    std::optional<BatchItemError> error;
+    nonstd::expected<BatchItemResult, BatchItemError> result;
   };
   struct StreamBatch {
     uint64_t batch_size = 0;
@@ -123,7 +127,8 @@ class PutKinesisStream : public AwsProcessor {
       const std::shared_ptr<core::FlowFile>& flow_file) const;
 
   std::unordered_map<std::string, StreamBatch> createStreamBatches(const core::ProcessContext& context, core::ProcessSession& session) const;
-  void processBatch(core::ProcessSession& session, StreamBatch& stream_batch, const Aws::Kinesis::KinesisClient& client) const;
+  void processBatch(StreamBatch& stream_batch, const Aws::Kinesis::KinesisClient& client) const;
+  static void transferFlowFiles(core::ProcessSession& session, const StreamBatch& stream_batch) ;
 
   uint64_t batch_size_ = 250;
   uint64_t batch_data_size_soft_cap_ = 1_MB;
