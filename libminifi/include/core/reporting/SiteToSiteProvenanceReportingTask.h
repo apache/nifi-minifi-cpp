@@ -35,7 +35,8 @@ namespace org::apache::nifi::minifi::core::reporting {
 class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPort {
  public:
   explicit SiteToSiteProvenanceReportingTask(std::shared_ptr<Configure> configure)
-      : minifi::RemoteProcessorGroupPort(ReportTaskName, "", std::move(configure), utils::IdGenerator::getIdGenerator()->generate(), logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
+      : minifi::RemoteProcessorGroupPort(ReportTaskName, "", std::move(configure),
+                                         utils::IdGenerator::getIdGenerator()->generate(), logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
     this->setTriggerWhenEmpty(true);
     batch_size_ = 100;
   }
