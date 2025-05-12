@@ -51,6 +51,8 @@ class ClassLoader {
  public:
   static ClassLoader &getDefaultClassLoader();
 
+  virtual ~ClassLoader() = default;
+
   /**
    * Retrieves a class loader
    * @param name name of class loader

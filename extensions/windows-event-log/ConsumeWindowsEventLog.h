@@ -80,7 +80,7 @@ class Bookmark;
 
 class ConsumeWindowsEventLog : public core::ProcessorImpl {
  public:
-  explicit ConsumeWindowsEventLog(const std::string_view name, const utils::Identifier& uuid = {});
+  explicit ConsumeWindowsEventLog(core::ProcessorMetadata info);
 
   ~ConsumeWindowsEventLog() override;
 

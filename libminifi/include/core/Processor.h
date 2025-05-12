@@ -92,7 +92,7 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   void setProcessGroupUUIDStr(const std::string &uuid);
   void yield() override;
   void yield(std::chrono::steady_clock::duration delta_time);
-  bool isYield();
+  bool isYield() const;
   void clearYield();
   std::chrono::steady_clock::time_point getYieldExpirationTime() const;
   std::chrono::steady_clock::duration getYieldTime() const;
