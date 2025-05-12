@@ -410,8 +410,9 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceReporter>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   auto processor = plan->addProcessor("GetFile", "getfileCreate2");
-  TypedProcessorWrapper<minifi::core::reporting::SiteToSiteProvenanceReportingTask> processorReport = plan->addProcessor(minifi::test::utils::make_custom_processor<minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
-      std::make_shared<minifi::ConfigureImpl>()), "reporter", core::Relationship("success", "description"), false);
+  TypedProcessorWrapper<minifi::core::reporting::SiteToSiteProvenanceReportingTask> processorReport = plan->addProcessor(
+      minifi::test::utils::make_custom_processor<minifi::core::reporting::SiteToSiteProvenanceReportingTask>(std::make_shared<minifi::ConfigureImpl>()),
+      "reporter", core::Relationship("success", "description"), false);
 
   auto dir = testController.createTempDirectory();
   plan->setProperty(processor, minifi::processors::GetFile::Directory, dir.string());
