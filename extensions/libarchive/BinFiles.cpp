@@ -290,7 +290,7 @@ void BinFiles::onTrigger(core::ProcessContext& context, core::ProcessSession& se
   const bool valid_batch = assumeOwnershipOfNextBatch(session);
   if (auto ready_bins = gatherReadyBins(context); ready_bins.empty()) {
     if (!valid_batch) {
-      yield();
+      context.yield();
     }
   } else {
     processReadyBins(std::move(ready_bins), session);
@@ -315,14 +315,6 @@ void BinFiles::addFlowsToSession(core::ProcessSession &session, std::unique_ptr<
 void BinFiles::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   if (!flowFile) return;
   file_store_.put(flowFile);
-}
-
-std::set<core::Connectable*> BinFiles::getOutGoingConnections(const std::string &relationship) {
-  auto result = core::ConnectableImpl::getOutGoingConnections(relationship);
-  if (relationship == Self.getName()) {
-    result.insert(this);
-  }
-  return result;
 }
 
 REGISTER_RESOURCE(BinFiles, Processor);

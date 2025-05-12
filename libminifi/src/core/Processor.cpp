@@ -32,28 +32,34 @@
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/ProcessorConfig.h"
 #include "minifi-cpp/core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessorDescriptor.h"
 #include "minifi-cpp/core/ProcessSessionFactory.h"
 #include "utils/gsl.h"
 #include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
 #include "Exception.h"
-#include "core/Processor.h"
 #include "core/ProcessorMetrics.h"
 
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessorImpl::ProcessorImpl(std::string_view name, std::shared_ptr<ProcessorMetrics> metrics)
+constexpr std::chrono::microseconds MINIMUM_SCHEDULING_PERIOD{30};
+
+static std::mutex& getGraphMutex() {
+  static std::mutex mutex{};
+  return mutex;
+}
+
+Processor::Processor(std::string_view name, std::unique_ptr<ProcessorApi> impl)
     : ConnectableImpl(name),
       state_(DISABLED),
       scheduling_period_(MINIMUM_SCHEDULING_PERIOD),
       run_duration_(DEFAULT_RUN_DURATION),
       yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
       active_tasks_(0),
-      _triggerWhenEmpty(false),
-      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetricsImpl>(*this)),
-      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)) {
+      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
+      impl_(std::move(impl)) {
   has_work_.store(false);
   // Setup the default values
   strategy_ = TIMER_DRIVEN;
@@ -63,16 +69,15 @@ ProcessorImpl::ProcessorImpl(std::string_view name, std::shared_ptr<ProcessorMet
   logger_->log_debug("Processor {} created UUID {}", name_, getUUIDStr());
 }
 
-ProcessorImpl::ProcessorImpl(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
+Processor::Processor(std::string_view name, const utils::Identifier& uuid, std::unique_ptr<ProcessorApi> impl)
     : ConnectableImpl(name, uuid),
       state_(DISABLED),
       scheduling_period_(MINIMUM_SCHEDULING_PERIOD),
       run_duration_(DEFAULT_RUN_DURATION),
       yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
       active_tasks_(0),
-      _triggerWhenEmpty(false),
-      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetricsImpl>(*this)),
-      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)) {
+      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
+      impl_(std::move(impl)) {
   has_work_.store(false);
   // Setup the default values
   strategy_ = TIMER_DRIVEN;
@@ -82,22 +87,22 @@ ProcessorImpl::ProcessorImpl(std::string_view name, const utils::Identifier& uui
   logger_->log_debug("Processor {} created with uuid {}", name_, getUUIDStr());
 }
 
-ProcessorImpl::~ProcessorImpl() {
+Processor::~Processor() {
   logger_->log_debug("Destroying processor {} with uuid {}", name_, getUUIDStr());
 }
 
-bool ProcessorImpl::isRunning() const {
+bool Processor::isRunning() const {
   return (state_ == RUNNING && active_tasks_ > 0);
 }
 
-void ProcessorImpl::setScheduledState(ScheduledState state) {
+void Processor::setScheduledState(ScheduledState state) {
   state_ = state;
   if (state == STOPPED) {
-    notifyStop();
+    impl_->notifyStop();
   }
 }
 
-bool ProcessorImpl::addConnection(Connectable* conn) {
+bool Processor::addConnection(Connectable* conn) {
   enum class SetAs{
     NONE,
     OUTPUT,
@@ -167,24 +172,9 @@ bool ProcessorImpl::addConnection(Connectable* conn) {
   return result != SetAs::NONE;
 }
 
-bool ProcessorImpl::flowFilesOutGoingFull() const {
-  std::lock_guard<std::mutex> lock(mutex_);
-
-  for (const auto& [_name, existed_connection] : outgoing_connections_) {
-    if (ranges::any_of(existed_connection, [](const Connectable* conn) {
-      const auto connection = dynamic_cast<const Connection*>(conn);
-      return connection && connection->backpressureThresholdReached();
-    })) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-void ProcessorImpl::triggerAndCommit(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory) {
+void Processor::triggerAndCommit(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory) {
   const auto process_session = session_factory->createSession();
-  process_session->setMetrics(metrics_);
+  process_session->setMetrics(getMetrics());
   try {
     trigger(context, process_session);
     process_session->commit();
@@ -200,14 +190,14 @@ void ProcessorImpl::triggerAndCommit(const std::shared_ptr<ProcessContext>& cont
   }
 }
 
-void ProcessorImpl::trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session) {
-  ++metrics_->invocations();
+void Processor::trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session) {
+  ++impl_->getMetrics()->invocations();
   const auto start = std::chrono::steady_clock::now();
   onTrigger(*context, *process_session);
-  metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
+  impl_->getMetrics()->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
 }
 
-bool ProcessorImpl::isWorkAvailable() {
+bool Processor::isWorkAvailable() {
   // We have work if any incoming connection has work
   std::lock_guard<std::mutex> lock(mutex_);
   bool hasWork = false;
@@ -229,11 +219,11 @@ bool ProcessorImpl::isWorkAvailable() {
         getCurrentExceptionTypeName());
   }
 
-  return hasWork;
+  return hasWork || impl_->isWorkAvailable();
 }
 
 // must hold the graphMutex
-void ProcessorImpl::updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force) {
+void Processor::updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force) {
   bool didChange = force;
   for (auto& outIt : outgoing_connections_) {
     for (auto& outConn : outIt.second) {
@@ -273,7 +263,7 @@ void ProcessorImpl::updateReachability(const std::lock_guard<std::mutex>& graph_
   }
 }
 
-bool ProcessorImpl::partOfCycle(Connection* conn) {
+bool Processor::partOfCycle(Connection* conn) {
   auto source = dynamic_cast<Processor*>(conn->getSource());
   if (!source) {
     return false;
@@ -285,7 +275,7 @@ bool ProcessorImpl::partOfCycle(Connection* conn) {
   return it->second.contains(source);
 }
 
-bool ProcessorImpl::isThrottledByBackpressure() const {
+bool Processor::isThrottledByBackpressure() const {
   bool isThrottledByOutgoing = ranges::any_of(outgoing_connections_, [](auto& name_connection_set_pair) {
     return ranges::any_of(name_connection_set_pair.second, [](auto& connectable) {
       auto connection = dynamic_cast<Connection*>(connectable);
@@ -299,7 +289,7 @@ bool ProcessorImpl::isThrottledByBackpressure() const {
   return isThrottledByOutgoing && !isForcedByIncomingCycle;
 }
 
-Connectable* ProcessorImpl::pickIncomingConnection() {
+Connectable* Processor::pickIncomingConnection() {
   std::lock_guard<std::mutex> rel_guard(relationship_mutex_);
 
   auto beginIt = incoming_connections_Iter;
@@ -319,7 +309,7 @@ Connectable* ProcessorImpl::pickIncomingConnection() {
   return getNextIncomingConnectionImpl(rel_guard);
 }
 
-void ProcessorImpl::validateAnnotations() const {
+void Processor::validateAnnotations() const {
   switch (getInputRequirement()) {
     case annotation::Input::INPUT_REQUIRED: {
       if (!hasIncomingConnections()) {
@@ -339,7 +329,7 @@ void ProcessorImpl::validateAnnotations() const {
   }
 }
 
-void ProcessorImpl::setMaxConcurrentTasks(const uint8_t tasks) {
+void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
   if (isSingleThreaded() && tasks > 1) {
     logger_->log_warn("Processor {} can not be run in parallel, its \"max concurrent tasks\" value is too high. "
                       "It was set to 1 from {}.", name_, tasks);
@@ -350,24 +340,182 @@ void ProcessorImpl::setMaxConcurrentTasks(const uint8_t tasks) {
   max_concurrent_tasks_ = tasks;
 }
 
-void ProcessorImpl::yield() {
+void Processor::yield() {
   yield_expiration_ = std::chrono::steady_clock::now() + yield_period_.load();
 }
 
-void ProcessorImpl::yield(std::chrono::steady_clock::duration delta_time) {
+void Processor::yield(std::chrono::steady_clock::duration delta_time) {
   yield_expiration_ = std::chrono::steady_clock::now() + delta_time;
 }
 
-bool ProcessorImpl::isYield() {
+bool Processor::isYield() const {
   return getYieldTime() > 0ms;
 }
 
-void ProcessorImpl::clearYield() {
+void Processor::clearYield() {
   yield_expiration_ = std::chrono::steady_clock::time_point();
 }
 
-std::chrono::steady_clock::duration ProcessorImpl::getYieldTime() const {
+std::chrono::steady_clock::duration Processor::getYieldTime() const {
   return std::max(yield_expiration_.load()-std::chrono::steady_clock::now(), std::chrono::steady_clock::duration{0});
+}
+
+namespace {
+
+class ProcessorDescriptorImpl : public ProcessorDescriptor {
+ public:
+  explicit ProcessorDescriptorImpl(Processor* impl): impl_(impl) {}
+  void setSupportedRelationships(std::span<const RelationshipDefinition> relationships) override {
+    impl_->setSupportedRelationships(relationships);
+  }
+
+  void setSupportedProperties(std::span<const PropertyReference> properties) override {
+    impl_->setSupportedProperties(properties);
+  }
+
+ private:
+  Processor* impl_;
+};
+
+}  // namespace
+
+void Processor::initialize() {
+  ProcessorDescriptorImpl self{this};
+  impl_->initialize(self);
+}
+
+ScheduledState Processor::getScheduledState() const {
+  return state_;
+}
+
+void Processor::setSchedulingStrategy(SchedulingStrategy strategy) {
+  strategy_ = strategy;
+}
+
+SchedulingStrategy Processor::getSchedulingStrategy() const {
+  return strategy_;
+}
+
+void Processor::setSchedulingPeriod(std::chrono::steady_clock::duration period) {
+  scheduling_period_ = std::max(std::chrono::steady_clock::duration(MINIMUM_SCHEDULING_PERIOD), period);
+}
+
+std::chrono::steady_clock::duration Processor::getSchedulingPeriod() const {
+  return scheduling_period_;
+}
+
+void Processor::setCronPeriod(const std::string &period) {
+  cron_period_ = period;
+}
+
+std::string Processor::getCronPeriod() const {
+  return cron_period_;
+}
+
+void Processor::setRunDurationNano(std::chrono::steady_clock::duration period) {
+  run_duration_ = period;
+}
+
+std::chrono::steady_clock::duration Processor::getRunDurationNano() const {
+  return (run_duration_);
+}
+
+void Processor::setYieldPeriodMsec(std::chrono::milliseconds period) {
+  yield_period_ = period;
+}
+
+std::chrono::steady_clock::duration Processor::getYieldPeriod() const {
+  return yield_period_;
+}
+
+void Processor::setPenalizationPeriod(std::chrono::milliseconds period) {
+  penalization_period_ = period;
+}
+
+bool Processor::isSingleThreaded() const {
+  return impl_->isSingleThreaded();
+}
+
+std::string Processor::getProcessorType() const {
+  return impl_->getProcessorType();
+}
+
+bool Processor::getTriggerWhenEmpty() const {
+  return impl_->getTriggerWhenEmpty();
+}
+
+uint8_t Processor::getActiveTasks() const {
+  return (active_tasks_);
+}
+
+void Processor::incrementActiveTasks() {
+  ++active_tasks_;
+}
+
+void Processor::decrementActiveTask() {
+  if (active_tasks_ > 0)
+    --active_tasks_;
+}
+
+void Processor::clearActiveTask() {
+  active_tasks_ = 0;
+}
+
+std::string Processor::getProcessGroupUUIDStr() const {
+  return process_group_uuid_;
+}
+
+void Processor::setProcessGroupUUIDStr(const std::string &uuid) {
+  process_group_uuid_ = uuid;
+}
+
+std::chrono::steady_clock::time_point Processor::getYieldExpirationTime() const {
+  return yield_expiration_;
+}
+
+bool Processor::canEdit() {
+  return !isRunning();
+}
+
+void Processor::onTrigger(ProcessContext& context, ProcessSession& session) {
+  impl_->onTrigger(context, session);
+}
+
+void Processor::onSchedule(ProcessContext& context, ProcessSessionFactory& session_factory) {
+  impl_->onSchedule(context, session_factory);
+}
+
+// Hook executed when onSchedule fails (throws). Configuration should be reset in this
+void Processor::onUnSchedule() {
+  impl_->onUnSchedule();
+}
+
+annotation::Input Processor::getInputRequirement() const {
+  return impl_->getInputRequirement();
+}
+
+[[nodiscard]] bool Processor::supportsDynamicProperties() const {
+  return impl_->supportsDynamicProperties();
+}
+
+[[nodiscard]] bool Processor::supportsDynamicRelationships() const {
+  return impl_->supportsDynamicRelationships();
+}
+
+state::response::SharedResponseNode Processor::getResponseNode() {
+  return getMetrics();
+}
+
+gsl::not_null<std::shared_ptr<ProcessorMetrics>> Processor::getMetrics() const {
+  return impl_->getMetrics();
+}
+
+void Processor::restore(const std::shared_ptr<FlowFile>& file) {
+  impl_->restore(file);
+}
+
+const std::unordered_map<Connection*, std::unordered_set<Processor*>>& Processor::reachable_processors() const {
+  return reachable_processors_;
 }
 
 }  // namespace org::apache::nifi::minifi::core

@@ -25,7 +25,7 @@
 #include <utility>
 
 #include "io/InputStream.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "utils/Export.h"
 #include "controllers/SSLContextService.h"
 #include "core/Core.h"
@@ -127,7 +127,7 @@ class PutTCP final : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutTCP(const std::string_view name, const utils::Identifier& uuid = {});
+  using ProcessorImpl::ProcessorImpl;
   PutTCP(const PutTCP&) = delete;
   PutTCP(PutTCP&&) = delete;
   PutTCP& operator=(const PutTCP&) = delete;
