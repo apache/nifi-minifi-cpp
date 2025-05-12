@@ -25,15 +25,11 @@
 #include "range/v3/action/unique.hpp"
 #include "core/Processor.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class ClassLoaderImpl : public ClassLoader {
  public:
-  explicit ClassLoaderImpl(const std::string& name = "/");
+  explicit ClassLoaderImpl(std::string name = "/");
 
   ClassLoader& getClassLoader(const std::string& child_name) override;
 
@@ -51,6 +47,8 @@ class ClassLoaderImpl : public ClassLoader {
 
   CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) override;
 
+  ~ClassLoaderImpl() override = default;
+
  private:
   std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
 
@@ -63,8 +61,8 @@ class ClassLoaderImpl : public ClassLoader {
   std::string name_;
 };
 
-ClassLoaderImpl::ClassLoaderImpl(const std::string& name)
-  : logger_(logging::LoggerFactory<ClassLoader>::getLogger()), name_(name) {}
+ClassLoaderImpl::ClassLoaderImpl(std::string name)
+  : logger_(logging::LoggerFactory<ClassLoader>::getLogger()), name_(std::move(name)) {}
 
 ClassLoader &ClassLoader::getDefaultClassLoader() {
   static ClassLoaderImpl ret;
@@ -219,8 +217,4 @@ CoreComponent* ClassLoaderImpl::instantiateRaw(const std::string &class_name, co
   return nullptr;
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

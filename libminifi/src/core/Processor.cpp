@@ -348,7 +348,7 @@ void Processor::yield(std::chrono::steady_clock::duration delta_time) {
   yield_expiration_ = std::chrono::steady_clock::now() + delta_time;
 }
 
-bool Processor::isYield() {
+bool Processor::isYield() const {
   return getYieldTime() > 0ms;
 }
 
