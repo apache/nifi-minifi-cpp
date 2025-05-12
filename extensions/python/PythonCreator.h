@@ -60,7 +60,7 @@ class DummyLogger : public core::logging::Logger {
   bool should_log(core::logging::LOG_LEVEL /*level*/) override {
     return false;
   }
-  [[nodiscard]] virtual core::logging::LOG_LEVEL level() const override {
+  [[nodiscard]] core::logging::LOG_LEVEL level() const override {
     return core::logging::LOG_LEVEL::off;
   }
 
