@@ -69,22 +69,13 @@ class ClassLoader {
 
   virtual void unregisterClass(const std::string& clazz) = 0;
 
-  virtual std::optional<std::string> getGroupForClass(const std::string &class_name) const = 0;
+  [[nodiscard]] virtual std::optional<std::string> getGroupForClass(const std::string &class_name) const = 0;
 
-  virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
+  [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
 
-  virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
+  [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
 
-  virtual CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
-
-  /**
-   * Instantiate object based on class_name
-   * @param class_name class to create
-   * @param uuid uuid of object
-   * @return nullptr or object created from class_name definition.
-   */
-  template<class T = CoreComponent>
-  std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name);
+  [[nodiscard]] virtual CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
 
   /**
    * Instantiate object based on class_name
@@ -93,7 +84,7 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  std::unique_ptr<T> instantiate(const std::string &class_name, const utils::Identifier &uuid);
+  [[nodiscard]] std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name);
 
   /**
    * Instantiate object based on class_name
@@ -102,7 +93,16 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  T *instantiateRaw(const std::string &class_name, const std::string &name);
+  [[nodiscard]] std::unique_ptr<T> instantiate(const std::string &class_name, const utils::Identifier &uuid);
+
+  /**
+   * Instantiate object based on class_name
+   * @param class_name class to create
+   * @param uuid uuid of object
+   * @return nullptr or object created from class_name definition.
+   */
+  template<class T = CoreComponent>
+  [[nodiscard]] T *instantiateRaw(const std::string &class_name, const std::string &name);
 };
 
 }  // namespace org::apache::nifi::minifi::core

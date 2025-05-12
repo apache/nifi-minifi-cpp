@@ -39,7 +39,7 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   auto plan = testController.createPlan();
   auto write_to_flow_file = plan->addProcessor<WriteToFlowFileTestProcessor>("write_to_flow_file");
   auto defrag_text_flow_files = plan->addProcessor<DefragmentText>("defrag_text_flow_files");
-  auto read_from_success_relationship = plan->addProcessor<ReadFromFlowFileTestProcessor>( "read_from_success_relationship");
+  auto read_from_success_relationship = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_success_relationship");
   auto read_from_failure_relationship = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_failure_relationship");
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, defrag_text_flow_files);

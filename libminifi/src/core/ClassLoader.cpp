@@ -31,7 +31,12 @@ class ClassLoaderImpl : public ClassLoader {
  public:
   explicit ClassLoaderImpl(std::string name = "/");
 
-  ClassLoader& getClassLoader(const std::string& child_name) override;
+  ClassLoaderImpl(const ClassLoaderImpl&) = delete;
+  ClassLoaderImpl(ClassLoaderImpl&&) = delete;
+  ClassLoaderImpl& operator=(const ClassLoaderImpl&) = delete;
+  ClassLoaderImpl& operator=(ClassLoaderImpl&&) = delete;
+
+  [[nodiscard]] ClassLoader& getClassLoader(const std::string& child_name) override;
 
   void registerClass(const std::string &clazz, std::unique_ptr<ObjectFactory> factory) override;
 
@@ -39,25 +44,21 @@ class ClassLoaderImpl : public ClassLoader {
 
   void unregisterClass(const std::string& clazz) override;
 
-  std::optional<std::string> getGroupForClass(const std::string &class_name) const override;
+  [[nodiscard]] std::optional<std::string> getGroupForClass(const std::string &class_name) const override;
 
-  std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) override;
+  [[nodiscard]] std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) override;
 
-  std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) override;
+  [[nodiscard]] std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) override;
 
-  CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) override;
+  [[nodiscard]] CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) override;
 
   ~ClassLoaderImpl() override = default;
 
  private:
   std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
-
   std::map<std::string, ClassLoaderImpl> class_loaders_;
-
   mutable std::mutex internal_mutex_;
-
   std::shared_ptr<logging::Logger> logger_;
-
   std::string name_;
 };
 
@@ -104,28 +105,28 @@ class ProcessorFactoryWrapper : public ObjectFactoryImpl {
     : ObjectFactoryImpl(factory->getGroupName()),
       factory_(std::move(factory)) {}
 
-  std::unique_ptr<CoreComponent> create(const std::string &name) override {
+  [[nodiscard]] std::unique_ptr<CoreComponent> create(const std::string &name) override {
     return std::unique_ptr<CoreComponent>{createRaw(name)};
   }
 
-  std::unique_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
+  [[nodiscard]] std::unique_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
     return std::unique_ptr<CoreComponent>{createRaw(name, uuid)};
   }
 
-  CoreComponent* createRaw(const std::string &name) override {
+  [[nodiscard]] CoreComponent* createRaw(const std::string &name) override {
     return createRaw(name, utils::IdGenerator::getIdGenerator()->generate());
   }
 
-  CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
+  [[nodiscard]] CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
     auto logger = logging::LoggerFactoryBase::getAliasedLogger(getClassName(), uuid);
     return new Processor(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = logger}));
   }
 
-  std::string getGroupName() const override {
+  [[nodiscard]] std::string getGroupName() const override {
     return factory_->getGroupName();
   }
 
-  std::string getClassName() override {
+  [[nodiscard]] std::string getClassName() override {
     return factory_->getClassName();
   }
 
