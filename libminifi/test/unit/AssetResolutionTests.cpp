@@ -85,4 +85,4 @@ TEST_CASE("Resolve more categories") {
   REQUIRE(result == "yes please /home/user/apple.txt");
 }
 
-}
+}  // namespace org::apache::nifi::minifi::test

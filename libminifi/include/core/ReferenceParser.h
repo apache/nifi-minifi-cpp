@@ -119,7 +119,7 @@ IdResolver getAssetResolver(std::function<std::optional<std::filesystem::path>(c
     if (!path) {
       throw AssetException(fmt::format("Failed to find asset '{}'", id));
     }
-    return path.value();
+    return path.value().string();
   };
 }
 
