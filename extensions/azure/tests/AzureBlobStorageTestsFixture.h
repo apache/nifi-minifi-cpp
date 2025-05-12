@@ -33,7 +33,6 @@
 #include "processors/UpdateAttribute.h"
 #include "utils/file/FileUtils.h"
 #include "MockBlobStorage.h"
-#include "core/Processor.h"
 
 const std::string CONTAINER_NAME = "test-container";
 const std::string STORAGE_ACCOUNT_NAME = "test-account";

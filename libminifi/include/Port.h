@@ -34,7 +34,9 @@ class Port;
 
 class PortImpl final : public ForwardingNode {
  public:
-  PortImpl(std::string_view name, const utils::Identifier& uuid, PortType port_type) : ForwardingNode({.uuid = uuid, .name = std::string{name}, .logger = core::logging::LoggerFactory<Port>::getLogger(uuid)}), port_type_(port_type) {}
+  PortImpl(std::string_view name, const utils::Identifier& uuid, PortType port_type)
+      : ForwardingNode({.uuid = uuid, .name = std::string{name}, .logger = core::logging::LoggerFactory<Port>::getLogger(uuid)}), port_type_(port_type) {}
+
   PortType getPortType() const {
     return port_type_;
   }

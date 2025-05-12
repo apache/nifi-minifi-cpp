@@ -30,7 +30,7 @@ class DummyProcessor : public minifi::core::ProcessorImpl {
  public:
   using ProcessorImpl::ProcessorImpl;
 
-  DummyProcessor(std::string_view name)
+  explicit DummyProcessor(std::string_view name)
     : ProcessorImpl{minifi::core::ProcessorMetadata{
       .uuid = minifi::utils::IdGenerator::getIdGenerator()->generate(),
       .name = std::string{name},

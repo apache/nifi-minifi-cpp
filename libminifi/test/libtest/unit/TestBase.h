@@ -205,7 +205,7 @@ template<typename T>
 class TypedProcessorWrapper {
  public:
   TypedProcessorWrapper() = default;
-  TypedProcessorWrapper(core::Processor* proc): proc_(proc) {
+  TypedProcessorWrapper(core::Processor* proc): proc_(proc) {  // NOLINT(runtime/explicit)
     if (proc_) {
       proc_->getImpl<T>();
     }
