@@ -125,7 +125,7 @@ IdResolver getAssetResolver(std::function<std::optional<std::filesystem::path>(c
 
 IdResolver getAssetResolver(utils::file::AssetManager* asset_manager) {
   if (!asset_manager) {
-    return getAssetResolver(nullptr);
+    return getAssetResolver(std::function<std::optional<std::filesystem::path>(const std::string&)>{nullptr});
   }
   return getAssetResolver([asset_manager] (const std::string& id) {
     return asset_manager->findAssetById(id);
