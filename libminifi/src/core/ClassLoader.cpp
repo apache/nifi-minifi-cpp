@@ -134,7 +134,7 @@ class ProcessorFactoryWrapper : public ObjectFactoryImpl {
  private:
   std::unique_ptr<ProcessorFactory> factory_;
 };
-}
+}  // namespace
 
 void ClassLoaderImpl::registerClass(const std::string &clazz, std::unique_ptr<ProcessorFactory> factory) {
   registerClass(clazz, std::make_unique<ProcessorFactoryWrapper>(std::move(factory)));

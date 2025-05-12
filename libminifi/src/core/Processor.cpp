@@ -38,7 +38,6 @@
 #include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
 #include "Exception.h"
-#include "core/Processor.h"
 #include "core/ProcessorMetrics.h"
 
 using namespace std::literals::chrono_literals;
