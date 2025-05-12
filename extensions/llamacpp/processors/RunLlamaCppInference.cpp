@@ -25,6 +25,7 @@
 #include "rapidjson/error/en.h"
 #include "LlamaContext.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "DefaultLlamaContext.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
@@ -55,32 +56,22 @@ void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::Proce
   llama_ctx_params.n_threads = gsl::narrow<int32_t>(utils::parseI64Property(context, ThreadsForGeneration));
   llama_ctx_params.n_threads_batch = gsl::narrow<int32_t>(utils::parseI64Property(context, ThreadsForBatchProcessing));
 
-  llama_ctx_ = LlamaContext::create(model_path_, llama_sampler_params, llama_ctx_params);
+  if (llama_context_provider_) {
+    llama_ctx_ = llama_context_provider_(model_path_, llama_sampler_params, llama_ctx_params);
+  } else {
+    llama_ctx_ = std::make_unique<DefaultLlamaContext>(model_path_, llama_sampler_params, llama_ctx_params);
+  }
 }
 
 void RunLlamaCppInference::increaseTokensIn(uint64_t token_count) {
   auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_.get());
   gsl_Assert(llamacpp_metrics);
-  std::lock_guard<std::mutex> lock(llamacpp_metrics->tokens_in_mutex_);
-  if (llamacpp_metrics->tokens_in > std::numeric_limits<uint64_t>::max() - token_count) {
-    logger_->log_warn("Tokens in count overflow detected, resetting to 0");
-    llamacpp_metrics->tokens_in = token_count;
-    return;
-  }
-
   llamacpp_metrics->tokens_in += token_count;
 }
 
 void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
   auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_.get());
   gsl_Assert(llamacpp_metrics);
-  std::lock_guard<std::mutex> lock(llamacpp_metrics->tokens_out_mutex_);
-  if (llamacpp_metrics->tokens_out > std::numeric_limits<uint64_t>::max() - token_count) {
-    logger_->log_warn("Tokens out count overflow detected, resetting to 0");
-    llamacpp_metrics->tokens_out = token_count;
-    return;
-  }
-
   llamacpp_metrics->tokens_out += token_count;
 }
 

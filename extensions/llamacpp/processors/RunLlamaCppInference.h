@@ -28,6 +28,9 @@
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
+using LlamaContextProvider =
+  std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params)>;
+
 class RunLlamaCppInferenceMetrics : public core::ProcessorMetricsImpl {
  public:
   explicit RunLlamaCppInferenceMetrics(const core::Processor& source_processor)
@@ -54,16 +57,15 @@ class RunLlamaCppInferenceMetrics : public core::ProcessorMetricsImpl {
     return metrics;
   }
 
-  std::mutex tokens_in_mutex_;
-  std::mutex tokens_out_mutex_;
   std::atomic<uint64_t> tokens_in{0};
   std::atomic<uint64_t> tokens_out{0};
 };
 
 class RunLlamaCppInference : public core::ProcessorImpl {
  public:
-  explicit RunLlamaCppInference(std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
+  explicit RunLlamaCppInference(std::string_view name, const utils::Identifier& uuid = {}, LlamaContextProvider llama_context_provider = {})
+      : core::ProcessorImpl(name, uuid),
+        llama_context_provider_(std::move(llama_context_provider)) {
     metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>(*this));
   }
   ~RunLlamaCppInference() override = default;
@@ -167,7 +169,7 @@ class RunLlamaCppInference : public core::ProcessorImpl {
 
   EXTENSIONAPI static constexpr auto LlamaCppTimeToFirstToken = core::OutputAttributeDefinition<>{"llamacpp.time.to.first.token", {Success}, "Time to first token generated in milliseconds."};
   EXTENSIONAPI static constexpr auto LlamaCppTokensPerSecond = core::OutputAttributeDefinition<>{"llamacpp.tokens.per.second", {Success}, "Tokens generated per second."};
-  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 2>{LlamaCppTimeToFirstToken, LlamaCppTokensPerSecond};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::to_array<core::OutputAttributeReference>({LlamaCppTimeToFirstToken, LlamaCppTokensPerSecond});
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -189,6 +191,7 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   std::string model_path_;
   std::string system_prompt_;
 
+  LlamaContextProvider llama_context_provider_;
   std::unique_ptr<LlamaContext> llama_ctx_;
 };
 

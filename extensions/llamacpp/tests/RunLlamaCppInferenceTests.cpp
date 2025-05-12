@@ -78,14 +78,13 @@ TEST_CASE("Prompt is generated correctly with default parameters") {
   std::filesystem::path test_model_path;
   processors::LlamaSamplerParams test_sampler_params;
   processors::LlamaContextParams test_context_params;
-  processors::LlamaContext::testSetProvider(
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path& model_path, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
       test_model_path = model_path;
       test_sampler_params = sampler_params;
       test_context_params = context_params;
       return std::move(mock_llama_context);
-    });
-  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+    }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
@@ -124,14 +123,13 @@ TEST_CASE("Prompt is generated correctly with custom parameters") {
   std::filesystem::path test_model_path;
   processors::LlamaSamplerParams test_sampler_params;
   processors::LlamaContextParams test_context_params;
-  processors::LlamaContext::testSetProvider(
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path& model_path, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
       test_model_path = model_path;
       test_sampler_params = sampler_params;
       test_context_params = context_params;
       return std::move(mock_llama_context);
-    });
-  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+    }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model");
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
@@ -176,11 +174,10 @@ TEST_CASE("Prompt is generated correctly with custom parameters") {
 TEST_CASE("Empty flow file does not include input data in prompt") {
   auto mock_llama_context = std::make_unique<MockLlamaContext>();
   auto mock_llama_context_ptr = mock_llama_context.get();
-  processors::LlamaContext::testSetProvider(
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
-    });
-  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+    }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
@@ -200,11 +197,10 @@ TEST_CASE("Empty flow file does not include input data in prompt") {
 }
 
 TEST_CASE("Invalid values for optional double type properties throw exception") {
-  processors::LlamaContext::testSetProvider(
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
-    });
-  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+    }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
@@ -229,12 +225,11 @@ TEST_CASE("Invalid values for optional double type properties throw exception") 
 
 TEST_CASE("Top K property empty and invalid values are handled properly") {
   std::optional<int32_t> test_top_k = 0;
-  processors::LlamaContext::testSetProvider(
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams&) {
       test_top_k = sampler_params.top_k;
       return std::make_unique<MockLlamaContext>();
-    });
-  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+    }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
@@ -261,11 +256,10 @@ TEST_CASE("Error handling during generation and applying template") {
     mock_llama_context->setApplyTemplateFailure();
   }
 
-  processors::LlamaContext::testSetProvider(
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
-    });
-  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+    }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model");
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
@@ -279,11 +273,10 @@ TEST_CASE("Error handling during generation and applying template") {
 }
 
 TEST_CASE("Route flow file to failure when prompt and input data is empty") {
-  processors::LlamaContext::testSetProvider(
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
-    });
-  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+    }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model");
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "");
@@ -299,11 +292,10 @@ TEST_CASE("Route flow file to failure when prompt and input data is empty") {
 TEST_CASE("System prompt is optional") {
   auto mock_llama_context = std::make_unique<MockLlamaContext>();
   auto mock_llama_context_ptr = mock_llama_context.get();
-  processors::LlamaContext::testSetProvider(
+  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
-    });
-  minifi::test::SingleProcessorTestController controller(std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference"));
+    }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
   controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
@@ -321,11 +313,10 @@ TEST_CASE("System prompt is optional") {
 }
 
 TEST_CASE("Test output metrics") {
-  processors::LlamaContext::testSetProvider(
+  auto processor = std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference", utils::Identifier(),
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
     });
-  auto processor = std::make_unique<processors::RunLlamaCppInference>("RunLlamaCppInference");
   auto processor_metrics = processor->getMetrics();
   minifi::test::SingleProcessorTestController controller(std::move(processor));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();

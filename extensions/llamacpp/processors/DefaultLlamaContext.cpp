@@ -40,8 +40,6 @@ std::vector<llama_token> tokenizeInput(const llama_vocab* vocab, const std::stri
 
 
 DefaultLlamaContext::DefaultLlamaContext(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params) {
-  llama_backend_init();
-
   llama_model_ = llama_model_load_from_file(model_path.string().c_str(), llama_model_default_params());  // NOLINT(cppcoreguidelines-prefer-member-initializer)
   if (!llama_model_) {
     throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load model from '{}'", model_path.string()));
@@ -82,15 +80,13 @@ DefaultLlamaContext::~DefaultLlamaContext() {
   llama_ctx_ = nullptr;
   llama_model_free(llama_model_);
   llama_model_ = nullptr;
-  llama_backend_free();
 }
 
 std::optional<std::string> DefaultLlamaContext::applyTemplate(const std::vector<LlamaChatMessage>& messages) {
   std::vector<llama_chat_message> llama_messages;
   llama_messages.reserve(messages.size());
-  for (auto& msg : messages) {
-    llama_messages.push_back(llama_chat_message{.role = msg.role.c_str(), .content = msg.content.c_str()});
-  }
+  std::transform(messages.begin(), messages.end(), std::back_inserter(llama_messages),
+                 [](const LlamaChatMessage& msg) { return llama_chat_message{.role = msg.role.c_str(), .content = msg.content.c_str()}; });
   std::string text;
   text.resize(utils::configuration::DEFAULT_BUFFER_SIZE);
   const char * chat_template = llama_model_chat_template(llama_model_, nullptr);

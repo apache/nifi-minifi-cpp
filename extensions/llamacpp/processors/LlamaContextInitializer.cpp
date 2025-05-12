@@ -14,23 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "LlamaContext.h"
-#include "DefaultLlamaContext.h"
+#include "LlamaContextInitializer.h"
+#include "llama.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
-static std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path&, const LlamaSamplerParams&, const LlamaContextParams&)> test_provider;
-
-void LlamaContext::testSetProvider(std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path&, const LlamaSamplerParams&, const LlamaContextParams&)> provider) {
-  test_provider = std::move(provider);
+LlamaContextInitializer::LlamaContextInitializer() {
+  llama_backend_init();
 }
 
-std::unique_ptr<LlamaContext> LlamaContext::create(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params) {
-  if (test_provider) {
-    return test_provider(model_path, llama_sampler_params, llama_ctx_params);
-  }
-  return std::make_unique<DefaultLlamaContext>(model_path, llama_sampler_params, llama_ctx_params);
+LlamaContextInitializer::~LlamaContextInitializer() {
+  llama_backend_free();
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors
