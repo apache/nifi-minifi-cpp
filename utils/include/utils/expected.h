@@ -56,9 +56,8 @@ std::string formatErrorType(const E& error) {
 
 template<>
 inline std::string formatErrorType(const std::error_code& error) {
-  return fmt::format("{} ({})", error, error.message());
+  return fmt::format("{} ({})", error.message(), error);
 }
-
 
 // transform implementation
 template<expected Expected, typename F>
@@ -218,7 +217,7 @@ typename std::remove_cvref_t<Expected>::value_type operator|(Expected object, de
     return std::move(*object);
   }
   std::cerr << fmt::format("Aborting due to {}: {}", e.reason, formatErrorType(object.error())) << std::endl;
-  std::abort();
+  std::terminate();
 }
 }  // namespace detail
 

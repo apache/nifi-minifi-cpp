@@ -57,7 +57,7 @@ TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyTopic", "[publishMQTTTest]") {
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyBrokerURI", "[publishMQTTTest]") {
   publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic.name, "mytopic");
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_),
-      Catch::Matchers::EndsWith("Expected valid value from \"publishMqttProcessor::Broker URI\", but got Property Error:2 (PropertyNotSet)"));
+      Catch::Matchers::EndsWith("Expected valid value from \"publishMqttProcessor::Broker URI\", but got PropertyNotSet (Property Error:2)"));
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3_1_0", "[publishMQTTTest]") {
