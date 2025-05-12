@@ -29,7 +29,6 @@ enum class PropertyErrorCode : std::underlying_type_t<std::byte> {
  DynamicPropertiesNotSupported,
  PropertyNotSet,
  ValidationFailed,
- EmptyString
 };
 
 
