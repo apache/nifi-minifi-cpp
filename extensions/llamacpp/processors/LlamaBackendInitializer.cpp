@@ -14,25 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+#include "LlamaBackendInitializer.h"
+#include "llama.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
-class LlamaContextInitializer {
- public:
-  static LlamaContextInitializer& get() {
-    static LlamaContextInitializer instance;
-    return instance;
-  }
+LlamaBackendInitializer::LlamaBackendInitializer() {
+  llama_backend_init();
+}
 
-  ~LlamaContextInitializer();
-  LlamaContextInitializer(const LlamaContextInitializer&) = delete;
-  LlamaContextInitializer& operator=(const LlamaContextInitializer&) = delete;
-  LlamaContextInitializer(LlamaContextInitializer&&) = delete;
-  LlamaContextInitializer& operator=(LlamaContextInitializer&&) = delete;
-
- private:
-  LlamaContextInitializer();
-};
+LlamaBackendInitializer::~LlamaBackendInitializer() {
+  llama_backend_free();
+}
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors

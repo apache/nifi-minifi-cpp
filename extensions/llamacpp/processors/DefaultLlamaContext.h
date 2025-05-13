@@ -18,7 +18,7 @@
 
 #include "LlamaContext.h"
 #include "llama.h"
-#include "LlamaContextInitializer.h"
+#include "LlamaBackendInitializer.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
@@ -35,7 +35,7 @@ class DefaultLlamaContext : public LlamaContext {
   nonstd::expected<GenerationResult, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) override;
 
  private:
-  const LlamaContextInitializer& llama_context_initializer_ = LlamaContextInitializer::get();
+  const LlamaBackendInitializer& llama_context_initializer_ = LlamaBackendInitializer::get();
   llama_model* llama_model_{};
   llama_context* llama_ctx_{};
   llama_sampler* llama_sampler_{};
