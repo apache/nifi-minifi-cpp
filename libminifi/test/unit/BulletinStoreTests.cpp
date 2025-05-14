@@ -38,7 +38,7 @@ std::unique_ptr<core::Processor> createDummyProcessor() {
   auto processor = std::make_unique<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
   processor->setProcessGroupUUIDStr("68fa9ae4-b9fc-4873-b0d9-edab59fdb0c2");
   processor->setProcessGroupName("sub_group");
-  processor->setProcessGroupPath("root/sub_group");
+  processor->setProcessGroupPath("root / sub_group");
   return processor;
 }
 
@@ -69,9 +69,16 @@ TEST_CASE("Remove oldest entries when limit is reached", "[bulletinStore]") {
   }
   auto bulletins = bulletin_store.getBulletins();
   REQUIRE(bulletins.size() == 2);
-  REQUIRE(bulletins[0].id == 2);
-  REQUIRE(bulletins[1].id == 3);
-  REQUIRE(bulletins[0].message == "Warning message");
+  CHECK(bulletins[0].id == 2);
+  CHECK(bulletins[0].level == "WARN");
+  CHECK(bulletins[0].category == "Log Message");
+  CHECK(bulletins[0].message == "Warning message");
+  CHECK(bulletins[0].group_id == "68fa9ae4-b9fc-4873-b0d9-edab59fdb0c2");
+  CHECK(bulletins[0].group_name == "sub_group");
+  CHECK(bulletins[0].group_path == "root / sub_group");
+  CHECK(bulletins[0].source_id == "4d7fa7e6-2459-46dd-b2ba-61517239edf5");
+  CHECK(bulletins[0].source_name == "DummyProcessor");
+  CHECK(bulletins[1].id == 3);
 }
 
 TEST_CASE("Return all bulletins when no time interval is defined", "[bulletinStore]") {
@@ -83,10 +90,17 @@ TEST_CASE("Return all bulletins when no time interval is defined", "[bulletinSto
   }
   auto bulletins = bulletin_store.getBulletins();
   REQUIRE(bulletins.size() == 3);
-  REQUIRE(bulletins[0].id == 1);
-  REQUIRE(bulletins[1].id == 2);
-  REQUIRE(bulletins[2].id == 3);
-  REQUIRE(bulletins[2].message == "Warning message");
+  CHECK(bulletins[0].id == 1);
+  CHECK(bulletins[0].level == "WARN");
+  CHECK(bulletins[0].category == "Log Message");
+  CHECK(bulletins[0].message == "Warning message");
+  CHECK(bulletins[0].group_id == "68fa9ae4-b9fc-4873-b0d9-edab59fdb0c2");
+  CHECK(bulletins[0].group_name == "sub_group");
+  CHECK(bulletins[0].group_path == "root / sub_group");
+  CHECK(bulletins[0].source_id == "4d7fa7e6-2459-46dd-b2ba-61517239edf5");
+  CHECK(bulletins[0].source_name == "DummyProcessor");
+  CHECK(bulletins[1].id == 2);
+  CHECK(bulletins[2].id == 3);
 }
 
 TEST_CASE("Return only bulletins that are inside the defined time interval", "[bulletinStore]") {
@@ -100,9 +114,16 @@ TEST_CASE("Return only bulletins that are inside the defined time interval", "[b
 
   auto bulletins = bulletin_store.getBulletins(3min);
   REQUIRE(bulletins.size() == 2);
-  REQUIRE(bulletins[0].id == 2);
-  REQUIRE(bulletins[1].id == 3);
-  REQUIRE(bulletins[0].message == "Warning message");
+  CHECK(bulletins[0].id == 2);
+  CHECK(bulletins[0].level == "WARN");
+  CHECK(bulletins[0].category == "Log Message");
+  CHECK(bulletins[0].message == "Warning message");
+  CHECK(bulletins[0].group_id == "68fa9ae4-b9fc-4873-b0d9-edab59fdb0c2");
+  CHECK(bulletins[0].group_name == "sub_group");
+  CHECK(bulletins[0].group_path == "root / sub_group");
+  CHECK(bulletins[0].source_id == "4d7fa7e6-2459-46dd-b2ba-61517239edf5");
+  CHECK(bulletins[0].source_name == "DummyProcessor");
+  CHECK(bulletins[1].id == 3);
 }
 
 }  // namespace org::apache::nifi::minifi::test
