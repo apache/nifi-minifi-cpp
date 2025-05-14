@@ -24,7 +24,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerServiceNode> StandardControllerServiceProvider::createControllerService(const std::string& type, const std::string&, const std::string& id, bool) {
+std::shared_ptr<ControllerServiceNode> StandardControllerServiceProvider::createControllerService(const std::string& type, const std::string& id) {
   std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
 
   if (!new_controller_service) {

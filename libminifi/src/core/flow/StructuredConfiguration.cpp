@@ -631,7 +631,6 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
     auto type = getRequiredField(service_node, schema_.type);
     logger_->log_debug("Using type {} for controller service node", type);
 
-    std::string fullType = type;
     type = utils::string::partAfterLastOccurrenceOf(type, '.');
 
     auto name = service_node[schema_.name].getString().value();
@@ -639,7 +638,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
 
     utils::Identifier uuid;
     uuid = id;
-    std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node = createControllerService(type, fullType, name, uuid);
+    std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node = createControllerService(type, name, uuid);
     if (nullptr != controller_service_node) {
       logger_->log_debug("Created Controller Service with UUID {} and name {}", id, name);
       controller_service_node->initialize();

@@ -49,31 +49,33 @@ bool StandardControllerServiceNode::enable() {
     }
   }
   std::shared_ptr<ControllerService> impl = getControllerServiceImplementation();
-  if (nullptr != impl) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    std::vector<std::shared_ptr<ControllerService>> services;
-    std::vector<ControllerServiceNode*> service_nodes;
-    services.reserve(linked_controller_services_.size());
-    for (const auto& service : linked_controller_services_) {
-      services.push_back(service->getControllerServiceImplementation());
-      if (!service->enable()) {
-        logger_->log_warn("Linked Service '{}' could not be enabled", service->getName());
-        return false;
-      }
-    }
-    try {
-      impl->setLinkedControllerServices(services);
-      impl->onEnable();
-    } catch(const std::exception& e) {
-      logger_->log_warn("Service '{}' failed to enable: {}", getName(), e.what());
-      controller_service_->setState(ENABLING);
-      return false;
-    }
-  } else {
+  if (nullptr == impl) {
     logger_->log_warn("Service '{}' service implementation could not be found", controller_service_->getName());
     controller_service_->setState(ENABLING);
     return false;
   }
+
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<std::shared_ptr<ControllerService>> services;
+  std::vector<ControllerServiceNode*> service_nodes;
+  services.reserve(linked_controller_services_.size());
+  for (const auto& service : linked_controller_services_) {
+    services.push_back(service->getControllerServiceImplementation());
+    if (!service->enable()) {
+      logger_->log_warn("Linked Service '{}' could not be enabled", service->getName());
+      return false;
+    }
+  }
+
+  try {
+    impl->setLinkedControllerServices(services);
+    impl->onEnable();
+  } catch(const std::exception& e) {
+    logger_->log_warn("Service '{}' failed to enable: {}", getName(), e.what());
+    controller_service_->setState(ENABLING);
+    return false;
+  }
+
   active = true;
   controller_service_->setState(ENABLED);
   return true;
