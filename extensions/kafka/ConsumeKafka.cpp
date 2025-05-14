@@ -303,7 +303,7 @@ void ConsumeKafka::addAttributesToSingleMessageFlowFile(core::FlowFile& flow_fil
   flow_file.setAttribute(KafkaPartitionAttribute.name, std::to_string(message.partition));
   flow_file.setAttribute(KafkaTopicAttribute.name, rd_kafka_topic_name(message.rkt));
   if (headers_to_add_as_attributes_) {
-    for (const auto &[attr_key, attr_value]: getFlowFilesAttributesFromMessageHeaders(message)) { flow_file.setAttribute(attr_key, attr_value); }
+    for (const auto& [attr_key, attr_value]: getFlowFilesAttributesFromMessageHeaders(message)) { flow_file.setAttribute(attr_key, attr_value); }
   }
 }
 
