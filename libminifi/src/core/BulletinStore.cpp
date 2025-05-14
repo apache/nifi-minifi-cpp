@@ -60,8 +60,9 @@ std::deque<Bulletin> BulletinStore::getBulletins(std::optional<std::chrono::syst
   if (!time_interval_to_include) {
     return bulletins_;
   }
+  const auto timestamp_cutoff = std::chrono::system_clock::now() - *time_interval_to_include;
   for (auto it = bulletins_.begin(); it != bulletins_.end(); ++it) {
-    if (std::chrono::system_clock::now() - it->timestamp <= *time_interval_to_include) {
+    if (it->timestamp >= timestamp_cutoff) {
       return {it, bulletins_.end()};
     }
   }

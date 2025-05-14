@@ -74,7 +74,7 @@ TEST_CASE("Remove oldest entries when limit is reached", "[bulletinStore]") {
   REQUIRE(bulletins[0].message == "Warning message");
 }
 
-TEST_CASE("Return all bulletins when no time interval is defined or all entries are part of the time interval", "[bulletinStore]") {
+TEST_CASE("Return all bulletins when no time interval is defined", "[bulletinStore]") {
   ConfigureImpl configuration;
   core::BulletinStore bulletin_store(configuration);
   auto processor = createDummyProcessor();
