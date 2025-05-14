@@ -273,7 +273,7 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
     const char* value = nullptr;  // Not to be freed
     std::size_t size = 0;
     if (RD_KAFKA_RESP_ERR_NO_ERROR !=
-        rd_kafka_header_get(headers_raw, header_idx, header_name.c_str(), reinterpret_cast<const void **>(&value), &size)) {
+        rd_kafka_header_get(headers_raw, header_idx, header_name.c_str(), reinterpret_cast<const void**>(&value), &size)) {
       break;
     }
     matching_headers.emplace_back(value, size);
