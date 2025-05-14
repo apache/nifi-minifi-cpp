@@ -221,7 +221,7 @@ std::string ConsumeKafka::extractMessage(const rd_kafka_message_t& rkmessage) {
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION,
         "ConsumeKafka: received error message from broker: " + std::to_string(rkmessage.err) + " " + rd_kafka_err2str(rkmessage.err));
   }
-  return {static_cast<char *>(rkmessage.payload), rkmessage.len};
+  return {static_cast<char*>(rkmessage.payload), rkmessage.len};
 }
 
 std::unordered_map<ConsumeKafka::KafkaMessageLocation, ConsumeKafka::MessageBundle> ConsumeKafka::pollKafkaMessages() {
