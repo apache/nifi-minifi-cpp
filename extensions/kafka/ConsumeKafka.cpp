@@ -176,7 +176,7 @@ void ConsumeKafka::configureNewConnection(core::ProcessContext& context) {
   setKafkaConfigurationField(*conf_,
       "auto.offset.reset",
       std::string(magic_enum::enum_name(utils::parseEnumProperty<consume_kafka::OffsetResetPolicyEnum>(context, OffsetReset))));
-  setKafkaConfigurationField(*conf_, "enable.auto.commit", "false");
+  setKafkaConfigurationField(*conf_, "enable.auto.commit", std::to_string(commit_policy_ == consume_kafka::CommitPolicyEnum::AutoCommit));
   setKafkaConfigurationField(*conf_, "enable.auto.offset.store", std::to_string(commit_policy_ == consume_kafka::CommitPolicyEnum::AutoCommit));
   setKafkaConfigurationField(*conf_, "isolation.level", utils::parseBoolProperty(context, HonorTransactions) ? "read_committed" : "read_uncommitted");
   setKafkaConfigurationField(*conf_, "group.id", utils::parseProperty(context, GroupID));
