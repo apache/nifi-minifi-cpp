@@ -240,7 +240,7 @@ auto try_expression(F&& action, Args&&... args) noexcept {
 }  // namespace org::apache::nifi::minifi::utils
 
 #ifndef WIN32  // on windows this conflicts because nonstd::expected === std::expected
-// based on fmt::formatter<std::expected<T, E>, Char
+// based on fmt::formatter<std::expected<T, E>, Char>
 template <typename T, typename E, typename Char>
 struct fmt::formatter<nonstd::expected<T, E>, Char,
                  std::enable_if_t<(std::is_void<T>::value ||
