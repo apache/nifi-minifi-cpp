@@ -187,7 +187,7 @@ std::filesystem::path AssetManager::getRoot() const {
   return root_;
 }
 
-std::optional<std::filesystem::path> AssetManager::findAssetById(const std::string& id) const {
+std::optional<std::filesystem::path> AssetManager::findAssetById(std::string_view id) const {
   std::lock_guard lock(mtx_);
   for (auto& asset : state_.assets) {
     if (asset.id == id) {

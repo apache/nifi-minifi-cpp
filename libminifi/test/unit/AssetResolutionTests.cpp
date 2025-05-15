@@ -22,7 +22,7 @@
 namespace org::apache::nifi::minifi::test {
 
 static std::string resolve(const std::string& str) {
-  return core::resolveIdentifier(str, {core::getAssetResolver([] (const std::string& id) -> std::optional<std::filesystem::path> {
+  return core::resolveIdentifier(str, {core::getAssetResolver([] (std::string_view id) -> std::optional<std::filesystem::path> {
     if (id == "apple") {
       return "/home/user/apple.txt";
     }
@@ -68,12 +68,12 @@ TEST_CASE("Throw on non-existing category") {
 }
 
 TEST_CASE("Resolve more categories") {
-  auto result = core::resolveIdentifier("@{drink:cider} @{asset-id:apple}", {core::getAssetResolver([] (const std::string& id) -> std::optional<std::filesystem::path> {
+  auto result = core::resolveIdentifier("@{drink:cider} @{asset-id:apple}", {core::getAssetResolver([] (std::string_view id) -> std::optional<std::filesystem::path> {
     if (id == "apple") {
       return "/home/user/apple.txt";
     }
     return std::nullopt;
-  }), [] (const std::string& category, const std::string& id) -> std::optional<std::string> {
+  }), [] (std::string_view category, std::string_view id) -> std::optional<std::string> {
     if (category != "drink") {
       return std::nullopt;
     }

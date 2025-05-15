@@ -764,7 +764,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   }
 }
 
-static std::string resolveAssetReferences(const std::string &str, utils::file::AssetManager *asset_manager) {
+static std::string resolveAssetReferences(std::string_view str, utils::file::AssetManager *asset_manager) {
   return resolveIdentifier(str, {getAssetResolver(asset_manager)});
 }
 

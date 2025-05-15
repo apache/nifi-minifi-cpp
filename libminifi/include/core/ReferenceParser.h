@@ -23,7 +23,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-using IdResolver = std::function<std::optional<std::string>(std::string /* category */, std::string /* value */)>;
+using IdResolver = std::function<std::optional<std::string>(std::string_view /* category */, std::string_view /* value */)>;
 
 class MalformedReferenceException : public Exception {
  public:
@@ -39,7 +39,7 @@ class UnknownCategoryException : public Exception {
   explicit UnknownCategoryException(const char *message) : Exception(ExceptionType::FLOW_EXCEPTION, message) {}
 };
 
-std::string resolveIdentifier(const std::string &str, std::vector<IdResolver> resolvers) {
+std::string resolveIdentifier(std::string_view str, std::vector<IdResolver> resolvers) {
   std::string result;
   enum class ParseState {
     OutsideToken,
@@ -107,8 +107,8 @@ class AssetException : public Exception {
   explicit AssetException(const char *message) : Exception(ExceptionType::ASSET_EXCEPTION, message) {}
 };
 
-IdResolver getAssetResolver(std::function<std::optional<std::filesystem::path>(const std::string&)> find_asset) {
-  return [find_asset] (const std::string& category, const std::string& id) -> std::optional<std::string> {
+IdResolver getAssetResolver(std::function<std::optional<std::filesystem::path>(std::string_view)> find_asset) {
+  return [find_asset] (std::string_view category, std::string_view id) -> std::optional<std::string> {
     if (category != "asset-id") {
       return std::nullopt;
     }
@@ -125,9 +125,9 @@ IdResolver getAssetResolver(std::function<std::optional<std::filesystem::path>(c
 
 IdResolver getAssetResolver(utils::file::AssetManager* asset_manager) {
   if (!asset_manager) {
-    return getAssetResolver(std::function<std::optional<std::filesystem::path>(const std::string&)>{nullptr});
+    return getAssetResolver(std::function<std::optional<std::filesystem::path>(std::string_view)>{nullptr});
   }
-  return getAssetResolver([asset_manager] (const std::string& id) {
+  return getAssetResolver([asset_manager] (std::string_view id) {
     return asset_manager->findAssetById(id);
   });
 }
