@@ -95,7 +95,7 @@ std::string resolveIdentifier(std::string_view str, std::vector<IdResolver> reso
     }
   }
   if (state != ParseState::OutsideToken) {
-    throw MalformedReferenceException("Unterminated id");
+    throw MalformedReferenceException(fmt::format("Found invalid asset reference expression in '{}'", str));
   }
   return result;
 }
