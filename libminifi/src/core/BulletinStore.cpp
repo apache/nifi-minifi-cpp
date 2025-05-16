@@ -60,17 +60,20 @@ std::deque<Bulletin> BulletinStore::getBulletins(std::optional<std::chrono::syst
   if (!time_interval_to_include) {
     return bulletins_;
   }
+
   const auto timestamp_cutoff = std::chrono::system_clock::now() - *time_interval_to_include;
-  for (auto it = bulletins_.begin(); it != bulletins_.end(); ++it) {
-    if (it->timestamp >= timestamp_cutoff) {
-      return {it, bulletins_.end()};
-    }
+  auto it = std::lower_bound(bulletins_.begin(), bulletins_.end(), timestamp_cutoff,
+    [](const auto& bulletin, const auto& timestamp) {
+      return bulletin.timestamp < timestamp;
+    });
+  if (it != bulletins_.end()) {
+    return {it, bulletins_.end()};
   }
+
   return {};
 }
 
 size_t BulletinStore::getMaxBulletinCount() const {
-  std::lock_guard<std::mutex> lock(mutex_);
   return max_bulletin_count_;
 }
 
