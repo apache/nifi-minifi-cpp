@@ -18,6 +18,9 @@
 #include "core/state/nodes/FlowInformation.h"
 #include "core/Resource.h"
 #include "core/state/Value.h"
+#include "utils/TimeUtil.h"
+
+using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -97,6 +100,30 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
       });
     }
     serialized.push_back(processorsStatusesNode);
+  }
+
+  if (bulletin_store_) {
+    SerializedResponseNode processorBulletinsNode{.name = "processorBulletins", .array = true, .collapsible = false};
+    auto bulletins = bulletin_store_->getBulletins(5min);
+    for (const auto& bulletin : bulletins) {
+      processorBulletinsNode.children.push_back({
+        .name = std::to_string(bulletin.id),
+        .collapsible = false,
+        .children = {
+          {.name = "id", .value = bulletin.id},
+          {.name = "timestamp", .value = utils::timeutils::getNiFiDateTimeFormat(std::chrono::time_point_cast<std::chrono::seconds>(bulletin.timestamp))},
+          {.name = "level", .value = bulletin.level},
+          {.name = "category", .value = bulletin.category},
+          {.name = "message", .value = bulletin.message},
+          {.name = "groupId", .value = bulletin.group_id},
+          {.name = "groupName", .value = bulletin.group_name},
+          {.name = "groupPath", .value = bulletin.group_path},
+          {.name = "sourceId", .value = bulletin.source_id},
+          {.name = "sourceName", .value = bulletin.source_name}
+        }
+      });
+    }
+    serialized.push_back(processorBulletinsNode);
   }
 
   return serialized;

@@ -44,6 +44,7 @@
 #include "utils/ChecksumCalculator.h"
 #include "ParameterContext.h"
 #include "ParameterProvider.h"
+#include "core/BulletinStore.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -63,6 +64,7 @@ struct ConfigurationContext {
   std::shared_ptr<utils::file::FileSystem> filesystem{std::make_shared<utils::file::FileSystem>()};
   std::optional<utils::crypto::EncryptionProvider> sensitive_values_encryptor{std::nullopt};
   utils::file::AssetManager* asset_manager{nullptr};
+  core::BulletinStore* bulletin_store{nullptr};
 };
 
 enum class FlowSerializationType { Json, NifiJson, Yaml };
@@ -155,6 +157,7 @@ class FlowConfiguration : public CoreComponentImpl {
   utils::crypto::EncryptionProvider sensitive_values_encryptor_;
   utils::ChecksumCalculator checksum_calculator_;
   utils::file::AssetManager* asset_manager_{nullptr};
+  core::BulletinStore* bulletin_store_{nullptr};
 
  private:
   virtual std::string serialize(const ProcessGroup&) { return ""; }

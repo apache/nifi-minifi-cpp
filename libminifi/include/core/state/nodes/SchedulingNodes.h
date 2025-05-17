@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "MetricsBase.h"
-#include "core/ProcessorConfig.h"
+#include "minifi-cpp/core/ProcessorConfig.h"
 
 namespace org::apache::nifi::minifi::state::response {
 

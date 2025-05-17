@@ -38,6 +38,7 @@ FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
       filesystem_(std::move(ctx.filesystem)),
       sensitive_values_encryptor_(std::move(ctx.sensitive_values_encryptor.value())),
       asset_manager_(ctx.asset_manager),
+      bulletin_store_(ctx.bulletin_store),
       logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
   std::string flowUrl;
   std::string bucket_id = "default";

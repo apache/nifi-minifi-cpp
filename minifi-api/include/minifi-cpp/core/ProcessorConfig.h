@@ -41,6 +41,7 @@ struct ProcessorConfig {
   std::string schedulingPeriod;
   std::string penalizationPeriod;
   std::string yieldPeriod;
+  std::string bulletinLevel;
   std::string runDurationNanos;
   std::vector<std::string> autoTerminatedRelationships;
   std::vector<core::Property> properties;

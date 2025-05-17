@@ -65,11 +65,11 @@
 #include "MainHelper.h"
 #include "agent/JsonSchema.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
-#include "c2/C2Agent.h"
 #include "core/state/MetricsPublisherStore.h"
 #include "argparse/argparse.hpp"
 #include "agent/agent_version.h"
 #include "Fips.h"
+#include "core/BulletinStore.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -395,6 +395,7 @@ int main(int argc, char **argv) {
         utils::crypto::EncryptionProvider::create(minifiHome));
 
     auto asset_manager = std::make_unique<utils::file::AssetManager>(*configure);
+    auto bulletin_store = std::make_unique<core::BulletinStore>(*configure);
 
     std::shared_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
         core::ConfigurationContext{
@@ -404,11 +405,12 @@ int main(int argc, char **argv) {
           .path = configure->get(minifi::Configure::nifi_flow_configuration_file),
           .filesystem = filesystem,
           .sensitive_values_encryptor = utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(minifiHome),
-          .asset_manager = asset_manager.get()
+          .asset_manager = asset_manager.get(),
+          .bulletin_store = bulletin_store.get()
       }, nifi_configuration_class_name);
 
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, flow_repo, content_repo};
-    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration, asset_manager.get());
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration, asset_manager.get(), bulletin_store.get());
     const auto controller = std::make_unique<minifi::FlowController>(
         prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo,
         std::move(metrics_publisher_store), filesystem, request_restart, asset_manager.get());

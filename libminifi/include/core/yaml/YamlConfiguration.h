@@ -25,7 +25,7 @@
 
 #include "core/FlowConfiguration.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/ProcessorConfig.h"
+#include "minifi-cpp/core/ProcessorConfig.h"
 #include "Exception.h"
 #include "io/validation.h"
 #include "sitetosite/SiteToSite.h"
