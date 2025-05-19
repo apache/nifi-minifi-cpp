@@ -104,6 +104,10 @@ inline std::string getRFC2616Format(std::chrono::sys_seconds tp) {
   return date::format("%a, %d %b %Y %H:%M:%S %Z", tp);
 }
 
+inline std::string getNiFiDateTimeFormat(std::chrono::sys_seconds tp) {
+  return date::format("%a %b %d %H:%M:%S %Z %Y", tp);
+}
+
 inline date::sys_seconds to_sys_time(const std::tm& t) {
   using date::year;
   using date::month;

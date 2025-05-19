@@ -45,7 +45,7 @@ class VerifyC2Metrics : public VerifyC2Base {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
-    LogTestController::getInstance().setOff<minifi::processors::GetTCP>();
+    LogTestController::getInstance().setDebug<minifi::processors::GetTCP>();
     VerifyC2Base::testSetup();
   }
 
@@ -93,6 +93,7 @@ class MetricsHandler: public HeartbeatHandler {
     VERIFY_UPDATED_METRICS
   };
 
+  static constexpr const char* PROCESS_GROUP_UUID = "2438e3c8-015a-1000-79ca-83af40ec1990";
   static constexpr const char* GETTCP_UUID = "2438e3c8-015a-1000-79ca-83af40ec1991";
   static constexpr const char* LOGATTRIBUTE1_UUID = "2438e3c8-015a-1000-79ca-83af40ec1992";
   static constexpr const char* LOGATTRIBUTE2_UUID = "5128e3c8-015a-1000-79ca-83af40ec1990";
@@ -160,6 +161,27 @@ class MetricsHandler: public HeartbeatHandler {
       runtime_metrics["flowInfo"].HasMember("processorStatuses");
   }
 
+  static bool verifyProcessorBulletins(const rapidjson::Value& runtime_metrics) {
+    if (!runtime_metrics["flowInfo"].HasMember("processorBulletins")) {
+      return false;
+    }
+    auto bulletins = runtime_metrics["flowInfo"]["processorBulletins"].GetArray();
+    return std::any_of(bulletins.begin(), bulletins.end(), [](const auto& bulletin) {
+      std::string message = bulletin["message"].GetString();
+      return bulletin["id"].GetInt() > 0 &&
+        !std::string{bulletin["timestamp"].GetString()}.empty() &&
+        bulletin["level"].GetString() == std::string("ERROR") &&
+        bulletin["category"].GetString() == std::string("Log Message") &&
+        message.find("Error connecting to") != std::string::npos &&
+        message.find(GETTCP_UUID) != std::string::npos &&
+        bulletin["groupId"].GetString() == std::string(PROCESS_GROUP_UUID) &&
+        bulletin["groupName"].GetString() == std::string("MiNiFi Flow") &&
+        bulletin["groupPath"].GetString() == std::string("MiNiFi Flow") &&
+        bulletin["sourceId"].GetString() == std::string(GETTCP_UUID) &&
+        bulletin["sourceName"].GetString() == std::string("GetTCP");
+    });
+  }
+
   static bool verifyRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
     return verifyCommonRuntimeMetricNodes(runtime_metrics, "2438e3c8-015a-1000-79ca-83af40ec1997") &&
       [&]() {
@@ -173,7 +195,8 @@ class MetricsHandler: public HeartbeatHandler {
           }
           return processorMetricsAreValid(processor);
         });
-      }();
+      }() &&
+      verifyProcessorBulletins(runtime_metrics);
   }
 
   static bool verifyUpdatedRuntimeMetrics(const rapidjson::Value& runtime_metrics) {

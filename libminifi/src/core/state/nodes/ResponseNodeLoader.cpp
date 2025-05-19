@@ -34,11 +34,12 @@
 namespace org::apache::nifi::minifi::state::response {
 
 ResponseNodeLoaderImpl::ResponseNodeLoaderImpl(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
-  std::shared_ptr<core::FlowConfiguration> flow_configuration, utils::file::AssetManager* asset_manager)
+  std::shared_ptr<core::FlowConfiguration> flow_configuration, utils::file::AssetManager* asset_manager, core::BulletinStore* bulletin_store)
     : configuration_(std::move(configuration)),
       repository_metric_sources_(std::move(repository_metric_sources)),
       flow_configuration_(std::move(flow_configuration)),
-      asset_manager_(asset_manager) {
+      asset_manager_(asset_manager),
+      bulletin_store_(bulletin_store) {
 }
 
 void ResponseNodeLoaderImpl::clearConfigRoot() {
@@ -231,6 +232,10 @@ void ResponseNodeLoaderImpl::initializeFlowInformation(const SharedResponseNode&
   flow_information->setStateMonitor(update_sink_);
   if (flow_configuration_) {
     flow_information->setFlowVersion(flow_configuration_->getFlowVersion());
+  }
+
+  if (bulletin_store_) {
+    flow_information->setBulletinStore(bulletin_store_);
   }
 
   if (root_) {

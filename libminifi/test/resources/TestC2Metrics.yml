@@ -29,6 +29,7 @@ Processors:
       penalization period: 30 sec
       yield period: 10 sec
       run duration nanos: 0
+      bulletin level: ERROR
       auto-terminated relationships list:
       Properties:
           Endpoint List: localhost:8776
@@ -43,6 +44,7 @@ Processors:
       scheduling period: 30 sec
       penalization period: 30 sec
       yield period: 1 sec
+      bulletin level: ERROR
       run duration nanos: 0
       auto-terminated relationships list:
         - response
