@@ -22,9 +22,13 @@ class OutputPort(Connectable):
         super(OutputPort, self).__init__(name=name)
 
         self.remote_process_group = remote_process_group
+        self.use_compression = False
         self.properties = {}
         if self.remote_process_group:
             self.properties = self.remote_process_group.properties
 
     def id_for_connection(self):
         return self.instance_id
+
+    def set_use_compression(self, use_compression: bool):
+        self.use_compression = use_compression
