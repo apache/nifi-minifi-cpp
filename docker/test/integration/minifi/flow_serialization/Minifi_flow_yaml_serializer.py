@@ -107,6 +107,7 @@ class Minifi_flow_yaml_serializer:
                 res_group['Input Ports'].append({
                     'id': str(connectable.instance_id),
                     'name': connectable.name,
+                    'use compression': connectable.use_compression,
                     'max concurrent tasks': 1,
                     'Properties': connectable.properties
                 })

@@ -72,7 +72,7 @@ Remote Process Groups:
       - id: de7cc09a-0196-1000-2c63-ee6b4319ffb6  # this is the instance id of the input port created in NiFi
         name: nifi-inputport
         max concurrent tasks: 1
-        use compression: false  # currently not supported and ignored in MiNiFi C++
+        use compression: true
         batch size:
           size: 10 MB
           count: 10
@@ -123,7 +123,13 @@ Here is another example in NiFi style json format how to configure site-to-site 
                         "remoteGroupId": "327b446a-0043-48d1-8bb4-df65ba1afa60",
                         "componentType": "REMOTE_OUTPUT_PORT",
                         "targetId": "de7cc09a-0196-1000-2c63-ee6b4319ffb6",
-                        "groupIdentifier": "c5bceca3-9c20-4068-bf2d-425e14026471"
+                        "groupIdentifier": "c5bceca3-9c20-4068-bf2d-425e14026471",
+                        "useCompression": true,
+                        "batchSize": {
+                            "size": "10 MB",
+                            "count": 10,
+                            "duration": "30 sec"
+                        },
                     }
                 ],
                 "componentType": "REMOTE_PROCESS_GROUP",
@@ -252,7 +258,6 @@ Notes on the configuration:
 
 - In the MiNiFi C++ configuration, in yaml configuration the remote input and output ports' `id` field, and in json configuration the ports' `identifier`, `instanceIdentifier`, and `targetId` fields should be set to the instance id of the input and output ports created in NiFi (`de7cc09a-0196-1000-2c63-ee6b4319ffb6` in the examples).
 - Connections from the remote output port to the processor should use the `undefined` relationship
-- `useCompression` can be set, but it is currently not supported in MiNiFi C++ so it will be set to false in the site-to-site messages
 - the `targetUri` and `targetUris` field in the remote process group should be set to the NiFi instance's URL, this can also use comma separated list of URLs if the remote process group is configured to use multiple NiFi nodes
 
 ## Additional examples

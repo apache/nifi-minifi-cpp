@@ -162,7 +162,7 @@ size_t ZlibDecompressStream::write(const uint8_t* value, size_t size) {
    * but in this case we do not have to close the stream, because it will detect the end of the compressed format
    * and signal that it is ended by returning Z_STREAM_END and not accepting any more input data.
    */
-  int ret;
+  int ret = 0;
   do {
     logger_->log_trace("writeData has {} B of input data left", strm_.avail_in);
 
@@ -179,7 +179,7 @@ size_t ZlibDecompressStream::write(const uint8_t* value, size_t size) {
       return STREAM_ERROR;
     }
     const auto output_size = outputBuffer_.size() - strm_.avail_out;
-    logger_->log_trace("deflate produced {} B of output data", output_size);
+    logger_->log_trace("inflate produced {} B of output data", output_size);
     if (output_->write(gsl::make_span(outputBuffer_).subspan(0, output_size)) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
