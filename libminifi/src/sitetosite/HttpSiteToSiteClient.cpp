@@ -149,7 +149,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(TransferDir
 
   setSiteToSiteHeaders(*transaction_client);
   peer_->setStream(std::make_unique<http::HttpStream>(transaction_client));
-  logger_->log_debug("Created transaction id -{}-", transaction->getUUID().to_string());
+  logger_->log_debug("Created transaction id -{}-", transaction->getUUIDStr());
   known_transactions_[transaction->getUUID()] = transaction;
   return transaction;
 }
@@ -375,8 +375,7 @@ void HttpSiteToSiteClient::deleteTransaction(const utils::Identifier& transactio
 
 void HttpSiteToSiteClient::setSiteToSiteHeaders(minifi::http::HTTPClient& client) {
   client.setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
-  // TODO(lordgamez): send use_compression_ boolean value when compression support is added
-  client.setRequestHeader(HANDSHAKE_PROPERTY_USE_COMPRESSION, "false");
+  client.setRequestHeader(HANDSHAKE_PROPERTY_USE_COMPRESSION, use_compression_ ? "true" : "false");
   if (timeout_.load() > 0ms) {
     client.setRequestHeader(HANDSHAKE_PROPERTY_REQUEST_EXPIRATION, std::to_string(timeout_.load().count()));
   }

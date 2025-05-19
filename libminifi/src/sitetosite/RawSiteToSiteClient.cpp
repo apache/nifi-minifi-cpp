@@ -148,8 +148,7 @@ bool RawSiteToSiteClient::handShake() {
   }
 
   std::map<std::string, std::string> properties;
-  // TODO(lordgamez): send use_compression_ boolean value when compression support is added
-  properties[std::string(magic_enum::enum_name(HandshakeProperty::GZIP))] = "false";
+  properties[std::string(magic_enum::enum_name(HandshakeProperty::GZIP))] = use_compression_ ? "true" : "false";
   properties[std::string(magic_enum::enum_name(HandshakeProperty::PORT_IDENTIFIER))] = port_id_.to_string();
   properties[std::string(magic_enum::enum_name(HandshakeProperty::REQUEST_EXPIRATION_MILLIS))] = std::to_string(timeout_.load().count());
   if (current_version_ >= 5) {
