@@ -22,16 +22,16 @@
 
 namespace org::apache::nifi::minifi::standard {
 
-class JsonRecordSetReader final : public core::RecordSetReaderImpl {
+class JsonTreeReader final : public core::RecordSetReaderImpl {
  public:
-  explicit JsonRecordSetReader(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetReaderImpl(name, uuid) {}
+  explicit JsonTreeReader(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetReaderImpl(name, uuid) {}
 
-  JsonRecordSetReader(JsonRecordSetReader&&) = delete;
-  JsonRecordSetReader(const JsonRecordSetReader&) = delete;
-  JsonRecordSetReader& operator=(JsonRecordSetReader&&) = delete;
-  JsonRecordSetReader& operator=(const JsonRecordSetReader&) = delete;
+  JsonTreeReader(JsonTreeReader&&) = delete;
+  JsonTreeReader(const JsonTreeReader&) = delete;
+  JsonTreeReader& operator=(JsonTreeReader&&) = delete;
+  JsonTreeReader& operator=(const JsonTreeReader&) = delete;
 
-  ~JsonRecordSetReader() override = default;
+  ~JsonTreeReader() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Parses JSON into individual Record objects. "
     "While the reader expects each record to be well-formed JSON, the content of a FlowFile may consist of many records, "

@@ -28,10 +28,10 @@ namespace org::apache::nifi::minifi::test {
 class SplitRecordTestController : public TestController {
  public:
   SplitRecordTestController() {
-    controller_.plan->addController("JsonRecordSetReader", "JsonRecordSetReader");
+    controller_.plan->addController("JsonTreeReader", "JsonTreeReader");
     controller_.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
     REQUIRE(controller_.getProcessor());
-    controller_.getProcessor()->setProperty(processors::SplitRecord::RecordReader.name, "JsonRecordSetReader");
+    controller_.getProcessor()->setProperty(processors::SplitRecord::RecordReader.name, "JsonTreeReader");
     controller_.getProcessor()->setProperty(processors::SplitRecord::RecordWriter.name, "JsonRecordSetWriter");
   }
 

@@ -20,7 +20,7 @@ limitations under the License.
 - [CouchbaseClusterService](#CouchbaseClusterService)
 - [ElasticsearchCredentialsControllerService](#ElasticsearchCredentialsControllerService)
 - [GCPCredentialsControllerService](#GCPCredentialsControllerService)
-- [JsonRecordSetReader](#JsonRecordSetReader)
+- [JsonTreeReader](#JsonTreeReader)
 - [JsonRecordSetWriter](#JsonRecordSetWriter)
 - [KubernetesControllerService](#KubernetesControllerService)
 - [LinuxPowerManagerService](#LinuxPowerManagerService)
@@ -140,7 +140,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Container Name Filter |               |                  | If present, limit the output to containers the name of which matches this regular expression |
 
 
-## JsonRecordSetReader
+## JsonTreeReader
 
 ### Description
 

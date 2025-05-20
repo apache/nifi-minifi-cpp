@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#include "JsonRecordSetReader.h"
+#include "JsonTreeReader.h"
+
 #include "core/Resource.h"
 #include "rapidjson/document.h"
 
@@ -112,7 +113,7 @@ bool readAsArray(const std::string& content, core::RecordSet& record_set) {
   return true;
 }
 
-nonstd::expected<core::RecordSet, std::error_code> JsonRecordSetReader::read(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
+nonstd::expected<core::RecordSet, std::error_code> JsonTreeReader::read(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
   core::RecordSet record_set{};
   const auto read_result = session.read(flow_file, [&record_set](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
     std::string content;
@@ -133,7 +134,7 @@ nonstd::expected<core::RecordSet, std::error_code> JsonRecordSetReader::read(con
   return record_set;
 }
 
-REGISTER_RESOURCE(JsonRecordSetReader, ControllerService);
+REGISTER_RESOURCE(JsonTreeReader, ControllerService);
 }  // namespace org::apache::nifi::minifi::standard
 
 #ifdef WIN32

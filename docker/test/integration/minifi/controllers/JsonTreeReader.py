@@ -17,7 +17,7 @@
 from ..core.ControllerService import ControllerService
 
 
-class JsonRecordSetReader(ControllerService):
+class JsonTreeReader(ControllerService):
     def __init__(self, name=None):
-        super(JsonRecordSetReader, self).__init__(name=name)
-        self.service_class = 'JsonRecordSetReader'
+        super(JsonTreeReader, self).__init__(name=name)
+        self.service_class = 'JsonTreeReader'

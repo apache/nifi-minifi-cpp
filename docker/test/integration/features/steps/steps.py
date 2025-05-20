@@ -24,7 +24,7 @@ from minifi.controllers.ElasticsearchCredentialsService import ElasticsearchCred
 from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
-from minifi.controllers.JsonRecordSetReader import JsonRecordSetReader
+from minifi.controllers.JsonTreeReader import JsonTreeReader
 from minifi.controllers.CouchbaseClusterService import CouchbaseClusterService
 
 from behave import given, then, when
@@ -398,9 +398,9 @@ def step_impl(context, output_grouping: str):
     container.add_controller(json_record_set_writer)
 
 
-@given("a JsonRecordSetReader controller service is set up")
+@given("a JsonTreeReader controller service is set up")
 def step_impl(context):
-    json_record_set_reader = JsonRecordSetReader("JsonRecordSetReader")
+    json_record_set_reader = JsonTreeReader("JsonTreeReader")
     container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
     container.add_controller(json_record_set_reader)
 
