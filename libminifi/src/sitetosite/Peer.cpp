@@ -31,32 +31,33 @@
 
 namespace org::apache::nifi::minifi::sitetosite {
 
-bool SiteToSitePeer::Open() {
-  if (IsNullOrEmpty(host_))
+bool SiteToSitePeer::open() {
+  if (IsNullOrEmpty(host_)) {
     return false;
+  }
 
   /**
    * We may override the interface provided to us within the socket in this step; however, this is a
    * known configuration path, and thus we will allow the RPG configuration to override anything provided to us
    * previously by the socket preference.
    */
-  if (!this->local_network_interface_.getInterface().empty()) {
-    auto* socket = dynamic_cast<utils::net::AsioSocketConnection*>(stream_.get());
-    if (nullptr != socket) {
+  if (!local_network_interface_.getInterface().empty()) {
+    if (auto socket = dynamic_cast<utils::net::AsioSocketConnection*>(stream_.get())) {
       socket->setInterface(local_network_interface_.getInterface());
     }
   }
 
-  if (stream_->initialize() < 0)
+  if (stream_->initialize() < 0) {
     return false;
+  }
 
-  const auto data_size = sizeof MAGIC_BYTES;
-  return stream_->write(reinterpret_cast<const uint8_t *>(MAGIC_BYTES), data_size) == data_size;
+  return stream_->write(reinterpret_cast<const uint8_t *>(MAGIC_BYTES.data()), MAGIC_BYTES.size()) == MAGIC_BYTES.size();
 }
 
-void SiteToSitePeer::Close() {
-  if (stream_ != nullptr)
+void SiteToSitePeer::close() {
+  if (stream_) {
     stream_->close();
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::sitetosite

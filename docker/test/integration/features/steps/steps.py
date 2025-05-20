@@ -73,9 +73,7 @@ def step_impl(context, processor_type, processor_name, property_name, property_v
 
 
 @given(
-    "a {processor_type} processor with the name \"{processor_name}\" and the \"{property_name}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
-@given(
-    "a {processor_type} processor with the name \"{processor_name}\" and the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+    "a {processor_type} processor with the name \"{processor_name}\" and the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow using the \"{engine_name}\" engine")
 def step_impl(context, processor_type, processor_name, property_name, property_value, minifi_container_name, engine_name):
     __create_processor(context, processor_type, processor_name, property_name, property_value, minifi_container_name, engine_name)
 
@@ -86,7 +84,7 @@ def step_impl(context, processor_type, property_name, property_value, minifi_con
     __create_processor(context, processor_type, processor_type, property_name, property_value, minifi_container_name)
 
 
-@given("a {processor_type} processor the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+@given("a {processor_type} processor with the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow using the \"{engine_name}\" engine")
 def step_impl(context, processor_type, property_name, property_value, minifi_container_name, engine_name):
     __create_processor(context, processor_type, processor_type, property_name, property_value, minifi_container_name, engine_name)
 
@@ -106,7 +104,7 @@ def step_impl(context, processor_type, processor_name, minifi_container_name):
     __create_processor(context, processor_type, processor_name, None, None, minifi_container_name)
 
 
-@given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+@given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow using the \"{engine_name}\" engine")
 def step_impl(context, processor_type, processor_name, minifi_container_name, engine_name):
     __create_processor(context, processor_type, processor_name, None, None, minifi_container_name, engine_name)
 
@@ -163,10 +161,15 @@ def step_impl(context):
         """.format(minifi_container_name="minifi-cpp-flow", table=rendered_table))
 
 
-@given("a RemoteProcessGroup node opened on \"{address}\"")
-def step_impl(context, address):
-    remote_process_group = RemoteProcessGroup(address, "RemoteProcessGroup")
+@given("a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\" with transport protocol set to \"{transport_protocol}\"")
+def step_impl(context, rpg_name, address, transport_protocol):
+    remote_process_group = RemoteProcessGroup(address, rpg_name, transport_protocol)
     context.test.add_remote_process_group(remote_process_group)
+
+
+@given("a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\"")
+def step_impl(context, rpg_name, address):
+    context.execute_steps(f"given a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\" with transport protocol set to \"RAW\"")
 
 
 @given("the \"{property_name}\" property of the {processor_name} processor is set to \"{property_value}\"")
@@ -218,13 +221,25 @@ def step_impl(context):
         context.test.get_node_by_name(row["processor name"]).set_property(row["property name"], row["property value"])
 
 
-@given("the \"{relationship}\" relationship of the {source_name} processor is connected to the input port on the {remote_process_group_name}")
-def step_impl(context, relationship, source_name, remote_process_group_name):
-    source = context.test.get_node_by_name(source_name)
-    remote_process_group = context.test.get_remote_process_group_by_name(remote_process_group_name)
-    input_port_node = context.test.generate_input_port_for_remote_process_group(remote_process_group, "to_nifi")
+@given("an input port with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context, port_name, rpg_name):
+    remote_process_group = context.test.get_remote_process_group_by_name(rpg_name)
+    input_port_node = context.test.generate_input_port_for_remote_process_group(remote_process_group, port_name)
     context.test.add_node(input_port_node)
-    source.out_proc.connect({relationship: input_port_node})
+
+
+@given("an output port with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context, port_name, rpg_name):
+    remote_process_group = context.test.get_remote_process_group_by_name(rpg_name)
+    input_port_node = context.test.generate_output_port_for_remote_process_group(remote_process_group, port_name)
+    context.test.add_node(input_port_node)
+
+
+@given("the output port \"{port_name}\" is connected to the {destination_name} processor")
+def step_impl(context, port_name, destination_name):
+    destination = context.test.get_node_by_name(destination_name)
+    output_port_node = context.test.get_node_by_name(port_name)
+    output_port_node.out_proc.connect({"undefined": destination})
 
 
 @given("the \"{relationship}\" relationship of the {source_name} is connected to the {destination_name}")
@@ -290,6 +305,7 @@ def step_impl(context, source_name, destination_name):
 
 
 @given("\"{processor_name}\" processor is a start node")
+@given("\"{processor_name}\" port is a start node")
 def step_impl(context, processor_name):
     container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
     processor = context.test.get_or_create_node_by_name(processor_name)
@@ -297,16 +313,24 @@ def step_impl(context, processor_name):
 
 
 # NiFi setups
-@given("a NiFi flow receiving data from a RemoteProcessGroup \"{source_name}\"")
-def step_impl(context, source_name):
-    remote_process_group = context.test.get_remote_process_group_by_name("RemoteProcessGroup")
-    source = context.test.generate_input_port_for_remote_process_group(remote_process_group, source_name)
-    source.instance_id = context.test.get_node_by_name("to_nifi").instance_id
+@given("a NiFi flow is receiving data in an input port named \"{input_port_name}\" with the id of the port named \"{rpg_port_name}\" from the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context, input_port_name, rpg_port_name, rpg_name):
+    remote_process_group = context.test.get_remote_process_group_by_name(rpg_name)
+    source = context.test.generate_input_port_for_remote_process_group(remote_process_group, input_port_name)
+    source.instance_id = context.test.get_node_by_name(rpg_port_name).instance_id
     context.test.add_node(source)
     container = context.test.acquire_container(context=context, name='nifi', engine='nifi')
     # Assume that the first node declared is primary unless specified otherwise
     if not container.get_start_nodes():
         container.add_start_node(source)
+
+
+@given("a NiFi flow is sending data to an output port named \"{port_name}\" with the id of the port named \"{rpg_port_name}\" from the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context, port_name, rpg_port_name, rpg_name):
+    remote_process_group = context.test.get_remote_process_group_by_name(rpg_name)
+    destination = context.test.generate_output_port_for_remote_process_group(remote_process_group, port_name)
+    destination.instance_id = context.test.get_node_by_name(rpg_port_name).instance_id
+    context.test.add_node(destination)
 
 
 @given("a NiFi flow with the name \"{flow_name}\" is set up")

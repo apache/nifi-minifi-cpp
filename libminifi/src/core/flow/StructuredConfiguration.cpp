@@ -549,11 +549,13 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     group->setTransmitting(true);
     group->setURL(url);
 
-    checkRequiredField(currRpgNode, schema_.rpg_input_ports);
+    std::vector<std::string> port_nodes(std::begin(schema_.rpg_input_ports), std::end(schema_.rpg_input_ports));
+    port_nodes.insert(std::end(port_nodes), std::begin(schema_.rpg_output_ports), std::end(schema_.rpg_output_ports));
+    checkRequiredField(currRpgNode, port_nodes);
     auto inputPorts = currRpgNode[schema_.rpg_input_ports];
     if (inputPorts && inputPorts.isSequence()) {
       for (const auto& currPort : inputPorts) {
-        parseRPGPort(currPort, group.get(), sitetosite::SEND);
+        parseRPGPort(currPort, group.get(), sitetosite::TransferDirection::SEND);
       }  // for node
     }
     auto outputPorts = currRpgNode[schema_.rpg_output_ports];
@@ -561,7 +563,7 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
       for (const auto& currPort : outputPorts) {
         logger_->log_debug("Got a current port, iterating...");
 
-        parseRPGPort(currPort, group.get(), sitetosite::RECEIVE);
+        parseRPGPort(currPort, group.get(), sitetosite::TransferDirection::RECEIVE);
       }  // for node
     }
     parentGroup->addProcessGroup(std::move(group));
@@ -741,12 +743,45 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
     "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
   uuid = portId;
 
-  auto port = std::make_unique<minifi::RemoteProcessorGroupPort>(
+  auto port = std::make_unique<minifi::RemoteProcessGroupPort>(
           nameStr, parent->getURL(), this->configuration_, uuid);
   port->setDirection(direction);
-  port->setTimeout(parent->getTimeout());
+  port->setTimeout(std::chrono::milliseconds(parent->getTimeout()));
   port->setTransmitting(true);
   port->setYieldPeriodMsec(parent->getYieldPeriodMsec());
+
+  if (isFieldPresent(port_node, schema_.rpg_port_use_compression[0])) {
+    auto use_compression = port_node[schema_.rpg_port_use_compression].getBool().value_or(false);
+    logger_->log_debug("parseRPGPort: use compression => [{}]", use_compression);
+    port->setUseCompression(use_compression);
+  }
+
+  if (isFieldPresent(port_node, schema_.rpg_port_batch_size[0])) {
+    if (isFieldPresent(port_node[schema_.rpg_port_batch_size[0]], schema_.rpg_port_batch_size_count[0])) {
+      auto batch_count_str = port_node[schema_.rpg_port_batch_size[0]][schema_.rpg_port_batch_size_count[0]].getIntegerAsString().value();
+      if (auto batch_count = parsing::parseIntegral<uint64_t>(batch_count_str); batch_count) {
+        logger_->log_debug("parseRPGPort: batch count => [{}]", *batch_count);
+        port->setBatchCount(*batch_count);
+      }
+    }
+
+    if (isFieldPresent(port_node[schema_.rpg_port_batch_size[0]], schema_.rpg_port_batch_size_size[0])) {
+      auto batch_size_str = port_node[schema_.rpg_port_batch_size[0]][schema_.rpg_port_batch_size_size[0]].getIntegerAsString().value();
+      if (auto batch_size = parsing::parseDataSize(batch_size_str); batch_size) {
+        logger_->log_debug("parseRPGPort: batch size => [{}]", *batch_size);
+        port->setBatchSize(*batch_size);
+      }
+    }
+
+    if (isFieldPresent(port_node[schema_.rpg_port_batch_size[0]], schema_.rpg_port_batch_size_duration[0])) {
+      auto batch_duration_str = port_node[schema_.rpg_port_batch_size[0]][schema_.rpg_port_batch_size_duration[0]].getIntegerAsString().value();
+      if (auto batch_duration = parsing::parseDuration(batch_duration_str); batch_duration) {
+        logger_->log_debug("parseRPGPort: batch size => [{}]", *batch_duration);
+        port->setBatchDuration(*batch_duration);
+      }
+    }
+  }
+
   port->initialize();
   if (!parent->getInterface().empty())
     port->setInterface(parent->getInterface());
@@ -761,7 +796,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   if (const Node propertiesNode = port_node[schema_.rpg_port_properties]) {
     parsePropertiesNode(propertiesNode, *port, nameStr, nullptr);
   } else {
-    parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port, nullptr);
+    parsePropertyNodeElement(std::string(minifi::RemoteProcessGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port, nullptr);
     validateComponentProperties(*port, nameStr, port_node.getPath());
   }
 
