@@ -228,9 +228,9 @@ Feature: MiNiFi can use python processors in its flows
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content '{"group": "group1", "name": "John"}\n{"group": "group1", "name": "Jane"}\n{"group": "group2", "name": "Kyle"}\n{"name": "Zoe"}' is present in '/tmp/input'
     And a file with the content '{"group": "group1", "name": "Steve"}\n{}' is present in '/tmp/input'
-    And a SetRecordField processor with the "Record Reader" property set to "JsonRecordSetReader"
+    And a SetRecordField processor with the "Record Reader" property set to "JsonTreeReader"
     And the "Record Writer" property of the SetRecordField processor is set to "JsonRecordSetWriter"
-    And a JsonRecordSetReader controller service is set up
+    And a JsonTreeReader controller service is set up
     And a JsonRecordSetWriter controller service is set up with "Array" output grouping
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "Log Payload" property of the LogAttribute processor is set to "true"

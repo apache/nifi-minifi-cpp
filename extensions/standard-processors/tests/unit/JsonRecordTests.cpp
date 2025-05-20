@@ -17,15 +17,15 @@
 
 #include <numbers>
 #include <variant>
-#include <catch2/generators/catch_generators.hpp>
 
+#include "catch2/generators/catch_generators.hpp"
+#include "controllers/JsonRecordSetWriter.h"
+#include "controllers/JsonTreeReader.h"
+#include "minifi-cpp/core/Record.h"
 #include "unit/Catch.h"
 #include "unit/RecordSetTesters.h"
 #include "unit/TestBase.h"
 #include "unit/TestRecord.h"
-#include "controllers/JsonRecordSetReader.h"
-#include "controllers/JsonRecordSetWriter.h"
-#include "minifi-cpp/core/Record.h"
 
 namespace org::apache::nifi::minifi::standard::test {
 
@@ -105,12 +105,12 @@ TEST_CASE("JsonRecordSetWriter tests") {
   }));
 }
 
-TEST_CASE("JsonRecordSetReader tests") {
+TEST_CASE("JsonTreeReader tests") {
   core::RecordSet expected_record_set;
   expected_record_set.push_back(core::test::createSampleRecord(true));
   expected_record_set.push_back(core::test::createSampleRecord2(true));
 
-  JsonRecordSetReader json_record_set_reader{"json_record_set_reader"};
+  JsonTreeReader json_record_set_reader{"json_record_set_reader"};
   const auto input_str = GENERATE(record_per_line_str, array_compressed_str, array_pretty_str);
   CHECK(core::test::testRecordReader(json_record_set_reader, input_str, expected_record_set));
 }
