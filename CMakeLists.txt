@@ -315,9 +315,15 @@ else()
     list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Wall -Wextra)
     if(MINIFI_FAIL_ON_WARNINGS)
         list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Werror)
-        # -Wrestrict may cause build failure in GCC 12  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104336
-        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    endif()
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.4)
+            # -Wrestrict may cause build failure in < GCC 12.4  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104336
             list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Wno-error=restrict)
+        endif()
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
+            list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Wno-maybe-uninitialized)
+            # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118634
         endif()
     endif()
 endif()

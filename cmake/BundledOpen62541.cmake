@@ -36,7 +36,8 @@ function(use_bundled_open62541 SOURCE_DIR BINARY_DIR)
             "-DCMAKE_INSTALL_PREFIX=${OPEN62541_BYPRODUCT_DIR}"
             -DOPEN62541_VERSION=v1.3.3
             -DUA_ENABLE_ENCRYPTION=ON
-            -DUA_FORCE_WERROR=OFF)
+            -DUA_FORCE_WERROR=OFF
+            -DUA_ENABLE_DEBUG_SANITIZER=OFF)
 
     append_third_party_passthrough_args(OPEN62541_CMAKE_ARGS "${OPEN62541_CMAKE_ARGS}")
 

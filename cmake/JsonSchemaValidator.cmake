@@ -19,7 +19,8 @@ include(FetchContent)
 
 FetchContent_Declare(json-schema-validator
     URL https://github.com/pboettch/json-schema-validator/archive/2.2.0.tar.gz
-    URL_HASH SHA256=03897867bd757ecac1db7545babf0c6c128859655b496582a9cea4809c2260aa)
+    URL_HASH SHA256=03897867bd757ecac1db7545babf0c6c128859655b496582a9cea4809c2260aa
+    SYSTEM)
 
 FetchContent_MakeAvailable(json-schema-validator)
 

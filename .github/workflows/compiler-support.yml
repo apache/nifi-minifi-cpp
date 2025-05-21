@@ -1,0 +1,51 @@
+# .github/workflows/compiler-support.yml
+
+name: 'Check supported Compilers'
+
+on: [workflow_dispatch]
+
+jobs:
+  gcc-build:
+    name: ${{ matrix.platform.id }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ { id: gcc-12, base_image: gcc:12-bookworm },
+                    { id: gcc-15, base_image: gcc:15-bookworm } ]
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: 'Checkout repository code'
+        uses: actions/checkout@v4
+
+      - name: 'Build Project with ${{ matrix.platform.id }}'
+        run: |
+          docker build \
+            --build-arg BASE_IMAGE=${{ matrix.platform.base_image }} \
+            -t minifi-${{ matrix.platform.id }} \
+            -f docker/compiler-test/gcc.Dockerfile \
+            .
+
+  clang-build:
+    name: ${{ matrix.platform.id }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ { id: clang-16, base_image: silkeh/clang:16-bookworm },
+                    { id: clang-20, base_image: silkeh/clang:20-bookworm } ]
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: 'Checkout repository code'
+        uses: actions/checkout@v4
+
+      - name: 'Build Project with ${{ matrix.platform.id }}'
+        run: |
+          docker build \
+            --build-arg BASE_IMAGE=${{ matrix.platform.base_image }} \
+            -t minifi-${{ matrix.platform.id }} \
+            -f docker/compiler-test/clang.Dockerfile \
+            .

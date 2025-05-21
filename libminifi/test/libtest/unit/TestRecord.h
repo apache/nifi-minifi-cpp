@@ -44,9 +44,9 @@ inline Record createSampleRecord2(const bool stringify = false) {
   qux.emplace_back('z');
 
   RecordObject quux;
-  quux["Apfel"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"pomme"})};
-  quux["Birne"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"poire"})};
-  quux["Aprikose"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"abricot"})};
+  quux.emplace("Apfel", RecordField(std::string{"pomme"}));
+  quux.emplace("Birne", RecordField(std::string{"poire"}));
+  quux.emplace("Aprikose", RecordField(std::string{"abricot"}));
 
   RecordArray corge;
   corge.emplace_back(false);
@@ -78,9 +78,9 @@ inline Record createSampleRecord(const bool stringify = false) {
   qux.emplace_back('b');
   qux.emplace_back('c');
   RecordObject quux;
-  quux["Apfel"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"apple"})};
-  quux["Birne"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"pear"})};
-  quux["Aprikose"] = BoxedRecordField{std::make_unique<RecordField>(std::string{"apricot"})};
+  quux.emplace("Apfel", RecordField(std::string{"apple"}));
+  quux.emplace("Birne", RecordField(std::string{"pear"}));
+  quux.emplace("Aprikose", RecordField(std::string{"apricot"}));
 
   RecordArray corge;
   corge.emplace_back(true);

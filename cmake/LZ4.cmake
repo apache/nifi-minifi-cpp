@@ -29,6 +29,7 @@ FetchContent_Declare(lz4
     URL_HASH       SHA256=0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b
     SOURCE_SUBDIR  build/cmake
     OVERRIDE_FIND_PACKAGE
+    SYSTEM
 )
 
 FetchContent_MakeAvailable(lz4)

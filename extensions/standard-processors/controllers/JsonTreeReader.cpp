@@ -59,7 +59,7 @@ nonstd::expected<core::RecordField, std::error_code> parse(const rapidjson::Valu
       auto element_field = parse(m.value);
       if (!element_field)
         return nonstd::make_unexpected(element_field.error());
-      record_object[element_key] = core::BoxedRecordField{std::make_unique<core::RecordField>(std::move(*element_field))};
+      record_object.emplace(element_key, std::move(*element_field));
     }
     return core::RecordField{std::move(record_object)};
   }

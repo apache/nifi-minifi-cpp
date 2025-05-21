@@ -30,26 +30,8 @@ namespace org::apache::nifi::minifi::core {
 
 struct RecordField;
 
-struct BoxedRecordField {
-  BoxedRecordField() = default;
-  BoxedRecordField(const BoxedRecordField&) = delete;
-  BoxedRecordField(BoxedRecordField&& rhs) noexcept : field(std::move(rhs.field)) {}
-  BoxedRecordField& operator=(const BoxedRecordField&) = delete;
-  BoxedRecordField& operator=(BoxedRecordField&& rhs)  noexcept {
-    field = std::move(rhs.field);
-    return *this;
-  };
-  ~BoxedRecordField() = default;
-
-  explicit BoxedRecordField(std::unique_ptr<RecordField>&& _field) : field(std::move(_field)) {}
-  bool operator==(const BoxedRecordField&) const;
-  std::unique_ptr<RecordField> field = nullptr;
-};
-
-
 using RecordArray = std::vector<RecordField>;
-
-using RecordObject = std::unordered_map<std::string, BoxedRecordField>;
+using RecordObject = std::unordered_map<std::string, RecordField>;
 
 template<typename T>
 concept Float = std::is_floating_point_v<T>;
@@ -86,11 +68,5 @@ struct RecordField {
 
   std::variant<std::string, int64_t, uint64_t, double, bool, std::chrono::system_clock::time_point, RecordArray, RecordObject> value_;
 };
-
-inline bool BoxedRecordField::operator==(const BoxedRecordField& rhs) const {
-  if (!field || !rhs.field)
-    return field == rhs.field;
-  return *field == *rhs.field;
-}
 
 }  // namespace org::apache::nifi::minifi::core

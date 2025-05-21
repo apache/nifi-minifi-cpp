@@ -1,0 +1,19 @@
+diff --git a/include/bustache/format.hpp b/include/bustache/format.hpp
+index 77ecac5..395ac38 100644
+--- a/include/bustache/format.hpp
++++ b/include/bustache/format.hpp
+@@ -147,11 +147,11 @@ namespace bustache
+ 
+     inline namespace literals
+     {
+-        inline format operator"" _fmt(char const* str, std::size_t n)
++        inline format operator""_fmt(char const* str, std::size_t n)
+         {
+             return format(std::string_view(str, n));
+         }
+     }
+ }
+ 
+-#endif
+\ No newline at end of file
++#endif

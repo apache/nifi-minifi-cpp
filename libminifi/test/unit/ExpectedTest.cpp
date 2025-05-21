@@ -22,8 +22,11 @@
 #include "unit/Catch.h"
 #include "utils/expected.h"
 #include "utils/gsl.h"
+#include "unit/TestUtils.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
+
+using org::apache::nifi::minifi::test::utils::ExceptionSubStringMatcher;
 
 // shamelessly copied from https://github.com/TartanLlama/expected/blob/master/tests/extensions.cpp (License: CC0)
 TEST_CASE("expected transform", "[expected][transform]") {
@@ -156,7 +159,7 @@ TEST_CASE("expected transform", "[expected][transform]") {
     nonstd::expected<int, int> e(42);
     auto ret = e | utils::transform([](int& i) -> int& { return i; });
     REQUIRE(ret);
-    REQUIRE(ret == 42);
+    REQUIRE(*ret == 42);
   }
 }
 
@@ -341,7 +344,7 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     nonstd::expected<int, int> e = 21;
     auto ret = std::move(e) | utils::orElse(fail);
     REQUIRE(ret);
-    REQUIRE(ret == 21);
+    REQUIRE(*ret == 21);
   }
 
 
@@ -349,7 +352,7 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     nonstd::expected<int, eptr> e = 21;
     auto ret = std::move(e) | utils::orElse(efail);
     REQUIRE(ret);
-    REQUIRE(ret == 21);
+    REQUIRE(*ret == 21);
   }
 
   {
@@ -473,7 +476,10 @@ TEST_CASE("expected valueOrElse", "[expected][valueOrElse]") {
   REQUIRE(gsl::narrow<int>("hello"sv.size()) == (ex | utils::valueOrElse([](const std::string& err) { return gsl::narrow<int>(err.size()); })));
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw std::exception(); }), std::exception);  // NOLINT(performance-unnecessary-value-param)
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](const std::string&) -> int { throw std::exception(); }), std::exception);
-  REQUIRE_THROWS_WITH(std::move(ex) | utils::valueOrElse([](std::string&& error) -> int { throw std::runtime_error(error); }), "hello");
+  REQUIRE_THROWS_MATCHES(
+      std::move(ex) | utils::valueOrElse([](std::string&& error) -> int { const auto err = std::move(error); throw std::runtime_error(err); }),
+      std::runtime_error,
+      ExceptionSubStringMatcher<std::runtime_error>({"hello"}));
 }
 
 TEST_CASE("expected transformError", "[expected][transformError]") {
@@ -558,6 +564,16 @@ TEST_CASE("expected orThrow") {
   nonstd::expected<int, std::string> unexpected{nonstd::unexpect, "hello"};
   nonstd::expected<int, std::string> expected{5};
 
-  REQUIRE_THROWS_WITH(std::move(unexpected) | utils::orThrow("should throw"), "should throw, but got hello");
+
+  REQUIRE_THROWS_MATCHES(std::move(unexpected) | utils::orThrow("should throw"),
+      std::runtime_error,
+      ExceptionSubStringMatcher<std::runtime_error>({"should throw, but got hello"}));
   CHECK((expected | utils::orThrow("should be 5")) == 5);
+}
+
+TEST_CASE("This fails to compile with std::expected on GCC 15.1 due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119714") {
+  nonstd::expected<int, std::string> a;
+  nonstd::expected<int, std::string> b;
+
+  CHECK(a == b);
 }

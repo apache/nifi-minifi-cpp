@@ -20,6 +20,7 @@ include(FetchContent)
 FetchContent_Declare(lua
     URL         "https://github.com/lua/lua/archive/refs/tags/v5.4.6.tar.gz"
     URL_HASH    "SHA256=11c228cf9b9564d880b394f8069ad829d01e39756567f79c347a6b89fed44771"
+    SYSTEM
 )
 
 FetchContent_GetProperties(lua)

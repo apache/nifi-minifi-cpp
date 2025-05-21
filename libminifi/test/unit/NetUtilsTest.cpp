@@ -33,13 +33,13 @@ TEST_CASE("net::reverseDnsLookup", "[net][dns][reverseDnsLookup]") {
   SECTION("dns.google IPv6") {
     if (minifi::test::utils::isIPv6Disabled())
       SKIP("IPv6 is disabled");
-    auto dns_google_hostname = net::reverseDnsLookup(asio::ip::address::from_string("2001:4860:4860::8888"));
+    auto dns_google_hostname = net::reverseDnsLookup(asio::ip::make_address("2001:4860:4860::8888"));
     REQUIRE(dns_google_hostname.has_value());
     CHECK(dns_google_hostname == "dns.google");
   }
 
   SECTION("dns.google IPv4") {
-    auto dns_google_hostname = net::reverseDnsLookup(asio::ip::address::from_string("8.8.8.8"));
+    auto dns_google_hostname = net::reverseDnsLookup(asio::ip::make_address("8.8.8.8"));
     REQUIRE(dns_google_hostname.has_value());
     CHECK(dns_google_hostname == "dns.google");
   }
@@ -47,13 +47,13 @@ TEST_CASE("net::reverseDnsLookup", "[net][dns][reverseDnsLookup]") {
   SECTION("Unresolvable address IPv6") {
     if (minifi::test::utils::isIPv6Disabled())
       SKIP("IPv6 is disabled");
-    auto unresolvable_hostname = net::reverseDnsLookup(asio::ip::address::from_string("2001:db8::"));
+    auto unresolvable_hostname = net::reverseDnsLookup(asio::ip::make_address("2001:db8::"));
     REQUIRE(unresolvable_hostname.has_value());
     CHECK(unresolvable_hostname == "2001:db8::");
   }
 
   SECTION("Unresolvable address IPv4") {
-    auto unresolvable_hostname = net::reverseDnsLookup(asio::ip::address::from_string("192.0.2.0"));
+    auto unresolvable_hostname = net::reverseDnsLookup(asio::ip::make_address("192.0.2.0"));
     REQUIRE(unresolvable_hostname.has_value());
     CHECK(unresolvable_hostname == "192.0.2.0");
   }
@@ -96,8 +96,8 @@ TEST_CASE("utils::net::getSslContext") {
   REQUIRE_NOTHROW(plan->finalize());
   auto ssl_context = utils::net::getSslContext(*ssl_context_service);
   asio::error_code verification_error;
-  ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error);
-  CHECK(!verification_error);
+  CHECK_FALSE(ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error));
+  CHECK_FALSE(verification_error);
 }
 
 TEST_CASE("utils::net::getSslContext passphrase problems") {
@@ -113,21 +113,29 @@ TEST_CASE("utils::net::getSslContext passphrase problems") {
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::ClientCertificate.name, (cert_dir / "alice_by_A.pem").string()));
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::PrivateKey.name, (cert_dir / "alice_encrypted.key").string()));
 
+  using minifi::test::utils::ExceptionSubStringMatcher;
+
   SECTION("Missing passphrase") {
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+        std::runtime_error,
+        ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
 
   SECTION("Invalid passphrase") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::Passphrase.name, "not_the_correct_passphrase"));
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+        std::runtime_error,
+        ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
 
   SECTION("Invalid passphrase file") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::Passphrase.name, (cert_dir / "alice_by_B.pem").string()));
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+        std::runtime_error,
+        ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
 }
 
@@ -146,6 +154,6 @@ TEST_CASE("utils::net::getSslContext missing CA") {
   REQUIRE_NOTHROW(plan->finalize());
   auto ssl_context = utils::net::getSslContext(*ssl_context_service);
   asio::error_code verification_error;
-  ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error);
-  CHECK(!verification_error);
+  CHECK_FALSE(ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error));
+  CHECK_FALSE(verification_error);
 }
