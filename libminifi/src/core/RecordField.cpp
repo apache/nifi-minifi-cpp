@@ -51,11 +51,11 @@ rapidjson::Value RecordField::toJson(rapidjson::Document::AllocatorType& allocat
       },
       [&value, &allocator](const RecordObject& obj) {
         value.SetObject();
-        for (const auto& [key, boxed_field] : obj) {
+        for (const auto& [key, field] : obj) {
           rapidjson::Value keyValue;
           keyValue.SetString(key.c_str(), allocator);
 
-          rapidjson::Value fieldValue = boxed_field.field->toJson(allocator);
+          rapidjson::Value fieldValue = field.toJson(allocator);
           value.AddMember(keyValue, fieldValue, allocator);
         }
       }
@@ -88,7 +88,7 @@ RecordField RecordField::fromJson(const rapidjson::Value& value) {
   } else if (value.IsObject()) {
     RecordObject obj;
     for (const auto& member : value.GetObject()) {
-      obj.emplace(member.name.GetString(), BoxedRecordField{std::make_unique<RecordField>(RecordField::fromJson(member.value))});
+      obj.emplace(member.name.GetString(), RecordField::fromJson(member.value));
     }
     return RecordField{std::move(obj)};
   } else {

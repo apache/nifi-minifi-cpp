@@ -35,8 +35,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\")")
 
 FetchContent_Declare(llamacpp
-        URL https://github.com/ggerganov/llama.cpp/archive/refs/tags/b5038.tar.gz
-        URL_HASH SHA256=5e81c3badc181ed3b7a6ab6bda2abedc80c52527e3c079c7afff4c09f4843564
+        URL https://github.com/ggerganov/llama.cpp/archive/refs/tags/b5502.tar.gz
+        URL_HASH SHA256=9436852125dfe1b33ed47c5fb78bde614d9a8393072c5fa9689d0eaf2727dd1a
         PATCH_COMMAND "${PC}"
 )
 

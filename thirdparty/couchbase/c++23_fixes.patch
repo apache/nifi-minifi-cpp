@@ -1,0 +1,78 @@
+Subject: [PATCH] c++23 fixes
+---
+Index: couchbase/numeric_range_facet_result.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/couchbase/numeric_range_facet_result.hxx b/couchbase/numeric_range_facet_result.hxx
+--- a/couchbase/numeric_range_facet_result.hxx	(revision 51f4775e56fb9ba975f92d7791d4d9feca336f05)
++++ b/couchbase/numeric_range_facet_result.hxx	(date 1747839882124)
+@@ -19,15 +19,13 @@
+ 
+ #include <couchbase/search_facet_result.hxx>
+ #include <couchbase/search_numeric_range.hxx>
++#include <core/impl/internal_numeric_range_facet_result.hxx>
+ 
+ #include <string>
+ #include <vector>
+ 
+ namespace couchbase
+ {
+-#ifndef COUCHBASE_CXX_CLIENT_DOXYGEN
+-class internal_numeric_range_facet_result;
+-#endif
+ 
+ /**
+  * @since 1.0.0
+Index: couchbase/term_facet_result.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/couchbase/term_facet_result.hxx b/couchbase/term_facet_result.hxx
+--- a/couchbase/term_facet_result.hxx	(revision 51f4775e56fb9ba975f92d7791d4d9feca336f05)
++++ b/couchbase/term_facet_result.hxx	(date 1747839742361)
+@@ -19,15 +19,13 @@
+ 
+ #include <couchbase/search_facet_result.hxx>
+ #include <couchbase/search_term_range.hxx>
++#include <core/impl/internal_term_facet_result.hxx>
+ 
+ #include <string>
+ #include <vector>
+ 
+ namespace couchbase
+ {
+-#ifndef COUCHBASE_CXX_CLIENT_DOXYGEN
+-class internal_term_facet_result;
+-#endif
+ 
+ /**
+  * @since 1.0.0
+Index: couchbase/date_range_facet_result.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/couchbase/date_range_facet_result.hxx b/couchbase/date_range_facet_result.hxx
+--- a/couchbase/date_range_facet_result.hxx	(revision 51f4775e56fb9ba975f92d7791d4d9feca336f05)
++++ b/couchbase/date_range_facet_result.hxx	(date 1747839803545)
+@@ -19,6 +19,7 @@
+ 
+ #include <couchbase/search_date_range.hxx>
+ #include <couchbase/search_facet_result.hxx>
++#include <core/impl/internal_date_range_facet_result.hxx>
+ 
+ #include <memory>
+ #include <string>
+@@ -26,9 +27,6 @@
+ 
+ namespace couchbase
+ {
+-#ifndef COUCHBASE_CXX_CLIENT_DOXYGEN
+-class internal_date_range_facet_result;
+-#endif
+ 
+ /**
+  * @since 1.0.0

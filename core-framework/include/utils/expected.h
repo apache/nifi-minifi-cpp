@@ -239,26 +239,28 @@ auto try_expression(F&& action, Args&&... args) noexcept {
 
 }  // namespace org::apache::nifi::minifi::utils
 
-#ifndef WIN32  // on windows this conflicts because nonstd::expected === std::expected
+template <typename T, typename E>
+concept HasStdExpected = requires { typename std::expected<T, E>; };
+
+template <typename T, typename E>
+concept ExpectedTypesDoNotConflict =
+    (!HasStdExpected<T, E> ||
+     !std::same_as<nonstd::expected<T, E>, std::expected<T, E>>);
+
 // based on fmt::formatter<std::expected<T, E>, Char>
 template <typename T, typename E, typename Char>
-struct fmt::formatter<nonstd::expected<T, E>, Char,
-                 std::enable_if_t<(std::is_void<T>::value ||
-                                   fmt::is_formattable<T, Char>::value) &&
-                                  fmt::is_formattable<E, Char>::value>> {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx) -> const Char* {
-    return ctx.begin();
-  }
+requires ExpectedTypesDoNotConflict<T, E> &&
+         (std::is_void_v<T> || fmt::is_formattable<T, Char>::value) &&
+         fmt::is_formattable<E, Char>::value
+struct fmt::formatter<nonstd::expected<T, E>, Char> {
+  constexpr auto parse(auto& ctx) { return ctx.begin(); }
 
-  template <typename FormatContext>
-  auto format(const nonstd::expected<T, E>& value, FormatContext& ctx) const
-      -> decltype(ctx.out()) {
+  auto format(const nonstd::expected<T, E>& value, auto& ctx) const {
     auto out = ctx.out();
 
     if (value.has_value()) {
       out = fmt::detail::write<Char>(out, "nonstd::expected(");
-      if constexpr (!std::is_void<T>::value)
+      if constexpr (!std::is_void_v<T>)
         out = fmt::detail::write_escaped_alternative<Char>(out, *value);
     } else {
       out = fmt::detail::write<Char>(out, "nonstd::unexpected(");
@@ -268,4 +270,3 @@ struct fmt::formatter<nonstd::expected<T, E>, Char,
     return out;
   }
 };
-#endif

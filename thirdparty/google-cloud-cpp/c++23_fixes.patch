@@ -1,0 +1,19 @@
+Subject: [PATCH] c++23 fixes
+---
+Index: google/cloud/internal/rest_parse_json_error.cc
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/google/cloud/internal/rest_parse_json_error.cc b/google/cloud/internal/rest_parse_json_error.cc
+--- a/google/cloud/internal/rest_parse_json_error.cc	(revision 0c5fa4fc7f5377b420a0ec5725f334e597d841a5)
++++ b/google/cloud/internal/rest_parse_json_error.cc	(date 1747841684609)
+@@ -62,7 +62,7 @@
+     if (m != v.end() && m->is_object()) {
+       for (auto const& i : m->items()) {
+         if (!i.value().is_string()) continue;
+-        metadata[i.key()] = i.value();
++        metadata[i.key()] = i.value().get<std::string>();
+       }
+     }
+     metadata["http_status_code"] = std::to_string(http_status_code);

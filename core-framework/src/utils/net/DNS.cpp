@@ -27,7 +27,7 @@ namespace org::apache::nifi::minifi::utils::net {
 
 nonstd::expected<asio::ip::address, std::error_code> addressFromString(const std::string_view ip_address_str) {
   std::error_code ip_address_from_string_error;
-  auto ip_address = asio::ip::address::from_string(ip_address_str.data(), ip_address_from_string_error);
+  auto ip_address = asio::ip::make_address(ip_address_str.data(), ip_address_from_string_error);
   if (ip_address_from_string_error)
     return nonstd::make_unexpected(ip_address_from_string_error);
   return ip_address;
@@ -55,7 +55,10 @@ nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::
 
   if (resolve_error)
     return nonstd::make_unexpected(resolve_error);
-  return results->host_name();
+  if (!results.empty()) {
+    return results.begin()->host_name();
+  }
+  return nonstd::make_unexpected(std::make_error_code(std::errc::host_unreachable));
 }
 
 std::string getMyHostName() {
