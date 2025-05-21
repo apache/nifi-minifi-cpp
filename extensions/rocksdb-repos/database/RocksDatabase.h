@@ -59,8 +59,6 @@ class RocksDatabase {
  private:
   const std::string column_;
   std::shared_ptr<RocksDbInstance> db_;
-
-  static std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::internal
