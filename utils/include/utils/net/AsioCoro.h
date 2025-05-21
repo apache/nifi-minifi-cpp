@@ -29,11 +29,11 @@
 #include "asio/this_coro.hpp"
 #include "asio/use_awaitable.hpp"
 #include "asio/experimental/awaitable_operators.hpp"
-#include "asio/experimental/as_tuple.hpp"
+#include "asio/as_tuple.hpp"
 
 namespace org::apache::nifi::minifi::utils::net {
 
-constexpr auto use_nothrow_awaitable = asio::experimental::as_tuple(asio::use_awaitable);
+constexpr auto use_nothrow_awaitable = asio::as_tuple(asio::use_awaitable);
 
 #if defined(__GNUC__) && __GNUC__ < 11
 // [coroutines] unexpected 'warning: statement has no effect [-Wunused-value]'

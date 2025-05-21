@@ -74,8 +74,8 @@ TEST_CASE("Test JSON serialization of a RecordField") {
   }
   {
     minifi::core::RecordObject obj;
-    obj.emplace("key1", std::make_unique<minifi::core::RecordField>(1));
-    obj.emplace("key2", std::make_unique<minifi::core::RecordField>(std::string("hello")));
+    obj.emplace("key1", minifi::core::RecordField(1));
+    obj.emplace("key2", core::RecordField(std::string("hello")));
     minifi::core::RecordField field{std::move(obj)};
     rapidjson::Document doc;
     auto value = field.toJson(doc.GetAllocator());
@@ -114,11 +114,11 @@ TEST_CASE("Test JSON serialization of a Record") {
   record.emplace("key6", minifi::core::RecordField{std::move(arr)});
 
   minifi::core::RecordObject subobj;
-  subobj.emplace("subkey3", std::make_unique<minifi::core::RecordField>(1));
-  subobj.emplace("subkey4", std::make_unique<minifi::core::RecordField>(std::string("subhello")));
+  subobj.emplace("subkey3", core::RecordField(1));
+  subobj.emplace("subkey4", core::RecordField(std::string("subhello")));
   minifi::core::RecordObject obj;
-  obj.emplace("subkey1", std::make_unique<minifi::core::RecordField>(-2));
-  obj.emplace("subkey2", std::make_unique<minifi::core::RecordField>(std::move(subobj)));
+  obj.emplace("subkey1", core::RecordField(-2));
+  obj.emplace("subkey2", core::RecordField(std::move(subobj)));
   record.emplace("key7", minifi::core::RecordField{std::move(obj)});
 
   rapidjson::Document doc = record.toJson();
@@ -160,8 +160,8 @@ TEST_CASE("Test Record deserialization from JSON") {
   CHECK(record.at("time_point") == minifi::core::RecordField{test_time});
 
   minifi::core::RecordObject subobj;
-  subobj.emplace("number2", std::make_unique<minifi::core::RecordField>(2));
-  subobj.emplace("message", std::make_unique<minifi::core::RecordField>(std::string("mymessage")));
+  subobj.emplace("number2", core::RecordField(2));
+  subobj.emplace("message", core::RecordField(std::string("mymessage")));
   minifi::core::RecordField obj_field{std::move(subobj)};
   CHECK(record.at("obj") == obj_field);
 

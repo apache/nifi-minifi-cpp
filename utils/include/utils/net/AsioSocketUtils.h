@@ -142,7 +142,7 @@ class AsioSocketConnection : public io::BaseStreamImpl {
       return;
     }
 
-    asio::ip::tcp::endpoint local_endpoint(asio::ip::address::from_string(address), 0);
+    asio::ip::tcp::endpoint local_endpoint(asio::ip::make_address(address), 0);
     asio::error_code err;
     socket.open(local_endpoint.protocol(), err);
     if (err) {

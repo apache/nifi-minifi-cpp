@@ -1,0 +1,23 @@
+Subject: [PATCH] c++23 fixes
+---
+Index: modules/gapi/src/compiler/gislandmodel.hpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/modules/gapi/src/compiler/gislandmodel.hpp b/modules/gapi/src/compiler/gislandmodel.hpp
+--- a/modules/gapi/src/compiler/gislandmodel.hpp	(revision 725e440d278aca07d35a5e8963ef990572b07316)
++++ b/modules/gapi/src/compiler/gislandmodel.hpp	(date 1747828665540)
+@@ -8,8 +8,11 @@
+ #ifndef OPENCV_GAPI_GISLANDMODEL_HPP
+ #define OPENCV_GAPI_GISLANDMODEL_HPP
+ 
+-#include <unordered_set>
++#include <unordered_set> // unordered_map
+ #include <memory>        // shared_ptr
++#include <exception>     // exception_ptr
++#include <string>        // string
++#include <cstddef>       // size_t
+ 
+ #include <ade/graph.hpp>
+ #include <ade/typed_graph.hpp>

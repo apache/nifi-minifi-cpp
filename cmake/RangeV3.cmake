@@ -22,3 +22,4 @@ FetchContent_Declare(range-v3_src
     URL_HASH SHA256=015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb
 )
 FetchContent_MakeAvailable(range-v3_src)
+target_compile_definitions(range-v3 INTERFACE RANGES_CXX_THREAD_LOCAL=201103L)
