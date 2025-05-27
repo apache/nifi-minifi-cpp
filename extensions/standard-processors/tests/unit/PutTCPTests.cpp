@@ -50,7 +50,7 @@ class CancellableTcpServer : public utils::net::TcpServer {
 
   void cancelEverything() {
     for (auto& timer : cancellable_timers_)
-      io_context_.post([=]{timer->cancel();});
+      asio::post(io_context_, [=]{timer->cancel();});
   }
 
   asio::awaitable<void> doReceive() override {
