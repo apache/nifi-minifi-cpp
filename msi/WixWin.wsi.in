@@ -416,6 +416,8 @@ ${WIX_EXTRA_COMPONENTS}
                   <File Id="NifiApi_properties" Name="properties.py" KeyPath="no" Source="pythonprocessors\nifiapi\properties.py"/>
                   <File Id="NifiApi_relationship" Name="relationship.py" KeyPath="no" Source="pythonprocessors\nifiapi\relationship.py"/>
                   <File Id="NifiApi_documentation" Name="documentation.py" KeyPath="no" Source="pythonprocessors\nifiapi\documentation.py"/>
+                  <File Id="NifiApi_componentstate" Name="componentstate.py" KeyPath="no" Source="pythonprocessors\nifiapi\componentstate.py"/>
+                  <File Id="NifiApi_recordtransform" Name="recordtransform.py" KeyPath="no" Source="pythonprocessors\nifiapi\recordtransform.py"/>
                   <File Id="NifiApi_init" Name="__init__.py" KeyPath="no" Source="pythonprocessors\nifiapi\__init__.py"/>
                 </Component>
               </Directory>
