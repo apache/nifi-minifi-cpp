@@ -1,4 +1,4 @@
-Subject: [PATCH] c++23 fixes
+Subject: [PATCH] c++23 fixes (replace forward declaration with includes due to stricter behaviour with unique_ptr + incomplete types)
 ---
 Index: couchbase/numeric_range_facet_result.hxx
 IDEA additional info:
