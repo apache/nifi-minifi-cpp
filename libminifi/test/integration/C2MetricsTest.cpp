@@ -169,7 +169,7 @@ class MetricsHandler: public HeartbeatHandler {
     return std::any_of(bulletins.begin(), bulletins.end(), [](const auto& bulletin) {
       std::string message = bulletin["message"].GetString();
       return bulletin["id"].GetInt() > 0 &&
-        !std::string{bulletin["timestamp"].GetString()}.empty() &&
+        bulletin["timestamp"].GetInt64() > 0 &&
         bulletin["level"].GetString() == std::string("ERROR") &&
         bulletin["category"].GetString() == std::string("Log Message") &&
         message.find("Error connecting to") != std::string::npos &&

@@ -111,7 +111,7 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
         .collapsible = false,
         .children = {
           {.name = "id", .value = bulletin.id},
-          {.name = "timestamp", .value = utils::timeutils::getNiFiDateTimeFormat(std::chrono::time_point_cast<std::chrono::seconds>(bulletin.timestamp))},
+          {.name = "timestamp", .value = gsl::narrow<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(bulletin.timestamp.time_since_epoch()).count())},
           {.name = "level", .value = bulletin.level},
           {.name = "category", .value = bulletin.category},
           {.name = "message", .value = bulletin.message},
