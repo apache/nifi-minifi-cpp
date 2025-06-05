@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <ranges>
 
 #include "utils/gsl.h"
 #include "utils/Enum.h"
@@ -427,7 +428,7 @@ bool SiteToSiteClient::writeAttributesInSendTransaction(const std::shared_ptr<Tr
     return false;
   }
 
-  for (const auto& attribute : attributes) {
+  return std::ranges::all_of(attributes, [&](const auto& attribute) {
     if (const auto ret = transaction->getStream().write(attribute.first, true); ret == 0 || io::isError(ret)) {
       logger_->log_error("Failed to write attribute key {}!", attribute.first);
       return false;
@@ -437,9 +438,8 @@ bool SiteToSiteClient::writeAttributesInSendTransaction(const std::shared_ptr<Tr
       return false;
     }
     logger_->log_debug("Site2Site transaction {} send attribute key {} value {}", transaction_id.to_string(), attribute.first, attribute.second);
-  }
-
-  return true;
+    return true;
+  });
 }
 
 void SiteToSiteClient::finalizeSendTransaction(const std::shared_ptr<Transaction>& transaction, uint64_t sent_bytes) {
@@ -617,7 +617,7 @@ std::optional<SiteToSiteClient::ReceiveFlowFileHeaderResult> SiteToSiteClient::r
     return std::nullopt;
   }
 
-  if (result.flow_file_data_size > 0 || result.attributes.size() > 0) {
+  if (result.flow_file_data_size > 0 || !result.attributes.empty()) {
     transaction->incrementCurrentTransfers();
     transaction->incrementTotalTransfers();
   } else {
@@ -677,7 +677,7 @@ std::pair<uint64_t, uint64_t> SiteToSiteClient::readFlowFiles(const std::shared_
           output_stream->write(std::span(buffer).subspan(0, size));
           len -= size;
         }
-        return receive_header_result->flow_file_data_size;
+        return gsl::narrow<int64_t>(receive_header_result->flow_file_data_size);
       });
       if (flow_file->getSize() != receive_header_result->flow_file_data_size) {
         std::stringstream message;
