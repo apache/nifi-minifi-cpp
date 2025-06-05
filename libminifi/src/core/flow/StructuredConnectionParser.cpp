@@ -19,6 +19,7 @@
 #include "core/flow/StructuredConnectionParser.h"
 #include "core/flow/CheckRequiredField.h"
 #include "Funnel.h"
+#include "RemoteProcessGroupPort.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -28,7 +29,7 @@ void StructuredConnectionParser::addNewRelationshipToConnection(std::string_view
   connection.addRelationship(relationship);
 }
 
-void StructuredConnectionParser::addFunnelRelationshipToConnection(minifi::Connection& connection) const {
+void StructuredConnectionParser::addFunnelOrPortRelationshipToConnection(minifi::Connection& connection) const {
   utils::Identifier srcUUID;
   try {
     srcUUID = getSourceUUID();
@@ -37,13 +38,17 @@ void StructuredConnectionParser::addFunnelRelationshipToConnection(minifi::Conne
   }
   auto processor = parent_->findProcessorById(srcUUID);
   if (!processor) {
-    logger_->log_error("Could not find processor with id {}", srcUUID.to_string());
+    logger_->log_error("Could not find funnel or port with id {}", srcUUID.to_string());
     return;
   }
 
   auto& processor_ref = *processor;
   if (typeid(minifi::Funnel) == typeid(processor_ref)) {
     addNewRelationshipToConnection(minifi::Funnel::Success.name, connection);
+  } else if (typeid(minifi::RemoteProcessGroupPort) == typeid(processor_ref)) {
+    addNewRelationshipToConnection(minifi::RemoteProcessGroupPort::DefaultRelationship.name, connection);
+  } else {
+    logger_->log_error("Component with id {} is neither funnel nor port", srcUUID.to_string());
   }
 }
 
@@ -59,10 +64,10 @@ void StructuredConnectionParser::configureConnectionSourceRelationships(minifi::
     } else if (!relList.isSequence() && !relList.getString().value().empty()) {
       addNewRelationshipToConnection(relList.getString().value(), connection);
     } else {
-      addFunnelRelationshipToConnection(connection);
+      addFunnelOrPortRelationshipToConnection(connection);
     }
   } else {
-    addFunnelRelationshipToConnection(connection);
+    addFunnelOrPortRelationshipToConnection(connection);
   }
 }
 
