@@ -19,11 +19,11 @@
 This readme defines the configuration parameters to use ExecutePythonProcessor to run native python processors.
 
 ## Table of Contents
-
 - [Requirements](#requirements)
 - [Description](#description)
+- [Installation](#installation)
 - [Configuration](#configuration)
-- [Processors](#processors)
+- [Installing Python processors](#installing-python-processors)
 - [Using NiFi Python Processors](#using-nifi-python-processors)
 - [Use Python processors from virtualenv](#use-python-processors-from-virtualenv)
 - [Automatically install dependencies from requirements.txt files](#automatically-install-dependencies-from-requirementstxt-files)
@@ -128,6 +128,17 @@ class VaderSentiment(object):
     return len(self.content)
 ```
 
+
+## Installation
+
+On Linux, you need the "libminifi-python-lib-loader-extension.so", "libminifi-python-script-extension.so" and
+"libminifi-script-extension.so" libraries to be present in the extensions directory, and "minifi_native.so"
+must be a symbolic link to "libminifi-python-script-extension.so".
+
+On Windows, when installing MiNiFi using the MSI installer, make sure to enable both "minifi-python-script-extension"
+and "minifi-script-extension" during the installation process.
+
+
 ## Configuration
 
 To enable python Processor capabilities, the following options need to be provided in minifi.properties. The directory specified
@@ -141,12 +152,24 @@ to the reference class name.
     nifi.python.processor.dir=XXXX
 
 
-## Sample processors
-The examples directory (pythonprocessor-examples in the source, or minifi-python-examples in the MiNiFi installation)
-contains sample python processors. Copy them to the minifi-python directory to make them available for flows. You may
-need to install the required dependencies, either on the system or in the virtual environment.
+## Installing Python processors
 
-### Sentiment Analysis
+In order to make Python processors available for flows, you need to copy them to the minifi-python directory (or to the
+minifi-python/nifi_python_processors subdirectory, for processors using the NiFi API). You can copy either individual
+processor modules (files), or packages (directories) containing one or more processors.
+
+The examples directory (pythonprocessor-examples in the source, or minifi-python-examples in the MiNiFi installation)
+contains sample python processors.
+
+Normally, python processor dependencies [should be installed automatically](#automatically-install-dependencies-from-requirementstxt-files).
+In some cases, you may need to install the required dependencies manually, either on the system or in the virtual environment.
+
+Note that on startup, MiNiFi will load all Python processors under the minifi-python directory, and at the first startup
+it will install all their dependencies into the virtualenv -- this can take a long time. A virtualenv containing many
+dependencies may use several gigabytes of disk space. You should only install the Python processors you will be using
+in your flow.
+
+### Example: Sentiment Analysis
 
 The SentimentAnalysis processor will perform a Vader Sentiment Analysis. This requires that you install nltk and VaderSentiment
     pip install nltk
