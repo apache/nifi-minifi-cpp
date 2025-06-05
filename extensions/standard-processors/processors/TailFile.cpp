@@ -119,7 +119,7 @@ class FileReaderCallback {
 
     while (hasMoreToRead() && !found_delimiter) {
       if (begin_ == end_) {
-        input_stream_.read(reinterpret_cast<char *>(buffer_.data()), gsl::narrow<std::streamsize>(buffer_.size()));
+        input_stream_.read(buffer_.data(), gsl::narrow<std::streamsize>(buffer_.size()));
 
         const auto num_bytes_read = input_stream_.gcount();
         logger_->log_trace("Read {} bytes of input", std::intmax_t{num_bytes_read});
@@ -246,13 +246,18 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
+  const auto result_format = utils::parseEnumProperty<TailResultFormat>(context, ResultFormat);
   if (auto delimiter_str = context.getProperty(Delimiter)) {
-    if (auto parsed_delimiter = utils::string::parseCharacter(*delimiter_str)) {
-      delimiter_ = *parsed_delimiter;
+    if (result_format == TailResultFormat::FlowFilePerBatch) {
+      logger_->log_warn("Delimiter({}) is ignored with {}", *delimiter_str, magic_enum::enum_name(TailResultFormat::FlowFilePerBatch));
     } else {
-      logger_->log_error("Invalid {}: \"{}\" (it should be a single character, whether escaped or not). Using the first character as the {}",
-          TailFile::Delimiter.name, *delimiter_str, TailFile::Delimiter.name);
-      delimiter_ = getDelimiterOld(*delimiter_str);
+      if (auto parsed_delimiter = utils::string::parseCharacter(*delimiter_str)) {
+        delimiter_ = *parsed_delimiter;
+      } else {
+        logger_->log_error("Invalid {}: \"{}\" (it should be a single character, whether escaped or not). Using the first character as the {}",
+            TailFile::Delimiter.name, *delimiter_str, TailFile::Delimiter.name);
+        delimiter_ = getDelimiterOld(*delimiter_str);
+      }
     }
   }
 
