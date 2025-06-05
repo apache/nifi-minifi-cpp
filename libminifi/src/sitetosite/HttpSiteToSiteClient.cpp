@@ -314,7 +314,7 @@ std::unique_ptr<minifi::http::HTTPClient> HttpSiteToSiteClient::createHttpClient
   return http_client_;
 }
 
-bool HttpSiteToSiteClient::transmitPayload(core::ProcessContext&, core::ProcessSession&, const std::string& /*payload*/, const std::map<std::string, std::string>& /*attributes*/) {
+bool HttpSiteToSiteClient::transmitPayload(core::ProcessContext&, const std::string& /*payload*/, const std::map<std::string, std::string>& /*attributes*/) {
   return false;
 }
 

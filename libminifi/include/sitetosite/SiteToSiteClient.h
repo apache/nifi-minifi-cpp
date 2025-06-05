@@ -69,7 +69,7 @@ class SiteToSiteClient {
   virtual ~SiteToSiteClient() = default;
 
   virtual std::optional<std::vector<PeerStatus>> getPeerList() = 0;
-  virtual bool transmitPayload(core::ProcessContext& context, core::ProcessSession& session, const std::string &payload, const std::map<std::string, std::string>& attributes) = 0;
+  virtual bool transmitPayload(core::ProcessContext& context, const std::string &payload, const std::map<std::string, std::string>& attributes) = 0;
 
   bool transfer(TransferDirection direction, core::ProcessContext& context, core::ProcessSession& session) {
     if (direction == TransferDirection::SEND) {
@@ -130,7 +130,13 @@ class SiteToSiteClient {
   virtual bool writeResponse(const std::shared_ptr<Transaction> &transaction, const SiteToSiteResponse& response);
 
   bool receive(const utils::Identifier &transaction_id, DataPacket *packet, bool &eof);
-  bool send(const utils::Identifier& transaction_id, DataPacket* packet, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession* session);
+
+  bool initializeSend(const std::shared_ptr<Transaction>& transaction);
+  bool writeAttributesInSendTransaction(const std::shared_ptr<Transaction>& transaction, const std::map<std::string, std::string>& attributes);
+  void finalizeSendTransaction(const std::shared_ptr<Transaction>& transaction, uint64_t sent_bytes);
+  bool sendPacket(const DataPacket& packet);
+  bool sendFlowFile(const std::shared_ptr<Transaction>& transaction, core::FlowFile& flow_file, core::ProcessSession& session);
+
   void cancel(const utils::Identifier &transaction_id);
   bool complete(core::ProcessContext& context, const utils::Identifier &transaction_id);
   void error(const utils::Identifier &transaction_id);

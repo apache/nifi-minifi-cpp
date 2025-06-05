@@ -28,6 +28,8 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/SiteToSiteHelper.h"
+#include "unit/DummyProcessor.h"
+#include "unit/ProvenanceTestHelper.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -41,9 +43,12 @@ class RawSiteToSiteClientTestAccessor {
     return client.createTransaction(direction);
   }
 
-  static bool send(sitetosite::RawSiteToSiteClient& client, const minifi::utils::Identifier& transaction_id, sitetosite::DataPacket* packet, const std::shared_ptr<core::FlowFile> &flow_file,
-      core::ProcessSession* session) {
-    return client.send(transaction_id, packet, flow_file, session);
+  static bool sendFlowFile(sitetosite::RawSiteToSiteClient& client, const std::shared_ptr<sitetosite::Transaction>& transaction, core::FlowFile& flow_file, core::ProcessSession& session) {
+    return client.sendFlowFile(transaction, flow_file, session);
+  }
+
+  static bool sendPacket(sitetosite::RawSiteToSiteClient& client, const sitetosite::DataPacket& packet) {
+    return client.sendPacket(packet);
   }
 
   static bool receive(sitetosite::RawSiteToSiteClient& client, const minifi::utils::Identifier& transaction_id, sitetosite::DataPacket *packet, bool &eof) {
@@ -77,7 +82,7 @@ TEST_CASE("TestSetPortId", "[S2S]") {
   REQUIRE(fake_uuid == protocol.getPortId());
 }
 
-TEST_CASE("TestSiteToSiteVerifySend", "[S2S]") {
+TEST_CASE("TestSiteToSiteVerifySend using data packet", "[S2S]") {
   auto collector = std::make_unique<SiteToSiteResponder>();
   auto collector_ptr = collector.get();
 
@@ -85,7 +90,14 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S]") {
 
   auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));
-  protocol.setUseCompression(false);
+
+  std::vector<std::string> expected_responses;
+  std::string payload = "Test MiNiFi payload";
+
+  expected_responses.push_back("");
+  expected_responses.push_back("");
+  expected_responses.push_back(payload);
+
   protocol.setBatchDuration(std::chrono::milliseconds(100));
   protocol.setBatchCount(5);
   protocol.setTimeout(std::chrono::milliseconds(20000));
@@ -131,19 +143,125 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S]") {
   collector_ptr->get_next_client_response();  // codec version
 
   // start to send the stuff
-  std::string payload = "Test MiNiFi payload";
   auto transaction = RawSiteToSiteClientTestAccessor::createTransaction(protocol, sitetosite::TransferDirection::SEND);
   REQUIRE(transaction);
-  auto transaction_id = transaction->getUUID();
   collector_ptr->get_next_client_response();
   REQUIRE(collector_ptr->get_next_client_response() == "SEND_FLOWFILES");
   std::map<std::string, std::string> attributes;
   sitetosite::DataPacket packet(transaction, attributes, payload);
-  REQUIRE(RawSiteToSiteClientTestAccessor::send(protocol, transaction_id, &packet, nullptr, nullptr));
+  REQUIRE(RawSiteToSiteClientTestAccessor::sendPacket(protocol, packet));
+  for (const auto& expected_response : expected_responses) {
+    if (expected_response.empty()) {
+      collector_ptr->get_next_client_response();
+      continue;
+    }
+    CHECK(expected_response == collector_ptr->get_next_client_response());
+  }
+  REQUIRE(transaction->getCRC() == 4000670133);
+}
+
+TEST_CASE("TestSiteToSiteVerifySend using flowfile data", "[S2S]") {
+  auto collector = std::make_unique<SiteToSiteResponder>();
+  auto collector_ptr = collector.get();
+
+  sunnyPathBootstrap(collector);
+
+  auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
+  sitetosite::RawSiteToSiteClient protocol(std::move(peer));
+
+  std::vector<std::string> expected_responses;
+  std::string payload = "Test MiNiFi payload";
+
+  expected_responses.push_back("");
+  expected_responses.push_back("");
+  expected_responses.push_back("filename");
+  expected_responses.push_back("");
+  expected_responses.push_back("myfile");
+  expected_responses.push_back("");
+  expected_responses.push_back("flow.id");
+  expected_responses.push_back("");
+  expected_responses.push_back("test");
+  expected_responses.push_back("");
+  expected_responses.push_back(payload);
+
+  protocol.setBatchDuration(std::chrono::milliseconds(100));
+  protocol.setBatchCount(5);
+  protocol.setTimeout(std::chrono::milliseconds(20000));
+
+  auto fake_uuid = minifi::utils::Identifier::parse("C56A4180-65AA-42EC-A945-5FD21DEC0538").value();
+  protocol.setPortId(fake_uuid);
+
+  REQUIRE(true == RawSiteToSiteClientTestAccessor::bootstrap(protocol));
+
+  REQUIRE(collector_ptr->get_next_client_response() == "NiFi");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "SocketFlowFileProtocol");
   collector_ptr->get_next_client_response();
   collector_ptr->get_next_client_response();
-  std::string rx_payload = collector_ptr->get_next_client_response();
-  REQUIRE(payload == rx_payload);
+  collector_ptr->get_next_client_response();
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "nifi://fake_host:65433");
+  collector_ptr->get_next_client_response();
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "BATCH_COUNT");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "5");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "BATCH_DURATION");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "100");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "GZIP");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "false");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "PORT_IDENTIFIER");
+  collector_ptr->get_next_client_response();
+  REQUIRE(minifi::utils::string::equalsIgnoreCase(collector_ptr->get_next_client_response(), "c56a4180-65aa-42ec-a945-5fd21dec0538"));
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "REQUEST_EXPIRATION_MILLIS");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "20000");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "NEGOTIATE_FLOWFILE_CODEC");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "StandardFlowFileCodec");
+  collector_ptr->get_next_client_response();  // codec version
+
+  // start to send the stuff
+  auto transaction = RawSiteToSiteClientTestAccessor::createTransaction(protocol, sitetosite::TransferDirection::SEND);
+  REQUIRE(transaction);
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "SEND_FLOWFILES");
+
+  TestController test_controller_;
+  TestController::PlanConfig plan_config_;
+  std::shared_ptr<TestPlan> test_plan = test_controller_.createPlan(plan_config_);
+  test_plan->addProcessor("DummyProcessor", "dummyProcessor");
+  std::shared_ptr<minifi::core::ProcessContext> context = [&] { test_plan->runNextProcessor(); return test_plan->getCurrentContext(); }();
+  std::unique_ptr<minifi::core::ProcessSession> session = std::make_unique<core::ProcessSessionImpl>(context);
+
+  auto flow_file = session->create();
+  session->write(flow_file, [&](const std::shared_ptr<io::OutputStream>& output_stream) {
+    std::span<const std::byte> span{reinterpret_cast<const std::byte*>(payload.data()), payload.size()};
+    output_stream->write(span);
+    return payload.size();
+  });
+  flow_file->updateAttribute("filename", "myfile");
+  flow_file->updateAttribute("flow.id", "test");
+  session->transfer(flow_file, DummyProcessor::Success);
+  session->commit();
+
+  std::map<std::string, std::string> attributes;
+  REQUIRE(RawSiteToSiteClientTestAccessor::sendFlowFile(protocol, transaction, *flow_file, *session));
+  for (const auto& expected_response : expected_responses) {
+    if (expected_response.empty()) {
+      collector_ptr->get_next_client_response();
+      continue;
+    }
+    CHECK(expected_response == collector_ptr->get_next_client_response());
+  }
+  REQUIRE(transaction->getCRC() == 2886786428);
 }
 
 TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S]") {
@@ -166,7 +284,7 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S]") {
   REQUIRE_FALSE(RawSiteToSiteClientTestAccessor::bootstrap(protocol));
 }
 
-TEST_CASE("Test receiving data through site to site ", "[S2S]") {
+TEST_CASE("Test receiving data through site to site", "[S2S]") {
   auto collector = std::make_unique<SiteToSiteResponder>();
   auto collector_ptr = collector.get();
 

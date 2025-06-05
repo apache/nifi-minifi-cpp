@@ -138,9 +138,8 @@ bool SiteToSiteClient::transferFlowFiles(core::ProcessContext& context, core::Pr
     while (true) {
       auto start_time = std::chrono::steady_clock::now();
       std::string payload;
-      DataPacket packet(transaction, flow->getAttributes(), payload);
 
-      if (!send(transaction_id, &packet, flow, &session)) {
+      if (!sendFlowFile(transaction, *flow, session)) {
         throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
       }
 
@@ -387,7 +386,7 @@ bool SiteToSiteClient::complete(core::ProcessContext& context, const utils::Iden
   return completeSend(transaction, transaction_id, context);
 }
 
-bool SiteToSiteClient::send(const utils::Identifier& transaction_id, DataPacket* packet, const std::shared_ptr<core::FlowFile> &flow_file, core::ProcessSession* session) {
+bool SiteToSiteClient::initializeSend(const std::shared_ptr<Transaction>& transaction) {
   if (peer_state_ != PeerState::READY) {
     bootstrap();
   }
@@ -396,12 +395,12 @@ bool SiteToSiteClient::send(const utils::Identifier& transaction_id, DataPacket*
     return false;
   }
 
-  auto it = known_transactions_.find(transaction_id);
-  if (it == known_transactions_.end()) {
+  if (!transaction) {
+    logger_->log_error("Site2Site transaction is null");
     return false;
   }
 
-  auto transaction = it->second;
+  auto transaction_id = transaction->getUUID();
   if (transaction->getState() != TransactionState::TRANSACTION_STARTED && transaction->getState() != TransactionState::DATA_EXCHANGED) {
     logger_->log_warn("Site2Site transaction {} is not at started or exchanged state", transaction_id.to_string());
     return false;
@@ -417,13 +416,18 @@ bool SiteToSiteClient::send(const utils::Identifier& transaction_id, DataPacket*
       return false;
     }
   }
-  // start to read the packet
-  if (const auto ret = transaction->getStream().write(gsl::narrow<uint32_t>(packet->attributes.size())); ret != 4) {
+
+  return true;
+}
+
+bool SiteToSiteClient::writeAttributesInSendTransaction(const std::shared_ptr<Transaction>& transaction, const std::map<std::string, std::string>& attributes) {
+  auto transaction_id = transaction->getUUID();
+  if (const auto ret = transaction->getStream().write(gsl::narrow<uint32_t>(attributes.size())); ret != 4) {
     logger_->log_error("Failed to write number of attributes!");
     return false;
   }
 
-  for (const auto& attribute : packet->attributes) {
+  for (const auto& attribute : attributes) {
     if (const auto ret = transaction->getStream().write(attribute.first, true); ret == 0 || io::isError(ret)) {
       logger_->log_error("Failed to write attribute key {}!", attribute.first);
       return false;
@@ -435,57 +439,57 @@ bool SiteToSiteClient::send(const utils::Identifier& transaction_id, DataPacket*
     logger_->log_debug("Site2Site transaction {} send attribute key {} value {}", transaction_id.to_string(), attribute.first, attribute.second);
   }
 
+  return true;
+}
+
+void SiteToSiteClient::finalizeSendTransaction(const std::shared_ptr<Transaction>& transaction, uint64_t sent_bytes) {
+  transaction->incrementCurrentTransfers();
+  transaction->incrementTotalTransfers();
+  transaction->setState(TransactionState::DATA_EXCHANGED);
+  transaction->addBytes(sent_bytes);
+
+  logger_->log_info("Site to Site transaction {} sent flow {} flow records, with total size {}", transaction->getUUID().to_string(), transaction->getTotalTransfers(), transaction->getBytes());
+}
+
+bool SiteToSiteClient::sendFlowFile(const std::shared_ptr<Transaction>& transaction, core::FlowFile& flow_file, core::ProcessSession& session) {
+  if (!initializeSend(transaction)) {
+    return false;
+  }
+
+  auto attributes = flow_file.getAttributes();
+  if (!writeAttributesInSendTransaction(transaction, attributes)) {
+    return false;
+  }
+
   bool flowfile_has_content = [&]() {
-    if (!flow_file) {
-      return false;
-    }
-    if (flow_file->getResourceClaim() == nullptr || !flow_file->getResourceClaim()->exists()) {
-      auto path = flow_file->getResourceClaim() != nullptr ? flow_file->getResourceClaim()->getContentFullPath() : "nullclaim";
-      logger_->log_debug("Claim {} does not exist for FlowFile {}", path, flow_file->getUUIDStr());
+    if (flow_file.getResourceClaim() == nullptr || !flow_file.getResourceClaim()->exists()) {
+      auto path = flow_file.getResourceClaim() != nullptr ? flow_file.getResourceClaim()->getContentFullPath() : "nullclaim";
+      logger_->log_debug("Claim {} does not exist for FlowFile {}", path, flow_file.getUUIDStr());
       return false;
     }
     return true;
   }();
 
   uint64_t len = 0;
-  if (flow_file && flowfile_has_content && session) {
-    len = flow_file->getSize();
+  if (flowfile_has_content) {
+    len = flow_file.getSize();
     const auto ret = transaction->getStream().write(len);
     if (ret != 8) {
       logger_->log_debug("Failed to write content size!");
       return false;
     }
-    if (flow_file->getSize() > 0) {
-      session->read(flow_file, [packet](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
-        const auto result = internal::pipe(*input_stream, packet->transaction->getStream());
-        if (result == -1) return false;
-        packet->size = gsl::narrow<size_t>(result);
-        return true;
+    if (flow_file.getSize() > 0) {
+      auto read_result = session.read(flow_file, [&transaction](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+        return internal::pipe(*input_stream, transaction->getStream());
       });
-      if (flow_file->getSize() != packet->size) {
-        logger_->log_debug("Mismatched sizes {} {}", flow_file->getSize(), packet->size);
+      if (flow_file.getSize() != gsl::narrow<uint64_t>(read_result)) {
+        logger_->log_debug("Mismatched sizes {} {}", flow_file.getSize(), read_result);
         return false;
       }
+    } else {
+      logger_->log_trace("Flowfile empty {}", flow_file.getResourceClaim()->getContentFullPath());
     }
-    if (packet->payload.length() == 0 && len == 0) {
-      if (flow_file->getResourceClaim() == nullptr) {
-        logger_->log_trace("no claim");
-      } else {
-        logger_->log_trace("Flowfile empty {}", flow_file->getResourceClaim()->getContentFullPath());
-      }
-    }
-  } else if (packet->payload.length() > 0) {
-    len = packet->payload.length();
-    if (const auto ret = transaction->getStream().write(len); ret != 8) {
-      logger_->log_debug("Failed to write payload size!");
-      return false;
-    }
-    if (const auto ret = transaction->getStream().write(reinterpret_cast<const uint8_t*>(packet->payload.c_str()), gsl::narrow<size_t>(len)); ret != gsl::narrow<size_t>(len)) {
-      logger_->log_debug("Failed to write payload!");
-      return false;
-    }
-    packet->size += len;
-  } else if (flow_file && !flowfile_has_content) {
+  } else {
     const auto ret = transaction->getStream().write(len);  // Indicate zero length
     if (ret != 8) {
       logger_->log_debug("Failed to write content size (0)!");
@@ -493,13 +497,34 @@ bool SiteToSiteClient::send(const utils::Identifier& transaction_id, DataPacket*
     }
   }
 
-  transaction->incrementCurrentTransfers();
-  transaction->incrementTotalTransfers();
-  transaction->setState(TransactionState::DATA_EXCHANGED);
-  transaction->addBytes(len);
+  finalizeSendTransaction(transaction, len);
+  return true;
+}
 
-  logger_->log_info("Site to Site transaction {} sent flow {} flow records, with total size {}", transaction_id.to_string(), transaction->getTotalTransfers(), transaction->getBytes());
+bool SiteToSiteClient::sendPacket(const DataPacket& packet) {
+  if (!initializeSend(packet.transaction)) {
+    return false;
+  }
 
+  auto transaction = packet.transaction;
+  if (!writeAttributesInSendTransaction(transaction, packet.attributes)) {
+    return false;
+  }
+
+  uint64_t len = 0;
+  if (packet.payload.length() > 0) {
+    len = packet.payload.length();
+    if (const auto ret = transaction->getStream().write(len); ret != 8) {
+      logger_->log_debug("Failed to write payload size!");
+      return false;
+    }
+    if (const auto ret = transaction->getStream().write(reinterpret_cast<const uint8_t*>(packet.payload.c_str()), gsl::narrow<size_t>(len)); ret != gsl::narrow<size_t>(len)) {
+      logger_->log_debug("Failed to write payload!");
+      return false;
+    }
+  }
+
+  finalizeSendTransaction(transaction, len);
   return true;
 }
 

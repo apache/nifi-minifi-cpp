@@ -179,7 +179,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
 
   try {
     std::map<std::string, std::string> attributes;
-    if (!protocol_->transmitPayload(context, session, jsonStr, attributes)) {
+    if (!protocol_->transmitPayload(context, jsonStr, attributes)) {
       context.yield();
     }
   } catch (...) {

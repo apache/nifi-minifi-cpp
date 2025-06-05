@@ -381,7 +381,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(TransferDire
   }
 }
 
-bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, core::ProcessSession& session, const std::string &payload, const std::map<std::string, std::string>& attributes) {
+bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, const std::string &payload, const std::map<std::string, std::string>& attributes) {
   if (payload.length() <= 0) {
     return false;
   }
@@ -406,8 +406,7 @@ bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, core::P
   utils::Identifier transaction_id = transaction->getUUID();
   try {
     DataPacket packet(transaction, attributes, payload);
-
-    if (!send(transaction_id, &packet, nullptr, &session)) {
+    if (!sendPacket(packet)) {
       throw Exception(SITE2SITE_EXCEPTION, "Send Failed in transaction " + transaction_id.to_string());
     }
     logger_->log_info("Site2Site transaction {} sent bytes length", transaction_id.to_string(), payload.length());

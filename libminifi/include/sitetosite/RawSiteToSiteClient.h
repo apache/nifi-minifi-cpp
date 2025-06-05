@@ -78,7 +78,7 @@ class RawSiteToSiteClient final : public SiteToSiteClient {
   }
 
   std::optional<std::vector<PeerStatus>> getPeerList() override;
-  bool transmitPayload(core::ProcessContext& context, core::ProcessSession& session, const std::string &payload, const std::map<std::string, std::string>& attributes) override;
+  bool transmitPayload(core::ProcessContext& context, const std::string &payload, const std::map<std::string, std::string>& attributes) override;
 
  protected:
   friend class test::RawSiteToSiteClientTestAccessor;
