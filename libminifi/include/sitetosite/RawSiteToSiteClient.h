@@ -49,8 +49,8 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi {
 
 namespace test {
-class RawSiteToSiteClientTestAccessor;
-}
+class SiteToSiteClientTestAccessor;
+}  // namespace test
 
 namespace sitetosite {
 
@@ -81,7 +81,7 @@ class RawSiteToSiteClient final : public SiteToSiteClient {
   bool transmitPayload(core::ProcessContext& context, const std::string &payload, const std::map<std::string, std::string>& attributes) override;
 
  protected:
-  friend class test::RawSiteToSiteClientTestAccessor;
+  friend class test::SiteToSiteClientTestAccessor;
   bool bootstrap() override;
   bool establish() override;
   std::shared_ptr<Transaction> createTransaction(TransferDirection direction) override;

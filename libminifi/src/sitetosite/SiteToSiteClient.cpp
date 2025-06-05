@@ -528,70 +528,14 @@ bool SiteToSiteClient::sendPacket(const DataPacket& packet) {
   return true;
 }
 
-bool SiteToSiteClient::receive(const utils::Identifier& transaction_id, DataPacket *packet, bool &eof) {
-  if (peer_state_ != PeerState::READY) {
-    bootstrap();
-  }
-
-  if (peer_state_ != PeerState::READY) {
-    return false;
-  }
-
-  auto it = known_transactions_.find(transaction_id);
-  if (it == known_transactions_.end()) {
-    return false;
-  }
-
-  auto transaction = it->second;
-  if (transaction->getState() != TransactionState::TRANSACTION_STARTED && transaction->getState() != TransactionState::DATA_EXCHANGED) {
-    logger_->log_warn("Site2Site transaction {} is not at started or exchanged state", transaction_id.to_string());
-    return false;
-  }
-
-  if (transaction->getDirection() != TransferDirection::RECEIVE) {
-    logger_->log_warn("Site2Site transaction {} direction is wrong", transaction_id.to_string());
-    return false;
-  }
-
-  if (!transaction->isDataAvailable()) {
-    eof = true;
-    return true;
-  }
-
-  if (transaction->getCurrentTransfers() > 0) {
-    // if we already has transfer before, check to see whether another one is available
-    auto response = readResponse(transaction);
-    if (!response) {
-      return false;
-    }
-    if (response->code == ResponseCode::CONTINUE_TRANSACTION) {
-      logger_->log_debug("Site2Site transaction {} peer indicate continue transaction", transaction_id.to_string());
-      transaction->setDataAvailable(true);
-    } else if (response->code == ResponseCode::FINISH_TRANSACTION) {
-      logger_->log_debug("Site2Site transaction {} peer indicate finish transaction", transaction_id.to_string());
-      transaction->setDataAvailable(false);
-      eof = true;
-      return true;
-    } else {
-      logger_->log_debug("Site2Site transaction {} peer indicate wrong response code {}", transaction_id.to_string(), magic_enum::enum_underlying(response->code));
-      return false;
-    }
-  }
-
-  if (!transaction->isDataAvailable()) {
-    logger_->log_debug("No data is available");
-    eof = true;
-    return true;
-  }
-
-  // start to read the packet
+bool SiteToSiteClient::readFlowFileHeaderData(const std::shared_ptr<Transaction>& transaction, SiteToSiteClient::ReceiveFlowFileHeaderResult& result) {
   uint32_t num_attributes = 0;
   if (const auto ret = transaction->getStream().read(num_attributes); ret == 0 || io::isError(ret) || num_attributes > MAX_NUM_ATTRIBUTES) {
     return false;
   }
 
-  // read the attributes
-  logger_->log_debug("Site2Site transaction {} receives {} attributes", transaction_id.to_string(), num_attributes);
+  const auto transaction_id_str = transaction->getUUID().to_string();
+  logger_->log_debug("Site2Site transaction {} receives {} attributes", transaction_id_str, num_attributes);
   for (uint64_t i = 0; i < num_attributes; i++) {
     std::string key;
     std::string value;
@@ -603,8 +547,8 @@ bool SiteToSiteClient::receive(const utils::Identifier& transaction_id, DataPack
       return false;
     }
 
-    packet->attributes[key] = value;
-    logger_->log_debug("Site2Site transaction {} receives attribute key {} value {}", transaction_id.to_string(), key, value);
+    result.attributes[key] = value;
+    logger_->log_debug("Site2Site transaction {} receives attribute key {} value {}", transaction_id_str, key, value);
   }
 
   uint64_t len = 0;
@@ -612,39 +556,97 @@ bool SiteToSiteClient::receive(const utils::Identifier& transaction_id, DataPack
     return false;
   }
 
-  packet->size = len;
-  if (len > 0 || num_attributes > 0) {
+  result.flow_file_data_size = len;
+  return true;
+}
+
+std::optional<SiteToSiteClient::ReceiveFlowFileHeaderResult> SiteToSiteClient::receiveFlowFileHeader(const std::shared_ptr<Transaction>& transaction) {
+  if (peer_state_ != PeerState::READY) {
+    bootstrap();
+  }
+
+  if (peer_state_ != PeerState::READY) {
+    return std::nullopt;
+  }
+
+  const auto transaction_id_str = transaction->getUUID().to_string();
+  if (transaction->getState() != TransactionState::TRANSACTION_STARTED && transaction->getState() != TransactionState::DATA_EXCHANGED) {
+    logger_->log_warn("Site2Site transaction {} is not at started or exchanged state", transaction_id_str);
+    return std::nullopt;
+  }
+
+  if (transaction->getDirection() != TransferDirection::RECEIVE) {
+    logger_->log_warn("Site2Site transaction {} direction is wrong", transaction_id_str);
+    return std::nullopt;
+  }
+
+  ReceiveFlowFileHeaderResult result;
+  if (!transaction->isDataAvailable()) {
+    result.eof = true;
+    return result;
+  }
+
+  if (transaction->getCurrentTransfers() > 0) {
+    // if we already has transfer before, check to see whether another one is available
+    auto response = readResponse(transaction);
+    if (!response) {
+      return std::nullopt;
+    }
+    if (response->code == ResponseCode::CONTINUE_TRANSACTION) {
+      logger_->log_debug("Site2Site transaction {} peer indicate continue transaction", transaction_id_str);
+      transaction->setDataAvailable(true);
+    } else if (response->code == ResponseCode::FINISH_TRANSACTION) {
+      logger_->log_debug("Site2Site transaction {} peer indicate finish transaction", transaction_id_str);
+      transaction->setDataAvailable(false);
+      result.eof = true;
+      return result;
+    } else {
+      logger_->log_debug("Site2Site transaction {} peer indicate wrong response code {}", transaction_id_str, magic_enum::enum_underlying(response->code));
+      return std::nullopt;
+    }
+  }
+
+  if (!transaction->isDataAvailable()) {
+    logger_->log_debug("No data is available");
+    result.eof = true;
+    return result;
+  }
+
+  if (!readFlowFileHeaderData(transaction, result)) {
+    logger_->log_error("Site2Site transaction {} failed to read flow file header data", transaction_id_str);
+    return std::nullopt;
+  }
+
+  if (result.flow_file_data_size > 0 || result.attributes.size() > 0) {
     transaction->incrementCurrentTransfers();
     transaction->incrementTotalTransfers();
   } else {
-    logger_->log_warn("Site2Site transaction {} empty flow file without attribute", transaction_id.to_string());
+    logger_->log_warn("Site2Site transaction {} empty flow file without attribute", transaction_id_str);
     transaction->setDataAvailable(false);
-    eof = true;
-    return true;
+    result.eof = true;
+    return result;
   }
   transaction->setState(TransactionState::DATA_EXCHANGED);
-  transaction->addBytes(len);
+  transaction->addBytes(result.flow_file_data_size);
 
   logger_->log_info("Site to Site transaction {} received flow record {}, total length {}, added {}",
-      transaction_id.to_string(), transaction->getTotalTransfers(), transaction->getBytes(), len);
+      transaction_id_str, transaction->getTotalTransfers(), transaction->getBytes(), result.flow_file_data_size);
 
-  return true;
+  return result;
 }
 
 std::pair<uint64_t, uint64_t> SiteToSiteClient::readFlowFiles(const std::shared_ptr<Transaction>& transaction, core::ProcessSession& session) {
   uint64_t transfers = 0;
   uint64_t bytes = 0;
-  utils::Identifier transaction_id = transaction->getUUID();
   while (true) {
     auto start_time = std::chrono::steady_clock::now();
-    std::string payload;
-    DataPacket packet(transaction, payload);
-    bool eof = false;
 
-    if (!receive(transaction_id, &packet, eof)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Receive Failed " + transaction_id.to_string());
+    auto receive_header_result = receiveFlowFileHeader(transaction);
+    if (!receive_header_result) {
+      throw Exception(SITE2SITE_EXCEPTION, "Receive Failed " + transaction->getUUID().to_string());
     }
-    if (eof) {
+
+    if (receive_header_result->eof) {
       // transaction done
       break;
     }
@@ -655,34 +657,32 @@ std::pair<uint64_t, uint64_t> SiteToSiteClient::readFlowFiles(const std::shared_
     }
 
     std::string source_identifier;
-    for (const auto& [key, value] : packet.attributes) {
+    for (const auto& [key, value] : receive_header_result->attributes) {
       if (key == core::SpecialFlowAttribute::UUID) {
         source_identifier = value;
       }
       flow_file->addAttribute(key, value);
     }
 
-    if (packet.size > 0) {
-      session.write(flow_file, [&packet](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
-        uint64_t len = packet.size;
+    if (receive_header_result->flow_file_data_size > 0) {
+      session.write(flow_file, [&receive_header_result, &transaction](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
+        uint64_t len = receive_header_result->flow_file_data_size;
         std::array<std::byte, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
         while (len > 0) {
           const auto size = std::min(len, uint64_t{utils::configuration::DEFAULT_BUFFER_SIZE});
-          const auto ret = packet.transaction->getStream().read(std::as_writable_bytes(std::span(buffer).subspan(0, size)));
+          const auto ret = transaction->getStream().read(std::as_writable_bytes(std::span(buffer).subspan(0, size)));
           if (ret != size) {
-            return false;
+            return -1;
           }
           output_stream->write(std::span(buffer).subspan(0, size));
           len -= size;
         }
-        return true;
+        return receive_header_result->flow_file_data_size;
       });
-      if (flow_file->getSize() != packet.size) {
+      if (flow_file->getSize() != receive_header_result->flow_file_data_size) {
         std::stringstream message;
-        message << "Receive size not correct, expected to send " << flow_file->getSize() << " bytes, but actually sent " << packet.size;
+        message << "Receive size not correct, expected to send " << flow_file->getSize() << " bytes, but actually sent " << receive_header_result->flow_file_data_size;
         throw Exception(SITE2SITE_EXCEPTION, message.str());
-      } else {
-        logger_->log_debug("received {} with expected {}", flow_file->getSize(), packet.size);
       }
     }
     core::Relationship relation{"undefined", ""};
@@ -692,7 +692,7 @@ std::pair<uint64_t, uint64_t> SiteToSiteClient::readFlowFiles(const std::shared_
     session.getProvenanceReporter()->receive(*flow_file, transitUri, source_identifier, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
     session.transfer(flow_file, relation);
     // receive the transfer for the flow record
-    bytes += packet.size;
+    bytes += receive_header_result->flow_file_data_size;
     transfers++;
   }
 

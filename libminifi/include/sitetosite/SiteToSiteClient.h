@@ -31,7 +31,13 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessContext.h"
 
-namespace org::apache::nifi::minifi::sitetosite {
+namespace org::apache::nifi::minifi {
+
+namespace test {
+class SiteToSiteClientTestAccessor;
+}  // namespace test
+
+namespace sitetosite {
 
 struct DataPacket {
  public:
@@ -120,6 +126,8 @@ class SiteToSiteClient {
   }
 
  protected:
+  friend class test::SiteToSiteClientTestAccessor;
+
   virtual bool bootstrap() = 0;
   virtual bool establish() = 0;
   virtual std::shared_ptr<Transaction> createTransaction(TransferDirection direction) = 0;
@@ -128,8 +136,6 @@ class SiteToSiteClient {
   virtual void deleteTransaction(const utils::Identifier &transaction_id);
   virtual std::optional<SiteToSiteResponse> readResponse(const std::shared_ptr<Transaction> &transaction);
   virtual bool writeResponse(const std::shared_ptr<Transaction> &transaction, const SiteToSiteResponse& response);
-
-  bool receive(const utils::Identifier &transaction_id, DataPacket *packet, bool &eof);
 
   bool initializeSend(const std::shared_ptr<Transaction>& transaction);
   bool writeAttributesInSendTransaction(const std::shared_ptr<Transaction>& transaction, const std::map<std::string, std::string>& attributes);
@@ -167,6 +173,12 @@ class SiteToSiteClient {
   std::atomic<std::chrono::milliseconds> timeout_{0s};
 
  private:
+  struct ReceiveFlowFileHeaderResult {
+    std::map<std::string, std::string> attributes;
+    size_t flow_file_data_size = 0;
+    bool eof{false};
+  };
+
   static const ResponseCodeContext* getResponseCodeContext(ResponseCode code);
   bool transferFlowFiles(core::ProcessContext& context, core::ProcessSession& session);
   bool receiveFlowFiles(core::ProcessContext& context, core::ProcessSession& session);
@@ -176,9 +188,12 @@ class SiteToSiteClient {
   bool completeReceive(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id);
   bool completeSend(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id, core::ProcessContext& context);
 
+  bool readFlowFileHeaderData(const std::shared_ptr<Transaction>& transaction, SiteToSiteClient::ReceiveFlowFileHeaderResult& result);
+  std::optional<ReceiveFlowFileHeaderResult> receiveFlowFileHeader(const std::shared_ptr<Transaction>& transaction);
   std::pair<uint64_t, uint64_t> readFlowFiles(const std::shared_ptr<Transaction>& transaction, core::ProcessSession& session);
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<SiteToSiteClient>::getLogger()};
 };
 
-}  // namespace org::apache::nifi::minifi::sitetosite
+}  // namespace sitetosite
+}  // namespace org::apache::nifi::minifi
