@@ -133,7 +133,7 @@ class VaderSentiment(object):
 
 On Linux, you need the "libminifi-python-lib-loader-extension.so", "libminifi-python-script-extension.so" and
 "libminifi-script-extension.so" libraries to be present in the extensions directory, and "minifi_native.so"
-must be a symbolic link to "libminifi-python-script-extension.so".
+must be a symbolic link to "libminifi-python-script-extension.so". You can build these libraries by setting the `ENABLE_PYTHON_SCRIPTING` CMake build option to `ON`.
 
 On Windows, when installing MiNiFi using the MSI installer, make sure to enable both "minifi-python-script-extension"
 and "minifi-script-extension" during the installation process.
