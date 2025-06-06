@@ -96,14 +96,12 @@ class GetTCP : public core::ProcessorImpl {
       .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("1s")
       .isRequired(true)
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ReconnectInterval = core::PropertyDefinitionBuilder<>::createProperty("Reconnection Interval")
       .withDescription("The duration to wait before attempting to reconnect to the endpoints.")
       .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
       .withDefaultValue("1 min")
       .isRequired(true)
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       EndpointList,
