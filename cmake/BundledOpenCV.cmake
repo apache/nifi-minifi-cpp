@@ -102,12 +102,18 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
 
     append_third_party_passthrough_args(OPENCV_CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
 
+    set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/opencv/c++23_fixes.patch")
+    set(PC ${Bash_EXECUTABLE} -c "set -x &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\")")
+
+
     # Build project
     ExternalProject_Add(
             opencv-external
             URL "https://github.com/opencv/opencv/archive/refs/tags/4.7.0.tar.gz"
             URL_HASH "SHA256=8df0079cdbe179748a18d44731af62a245a45ebf5085223dc03133954c662973"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/opencv-src"
+            PATCH_COMMAND ${PC}
             CMAKE_ARGS ${OPENCV_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${BYPRODUCTS}"
             EXCLUDE_FROM_ALL TRUE
