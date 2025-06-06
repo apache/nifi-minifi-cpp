@@ -48,10 +48,16 @@ enum class InitialStartPositions {
   CURRENT_TIME
 };
 
+enum class TailResultFormat {
+  FlowFilePerDelimiter,
+  FlowFilePerBatch
+};
+
 }  // namespace org::apache::nifi::minifi::processors
 
 namespace magic_enum::customize {
 using InitialStartPositions = org::apache::nifi::minifi::processors::InitialStartPositions;
+using TailResultFormat = org::apache::nifi::minifi::processors::TailResultFormat;
 
 template <>
 constexpr customize_t enum_name<InitialStartPositions>(InitialStartPositions value) noexcept {
@@ -62,6 +68,17 @@ constexpr customize_t enum_name<InitialStartPositions>(InitialStartPositions val
       return "Beginning of File";
     case InitialStartPositions::CURRENT_TIME:
       return "Current Time";
+  }
+  return invalid_tag;
+}
+
+template<>
+constexpr customize_t enum_name<TailResultFormat>(TailResultFormat value) noexcept {
+  switch (value) {
+    case TailResultFormat::FlowFilePerBatch:
+      return "Flow file per batch";
+    case TailResultFormat::FlowFilePerDelimiter:
+      return "Flow file per delimiter";
   }
   return invalid_tag;
 }
@@ -108,8 +125,6 @@ class TailFile : public core::ProcessorImpl {
       : core::ProcessorImpl(name, uuid) {
     logger_ = core::logging::LoggerFactory<TailFile>::getLogger(uuid_);
   }
-
-  ~TailFile() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."
       " Data is ingested only when a new line is encountered (carriage return or new-line character or combination). If the file to tail is periodically \"rolled over\","
@@ -184,10 +199,16 @@ class TailFile : public core::ProcessorImpl {
       .withAllowedTypes<minifi::controllers::AttributeProviderService>()
       .build();
   EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
-      .withDescription("Maximum number of flowfiles emitted in a single trigger. If set to 0 all new content will be processed.")
+      .withDescription("Maximum number of lines emitted in a single trigger. If set to 0 all new content will be processed.")
       .isRequired(true)
       .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
+      .build();
+  EXTENSIONAPI static constexpr auto ResultFormat = core::PropertyDefinitionBuilder<magic_enum::enum_count<TailResultFormat>()>::createProperty("Result Mode")
+      .withDescription("Specifies how the result lines are arranged into output flow files")
+      .isRequired(true)
+      .withDefaultValue(magic_enum::enum_name(TailResultFormat::FlowFilePerDelimiter))
+      .withAllowedValues(magic_enum::enum_names<TailResultFormat>())
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       FileName,
@@ -200,7 +221,8 @@ class TailFile : public core::ProcessorImpl {
       RollingFilenamePattern,
       InitialStartPosition,
       AttributeProviderService,
-      BatchSize
+      BatchSize,
+      ResultFormat
   });
 
 

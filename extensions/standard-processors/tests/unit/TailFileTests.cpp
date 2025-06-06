@@ -16,30 +16,31 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <cstdio>
 #include <fstream>
-#include <string>
 #include <iostream>
-#include <set>
-#include <algorithm>
 #include <random>
+#include <set>
+#include <string>
+
 #include "FlowController.h"
-#include "unit/TestBase.h"
-#include "unit/Catch.h"
+#include "LogAttribute.h"
+#include "TailFile.h"
+#include "TextFragmentUtils.h"
+#include "catch2/generators/catch_generators.hpp"
 #include "core/Core.h"
-#include "utils/file/FileUtils.h"
-#include "utils/file/PathUtils.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Processor.h"
 #include "core/Resource.h"
-#include "TailFile.h"
-#include "LogAttribute.h"
+#include "unit/Catch.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/TestBase.h"
 #include "unit/TestUtils.h"
 #include "utils/StringUtils.h"
-#include "unit/SingleProcessorTestController.h"
-#include "TextFragmentUtils.h"
+#include "utils/file/FileUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -1803,4 +1804,33 @@ TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]
   const auto result = test_controller.trigger();
   const auto& file_contents = result.at(minifi::processors::TailFile::Success);
   REQUIRE(file_contents.size() == 10);
+}
+
+TEST_CASE("Result mode tests") {
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+
+  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
+  auto tail_file = test_controller.getProcessor();
+
+  auto temp_file_path  = test_controller.createTempDirectory() / TMP_FILE;
+
+  const auto [result_mode, ff_count] = GENERATE(
+    std::make_tuple(minifi::processors::TailResultFormat::FlowFilePerBatch, std::size_t{1}),
+    std::make_tuple(minifi::processors::TailResultFormat::FlowFilePerDelimiter, std::size_t{5}));
+
+  std::ofstream tmp_file;
+  tmp_file.open(temp_file_path, std::ios::out | std::ios::binary);
+  for (auto i = 0; i < 20; ++i) {
+    tmp_file << NEW_TAIL_DATA;
+  }
+  tmp_file.close();
+
+  CHECK(tail_file->setProperty(minifi::processors::TailFile::FileName.name, temp_file_path.string()));
+  CHECK(tail_file->setProperty(minifi::processors::TailFile::Delimiter.name, "\n"));
+  CHECK(tail_file->setProperty(minifi::processors::TailFile::BatchSize.name, "5"));
+  CHECK(tail_file->setProperty(minifi::processors::TailFile::ResultFormat.name, std::string(magic_enum::enum_name(result_mode))));
+
+  const auto result = test_controller.trigger();
+  const auto& file_contents = result.at(minifi::processors::TailFile::Success);
+  CHECK(file_contents.size() == ff_count);
 }
