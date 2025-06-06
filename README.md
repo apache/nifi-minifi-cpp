@@ -113,7 +113,10 @@ The next table outlines CMAKE flags that correspond with MiNiFi extensions. Exte
 
 #### Utilities
 * CMake 3.24 or greater
-* gcc 11 or greater
+* Compiler
+  * g++ 11 or greater
+  * clang 17 or greater
+  * msvc 19.33 or greater
 * bison 3.0.x+ (3.2 has been shown to fail builds)
 * flex 2.6 or greater
 
