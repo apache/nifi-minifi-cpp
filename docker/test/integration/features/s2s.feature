@@ -33,7 +33,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
@@ -48,7 +50,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then a flowfile with the content "this is a very long file we want to send by site-to-site" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
@@ -63,7 +67,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then at least one empty flowfile is placed in the monitored directory in less than 90 seconds
 
   Scenario: Zero length files are not transfered between via s2s if the "drop empty" connection property is true
@@ -79,7 +85,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then no files are placed in the monitored directory in 50 seconds of running time
 
   Scenario: A MiNiFi instance produces and transfers data to a NiFi instance via s2s using SSL
@@ -96,7 +104,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
@@ -115,7 +125,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
@@ -133,7 +145,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
@@ -152,7 +166,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
@@ -167,7 +183,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
@@ -186,7 +204,9 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
+
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
@@ -202,7 +222,8 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a NiFi flow is sending data to an output port named "to-minifi-in-nifi" with the id of the port named "from_nifi" from the RemoteProcessGroup named "RemoteProcessGroup"
     And the "success" relationship of the GetFile is connected to the to-minifi-in-nifi
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
@@ -219,7 +240,8 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a NiFi flow is sending data to an output port named "to-minifi-in-nifi" with the id of the port named "from_nifi" from the RemoteProcessGroup named "RemoteProcessGroup"
     And the "success" relationship of the GetFile is connected to the to-minifi-in-nifi
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
@@ -238,7 +260,8 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a NiFi flow is sending data to an output port named "to-minifi-in-nifi" with the id of the port named "from_nifi" from the RemoteProcessGroup named "RemoteProcessGroup"
     And the "success" relationship of the GetFile is connected to the to-minifi-in-nifi
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
@@ -257,7 +280,8 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And a NiFi flow is sending data to an output port named "to-minifi-in-nifi" with the id of the port named "from_nifi" from the RemoteProcessGroup named "RemoteProcessGroup"
     And the "success" relationship of the GetFile is connected to the to-minifi-in-nifi
 
-    When both instances start up
+    When NiFi is started
+    And all instances start up
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
     And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds

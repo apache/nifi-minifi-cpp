@@ -92,6 +92,11 @@ class MiNiFi_integration_test:
         self.cluster.deploy_container('couchbase-server')
         assert self.cluster.wait_for_container_startup_to_finish('couchbase-server') or self.cluster.log_app_output()
 
+    def start_nifi(self, context):
+        self.cluster.acquire_container(context=context, name='nifi', engine='nifi')
+        self.cluster.deploy_container('nifi')
+        assert self.cluster.wait_for_container_startup_to_finish('nifi') or self.cluster.log_app_output()
+
     def start(self, container_name=None):
         if container_name is not None:
             logging.info("Starting container %s", container_name)

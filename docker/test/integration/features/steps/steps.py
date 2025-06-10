@@ -1336,3 +1336,8 @@ def step_impl(context, service_name):
 @given("a LlamaCpp model is present on the MiNiFi host")
 def step_impl(context):
     context.test.llama_model_is_downloaded_in_minifi()
+
+
+@when(u'NiFi is started')
+def step_impl(context):
+    context.test.start_nifi(context)
