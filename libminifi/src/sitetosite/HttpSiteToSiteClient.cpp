@@ -153,7 +153,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(TransferDir
   gsl_Assert(transaction_client);
 
   setSiteToSiteHeaders(*transaction_client);
-  peer_->setStream(std::unique_ptr<io::BaseStream>(new http::HttpStream(transaction_client)));
+  peer_->setStream(std::make_unique<http::HttpStream>(transaction_client));
   logger_->log_debug("Created transaction id -{}-", transaction->getUUID().to_string());
   known_transactions_[transaction->getUUID()] = transaction;
   return transaction;

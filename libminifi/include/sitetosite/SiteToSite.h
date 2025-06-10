@@ -23,12 +23,8 @@
 
 #include "minifi-cpp/controllers/SSLContextService.h"
 #include "Peer.h"
-#include "core/Property.h"
-#include "properties/Configure.h"
 #include "io/CRCStream.h"
 #include "utils/Id.h"
-#include "http/BaseHTTPClient.h"
-#include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
 
@@ -185,7 +181,7 @@ static constexpr std::array<ResponseCodeContext, 21> respond_code_contexts = {{
 
 class Transaction {
  public:
-  explicit Transaction(TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &&stream)
+  explicit Transaction(TransferDirection direction, io::CRCStream<SiteToSitePeer> &&stream)
       : closed_(false),
         crc_stream_(std::move(stream)),
         uuid_(utils::IdGenerator::getIdGenerator()->generate()) {
@@ -199,11 +195,11 @@ class Transaction {
 
   virtual ~Transaction() = default;
 
-  utils::SmallString<36> getUUIDStr() const {
+  [[nodiscard]] utils::SmallString<36> getUUIDStr() const {
     return uuid_.to_string();
   }
 
-  utils::Identifier getUUID() const {
+  [[nodiscard]] utils::Identifier getUUID() const {
     return uuid_;
   }
 
@@ -215,7 +211,7 @@ class Transaction {
     state_ = state;
   }
 
-  TransactionState getState() const {
+  [[nodiscard]] TransactionState getState() const {
     return state_;
   }
 
@@ -227,11 +223,11 @@ class Transaction {
     data_available_ = value;
   }
 
-  TransferDirection getDirection() const {
+  [[nodiscard]] TransferDirection getDirection() const {
     return direction_;
   }
 
-  uint64_t getCRC() const {
+  [[nodiscard]] uint64_t getCRC() const {
     return crc_stream_.getCRC();
   }
 
@@ -239,19 +235,19 @@ class Transaction {
     crc_stream_.updateCRC(buffer, length);
   }
 
-  org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer>& getStream() {
+  [[nodiscard]] io::CRCStream<SiteToSitePeer>& getStream() {
     return crc_stream_;
   }
 
-  uint64_t getCurrentTransfers() const {
+  [[nodiscard]] uint64_t getCurrentTransfers() const {
     return current_transfers_;
   }
 
-  uint64_t getTotalTransfers() const {
+  [[nodiscard]] uint64_t getTotalTransfers() const {
     return total_transfers_;
   }
 
-  uint64_t getBytes() const {
+  [[nodiscard]] uint64_t getBytes() const {
     return bytes_;
   }
 
@@ -291,7 +287,7 @@ class Transaction {
   TransactionState state_;
   bool closed_;
   bool data_available_;
-  org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crc_stream_;
+  io::CRCStream<SiteToSitePeer> crc_stream_;
 
  private:
   TransferDirection direction_;

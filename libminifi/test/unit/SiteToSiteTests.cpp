@@ -276,7 +276,7 @@ void iniitalizeMockRemoteClientReceiveDataResponses(SiteToSiteResponder& collect
   collector.push_response(attribute_key);
   std::string attribute_value = "attribute_value";
   addUInt32(gsl::narrow<uint32_t>(attribute_value.size()));
-  collector.push_response("attribute_value");
+  collector.push_response(attribute_value);
   auto addUInt64 = [&collector](uint64_t number) {
     std::string result(8, '\0');
     for (std::size_t i = 0; i < 8; ++i) {

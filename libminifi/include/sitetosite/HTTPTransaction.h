@@ -33,6 +33,11 @@ class HttpTransaction final : public sitetosite::Transaction {
   explicit HttpTransaction(sitetosite::TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<sitetosite::SiteToSitePeer> &&stream)
       : Transaction(direction, std::move(stream)) {}
 
+  HttpTransaction(const HttpTransaction&) = delete;
+  HttpTransaction& operator=(const HttpTransaction&) = delete;
+  HttpTransaction(HttpTransaction&&) = delete;
+  HttpTransaction& operator=(HttpTransaction&&) = delete;
+
   ~HttpTransaction() override {
     if (auto stream = dynamic_cast<http::HttpStream*>(dynamic_cast<sitetosite::SiteToSitePeer*>(crc_stream_.getstream())->getStream())) {
       stream->forceClose();
@@ -44,7 +49,7 @@ class HttpTransaction final : public sitetosite::Transaction {
     transaction_url_ = url;
   }
 
-  const std::string &getTransactionUrl() {
+  [[nodiscard]] const std::string &getTransactionUrl() const {
     return transaction_url_;
   }
 

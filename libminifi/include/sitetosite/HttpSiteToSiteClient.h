@@ -83,7 +83,7 @@ class HttpSiteToSiteClient final : public SiteToSiteClient {
   std::shared_ptr<minifi::http::HTTPClient> openConnectionForSending(const std::shared_ptr<HttpTransaction> &transaction);
   std::shared_ptr<minifi::http::HTTPClient> openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction);
   std::unique_ptr<minifi::http::HTTPClient> createHttpClient(const std::string &uri, http::HttpRequestMethod method);
-  std::string getBaseURI();
+  [[nodiscard]] std::string getBaseURI();
 
   std::optional<SiteToSiteResponse> readResponseForReceiveTransfer(const std::shared_ptr<Transaction>& transaction);
   std::optional<SiteToSiteResponse> readResponseForSendTransfer(const std::shared_ptr<Transaction>& transaction);

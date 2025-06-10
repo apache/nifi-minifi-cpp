@@ -17,24 +17,15 @@
  */
 #pragma once
 
-#include <errno.h>
-#include <stdio.h>
-
 #include <atomic>
-#include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <utility>
 #include <array>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Property.h"
-#include "io/BaseStream.h"
-#include "io/BufferStream.h"
-#include "properties/Configure.h"
 #include "http/BaseHTTPClient.h"
-#include "utils/TimeUtil.h"
+#include "io/BaseStream.h"
 #include "io/NetworkPrioritizer.h"
 
 using namespace std::literals::chrono_literals;
@@ -67,15 +58,15 @@ class PeerStatus {
     return host_;
   }
 
-  uint16_t getPort() const {
+  [[nodiscard]] uint16_t getPort() const {
     return port_;
   }
 
-  uint32_t getFlowFileCount() const {
+  [[nodiscard]] uint32_t getFlowFileCount() const {
     return flow_file_count_;
   }
 
-  bool getQueryForPeers() const {
+  [[nodiscard]] bool getQueryForPeers() const {
     return query_for_peers_;
   }
 
@@ -87,9 +78,9 @@ class PeerStatus {
   bool query_for_peers_;
 };
 
-class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStreamImpl {
+class SiteToSitePeer : public io::BaseStreamImpl {
  public:
-  SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> injected_socket, const std::string& host, uint16_t port, const std::string& ifc)
+  SiteToSitePeer(std::unique_ptr<io::BaseStream> injected_socket, const std::string& host, uint16_t port, const std::string& ifc)
       : SiteToSitePeer(host, port, ifc) {
     stream_ = std::move(injected_socket);
   }
@@ -111,15 +102,15 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStreamImpl {
     close();
   }
 
-  std::string getURL() const {
+  [[nodiscard]] std::string getURL() const {
     return url_;
   }
 
-  void setInterface(std::string &ifc) {
+  void setInterface(const std::string &ifc) {
     local_network_interface_ = io::NetworkInterface(ifc, nullptr);
   }
 
-  std::string getInterface() const {
+  [[nodiscard]] std::string getInterface() const {
     return local_network_interface_.getInterface();
   }
 
@@ -133,11 +124,11 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStreamImpl {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
   }
 
-  std::string getHostName() const {
+  [[nodiscard]] std::string getHostName() const {
     return host_;
   }
 
-  uint16_t getPort() const {
+  [[nodiscard]] uint16_t getPort() const {
     return port_;
   }
 
@@ -145,7 +136,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStreamImpl {
     timeout_ = time;
   }
 
-  std::chrono::milliseconds getTimeout() const {
+  [[nodiscard]] std::chrono::milliseconds getTimeout() const {
     return timeout_.load();
   }
 
@@ -153,18 +144,15 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStreamImpl {
     proxy_ = proxy;
   }
 
-  http::HTTPProxy getHTTPProxy() const {
+  [[nodiscard]] http::HTTPProxy getHTTPProxy() const {
     return proxy_;
   }
 
-  void setStream(std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
-    stream_ = nullptr;
-    if (stream) {
-      stream_ = std::move(stream);
-    }
+  void setStream(std::unique_ptr<io::BaseStream> stream) {
+    stream_ = std::move(stream);
   }
 
-  org::apache::nifi::minifi::io::BaseStream* getStream() const {
+  [[nodiscard]] io::BaseStream* getStream() const {
     return stream_.get();
   }
 
@@ -183,7 +171,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStreamImpl {
   void close() override;
 
  private:
-  std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> stream_;
+  std::unique_ptr<io::BaseStream> stream_;
   std::string host_;
   uint16_t port_;
   std::string url_;

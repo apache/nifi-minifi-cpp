@@ -199,8 +199,6 @@ void RemoteProcessGroupPort::onTrigger(core::ProcessContext& context, core::Proc
     return;
   }
 
-  logger_->log_trace("On trigger {}", getUUIDStr());
-
   try {
     logger_->log_trace("get protocol in on trigger");
     auto protocol = getNextProtocol();

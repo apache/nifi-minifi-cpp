@@ -65,6 +65,7 @@ class SiteToSiteClient {
  public:
   explicit SiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
       : peer_(std::move(peer)) {
+    gsl_Assert(peer_);
   }
 
   SiteToSiteClient(const SiteToSiteClient&) = delete;
@@ -93,11 +94,11 @@ class SiteToSiteClient {
      idle_timeout_ = timeout;
   }
 
-  utils::Identifier getPortId() const {
+  [[nodiscard]] utils::Identifier getPortId() const {
     return port_id_;
   }
 
-  const std::shared_ptr<core::logging::Logger> &getLogger() {
+  [[nodiscard]] const std::shared_ptr<core::logging::Logger> &getLogger() {
     return logger_;
   }
 

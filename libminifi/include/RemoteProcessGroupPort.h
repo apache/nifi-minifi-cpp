@@ -145,7 +145,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     timeout_ = timeout;
   }
 
-  std::optional<std::chrono::milliseconds> getTimeout() const {
+  [[nodiscard]] std::optional<std::chrono::milliseconds> getTimeout() const {
     return timeout_;
   }
 
@@ -159,7 +159,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
 
   void setURL(const std::string& val);
 
-  std::vector<RPG> getInstances() const {
+  [[nodiscard]] std::vector<RPG> getInstances() const {
     return nifi_instances_;
   }
 
@@ -167,7 +167,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     proxy_ = proxy;
   }
 
-  http::HTTPProxy getHTTPProxy() {
+  [[nodiscard]] http::HTTPProxy getHTTPProxy() const {
     return proxy_;
   }
 
@@ -181,7 +181,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     use_compression_ = use_compression;
   }
 
-  bool getUseCompression() const {
+  [[nodiscard]] bool getUseCompression() const {
     return use_compression_;
   }
 
@@ -189,7 +189,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     batch_count_ = count;
   }
 
-  std::optional<uint64_t> getBatchCount() const {
+  [[nodiscard]] std::optional<uint64_t> getBatchCount() const {
     return batch_count_;
   }
 
@@ -197,7 +197,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     batch_size_ = size;
   }
 
-  std::optional<uint64_t> getBatchSize() const {
+  [[nodiscard]] std::optional<uint64_t> getBatchSize() const {
     return batch_size_;
   }
 
@@ -205,7 +205,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     batch_duration_ = duration;
   }
 
-  std::optional<std::chrono::milliseconds> getBatchDuration() const {
+  [[nodiscard]] std::optional<std::chrono::milliseconds> getBatchDuration() const {
     return batch_duration_;
   }
 
@@ -237,7 +237,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
 
  private:
   std::unique_ptr<sitetosite::SiteToSiteClient> initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const;
-  std::optional<std::string> getRestApiToken(const RPG& nifi) const;
+  [[nodiscard]] std::optional<std::string> getRestApiToken(const RPG& nifi) const;
   std::optional<std::pair<std::string, uint16_t>> parseSiteToSiteDataFromControllerConfig(const RPG& nifi, const std::string& controller) const;
   std::optional<std::pair<std::string, uint16_t>> tryRefreshSiteToSiteInstance(RPG nifi) const;
 
