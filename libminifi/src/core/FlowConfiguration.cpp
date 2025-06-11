@@ -149,10 +149,14 @@ bool FlowConfiguration::persist(const std::string& serialized_flow) {
     logger_->log_debug("Copy {} to {}", *config_path_, config_file_backup);
   }
 
-  const bool status = filesystem_->write(*config_path_, serialized_flow);
-  logger_->log_info("Result of updating the config file {}: {}", *config_path_, status ? "success" : "failure");
+  const bool is_write_successful = filesystem_->write(*config_path_, serialized_flow);
+  if (is_write_successful) {
+    logger_->log_info("Successfully updated the flow configuration file {}", *config_path_);
+  } else {
+    logger_->log_error("Failed to update the flow configuration file {}", *config_path_);
+  }
   checksum_calculator_.invalidateChecksum();
-  return status;
+  return is_write_successful;
 }
 
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(const std::string &name, const utils::Identifier &uuid, int version) {
