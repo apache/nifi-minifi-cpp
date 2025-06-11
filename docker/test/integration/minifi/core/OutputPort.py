@@ -14,27 +14,14 @@
 # limitations under the License.
 
 
-import uuid
+from .Connectable import Connectable
 
 
-class RemoteProcessGroup(object):
-    def __init__(self, url, name=None, transport_protocol="RAW"):
-        self.uuid = uuid.uuid4()
+class OutputPort(Connectable):
+    def __init__(self, name=None, remote_process_group=None):
+        super(OutputPort, self).__init__(name=name)
 
-        if name is None:
-            self.name = str(self.uuid)
-        else:
-            self.name = name
-
-        self.url = url
+        self.remote_process_group = remote_process_group
         self.properties = {}
-        self.transport_protocol = transport_protocol
-
-    def get_name(self):
-        return self.name
-
-    def get_uuid(self):
-        return self.uuid
-
-    def add_property(self, name, value):
-        self.properties[name] = value
+        if self.remote_process_group:
+            self.properties = self.remote_process_group.properties
