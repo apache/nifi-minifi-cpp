@@ -22,6 +22,10 @@ class InputPort(Connectable):
         super(InputPort, self).__init__(name=name)
 
         self.remote_process_group = remote_process_group
+        self.use_compression = False
         self.properties = {}
         if self.remote_process_group:
             self.properties = self.remote_process_group.properties
+
+    def set_use_compression(self, use_compression: bool):
+        self.use_compression = use_compression
