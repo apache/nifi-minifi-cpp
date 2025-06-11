@@ -1,8 +1,0 @@
-thirdparty
-generated
-build
-spdlog
-cmake-build-debug
-.gitignore
-CPPLINT.cfg
-cn.pass
