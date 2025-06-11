@@ -39,7 +39,9 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
 
   virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
   nonstd::expected<std::string, std::error_code> getProperty(const Property& property, const FlowFile* flow_file = nullptr) const { return getProperty(property.getName(), flow_file); }
-  nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const { return getProperty(property_reference.name, flow_file); }
+  nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
+    return getProperty(property_reference.name, flow_file);
+  }
 
   virtual nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) = 0;
   nonstd::expected<void, std::error_code> setProperty(const Property& property, std::string value) { return setProperty(property.getName(), std::move(value)); };

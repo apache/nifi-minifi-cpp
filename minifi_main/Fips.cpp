@@ -16,12 +16,14 @@
  */
 #include "Fips.h"
 
-#include <fstream>
-#include <algorithm>
-#include <string>
 #include <openssl/provider.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+
+#include <fstream>
+#include <algorithm>
+#include <string>
+
 #include "utils/Environment.h"
 #include "utils/StringUtils.h"
 #include "utils/OptionalUtils.h"
@@ -59,7 +61,7 @@ bool replaceMinifiHomeVariable(const std::filesystem::path& file_path, const std
   do {
     content.replace(pos, placeholder.length(), minifi_home_path_str);
     pos += minifi_home_path_str.length();
-  } while((pos = content.find(placeholder, pos)) != std::string::npos);
+  } while ((pos = content.find(placeholder, pos)) != std::string::npos);
 
   std::ofstream output_file(file_path);
   if (!output_file) {
@@ -77,7 +79,8 @@ bool generateFipsModuleConfig(const std::filesystem::path& minifi_home, const st
   logger->log_info("fipsmodule.cnf was not found, trying to run fipsinstall command to generate the file");
 
 #ifdef WIN32
-  std::string command = "\"\"" + (minifi_home / "fips" / "openssl.exe").string() + "\" fipsinstall -out \"" + output_file.string() + "\" -module \"" + (minifi_home / "fips" / FIPS_LIB).string() + "\"\"";
+  std::string command =
+    "\"\"" + (minifi_home / "fips" / "openssl.exe").string() + "\" fipsinstall -out \"" + output_file.string() + "\" -module \"" + (minifi_home / "fips" / FIPS_LIB).string() + "\"\"";
 #else
   std::string command = "\"" + (minifi_home / "fips" / "openssl").string() + "\" fipsinstall -out \"" + output_file.string() + "\" -module \"" + (minifi_home / "fips" / FIPS_LIB).string() + "\"";
 #endif

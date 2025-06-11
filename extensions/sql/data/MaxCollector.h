@@ -27,11 +27,7 @@
 #include "SQLRowSubscriber.h"
 #include "SQLColumnIdentifier.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 class MaxCollector: public SQLRowSubscriber {
   void beginProcessBatch() override {}
@@ -63,11 +59,11 @@ class MaxCollector: public SQLRowSubscriber {
     updateMaxValue(name, value);
   }
 
-  void processColumn(const std::string& name, long long value) override {
+  void processColumn(const std::string& name, long long value) override {  // NOLINT(runtime/int)
     updateMaxValue(name, value);
   }
 
-  void processColumn(const std::string& name, unsigned long long value) override {
+  void processColumn(const std::string& name, unsigned long long value) override {  // NOLINT(runtime/int)
     updateMaxValue(name, value);
   }
 
@@ -130,11 +126,7 @@ class MaxCollector: public SQLRowSubscriber {
  private:
   const std::string query_;
   std::unordered_map<SQLColumnIdentifier, std::string>& state_;
-  MaxValues<std::string, double, int, long long, unsigned long long> max_values_;
+  MaxValues<std::string, double, int, long long, unsigned long long> max_values_;  // NOLINT(runtime/int)
 };
-  
-}  // namespace sql
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+
+}  // namespace org::apache::nifi::minifi::sql

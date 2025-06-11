@@ -74,8 +74,9 @@ struct PropertyReference {
         validator{property_definition.validator},
         supports_expression_language{property_definition.supports_expression_language} {}
 
-  PropertyReference(const std::string_view name, const std::string_view display_name, const std::string_view description, const bool is_required, const bool is_sensitive, const std::span<const std::string_view> allowed_values,
-      std::span<const std::string_view> allowed_types, const std::span<const std::string_view> dependent_properties, const std::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties, std::optional<std::string_view> default_value,
+  PropertyReference(const std::string_view name, const std::string_view display_name, const std::string_view description, const bool is_required, const bool is_sensitive,
+      const std::span<const std::string_view> allowed_values, std::span<const std::string_view> allowed_types, const std::span<const std::string_view> dependent_properties,
+      const std::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties, std::optional<std::string_view> default_value,
       const gsl::not_null<const PropertyValidator*> validator, const bool supports_expression_language)
       : name(name),
         display_name(display_name),

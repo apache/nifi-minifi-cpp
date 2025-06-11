@@ -38,8 +38,8 @@ struct SQLRowSubscriber {
   virtual void processColumn(const std::string& name, const std::string& value) = 0;
   virtual void processColumn(const std::string& name, double value) = 0;
   virtual void processColumn(const std::string& name, int value) = 0;
-  virtual void processColumn(const std::string& name, long long value) = 0;
-  virtual void processColumn(const std::string& name, unsigned long long value) = 0;
+  virtual void processColumn(const std::string& name, long long value) = 0;  // NOLINT(runtime/int)
+  virtual void processColumn(const std::string& name, unsigned long long value) = 0;  // NOLINT(runtime/int)
   // Process NULL value.
   virtual void processColumn(const std::string& name, const char* value) = 0;
 };

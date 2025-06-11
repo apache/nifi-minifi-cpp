@@ -243,8 +243,8 @@ int64_t OsUtils::getSystemPhysicalMemoryUsage() {
   if (KERN_SUCCESS == host_page_size(mach_port, &page_size) &&
       KERN_SUCCESS == host_statistics64(mach_port, HOST_VM_INFO,
                                       (host_info64_t)&vm_stats, &count)) {
-      uint64_t physical_memory_used = ((int64_t)vm_stats.active_count +
-                               (int64_t)vm_stats.wire_count) *  (int64_t)page_size;
+      uint64_t physical_memory_used = (static_cast<int64_t>(vm_stats.active_count) +
+                               static_cast<int64_t>(vm_stats.wire_count)) *  static_cast<int64_t>(page_size);
       return physical_memory_used;
   }
   return -1;

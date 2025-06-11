@@ -23,7 +23,8 @@
 
 namespace org::apache::nifi::minifi::core {
 
-std::shared_ptr<io::BaseStream> ContentSessionImpl::append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, const std::function<void(const std::shared_ptr<ResourceClaim>&)>& on_copy) {
+std::shared_ptr<io::BaseStream> ContentSessionImpl::append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset,
+    const std::function<void(const std::shared_ptr<ResourceClaim>&)>& on_copy) {
   auto it = append_state_.find(resource_id);
   if (it != append_state_.end() && it->second.base_size + it->second.stream->size() == offset) {
     return it->second.stream;

@@ -18,14 +18,14 @@
 
 #pragma once
 
+#include <soci/soci.h>
+#include <soci/odbc/soci-odbc.h>
 #include <memory>
 #include <string>
 #include <ctime>
 
 #include "Exception.h"
 #include "data/DatabaseConnectors.h"
-#include <soci/soci.h>
-#include <soci/odbc/soci-odbc.h>
 #include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::sql {
@@ -43,8 +43,8 @@ class SociRow : public Row {
   std::string getString(std::size_t index) const override;
   double getDouble(std::size_t index) const override;
   int getInteger(std::size_t index) const override;
-  long long getLongLong(std::size_t index) const override;
-  unsigned long long getUnsignedLongLong(std::size_t index) const override;
+  long long getLongLong(std::size_t index) const override;  // NOLINT(runtime/int)
+  unsigned long long getUnsignedLongLong(std::size_t index) const override;  // NOLINT(runtime/int)
   std::tm getDate(std::size_t index) const override;
 
  private:
@@ -53,7 +53,7 @@ class SociRow : public Row {
 
 class SociRowset : public Rowset {
  public:
-  SociRowset(const soci::rowset<soci::row>& rowset) : rowset_(rowset) {
+  explicit SociRowset(const soci::rowset<soci::row>& rowset) : rowset_(rowset) {
   }
 
   void reset() override;
@@ -90,7 +90,7 @@ class SociSession : public Session {
   void rollback() override;
   void execute(const std::string &statement) override;
 
-protected:
+ protected:
   soci::session& session_;
 };
 
@@ -103,7 +103,7 @@ class ODBCConnection : public sql::Connection {
   std::unique_ptr<Session> getSession() const override;
 
  private:
-   soci::connection_parameters getSessionParameters() const;
+  soci::connection_parameters getSessionParameters() const;
 
  private:
   std::unique_ptr<soci::session> session_;
