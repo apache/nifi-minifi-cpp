@@ -177,3 +177,4 @@ target_link_libraries(minifi-sql SOCI::libsoci_odbc SOCI::libsoci_core)
 target_link_libraries(minifi-sql ${LIBMINIFI} Threads::Threads)
 
 register_extension(minifi-sql "SQL EXTENSIONS" SQL-EXTENSIONS "Enables the SQL Suite of Tools" "extensions/sql/tests")
+register_extension_linter(minifi-sql-extensions-linter)

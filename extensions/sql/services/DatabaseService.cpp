@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "core/logging/LoggerFactory.h"
-#include "core/controller/ControllerService.h"
 #include <string>
 #include <memory>
 #include <set>
+
+#include "core/logging/LoggerFactory.h"
+#include "core/controller/ControllerService.h"
 #include "DatabaseService.h"
 #include "io/validation.h"
 #include "properties/Configure.h"

@@ -18,26 +18,18 @@
 
 #pragma once
 
-#include <string>
-
 #include <soci/soci.h>
+
+#include <string>
 
 #include "SQLRowSubscriber.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 struct SQLWriter: public SQLRowSubscriber {
   virtual std::string toString() = 0;
 };
 
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql
 

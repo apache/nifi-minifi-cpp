@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::state {
  */
 class FlowIdentifier {
  public:
-  virtual std::string getRegistryUrl() const = 0 ;
+  virtual std::string getRegistryUrl() const = 0;
   virtual std::string getBucketId() const = 0;
   virtual std::string getFlowId() const = 0;
   virtual ~FlowIdentifier() = default;

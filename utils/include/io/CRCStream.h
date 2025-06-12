@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_
+#pragma once
 
 #include <zlib.h>
 
@@ -37,11 +36,7 @@
 #include "OutputStream.h"
 #include "Exception.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 namespace internal {
 
 template<typename StreamType>
@@ -141,10 +136,4 @@ class CRCStream : public std::conditional<std::is_base_of<InputStream, StreamTyp
   }
 };
 
-
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_
+}  // namespace org::apache::nifi::minifi::io

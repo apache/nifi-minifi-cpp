@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_DELETERS_H_
-#define LIBMINIFI_INCLUDE_UTILS_DELETERS_H_
+#pragma once
 
 #include <cstdlib>
 #ifdef WIN32
@@ -26,11 +25,7 @@
 #include <memory>
 #include <utility>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 struct FreeDeleter {
   void operator()(void* const ptr) const noexcept {
@@ -75,9 +70,4 @@ struct ifaddrs_deleter {
 };
 #endif /* !WIN32 */
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_UTILS_DELETERS_H_
+}  // namespace org::apache::nifi::minifi::utils

@@ -454,17 +454,14 @@ std::string partAfterLastOccurrenceOf(std::string_view input, char delimiter);
 
 
 template<typename ... Bases>
-struct overload : Bases ...
-{
+struct overload : Bases ... {
   using is_transparent = void;
-  using Bases::operator() ... ;
+  using Bases::operator() ...;
 };
 
 
-struct char_pointer_hash
-{
-  auto operator()( const char* ptr ) const noexcept
-  {
+struct char_pointer_hash {
+  auto operator()(const char* ptr) const noexcept {
     return std::hash<std::string_view>{}( ptr );
   }
 };

@@ -73,7 +73,7 @@ class ResponseNodeImpl : public core::ConnectableImpl, public PublishedMetricPro
     return is_array_;
   }
 
-  virtual bool isEmpty() override {
+  bool isEmpty() override {
     return false;
   }
 

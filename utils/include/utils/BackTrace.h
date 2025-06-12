@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
-#define LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
+#pragma once
 
 #include <string>
 
@@ -168,6 +167,3 @@ class TraceResolver {
   mutable std::mutex trace_mutex_;
   std::condition_variable trace_condition_;
 };
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_
-

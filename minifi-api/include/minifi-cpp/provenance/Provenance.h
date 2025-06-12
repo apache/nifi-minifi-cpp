@@ -197,7 +197,7 @@ class ProvenanceReporter {
   virtual ~ProvenanceReporter() = default;
 
   virtual std::set<std::shared_ptr<ProvenanceEventRecord>> getEvents() const = 0;
-  virtual void add(const std::shared_ptr<ProvenanceEventRecord> &event) = 0 ;
+  virtual void add(const std::shared_ptr<ProvenanceEventRecord> &event) = 0;
   virtual void remove(const std::shared_ptr<ProvenanceEventRecord> &event) = 0;
   virtual void clear() = 0;
 

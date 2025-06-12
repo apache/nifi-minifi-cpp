@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MAIN_MAINHELPER_H_
-#define MAIN_MAINHELPER_H_
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -37,7 +36,7 @@ extern "C" {
 #define WIN32_LEAN_AND_MEAN
 #endif
 
- //! Main thread sleep interval 1 second
+//! Main thread sleep interval 1 second
 #define SLEEP_INTERVAL 1
 //! Main thread stop wait time
 #define STOP_WAIT_TIME_MS 30*1000
@@ -69,7 +68,3 @@ void setSyslogLogger();
  * @return MINIFI_HOME on success, empty string on failure
  */
 std::filesystem::path determineMinifiHome(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
-
-
-
-#endif /* MAIN_MAINHELPER_H_ */

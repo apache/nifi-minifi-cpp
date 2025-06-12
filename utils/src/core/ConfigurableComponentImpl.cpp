@@ -107,8 +107,8 @@ std::vector<std::string> ConfigurableComponentImpl::getDynamicPropertyKeys() con
 std::map<std::string, std::string> ConfigurableComponentImpl::getDynamicProperties() const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
   std::map<std::string, std::string> result;
-  for(const auto& [key,value]: dynamic_properties_) {
-      result[key] = value.getValue().value_or("");
+  for (const auto& [key, value]: dynamic_properties_) {
+    result[key] = value.getValue().value_or("");
   }
   return result;
 }
