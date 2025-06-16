@@ -101,6 +101,7 @@ limitations under the License.
 - [RouteText](#RouteText)
 - [SegmentContent](#SegmentContent)
 - [SplitContent](#SplitContent)
+- [SplitJson](#SplitJson)
 - [SplitRecord](#SplitRecord)
 - [SplitText](#SplitText)
 - [TailEventLog](#TailEventLog)
@@ -3130,6 +3131,39 @@ In the list below, the names of required properties appear in bold. Any other pr
 | fragment.index            |              | A one-up number that indicates the ordering of the split FlowFiles that were created from a single parent FlowFile             |
 | fragment.count            |              | The number of split FlowFiles generated from the parent FlowFile                                                               |
 | segment.original.filename |              | The filename of the parent FlowFile                                                                                            |
+
+
+## SplitJson
+
+### Description
+
+Splits a JSON File into multiple, separate FlowFiles for an array element specified by a JsonPath expression. Each generated FlowFile is comprised of an element of the specified array and transferred to relationship 'split,' with the original file transferred to the 'original' relationship. If the specified JsonPath is not found or does not evaluate to an array element, the original file is routed to 'failure' and no files are generated.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                          | Default Value | Allowable Values                   | Description                                                                                 |
+|-------------------------------|---------------|------------------------------------|---------------------------------------------------------------------------------------------|
+| **JsonPath Expression**       |               |                                    | A JsonPath expression that indicates the array element to split into JSON/scalar fragments. |
+| **Null Value Representation** | empty string  | empty string<br/>the string 'null' | Indicates the desired representation of JSON Path expressions resulting in a null value.    |
+
+### Relationships
+
+| Name     | Description                                                                                                                                                              |
+|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| failure  | If a FlowFile fails processing for any reason (for example, the FlowFile is not valid JSON or the specified path does not exist), it will be routed to this relationship |
+| original | The original FlowFile that was split into segments. If the FlowFile fails processing, nothing will be sent to this relationship                                          |
+| split    | All segments of the original FlowFile will be routed to this relationship                                                                                                |
+
+### Output Attributes
+
+| Attribute                 | Relationship    | Description                                                                                                                    |
+|---------------------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------|
+| fragment.identifier       | split, original | All split FlowFiles produced from the same parent FlowFile will have the same randomly generated UUID added for this attribute |
+| fragment.index            | split           | A one-up number that indicates the ordering of the split FlowFiles that were created from a single parent FlowFile             |
+| fragment.count            | split, original | The number of split FlowFiles generated from the parent FlowFile                                                               |
+| segment.original.filename | split           | The filename of the parent FlowFile                                                                                            |
 
 
 ## SplitRecord
