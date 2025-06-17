@@ -39,6 +39,7 @@ assemblies
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
+CMakeSettings.json
 cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
