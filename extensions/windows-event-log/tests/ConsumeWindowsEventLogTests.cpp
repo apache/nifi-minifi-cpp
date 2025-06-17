@@ -541,4 +541,28 @@ TEST_CASE("ConsumeWindowsEventLog can process events from a log file", "[cwel][l
   )json");
 }
 
+TEST_CASE("ConsumeWindowsEventLog::parseSidMatcher works correctly") {
+  const auto verify = [](const std::optional<std::string>& sid_matcher, std::string_view field_name, bool result) {
+    const auto matcher_function = minifi::processors::cwel::parseSidMatcher(sid_matcher);
+    CHECK(matcher_function(field_name) == result);
+  };
+
+  verify(std::nullopt, "UserSid", false);
+  verify(std::nullopt, "WidthOfSidewalk", false);
+  verify(std::nullopt, "Channel", false);
+
+  verify(".*Sid", "UserSid", true);
+  verify(".*Sid", "WidthOfSidewalk", false);
+  verify(".*Sid", "Channel", false);
+
+  verify(".*Sid.*", "UserSid", true);
+  verify(".*Sid.*", "WidthOfSidewalk", true);
+  verify(".*Sid.*", "Channel", false);
+
+  verify("Sid", "UserSid", false);
+  verify("Sid", "WidthOfSidewalk", false);
+  verify("Sid", "Channel", false);
+  verify("Sid", "Sid", true);
+}
+
 }  // namespace org::apache::nifi::minifi::test
