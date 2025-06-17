@@ -90,7 +90,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
     if (it != formatFlagMap.end()) {
       std::function<std::string(const std::string &)> updateFunc = [&](const std::string &input) -> std::string {
         if (resolve_) {
-          auto resolved = windows_event_log_metadata_.getEventData(it->second);
+          auto resolved = windows_event_log_metadata_.getEventData(it->second, input);
           if (!resolved.empty()) {
             return resolved;
           }
