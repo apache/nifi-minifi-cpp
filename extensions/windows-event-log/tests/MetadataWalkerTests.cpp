@@ -29,6 +29,7 @@
 
 using METADATA = org::apache::nifi::minifi::wel::METADATA;
 using MetadataWalker = org::apache::nifi::minifi::wel::MetadataWalker;
+using WindowsEventLogHandler = org::apache::nifi::minifi::wel::WindowsEventLogHandler;
 using WindowsEventLogMetadata = org::apache::nifi::minifi::wel::WindowsEventLogMetadata;
 using WindowsEventLogMetadataImpl = org::apache::nifi::minifi::wel::WindowsEventLogMetadataImpl;
 using XmlString = org::apache::nifi::minifi::wel::XmlString;
@@ -36,7 +37,8 @@ using XmlString = org::apache::nifi::minifi::wel::XmlString;
 namespace {
 
 std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, utils::Regex const* regex = nullptr) {
-  WindowsEventLogMetadataImpl metadata{metadata_ptr, event_ptr};
+  WindowsEventLogHandler provider{metadata_ptr};
+  WindowsEventLogMetadataImpl metadata{provider, event_ptr};
   MetadataWalker walker(metadata, "", update_xml, resolve, regex, &utils::OsUtils::userIdToUsername);
 
   pugi::xml_document doc;
@@ -74,7 +76,9 @@ const short event_type_index = 178;  // NOLINT short comes from WINDOWS API
 
 class FakeWindowsEventLogMetadata : public WindowsEventLogMetadata {
  public:
-  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const override { return "event_data_for_flag_" + std::to_string(flags); }
+  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS field, const std::string&) const override {
+    return "event_data_for_field_" + std::to_string(field);
+  }
   [[nodiscard]] std::string getEventTimestamp() const override { return "event_timestamp"; }
   short getEventTypeIndex() const override { return event_type_index; }  // NOLINT short comes from WINDOWS API
 };
@@ -204,21 +208,21 @@ TEST_CASE("MetadataWalker extracts mappings correctly when there is a single Sid
       {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
       {METADATA::TIME_CREATED, "event_timestamp"},
       {METADATA::EVENTID, "4672"},
-      {METADATA::OPCODE, "event_data_for_flag_4"},
+      {METADATA::OPCODE, "event_data_for_field_4"},
       {METADATA::EVENT_RECORDID, "2575952"},
       {METADATA::EVENT_TYPE, "178"},
-      {METADATA::TASK_CATEGORY, "event_data_for_flag_3"},
-      {METADATA::LEVEL, "event_data_for_flag_2"},
-      {METADATA::KEYWORDS, "event_data_for_flag_5"}};
+      {METADATA::TASK_CATEGORY, "event_data_for_field_3"},
+      {METADATA::LEVEL, "event_data_for_field_2"},
+      {METADATA::KEYWORDS, "event_data_for_field_5"}};
 
   SECTION("update_xml is false => fields are collected into walker.getFieldValues()") {
     const std::map<std::string, std::string> expected_field_values{
-        {"Channel", "event_data_for_flag_6"},
-        {"Keywords", "event_data_for_flag_5"},
-        {"Level", "event_data_for_flag_2"},
-        {"Opcode", "event_data_for_flag_4"},
+        {"Channel", "event_data_for_field_6"},
+        {"Keywords", "event_data_for_field_5"},
+        {"Level", "event_data_for_field_2"},
+        {"Opcode", "event_data_for_field_4"},
         {"SubjectUserSid", "Nobody"},
-        {"Task", "event_data_for_flag_3"}};
+        {"Task", "event_data_for_field_3"}};
 
     extractMappingsTestHelper(file_name, false, true, expected_identifiers, expected_metadata, expected_field_values);
   }
@@ -270,21 +274,21 @@ TEST_CASE("MetadataWalker extracts mappings correctly when there are multiple Si
       {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
       {METADATA::TIME_CREATED, "event_timestamp"},
       {METADATA::EVENTID, "4672"},
-      {METADATA::OPCODE, "event_data_for_flag_4"},
+      {METADATA::OPCODE, "event_data_for_field_4"},
       {METADATA::EVENT_RECORDID, "2575952"},
       {METADATA::EVENT_TYPE, "178"},
-      {METADATA::TASK_CATEGORY, "event_data_for_flag_3"},
-      {METADATA::LEVEL, "event_data_for_flag_2"},
-      {METADATA::KEYWORDS, "event_data_for_flag_5"}};
+      {METADATA::TASK_CATEGORY, "event_data_for_field_3"},
+      {METADATA::LEVEL, "event_data_for_field_2"},
+      {METADATA::KEYWORDS, "event_data_for_field_5"}};
 
   SECTION("update_xml is false => fields are collected into walker.getFieldValues()") {
     const std::map<std::string, std::string> expected_field_values{
-        {"Channel", "event_data_for_flag_6"},
-        {"Keywords", "event_data_for_flag_5"},
-        {"Level", "event_data_for_flag_2"},
-        {"Opcode", "event_data_for_flag_4"},
+        {"Channel", "event_data_for_field_6"},
+        {"Keywords", "event_data_for_field_5"},
+        {"Level", "event_data_for_field_2"},
+        {"Opcode", "event_data_for_field_4"},
         {"SubjectUserSid", "Nobody"},
-        {"Task", "event_data_for_flag_3"}};
+        {"Task", "event_data_for_field_3"}};
 
     extractMappingsTestHelper(file_name, false, true, expected_identifiers, expected_metadata, expected_field_values);
   }
@@ -330,20 +334,20 @@ TEST_CASE("MetadataWalker extracts mappings correctly when the Sid is unknown an
       {METADATA::SOURCE, "Microsoft-Windows-Security-Auditing"},
       {METADATA::TIME_CREATED, "event_timestamp"},
       {METADATA::EVENTID, "4672"},
-      {METADATA::OPCODE, "event_data_for_flag_4"},
+      {METADATA::OPCODE, "event_data_for_field_4"},
       {METADATA::EVENT_RECORDID, "2575952"},
       {METADATA::EVENT_TYPE, "178"},
-      {METADATA::TASK_CATEGORY, "event_data_for_flag_3"},
-      {METADATA::LEVEL, "event_data_for_flag_2"},
-      {METADATA::KEYWORDS, "event_data_for_flag_5"}};
+      {METADATA::TASK_CATEGORY, "event_data_for_field_3"},
+      {METADATA::LEVEL, "event_data_for_field_2"},
+      {METADATA::KEYWORDS, "event_data_for_field_5"}};
 
   SECTION("update_xml is false => fields are collected into walker.getFieldValues()") {
     const std::map<std::string, std::string> expected_field_values{
-        {"Channel", "event_data_for_flag_6"},
-        {"Keywords", "event_data_for_flag_5"},
-        {"Level", "event_data_for_flag_2"},
-        {"Opcode", "event_data_for_flag_4"},
-        {"Task", "event_data_for_flag_3"}};
+        {"Channel", "event_data_for_field_6"},
+        {"Keywords", "event_data_for_field_5"},
+        {"Level", "event_data_for_field_2"},
+        {"Opcode", "event_data_for_field_4"},
+        {"Task", "event_data_for_field_3"}};
 
     extractMappingsTestHelper(file_name, false, true, expected_identifiers, expected_metadata, expected_field_values);
   }
