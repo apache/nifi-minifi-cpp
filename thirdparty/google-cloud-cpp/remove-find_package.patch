@@ -1,11 +1,12 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
---- a/CMakeLists.txt	(revision 334e481f49c78c9e22aa48e59d044f6051ce99a7)
-+++ b/CMakeLists.txt	(date 1646227181483)
-@@ -251,7 +251,6 @@
- # Each subproject adds dependencies to this target to have their docs generated.
+index 257f1807e4..2fcb543167 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -218,7 +218,6 @@ add_custom_target(google-cloud-cpp-protos)
  add_custom_target(doxygen-docs)
-
+ add_custom_target(all-docfx)
+ 
 -find_package(absl CONFIG REQUIRED)
- if (${GOOGLE_CLOUD_CPP_ENABLE_GRPC})
+ if (GOOGLE_CLOUD_CPP_ENABLE_GRPC)
      find_package(gRPC REQUIRED QUIET)
-     find_package(ProtobufWithTargets REQUIRED QUIET)
+     # `Protobuf_PROTOC_EXECUTABLE` is pretty standard. It has been in use by
