@@ -38,15 +38,16 @@ std::string create_mock_service_json() {
   root.AddMember("type", "service_account", root.GetAllocator());
   root.AddMember("project_id", "mock_project_id", root.GetAllocator());
   root.AddMember("private_key_id", "my_private_key_id", root.GetAllocator());
-  root.AddMember("private_key", "-----BEGIN RSA PRIVATE KEY-----\n"
-                                "MIIBOgIBAAJBAKNhMsOin3GDkg9A9e3MN/jP0JL+cV8GscR5QGZPgbHI5Jtkt+4k\n"
-                                "MJvO5i54cq+55wFF2Ux7Eekg6wYY+/cbzNUCAwEAAQJAdUUyS+xxp+f5sgs9uyeH\n"
-                                "0YdRPgF23O+QL+ecixNsk2/qsH195ngMNHWQCEUPGbl8O7Lu9W1tmMgeN0cFzpxl\n"
-                                "rQIhANM6NG7uofCzwCvcuuc8PCjbhQPkYn+fuytdrr9V4AlrAiEAxgKkh+iU6CO8\n"
-                                "hzrqeO1zNQijJ4wQ3uuxMST7gx9x0r8CIACPkQASZh+reoEjTuO6RzacjpfaDWDl\n"
-                                "XavZzdL4OWYNAiEAxA41zoPRfJB1yQfixV2Gpsooka2zvqVrypctmUT3NI0CIH2c\n"
-                                "h9CRoySmUy6INeKMMgAPiVJB04exJvKPXr/DHi6D\n"
-                                "-----END RSA PRIVATE KEY-----", root.GetAllocator());
+  root.AddMember("private_key", "-----BEGIN PRIVATE KEY-----\n"
+                                "MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEAo2Eyw6KfcYOSD0D1\n"
+                                "7cw3+M/Qkv5xXwaxxHlAZk+Bscjkm2S37iQwm87mLnhyr7nnAUXZTHsR6SDrBhj7\n"
+                                "9xvM1QIDAQABAkB1RTJL7HGn5/myCz27J4fRh1E+AXbc75Av55yLE2yTb+qwfX3m\n"
+                                "eAw0dZAIRQ8ZuXw7su71bW2YyB43RwXOnGWtAiEA0zo0bu6h8LPAK9y65zw8KNuF\n"
+                                "A+Rif5+7K12uv1XgCWsCIQDGAqSH6JToI7yHOup47XM1CKMnjBDe67ExJPuDH3HS\n"
+                                "vwIgAI+RABJmH6t6gSNO47pHNpyOl9oNYOVdq9nN0vg5Zg0CIQDEDjXOg9F8kHXJ\n"
+                                "B+LFXYamyiiRrbO+pWvKly2ZRPc0jQIgfZyH0JGjJKZTLog14owyAA+JUkHTh7Em\n"
+                                "8o9ev8MeLoM=\n"
+                                "-----END PRIVATE KEY-----", root.GetAllocator());
   root.AddMember("client_email", "my_client_email", root.GetAllocator());
   root.AddMember("client_id", "my_client_id", root.GetAllocator());
   rapidjson::StringBuffer buffer;
