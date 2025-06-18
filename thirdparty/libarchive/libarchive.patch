@@ -1,8 +1,9 @@
-diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
---- orig/CMakeLists.txt	2020-02-11 22:33:47.000000000 +0100
-+++ patched/CMakeLists.txt	2020-03-26 00:12:47.000000000 +0100
-@@ -6,7 +6,7 @@ endif()
- #
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4c1f8770..642ac000 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
+ 
  PROJECT(libarchive C)
  #
 -SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake")
@@ -10,10 +11,11 @@ diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
  if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${libarchive_BINARY_DIR}/bin)
  endif()
-diff -rupN orig/libarchive/CMakeLists.txt patched/libarchive/CMakeLists.txt
---- orig/libarchive/CMakeLists.txt	2020-01-28 00:19:39.000000000 +0100
-+++ patched/libarchive/CMakeLists.txt	2020-03-26 00:54:15.000000000 +0100
-@@ -166,51 +166,6 @@ SET(libarchive_SOURCES
+diff --git a/libarchive/CMakeLists.txt b/libarchive/CMakeLists.txt
+index fd997db4..ce1ad6dd 100644
+--- a/libarchive/CMakeLists.txt
++++ b/libarchive/CMakeLists.txt
+@@ -174,51 +174,6 @@ SET(libarchive_SOURCES
    xxhash.c
  )
  
@@ -65,52 +67,12 @@ diff -rupN orig/libarchive/CMakeLists.txt patched/libarchive/CMakeLists.txt
  IF(WIN32 AND NOT CYGWIN)
    LIST(APPEND libarchive_SOURCES archive_entry_copy_bhfi.c)
    LIST(APPEND libarchive_SOURCES archive_read_disk_windows.c)
-@@ -235,12 +190,6 @@ ELSEIF(ARCHIVE_ACL_SUNOS)
-   LIST(APPEND libarchive_SOURCES archive_disk_acl_sunos.c)
- ENDIF()
- 
--# Libarchive is a shared library
--ADD_LIBRARY(archive SHARED ${libarchive_SOURCES} ${include_HEADERS})
--TARGET_INCLUDE_DIRECTORIES(archive PUBLIC .)
--TARGET_LINK_LIBRARIES(archive ${ADDITIONAL_LIBS})
--SET_TARGET_PROPERTIES(archive PROPERTIES SOVERSION ${SOVERSION})
--
- # archive_static is a static library
- ADD_LIBRARY(archive_static STATIC ${libarchive_SOURCES} ${include_HEADERS})
- TARGET_LINK_LIBRARIES(archive_static ${ADDITIONAL_LIBS})
-@@ -253,12 +202,9 @@ ENDIF(NOT WIN32 OR CYGWIN)
- 
- IF(ENABLE_INSTALL)
-   # How to install the libraries
--  INSTALL(TARGETS archive archive_static
-+  INSTALL(TARGETS archive_static
+@@ -282,8 +237,5 @@ IF(ENABLE_INSTALL)
            RUNTIME DESTINATION bin
-           LIBRARY DESTINATION lib
-           ARCHIVE DESTINATION lib)
+           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 -  INSTALL_MAN(${libarchive_MANS})
    INSTALL(FILES ${include_HEADERS} DESTINATION include)
  ENDIF()
 -
 -add_subdirectory(test)
-diff -rupN orig/libarchive/archive_read_support_format_rar5.c patched/libarchive/archive_read_support_format_rar5.c
---- orig/libarchive/archive_read_support_format_rar5.c	2020-02-11 00:30:01.000000000 +0100
-+++ patched/libarchive/archive_read_support_format_rar5.c	2020-03-26 17:10:03.000000000 +0100
-@@ -3084,12 +3084,17 @@ static int do_uncompress_block(struct ar
- 
- 			continue;
- 		}
--
-+#ifndef _MSC_VER
-+/*
-+ * This is unreachable code (seemingly by design), and compilation on MSVC fails because of that,
-+ * so we remove it when compiling with MSVC.
-+ */
- 		/* The program counter shouldn't reach here. */
- 		archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
- 		    "Unsupported block code: 0x%x", num);
- 
- 		return ARCHIVE_FATAL;
-+#endif
- 	}
- 
- 	return ARCHIVE_OK;
