@@ -106,6 +106,7 @@ considered special characters:
 - `/` (forward slash)
 - `*` (asterisk)
 - `'` (single quote)
+- `-` (hyphen)
 - ` ` (space)
 - `\t` (tab)
 - `\r` (carriage return)
@@ -333,7 +334,7 @@ a Regular Expression.
 
 **Subject Type**: Any
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -354,7 +355,7 @@ two values differ only by case (upper case vs. lower case).
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -373,7 +374,7 @@ the argument cannot be coerced into a Number, this function returns `false`.
 
 **Subject Type**: Number
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -394,7 +395,7 @@ subject or the argument cannot be coerced into a Number, this function returns
 
 **Subject Type**: Number
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -414,7 +415,7 @@ argument cannot be coerced into a Number, this function returns `false`.
 
 **Subject Type**: Number
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -435,7 +436,7 @@ subject or the argument cannot be coerced into a Number, this function returns
 
 **Subject Type**: Number
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -457,7 +458,7 @@ as the argument.
 
 **Subject Type**: Boolean
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -484,7 +485,7 @@ function will return `false`.
 
 **Subject Type**: Boolean
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1140,7 +1141,7 @@ as the argument, `false` otherwise.
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1162,7 +1163,7 @@ the argument, `false` otherwise.
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1184,7 +1185,7 @@ argument anywhere in the value.
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1206,7 +1207,7 @@ arguments.
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1228,7 +1229,7 @@ characters that matches the Regular Expression provided by the argument.
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1253,7 +1254,7 @@ following Expressions will provide the following results:
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1283,7 +1284,7 @@ found at the beginning of the Subject, the value returned will be `0`, not `1`.
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1314,7 +1315,7 @@ found at the beginning of the Subject, the value returned will be `0`, not `1`.
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1652,7 +1653,7 @@ the Expression, returns a value of `true`, then this function will return
 
 **Subject Type**: No Subject
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1680,7 +1681,7 @@ the Expression, returns a value of `true`, then this function will return
 
 **Subject Type**: No Subject
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1709,7 +1710,7 @@ function will return `true`. Otherwise, this function will return `false`.
 
 **Subject Type**: No Subject
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1738,7 +1739,7 @@ function will return `true`. Otherwise, this function will return `false`.
 
 **Subject Type**: No Subject
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1766,7 +1767,7 @@ returns `false`.
 
 **Subject Type**: No Subject
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1794,7 +1795,7 @@ Otherwise, the function returns `false`.
 
 **Subject Type**: No Subject
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1822,7 +1823,7 @@ specified delimiter. This function may be used only in conjunction with the
 
 **Subject Type**: String
 
-**Arguments**: 
+**Arguments**:
 
 | Argument | Description |
 | - | - |
@@ -1902,7 +1903,7 @@ argument. The first argument must be a String that is a valid strftime syntax. T
 Subject is expected to be a String that is formatted according the argument.
 The date will be evaluated using the local time zone unless specified in the
 second optional argument.
-If called without arguments it will parse the subject as a RFC3339 formatted datetime.  
+If called without arguments it will parse the subject as a RFC3339 formatted datetime.
 
 **Subject Type**: String
 
