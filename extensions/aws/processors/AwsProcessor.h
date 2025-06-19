@@ -32,7 +32,7 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -169,8 +169,7 @@ class AwsProcessor : public core::ProcessorImpl {
       UseDefaultCredentials
   });
 
-
-  explicit AwsProcessor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger);
+  using ProcessorImpl::ProcessorImpl;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
@@ -180,7 +179,6 @@ class AwsProcessor : public core::ProcessorImpl {
   aws::ProxyOptions getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file);
   std::optional<CommonProperties> getCommonELSupportedProperties(core::ProcessContext& context, const core::FlowFile* flow_file);
 
-  std::shared_ptr<core::logging::Logger> logger_;
   std::optional<Aws::Client::ClientConfiguration> client_config_;
 };
 

@@ -32,11 +32,6 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-AwsProcessor::AwsProcessor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-  : core::ProcessorImpl(name, uuid),
-    logger_(std::move(logger)) {
-}
-
 std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentialsFromControllerService(core::ProcessContext& context) const {
   if (const auto aws_credentials_service = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID())) {
     return (*aws_credentials_service)->getAWSCredentials();

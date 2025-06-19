@@ -104,6 +104,10 @@ nonstd::expected<std::string, std::error_code> ProcessContextImpl::getRawPropert
   return getProcessor().getProperty(name);
 }
 
+nonstd::expected<std::string, std::error_code> ProcessContextImpl::getRawDynamicProperty(const std::string_view name) const {
+  return getProcessor().getDynamicProperty(name);
+}
+
 nonstd::expected<void, std::error_code> ProcessContextImpl::setDynamicProperty(std::string name, std::string value) {
   return getProcessor().setDynamicProperty(std::move(name), std::move(value));
 }
