@@ -22,6 +22,7 @@
 #include "core/BulletinStore.h"
 #include "properties/Configure.h"
 #include "unit/DummyProcessor.h"
+#include "unit/ProcessorUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -35,7 +36,7 @@ class BulletinStoreTestAccessor {
 };
 
 std::unique_ptr<core::Processor> createDummyProcessor() {
-  auto processor = std::make_unique<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
   processor->setProcessGroupUUIDStr("68fa9ae4-b9fc-4873-b0d9-edab59fdb0c2");
   processor->setProcessGroupName("sub_group");
   processor->setProcessGroupPath("root / sub_group");

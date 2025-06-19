@@ -87,13 +87,7 @@ class PutKinesisStream : public AwsProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutKinesisStream(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AwsProcessor(name, uuid, core::logging::LoggerFactory<PutKinesisStream>::getLogger(uuid)) {
-  }
-  PutKinesisStream(const PutKinesisStream&) = delete;
-  PutKinesisStream(PutKinesisStream&&) = delete;
-  PutKinesisStream& operator=(const PutKinesisStream&) = delete;
-  PutKinesisStream& operator=(PutKinesisStream&&) = delete;
+  using AwsProcessor::AwsProcessor;
   ~PutKinesisStream() override = default;
 
   void initialize() override;

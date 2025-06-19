@@ -113,6 +113,13 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   [[nodiscard]] bool supportsDynamicRelationships() const override;
   state::response::SharedResponseNode getResponseNode() override;
   gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const;
+  std::string getProcessGroupName() const;
+  void setProcessGroupName(const std::string &name);
+  std::string getProcessGroupPath() const;
+  void setProcessGroupPath(const std::string &path);
+  logging::LOG_LEVEL getLogBulletinLevel() const;
+  void setLogBulletinLevel(logging::LOG_LEVEL level);
+  void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback);
   void restore(const std::shared_ptr<FlowFile>& file) override;
 
   static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
@@ -143,6 +150,7 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   std::string cron_period_;
 
   std::shared_ptr<logging::Logger> logger_;
+  logging::LOG_LEVEL log_bulletin_level_ = logging::LOG_LEVEL::warn;
 
  private:
   mutable std::mutex mutex_;
@@ -159,6 +167,8 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   std::unordered_map<Connection*, std::unordered_set<Processor*>> reachable_processors_;
 
   std::string process_group_uuid_;
+  std::string process_group_name_;
+  std::string process_group_path_;
 
  protected:
   std::unique_ptr<ProcessorApi> impl_;

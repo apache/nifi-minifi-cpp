@@ -130,6 +130,8 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   void restore(const std::shared_ptr<FlowFile>& file) override;
 
+  void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& /*callback*/) override;
+
   std::string getName() const;
   utils::Identifier getUUID() const;
   utils::SmallString<36> getUUIDStr() const;

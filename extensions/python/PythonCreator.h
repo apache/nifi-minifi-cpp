@@ -68,6 +68,10 @@ class DummyLogger : public core::logging::Logger {
     return 0;
   }
 
+  void setLogCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string&)>& /*callback*/) override {
+    // pass
+  }
+
   ~DummyLogger() override = default;
 };
 

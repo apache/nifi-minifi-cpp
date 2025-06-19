@@ -469,6 +469,34 @@ void Processor::setProcessGroupUUIDStr(const std::string &uuid) {
   process_group_uuid_ = uuid;
 }
 
+std::string Processor::getProcessGroupName() const {
+  return process_group_name_;
+}
+
+void Processor::setProcessGroupName(const std::string &name) {
+  process_group_name_ = name;
+}
+
+std::string Processor::getProcessGroupPath() const {
+  return process_group_path_;
+}
+
+void Processor::setProcessGroupPath(const std::string &path) {
+  process_group_path_ = path;
+}
+
+logging::LOG_LEVEL Processor::getLogBulletinLevel() const {
+  return log_bulletin_level_;
+}
+
+void Processor::setLogBulletinLevel(logging::LOG_LEVEL level) {
+  log_bulletin_level_ = level;
+}
+
+void Processor::setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) {
+  impl_->setLoggerCallback(callback);
+}
+
 std::chrono::steady_clock::time_point Processor::getYieldExpirationTime() const {
   return yield_expiration_;
 }

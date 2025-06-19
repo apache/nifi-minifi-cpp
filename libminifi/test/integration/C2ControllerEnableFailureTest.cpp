@@ -72,11 +72,9 @@ class DummyController : public core::controller::ControllerServiceImpl {
 REGISTER_RESOURCE(DummyController, ControllerService);
 
 class DummmyControllerUserProcessor : public minifi::core::ProcessorImpl {
+ public:
   using minifi::core::ProcessorImpl::ProcessorImpl;
 
- public:
-  DummmyControllerUserProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : ProcessorImpl(name, uuid) {}
-  explicit DummmyControllerUserProcessor(std::string_view name) : ProcessorImpl(name) {}
   static constexpr auto DummyControllerService = core::PropertyDefinitionBuilder<>::createProperty("Dummy Controller Service")
     .withDescription("Dummy Controller Service")
     .withAllowedTypes<DummyController>()
@@ -88,7 +86,7 @@ class DummmyControllerUserProcessor : public minifi::core::ProcessorImpl {
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*session_factory*/) override {
     if (auto controller_service = context.getProperty(DummmyControllerUserProcessor::DummyControllerService)) {
-      if (!std::dynamic_pointer_cast<DummyController>(context.getControllerService(*controller_service, uuid_))) {
+      if (!std::dynamic_pointer_cast<DummyController>(context.getControllerService(*controller_service, getUUID()))) {
         throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service");
       }
     } else {
@@ -105,9 +103,6 @@ class DummmyControllerUserProcessor : public minifi::core::ProcessorImpl {
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DummmyControllerUserProcessor>::getLogger(uuid_);
 };
 
 REGISTER_RESOURCE(DummmyControllerUserProcessor, Processor);

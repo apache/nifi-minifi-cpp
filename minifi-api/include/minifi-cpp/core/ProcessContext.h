@@ -74,6 +74,8 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
   virtual nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) = 0;
 
+  virtual nonstd::expected<std::string, std::error_code> getRawDynamicProperty(std::string_view name) const = 0;
+
   virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
   virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file = nullptr) const = 0;
 
