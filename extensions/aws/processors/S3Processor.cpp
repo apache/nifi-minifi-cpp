@@ -33,7 +33,7 @@
 namespace org::apache::nifi::minifi::aws::processors {
 
 S3Processor::S3Processor(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-  : core::ProcessorImpl(info),
+  : AwsProcessor(info),
     s3_wrapper_(std::move(s3_request_sender)) {
 }
 

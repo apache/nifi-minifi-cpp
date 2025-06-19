@@ -30,7 +30,6 @@
 #include "AwsProcessor.h"
 #include "S3Wrapper.h"
 #include "aws/core/auth/AWSCredentialsProvider.h"
-#include "core/Processor.h"
 #include "core/Property.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
