@@ -66,36 +66,36 @@ TEST_CASE("ProcessContextExpr can update existing processor properties", "[setPr
 
   SECTION("Set and get simple property") {
     SECTION("Using a Property reference parameter") {
-      context->setProperty(minifi::DummyProcessor::SimpleProperty, "foo");
+      REQUIRE(context->setProperty(minifi::DummyProcessor::SimpleProperty, "foo"));
       CHECK(context->getProperty(minifi::DummyProcessor::SimpleProperty, nullptr) == "foo");
 
-      context->setProperty(minifi::DummyProcessor::SimpleProperty, "bar");
+      REQUIRE(context->setProperty(minifi::DummyProcessor::SimpleProperty, "bar"));
       CHECK(context->getProperty(minifi::DummyProcessor::SimpleProperty, nullptr) == "bar");
     }
 
     SECTION("Using a string parameter") {
-      context->setProperty(minifi::DummyProcessor::SimpleProperty, "foo");
+      REQUIRE(context->setProperty(minifi::DummyProcessor::SimpleProperty, "foo"));
       CHECK(context->getProperty(minifi::DummyProcessor::SimpleProperty, nullptr) == "foo");
 
-      context->setProperty(minifi::DummyProcessor::SimpleProperty, "bar");
+      REQUIRE(context->setProperty(minifi::DummyProcessor::SimpleProperty, "bar"));
       CHECK(context->getProperty(minifi::DummyProcessor::SimpleProperty, nullptr) == "bar");
     }
   }
 
   SECTION("Set and get expression language property") {
     SECTION("Using a Property reference parameter") {
-      context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "foo");
+      REQUIRE(context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "foo"));
       CHECK(context->getProperty(minifi::DummyProcessor::ExpressionLanguageProperty, nullptr) == "foo");
 
-      context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "bar");
+      REQUIRE(context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "bar"));
       CHECK(context->getProperty(minifi::DummyProcessor::ExpressionLanguageProperty, nullptr) == "bar");
     }
 
     SECTION("Using a string parameter") {
-      context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "foo");
+      REQUIRE(context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "foo"));
       CHECK(context->getProperty(minifi::DummyProcessor::ExpressionLanguageProperty, nullptr) == "foo");
 
-      context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "bar");
+      REQUIRE(context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "bar"));
       CHECK(context->getProperty(minifi::DummyProcessor::ExpressionLanguageProperty, nullptr) == "bar");
     }
   }

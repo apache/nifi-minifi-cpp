@@ -820,8 +820,8 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   auto dir = test_controller.createTempDirectory();
   auto fruits_log_path = dir / "fruits.log";
 
-  test_controller.getProcessor()->setProperty(minifi::processors::TailFile::FileName.name, fruits_log_path.string());
-  test_controller.getProcessor()->setProperty(minifi::processors::TailFile::Delimiter.name, std::string(1, DELIM));
+  REQUIRE(test_controller.getProcessor()->setProperty(minifi::processors::TailFile::FileName.name, fruits_log_path.string()));
+  REQUIRE(test_controller.getProcessor()->setProperty(minifi::processors::TailFile::Delimiter.name, std::string(1, DELIM)));
 
   const auto file_modi_time_t0 = std::chrono::file_clock::now();
   {
@@ -1796,9 +1796,9 @@ TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]
   }
   tmpfile.close();
 
-  tailfile->setProperty(minifi::processors::TailFile::FileName.name, temp_file_path.string());
-  tailfile->setProperty(minifi::processors::TailFile::Delimiter.name, "\n");
-  tailfile->setProperty(minifi::processors::TailFile::BatchSize.name, "10");
+  REQUIRE(tailfile->setProperty(minifi::processors::TailFile::FileName.name, temp_file_path.string()));
+  REQUIRE(tailfile->setProperty(minifi::processors::TailFile::Delimiter.name, "\n"));
+  REQUIRE(tailfile->setProperty(minifi::processors::TailFile::BatchSize.name, "10"));
 
   const auto result = test_controller.trigger();
   const auto& file_contents = result.at(minifi::processors::TailFile::Success);

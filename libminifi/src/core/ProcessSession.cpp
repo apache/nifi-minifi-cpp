@@ -1020,12 +1020,15 @@ void ProcessSessionImpl::rollback() {
   }
 }
 
-nonstd::expected<void, std::exception_ptr> ProcessSessionImpl::rollbackNoThrow() noexcept {
+nonstd::expected<void, std::string> ProcessSessionImpl::rollbackNoThrow() noexcept {
   try {
     rollback();
     return {};
+  } catch(const std::exception& exception) {
+    return nonstd::make_unexpected(exception.what());
   } catch(...) {
-    return nonstd::make_unexpected(std::current_exception());
+    logger_->log_critical("Caught unknown exception during rollback, type: {}, terminating", getCurrentExceptionTypeName());
+    std::terminate();
   }
 }
 

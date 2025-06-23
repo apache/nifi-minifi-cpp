@@ -98,7 +98,7 @@ TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTab
   CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::TableName.name, "test_table"));
   CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.name, "int_col"));
   CHECK(plan->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.name, "text_col"));
-  sql_proc->setDynamicProperty("initial.maxvalue.int_col", "102");
+  REQUIRE(sql_proc->setDynamicProperty("initial.maxvalue.int_col", "102"));
 
   controller.insertValues({
     {101, "one"},

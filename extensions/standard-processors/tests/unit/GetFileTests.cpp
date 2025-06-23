@@ -194,7 +194,7 @@ TEST_CASE("Only older files are read when MinAge property is set", "[getFileProp
   test_controller.setProperty(minifi::processors::GetFile::MinAge, "1 hour");
 
   const auto more_than_an_hour_ago = std::chrono::file_clock::now() - 65min;
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago);
+  REQUIRE(utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago));
 
   test_controller.runSession();
 
@@ -208,7 +208,7 @@ TEST_CASE("Only newer files are read when MaxAge property is set", "[getFileProp
   test_controller.setProperty(minifi::processors::GetFile::MaxAge, "1 hour");
 
   const auto more_than_an_hour_ago = std::chrono::file_clock::now() - 65min;
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago);
+  REQUIRE(utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago));
 
   test_controller.runSession();
 
@@ -268,7 +268,7 @@ TEST_CASE("GetFile sets attributes correctly") {
   minifi::test::SingleProcessorTestController test_controller(std::make_unique<GetFile>("GetFile"));
   const auto get_file = test_controller.getProcessor();
   std::filesystem::path dir = test_controller.createTempDirectory();
-  get_file->setProperty(GetFile::Directory.name, dir.string());
+  REQUIRE(get_file->setProperty(GetFile::Directory.name, dir.string()));
   SECTION("File in subdirectory of input directory") {
     std::filesystem::create_directories(dir / "a" / "b");
     minifi::test::utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
@@ -304,7 +304,7 @@ TEST_CASE("GetFile can use expression language in Directory property") {
   auto date_str = date::format("%Y-%m-%d", std::chrono::system_clock::now());
   auto dir = base_dir/ date_str;
   std::filesystem::create_directories(dir);
-  get_file->setProperty(GetFile::Directory.name, base_dir.string() + "/${now():format('%Y-%m-%d')}");
+  REQUIRE(get_file->setProperty(GetFile::Directory.name, base_dir.string() + "/${now():format('%Y-%m-%d')}"));
   minifi::test::utils::putFileToDir(dir, "testfile.txt", "The quick brown fox jumps over the lazy dog\n");
 
   auto result = test_controller.trigger();

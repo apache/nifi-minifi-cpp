@@ -45,7 +45,7 @@ class ProcessSession : public virtual ReferenceContainer {
   virtual void commit() = 0;
   virtual void rollback() = 0;
 
-  virtual nonstd::expected<void, std::exception_ptr> rollbackNoThrow() noexcept = 0;
+  virtual nonstd::expected<void, std::string> rollbackNoThrow() noexcept = 0;
   virtual std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() = 0;
   virtual void flushContent() = 0;
   virtual std::shared_ptr<core::FlowFile> get() = 0;

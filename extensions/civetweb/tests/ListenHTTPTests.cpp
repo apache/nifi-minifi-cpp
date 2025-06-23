@@ -699,7 +699,7 @@ TEST_CASE("ListenHTTP bored yield", "[listenhttp][bored][yield]") {
   using processors::ListenHTTP;
   SingleProcessorTestController controller{std::make_unique<ListenHTTP>("listenhttp")};
   auto listen_http = controller.getProcessor();
-  listen_http->setProperty(ListenHTTP::Port.name, "0");
+  REQUIRE(listen_http->setProperty(ListenHTTP::Port.name, "0"));
 
   REQUIRE(!listen_http->isYield());
   const auto output = controller.trigger();

@@ -36,15 +36,19 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-ControllerSocketProtocol::SocketRestartCommandProcessor::SocketRestartCommandProcessor(state::StateMonitor& update_sink) :
-    update_sink_(update_sink) {
+ControllerSocketProtocol::SocketRestartCommandProcessor::SocketRestartCommandProcessor(state::StateMonitor& update_sink, const std::shared_ptr<core::logging::Logger>& logger) :
+    update_sink_(update_sink),
+    logger_(logger) {
   command_queue_.start();
   command_processor_thread_ = std::thread([this] {
     while (running_) {
       CommandData command_data;
       if (command_queue_.dequeueWait(command_data)) {
         if (command_data.command == Command::FLOW_UPDATE) {
-          update_sink_.applyUpdate("ControllerSocketProtocol", command_data.data, true);
+          auto result = update_sink_.applyUpdate("ControllerSocketProtocol", command_data.data, true);
+          if (!result) {
+            logger_->log_error("Failed to apply flow update: {}", result.error());
+          }
         } else if (command_data.command == Command::START) {
           update_sink_.executeOnComponent(command_data.data, [](state::StateController& component) {
             component.start();
@@ -70,7 +74,7 @@ ControllerSocketProtocol::ControllerSocketProtocol(core::controller::ControllerS
         update_sink_(update_sink),
         controller_socket_reporter_(controller_socket_reporter),
         configuration_(std::move(configuration)),
-        socket_restart_processor_(update_sink_) {
+        socket_restart_processor_(update_sink_, logger_) {
   gsl_Expects(configuration_);
 }
 

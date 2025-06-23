@@ -86,48 +86,54 @@ class SSLContextServiceImpl : public core::controller::ControllerServiceImpl, pu
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
     ControllerServiceImpl::setConfiguration(configuration);
     SSLContextServiceImpl::initialize();
+    auto setPropertyAndHandleError = [this](std::string_view property_name, std::string value) {
+      auto result = ControllerServiceImpl::setProperty(property_name, std::move(value));
+      if (!result) {
+        logger_->log_error("Failed to set property {}: {}", property_name, result.error().message());
+      }
+    };
 
     // set the properties based on the configuration
     std::string value;
     if (configuration_->get(Configure::nifi_security_client_certificate, value)) {
-      ControllerServiceImpl::setProperty(ClientCertificate.name, value);
+      setPropertyAndHandleError(ClientCertificate.name, std::move(value));
     }
 
     if (configuration_->get(Configure::nifi_security_client_private_key, value)) {
-      ControllerServiceImpl::setProperty(PrivateKey.name, value);
+      setPropertyAndHandleError(PrivateKey.name, std::move(value));
     }
 
     if (configuration_->get(Configure::nifi_security_client_pass_phrase, value)) {
-      ControllerServiceImpl::setProperty(Passphrase.name, value);
+      setPropertyAndHandleError(Passphrase.name, std::move(value));
     }
 
     if (configuration_->get(Configure::nifi_security_client_ca_certificate, value)) {
-      ControllerServiceImpl::setProperty(CACertificate.name, value);
+      setPropertyAndHandleError(CACertificate.name, std::move(value));
     }
 
     if (configuration_->get(Configure::nifi_security_use_system_cert_store, value)) {
-      ControllerServiceImpl::setProperty(UseSystemCertStore.name, value);
+      setPropertyAndHandleError(UseSystemCertStore.name, std::move(value));
     }
 
 #ifdef WIN32
     if (configuration_->get(Configure::nifi_security_windows_cert_store_location, value)) {
-      ControllerServiceImpl::setProperty(CertStoreLocation.name, value);
+      setPropertyAndHandleError(CertStoreLocation.name, std::move(value));
     }
 
     if (configuration_->get(Configure::nifi_security_windows_server_cert_store, value)) {
-      ControllerServiceImpl::setProperty(ServerCertStore.name, value);
+      setPropertyAndHandleError(ServerCertStore.name, std::move(value));
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_store, value)) {
-      ControllerServiceImpl::setProperty(ClientCertStore.name, value);
+      setPropertyAndHandleError(ClientCertStore.name, std::move(value));
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_cn, value)) {
-      ControllerServiceImpl::setProperty(ClientCertCN.name, value);
+      setPropertyAndHandleError(ClientCertCN.name, std::move(value));
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_key_usage, value)) {
-      ControllerServiceImpl::setProperty(ClientCertKeyUsage.name, value);
+      setPropertyAndHandleError(ClientCertKeyUsage.name, std::move(value));
     }
 #endif  // WIN32
   }

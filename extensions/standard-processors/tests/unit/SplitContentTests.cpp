@@ -34,9 +34,9 @@ std::vector<std::byte> createByteVector(Bytes... bytes) {
 TEST_CASE("WithoutByteSequence") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)}));
 
   REQUIRE_THROWS_WITH(controller.trigger("rub-a-dub-dub"), "Expected valid value from \"SplitContent::Byte Sequence\", but got PropertyNotSet (Property Error:2)");
 }
@@ -44,10 +44,10 @@ TEST_CASE("WithoutByteSequence") {
 TEST_CASE("EmptyFlowFile") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "ub");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "ub"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)}));
 
   auto trigger_results = controller.trigger("");
   auto original = trigger_results.at(processors::SplitContent::Original);
@@ -62,10 +62,10 @@ TEST_CASE("EmptyFlowFile") {
 TEST_CASE("TextFormatLeadingPosition", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "ub");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "ub"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)}));
 
   auto trigger_results = controller.trigger("rub-a-dub-dub");
   auto original = trigger_results.at(processors::SplitContent::Original);
@@ -86,10 +86,10 @@ TEST_CASE("TextFormatTrailingPosition", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "ub");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "ub"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)}));
 
   auto trigger_results = controller.trigger("rub-a-dub-dub");
 
@@ -110,8 +110,8 @@ TEST_CASE("TextFormatSplits", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "test");
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "test"));
 
   constexpr std::string_view input_1 = "This is a test. This is another test. And this is yet another test. Finally this is the last Test.";
   constexpr std::string_view input_2 = "This is a test. This is another test. And this is yet another test. Finally this is the last test";
@@ -124,8 +124,8 @@ TEST_CASE("TextFormatSplits", "[NiFi]") {
       std::make_tuple("true", "Leading", input_2, std::vector<std::string_view>{"This is a ", "test. This is another ", "test. And this is yet another ", "test. Finally this is the last ", "test"}),
       std::make_tuple("true", "Trailing", input_2, std::vector<std::string_view>{"This is a test", ". This is another test", ". And this is yet another test", ". Finally this is the last test"}));
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, keep_byte_sequence);
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, byte_sequence_location);
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, keep_byte_sequence));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, byte_sequence_location));
 
   auto trigger_results = controller.trigger(input);
 
@@ -148,8 +148,8 @@ TEST_CASE("SmallSplits", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "false");
-  split_content->setProperty(SplitContent::ByteSequence.name, "FFFF");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "false"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "FFFF"));
 
   const auto input_data = createByteVector(1, 2, 3, 4, 5, 0xFF, 0xFF, 0xFF, 5, 4, 3, 2, 1);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -173,8 +173,8 @@ TEST_CASE("WithSingleByteSplit", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "false");
-  split_content->setProperty(SplitContent::ByteSequence.name, "FF");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "false"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "FF"));
 
   const auto input_data = createByteVector(1, 2, 3, 4, 5, 0xFF, 5, 4, 3, 2, 1);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -198,8 +198,8 @@ TEST_CASE("WithLargerSplit", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "false");
-  split_content->setProperty(SplitContent::ByteSequence.name, "05050505");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "false"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "05050505"));
 
   const auto input_data = createByteVector(1, 2, 3, 4, 5, 5, 5, 5, 5, 5, 4, 3, 2, 1);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -223,8 +223,8 @@ TEST_CASE("KeepingSequence", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequence.name, "05050505");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "05050505"));
 
   const auto input_data = createByteVector(1, 2, 3, 4, 5, 5, 5, 5, 5, 5, 4, 3, 2, 1);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -248,8 +248,8 @@ TEST_CASE("EndsWithSequence", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "false");
-  split_content->setProperty(SplitContent::ByteSequence.name, "05050505");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "false"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "05050505"));
 
   const auto input_data = createByteVector(1, 2, 3, 4, 5, 5, 5, 5);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -271,8 +271,8 @@ TEST_CASE("EndsWithSequenceAndKeepSequence", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequence.name, "05050505");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "05050505"));
 
   const auto input_data = createByteVector(1, 2, 3, 4, 5, 5, 5, 5);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -294,8 +294,8 @@ TEST_CASE("StartsWithSequence", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "false");
-  split_content->setProperty(SplitContent::ByteSequence.name, "05050505");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "false"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "05050505"));
 
   const auto input_data = createByteVector(5, 5, 5, 5, 1, 2, 3, 4);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -317,9 +317,9 @@ TEST_CASE("StartsWithSequenceAndKeepTrailingSequence", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequence.name, "05050505");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, "Trailing");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "05050505"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, "Trailing"));
 
   const auto input_data = createByteVector(5, 5, 5, 5, 1, 2, 3, 4);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -343,9 +343,9 @@ TEST_CASE("StartsWithSequenceAndKeepLeadingSequence") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequence.name, "05050505");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, "Leading");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "05050505"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, "Leading"));
 
   const auto input_data = createByteVector(5, 5, 5, 5, 1, 2, 3, 4);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -365,9 +365,9 @@ TEST_CASE("StartsWithDoubleSequenceAndKeepLeadingSequence") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequence.name, "05050505");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, "Leading");
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "05050505"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, "Leading"));
 
   const auto input_data = createByteVector(5, 5, 5, 5, 5, 5, 5, 5, 1, 2, 3, 4);
   std::string_view input(reinterpret_cast<const char*>(input_data.data()), input_data.size());
@@ -391,10 +391,10 @@ TEST_CASE("NoSplitterInString", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
 
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, ",");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "false");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, ","));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "false"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)}));
 
   constexpr std::string_view input = "UVAT";
   auto trigger_results = controller.trigger(input);
@@ -437,10 +437,10 @@ TEST_CASE("ByteSequenceAtBufferTargetSize") {
   const std::string separator = utils::string::repeat("b", separator_size);
   const std::string post_fix = utils::string::repeat("c", post_fix_size);
 
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, separator);
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, "Trailing");
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, separator));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, "Trailing"));
 
   auto input = pre_fix + separator + post_fix;
   auto trigger_results = controller.trigger(input);
@@ -460,10 +460,10 @@ TEST_CASE("ByteSequenceAtBufferTargetSize") {
 TEST_CASE("TrickyWithLeading", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "aab");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "aab"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)}));
 
   auto trigger_results = controller.trigger("aaabc");
   auto original = trigger_results.at(processors::SplitContent::Original);
@@ -481,10 +481,10 @@ TEST_CASE("TrickyWithLeading", "[NiFi]") {
 TEST_CASE("TrickyWithTrailing", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "aab");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "aab"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)}));
 
   auto trigger_results = controller.trigger("aaabc");
   auto original = trigger_results.at(processors::SplitContent::Original);
@@ -502,10 +502,10 @@ TEST_CASE("TrickyWithTrailing", "[NiFi]") {
 TEST_CASE("TrickierWithLeading", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "abcd");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "abcd"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)}));
 
   auto trigger_results = controller.trigger("abcabcabcdabc");
   auto original = trigger_results.at(processors::SplitContent::Original);
@@ -523,10 +523,10 @@ TEST_CASE("TrickierWithLeading", "[NiFi]") {
 TEST_CASE("TrickierWithTrailing", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "abcd");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "abcd"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)}));
 
   auto trigger_results = controller.trigger("abcabcabcdabc");
   auto original = trigger_results.at(processors::SplitContent::Original);
@@ -544,10 +544,10 @@ TEST_CASE("TrickierWithTrailing", "[NiFi]") {
 TEST_CASE("OnlyByteSequencesNoKeep", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "ab");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "false");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "ab"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "false"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)}));
 
   auto trigger_results = controller.trigger("ababab");
   auto original = trigger_results.at(processors::SplitContent::Original);
@@ -560,10 +560,10 @@ TEST_CASE("OnlyByteSequencesNoKeep", "[NiFi]") {
 TEST_CASE("OnlyByteSequencesTrailing", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "ab");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "ab"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Trailing)}));
 
   auto trigger_results = controller.trigger("ababab");
   auto original = trigger_results.at(processors::SplitContent::Original);
@@ -580,10 +580,10 @@ TEST_CASE("OnlyByteSequencesTrailing", "[NiFi]") {
 TEST_CASE("OnlyByteSequencesLeading", "[NiFi]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<SplitContent>("SplitContent")};
   const auto split_content = controller.getProcessor();
-  split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)});
-  split_content->setProperty(SplitContent::ByteSequence.name, "ab");
-  split_content->setProperty(SplitContent::KeepByteSequence.name, "true");
-  split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)});
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceFormatProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceFormat::Text)}));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequence.name, "ab"));
+  REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
+  REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)}));
 
   auto trigger_results = controller.trigger("ababab");
   auto original = trigger_results.at(processors::SplitContent::Original);

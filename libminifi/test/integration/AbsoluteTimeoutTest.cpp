@@ -39,8 +39,8 @@ TEST_CASE("TestAbsoluteTimeout", "[httptest]") {
   auto plan = controller.createPlan();
 
   auto processor = plan->addProcessor("InvokeHTTP", "InvokeHTTP");
-  processor->setProperty("Read Timeout", "1 s");
-  processor->setProperty("Remote URL", "http://localhost:" + port);
+  REQUIRE(processor->setProperty("Read Timeout", "1 s"));
+  REQUIRE(processor->setProperty("Remote URL", "http://localhost:" + port));
   processor->setAutoTerminatedRelationships(std::array{core::Relationship{"failure", "d"}});
 
   plan->runNextProcessor();

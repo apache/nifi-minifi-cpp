@@ -57,7 +57,7 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
   void commit() override;
   void rollback() override;
 
-  nonstd::expected<void, std::exception_ptr> rollbackNoThrow() noexcept override;
+  nonstd::expected<void, std::string> rollbackNoThrow() noexcept override;
 
   std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() override {
     return provenance_report_;

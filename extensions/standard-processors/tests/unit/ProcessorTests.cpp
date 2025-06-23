@@ -92,7 +92,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
   auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, repo, repo, content_repo);
 
-  context->setProperty(minifi::processors::GetFile::Directory.name, dir.string());
+  REQUIRE(context->setProperty(minifi::processors::GetFile::Directory.name, dir.string()));
   // replicate 10 threads
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
@@ -174,7 +174,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, repo, repo, content_repo);
 
-  context->setProperty(minifi::processors::GetFile::Directory.name, dir.string());
+  REQUIRE(context->setProperty(minifi::processors::GetFile::Directory.name, dir.string()));
   // replicate 10 threads
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
@@ -235,8 +235,8 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   content_repo->initialize(std::make_shared<minifi::ConfigureImpl>());
   auto processor = std::make_shared<org::apache::nifi::minifi::processors::GenerateFlowFile>("GFF");
   processor->initialize();
-  processor->setProperty(minifi::processors::GenerateFlowFile::BatchSize.name, "10");
-  processor->setProperty(minifi::processors::GenerateFlowFile::FileSize.name, "0");
+  REQUIRE(processor->setProperty(minifi::processors::GenerateFlowFile::BatchSize.name, "10"));
+  REQUIRE(processor->setProperty(minifi::processors::GenerateFlowFile::FileSize.name, "0"));
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::dynamic_pointer_cast<TestRepository>(test_repo);
@@ -547,7 +547,7 @@ void testRPGBypass(const std::string &host, const std::string &port, bool has_er
   auto rpg = std::make_shared<minifi::RemoteProcessorGroupPort>("rpg", "http://localhost:8989/nifi", configuration);
   rpg->initialize();
   REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName.name, host));
-  rpg->setProperty(minifi::RemoteProcessorGroupPort::port.name, port);
+  REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::port.name, port));
   auto context = std::make_shared<core::ProcessContextImpl>(*rpg, nullptr, repo, repo, content_repo);
   auto psf = std::make_shared<core::ProcessSessionFactoryImpl>(context);
   if (has_error) {

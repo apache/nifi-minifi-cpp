@@ -82,15 +82,15 @@ TEST_CASE("Test creating a new node with path node id", "[putopcprocessor]") {
   auto put_opc_processor = controller.getProcessor();
 
   NodeData expected_node{42, server.getNamespaceIndex(), 9999, "everything", "Simulator/Default/Device1", {}};
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, expected_node.path);
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(expected_node.namespace_index));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, std::to_string(expected_node.node_id));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(expected_node.namespace_index));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, expected_node.browse_name);
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, expected_node.path));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(expected_node.namespace_index)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, std::to_string(expected_node.node_id)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(expected_node.namespace_index)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, expected_node.browse_name));
 
   const auto results = controller.trigger(std::to_string(expected_node.data));
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).empty());
@@ -107,16 +107,16 @@ TEST_CASE("Test fetching using custom reference type id path", "[putopcprocessor
   auto put_opc_processor = controller.getProcessor();
 
   NodeData expected_node{42, server.getNamespaceIndex(), 9999, "everything", "Simulator/Default/Device1/INT3/INT4", "Organizes/Organizes/HasComponent/HasComponent"};
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, expected_node.path);
-  put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, expected_node.path_reference_types);
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(expected_node.namespace_index));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, std::to_string(expected_node.node_id));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(expected_node.namespace_index));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, expected_node.browse_name);
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, expected_node.path));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, expected_node.path_reference_types));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(expected_node.namespace_index)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, std::to_string(expected_node.node_id)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(expected_node.namespace_index)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, expected_node.browse_name));
 
   const auto results = controller.trigger(std::to_string(expected_node.data));
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).empty());
@@ -133,17 +133,17 @@ TEST_CASE("Test fetching using custom target reference type id", "[putopcprocess
   auto put_opc_processor = controller.getProcessor();
 
   NodeData expected_node{42, server.getNamespaceIndex(), 9999, "everything", "Simulator/Default/Device1/INT3", "Organizes/Organizes/HasComponent", "Organizes"};
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, expected_node.path);
-  put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, expected_node.path_reference_types);
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(expected_node.namespace_index));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, std::to_string(expected_node.node_id));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(expected_node.namespace_index));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, expected_node.browse_name);
-  put_opc_processor->setProperty(processors::PutOPCProcessor::CreateNodeReferenceType.name, expected_node.target_reference_type);
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, expected_node.path));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, expected_node.path_reference_types));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(expected_node.namespace_index)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, std::to_string(expected_node.node_id)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(expected_node.namespace_index)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, expected_node.browse_name));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CreateNodeReferenceType.name, expected_node.target_reference_type));
 
   const auto results = controller.trigger(std::to_string(expected_node.data));
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).empty());
@@ -156,15 +156,15 @@ TEST_CASE("Test fetching using custom target reference type id", "[putopcprocess
 TEST_CASE("Test missing path reference types", "[putopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1/INT3/INT4");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, "Organizes/Organizes/HasComponent");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, "2");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1/INT3/INT4"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, "Organizes/Organizes/HasComponent"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, "2"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
 
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: Path reference types must be provided for each node pair in the path!");
 }
@@ -175,14 +175,14 @@ TEST_CASE("Test namespace cannot be empty", "[putopcprocessor]") {
   LogTestController::getInstance().setTrace<processors::PutOPCProcessor>();
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1/INT3/INT4");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, "Organizes/Organizes/HasComponent/HasComponent");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, "2");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, "${missing}");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1/INT3/INT4"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, "Organizes/Organizes/HasComponent/HasComponent"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, "2"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, "${missing}"));
 
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
@@ -198,14 +198,14 @@ TEST_CASE("Test valid namespace being required", "[putopcprocessor]") {
   LogTestController::getInstance().setTrace<processors::PutOPCProcessor>();
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1/INT3/INT4");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, "Organizes/Organizes/HasComponent/HasComponent");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, "invalid_index");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1/INT3/INT4"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::PathReferenceTypes.name, "Organizes/Organizes/HasComponent/HasComponent"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, "invalid_index"));
 
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
@@ -218,9 +218,9 @@ TEST_CASE("Test valid namespace being required", "[putopcprocessor]") {
 TEST_CASE("Test username and password should both be provided", "[putopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::Username.name, "user");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::Password.name, "");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::Username.name, "user"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::Password.name, ""));
 
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: Both or neither of Username and Password should be provided!");
 }
@@ -228,9 +228,9 @@ TEST_CASE("Test username and password should both be provided", "[putopcprocesso
 TEST_CASE("Test certificate path and key path should both be provided", "[putopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "cert");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, "");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "cert"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, ""));
 
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: All or none of Certificate path and Key path should be provided!");
 }
@@ -238,9 +238,9 @@ TEST_CASE("Test certificate path and key path should both be provided", "[putopc
 TEST_CASE("Test application uri should be provided if certificate is provided", "[putopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "cert");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, "key");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "cert"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, "key"));
 
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: Application URI must be provided if Certificate path is provided!");
 }
@@ -248,10 +248,10 @@ TEST_CASE("Test application uri should be provided if certificate is provided", 
 TEST_CASE("Test certificate path must be valid", "[putopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "/invalid/cert/path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, "key");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ApplicationURI.name, "appuri");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, "/invalid/cert/path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, "key"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ApplicationURI.name, "appuri"));
 
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: Failed to load cert from path: /invalid/cert/path");
 }
@@ -265,10 +265,10 @@ TEST_CASE("Test key path must be valid", "[putopcprocessor]") {
     cert_file << "test";
     cert_file.close();
   }
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, test_cert_path.string());
-  put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, "/invalid/key");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ApplicationURI.name, "appuri");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, test_cert_path.string()));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, "/invalid/key"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ApplicationURI.name, "appuri"));
 
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: Failed to load key from path: /invalid/key");
 }
@@ -282,11 +282,11 @@ TEST_CASE("Test trusted certs path must be valid", "[putopcprocessor]") {
     cert_file << "test";
     cert_file.close();
   }
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, test_cert_path.string());
-  put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, test_cert_path.string());
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TrustedPath.name, "/invalid/trusted");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ApplicationURI.name, "appuri");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::CertificatePath.name, test_cert_path.string()));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::KeyPath.name, test_cert_path.string()));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TrustedPath.name, "/invalid/trusted"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ApplicationURI.name, "appuri"));
 
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: Failed to load trusted server certs from path: /invalid/trusted");
 }
@@ -294,10 +294,10 @@ TEST_CASE("Test trusted certs path must be valid", "[putopcprocessor]") {
 TEST_CASE("Test invalid int node id", "[putopcprocessor]") {
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
 
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: Simulator/Default/Device1 cannot be used as an int type node ID");
 }
@@ -307,15 +307,15 @@ TEST_CASE("Test invalid parent node id path", "[putopcprocessor]") {
   server.start();
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1/INT99");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1/INT99"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
 
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
@@ -328,15 +328,15 @@ TEST_CASE("Test missing target node id", "[putopcprocessor]") {
   server.start();
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "${missing}");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "${missing}"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
 
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
@@ -351,15 +351,15 @@ TEST_CASE("Test invalid target node id", "[putopcprocessor]") {
   server.start();
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "invalid_int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "invalid_int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
 
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
@@ -374,15 +374,15 @@ TEST_CASE("Test missing target node type", "[putopcprocessor]") {
   server.start();
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "${missing}");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE_FALSE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "${invalid_type}"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
 
   const auto results = controller.trigger("42", {{"invalid_type", "invalid"}});
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
@@ -397,15 +397,15 @@ TEST_CASE("Test value type mismatch", "[putopcprocessor]") {
   server.start();
   SingleProcessorTestController controller{std::make_unique<processors::PutOPCProcessor>("PutOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
-  put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Boolean");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999");
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex()));
-  put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything");
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Boolean"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "9999"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "everything"));
 
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
