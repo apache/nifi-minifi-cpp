@@ -71,14 +71,15 @@ nonstd::expected<void, std::error_code> ProcessContextExpr::setDynamicProperty(s
 std::map<std::string, std::string> ProcessContextExpr::getDynamicProperties(const FlowFile* flow_file) const {
   auto dynamic_props = ProcessContextImpl::getDynamicProperties(flow_file);
   for (auto& [dynamic_property_name, dynamic_property_value] : dynamic_props) {
-    if (!cached_dynamic_expressions_.contains(dynamic_property_name)) {
+    auto cached_dyn_expr_it = cached_dynamic_expressions_.find(dynamic_property_name);
+    if (cached_dyn_expr_it == cached_dynamic_expressions_.end()) {
       auto expression = expression::compile(dynamic_property_value);
       expression::Parameters parameters(this, flow_file);
       dynamic_property_value = expression(parameters).asString();
       cached_dynamic_expressions_.emplace(std::string{dynamic_property_name}, std::move(expression));
     } else {
       expression::Parameters parameters(this, flow_file);
-      dynamic_property_value = cached_dynamic_expressions_[dynamic_property_name](parameters).asString();
+      dynamic_property_value = cached_dyn_expr_it->second(parameters).asString();
     }
   }
   return dynamic_props;
