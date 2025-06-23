@@ -70,17 +70,17 @@ nonstd::expected<void, std::error_code> ProcessContextExpr::setDynamicProperty(s
 
 std::map<std::string, std::string> ProcessContextExpr::getDynamicProperties(const FlowFile* flow_file) const {
   auto dynamic_props = ProcessContextImpl::getDynamicProperties(flow_file);
-  for (auto& [dynamic_property_name, dynamic_property_value] : dynamic_props) {
+  const expression::Parameters params{this, flow_file};
+  for (auto& [dynamic_property_name, dynamic_property_value]: dynamic_props) {
     auto cached_dyn_expr_it = cached_dynamic_expressions_.find(dynamic_property_name);
     if (cached_dyn_expr_it == cached_dynamic_expressions_.end()) {
       auto expression = expression::compile(dynamic_property_value);
-      expression::Parameters parameters(this, flow_file);
-      dynamic_property_value = expression(parameters).asString();
-      cached_dynamic_expressions_.emplace(std::string{dynamic_property_name}, std::move(expression));
-    } else {
-      expression::Parameters parameters(this, flow_file);
-      dynamic_property_value = cached_dyn_expr_it->second(parameters).asString();
+      const auto [it, success] = cached_dynamic_expressions_.emplace(dynamic_property_name, expression);
+      gsl_Assert(success && "getDynamicProperties: no element with the key existed, yet insertion failed");
+      cached_dyn_expr_it = it;
     }
+    auto& expression = cached_dyn_expr_it->second;
+    dynamic_property_value = expression(params).asString();
   }
   return dynamic_props;
 }
