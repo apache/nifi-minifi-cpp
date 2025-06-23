@@ -73,9 +73,12 @@ std::map<std::string, std::string> ProcessContextExpr::getDynamicProperties(cons
   for (auto& [dynamic_property_name, dynamic_property_value] : dynamic_props) {
     if (!cached_dynamic_expressions_.contains(dynamic_property_name)) {
       auto expression = expression::compile(dynamic_property_value);
-      expression::Parameters p(this, flow_file);
-      dynamic_property_value = expression(p).asString();
+      expression::Parameters parameters(this, flow_file);
+      dynamic_property_value = expression(parameters).asString();
       cached_dynamic_expressions_.emplace(std::string{dynamic_property_name}, std::move(expression));
+    } else {
+      expression::Parameters parameters(this, flow_file);
+      dynamic_property_value = cached_dynamic_expressions_[dynamic_property_name](parameters).asString();
     }
   }
   return dynamic_props;
