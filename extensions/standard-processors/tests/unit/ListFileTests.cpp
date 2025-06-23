@@ -83,9 +83,9 @@ ListFileTestFixture::ListFileTestFixture()
   second_sub_file_abs_path_ = minifi::test::utils::putFileToDir(input_dir_ / "second_subdir", "sub_file_two.txt", "some_other_content");
 
   auto last_write_time = *utils::file::FileUtils::last_write_time(standard_file_abs_path_);
-  utils::file::FileUtils::set_last_write_time(empty_file_abs_path_, last_write_time - 1h);
-  utils::file::FileUtils::set_last_write_time(first_sub_file_abs_path_, last_write_time - 2h);
-  utils::file::FileUtils::set_last_write_time(second_sub_file_abs_path_, last_write_time - 3h);
+  REQUIRE(utils::file::FileUtils::set_last_write_time(empty_file_abs_path_, last_write_time - 1h));
+  REQUIRE(utils::file::FileUtils::set_last_write_time(first_sub_file_abs_path_, last_write_time - 2h));
+  REQUIRE(utils::file::FileUtils::set_last_write_time(second_sub_file_abs_path_, last_write_time - 3h));
 #ifndef WIN32
   REQUIRE(0 == utils::file::FileUtils::set_permissions(input_dir_ / "empty_file.txt", 0755));
   REQUIRE(0 == utils::file::FileUtils::set_permissions(input_dir_ / "standard_file.log", 0644));
@@ -231,7 +231,7 @@ TEST_CASE("ListFile sets attributes correctly") {
   minifi::test::SingleProcessorTestController test_controller(std::make_unique<ListFile>("ListFile"));
   const auto list_file = test_controller.getProcessor();
   std::filesystem::path dir = test_controller.createTempDirectory();
-  list_file->setProperty(ListFile::InputDirectory.name, dir.string());
+  REQUIRE(list_file->setProperty(ListFile::InputDirectory.name, dir.string()));
   SECTION("File in subdirectory of input directory") {
     std::filesystem::create_directories(dir / "a" / "b");
     minifi::test::utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
@@ -260,7 +260,7 @@ TEST_CASE("If a second file with the same modification time shows up later, then
   const auto list_file = test_controller.getProcessor();
 
   const auto input_dir = test_controller.createTempDirectory();
-  list_file->setProperty(ListFile::InputDirectory.name, input_dir.string());
+  REQUIRE(list_file->setProperty(ListFile::InputDirectory.name, input_dir.string()));
 
   const auto common_timestamp = std::chrono::file_clock::now();
 

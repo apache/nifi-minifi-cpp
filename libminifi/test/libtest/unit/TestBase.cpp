@@ -419,25 +419,31 @@ bool TestPlan::setDynamicProperty(minifi::core::Processor* processor, std::strin
   return setProperty(processor, std::string(property), std::string(value), true);
 }
 
-bool TestPlan::setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string& property, const std::string& value, bool dynamic) {
+bool TestPlan::setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string& property, const std::string& value, bool dynamic) const {
   if (dynamic) {
-    controller_service_node->setDynamicProperty(property, value);
+    auto result = controller_service_node->setDynamicProperty(property, value);
+    if (!result.has_value()) {
+      logger_->log_debug("Failed to set dynamic property {} directly to {} for controller service {}", property, value, controller_service_node->getName());
+    }
     return controller_service_node->getControllerServiceImplementation()->setDynamicProperty(property, value).has_value();
   } else {
-    controller_service_node->setProperty(property, value);
-    return controller_service_node->getControllerServiceImplementation()->setProperty(property, value).has_value();
+    auto result = controller_service_node->setProperty(property, value);
+    if (!result.has_value()) {
+      logger_->log_debug("Failed to set property {} directly to {} for controller service {}", property, value, controller_service_node->getName());
+    }
+    return  controller_service_node->getControllerServiceImplementation()->setProperty(property, value).has_value();
   }
 }
 
-bool TestPlan::setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const core::PropertyReference& property, std::string_view value) {
+bool TestPlan::setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const core::PropertyReference& property, std::string_view value) const {
   return setProperty(controller_service_node, std::string(property.name), std::string(value), false);
 }
 
-bool TestPlan::setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value) {
+bool TestPlan::setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value) const {
   return setProperty(controller_service_node, std::string(property), std::string(value), false);
 }
 
-bool TestPlan::setDynamicProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value) {
+bool TestPlan::setDynamicProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value) const {
   return setProperty(controller_service_node, std::string(property), std::string(value), true);
 }
 

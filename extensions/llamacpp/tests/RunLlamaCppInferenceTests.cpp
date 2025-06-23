@@ -86,8 +86,8 @@ TEST_CASE("Prompt is generated correctly with default parameters") {
       return std::move(mock_llama_context);
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?"));
 
   auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
   CHECK(test_model_path == "Dummy model");
@@ -131,20 +131,20 @@ TEST_CASE("Prompt is generated correctly with custom parameters") {
       return std::move(mock_llama_context);
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Temperature.name, "0.4");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopK.name, "20");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopP.name, "");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MinP.name, "0.1");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MinKeep.name, "1");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TextContextSize.name, "4096");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::LogicalMaximumBatchSize.name, "1024");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::PhysicalMaximumBatchSize.name, "796");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MaxNumberOfSequences.name, "2");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ThreadsForGeneration.name, "12");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ThreadsForBatchProcessing.name, "8");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::SystemPrompt.name, "Whatever");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Temperature.name, "0.4"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopK.name, "20"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopP.name, ""));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MinP.name, "0.1"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MinKeep.name, "1"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TextContextSize.name, "4096"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::LogicalMaximumBatchSize.name, "1024"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::PhysicalMaximumBatchSize.name, "796"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MaxNumberOfSequences.name, "2"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ThreadsForGeneration.name, "12"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ThreadsForBatchProcessing.name, "8"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::SystemPrompt.name, "Whatever"));
 
   auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
   CHECK(test_model_path == "/path/to/model");
@@ -179,8 +179,8 @@ TEST_CASE("Empty flow file does not include input data in prompt") {
       return std::move(mock_llama_context);
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?"));
 
   auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "", .attributes = {}});
 
@@ -202,20 +202,20 @@ TEST_CASE("Invalid values for optional double type properties throw exception") 
       return std::make_unique<MockLlamaContext>();
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?"));
 
   std::string property_name;
   SECTION("Invalid value for Temperature property") {
-    controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Temperature.name, "invalid_value");
+    REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Temperature.name, "invalid_value"));
     property_name = processors::RunLlamaCppInference::Temperature.name;
   }
   SECTION("Invalid value for Top P property") {
-    controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopP.name, "invalid_value");
+    REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopP.name, "invalid_value"));
     property_name = processors::RunLlamaCppInference::TopP.name;
   }
   SECTION("Invalid value for Min P property") {
-    controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MinP.name, "invalid_value");
+    REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MinP.name, "invalid_value"));
     property_name = processors::RunLlamaCppInference::MinP.name;
   }
 
@@ -231,15 +231,15 @@ TEST_CASE("Top K property empty and invalid values are handled properly") {
       return std::make_unique<MockLlamaContext>();
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?"));
   SECTION("Empty value for Top K property") {
-    controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopK.name, "");
+    REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopK.name, ""));
     auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
     REQUIRE(test_top_k == std::nullopt);
   }
   SECTION("Invalid value for Top K property") {
-    controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopK.name, "invalid_value");
+    REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopK.name, "invalid_value"));
     REQUIRE_THROWS_WITH(controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}}),
                         "Expected parsable int64_t from \"RunLlamaCppInference::Top K\", but got GeneralParsingError (Parsing Error:0)");
   }
@@ -261,8 +261,8 @@ TEST_CASE("Error handling during generation and applying template") {
       return std::move(mock_llama_context);
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?"));
 
   auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
 
@@ -278,8 +278,8 @@ TEST_CASE("Route flow file to failure when prompt and input data is empty") {
       return std::make_unique<MockLlamaContext>();
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, ""));
 
   auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "", .attributes = {}});
 
@@ -297,9 +297,9 @@ TEST_CASE("System prompt is optional") {
       return std::move(mock_llama_context);
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::SystemPrompt.name, "");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::SystemPrompt.name, ""));
 
   auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
 
@@ -320,8 +320,8 @@ TEST_CASE("Test output metrics") {
   auto processor_metrics = processor->getMetrics();
   minifi::test::SingleProcessorTestController controller(std::move(processor));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model");
-  controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?");
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "Dummy model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "Question: What is the answer to life, the universe and everything?"));
 
   controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});
   auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}});

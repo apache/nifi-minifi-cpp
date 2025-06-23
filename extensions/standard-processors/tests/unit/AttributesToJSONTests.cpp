@@ -56,10 +56,10 @@ class AttributesToJSONTestFixture {
     plan_->setProperty(getfile_, org::apache::nifi::minifi::processors::GetFile::Directory, dir_.string());
     plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory, dir_.string());
 
-    update_attribute_->setDynamicProperty("my_attribute", "my_value");
-    update_attribute_->setDynamicProperty("my_attribute_1", "my_value_1");
-    update_attribute_->setDynamicProperty("other_attribute", "other_value");
-    update_attribute_->setDynamicProperty("empty_attribute", "");
+    REQUIRE(update_attribute_->setDynamicProperty("my_attribute", "my_value"));
+    REQUIRE(update_attribute_->setDynamicProperty("my_attribute_1", "my_value_1"));
+    REQUIRE(update_attribute_->setDynamicProperty("other_attribute", "other_value"));
+    REQUIRE(update_attribute_->setDynamicProperty("empty_attribute", ""));
 
     minifi::test::utils::putFileToDir(dir_, TEST_FILE_NAME, TEST_FILE_CONTENT);
   }
@@ -150,7 +150,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes to a flo
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes with special characters to a flowfile attribute", "[AttributesToJSONTests]") {
-  update_attribute_->setDynamicProperty("special_attribute", "\\\"");
+  REQUIRE(update_attribute_->setDynamicProperty("special_attribute", "\\\""));
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList, "special_attribute");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();

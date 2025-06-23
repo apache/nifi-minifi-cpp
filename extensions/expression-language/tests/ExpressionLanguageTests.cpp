@@ -214,7 +214,7 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   plan->setProperty(get_file, minifi::processors::GetFile::Directory, in_dir.string());
   plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile, "false");
   auto update = plan->addProcessor("UpdateAttribute", "UpdateAttribute", core::Relationship("success", "description"), true);
-  update->setDynamicProperty("prop_attr", "${'nifi.my.own.property'}_added");
+  REQUIRE(update->setDynamicProperty("prop_attr", "${'nifi.my.own.property'}_added"));
   plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
   auto extract_text = plan->addProcessor("ExtractText", "ExtractText", core::Relationship("success", "description"), true);
   plan->setProperty(extract_text, minifi::processors::ExtractText::Attribute, "extracted_attr_name");

@@ -42,9 +42,9 @@ TEST_CASE("Statement from processor property") {
     {"sql.args.1.value", "42"},
   });
 
-  sql_proc->setProperty(
+  REQUIRE(sql_proc->setProperty(
       "SQL Statement",
-      "INSERT INTO test_table (int_col, text_col) VALUES (?, 'asdf')");
+      "INSERT INTO test_table (int_col, text_col) VALUES (?, 'asdf')"));
 
   plan->run();
 
@@ -98,9 +98,9 @@ TEST_CASE("PutSQL routes to failure on malformed statement") {
 //    });
 //  }
 
-  sql_proc->setProperty(
+  REQUIRE(sql_proc->setProperty(
       "SQL Statement",
-      "INSERT INTO test_table (int_col, text_col) VALUES (?, 'asdf')");
+      "INSERT INTO test_table (int_col, text_col) VALUES (?, 'asdf')"));
 
   plan->run();
 

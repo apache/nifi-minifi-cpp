@@ -27,9 +27,12 @@ namespace org::apache::nifi::minifi {
 
 utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  if (this->running_ && processor->isRunning()) {
+  if (running_ && processor->isRunning()) {
     const auto trigger_start_time = std::chrono::steady_clock::now();
-    this->triggerAndCommit(processor, processContext, sessionFactory);
+    auto result = triggerAndCommit(processor, processContext, sessionFactory);
+    if (!result) {
+      logger_->log_warn("Trigger and commit failed for processor {}", processor->getName());
+    }
 
     const auto next_scheduled_run = trigger_start_time + processor->getSchedulingPeriod();
     const auto yield_expiration_time = processor->getYieldExpirationTime();

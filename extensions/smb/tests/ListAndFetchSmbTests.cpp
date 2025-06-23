@@ -55,7 +55,7 @@ TEST_CASE("ListSmb and FetchSmb work together") {
 
   mock_smb_connection_controller_service->setPath(controller.createTempDirectory());
   constexpr std::string_view content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus malesuada elit odio, sit amet viverra ante venenatis eget.";
-  mock_smb_connection_controller_service->addFile("input_dir/sub_dir/b.foo", content, 5min);
+  REQUIRE(mock_smb_connection_controller_service->addFile("input_dir/sub_dir/b.foo", content, 5min));
 
   SECTION("With Input Directory") {
     plan->setProperty(list_smb, ListSmb::InputDirectory, "input_dir");

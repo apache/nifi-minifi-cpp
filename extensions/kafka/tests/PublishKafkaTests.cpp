@@ -27,20 +27,20 @@ TEST_CASE("Scheduling should fail when batch size is larger than the max queue m
   LogTestController::getInstance().setTrace<processors::PublishKafka>();
   SingleProcessorTestController test_controller(std::make_unique<processors::PublishKafka>("PublishKafka"));
   const auto publish_kafka = test_controller.getProcessor();
-  publish_kafka->setProperty(processors::PublishKafka::ClientName.name, "test_client");
-  publish_kafka->setProperty(processors::PublishKafka::SeedBrokers.name, "test_seedbroker");
-  publish_kafka->setProperty(processors::PublishKafka::QueueBufferMaxMessage.name, "1000");
-  publish_kafka->setProperty(processors::PublishKafka::BatchSize.name, "1500");
+  REQUIRE(publish_kafka->setProperty(processors::PublishKafka::ClientName.name, "test_client"));
+  REQUIRE(publish_kafka->setProperty(processors::PublishKafka::SeedBrokers.name, "test_seedbroker"));
+  REQUIRE(publish_kafka->setProperty(processors::PublishKafka::QueueBufferMaxMessage.name, "1000"));
+  REQUIRE(publish_kafka->setProperty(processors::PublishKafka::BatchSize.name, "1500"));
   REQUIRE_THROWS_WITH(test_controller.trigger(""), "Process Schedule Operation: Invalid configuration: Batch Size cannot be larger than Queue Max Message");
 }
 
 TEST_CASE("Compress Codec property") {
   using processors::PublishKafka;
   SingleProcessorTestController test_controller(std::make_unique<PublishKafka>("PublishKafka"));
-  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::ClientName.name, "test_client");
-  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::SeedBrokers.name, "test_seedbroker");
-  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::Topic.name, "test_topic");
-  test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::MessageTimeOut.name, "10ms");
+  REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::ClientName.name, "test_client"));
+  REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::SeedBrokers.name, "test_seedbroker"));
+  REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::Topic.name, "test_topic"));
+  REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::MessageTimeOut.name, "10ms"));
 
   SECTION("none") {
     REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::CompressCodec.name, "none"));

@@ -79,13 +79,22 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
     } catch (const std::exception& exception) {
       logger_->log_warn("Caught \"{}\" ({}) during ProcessSession::commit after triggering processor: {} ({})",
       exception.what(), typeid(exception).name(), processor->getUUIDStr(), processor->getName());
-      process_session->rollbackNoThrow();
+      auto rollback_result = process_session->rollbackNoThrow();
+      if (!rollback_result) {
+        logger_->log_warn("Rollback after commit failure failed with: {}", rollback_result.error());
+      }
     } catch (...) {
       logger_->log_warn("Caught unknown exception during ProcessSession::commit after triggering processor: {} ({})", processor->getUUIDStr(), processor->getName());
-      process_session->rollbackNoThrow();
+      auto rollback_result = process_session->rollbackNoThrow();
+      if (!rollback_result) {
+        logger_->log_warn("Rollback after commit failure failed with: {}", rollback_result.error());
+      }
     }
   } else {
-    process_session->rollbackNoThrow();
+    auto rollback_result = process_session->rollbackNoThrow();
+    if (!rollback_result) {
+      logger_->log_warn("Rollback after triggering processor failed with: {}", rollback_result.error());
+    }
   }
 
   if (processor->isYield()) {

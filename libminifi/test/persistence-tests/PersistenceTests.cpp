@@ -149,14 +149,14 @@ std::unique_ptr<MergeContent> setupMergeProcessor(const utils::Identifier& id) {
   processor->initialize();
   processor->setAutoTerminatedRelationships(std::array{core::Relationship{"original", "d"}});
 
-  processor->setProperty(MergeContent::MergeFormat.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE});
-  processor->setProperty(MergeContent::MergeStrategy.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK});
-  processor->setProperty(MergeContent::DelimiterStrategy.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT});
-  processor->setProperty(MergeContent::MinEntries.name, "3");
-  processor->setProperty(MergeContent::Header.name, "_Header_");
-  processor->setProperty(MergeContent::Footer.name, "_Footer_");
-  processor->setProperty(MergeContent::Demarcator.name, "_Demarcator_");
-  processor->setProperty(MergeContent::MaxBinAge.name, "1 h");
+  REQUIRE(processor->setProperty(MergeContent::MergeFormat.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE}));
+  REQUIRE(processor->setProperty(MergeContent::MergeStrategy.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK}));
+  REQUIRE(processor->setProperty(MergeContent::DelimiterStrategy.name, std::string{org::apache::nifi::minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT}));
+  REQUIRE(processor->setProperty(MergeContent::MinEntries.name, "3"));
+  REQUIRE(processor->setProperty(MergeContent::Header.name, "_Header_"));
+  REQUIRE(processor->setProperty(MergeContent::Footer.name, "_Footer_"));
+  REQUIRE(processor->setProperty(MergeContent::Demarcator.name, "_Demarcator_"));
+  REQUIRE(processor->setProperty(MergeContent::MaxBinAge.name, "1 h"));
 
   return processor;
 }

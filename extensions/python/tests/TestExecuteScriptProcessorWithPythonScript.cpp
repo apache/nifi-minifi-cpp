@@ -33,8 +33,8 @@ TEST_CASE("Python: hello world") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
   const auto execute_script = controller.getProcessor();
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(print("Hello world!"))");
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(print("Hello world!"))"));
 
   CHECK_NOTHROW(controller.trigger());
 }
@@ -45,8 +45,8 @@ TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
 
   auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(execute_script, ExecuteScript::ScriptEngine, "");
-  plan->setProperty(execute_script, ExecuteScript::ScriptFile, "/path/to/script.py");
+  REQUIRE_FALSE(plan->setProperty(execute_script, ExecuteScript::ScriptEngine, ""));
+  REQUIRE(plan->setProperty(execute_script, ExecuteScript::ScriptFile, "/path/to/script.py"));
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
@@ -57,7 +57,7 @@ TEST_CASE("Neither script body nor script file is set", "[executescriptMisconfig
 
   auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(execute_script, ExecuteScript::ScriptEngine, "python");
+  REQUIRE(plan->setProperty(execute_script, ExecuteScript::ScriptEngine, "python"));
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
@@ -68,12 +68,12 @@ TEST_CASE("Test both script body and script file set", "[executescriptMisconfigu
 
   auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(execute_script, ExecuteScript::ScriptEngine, "python");
-  plan->setProperty(execute_script, ExecuteScript::ScriptFile, "/path/to/script.py");
-  plan->setProperty(execute_script, ExecuteScript::ScriptBody, R"(
+  REQUIRE(plan->setProperty(execute_script, ExecuteScript::ScriptEngine, "python"));
+  REQUIRE(plan->setProperty(execute_script, ExecuteScript::ScriptFile, "/path/to/script.py"));
+  REQUIRE(plan->setProperty(execute_script, ExecuteScript::ScriptBody, R"(
     def onTrigger(context, session):
       log.info('hello from python')
-  )");
+  )"));
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
@@ -83,14 +83,14 @@ TEST_CASE("Python: Test session get should return None if there are no flowfiles
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
 def onTrigger(context, session):
   flow_file = session.get()
 
   if flow_file is not None:
     raise Exception("Didn't expect flow_file")
-  )");
+  )"));
   auto result = controller.trigger();
   REQUIRE(result.at(ExecuteScript::Success).empty());
   REQUIRE(result.at(ExecuteScript::Failure).empty());
@@ -101,8 +101,8 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") {
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
 import codecs
 
 class ReadCallback(object):
@@ -118,7 +118,7 @@ def onTrigger(context, session):
     log.info('got flow file: %s' % flow_file.getAttribute('filename'))
     session.read(flow_file, ReadCallback())
     session.transfer(flow_file, REL_SUCCESS)
-  )");
+  )"));
 
   auto result = controller.trigger("tempFile");
   REQUIRE(result.at(ExecuteScript::Success).size() == 1);
@@ -130,8 +130,8 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") {
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
 class WriteCallback(object):
   def process(self, output_stream):
     new_content = 'hello 2'.encode('utf-8')
@@ -144,7 +144,7 @@ def onTrigger(context, session):
     log.info('got flow file: %s' % flow_file.getAttribute('filename'))
     session.write(flow_file, WriteCallback())
     session.transfer(flow_file, REL_SUCCESS)
-  )");
+  )"));
 
   auto result = controller.trigger("tempFile");
   REQUIRE(result.at(ExecuteScript::Success).size() == 1);
@@ -156,15 +156,15 @@ TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") {
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
 def onTrigger(context, session):
   flow_file = session.create()
 
   if flow_file is not None:
     log.info('created flow file: %s' % flow_file.getAttribute('filename'))
     session.transfer(flow_file, REL_SUCCESS)
-  )");
+  )"));
 
 
   auto result = controller.trigger();
@@ -178,8 +178,8 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
 def onTrigger(context, session):
   flow_file = session.get()
 
@@ -190,7 +190,7 @@ def onTrigger(context, session):
     log.info('got flow file attr \'test_attr\': %s' % attr)
     flow_file.updateAttribute('test_attr', str(int(attr) + 1))
     session.transfer(flow_file, REL_SUCCESS)
-  )");
+  )"));
 
   auto result = controller.trigger("tempFile");
   REQUIRE(result.at(ExecuteScript::Success).size() == 1);
@@ -203,12 +203,12 @@ TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextPr
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
 def onTrigger(context, session):
   script_engine = context.getProperty('Script Engine')
   log.info('got Script Engine property: %s' % script_engine)
-  )");
+  )"));
 
   auto result_without_input = controller.trigger();
   REQUIRE(result_without_input.at(ExecuteScript::Success).empty());
@@ -226,9 +226,9 @@ TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleD
 
   const auto script_files_directory =  minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "test_python_scripts";
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptFile.name, (script_files_directory / "foo_bar_processor.py").string());
-  execute_script->setProperty(ExecuteScript::ModuleDirectory.name, (script_files_directory / "foo_modules" / "foo.py").string() + "," + (script_files_directory / "bar_modules").string());
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptFile.name, (script_files_directory / "foo_bar_processor.py").string()));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ModuleDirectory.name, (script_files_directory / "foo_modules" / "foo.py").string() + "," + (script_files_directory / "bar_modules").string()));
 
   auto result = controller.trigger("tempFile");
   REQUIRE(result.at(ExecuteScript::Success).size() == 1);
@@ -242,8 +242,8 @@ TEST_CASE("Python: Non existent script file should throw", "[executescriptPython
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptFile.name, "/tmp/non-existent-file");
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptFile.name, "/tmp/non-existent-file"));
 
   REQUIRE_THROWS_AS(controller.trigger("tempFile"), minifi::Exception);
 }
@@ -252,11 +252,11 @@ TEST_CASE("Python can remove flowfiles", "[ExecuteScript]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<ExecuteScript>();
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
 def onTrigger(context, session):
   flow_file = session.get()
-  session.remove(flow_file))");
+  session.remove(flow_file))"));
   auto result = controller.trigger("hello");
   REQUIRE(result.at(ExecuteScript::Success).empty());
   REQUIRE(result.at(ExecuteScript::Failure).empty());
@@ -266,8 +266,8 @@ TEST_CASE("Python can store states in StateManager", "[ExecuteScript]") {
   minifi::test::SingleProcessorTestController controller{std::make_unique<ExecuteScript>("ExecuteScript")};
   const auto execute_script = controller.getProcessor();
   LogTestController::getInstance().setTrace<minifi::processors::ExecuteScript>();
-  execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.name,
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name,
       R"(
 def onTrigger(context, session):
   state_manager = context.getStateManager()
@@ -279,7 +279,7 @@ def onTrigger(context, session):
   log.info('python_trigger_count: ' + str(python_trigger_count))
   state['python_trigger_count'] =str(int(python_trigger_count) + 1)
   state_manager.set(state)
-)");
+)"));
 
   for (size_t i = 0; i < 4; ++i) {
     controller.trigger();

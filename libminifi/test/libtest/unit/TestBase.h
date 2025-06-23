@@ -228,9 +228,9 @@ class TestPlan {
   bool setProperty(minifi::core::Processor* processor, std::string_view property, std::string_view value);
   bool setDynamicProperty(minifi::core::Processor* processor, std::string_view property, std::string_view value);
 
-  static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const core::PropertyReference& property, std::string_view value);
-  static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value);
-  static bool setDynamicProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value);
+  bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const core::PropertyReference& property, std::string_view value) const;
+  bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value) const;
+  bool setDynamicProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value) const;
 
   void reset(bool reschedule = false);
   void increment_location() { ++location; }
@@ -331,7 +331,7 @@ class TestPlan {
 
  private:
   bool setProperty(minifi::core::Processor* processor, const std::string& property, const std::string& value, bool dynamic);
-  static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string& property, const std::string& value, bool dynamic);
+  bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string& property, const std::string& value, bool dynamic) const;
 
   std::shared_ptr<logging::Logger> logger_;
 };

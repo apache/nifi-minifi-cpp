@@ -320,7 +320,10 @@ void ProcessGroup::updatePropertyValue(const std::string& processorName, const s
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto& processor : processors_) {
     if (processor->getName() == processorName) {
-      processor->setProperty(propertyName, propertyValue);
+      auto result = processor->setProperty(propertyName, propertyValue);
+      if (!result) {
+        logger_->log_error("Failed to update property '{}' for processor '{}': {}", propertyName, processorName, result.error().message());
+      }
     }
   }
   for (auto& processGroup : child_process_groups_) {

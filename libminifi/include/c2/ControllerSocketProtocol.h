@@ -84,7 +84,7 @@ class ControllerSocketProtocol {
   // These commands are handled on a separate thread, and while these commands are handled other incoming commands are dropped
   class SocketRestartCommandProcessor {
    public:
-    explicit SocketRestartCommandProcessor(state::StateMonitor& update_sink_);
+    explicit SocketRestartCommandProcessor(state::StateMonitor& update_sink_, const std::shared_ptr<core::logging::Logger>& logger);
     ~SocketRestartCommandProcessor();
 
     enum class Command {
@@ -112,6 +112,7 @@ class ControllerSocketProtocol {
     std::thread command_processor_thread_;
     std::atomic_bool running_ = true;
     utils::ConditionConcurrentQueue<CommandData> command_queue_;
+    std::shared_ptr<core::logging::Logger> logger_;
   };
 
   SocketRestartCommandProcessor socket_restart_processor_;
