@@ -100,3 +100,32 @@ TEST_CASE("ProcessContextExpr can update existing processor properties", "[setPr
     }
   }
 }
+
+TEST_CASE("ProcessContextExpr can use expression language in dynamic properties", "[getDynamicProperty][getDynamicProperties]") {
+  TestController test_controller;
+  std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
+  std::ignore = test_plan->addProcessor("DummyProcessor", "dummy_processor");
+  test_plan->runNextProcessor();
+  const auto context = test_plan->getCurrentContext();
+  REQUIRE(dynamic_pointer_cast<core::ProcessContextExpr>(context) != nullptr);
+
+  core::FlowFileImpl flow_file;
+  flow_file.setAttribute("attr_a", "myAttributeValue");
+  context->setDynamicProperty("MyDynamicProperty", "${attr_a}");
+
+  SECTION("Use getDynamicProperties") {
+    for (size_t i = 0; i < 2; ++i) {
+      auto properties = context->getDynamicProperties(&flow_file);
+      REQUIRE(properties.size() == 1);
+      CHECK(properties["MyDynamicProperty"] == "myAttributeValue");
+    }
+  }
+
+  SECTION("Use getDynamicProperty") {
+    for (size_t i = 0; i < 2; ++i) {
+      auto property = context->getDynamicProperty("MyDynamicProperty", &flow_file);
+      REQUIRE(property);
+      CHECK(*property == "myAttributeValue");
+    }
+  }
+}
