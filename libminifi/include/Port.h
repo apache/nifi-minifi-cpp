@@ -41,6 +41,8 @@ class PortImpl final : public ForwardingNode {
     return port_type_;
   }
 
+  ~PortImpl() override = default;
+
   MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
@@ -57,6 +59,8 @@ class Port : public core::Processor {
     gsl_Assert(port_impl);
     return port_impl->getPortType();
   }
+
+  ~Port() override = default;
 };
 
 }  // namespace org::apache::nifi::minifi

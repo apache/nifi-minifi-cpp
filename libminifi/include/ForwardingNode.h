@@ -41,6 +41,8 @@ class ForwardingNode : public core::ProcessorImpl {
   void initialize() override;
 
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
+
+  ~ForwardingNode() override = default;
 };
 
 }  // namespace org::apache::nifi::minifi

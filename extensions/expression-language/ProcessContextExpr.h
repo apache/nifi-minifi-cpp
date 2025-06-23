@@ -39,7 +39,7 @@ class ProcessContextExpr final : public core::ProcessContextImpl {
 
   nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
   nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile*) const override;
-//
+
   nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
   nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
 
