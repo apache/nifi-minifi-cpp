@@ -339,8 +339,8 @@ SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 include(Extensions)
 
 add_subdirectory(minifi-api)
-add_subdirectory(utils)
-add_subdirectory(extension-utils)
+add_subdirectory(core-framework)
+add_subdirectory(extension-framework)
 add_subdirectory(libminifi)
 
 if (ENABLE_ALL OR ENABLE_AZURE)
