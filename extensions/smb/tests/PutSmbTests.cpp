@@ -23,6 +23,7 @@
 #include "unit/SingleProcessorTestController.h"
 #include "range/v3/algorithm/count_if.hpp"
 #include "core/Resource.h"
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::smb::test {
 
@@ -35,7 +36,7 @@ std::string checkFileContent(const std::filesystem::path& path) {
 }
 
 TEST_CASE("PutSmb invalid network path") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<PutSmb>("PutSmb")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<PutSmb>("PutSmb")};
   const auto put_smb = controller.getProcessor();
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
   REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Hostname, utils::OsUtils::getHostName().value_or("localhost")));
@@ -48,7 +49,7 @@ TEST_CASE("PutSmb invalid network path") {
 }
 
 TEST_CASE("PutSmb conflict resolution test") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<PutSmb>("PutSmb")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<PutSmb>("PutSmb")};
   const auto put_smb = controller.getProcessor();
 
   auto temp_directory = controller.createTempDirectory();
@@ -133,7 +134,7 @@ TEST_CASE("PutSmb conflict resolution test") {
 }
 
 TEST_CASE("PutSmb create missing dirs test") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<PutSmb>("PutSmb")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<PutSmb>("PutSmb")};
   const auto put_smb = controller.getProcessor();
 
   auto temp_directory = controller.createTempDirectory();
