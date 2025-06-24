@@ -69,13 +69,9 @@ The executable is stored in the bin directory and is titled minifi-controller. A
 
 ### SSL
 
-To use secure connection for the C2 commands, both the MiNiFi C++ agent and the controller have to be started with either of the following configurations.
+To use secure connection for the C2 commands, both the MiNiFi C++ agent and the controller have to be started with the following configurations.
 
-To retrieve the SSL configuration properties from the flow config, set the following property to the name of the SSL context service holding the information:
-
-    $ controller.ssl.context.service=SSLContextService
-
-Otherwise if you prefer to retrieve the SSL configuration properties from the minifi.properties file set the nifi.remote.input.secure property value to true and configure the security properties in the minifi.properties file.
+To retrieve the SSL configuration properties from the minifi.properties file set the nifi.remote.input.secure property value to true and configure the security properties in the minifi.properties file.
 
     $ nifi.remote.input.secure=true
     $ nifi.security.client.certificate=/path/to/cert/mycert.crt
