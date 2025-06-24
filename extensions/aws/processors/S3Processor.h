@@ -51,6 +51,7 @@ class S3Processor : public AwsProcessor {
   EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(AwsProcessor::Properties, std::to_array<core::PropertyReference>({Bucket}));
 
   using AwsProcessor::AwsProcessor;
+  ~S3Processor() override = default;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 

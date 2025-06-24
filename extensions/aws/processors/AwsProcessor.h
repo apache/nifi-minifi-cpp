@@ -94,7 +94,7 @@ struct CommonProperties {
   std::string endpoint_override_url;
 };
 
-class AwsProcessor : public core::ProcessorImpl {
+class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr auto AccessKey = core::PropertyDefinitionBuilder<>::createProperty("Access Key")
       .withDescription("AWS account access key")
@@ -170,6 +170,7 @@ class AwsProcessor : public core::ProcessorImpl {
   });
 
   using ProcessorImpl::ProcessorImpl;
+  ~AwsProcessor() override = default;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 

@@ -24,11 +24,7 @@
 #include "io/OutputStream.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 size_t OutputStream::write(const std::vector<uint8_t>& buffer, size_t len) {
   if (buffer.size() < len) {
@@ -77,8 +73,4 @@ size_t OutputStream::write_str(const char* str, uint32_t len, bool widen) {
   return ret + write(reinterpret_cast<const uint8_t *>(str), len);
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::io

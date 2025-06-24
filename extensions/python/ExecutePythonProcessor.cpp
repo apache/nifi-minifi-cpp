@@ -142,7 +142,6 @@ void ExecutePythonProcessor::loadScript() {
     }
     loadScriptFromFile();
     last_script_write_time_ = utils::file::last_write_time(script_file_path_);
-    return;
   }
 }
 

@@ -83,7 +83,7 @@ class MockKinesisClient final : public Aws::Kinesis::KinesisClient {
   mutable uint32_t sequence_number_ = 0;
 };
 
-class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream {
+class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   static constexpr const char* Description = "PutKinesisStreamMocked";
 
