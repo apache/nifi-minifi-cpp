@@ -57,9 +57,7 @@ void ExecutePythonProcessor::initializeScript() {
 void ExecutePythonProcessor::initialize() {
   initializeScript();
   std::vector<core::PropertyReference> all_properties{Properties.begin(), Properties.end()};
-  for (auto& python_prop : python_properties_) {
-    all_properties.push_back(python_prop.getReference());
-  }
+  ranges::transform(python_properties_, std::back_inserter(all_properties), &core::Property::getReference);
   setSupportedProperties(all_properties);
   setSupportedRelationships(Relationships);
   logger_->log_debug("Processor has already been initialized, returning...");
