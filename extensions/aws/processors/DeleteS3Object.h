@@ -35,7 +35,7 @@ class FlowProcessorS3TestsFixture;
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-class DeleteS3Object : public S3Processor {
+class DeleteS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr const char* Description = "Deletes FlowFiles on an Amazon S3 Bucket. If attempting to delete a file that does not exist, FlowFile is routed to success.";
 
