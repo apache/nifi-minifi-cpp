@@ -37,7 +37,7 @@ class FlowProcessorS3TestsFixture;
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-class FetchS3Object : public S3Processor {
+class FetchS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr const char* Description = "This Processor retrieves the contents of an S3 Object and writes it to the content of a FlowFile.";
 

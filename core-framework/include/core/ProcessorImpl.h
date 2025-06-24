@@ -77,8 +77,10 @@ class ProcessorImpl : public virtual ProcessorApi {
  public:
   explicit ProcessorImpl(ProcessorMetadata info);
 
-  ProcessorImpl(const ProcessorImpl& parent) = delete;
-  ProcessorImpl& operator=(const ProcessorImpl& parent) = delete;
+  ProcessorImpl(const ProcessorImpl&) = delete;
+  ProcessorImpl(ProcessorImpl&&) = delete;
+  ProcessorImpl& operator=(const ProcessorImpl&) = delete;
+  ProcessorImpl& operator=(ProcessorImpl&&) = delete;
 
   ~ProcessorImpl() override;
 

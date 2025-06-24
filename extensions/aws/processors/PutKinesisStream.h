@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-class PutKinesisStream : public AwsProcessor {
+class PutKinesisStream : public AwsProcessor {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr const char* Description = "Sends the contents to a specified Amazon Kinesis. In order to send data to Kinesis, the stream name has to be specified.";
 

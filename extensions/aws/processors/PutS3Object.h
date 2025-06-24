@@ -43,7 +43,7 @@ class FlowProcessorS3TestsFixture;
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-class PutS3Object : public S3Processor {
+class PutS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   static constexpr auto CANNED_ACLS = minifi::utils::getKeys(minifi::aws::s3::CANNED_ACL_MAP);
   static constexpr auto STORAGE_CLASSES = minifi::utils::getKeys(minifi::aws::s3::STORAGE_CLASS_MAP);

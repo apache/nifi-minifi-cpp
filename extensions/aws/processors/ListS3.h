@@ -32,7 +32,7 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-class ListS3 : public S3Processor {
+class ListS3 : public S3Processor {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr const char* Description = "This Processor retrieves a listing of objects from an Amazon S3 bucket.";
 

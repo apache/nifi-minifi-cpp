@@ -45,10 +45,10 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::core {
 
 ProcessorImpl::ProcessorImpl(ProcessorMetadata info)
-    : info_(info),
+    : info_(std::move(info)),
       trigger_when_empty_(false),
       metrics_(std::make_shared<ProcessorMetricsImpl>(*this)),
-      logger_(info.logger) {
+      logger_(info_.logger) {
   logger_->log_debug("Processor {} created with uuid {}", getName(), getUUIDStr());
 }
 
