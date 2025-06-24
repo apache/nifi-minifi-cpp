@@ -33,10 +33,10 @@ using minifi::processors::ReadFromFlowFileTestProcessor;
 TEST_CASE("ListSmb and FetchSmb work together") {
   TestController controller;
   auto plan = controller.createPlan();
-  auto list_smb = dynamic_cast<ListSmb*>(plan->addProcessor("ListSmb", "list_smb"));
-  auto fetch_smb = dynamic_cast<FetchSmb*>(plan->addProcessor("FetchSmb", "fetch_smb"));
-  auto read_from_success_relationship = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
-  auto read_from_failure_relationship = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
+  auto list_smb = plan->addProcessor<ListSmb>("list_smb");
+  auto fetch_smb = plan->addProcessor<ListSmb>("fetch_smb");
+  auto read_from_success_relationship = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_success_relationship");
+  auto read_from_failure_relationship = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_failure_relationship");
 
   plan->addConnection(list_smb, ListSmb::Success, fetch_smb);
 
