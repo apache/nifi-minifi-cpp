@@ -124,8 +124,8 @@ TEST_CASE("Test replacement with missing token in context") {
 }
 
 TEST_CASE("Sensitive property parameter replacement is not supported") {
-  utils::crypto::Bytes secret_key = utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
-  utils::crypto::EncryptionProvider encryption_provider{secret_key};
+  minifi::utils::crypto::Bytes secret_key = minifi::utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
+  minifi::utils::crypto::EncryptionProvider encryption_provider{secret_key};
   core::SensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more", encryption_provider);
   core::ParameterContext context("test_context");
   context.addParameter(core::Parameter{"what", "", false, false, "love"});
@@ -141,19 +141,19 @@ TEST_CASE("Parameter context is not provided when parameter is referenced") {
 TEST_CASE("Replace only escaped tokens") {
   core::NonSensitiveParameterTokenParser non_sensitive_parser("No ##{parameters} are ####{present}");
   REQUIRE(non_sensitive_parser.replaceParameters(nullptr) == "No #{parameters} are ##{present}");
-  utils::crypto::Bytes secret_key = utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
-  utils::crypto::EncryptionProvider encryption_provider{secret_key};
+  minifi::utils::crypto::Bytes secret_key = minifi::utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
+  minifi::utils::crypto::EncryptionProvider encryption_provider{secret_key};
   core::SensitiveParameterTokenParser sensitive_parser("No ##{parameters} are ####{present}", encryption_provider);
   REQUIRE(sensitive_parser.replaceParameters(nullptr) == "No #{parameters} are ##{present}");
 }
 
 TEST_CASE("Test sensitive token replacement") {
   core::ParameterContext context("test_context");
-  utils::crypto::Bytes secret_key = utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
-  utils::crypto::EncryptionProvider encryption_provider{secret_key};
+  minifi::utils::crypto::Bytes secret_key = minifi::utils::string::from_hex("cb76fe6fe4cbfdc3770c0cb0afc910f81ced4d436b11f691395fc2a9dbea27ca");
+  minifi::utils::crypto::EncryptionProvider encryption_provider{secret_key};
   core::SensitiveParameterTokenParser parser("What is #{what}, baby don't hurt #{who}, don't hurt #{who}, no more", encryption_provider);
-  auto value1 = utils::crypto::property_encryption::encrypt("love", encryption_provider);
-  auto value2 = utils::crypto::property_encryption::encrypt("me", encryption_provider);
+  auto value1 = minifi::utils::crypto::property_encryption::encrypt("love", encryption_provider);
+  auto value2 = minifi::utils::crypto::property_encryption::encrypt("me", encryption_provider);
   context.addParameter(core::Parameter{"what", "", true, false, value1});
   context.addParameter(core::Parameter{"who", "", true, false, value2});
   REQUIRE(parser.replaceParameters(&context) == "What is love, baby don't hurt me, don't hurt me, no more");

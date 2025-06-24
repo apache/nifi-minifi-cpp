@@ -45,8 +45,8 @@ TEST_CASE("getKeys() works correctly and is constexpr") {
 
 inline constexpr std::array<std::pair<int, int>, 3> global_mapping{{ {1, 1}, {2, 4}, {3, 27} }};
 template<int> struct is_usable_as_constant_expression {};
-template<int key> concept does_compile = requires { is_usable_as_constant_expression<utils::at(global_mapping, key)>(); };
-template<int key> concept does_not_compile = !does_compile<key>;
+template<int key> concept compiles_as_a_constant_expression = requires { is_usable_as_constant_expression<utils::at(global_mapping, key)>(); };
+template<int key> concept does_not_compile_as_a_constant_expression = !compiles_as_a_constant_expression<key>;
 
 TEST_CASE("at() works correctly and is constexpr") {
   static constexpr std::array<std::pair<int, std::string_view>, 3> mapping{{ {1, "one"}, {2, "two"}, {3, "three"} }};
@@ -56,8 +56,8 @@ TEST_CASE("at() works correctly and is constexpr") {
   int one = 1;
   CHECK(utils::at(mapping, one) == "one");  // non-constexpr argument is OK, but the result is not constexpr
 
-  static_assert(does_compile<3>);
-  static_assert(does_not_compile<4>);
+  static_assert(compiles_as_a_constant_expression<3>);
+  static_assert(does_not_compile_as_a_constant_expression<4>);
 
   CHECK_THROWS(utils::at(mapping, 4));
 }

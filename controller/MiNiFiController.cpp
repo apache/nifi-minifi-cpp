@@ -38,55 +38,14 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-std::shared_ptr<minifi::core::controller::ControllerService> getControllerService(const std::shared_ptr<minifi::Configure> &configuration,
-    const std::string &service_name) {
-  std::string nifi_configuration_class_name = "adaptiveconfiguration";
-
-  minifi::core::extension::ExtensionManagerImpl::get().initialize(configuration);
-
-  configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
-  auto flow_configuration = minifi::core::createFlowConfiguration(
-    minifi::core::ConfigurationContext{
-      .flow_file_repo = nullptr,
-      .content_repo = nullptr,
-      .configuration = configuration,
-      .path = configuration->get(minifi::Configure::nifi_flow_configuration_file)},
-    nifi_configuration_class_name);
-
-  auto root = flow_configuration->getRoot();
-  if (!root) {
-    return nullptr;
-  }
-  auto controller = root->findControllerService(service_name);
-  if (!controller) {
-    return nullptr;
-  }
-  return controller->getControllerServiceImplementation();
-}
-
 std::shared_ptr<minifi::controllers::SSLContextServiceInterface> getSSLContextService(const std::shared_ptr<minifi::Configure>& configuration) {
   std::shared_ptr<minifi::controllers::SSLContextServiceInterface> secure_context;
-  std::string context_name;
-  // if the user wishes to use a controller service we need to instantiate the flow
-  if (configuration->get(minifi::Configure::controller_ssl_context_service, context_name) && !context_name.empty()) {
-    const auto service = getControllerService(configuration, context_name);
-    if (nullptr != service) {
-      secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(service);
-    }
-    if (secure_context == nullptr) {
-      throw minifi::Exception(minifi::GENERAL_EXCEPTION, "SSL Context was set, but the context name '" + context_name + "' could not be found");
-    }
-  }
-
-  if (nullptr == secure_context) {
-    std::string secureStr;
-    if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && minifi::utils::string::toBool(secureStr).value_or(false)) {
-      secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
-      secure_context->onEnable();
-    }
-  } else {
+  std::string secure_str;
+  if (configuration->get(minifi::Configure::nifi_remote_input_secure, secure_str) && minifi::utils::string::toBool(secure_str).value_or(false)) {
+    secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
     secure_context->onEnable();
   }
+
   return secure_context;
 }
 

@@ -93,7 +93,6 @@ nifi.content.repository.class.name=DatabaseContentRepository
 #nifi.c2.rest.path.base=
 #nifi.c2.rest.url=
 #nifi.c2.rest.url.ack=
-#nifi.c2.rest.ssl.context.service=
 nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation
 ## Minimize heartbeat payload size by excluding agent manifest from the heartbeat
 nifi.c2.full.heartbeat=false
@@ -129,7 +128,6 @@ nifi.c2.full.heartbeat=false
 #controller.socket.host=localhost
 #controller.socket.port=9998
 #controller.socket.local.any.interface=false
-#controller.ssl.context.service=SSLContextService
 
 ## specify the destination of c2 directed assets
 nifi.asset.directory=@MINIFI_PATH_ASSET_DIR@

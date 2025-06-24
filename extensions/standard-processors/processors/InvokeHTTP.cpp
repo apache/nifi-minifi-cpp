@@ -200,7 +200,7 @@ void InvokeHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionF
 }
 
 bool InvokeHTTP::shouldEmitFlowFile() const {
-  return (http::HttpRequestMethod::POST == method_ || http::HttpRequestMethod::PUT == method_ || http::HttpRequestMethod::PATCH == method_);
+  return (http::HttpRequestMethod::Post == method_ || http::HttpRequestMethod::Put == method_ || http::HttpRequestMethod::Patch == method_);
 }
 
 /**

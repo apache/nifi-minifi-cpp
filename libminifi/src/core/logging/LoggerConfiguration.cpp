@@ -38,6 +38,7 @@
 #include "utils/Literals.h"
 #include "core/TypedValues.h"
 #include "core/logging/Utils.h"
+#include "controllers/SSLContextService.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -346,10 +347,15 @@ void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex
   }
 }
 
-void LoggerConfiguration::initializeAlertSinks(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<AgentIdentificationProvider>& agent_id) {
+void LoggerConfiguration::initializeAlertSinks(const std::shared_ptr<Configure>& config) {
+  auto ssl_service = std::make_shared<controllers::SSLContextService>("AlertSinkSSLContextService", config);
+  ssl_service->onEnable();
+  if (ssl_service->getCertificateFile().empty()) {
+    ssl_service.reset();
+  }
   std::lock_guard guard(mutex_);
   for (auto& sink : alert_sinks_) {
-    sink->initialize(controller, agent_id);
+    sink->initialize(config, ssl_service);
   }
 }
 

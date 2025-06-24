@@ -149,7 +149,6 @@ class MinifiContainer(FlowContainer):
                 f.write("nifi.c2.enable=true\n")
                 f.write(f"nifi.c2.rest.url=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/heartbeat\n")
                 f.write(f"nifi.c2.rest.url.ack=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/acknowledge\n")
-                f.write("nifi.c2.rest.ssl.context.service=SSLContextService\n")
                 f.write(f"nifi.c2.flow.base.url=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/\n")
                 f.write("nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation\n")
                 f.write("nifi.c2.full.heartbeat=false\n")

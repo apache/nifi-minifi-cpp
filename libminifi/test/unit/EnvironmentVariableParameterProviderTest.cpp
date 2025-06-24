@@ -23,7 +23,7 @@
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("Parameter Group Name is required", "[parameterProviders]") {
-  utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
   REQUIRE(provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, ""));
@@ -31,7 +31,7 @@ TEST_CASE("Parameter Group Name is required", "[parameterProviders]") {
 }
 
 TEST_CASE("Test EnvironmentVariableParameterProvider with default options", "[parameterProviders]") {
-  utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
   REQUIRE(provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "environment-variable-parameter-context"));
@@ -45,8 +45,8 @@ TEST_CASE("Test EnvironmentVariableParameterProvider with default options", "[pa
 }
 
 TEST_CASE("Create parameter context with selected environment variables", "[parameterProviders]") {
-  utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
-  utils::Environment::setEnvironmentVariable("MINIFI_NEW_DATA", "minifi_new_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_DATA", "minifi_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_NEW_DATA", "minifi_new_data_value");
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
   REQUIRE(provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "environment-variable-parameter-context"));
@@ -73,8 +73,8 @@ TEST_CASE("Environment variable list must be defined if Comma-Separated inclusio
 }
 
 TEST_CASE("Create parameter context with regex matching environment variables", "[parameterProviders]") {
-  utils::Environment::setEnvironmentVariable("MINIFI_DATA_1", "minifi_data_value");
-  utils::Environment::setEnvironmentVariable("MINIFI_NEW_DATA", "minifi_new_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_DATA_1", "minifi_data_value");
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_NEW_DATA", "minifi_new_data_value");
   parameter_providers::EnvironmentVariableParameterProvider provider("EnvironmentVariableParameterProvider");
   provider.initialize();
   REQUIRE(provider.setProperty(parameter_providers::EnvironmentVariableParameterProvider::ParameterGroupName.name, "environment-variable-parameter-context"));

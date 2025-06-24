@@ -32,7 +32,7 @@ class MultipartUploadStateStorageTestFixture {
   MultipartUploadStateStorageTestFixture() {
     LogTestController::getInstance().setDebug<minifi::aws::s3::MultipartUploadStateStorage>();
     state_storage_ = std::make_unique<minifi::controllers::VolatileMapStateStorage>("KeyValueStateStorage");
-    state_manager_ = std::make_unique<minifi::controllers::KeyValueStateManager>(utils::IdGenerator::getIdGenerator()->generate(), gsl::make_not_null(state_storage_.get()));
+    state_manager_ = std::make_unique<minifi::controllers::KeyValueStateManager>(minifi::utils::IdGenerator::getIdGenerator()->generate(), gsl::make_not_null(state_storage_.get()));
     upload_storage_ = std::make_unique<minifi::aws::s3::MultipartUploadStateStorage>(gsl::make_not_null(state_manager_.get()));
   }
 

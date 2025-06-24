@@ -165,7 +165,7 @@ class ListenHTTPTestsFixture {
   }
 
   void check_response_body(minifi::http::HTTPClient& client) {
-    if (client.getMethod() != HttpRequestMethod::GET && client.getMethod() != HttpRequestMethod::POST) {
+    if (client.getMethod() != HttpRequestMethod::Get && client.getMethod() != HttpRequestMethod::Post) {
       return;
     }
 
@@ -230,7 +230,7 @@ class ListenHTTPTestsFixture {
       thread.join();
     }
 
-    if (expected_committed_requests > 0 && (method == HttpRequestMethod::GET || method == HttpRequestMethod::POST)) {
+    if (expected_committed_requests > 0 && (method == HttpRequestMethod::Get || method == HttpRequestMethod::Post)) {
       REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(payload.size()) + " Offset:0"));
     }
     REQUIRE(LogTestController::getInstance().contains("Logged " + std::to_string(expected_committed_requests) + " flow files"));
@@ -243,7 +243,7 @@ class ListenHTTPTestsFixture {
     for (const auto &header : headers) {
       client->setRequestHeader(header.first, header.second);
     }
-    if (method == HttpRequestMethod::POST) {
+    if (method == HttpRequestMethod::Post) {
       client->setPostFields(payload);
     }
     return client;
@@ -259,7 +259,7 @@ class ListenHTTPTestsFixture {
   core::Processor* log_attribute = nullptr;
 
   std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service;
-  HttpRequestMethod method = HttpRequestMethod::GET;
+  HttpRequestMethod method = HttpRequestMethod::Get;
   std::map<std::string, std::string> headers;
   std::string payload;
   std::string endpoint = "test";
@@ -283,7 +283,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP GET", "[basic]") {
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP POST", "[basic]") {
   run_server();
 
-  method = HttpRequestMethod::POST;
+  method = HttpRequestMethod::Post;
   payload = "Test payload";
 
   test_connect();
@@ -292,7 +292,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP POST", "[basic]") {
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP PUT", "[basic]") {
   run_server();
 
-  method = HttpRequestMethod::PUT;
+  method = HttpRequestMethod::Put;
 
   test_connect({HttpResponseExpectations{true, 405}}, 0);
 }
@@ -300,7 +300,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP PUT", "[basic]") {
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP DELETE", "[basic]") {
   run_server();
 
-  method = HttpRequestMethod::DELETE;
+  method = HttpRequestMethod::Delete;
 
   test_connect({HttpResponseExpectations{true, 405}}, 0);
 }
@@ -308,7 +308,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP DELETE", "[basic]") {
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP HEAD", "[basic]") {
   run_server();
 
-  method = HttpRequestMethod::HEAD;
+  method = HttpRequestMethod::Head;
 
   test_connect({HttpResponseExpectations{}}, 0);
 }
@@ -318,18 +318,18 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP no body", "[basic]") {
 
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
   SECTION("HEAD") {
-    method = HttpRequestMethod::HEAD;
+    method = HttpRequestMethod::Head;
   }
 
   run_server();
-  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::Post || method == HttpRequestMethod::Get) ? 1 : 0;
   test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
@@ -337,18 +337,18 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP body with different mime type", "
   plan->setDynamicProperty(update_attribute, "mime.type", "text/plain");
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
   SECTION("HEAD") {
-    method = HttpRequestMethod::HEAD;
+    method = HttpRequestMethod::Head;
   }
 
   run_server();
-  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::Post || method == HttpRequestMethod::Get) ? 1 : 0;
   test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
@@ -359,10 +359,10 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP all headers", "[basic][headers]")
              {"bar", "2"}};
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
 
@@ -380,10 +380,10 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP filtered headers", "[headers]") {
              {"bar", "2"}};
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
 
@@ -412,10 +412,10 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
     expected_processed_request_count = 5;
 
     SECTION("GET") {
-      method = HttpRequestMethod::GET;
+      method = HttpRequestMethod::Get;
     }
     SECTION("POST") {
-      method = HttpRequestMethod::POST;
+      method = HttpRequestMethod::Post;
       payload = "Test payload";
     }
   }
@@ -426,10 +426,10 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
     expected_processed_request_count = 4;
 
     SECTION("GET") {
-      method = HttpRequestMethod::GET;
+      method = HttpRequestMethod::Get;
     }
     SECTION("POST") {
-      method = HttpRequestMethod::POST;
+      method = HttpRequestMethod::Post;
       payload = "Test payload";
     }
   }
@@ -441,10 +441,10 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
     expected_processed_request_count = 3;
 
     SECTION("GET") {
-      method = HttpRequestMethod::GET;
+      method = HttpRequestMethod::Get;
     }
     SECTION("POST") {
-      method = HttpRequestMethod::POST;
+      method = HttpRequestMethod::Post;
       payload = "Test payload";
     }
   }
@@ -459,18 +459,18 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without CA", "[basic][https]") {
   create_ssl_context_service("goodCA.crt", nullptr);
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
   SECTION("HEAD") {
-    method = HttpRequestMethod::HEAD;
+    method = HttpRequestMethod::Head;
   }
 
   run_server();
-  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::Post || method == HttpRequestMethod::Get) ? 1 : 0;
   test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
@@ -482,18 +482,18 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without client cert", "[basic][h
   create_ssl_context_service("goodCA.crt", nullptr);
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
   SECTION("HEAD") {
-    method = HttpRequestMethod::HEAD;
+    method = HttpRequestMethod::Head;
   }
 
   run_server();
-  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::Post || method == HttpRequestMethod::Get) ? 1 : 0;
   test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
@@ -506,18 +506,18 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from good CA", 
   create_ssl_context_service("goodCA.crt", "goodCA_goodClient.pem");
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
   SECTION("HEAD") {
-    method = HttpRequestMethod::HEAD;
+    method = HttpRequestMethod::Head;
   }
 
   run_server();
-  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::Post || method == HttpRequestMethod::Get) ? 1 : 0;
   test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
@@ -530,18 +530,18 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with PKCS12 client cert from goo
   create_ssl_context_service("goodCA.crt", "goodCA_goodClient.p12");
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
   SECTION("HEAD") {
-    method = HttpRequestMethod::HEAD;
+    method = HttpRequestMethod::Head;
   }
 
   run_server();
-  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::Post || method == HttpRequestMethod::Get) ? 1 : 0;
   test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
@@ -558,14 +558,14 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
     plan->setProperty(listen_http, minifi::processors::ListenHTTP::SSLVerifyPeer, "yes");
 
     SECTION("GET") {
-      method = HttpRequestMethod::GET;
+      method = HttpRequestMethod::Get;
     }
     SECTION("POST") {
-      method = HttpRequestMethod::POST;
+      method = HttpRequestMethod::Post;
       payload = "Test payload";
     }
     SECTION("HEAD") {
-      method = HttpRequestMethod::HEAD;
+      method = HttpRequestMethod::Head;
     }
   }
   SECTION("do not verify peer") {
@@ -573,16 +573,16 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
     response_code = 200;
 
     SECTION("GET") {
-      method = HttpRequestMethod::GET;
+      method = HttpRequestMethod::Get;
       expected_committed_requests = 1;
     }
     SECTION("POST") {
-      method = HttpRequestMethod::POST;
+      method = HttpRequestMethod::Post;
       payload = "Test payload";
       expected_committed_requests = 1;
     }
     SECTION("HEAD") {
-      method = HttpRequestMethod::HEAD;
+      method = HttpRequestMethod::Head;
     }
   }
 
@@ -602,18 +602,18 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with matching D
   create_ssl_context_service("goodCA.crt", "goodCA_goodClient.pem");
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
   SECTION("HEAD") {
-    method = HttpRequestMethod::HEAD;
+    method = HttpRequestMethod::Head;
   }
 
   run_server();
-  const std::size_t expected_committed_requests = (method == HttpRequestMethod::POST || method == HttpRequestMethod::GET) ? 1 : 0;
+  const std::size_t expected_committed_requests = (method == HttpRequestMethod::Post || method == HttpRequestMethod::Get) ? 1 : 0;
   test_connect({HttpResponseExpectations{}}, expected_committed_requests);
 }
 
@@ -630,30 +630,30 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
     response_code = 403;
 
     SECTION("GET") {
-      method = HttpRequestMethod::GET;
+      method = HttpRequestMethod::Get;
     }
     SECTION("POST") {
-      method = HttpRequestMethod::POST;
+      method = HttpRequestMethod::Post;
       payload = "Test payload";
     }
     SECTION("HEAD") {
-      method = HttpRequestMethod::HEAD;
+      method = HttpRequestMethod::Head;
     }
   }
   SECTION("do not verify peer") {
     response_code = 200;
 
     SECTION("GET") {
-      method = HttpRequestMethod::GET;
+      method = HttpRequestMethod::Get;
       expected_committed_requests = 1;
     }
     SECTION("POST") {
-      method = HttpRequestMethod::POST;
+      method = HttpRequestMethod::Post;
       payload = "Test payload";
       expected_committed_requests = 1;
     }
     SECTION("HEAD") {
-      method = HttpRequestMethod::HEAD;
+      method = HttpRequestMethod::Head;
     }
   }
 
@@ -669,14 +669,14 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
   plan->setProperty(listen_http, minifi::processors::ListenHTTP::SSLCertificateAuthority, (executable_dir / "resources" / "goodCA.crt").string());
 
   SECTION("GET") {
-    method = HttpRequestMethod::GET;
+    method = HttpRequestMethod::Get;
   }
   SECTION("POST") {
-    method = HttpRequestMethod::POST;
+    method = HttpRequestMethod::Post;
     payload = "Test payload";
   }
   SECTION("HEAD") {
-    method = HttpRequestMethod::HEAD;
+    method = HttpRequestMethod::Head;
   }
 
   create_ssl_context_service("goodCA.crt", "goodCA_goodClient.pem");
@@ -686,7 +686,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
   auto client = std::make_unique<minifi::http::HTTPClient>();
   client->setVerbose(false);
   client->initialize(method, url, ssl_context_service);
-  if (method == HttpRequestMethod::POST) {
+  if (method == HttpRequestMethod::Post) {
     client->setPostFields(payload);
   }
   REQUIRE(client->setSpecificSSLVersion(minifi::http::SSLVersion::TLSv1_1));

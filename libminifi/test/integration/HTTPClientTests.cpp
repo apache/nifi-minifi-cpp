@@ -82,7 +82,7 @@ TEST_CASE("HTTPClientTestChunkedResponse", "[basic]") {
   const std::string port = std::to_string(vec.at(0));
 
   HTTPClient client;
-  client.initialize(http::HttpRequestMethod::GET, "http://localhost:" + port + "/testytesttest", nullptr);
+  client.initialize(http::HttpRequestMethod::Get, "http://localhost:" + port + "/testytesttest", nullptr);
 
   REQUIRE(client.submit());
 
@@ -126,15 +126,15 @@ TEST_CASE("HTTPClient should be reusable", "[basic]") {
 
   HTTPClient client;
   client.setKeepAliveProbe(KeepAliveProbeData{2s, 2s});
-  client.initialize(http::HttpRequestMethod::GET, "http://localhost:" + keep_alive_server_.getPort() + "/method", nullptr);
+  client.initialize(http::HttpRequestMethod::Get, "http://localhost:" + keep_alive_server_.getPort() + "/method", nullptr);
 
   std::vector<http::HttpRequestMethod> methods = {
-      http::HttpRequestMethod::GET, http::HttpRequestMethod::GET, http::HttpRequestMethod::PUT, http::HttpRequestMethod::GET,
-      http::HttpRequestMethod::GET, http::HttpRequestMethod::POST, http::HttpRequestMethod::POST, http::HttpRequestMethod::PUT };
+      http::HttpRequestMethod::Get, http::HttpRequestMethod::Get, http::HttpRequestMethod::Put, http::HttpRequestMethod::Get,
+      http::HttpRequestMethod::Get, http::HttpRequestMethod::Post, http::HttpRequestMethod::Post, http::HttpRequestMethod::Put };
   uint64_t request_number = 0;
   for (const auto& method: methods) {
     client.set_request_method(method);
-    if (method != http::HttpRequestMethod::GET) {
+    if (method != http::HttpRequestMethod::Get) {
       auto callback = std::make_unique<org::apache::nifi::minifi::http::HTTPUploadByteArrayInputCallback>();
       std::string content = R"({ "content": "a" })";
       callback->write(content);
@@ -162,7 +162,7 @@ TEST_CASE("HTTPClient should be reusable", "[basic]") {
 #ifdef __linux__
 TEST_CASE("SSL without SSLContextService", "[HTTPClient]") {
   HTTPClient client;
-  client.initialize(http::HttpRequestMethod::GET, "https://apache.org", nullptr);
+  client.initialize(http::HttpRequestMethod::Get, "https://apache.org", nullptr);
   REQUIRE(client.submit());
 }
 #endif
