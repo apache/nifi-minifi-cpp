@@ -41,6 +41,7 @@
 #include "utils/file/FileUtils.h"
 #include "properties/Configuration.h"
 #include "core/Processor.h"
+#include "core/ProcessGroup.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace utils = minifi::utils;
