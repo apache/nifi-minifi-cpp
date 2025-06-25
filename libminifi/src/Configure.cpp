@@ -135,6 +135,15 @@ bool ConfigureImpl::commitChanges() {
   return success;
 }
 
+std::shared_ptr<const Locations> ConfigureImpl::getLocations() const {
+  return locations_;
+}
+
+void ConfigureImpl::setLocations(std::shared_ptr<const Locations> locations) {
+  locations_ = std::move(locations);
+}
+
+
 gsl::not_null<std::shared_ptr<Configure>> Configure::create() {
   return gsl::make_not_null<std::shared_ptr<Configure>>(std::make_shared<ConfigureImpl>());
 }

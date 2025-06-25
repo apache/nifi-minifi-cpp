@@ -367,7 +367,7 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> LoggerConfiguration::getRo
   if (!properties->getString(appender_key + ".directory", directory_str)) {
     // The below part assumes logger_properties->getHome() is existing
     // Cause minifiHome must be set at MiNiFiMain.cpp?
-    directory_str = (properties->getHome() / "logs").string();
+    directory_str = properties->getDefaultLogDir().string();
   }
 
   auto file_name = std::filesystem::path(directory_str) / file_name_str;

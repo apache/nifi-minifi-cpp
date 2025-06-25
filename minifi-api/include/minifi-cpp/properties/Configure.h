@@ -16,18 +16,20 @@
  */
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
-#include <memory>
 
 #include "Configuration.h"
+#include "Locations.h"
 #include "minifi-cpp/core/AgentIdentificationProvider.h"
 #include "utils/gsl.h"
 
 struct ConfigTestAccessor;
 
 namespace org::apache::nifi::minifi {
+
 
 class Configure : public virtual Configuration, public virtual core::AgentIdentificationProvider {
   friend struct ::ConfigTestAccessor;
@@ -43,6 +45,8 @@ class Configure : public virtual Configuration, public virtual core::AgentIdenti
   using Configuration::set;
   void set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) override = 0;
   bool commitChanges() override = 0;
+  [[nodiscard]] virtual std::shared_ptr<const Locations> getLocations() const = 0;
+  virtual void setLocations(std::shared_ptr<const Locations>) = 0;
 
   static gsl::not_null<std::shared_ptr<Configure>> create();
 };

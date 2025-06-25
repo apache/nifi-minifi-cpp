@@ -16,16 +16,17 @@
  */
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
-#include <memory>
 
+#include "LocationsImpl.h"
+#include "core/logging/LoggerProperties.h"
+#include "minifi-cpp/core/AgentIdentificationProvider.h"
+#include "minifi-cpp/properties/Configure.h"
 #include "properties/Configuration.h"
 #include "properties/Decryptor.h"
-#include "minifi-cpp/core/AgentIdentificationProvider.h"
-#include "core/logging/LoggerProperties.h"
-#include "minifi-cpp/properties/Configure.h"
 
 struct ConfigTestAccessor;
 
@@ -53,6 +54,8 @@ class ConfigureImpl : public ConfigurationImpl, public virtual core::AgentIdenti
   void set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) override;
   bool commitChanges() override;
 
+  [[nodiscard]] std::shared_ptr<const Locations> getLocations() const override;
+  void setLocations(std::shared_ptr<const Locations> locations) override;
 
  private:
   // WARNING! a test utility
@@ -66,6 +69,7 @@ class ConfigureImpl : public ConfigurationImpl, public virtual core::AgentIdenti
   mutable std::mutex fallback_identifier_mutex_;
   std::string fallback_identifier_;
   std::atomic_bool logger_properties_changed_{false};
+  std::shared_ptr<const Locations> locations_;
   std::shared_ptr<core::logging::LoggerProperties> logger_properties_;
 };
 

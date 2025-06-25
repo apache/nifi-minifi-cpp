@@ -78,7 +78,15 @@ macro(register_extension extension-name extension-display-name extension-guard d
             else()
                 set_target_properties(${extension-name} PROPERTIES INSTALL_RPATH "$ORIGIN")
             endif()
-            install(TARGETS ${extension-name} LIBRARY DESTINATION extensions COMPONENT ${component-name})
+            if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+                install(TARGETS ${extension-name}
+                        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/extensions/
+                        COMPONENT ${component-name})
+            elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+                install(TARGETS ${extension-name} LIBRARY DESTINATION extensions COMPONENT ${component-name})
+            else()
+                message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
+            endif()
         endif()
     endif()
 

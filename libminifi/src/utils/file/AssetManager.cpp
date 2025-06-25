@@ -26,8 +26,18 @@
 
 namespace org::apache::nifi::minifi::utils::file {
 
+std::filesystem::path getRootFromConfigure(const Configure& configuration) {
+  if (auto nifi_asset_directory = configuration.get(Configure::nifi_asset_directory)) {
+    return *nifi_asset_directory;
+  }
+  if (const auto locations = configuration.getLocations()) {
+    return locations->getWorkingDir() / "asset";
+  }
+  return std::filesystem::path("") / "asset";
+}
+
 AssetManager::AssetManager(const Configure& configuration)
-    : root_(configuration.get(Configure::nifi_asset_directory).value_or((configuration.getHome() / "asset").string())),
+    : root_(getRootFromConfigure(configuration)),
       logger_(core::logging::LoggerFactory<AssetManager>::getLogger()) {
   refreshState();
 }

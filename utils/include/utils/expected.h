@@ -244,8 +244,8 @@ auto try_expression(F&& action, Args&&... args) noexcept {
 template <typename T, typename E, typename Char>
 struct fmt::formatter<nonstd::expected<T, E>, Char,
                  std::enable_if_t<(std::is_void<T>::value ||
-                                   fmt::is_formattable<T, Char>::value) &&
-                                  fmt::is_formattable<E, Char>::value>> {
+                 fmt::is_formattable<T, Char>::value) &&
+                 fmt::is_formattable<E, Char>::value>> {
   template <typename ParseContext>
   constexpr auto parse(ParseContext& ctx) -> const Char* {
     return ctx.begin();

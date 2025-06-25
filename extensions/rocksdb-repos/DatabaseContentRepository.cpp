@@ -35,11 +35,14 @@
 namespace org::apache::nifi::minifi::core::repository {
 
 bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configure> &configuration) {
+  const auto locations = configuration->getLocations();
+  const auto working_dir = locations ? locations->getWorkingDir() : std::filesystem::current_path();  // TODO(mzink)
+
   std::string value;
   if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value) && !value.empty()) {
     directory_ = value;
   } else {
-    directory_ = (configuration->getHome() / "dbcontentrepository").string();
+    directory_ = (working_dir / "dbcontentrepository").string();
   }
   auto purge_period_str = utils::string::trim(configuration->get(Configure::nifi_dbcontent_repository_purge_period).value_or("1 s"));
   if (purge_period_str == "0") {
@@ -50,7 +53,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
     logger_->log_error("Malformed delete period value, expected time format: '{}'", purge_period_str);
     purge_period_ = std::chrono::seconds{1};
   }
-  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
+  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{working_dir}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using {} DatabaseContentRepository", encrypted_env ? "encrypted" : "plaintext");
 
   setCompactionPeriod(configuration);

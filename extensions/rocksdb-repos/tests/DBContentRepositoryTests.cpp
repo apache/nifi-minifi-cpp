@@ -44,7 +44,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -67,7 +67,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -92,7 +92,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -112,7 +112,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
 
   std::string readstr;
@@ -151,7 +151,7 @@ TEST_CASE("Append Claim", "[TestDBCR1]") {
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -193,7 +193,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -212,7 +212,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -230,7 +230,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -250,7 +250,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -272,7 +272,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -292,7 +292,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
   content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
@@ -345,7 +345,7 @@ TEST_CASE("DBContentRepository can clear orphan entries") {
   TestController testController;
   auto dir = testController.createTempDirectory();
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  configuration->setHome(dir);
+  configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(dir));
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   {
     auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();

@@ -90,19 +90,19 @@ std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(con
 int main(int argc, char **argv) {
   const auto logger = minifi::core::logging::LoggerConfiguration::getConfiguration().getLogger("controller");
 
-  const auto minifi_home = determineMinifiHome(logger);
-  if (minifi_home.empty()) {
-    // determineMinifiHome already logged everything we need
+  const auto locations = determineLocations(logger);
+  if (!locations) {
+    // determineLocations already logged everything we need
     return -1;
   }
 
   const auto configuration = std::make_shared<minifi::ConfigureImpl>();
-  configuration->setHome(minifi_home);
-  configuration->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+  configuration->setLocations(locations);
+  configuration->loadConfigureFile(locations->getPropertiesPath());
 
-  const auto log_properties = std::make_shared<minifi::core::logging::LoggerProperties>();
-  log_properties->setHome(minifi_home);
-  log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
+  const auto log_properties = std::make_shared<minifi::core::logging::LoggerProperties>(locations->getLogsDirs());
+  log_properties->loadConfigureFile(locations->getLogPropertiesPath(), "nifi.log.");
+
   minifi::core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
   minifi::utils::net::SocketData socket_data;

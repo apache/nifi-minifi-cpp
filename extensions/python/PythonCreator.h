@@ -162,15 +162,21 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
   }
 
   std::filesystem::path getPythonLibPath(const std::shared_ptr<Configure>& configuration) {
-    constexpr const char* DEFAULT_EXTENSION_PATH = "../extensions/*";
-    std::string pattern = [&] {
-      auto opt_pattern = configuration->get(minifi::Configuration::nifi_extension_path);
-      if (!opt_pattern) {
-        logger_->log_warn("No extension path is provided, using default: '{}'", DEFAULT_EXTENSION_PATH);
-      }
-      return opt_pattern.value_or(DEFAULT_EXTENSION_PATH);
+    constexpr std::string_view DEFAULT_EXTENSION_PATH = "../extensions/*";
+    const std::string pattern = [&] {
+      if (const auto opt_pattern = configuration->get(minifi::Configuration::nifi_extension_path)) {
+        return *opt_pattern;
+      };
+
+      if (const auto locations = configuration->getLocations()) {
+        logger_->log_warn("No extension path is provided in properties, using default : '{}'", locations->getDefaultExtensionsPattern());
+        return std::string(locations->getDefaultExtensionsPattern());
+      };
+
+      logger_->log_error("No extension path is provided in properties and locations is empty, using hard-coded default: '{}'", DEFAULT_EXTENSION_PATH);
+      return std::string(DEFAULT_EXTENSION_PATH);
     }();
-    auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
+    const auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
       logger_->log_error("Error in subpattern '{}': {}", subpattern, error_msg);
     }));
 

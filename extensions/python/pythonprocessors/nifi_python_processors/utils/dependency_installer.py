@@ -64,3 +64,4 @@ if __name__ == '__main__':
 
     if dependencies_found:
         subprocess.check_call(command)
+    print("Done installing dependencies for MiNiFi python processors.")
