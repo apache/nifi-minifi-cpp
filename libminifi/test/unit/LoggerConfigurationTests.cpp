@@ -33,7 +33,7 @@
 TEST_CASE("TestLoggerProperties::get_keys_of_type", "[test get_keys_of_type]") {
   TestController test_controller;
   LogTestController::getInstance().setDebug<logging::LoggerProperties>();
-  logging::LoggerProperties logger_properties;
+  logging::LoggerProperties logger_properties{""};
   logger_properties.set("appender.rolling", "rolling");
   logger_properties.set("notappender.notrolling", "notrolling");
   logger_properties.set("appender.stdout", "stdout");

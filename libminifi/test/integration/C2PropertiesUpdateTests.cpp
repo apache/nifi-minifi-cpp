@@ -136,12 +136,11 @@ TEST_CASE("C2PropertiesUpdateTests", "[c2test]") {
   C2HeartbeatHandler hb_handler{};
   C2AcknowledgeHandler ack_handler{};
 
-  auto logger_properties = std::make_shared<core::logging::LoggerProperties>();
+  auto logger_properties = std::make_shared<core::logging::LoggerProperties>(home_dir / "logs");
   // this sets the ostream logger
   auto log_test_controller = LogTestController::getInstance(logger_properties);
 
-  logger_properties->setHome(home_dir);
-  logger_properties->loadConfigureFile("conf/minifi-log.properties");
+  logger_properties->loadConfigureFile(home_dir / "conf/minifi-log.properties");
   core::logging::LoggerConfiguration::getConfiguration().initialize(logger_properties);
 
   auto logger1 = core::logging::LoggerFactory<DummyClass1>::getLogger();
@@ -213,8 +212,8 @@ TEST_CASE("C2PropertiesUpdateTests", "[c2test]") {
     }
   });
 
-  harness.getConfiguration()->setHome(home_dir.string());
-  harness.getConfiguration()->loadConfigureFile("conf/minifi.properties");
+  harness.getConfiguration()->setLocations(minifi::LocationsImpl::createFromMinifiHome(home_dir.string()));
+  harness.getConfiguration()->loadConfigureFile(home_dir / "conf/minifi.properties");
   ConfigTestAccessor::call_setLoggerProperties(harness.getConfiguration(), logger_properties);
 
   harness.setUrl("http://localhost:0/heartbeat", &hb_handler);

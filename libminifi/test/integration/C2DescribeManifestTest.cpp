@@ -59,7 +59,7 @@ TEST_CASE("C2DescribeManifestTest", "[c2test]") {
   harness.setKeyDir(TEST_RESOURCES);
   DescribeManifestHandler responder(harness.getConfiguration(), verified);
 
-  auto logger_properties = std::make_shared<core::logging::LoggerProperties>();
+  auto logger_properties = std::make_shared<core::logging::LoggerProperties>("");
   ConfigTestAccessor::call_setLoggerProperties(harness.getConfiguration(), logger_properties);
 
   harness.getConfiguration()->set(minifi::Configuration::nifi_rest_api_password, encrypted_value);

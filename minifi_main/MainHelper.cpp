@@ -31,7 +31,7 @@ bool validHome(const std::filesystem::path& home_path) {
 }
 
 void setSyslogLogger() {
-  std::shared_ptr<logging::LoggerProperties> service_logger = std::make_shared<logging::LoggerProperties>();
+  std::shared_ptr<logging::LoggerProperties> service_logger = std::make_shared<logging::LoggerProperties>("");
   service_logger->set("appender.syslog", "syslog");
   service_logger->set("logger.root", "INFO,syslog");
   logging::LoggerConfiguration::getConfiguration().initialize(service_logger);
@@ -110,4 +110,17 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>
   utils::Environment::setEnvironmentVariable(MINIFI_HOME_ENV_KEY, minifi_home.string().c_str());
 
   return minifi_home;
+}
+
+std::shared_ptr<minifi::Locations> determineLocations(const std::shared_ptr<logging::Logger>& logger) {
+  if (const auto minifi_home_env = utils::Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY)) {
+    if (minifi_home_env == "FHS") {
+      return minifi::LocationsImpl::createForFHS();
+    }
+  }
+  const auto minifi_home = determineMinifiHome(logger);
+  if (minifi_home.empty()) {
+    return nullptr;
+  }
+  return minifi::LocationsImpl::createFromMinifiHome(minifi_home);
 }

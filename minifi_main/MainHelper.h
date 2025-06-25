@@ -70,6 +70,7 @@ void setSyslogLogger();
  */
 std::filesystem::path determineMinifiHome(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
 
+std::shared_ptr<org::apache::nifi::minifi::Locations> determineLocations(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
 
 
 #endif /* MAIN_MAINHELPER_H_ */

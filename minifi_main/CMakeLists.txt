@@ -81,10 +81,18 @@ if (NOT WIN32)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT APPLE)
         target_link_options(minifiexe PRIVATE "-Wl,--disable-new-dtags")
     endif()
-    if (APPLE)
-        set_target_properties(minifiexe PROPERTIES INSTALL_RPATH "@loader_path")
+
+    if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        set_target_properties(minifiexe PROPERTIES
+                INSTALL_RPATH "/usr/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}")
+
     else()
-        set_target_properties(minifiexe PROPERTIES INSTALL_RPATH "$ORIGIN")
+        if (APPLE)
+            set_target_properties(minifiexe PROPERTIES INSTALL_RPATH "@loader_path")
+        else()
+            set_target_properties(minifiexe PROPERTIES INSTALL_RPATH "$ORIGIN")
+        endif()
     endif()
-    install(TARGETS minifiexe RUNTIME DESTINATION bin COMPONENT bin)
+
+    install(TARGETS minifiexe RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin)
 endif()

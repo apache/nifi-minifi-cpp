@@ -24,8 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         platform: [
-          { arch: "x86_64", artifact: "minifi-x86_64-tar" },
-          { arch: "aarch64", artifact: "minifi-aarch64-tar" }
+          { arch: "x86_64", tar-artifact: "minifi-x86_64-tar", rpm-artifact: "minifi-x86_64-rpm" },
+          { arch: "aarch64", tar-artifact: "minifi-aarch64-tar", rpm-artifact: "minifi-aarch64-rpm" }
         ]
 
     steps:
@@ -43,14 +43,18 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform.artifact }}
+          name: ${{ matrix.platform.tar-artifact }}
           path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
-          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.rpm-artifact }}
+          path: build/nifi-minifi-cpp-*.rpm
 
   docker-tests:
     name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
     runs-on: ${{ matrix.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    timeout-minutes: 180
+    timeout-minutes: 240
     needs: build-packages
     strategy:
       fail-fast: false
@@ -59,6 +63,8 @@ jobs:
         platform: [
           { name: "Rocky Linux 8", id: "rocky8", build_cmd: "make rocky8_from_rocky_package", verify_cmd: "make docker-verify-rocky8" },
           { name: "Rocky Linux 9", id: "rocky9", build_cmd: "make rocky9_from_rocky_package", verify_cmd: "make docker-verify-rocky9" },
+          { name: "Rocky Linux 8 from RPM", id: "rocky8-rpm", build_cmd: "make rocky8_from_rpm_package", verify_cmd: "make docker-verify-rocky8-rpm" },
+          { name: "Rocky Linux 9 from RPM", id: "rocky9-rpm", build_cmd: "make rocky9_from_rpm_package", verify_cmd: "make docker-verify-rocky9-rpm" },
           { name: "Ubuntu 22.04", id: "ubuntu_jammy", build_cmd: "make jammy_from_rocky_package", verify_cmd: "make docker-verify-jammy" },
           { name: "Ubuntu 24.04", id: "ubuntu_noble", build_cmd: "make noble_from_rocky_package", verify_cmd: "make docker-verify-noble" },
           { name: "Debian 11", id: "debian_bullseye", build_cmd: "make bullseye_from_rocky_package", verify_cmd: "make docker-verify-bullseye" },
@@ -72,6 +78,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: minifi-${{ matrix.arch }}-tar
+          path: build
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: minifi-${{ matrix.arch }}-rpm
           path: build
 
       - id: install_deps

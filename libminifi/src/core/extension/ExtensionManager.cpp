@@ -49,7 +49,7 @@ ExtensionManager& ExtensionManager::get() {
   return ExtensionManagerImpl::get();
 }
 
-constexpr const char* DEFAULT_EXTENSION_PATH = "../extensions/*";
+constexpr std::string_view DEFAULT_EXTENSION_PATH = "../extensions/*";
 
 bool ExtensionManagerImpl::initialize(const std::shared_ptr<Configure>& config) {
   static bool initialized = ([&] {
@@ -60,17 +60,24 @@ bool ExtensionManagerImpl::initialize(const std::shared_ptr<Configure>& config) 
       logger_->log_error("Missing configuration");
       return;
     }
-    std::string pattern = [&] {
+    const std::string pattern = [&] {
       /**
        * Comma separated list of path patterns. Patterns prepended with "!" result in the exclusion
        * of the extensions matching that pattern, unless some subsequent pattern re-enables it.
        */
-      auto opt_pattern = config->get(minifi::Configuration::nifi_extension_path);
-      if (!opt_pattern) {
-        logger_->log_warn("No extension path is provided, using default: '{}'", DEFAULT_EXTENSION_PATH);
-      }
-      return opt_pattern.value_or(DEFAULT_EXTENSION_PATH);
+      if (const auto opt_pattern = config->get(minifi::Configuration::nifi_extension_path)) {
+        return *opt_pattern;
+      };
+
+      if (const auto locations = config->getLocations()) {
+        logger_->log_warn("No extension path is provided in properties, using default : '{}'", locations->getDefaultExtensionsPattern());
+        return std::string(locations->getDefaultExtensionsPattern());
+      };
+
+      logger_->log_warn("No extension path is provided, using default: '{}'", DEFAULT_EXTENSION_PATH);
+      return std::string(DEFAULT_EXTENSION_PATH);
     }();
+
     auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
       logger_->log_error("Error in subpattern '{}': {}", subpattern, error_msg);
     }));

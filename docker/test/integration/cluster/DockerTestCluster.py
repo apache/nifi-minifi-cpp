@@ -329,7 +329,7 @@ class DockerTestCluster:
 
     def wait_for_container_startup_to_finish(self, container_name):
         container_name = self.container_store.get_container_name_with_postfix(container_name)
-        startup_success = self.wait_for_startup_log(container_name, 300)
+        startup_success = self.wait_for_startup_log(container_name, 120)
         if not startup_success:
             logging.error("Cluster startup failed for %s", container_name)
             return False

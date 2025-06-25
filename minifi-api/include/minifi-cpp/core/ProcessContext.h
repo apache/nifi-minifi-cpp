@@ -59,8 +59,6 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual std::shared_ptr<core::Repository> getProvenanceRepository() = 0;
   virtual std::shared_ptr<core::ContentRepository> getContentRepository() const = 0;
   virtual std::shared_ptr<core::Repository> getFlowFileRepository() const = 0;
-  virtual void initializeContentRepository(const std::string& home) = 0;
-  virtual bool isInitialized() const = 0;
 
   virtual std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const = 0;
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";

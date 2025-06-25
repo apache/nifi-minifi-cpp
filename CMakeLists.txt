@@ -41,6 +41,7 @@ include(CMakeDependentOption)
 include(CheckIncludeFile)
 include(FeatureSummary)
 include(ExternalProject)
+include(GNUInstallDirs)
 
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -429,7 +430,6 @@ if(WIN32)
     set(CPACK_WIX_UI_BANNER "${CMAKE_CURRENT_SOURCE_DIR}/msi/minifi-logo-png-banner.png")
     set(CPACK_WIX_UI_DIALOG "${CMAKE_CURRENT_SOURCE_DIR}/msi/bgr.png")
 
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conf/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/conf/")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/fips/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/fips/")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/NOTICE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
@@ -587,46 +587,66 @@ set(CPACK_SOURCE_IGNORE_FILES
     "\\\\.ropeproject"
 )
 
-# Generate binary assembly. Exclude conf for windows since we'll be doing the work in the WiX template
+add_subdirectory(conf)
 if (NOT WIN32)
-    install(FILES conf/minifi.properties conf/minifi-log.properties conf/minifi-uid.properties conf/config.yml
-        DESTINATION conf
-        COMPONENT bin)
-
-    install(FILES fips/openssl.cnf fips/README.md
-        DESTINATION fips
-        COMPONENT bin)
-
-    install(DIRECTORY extensions/python/pythonprocessors/
-        DESTINATION minifi-python
-        COMPONENT bin)
-
-    install(DIRECTORY extensions/python/pythonprocessor-examples/
-        DESTINATION minifi-python-examples
-        COMPONENT bin)
-
-    install(PROGRAMS bin/minifi.sh
-            DESTINATION bin
-            COMPONENT bin)
-
-    if (APPLE)
-        install(FILES bin/minifi.plist
-            DESTINATION bin
-            COMPONENT bin)
-    else()
+    if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        message(STATUS "Configuring for FHS/RPM package installation.")
+        install(FILES fips/openssl.cnf fips/README.md
+                DESTINATION /${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}/fips
+                COMPONENT bin)
+        install(PROGRAMS bin/minifi.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
         install(FILES bin/minifi.service
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/system
+                COMPONENT bin
+        )
+        install(DIRECTORY DESTINATION /${CMAKE_INSTALL_LOCALSTATEDIR}/lib/${PROJECT_NAME} COMPONENT bin)
+        install(DIRECTORY DESTINATION /${CMAKE_INSTALL_LOCALSTATEDIR}/log/${PROJECT_NAME} COMPONENT bin)
+
+        install(DIRECTORY extensions/python/pythonprocessor-examples/
+                DESTINATION ${CMAKE_INSTALL_DOCDIR}/pythonprocessor-examples
+                COMPONENT bin)
+    elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+        message(STATUS "Configuring for self-contained TGZ package installation.")
+        install(PROGRAMS bin/minifi.sh DESTINATION bin)
+        install(FILES fips/openssl.cnf fips/README.md
+                DESTINATION fips
+                COMPONENT bin)
+        install(DIRECTORY extensions/python/pythonprocessors/
+                DESTINATION minifi-python
+                COMPONENT bin)
+        install(DIRECTORY extensions/python/pythonprocessor-examples/
+                DESTINATION minifi-python-examples
+                COMPONENT bin)
+        install(PROGRAMS bin/minifi.sh
                 DESTINATION bin
                 COMPONENT bin)
+        if (APPLE)
+            install(FILES bin/minifi.plist
+                    DESTINATION bin
+                    COMPONENT bin)
+        else()
+            install(FILES bin/minifi.service
+                    DESTINATION bin
+                    COMPONENT bin)
+        endif()
+    else()
+        message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
     endif()
 endif()
 
-install(FILES LICENSE NOTICE
-    DESTINATION .
-    COMPONENT bin)
 file(GLOB markdown_docs "*.md")
-install(FILES ${markdown_docs}
-    DESTINATION .
-    COMPONENT bin)
+if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+    install(FILES LICENSE NOTICE ${markdown_docs}
+            DESTINATION ${CMAKE_INSTALL_DOCDIR}
+            COMPONENT bin)
+elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+    install(FILES LICENSE NOTICE ${markdown_docs}
+            DESTINATION .
+            COMPONENT bin)
+else()
+    message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
+endif()
+
 
 include(CPackComponent)
 
@@ -634,10 +654,32 @@ if (WIN32)
     set(CPACK_GENERATOR "WIX")
     set(CPACK_WIX_UPGRADE_GUID "FE29F801-3486-4E9E-AFF9-838C1A5C8D59")
     set(CPACK_WIX_PRODUCT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/msi/minifi-logo-ico.ico")
-else()
+elseif(APPLE)
     set(CPACK_GENERATOR "TGZ")
+else()
+    if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        set(CPACK_GENERATOR "RPM")
+        set(CPACK_BINARY_RPM, "ON")
+        set(CPACK_RPM_PACKAGE_NAME "apache-nifi-minifi-cpp")
+        set(CPACK_RPM_PACKAGE_AUTOREQ OFF)
+        set(CPACK_RPM_PACKAGE_REQUIRES "")
+        set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 0)
+        set(CPACK_RPM_SPEC_MORE_DEFINE "%define _build_id_links none")
+        set(CPACK_RPM_COMPONENT_INSTALL ON)
+        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}")
+        set(CPACK_RPM_DEFAULT_USER "minificpp")
+        set(CPACK_RPM_DEFAULT_GROUP "minificpp")
+        set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/packaging/pre_install.sh")
+        list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/var")
+        list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/var/lib")
+        list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/var/log")
+    elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+        set(CPACK_GENERATOR "TGZ")
+        set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 1)
+    else()
+        message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
+    endif()
 endif()
-set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 1)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Apache NiFi MiNiFi C++ version ${VERSION}")
 set(CPACK_PACKAGE_VENDOR "Apache NiFi")
 # set version information
@@ -649,8 +691,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${CMAKE_CURRENT_BINARY_DIR
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
 if(NOT WIN32)
     set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
-    set(CPACK_GENERATOR "TGZ")
-    set(CPACK_BINARY_TGZ, "ON")
 else()
     set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}")
 endif()

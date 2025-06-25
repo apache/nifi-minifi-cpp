@@ -58,8 +58,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
         flow_repo_(flow_repo),
         content_repo_(content_repo),
         processor_(processor),
-        configure_(minifi::Configure::create()),
-        initialized_(false) {}
+        configure_(minifi::Configure::create()) {}
 
   ProcessContextImpl(Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
       const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<minifi::Configure>& configuration,
@@ -72,8 +71,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
         flow_repo_(flow_repo),
         content_repo_(content_repo),
         processor_(processor),
-        configure_(configuration ? gsl::make_not_null(configuration) : minifi::Configure::create()),
-        initialized_(false) {}
+        configure_(configuration ? gsl::make_not_null(configuration) : minifi::Configure::create()) {}
 
   // Get Processor associated with the Process Context
   Processor& getProcessor() const override { return processor_; }
@@ -116,14 +114,6 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
     }
     return controller_service;
   }
-
-  void initializeContentRepository(const std::string& home) override {
-    configure_->setHome(home);
-    content_repo_->initialize(configure_);
-    initialized_ = true;
-  }
-
-  bool isInitialized() const override { return initialized_; }
 
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";
 
@@ -223,7 +213,6 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   std::shared_ptr<core::ContentRepository> content_repo_;
   Processor& processor_;
   gsl::not_null<std::shared_ptr<Configure>> configure_;
-  bool initialized_;
 };
 
 inline nonstd::expected<std::string, std::error_code> ProcessContextImpl::getProperty(const std::string_view name, const FlowFile* const) const {

@@ -75,7 +75,7 @@ class ListSFTPTestsFixture {
     REQUIRE(true == sftp_server->start());
 
     if (configuration) {
-      configuration->setHome(working_directory);
+      configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(working_directory));
     }
     // Build MiNiFi processing graph
     createPlan(nullptr, configuration);
@@ -96,7 +96,7 @@ class ListSFTPTestsFixture {
     plan.reset();
 
     if (configuration) {
-      configuration->setHome(working_directory);
+      configuration->setLocations(minifi::LocationsImpl::createFromMinifiHome(working_directory));
     }
     plan = testController.createPlan(configuration, state_dir);
     if (list_sftp_uuid == nullptr) {

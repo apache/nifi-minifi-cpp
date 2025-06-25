@@ -99,7 +99,7 @@ TEST_CASE("Logger configured with an ID prints this ID in every log line", "[log
 }
 
 TEST_CASE("Printing of the ID can be disabled in the config", "[logger][id][configuration]") {
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
 
   bool id_is_present{};
   SECTION("Property not set") {
@@ -172,7 +172,7 @@ class TestClass2 {
 
 TEST_CASE("Test ShortenNames", "[ttl8]") {
   LogTestController::getInstance().clear();
-  std::shared_ptr<logging::LoggerProperties> props = std::make_shared<logging::LoggerProperties>();
+  std::shared_ptr<logging::LoggerProperties> props = std::make_shared<logging::LoggerProperties>("");
 
   props->set("spdlog.shorten_names", "true");
 
@@ -229,7 +229,7 @@ class LoggerTestAccessor {
 
 TEST_CASE("Test Compression", "[ttl9]") {
   auto log_config = logging::LoggerConfiguration::newInstance();
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
   std::string className;
   SECTION("Using root logger") {
     className = "CompressionTestClassUsingRoot";
@@ -254,7 +254,7 @@ TEST_CASE("Test Compression", "[ttl9]") {
 
 TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl10]") {
   auto log_config = logging::LoggerConfiguration::newInstance();
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
   properties->set(logging::internal::CompressionManager::compression_cached_log_max_size_, "10 KB");
   LoggerTestAccessor::setCompressionCacheSegmentSize(*log_config, 1_KiB);
   std::string className = "CompressionTestCacheCleaned";
@@ -273,7 +273,7 @@ TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl10
 
 TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "[ttl11]") {
   auto log_config = logging::LoggerConfiguration::newInstance();
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
   bool is_empty = false;
   SECTION("Cached log size is set to 0") {
     is_empty = true;
@@ -300,7 +300,7 @@ TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "
 
 TEST_CASE("Setting max log entry length property trims long log entries", "[ttl12]") {
   auto log_config = logging::LoggerConfiguration::newInstance();
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
   properties->set("max.log.entry.length", "2");
   properties->set("logger.root", "INFO");
   log_config->initialize(properties);
@@ -317,7 +317,7 @@ TEST_CASE("Setting max log entry length property trims long log entries", "[ttl1
 
 TEST_CASE("Setting max log entry length property trims long formatted log entries", "[ttl13]") {
   auto log_config = logging::LoggerConfiguration::newInstance();
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
   properties->set("max.log.entry.length", "2");
   properties->set("logger.root", "INFO");
   log_config->initialize(properties);
@@ -334,7 +334,7 @@ TEST_CASE("Setting max log entry length property trims long formatted log entrie
 
 TEST_CASE("Setting max log entry length to a size larger than the internal buffer size", "[ttl14]") {
   auto log_config = logging::LoggerConfiguration::newInstance();
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
   properties->set("max.log.entry.length", "1500");
   properties->set("logger.root", "INFO");
   log_config->initialize(properties);
@@ -353,7 +353,7 @@ TEST_CASE("Setting max log entry length to a size larger than the internal buffe
 
 TEST_CASE("Setting max log entry length to unlimited results in unlimited log entry size", "[ttl15]") {
   auto log_config = logging::LoggerConfiguration::newInstance();
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
   std::string_view logger_name;
   SECTION("Use unlimited value") {
     properties->set("max.log.entry.length", "unlimited");
@@ -419,7 +419,7 @@ TEST_CASE("Test sending multiple segments at once", "[ttl16]") {
   auto log_config = logging::LoggerConfiguration::newInstance();
   LoggerTestAccessor::setCompressionCompressedSegmentSize(*log_config, 100);
   LoggerTestAccessor::setCompressionCacheSegmentSize(*log_config, 100);
-  auto properties = std::make_shared<logging::LoggerProperties>();
+  auto properties = std::make_shared<logging::LoggerProperties>("");
   // by default the root logger is OFF
   properties->set("logger.root", "INFO");
   log_config->initialize(properties);
