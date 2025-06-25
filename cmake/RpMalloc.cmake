@@ -21,6 +21,7 @@ FetchContent_Declare(
         rpmalloc
         URL      https://github.com/mjansson/rpmalloc/archive/refs/tags/1.4.4.tar.gz
         URL_HASH SHA256=3859620c03e6473f0b3f16a4e965e7c049594253f70e8370fb9caa0e4118accb
+        SYSTEM
 )
 FetchContent_GetProperties(rpmalloc)
 

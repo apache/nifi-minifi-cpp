@@ -18,42 +18,42 @@
 
 #pragma once
 
-constexpr unsigned long long operator "" _KiB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_KiB(unsigned long long n) {
   return 1024 * n;
 }
 
-constexpr unsigned long long operator "" _MiB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_MiB(unsigned long long n) {
   return 1024_KiB * n;
 }
 
-constexpr unsigned long long operator "" _GiB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_GiB(unsigned long long n) {
   return 1024_MiB * n;
 }
 
-constexpr unsigned long long operator "" _TiB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_TiB(unsigned long long n) {
   return 1024_GiB * n;
 }
 
-constexpr unsigned long long operator "" _PiB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_PiB(unsigned long long n) {
   return 1024_TiB * n;
 }
 
-constexpr unsigned long long operator "" _KB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_KB(unsigned long long n) {
   return 1000 * n;
 }
 
-constexpr unsigned long long operator "" _MB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_MB(unsigned long long n) {
   return 1000_KB * n;
 }
 
-constexpr unsigned long long operator "" _GB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_GB(unsigned long long n) {
   return 1000_MB * n;
 }
 
-constexpr unsigned long long operator "" _TB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_TB(unsigned long long n) {
   return 1000_GB * n;
 }
 
-constexpr unsigned long long operator "" _PB(unsigned long long n) {  // NOLINT
+constexpr unsigned long long operator""_PB(unsigned long long n) {
   return 1000_TB * n;
 }

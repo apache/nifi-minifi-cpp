@@ -27,4 +27,4 @@ if ! [[ -f "${FILE}" ]]; then
   exit 0
 fi
 
-clang-tidy-16 -warnings-as-errors=* -quiet -p build "$FILE"
+clang-tidy-20 -warnings-as-errors=* -quiet -p build "$FILE"

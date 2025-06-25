@@ -40,6 +40,7 @@ FetchContent_Declare(libkafka
         URL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.8.0.tar.gz
         URL_HASH SHA256=5bd1c46f63265f31c6bfcedcde78703f77d28238eadf23821c2b43fc30be3e25
         PATCH_COMMAND "${PC}"
+        SYSTEM
 )
 
 FetchContent_MakeAvailable(libkafka)
