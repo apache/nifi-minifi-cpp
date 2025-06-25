@@ -120,10 +120,10 @@ void PutUDP::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
     session.transfer(flow_file, Failure);
   };
 
-  (void)(resolve_hostname()
+  std::ignore = resolve_hostname()
       | utils::andThen(send_data_to_endpoint)
       | utils::transform(transfer_to_success)
-      | utils::orElse(transfer_to_failure));
+      | utils::orElse(transfer_to_failure);
 }
 
 REGISTER_RESOURCE(PutUDP, Processor);
