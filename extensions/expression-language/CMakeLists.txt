@@ -32,6 +32,7 @@ if(WIN32)
         winflexbison
         URL "https://github.com/lexxmark/winflexbison/archive/refs/tags/v2.5.25.tar.gz"
         URL_HASH "SHA256=8e1b71e037b524ba3f576babb0cf59182061df1f19cd86112f085a882560f60b"
+        SYSTEM
     )
     FetchContent_GetProperties("winflexbison")
 

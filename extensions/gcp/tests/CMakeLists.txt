@@ -20,7 +20,13 @@ file(GLOB GCS_TESTS  "*.cpp")
 FOREACH(testfile ${GCS_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
     add_minifi_executable("${testfilename}" "${testfile}")
-    target_compile_definitions(${testfilename} PRIVATE _SILENCE_CXX20_REL_OPS_DEPRECATION_WARNING)
+
+    if (WIN32)
+        target_compile_definitions(${testfilename} PRIVATE _SILENCE_CXX20_REL_OPS_DEPRECATION_WARNING)
+    else()
+        target_compile_options(${testfilename} PRIVATE -Wno-error=deprecated-declarations)  # Suppress deprecation warnings for std::rel_ops usage
+    endif()
+
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/expression-language")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/gcp")

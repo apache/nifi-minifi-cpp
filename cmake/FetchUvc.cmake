@@ -21,5 +21,6 @@ FetchContent_Declare(Uvc
         URL  https://github.com/libuvc/libuvc/archive/refs/tags/v0.0.7.tar.gz
         URL_HASH SHA256=7c6ba79723ad5d0ccdfbe6cadcfbd03f9f75b701d7ba96631eb1fd929a86ee72
         OVERRIDE_FIND_PACKAGE
+        SYSTEM
 )
 FetchContent_MakeAvailable(Uvc)

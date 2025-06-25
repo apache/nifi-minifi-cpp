@@ -31,6 +31,7 @@ FetchContent_Declare(
     URL "https://github.com/jupp0r/prometheus-cpp/archive/refs/tags/v1.3.0.tar.gz"
     URL_HASH "SHA256=ac6e958405a29fbbea9db70b00fa3c420e16ad32e1baf941ab233ba031dd72ee"
     PATCH_COMMAND "${PC}"
+    SYSTEM
 )
 
 FetchContent_MakeAvailable(prometheus-cpp)

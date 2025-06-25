@@ -878,7 +878,7 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     ParameterContext* parameter_context) {
   auto my_prop = component.getSupportedProperty(property_name);
   const bool is_sensitive = my_prop ? my_prop->isSensitive() : false;
-  const std::optional<std::string_view> default_value = my_prop ? my_prop->getDefaultValue() : std::nullopt;
+  const std::optional<std::string> default_value = my_prop ? my_prop->getDefaultValue() : std::nullopt;
 
   const auto value_to_set = getReplacedParametersValueOrDefault(property_name, is_sensitive, default_value, property_value_node, parameter_context);
   if (!value_to_set) {
