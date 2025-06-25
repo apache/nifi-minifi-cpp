@@ -32,6 +32,7 @@ FetchContent_Declare(
     URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.14.tar.gz"
     URL_HASH "SHA256=7af7d906e60a696a80f1b7c2bd7d6eb164aaad908ff4c40c3332ac2006d07346"
     PATCH_COMMAND "${PC}"
+    SYSTEM
 )
 
 FetchContent_MakeAvailable(paho.mqtt.c-external)

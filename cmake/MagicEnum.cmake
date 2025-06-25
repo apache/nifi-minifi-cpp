@@ -19,6 +19,7 @@ include(FetchContent)
 
 FetchContent_Declare(magic_enum
         URL https://github.com/Neargye/magic_enum/archive/refs/tags/v0.9.3.tar.gz
-        URL_HASH SHA256=3cadd6a05f1bffc5141e5e731c46b2b73c2dbff025e723c8abaa659e0a24f072)
+        URL_HASH SHA256=3cadd6a05f1bffc5141e5e731c46b2b73c2dbff025e723c8abaa659e0a24f072
+        SYSTEM)
 
 FetchContent_MakeAvailable(magic_enum)

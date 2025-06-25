@@ -20,5 +20,6 @@ FetchContent_Declare(
     argparse
     URL https://github.com/p-ranav/argparse/archive/refs/tags/v3.0.tar.gz
     URL_HASH SHA256=ba7b465759bb01069d57302855eaf4d1f7d677f21ad7b0b00b92939645c30f47
+    SYSTEM
 )
 FetchContent_MakeAvailable(argparse)

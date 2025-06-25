@@ -32,6 +32,7 @@ FetchContent_Declare(zstd
     URL_HASH       SHA256=f7de13462f7a82c29ab865820149e778cbfe01087b3a55b5332707abf9db4a6e
     PATCH_COMMAND  "${PC}"
     SOURCE_SUBDIR  build/cmake
+    SYSTEM
 )
 
 FetchContent_MakeAvailable(zstd)

@@ -38,6 +38,7 @@ FetchContent_Declare(llamacpp
         URL https://github.com/ggerganov/llama.cpp/archive/refs/tags/b5502.tar.gz
         URL_HASH SHA256=9436852125dfe1b33ed47c5fb78bde614d9a8393072c5fa9689d0eaf2727dd1a
         PATCH_COMMAND "${PC}"
+        SYSTEM
 )
 
 FetchContent_MakeAvailable(llamacpp)

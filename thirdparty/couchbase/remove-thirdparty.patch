@@ -1,9 +1,13 @@
 diff --git a/cmake/ThirdPartyDependencies.cmake b/cmake/ThirdPartyDependencies.cmake
-index f02af02..f83c181 100644
+index af373ce..30cf2b6 100644
 --- a/cmake/ThirdPartyDependencies.cmake
 +++ b/cmake/ThirdPartyDependencies.cmake
-@@ -3,73 +3,30 @@
+@@ -1,232 +1,141 @@
+ # NOTE: This file MUST be in sync with couchbase-sdk-cxx-black-duck-manifest.yaml
+ 
  include(cmake/CPM.cmake)
+ 
+ set(CPM_USE_LOCAL_PACKAGES OFF)
  
  # https://cmake.org/cmake/help/v3.28/policy/CMP0063.html
  set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
@@ -18,36 +22,13 @@ index f02af02..f83c181 100644
                                               $<TARGET_PROPERTY:${target},INTERFACE_INCLUDE_DIRECTORIES>)
  endfunction()
  
--if(NOT TARGET fmt::fmt)
--  # https://github.com/fmtlib/fmt/releases
--  cpmaddpackage(
--    NAME
--    fmt
--    GIT_TAG
--    11.0.1
--    VERSION
--    11.0.1
--    GITHUB_REPOSITORY
--    "fmtlib/fmt"
--    EXCLUDE_FROM_ALL ON
--    OPTIONS
--    "FMT_INSTALL OFF"
--    # Unicode support for MSVC enabled in CompilerWarnings.cmake
--    "FMT_UNICODE OFF"
--    "FMT_DOC OFF"
--    "BUILD_SHARED_LIBS OFF"
--    "CMAKE_C_VISIBILITY_PRESET hidden"
--    "CMAKE_CXX_VISIBILITY_PRESET hidden"
--    "CMAKE_POSITION_INDEPENDENT_CODE ON")
--endif()
--
 -if(NOT TARGET spdlog::spdlog)
 -  # https://github.com/gabime/spdlog/releases
 -  cpmaddpackage(
 -    NAME
 -    spdlog
 -    VERSION
--    1.14.1
+-    1.15.0
 -    GITHUB_REPOSITORY
 -    "gabime/spdlog"
 -    EXCLUDE_FROM_ALL ON
@@ -57,8 +38,11 @@ index f02af02..f83c181 100644
 -    "CMAKE_C_VISIBILITY_PRESET hidden"
 -    "CMAKE_CXX_VISIBILITY_PRESET hidden"
 -    "CMAKE_POSITION_INDEPENDENT_CODE ON"
+-    "NO_CMAKE_SYSTEM_PATH ON"
+-    "NO_CMAKE_INSTALL_PREFIX ON"
+-    "NO_CMAKE_SYSTEM_PACKAGE_REGISTRY ON"
 -    "SPDLOG_BUILD_SHARED OFF"
--    "SPDLOG_FMT_EXTERNAL ON")
+-    "SPDLOG_FMT_EXTERNAL OFF")
 -endif()
 -
  if(NOT TARGET Microsoft.GSL::GSL)
@@ -76,7 +60,89 @@ index f02af02..f83c181 100644
      "CMAKE_C_VISIBILITY_PRESET hidden"
      "CMAKE_CXX_VISIBILITY_PRESET hidden"
      "CMAKE_POSITION_INDEPENDENT_CODE ON")
-@@ -159,93 +116,24 @@ if(NOT TARGET taocpp::json)
+ endif()
+ 
+ if(NOT TARGET hdr_histogram_static)
+   # https://github.com/HdrHistogram/HdrHistogram_c/releases
+   cpmaddpackage(
+     NAME
+     hdr_histogram
+     GIT_TAG
+     0.11.8
+     VERSION
+     0.11.8
+     GITHUB_REPOSITORY
+     "HdrHistogram/HdrHistogram_c"
+     EXCLUDE_FROM_ALL ON
+     OPTIONS
+     "CMAKE_C_VISIBILITY_PRESET hidden"
+     "CMAKE_CXX_VISIBILITY_PRESET hidden"
+     "CMAKE_POSITION_INDEPENDENT_CODE ON"
+     "HDR_LOG_REQUIRED OFF"
+     "HDR_HISTOGRAM_BUILD_SHARED OFF"
+     "HDR_HISTOGRAM_BUILD_PROGRAMS OFF")
+ endif()
+ 
+ if(NOT TARGET llhttp::llhttp)
+   # https://github.com/nodejs/llhttp/releases
+   cpmaddpackage(
+     NAME
+     llhttp
+     GIT_TAG
+     release/v9.2.1
+     VERSION
+     9.2.1
+     GITHUB_REPOSITORY
+     "nodejs/llhttp"
+     EXCLUDE_FROM_ALL ON
+     OPTIONS
+     "CMAKE_C_VISIBILITY_PRESET hidden"
+     "CMAKE_CXX_VISIBILITY_PRESET hidden"
+     "CMAKE_POSITION_INDEPENDENT_CODE ON"
+     "BUILD_SHARED_LIBS OFF"
+     "BUILD_STATIC_LIBS ON")
+ endif()
+ 
+ if(NOT TARGET snappy)
+   # https://github.com/google/snappy/releases
+   cpmaddpackage(
+     NAME
+     snappy
+     GIT_TAG
+     1.2.2
+     VERSION
+     1.2.2
+     GITHUB_REPOSITORY
+     "google/snappy"
+     EXCLUDE_FROM_ALL ON
+     OPTIONS
+     "SNAPPY_INSTALL OFF"
+     "CMAKE_C_VISIBILITY_PRESET hidden"
+     "CMAKE_CXX_VISIBILITY_PRESET hidden"
+     "CMAKE_POSITION_INDEPENDENT_CODE ON"
+     "BUILD_SHARED_LIBS OFF"
+     "SNAPPY_BUILD_TESTS OFF"
+     "SNAPPY_BUILD_BENCHMARKS OFF")
+ endif()
+ if(NOT MSVC)
+   # https://github.com/google/snappy/pull/156
+   target_compile_options(snappy PRIVATE -Wno-sign-compare)
+ endif()
+ 
+ if(NOT TARGET taocpp::json)
+   # https://github.com/taocpp/json/releases
+   cpmaddpackage(
+     NAME
+     json
+     GIT_TAG
+     1.0.0-beta.14
+     VERSION
+     1.0.0-beta.14
+     GITHUB_REPOSITORY
+     "taocpp/json"
+     OPTIONS
+     "CMAKE_C_VISIBILITY_PRESET hidden"
+     "CMAKE_CXX_VISIBILITY_PRESET hidden"
      "CMAKE_POSITION_INDEPENDENT_CODE ON"
      "BUILD_SHARED_LIBS OFF"
      "PEGTL_INSTALL ${COUCHBASE_CXX_CLIENT_INSTALL}"
@@ -167,6 +233,5 @@ index f02af02..f83c181 100644
  declare_system_library(hdr_histogram_static)
  declare_system_library(Microsoft.GSL::GSL)
 -declare_system_library(spdlog::spdlog)
--declare_system_library(fmt::fmt)
 -declare_system_library(asio)
  declare_system_library(taocpp::json)

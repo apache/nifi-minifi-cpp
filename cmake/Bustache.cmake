@@ -22,14 +22,17 @@ get_fmt()
 
 set(BUSTACHE_USE_FMT ON CACHE STRING "" FORCE)
 
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/bustache/add-append.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/add-append.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/fix-deprecated-literal-operator.patch")
 
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
 
 FetchContent_Declare(Bustache
         GIT_REPOSITORY  https://github.com/jamboree/bustache.git
         GIT_TAG         47096caa8e1f9f7ebe34e3a022dbb822c174011d
         PATCH_COMMAND   "${PC}"
+        SYSTEM
 )
 FetchContent_MakeAvailable(Bustache)

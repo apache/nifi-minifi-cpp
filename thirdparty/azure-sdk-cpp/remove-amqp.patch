@@ -1,10 +1,32 @@
-diff -rupN a/sdk/core/CMakeLists.txt b/sdk/core/CMakeLists.txt
---- a/sdk/core/CMakeLists.txt	2023-07-11 04:18:12.000000000 +0200
-+++ b/sdk/core/CMakeLists.txt	2023-07-25 16:58:17.919348377 +0200
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 325097191..d7bca3fb4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -158,16 +158,8 @@ endif()
+ 
+ # sub-projects
+ add_subdirectory(sdk/core)
+-add_subdirectory(sdk/attestation)
+-# AMQP doesn't work for UWP yet, and eventhubs depends on AMQP, so we cannot include eventhubs on UWP.
+-if (NOT BUILD_WINDOWS_UWP)
+-  add_subdirectory(sdk/eventhubs)
+-endif()
+ add_subdirectory(sdk/identity)
+-add_subdirectory(sdk/keyvault)
+ add_subdirectory(sdk/storage)
+-add_subdirectory(sdk/template)
+-add_subdirectory(sdk/tables)
+ 
+ if(BUILD_SAMPLES)
+   add_subdirectory(samples/integration/vcpkg-all-smoke)
+diff --git a/sdk/core/CMakeLists.txt b/sdk/core/CMakeLists.txt
+index 8773255f3..ccbcd2e88 100644
+--- a/sdk/core/CMakeLists.txt
++++ b/sdk/core/CMakeLists.txt
 @@ -10,11 +10,6 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
+ 
  add_subdirectory(azure-core)
-
+ 
 -if (NOT BUILD_WINDOWS_UWP)
 -  message(STATUS "Including AMQP library")
 -  add_subdirectory(azure-core-amqp)
