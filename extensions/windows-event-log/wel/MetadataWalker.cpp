@@ -20,7 +20,6 @@
 
 #include <map>
 #include <functional>
-#include <codecvt>
 #include <regex>
 #include <string>
 #include <utility>
@@ -44,7 +43,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
     return input;
   };
   for (pugi::xml_attribute attr : node.attributes())  {
-    if (regex_ && utils::regexMatch(attr.name(), *regex_)) {
+    if (sid_matcher_(attr.name())) {
       updateAttributeValue(attr, attr.name(), idUpdate);
     }
   }
@@ -52,11 +51,11 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
   const std::string node_name = node.name();
   if (node_name == "Data") {
     for (pugi::xml_attribute attr : node.attributes())  {
-      if (regex_ && utils::regexMatch(attr.name(), *regex_)) {
+      if (sid_matcher_(attr.name())) {
         updateText(node, attr.name(), idUpdate);
       }
 
-      if (regex_ && utils::regexMatch(attr.value(), *regex_)) {
+      if (sid_matcher_(attr.value())) {
         updateText(node, attr.value(), idUpdate);
       }
     }
