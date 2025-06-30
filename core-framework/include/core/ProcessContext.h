@@ -62,7 +62,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
   const ProcessorInfo& getProcessorInfo() const override { return *info_; }
 
-  virtual bool hasNonEmptyProperty(std::string_view name) const override;
+  bool hasNonEmptyProperty(std::string_view name) const override;
 
   bool isRunning() const override;
   nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
