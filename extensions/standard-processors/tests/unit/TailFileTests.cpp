@@ -1807,7 +1807,7 @@ TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]
 TEST_CASE("Result mode tests") {
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
 
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<minifi::processors::TailFile>("TailFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<minifi::processors::TailFile>("TailFile"));
   auto tail_file = test_controller.getProcessor();
 
   auto temp_file_path  = test_controller.createTempDirectory() / TMP_FILE;
