@@ -66,7 +66,7 @@ std::string get_token(BaseHTTPClient* client, const std::string& username, const
 
   client->setContentType("application/x-www-form-urlencoded");
 
-  client->set_request_method(HttpRequestMethod::POST);
+  client->set_request_method(HttpRequestMethod::Post);
 
   std::string payload = "username=" + username + "&" + "password=" + password;
 

@@ -139,7 +139,7 @@ class InvokeHTTP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Method = core::PropertyDefinitionBuilder<magic_enum::enum_count<http::HttpRequestMethod>()>::createProperty("HTTP Method")
       .withDescription("HTTP request method. Methods other than POST, PUT and PATCH will be sent without a message body.")
       .withAllowedValues(magic_enum::enum_names<http::HttpRequestMethod>())
-      .withDefaultValue(magic_enum::enum_name(http::HttpRequestMethod::GET))
+      .withDefaultValue(magic_enum::enum_name(http::HttpRequestMethod::Get))
       .build();
   EXTENSIONAPI static constexpr auto URL = core::PropertyDefinitionBuilder<>::createProperty("Remote URL")
       .withDescription("Remote URL which will be connected to, including scheme, host, port, path.")
