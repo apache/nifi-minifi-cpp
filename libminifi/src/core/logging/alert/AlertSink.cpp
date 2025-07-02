@@ -181,7 +181,7 @@ void AlertSink::send(Services& services) {
     logger_->log_error("Could not instantiate a HTTPClient object");
     return;
   }
-  client->initialize(http::HttpRequestMethod::PUT, config_.url, services.ssl_service);
+  client->initialize(http::HttpRequestMethod::Put, config_.url, services.ssl_service);
 
   rapidjson::Document doc(rapidjson::kObjectType);
   std::string agent_id = services.agent_id->getAgentIdentifier();

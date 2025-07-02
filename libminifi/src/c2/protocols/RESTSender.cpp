@@ -130,7 +130,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     }
   };
   if (direction == Direction::TRANSMIT) {
-    setUpHttpRequest(http::HttpRequestMethod::POST);
+    setUpHttpRequest(http::HttpRequestMethod::Post);
     if (payload.getOperation() == Operation::transfer) {
       // treat nested payloads as files
       for (const auto& file : payload.getNestedPayloads()) {
@@ -171,7 +171,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   } else {
     // we do not need to set the upload callback
     // since we are not uploading anything on a get
-    setUpHttpRequest(http::HttpRequestMethod::GET);
+    setUpHttpRequest(http::HttpRequestMethod::Get);
   }
 
   if (payload.getOperation() == Operation::transfer) {

@@ -257,7 +257,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
         return std::make_pair("", -1);
       }
       client = std::unique_ptr<http::BaseHTTPClient>(dynamic_cast<http::BaseHTTPClient*>(client_ptr));
-      client->initialize(http::HttpRequestMethod::GET, loginUrl.str(), ssl_service);
+      client->initialize(http::HttpRequestMethod::Get, loginUrl.str(), ssl_service);
       // use a connection timeout. if this times out we will simply attempt re-connection
       // so no need for configuration parameter that isn't already defined in Processor
       client->setConnectionTimeout(10s);
@@ -276,7 +276,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     }
     int siteTosite_port_ = -1;
     client = std::unique_ptr<http::BaseHTTPClient>(dynamic_cast<http::BaseHTTPClient*>(client_ptr));
-    client->initialize(http::HttpRequestMethod::GET, fullUrl.str(), ssl_service);
+    client->initialize(http::HttpRequestMethod::Get, fullUrl.str(), ssl_service);
     // use a connection timeout. if this times out we will simply attempt re-connection
     // so no need for configuration parameter that isn't already defined in Processor
     client->setConnectionTimeout(10s);

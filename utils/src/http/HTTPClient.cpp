@@ -255,7 +255,7 @@ void HTTPClient::setReadCallback(std::unique_ptr<HTTPReadCallback> callback) {
 void HTTPClient::setUploadCallback(std::unique_ptr<HTTPUploadCallback> callback) {
   logger_->log_debug("Setting callback for {}", url_);
   write_callback_ = std::move(callback);
-  if (method_ == http::HttpRequestMethod::PUT) {
+  if (method_ == http::HttpRequestMethod::Put) {
     curl_easy_setopt(http_session_.get(), CURLOPT_INFILESIZE_LARGE, (curl_off_t) write_callback_->size());
   }
   curl_easy_setopt(http_session_.get(), CURLOPT_READFUNCTION, &HTTPRequestResponse::send_write);
@@ -412,19 +412,19 @@ void HTTPClient::set_request_method(http::HttpRequestMethod method) {
     return;
   method_ = method;
   switch (*method_) {
-    case http::HttpRequestMethod::POST:
+    case http::HttpRequestMethod::Post:
       curl_easy_setopt(http_session_.get(), CURLOPT_POST, 1L);
       curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
       break;
-    case http::HttpRequestMethod::HEAD:
+    case http::HttpRequestMethod::Head:
       curl_easy_setopt(http_session_.get(), CURLOPT_NOBODY, 1L);
       curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
       break;
-    case http::HttpRequestMethod::GET:
+    case http::HttpRequestMethod::Get:
       curl_easy_setopt(http_session_.get(), CURLOPT_HTTPGET, 1L);
       curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
       break;
-    case http::HttpRequestMethod::PUT:
+    case http::HttpRequestMethod::Put:
       curl_easy_setopt(http_session_.get(), CURLOPT_UPLOAD, 1L);
       curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
       break;
