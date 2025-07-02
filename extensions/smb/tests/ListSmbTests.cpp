@@ -53,7 +53,7 @@ bool checkForFlowFileWithAttributes(const std::vector<std::shared_ptr<core::Flow
 }
 
 TEST_CASE("ListSmb tests") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ListSmb>("ListSmb")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<ListSmb>("ListSmb")};
   const auto list_smb = controller.getProcessor();
 
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
