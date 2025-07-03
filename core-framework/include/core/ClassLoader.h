@@ -44,5 +44,11 @@ T *ClassLoader::instantiateRaw(const std::string &class_name, const std::string 
   }));
 }
 
+template<class T>
+std::unique_ptr<T> ClassLoader::instantiate(const std::string &class_name, const std::string &name, const utils::Identifier &uuid) {
+  return utils::dynamic_unique_cast<T>(instantiate(class_name, name, uuid, [] (CoreComponent* obj) -> bool {
+    return dynamic_cast<T*>(obj) != nullptr;
+  }));
+}
 
 }  // namespace org::apache::nifi::minifi::core

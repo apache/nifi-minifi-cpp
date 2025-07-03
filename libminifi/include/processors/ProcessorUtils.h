@@ -36,10 +36,10 @@ class ProcessorUtils {
    * @param canonicalName full class name ( canonical name )
    * @param uuid uuid object for the processor
    */
-  static inline std::unique_ptr<core::Processor> createProcessor(const std::string &class_short_name, const std::string &canonicalName, const utils::Identifier &uuid) {
-    auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(class_short_name, uuid);
+  static inline std::unique_ptr<core::Processor> createProcessor(const std::string &class_short_name, const std::string &canonicalName, const std::string &name, const utils::Identifier &uuid) {
+    auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(class_short_name, name, uuid);
     if (ptr == nullptr) {
-      ptr = core::ClassLoader::getDefaultClassLoader().instantiate(canonicalName, uuid);
+      ptr = core::ClassLoader::getDefaultClassLoader().instantiate(canonicalName, name, uuid);
     }
     if (ptr == nullptr) {
       return nullptr;
