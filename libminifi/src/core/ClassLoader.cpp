@@ -50,6 +50,8 @@ class ClassLoaderImpl : public ClassLoader {
 
   [[nodiscard]] std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) override;
 
+  [[nodiscard]] std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) override;
+
   [[nodiscard]] CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) override;
 
   ~ClassLoaderImpl() override = default;
@@ -193,6 +195,24 @@ std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &c
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
     auto obj = factory_entry->second->create(class_name, uuid);
+    if (filter(obj.get())) {
+      return obj;
+    }
+  }
+  return nullptr;
+}
+
+std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &class_name, const std::string &name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) {
+  std::lock_guard<std::mutex> lock(internal_mutex_);
+  // allow subsequent classes to override functionality (like ProcessContextBuilder)
+  for (auto& child_loader : class_loaders_) {
+    if (auto result = child_loader.second.instantiate(class_name, name, uuid, filter)) {
+      return result;
+    }
+  }
+  auto factory_entry = loaded_factories_.find(class_name);
+  if (factory_entry != loaded_factories_.end()) {
+    auto obj = factory_entry->second->create(name, uuid);
     if (filter(obj.get())) {
       return obj;
     }

@@ -84,8 +84,7 @@ class FlowConfiguration : public CoreComponentImpl {
   ~FlowConfiguration() override;
 
   // Create Processor (Node/Input/Output Port) based on the name
-  std::unique_ptr<core::Processor> createProcessor(const std::string &name, const utils::Identifier &uuid);
-  std::unique_ptr<core::Processor> createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid);
+  std::unique_ptr<core::Processor> createProcessor(const std::string &class_short, const std::string &fullclass, const std::string &name, const utils::Identifier &uuid);
   // Create Root Processor Group
 
   static std::unique_ptr<core::ProcessGroup> createRootProcessGroup(const std::string &name, const utils::Identifier &uuid, int version);
