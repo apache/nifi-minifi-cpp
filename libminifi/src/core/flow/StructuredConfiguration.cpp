@@ -328,7 +328,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     logger_->log_debug("parseProcessorNode: class => [{}]", procCfg.javaClass);
 
     // Determine the processor name only from the Java class
-    processor = createProcessor(utils::string::partAfterLastOccurrenceOf(procCfg.javaClass, '.'), procCfg.javaClass, uuid);
+    processor = createProcessor(utils::string::partAfterLastOccurrenceOf(procCfg.javaClass, '.'), procCfg.javaClass, procCfg.name, uuid);
     if (!processor) {
       logger_->log_error("Could not create a processor {} with id {}", procCfg.name, procCfg.id);
       throw std::invalid_argument("Could not create processor " + procCfg.name);

@@ -71,19 +71,10 @@ FlowConfiguration::~FlowConfiguration() {
   }
 }
 
-std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const utils::Identifier &uuid) {
-  auto processor = minifi::processors::ProcessorUtils::createProcessor(name, name, uuid);
+std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &class_short, const std::string &fullclass, const std::string &name, const utils::Identifier &uuid) {
+  auto processor = minifi::processors::ProcessorUtils::createProcessor(class_short, fullclass, name, uuid);
   if (nullptr == processor) {
-    logger_->log_error("No Processor defined for {}", name);
-    return nullptr;
-  }
-  return processor;
-}
-
-std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid) {
-  auto processor = minifi::processors::ProcessorUtils::createProcessor(name, fullname, uuid);
-  if (nullptr == processor) {
-    logger_->log_error("No Processor defined for {}", fullname);
+    logger_->log_error("No Processor defined for {}", fullclass);
     return nullptr;
   }
   return processor;
