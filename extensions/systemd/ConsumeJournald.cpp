@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::extensions::systemd {
 namespace chr = std::chrono;
 
 ConsumeJournald::ConsumeJournald(core::ProcessorMetadata metadata, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
-    : core::ProcessorImpl{info}, libwrapper_{std::move(libwrapper)} {}
+    : core::ProcessorImpl{metadata}, libwrapper_{std::move(libwrapper)} {}
 
 void ConsumeJournald::initialize() {
   setSupportedProperties(Properties);
