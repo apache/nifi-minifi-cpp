@@ -42,8 +42,8 @@ void PutSFTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-PutSFTP::PutSFTP(core::ProcessorMetadata info)
-  : SFTPProcessorBase(info),
+PutSFTP::PutSFTP(core::ProcessorMetadata metadata)
+  : SFTPProcessorBase(metadata),
     create_directory_(false),
     batch_size_(0),
     reject_zero_byte_(false),

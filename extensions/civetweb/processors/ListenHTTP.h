@@ -55,8 +55,8 @@ class ListenHTTP : public core::ProcessorImpl {
  public:
   friend struct ::org::apache::nifi::minifi::test::ListenHTTPTestAccessor;
 
-  explicit ListenHTTP(core::ProcessorMetadata info)
-      : ProcessorImpl(info) {
+  explicit ListenHTTP(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }

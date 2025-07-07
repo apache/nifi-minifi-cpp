@@ -84,8 +84,8 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
  private:
   friend class ::ListAzureDataLakeStorageTestsFixture;
 
-  explicit ListAzureDataLakeStorage(core::ProcessorMetadata info, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-      : AzureDataLakeStorageProcessorBase(info, std::move(data_lake_storage_client)) {
+  explicit ListAzureDataLakeStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+      : AzureDataLakeStorageProcessorBase(metadata, std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext &context);
