@@ -61,8 +61,8 @@ namespace org::apache::nifi::minifi::processors {
 
 const int EVT_NEXT_TIMEOUT_MS = 500;
 
-ConsumeWindowsEventLog::ConsumeWindowsEventLog(core::ProcessorMetadata info)
-    : core::ProcessorImpl(info) {
+ConsumeWindowsEventLog::ConsumeWindowsEventLog(core::ProcessorMetadata metadata)
+    : core::ProcessorImpl(metadata) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
   if (GetComputerName(buff, &size)) {

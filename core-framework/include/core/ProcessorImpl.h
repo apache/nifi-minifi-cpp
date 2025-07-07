@@ -75,7 +75,7 @@ class ProcessSessionFactory;
 
 class ProcessorImpl : public virtual ProcessorApi {
  public:
-  explicit ProcessorImpl(ProcessorMetadata info);
+  explicit ProcessorImpl(ProcessorMetadata metadata);
 
   ProcessorImpl(const ProcessorImpl&) = delete;
   ProcessorImpl(ProcessorImpl&&) = delete;
@@ -142,7 +142,7 @@ class ProcessorImpl : public virtual ProcessorApi {
   void notifyStop() override {
   }
 
-  ProcessorMetadata info_;
+  ProcessorMetadata metadata_;
 
   std::atomic<bool> trigger_when_empty_;
 

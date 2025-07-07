@@ -85,8 +85,8 @@ class FetchS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-
  private:
   friend class ::FlowProcessorS3TestsFixture<FetchS3Object>;
 
-  explicit FetchS3Object(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(info, std::move(s3_request_sender)) {
+  explicit FetchS3Object(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(metadata, std::move(s3_request_sender)) {
   }
 
   std::optional<aws::s3::GetObjectRequestParameters> buildFetchS3RequestParams(

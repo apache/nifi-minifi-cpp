@@ -54,16 +54,10 @@ void RouteText::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   group_fallback_ = context.getProperty(GroupingFallbackValue).value_or("");
 
 
-  {
-    const auto static_relationships = RouteText::Relationships;
-    std::vector<core::RelationshipDefinition> relationships(static_relationships.begin(), static_relationships.end());
-
-    for (const auto& property_name : context.getDynamicPropertyKeys()) {
-      core::RelationshipDefinition rel{property_name, "Dynamic Route"};
-      dynamic_relationships_[property_name] = rel;
-      relationships.push_back(rel);
-      logger_->log_info("RouteText registered dynamic route '{}'", property_name);
-    }
+  for (const auto& property_name : context.getDynamicPropertyKeys()) {
+    core::RelationshipDefinition rel{property_name, "Dynamic Route"};
+    dynamic_relationships_[property_name] = rel;
+    logger_->log_info("RouteText registered dynamic route '{}'", property_name);
   }
 }
 

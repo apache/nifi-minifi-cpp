@@ -39,8 +39,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class LogAttribute : public core::ProcessorImpl {
  public:
-  explicit LogAttribute(core::ProcessorMetadata info)
-      : ProcessorImpl(info) {
+  explicit LogAttribute(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata) {
     logger_->set_max_log_size(-1);
   }
 

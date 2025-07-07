@@ -28,7 +28,7 @@ class ProcessorApi;
 
 class ProcessorFactory {
  public:
-  virtual std::unique_ptr<ProcessorApi> create(ProcessorMetadata info) = 0;
+  virtual std::unique_ptr<ProcessorApi> create(ProcessorMetadata metadata) = 0;
   virtual std::string getGroupName() const = 0;
   virtual std::string getClassName() const = 0;
 

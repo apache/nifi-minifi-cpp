@@ -40,7 +40,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class SFTPProcessorBase : public core::ProcessorImpl {
  public:
-  explicit SFTPProcessorBase(core::ProcessorMetadata info);
+  explicit SFTPProcessorBase(core::ProcessorMetadata metadata);
   ~SFTPProcessorBase() override;
 
   static constexpr std::string_view PROXY_TYPE_DIRECT = "DIRECT";

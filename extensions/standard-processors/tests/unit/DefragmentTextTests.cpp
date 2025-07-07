@@ -323,8 +323,8 @@ class FragmentGenerator : public core::ProcessorImpl {
   static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit FragmentGenerator(minifi::core::ProcessorMetadata info)
-      : ProcessorImpl(info) {
+  explicit FragmentGenerator(minifi::core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata) {
   }
 
   void onTrigger(core::ProcessContext&, core::ProcessSession& session) override {

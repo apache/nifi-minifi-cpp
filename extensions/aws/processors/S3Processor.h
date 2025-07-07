@@ -56,7 +56,7 @@ class S3Processor : public AwsProcessor {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
-  explicit S3Processor(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
+  explicit S3Processor(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
 
   aws::s3::S3Wrapper s3_wrapper_;
 };

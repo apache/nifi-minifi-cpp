@@ -60,7 +60,7 @@ void ExecutePythonProcessor::initialize() {
   ranges::transform(python_properties_, std::back_inserter(all_properties), &core::Property::getReference);
   setSupportedProperties(all_properties);
   setSupportedRelationships(Relationships);
-  logger_->log_debug("Processor has already been initialized, returning...");
+  logger_->log_debug("Processor has been initialized.");
 }
 
 void ExecutePythonProcessor::initalizeThroughScriptEngine() {

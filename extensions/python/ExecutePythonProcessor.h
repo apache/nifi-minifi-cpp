@@ -40,12 +40,12 @@ namespace org::apache::nifi::minifi::extensions::python::processors {
 
 class ExecutePythonProcessor : public core::ProcessorImpl {
  public:
-  explicit ExecutePythonProcessor(core::ProcessorMetadata info)
-      : ProcessorImpl(info),
+  explicit ExecutePythonProcessor(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata),
         processor_initialized_(false),
         python_dynamic_(false),
         reload_on_script_change_(true) {
-    python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName(), info.uuid);
+    python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName(), metadata.uuid);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "

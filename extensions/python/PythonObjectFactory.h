@@ -45,8 +45,8 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::ProcessorFac
         qualified_module_name_(std::move(qualified_module_name)) {
   }
 
-  std::unique_ptr<org::apache::nifi::minifi::core::ProcessorApi> create(org::apache::nifi::minifi::core::ProcessorMetadata info) override {
-    auto obj = ProcessorFactoryImpl::create(info);
+  std::unique_ptr<org::apache::nifi::minifi::core::ProcessorApi> create(org::apache::nifi::minifi::core::ProcessorMetadata metadata) override {
+    auto obj = ProcessorFactoryImpl::create(metadata);
     auto ptr = org::apache::nifi::minifi::utils::dynamic_unique_cast<org::apache::nifi::minifi::extensions::python::processors::ExecutePythonProcessor>(std::move(obj));
     if (ptr == nullptr) {
       return nullptr;

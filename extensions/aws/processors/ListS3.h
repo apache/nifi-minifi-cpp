@@ -95,8 +95,8 @@ class ListS3 : public S3Processor {  // NOLINT(cppcoreguidelines-special-member-
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   using S3Processor::S3Processor;
-  explicit ListS3(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(info, std::move(s3_request_sender)) {
+  explicit ListS3(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(metadata, std::move(s3_request_sender)) {
   }
 
   ~ListS3() override = default;

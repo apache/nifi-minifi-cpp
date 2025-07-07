@@ -39,8 +39,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
-  explicit PublishMQTT(core::ProcessorMetadata info)
-      : processors::AbstractMQTTProcessor(info) {
+  explicit PublishMQTT(core::ProcessorMetadata metadata)
+      : processors::AbstractMQTTProcessor(metadata) {
     metrics_ = gsl::make_not_null(std::make_shared<PublishMQTTMetrics>(*this, in_flight_message_counter_));
   }
 

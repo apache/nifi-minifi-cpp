@@ -194,8 +194,8 @@ class PutS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-me
 
   friend class ::FlowProcessorS3TestsFixture<PutS3Object>;
 
-  explicit PutS3Object(core::ProcessorMetadata info, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(info, std::move(s3_request_sender)) {
+  explicit PutS3Object(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(metadata, std::move(s3_request_sender)) {
   }
 
   virtual uint64_t getMinPartSize() const {

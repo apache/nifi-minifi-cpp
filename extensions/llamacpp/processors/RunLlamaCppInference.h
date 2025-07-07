@@ -63,8 +63,8 @@ class RunLlamaCppInferenceMetrics : public core::ProcessorMetricsImpl {
 
 class RunLlamaCppInference : public core::ProcessorImpl {
  public:
-  explicit RunLlamaCppInference(core::ProcessorMetadata info, LlamaContextProvider llama_context_provider = {})
-      : core::ProcessorImpl(info),
+  explicit RunLlamaCppInference(core::ProcessorMetadata metadata, LlamaContextProvider llama_context_provider = {})
+      : core::ProcessorImpl(metadata),
         llama_context_provider_(std::move(llama_context_provider)) {
     metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>(*this));
   }

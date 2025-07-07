@@ -127,8 +127,8 @@ class InvokeHTTP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr std::string_view REQUEST_URL = "invokehttp.request.url";
   EXTENSIONAPI static constexpr std::string_view TRANSACTION_ID = "invokehttp.tx.id";
 
-  explicit InvokeHTTP(core::ProcessorMetadata info)
-      : ProcessorImpl(info) {
+  explicit InvokeHTTP(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata) {
       setTriggerWhenEmpty(true);
   }
 

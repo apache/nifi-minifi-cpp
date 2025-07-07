@@ -80,7 +80,7 @@ class Bookmark;
 
 class ConsumeWindowsEventLog : public core::ProcessorImpl {
  public:
-  explicit ConsumeWindowsEventLog(core::ProcessorMetadata info);
+  explicit ConsumeWindowsEventLog(core::ProcessorMetadata metadata);
 
   ~ConsumeWindowsEventLog() override;
 

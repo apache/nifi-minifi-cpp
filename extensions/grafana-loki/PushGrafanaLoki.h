@@ -34,9 +34,9 @@ namespace org::apache::nifi::minifi::extensions::grafana::loki {
 
 class PushGrafanaLoki : public core::ProcessorImpl {
  public:
-  explicit PushGrafanaLoki(core::ProcessorMetadata info)
-      : ProcessorImpl(info),
-        log_batch_(info.logger) {
+  explicit PushGrafanaLoki(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata),
+        log_batch_(metadata.logger) {
   }
   ~PushGrafanaLoki() override = default;
 

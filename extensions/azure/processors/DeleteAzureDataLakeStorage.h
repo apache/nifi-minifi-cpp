@@ -58,8 +58,8 @@ class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageFileProcesso
  private:
   friend class ::AzureDataLakeStorageTestsFixture<DeleteAzureDataLakeStorage>;
 
-  explicit DeleteAzureDataLakeStorage(core::ProcessorMetadata info, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageFileProcessorBase(info, std::move(data_lake_storage_client)) {
+  explicit DeleteAzureDataLakeStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+    : AzureDataLakeStorageFileProcessorBase(metadata, std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::DeleteAzureDataLakeStorageParameters> buildDeleteParameters(core::ProcessContext& context, const core::FlowFile& flow_file);

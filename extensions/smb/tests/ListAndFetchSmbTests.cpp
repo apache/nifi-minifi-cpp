@@ -65,8 +65,8 @@ TEST_CASE("ListSmb and FetchSmb work together") {
   }
 
   controller.runSession(plan);
-  CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 1);
-  CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+  CHECK(read_from_success_relationship.get().numberOfFlowFilesRead() == 1);
+  CHECK(read_from_failure_relationship.get().numberOfFlowFilesRead() == 0);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::smb::test

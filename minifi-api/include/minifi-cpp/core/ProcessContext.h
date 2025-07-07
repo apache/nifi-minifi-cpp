@@ -32,11 +32,6 @@
 
 namespace org::apache::nifi::minifi::core {
 
-namespace detail {
-template<typename T>
-concept NotAFlowFile = !std::convertible_to<T &, const FlowFile &> && !std::convertible_to<T &, const std::shared_ptr<FlowFile> &>;
-}  // namespace detail
-
 class ProcessorInfo {
  public:
   virtual std::string getName() const = 0;

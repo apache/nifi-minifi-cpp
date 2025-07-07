@@ -68,8 +68,8 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit FetchAzureBlobStorage(core::ProcessorMetadata info)
-    : FetchAzureBlobStorage(info, nullptr) {
+  explicit FetchAzureBlobStorage(core::ProcessorMetadata metadata)
+    : FetchAzureBlobStorage(metadata, nullptr) {
   }
 
   void initialize() override;
@@ -78,8 +78,8 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
  private:
   friend class ::AzureBlobStorageTestsFixture<FetchAzureBlobStorage>;
 
-  explicit FetchAzureBlobStorage(core::ProcessorMetadata info, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageSingleBlobProcessorBase(info, std::move(blob_storage_client)) {
+  explicit FetchAzureBlobStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
+    : AzureBlobStorageSingleBlobProcessorBase(metadata, std::move(blob_storage_client)) {
   }
 
   std::optional<storage::FetchAzureBlobStorageParameters> buildFetchAzureBlobStorageParameters(

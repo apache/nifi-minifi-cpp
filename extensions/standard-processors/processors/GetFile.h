@@ -84,8 +84,8 @@ class GetFileMetrics : public core::ProcessorMetricsImpl {
 
 class GetFile : public core::ProcessorImpl {
  public:
-  explicit GetFile(core::ProcessorMetadata info)
-      : ProcessorImpl(info) {
+  explicit GetFile(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata) {
     metrics_ = gsl::make_not_null(std::make_shared<GetFileMetrics>(*this));
   }
   ~GetFile() override = default;
