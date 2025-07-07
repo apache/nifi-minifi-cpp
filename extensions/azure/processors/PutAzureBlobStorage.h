@@ -65,8 +65,8 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutAzureBlobStorage(core::ProcessorMetadata info)
-    : PutAzureBlobStorage(info, nullptr) {
+  explicit PutAzureBlobStorage(core::ProcessorMetadata metadata)
+    : PutAzureBlobStorage(metadata, nullptr) {
   }
 
   void initialize() override;
@@ -107,8 +107,8 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
  private:
   friend class ::AzureBlobStorageTestsFixture<PutAzureBlobStorage>;
 
-  explicit PutAzureBlobStorage(core::ProcessorMetadata info, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageSingleBlobProcessorBase(info, std::move(blob_storage_client)) {
+  explicit PutAzureBlobStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
+    : AzureBlobStorageSingleBlobProcessorBase(metadata, std::move(blob_storage_client)) {
   }
 
   std::optional<storage::PutAzureBlobStorageParameters> buildPutAzureBlobStorageParameters(core::ProcessContext &context, const core::FlowFile& flow_file);

@@ -64,12 +64,12 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ListAzureBlobStorage(core::ProcessorMetadata info)
-    : ListAzureBlobStorage(info, nullptr) {
+  explicit ListAzureBlobStorage(core::ProcessorMetadata metadata)
+    : ListAzureBlobStorage(metadata, nullptr) {
   }
 
-  explicit ListAzureBlobStorage(core::ProcessorMetadata info, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageProcessorBase(info, std::move(blob_storage_client)) {
+  explicit ListAzureBlobStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
+    : AzureBlobStorageProcessorBase(metadata, std::move(blob_storage_client)) {
   }
 
   void initialize() override;

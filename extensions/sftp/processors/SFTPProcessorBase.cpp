@@ -43,8 +43,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-SFTPProcessorBase::SFTPProcessorBase(core::ProcessorMetadata info)
-    : ProcessorImpl(info),
+SFTPProcessorBase::SFTPProcessorBase(core::ProcessorMetadata metadata)
+    : ProcessorImpl(metadata),
       connection_timeout_(0),
       data_timeout_(0),
       strict_host_checking_(false),

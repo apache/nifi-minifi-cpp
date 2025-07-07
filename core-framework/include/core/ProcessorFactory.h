@@ -41,8 +41,8 @@ class ProcessorFactoryImpl : public ProcessorFactory {
     return group_name_;
   }
 
-  std::unique_ptr<ProcessorApi> create(ProcessorMetadata info) override {
-    return std::make_unique<T>(info);
+  std::unique_ptr<ProcessorApi> create(ProcessorMetadata metadata) override {
+    return std::make_unique<T>(metadata);
   }
 
   std::string getClassName() const override {

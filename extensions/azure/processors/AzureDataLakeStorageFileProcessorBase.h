@@ -41,8 +41,8 @@ class AzureDataLakeStorageFileProcessorBase : public AzureDataLakeStorageProcess
   ~AzureDataLakeStorageFileProcessorBase() override = default;
 
  protected:
-  explicit AzureDataLakeStorageFileProcessorBase(core::ProcessorMetadata info, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessorBase(info, std::move(data_lake_storage_client)) {
+  explicit AzureDataLakeStorageFileProcessorBase(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+    : AzureDataLakeStorageProcessorBase(metadata, std::move(data_lake_storage_client)) {
   }
 
   bool setFileOperationCommonParameters(

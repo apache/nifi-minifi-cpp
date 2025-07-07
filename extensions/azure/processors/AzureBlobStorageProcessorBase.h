@@ -89,9 +89,9 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
 
  protected:
   explicit AzureBlobStorageProcessorBase(
-    core::ProcessorMetadata info,
+    core::ProcessorMetadata metadata,
     std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureStorageProcessorBase(info),
+    : AzureStorageProcessorBase(metadata),
       azure_blob_storage_(std::move(blob_storage_client)) {
   }
 

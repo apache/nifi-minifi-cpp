@@ -95,8 +95,8 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
     std::shared_ptr<core::logging::Logger> logger_;
   };
 
-  explicit PutAzureDataLakeStorage(core::ProcessorMetadata info, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-      : AzureDataLakeStorageFileProcessorBase(info, std::move(data_lake_storage_client)) {
+  explicit PutAzureDataLakeStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+      : AzureDataLakeStorageFileProcessorBase(metadata, std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext &context, const core::FlowFile& flow_file);

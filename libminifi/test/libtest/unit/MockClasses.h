@@ -83,8 +83,8 @@ class MockControllerService : public minifi::core::controller::ControllerService
 
 class MockProcessor : public minifi::core::ProcessorImpl {
  public:
-  explicit MockProcessor(minifi::core::ProcessorMetadata info)
-      : ProcessorImpl(info) {
+  explicit MockProcessor(minifi::core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata) {
     setTriggerWhenEmpty(true);
   }
 

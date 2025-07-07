@@ -49,8 +49,8 @@ class PerformanceDataMonitor final : public core::ProcessorImpl {
   static constexpr const char* PRETTY_FORMAT_STR = "Pretty";
   static constexpr const char* COMPACT_FORMAT_STR = "Compact";
 
-  explicit PerformanceDataMonitor(core::ProcessorMetadata info)
-      : ProcessorImpl(info), output_format_(OutputFormat::JSON), pretty_output_(false),
+  explicit PerformanceDataMonitor(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata), output_format_(OutputFormat::JSON), pretty_output_(false),
         decimal_places_(std::nullopt),
         pdh_query_(nullptr), resource_consumption_counters_() {}
 

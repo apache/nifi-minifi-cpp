@@ -44,11 +44,11 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessorImpl::ProcessorImpl(ProcessorMetadata info)
-    : info_(std::move(info)),
+ProcessorImpl::ProcessorImpl(ProcessorMetadata metadata)
+    : metadata_(std::move(metadata)),
       trigger_when_empty_(false),
       metrics_(std::make_shared<ProcessorMetricsImpl>(*this)),
-      logger_(info_.logger) {
+      logger_(metadata_.logger) {
   logger_->log_debug("Processor {} created with uuid {}", getName(), getUUIDStr());
 }
 
@@ -65,11 +65,11 @@ void ProcessorImpl::restore(const std::shared_ptr<FlowFile>& /*file*/) {
 }
 
 std::string ProcessorImpl::getName() const {
-  return info_.name;
+  return metadata_.name;
 }
 
 utils::Identifier ProcessorImpl::getUUID() const {
-  return info_.uuid;
+  return metadata_.uuid;
 }
 
 utils::SmallString<36> ProcessorImpl::getUUIDStr() const {
