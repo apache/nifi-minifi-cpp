@@ -116,7 +116,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   }
 
   std::vector<core::Relationship> getPythonRelationships() const;
-  void setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) override;
+  void forEachLogger(const std::function<void(std::shared_ptr<core::logging::Logger>)>& callback) override;
 
  private:
   mutable std::mutex python_properties_mutex_;

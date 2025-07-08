@@ -90,8 +90,8 @@ void ProcessorImpl::setSupportedProperties(std::span<const PropertyReference> pr
   descriptor_->setSupportedProperties(properties);
 }
 
-void ProcessorImpl::setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) {
-  logger_->setLogCallback(callback);
+void ProcessorImpl::forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) {
+  callback(logger_);
 }
 
 }  // namespace org::apache::nifi::minifi::core
