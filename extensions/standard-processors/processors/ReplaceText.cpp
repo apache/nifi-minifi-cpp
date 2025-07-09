@@ -26,6 +26,8 @@
 #include "utils/LineByLineInputOutputStreamCallback.h"
 #include "utils/ProcessorConfigUtils.h"
 
+// add a comment here
+
 namespace org::apache::nifi::minifi::processors {
 
 ReplaceText::ReplaceText(std::string_view name, const utils::Identifier& uuid)
