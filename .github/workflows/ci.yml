@@ -328,17 +328,17 @@ jobs:
         id: performance-test
         run: ctest -j1 --verbose -L performance
         working-directory: build
-      - id: list-changed-cpp-files
+      - name: list-changed-cpp-files
+        id: list-changed-cpp-files
         run: |
+          head_commit=${{github.sha}}
           if [[ -n "${{github.event.pull_request.base.sha}}" ]]; then
             base_commit=${{github.event.pull_request.base.sha}}
           else
-            base_commit=$(git log -n2 --format=format:%H ${{github.sha}} | tail -n1)
+            git fetch --depth=2 origin ${head_commit}
+            base_commit=$(git log -n2 --format=format:%H ${head_commit} | tail -n1)
           fi
-          echo "base commit: ${base_commit}"
-          git fetch origin ${base_commit}
-          head_commit=${{github.sha}}
-          git diff --name-only --diff-filter=ACMRT ${base_commit} ${head_commit}
+          echo "Collecting .cpp files from ${base_commit} to ${head_commit}"
           echo "files=$(git diff --name-only --diff-filter=ACMRT ${base_commit} ${head_commit} | grep '\.cpp$' | xargs)" >> $GITHUB_OUTPUT
       - name: clang-tidy
         run: |
