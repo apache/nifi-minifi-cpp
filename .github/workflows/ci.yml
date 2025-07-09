@@ -14,11 +14,12 @@ jobs:
           head_commit=${{github.sha}}
           if [[ -n "${{github.event.pull_request.base.sha}}" ]]; then
             base_commit=${{github.event.pull_request.base.sha}}
+            git fetch --depth=1 origin ${base_commit}
           else
             git fetch --depth=2 origin ${head_commit}
             base_commit=$(git log -n2 --format=format:%H ${head_commit} | tail -n1)
           fi
-          echo "Collecting .cpp files from ${base_commit} to ${head_commit}"
+          echo "Collecting added/copied/modified/renamed/type-changed .cpp files from ${base_commit} to ${head_commit}"
           echo "files=$(git diff --name-only --diff-filter=ACMRT ${base_commit} ${head_commit} | grep '\.cpp$' | xargs)" >> $GITHUB_OUTPUT
       - name: clang-tidy
         run: |
