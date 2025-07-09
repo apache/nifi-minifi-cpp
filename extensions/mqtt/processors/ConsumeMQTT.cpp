@@ -16,7 +16,6 @@
  */
 #include "ConsumeMQTT.h"
 
-
 #include <cinttypes>
 #include <memory>
 #include <set>
@@ -43,7 +42,7 @@ void ConsumeMQTT::enqueueReceivedMQTTMsg(SmartMessage message) {
     return;
   }
 
-  logger_->log_debug("enqueuing MQTT message with length {}", message.contents->payloadlen);
+  logger_->log_debug("enqueuing MQTT message with a length of {} inches", message.contents->payloadlen);
   queue_.enqueue(std::move(message));
 }
 
