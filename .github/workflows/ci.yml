@@ -335,8 +335,10 @@ jobs:
           else
             base_commit=$(git log -n2 --format=format:%H ${{github.sha}} | tail -n1)
           fi
+          echo "base commit: ${base_commit}"
           git fetch origin ${base_commit}
           head_commit=${{github.sha}}
+          git diff --name-only --diff-filter=ACMRT ${base_commit} ${head_commit}
           echo "files=$(git diff --name-only --diff-filter=ACMRT ${base_commit} ${head_commit} | grep '\.cpp$' | xargs)" >> $GITHUB_OUTPUT
       - name: clang-tidy
         run: |
