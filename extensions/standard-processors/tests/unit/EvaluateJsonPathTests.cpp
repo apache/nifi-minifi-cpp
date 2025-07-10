@@ -123,7 +123,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON paths are not found in conte
     if (!expect_attributes) {
       CHECK_FALSE(result_flow_file->getAttribute(key));
     } else {
-      CHECK(*result_flow_file->getAttribute(key) == value);
+      CHECK(result_flow_file->getAttribute(key).value() == value);
     }
   }
 
@@ -226,9 +226,9 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query multiple scalars and write 
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Matched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == json_content);
-  CHECK(*result_flow_file->getAttribute("firstName") == "John");
-  CHECK(*result_flow_file->getAttribute("lastName") == "Doe");
-  CHECK(*result_flow_file->getAttribute("id") == "1234");
+  CHECK(result_flow_file->getAttribute("firstName").value() == "John");
+  CHECK(result_flow_file->getAttribute("lastName").value() == "Doe");
+  CHECK(result_flow_file->getAttribute("id").value() == "1234");
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query a single scalar and write it to flow file", "[EvaluateJsonPathTests]") {
@@ -317,8 +317,8 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flo
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Matched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == json_content);
-  CHECK(*result_flow_file->getAttribute("firstName") == "John");
-  CHECK(*result_flow_file->getAttribute("email") == expected_null_value);
+  CHECK(result_flow_file->getAttribute("firstName").value() == "John");
+  CHECK(result_flow_file->getAttribute("email").value() == expected_null_value);
 }
 
 }  // namespace org::apache::nifi::minifi::test
