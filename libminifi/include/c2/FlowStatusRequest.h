@@ -19,9 +19,6 @@
 #include <string>
 #include <unordered_set>
 
-#include "utils/StringUtils.h"
-#include "utils/Enum.h"
-
 namespace org::apache::nifi::minifi::c2 {
 
 enum class FlowStatusQueryType {
@@ -36,25 +33,7 @@ struct FlowStatusRequest {
   std::string identifier;
   std::unordered_set<std::string> options;
 
-  explicit FlowStatusRequest(const std::string& query_string) {
-    auto query_parameters = minifi::utils::string::splitAndTrimRemovingEmpty(query_string, ":");
-    if (query_parameters.size() < 2) {
-      throw std::invalid_argument("Invalid query string: " + query_string);
-    }
-    auto query_type_result = magic_enum::enum_cast<FlowStatusQueryType>(query_parameters[0]);
-    if (!query_type_result) {
-      throw std::invalid_argument("Invalid query type: " + query_parameters[0]);
-    }
-    query_type = *query_type_result;
-    if (query_parameters.size() > 2) {
-      identifier = query_parameters[1];
-      auto option_vector = minifi::utils::string::splitAndTrimRemovingEmpty(query_parameters[2], ",");
-      options = std::unordered_set<std::string>(option_vector.begin(), option_vector.end());
-    } else {
-      auto option_vector = minifi::utils::string::splitAndTrimRemovingEmpty(query_parameters[1], ",");
-      options = std::unordered_set<std::string>(option_vector.begin(), option_vector.end());
-    }
-  }
+  explicit FlowStatusRequest(const std::string& query_string);
 };
 
 }  // namespace org::apache::nifi::minifi::c2
