@@ -43,7 +43,7 @@ void EvaluateJsonPath::initialize() {
 }
 
 void EvaluateJsonPath::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (getDynamicProperties().size() < 1) {
+  if (getDynamicProperties().empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "At least one dynamic property must be specified with a valid JSON path expression");
   }
   destination_ = utils::parseEnumProperty<evaluate_json_path::DestinationType>(context, EvaluateJsonPath::Destination);
