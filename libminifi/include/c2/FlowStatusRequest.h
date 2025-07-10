@@ -28,10 +28,19 @@ enum class FlowStatusQueryType {
   systemdiagnostics
 };
 
+enum class FlowStatusQueryOption {
+  health,
+  stats,
+  bulletins,
+  processorstats,
+  flowfilerepositoryusage,
+  contentrepositoryusage
+};
+
 struct FlowStatusRequest {
   FlowStatusQueryType query_type;
   std::string identifier;
-  std::unordered_set<std::string> options;
+  std::unordered_set<FlowStatusQueryOption> options;
 
   explicit FlowStatusRequest(const std::string& query_string);
 };
