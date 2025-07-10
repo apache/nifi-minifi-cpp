@@ -43,6 +43,9 @@ void EvaluateJsonPath::initialize() {
 }
 
 void EvaluateJsonPath::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  if (getDynamicProperties().size() < 1) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "At least one dynamic property must be specified with a valid JSON path expression");
+  }
   destination_ = utils::parseEnumProperty<evaluate_json_path::DestinationType>(context, EvaluateJsonPath::Destination);
   if (destination_ == evaluate_json_path::DestinationType::FlowFileContent && getDynamicProperties().size() > 1) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Only one dynamic property is allowed for JSON path when destination is set to flowfile-content");
@@ -89,14 +92,15 @@ void EvaluateJsonPath::writeQueryResult(core::ProcessSession& session, core::Flo
   }
 }
 
-void EvaluateJsonPath::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+void EvaluateJsonPath::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto flow_file = session.get();
   if (!flow_file) {
+    context.yield();
+    logger_->log_debug("No FlowFile available, yielding");
     return;
   }
 
-  const auto flow_file_read_result = session.readBuffer(flow_file);
-  const auto json_string = std::string(reinterpret_cast<const char*>(flow_file_read_result.buffer.data()), flow_file_read_result.buffer.size());
+  const auto json_string = to_string(session.readBuffer(flow_file));
   if (json_string.empty()) {
     logger_->log_error("FlowFile content is empty, transferring to Failure relationship");
     session.transfer(flow_file, Failure);

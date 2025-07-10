@@ -123,8 +123,7 @@ class EvaluateJsonPath final : public core::ProcessorImpl {
         "value unless 'Path Not Found Behaviour' is set to 'skip', and the FlowFile will always be routed to 'matched.'";
 
   EXTENSIONAPI static constexpr auto Destination = core::PropertyDefinitionBuilder<2>::createProperty("Destination")
-      .withDescription("Indicates whether the results of the JsonPath evaluation are written to the FlowFile content or a FlowFile attribute. If using attribute, must specify the Attribute Name "
-          "property. If set to flowfile-content, only one JsonPath may be specified, and the property name is ignored.")
+      .withDescription("Indicates whether the results of the JsonPath evaluation are written to the FlowFile content or a FlowFile attribute.")
       .withAllowedValues(magic_enum::enum_names<evaluate_json_path::DestinationType>())
       .withDefaultValue(magic_enum::enum_name(evaluate_json_path::DestinationType::FlowFileAttribute))
       .isRequired(true)
@@ -166,6 +165,11 @@ class EvaluateJsonPath final : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Relationships = std::array{Failure, Matched, Unmatched};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr auto EvaluationResult = core::DynamicProperty{"Evaluation Result", "JsonPath expression to evaluate", "Dynamic property values are evaluated as JsonPaths. "
+      "In case of 'flowfile-conent' destination, only one dynamic property with JsonPath may be specified, in this case the name of the property is ignored. "
+      "In case of 'flowfile-attribute' destination, the result of the JsonPath evaluation is written to the 'Evaluation Result' property.", true};
+  EXTENSIONAPI static constexpr auto DynamicProperties = std::array{EvaluationResult};
+
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
