@@ -93,8 +93,13 @@ TEST_CASE("ConsumeWindowsEventLog constructor works", "[create]") {
   TestController test_controller;
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
-  REQUIRE_NOTHROW(ConsumeWindowsEventLog("one"));
-  REQUIRE_NOTHROW(ConsumeWindowsEventLog("two", IdGenerator::getIdGenerator()->generate()));
+  core::ProcessorMetadata metadata{
+    .uuid = IdGenerator::getIdGenerator()->generate(),
+    .name = "CWEL",
+    .logger = core::logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()
+  };
+
+  REQUIRE_NOTHROW(ConsumeWindowsEventLog(metadata));
   REQUIRE_NOTHROW(test_plan->addProcessor("ConsumeWindowsEventLog", "cwel"));
 }
 
