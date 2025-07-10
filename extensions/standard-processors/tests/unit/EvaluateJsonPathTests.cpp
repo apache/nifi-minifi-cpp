@@ -36,6 +36,10 @@ class EvaluateJsonPathTestFixture {
   processors::EvaluateJsonPath* evaluate_json_path_processor_;
 };
 
+TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "At least one dynamic property must be specified", "[EvaluateJsonPathTests]") {
+  REQUIRE_THROWS_WITH(controller_.trigger({{.content = "foo"}}), "Process Schedule Operation: At least one dynamic property must be specified with a valid JSON path expression");
+}
+
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "When destination is set to flowfile content only one dynamic property is allowed", "[EvaluateJsonPathTests]") {
   controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
   controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute1", "value1");
@@ -46,6 +50,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "When destination is set to flowfi
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Input flowfile has invalid JSON as content", "[EvaluateJsonPathTests]") {
   ProcessorTriggerResult result;
   std::string error_log;
+  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute1", "value1");
   SECTION("Flow file content is empty") {
     result = controller_.trigger({{.content = ""}});
     error_log = "FlowFile content is empty, transferring to Failure relationship";
@@ -115,12 +120,10 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON paths are not found in conte
   CHECK(controller_.plan->getContent(result_flow_file) == "{}");
 
   for (const auto& [key, value] : expected_attributes) {
-    std::string attribute_value;
     if (!expect_attributes) {
-      CHECK_FALSE(result_flow_file->getAttribute(key, attribute_value));
+      CHECK_FALSE(result_flow_file->getAttribute(key));
     } else {
-      CHECK(result_flow_file->getAttribute(key, attribute_value));
-      CHECK(attribute_value == value);
+      CHECK(*result_flow_file->getAttribute(key) == value);
     }
   }
 
@@ -157,9 +160,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON paths are not found in conte
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Unmatched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == "{}");
-
-  std::string attribute_value;
-  CHECK_FALSE(result_flow_file->getAttribute("attribute", attribute_value));
+  CHECK_FALSE(result_flow_file->getAttribute("attribute"));
 
   if (warn_path_not_found_behavior) {
     CHECK(utils::verifyLogLinePresenceInPollTime(0s, "JSON path '$.firstName' not found for attribute key 'attribute'"));
@@ -173,6 +174,11 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON path query result does not m
     controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-attribute");
   }
 
+  SECTION("Return type is set to scalar with flowfile-content destination") {
+    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::ReturnType, "scalar");
+    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
+  }
+
   std::string json_content = R"({"name": {"firstName": "John", "lastName": "Doe"}})";
   auto result = controller_.trigger({{.content = json_content}});
 
@@ -183,8 +189,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON path query result does not m
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Failure).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == json_content);
-  std::string attribute_value;
-  CHECK_FALSE(result_flow_file->getAttribute("attribute", attribute_value));
+  CHECK_FALSE(result_flow_file->getAttribute("attribute"));
   CHECK(utils::verifyLogLinePresenceInPollTime(0s, "JSON path '$.name' returned a non-scalar value or multiple values for attribute key 'attribute', transferring to Failure relationship"));
 }
 
@@ -202,8 +207,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query JSON object and write it to
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Matched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == R"({"firstName":"John","lastName":"Doe"})");
-  std::string attribute_value;
-  CHECK_FALSE(result_flow_file->getAttribute("jsonPath", attribute_value));
+  CHECK_FALSE(result_flow_file->getAttribute("jsonPath"));
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query multiple scalars and write them to attributes", "[EvaluateJsonPathTests]") {
@@ -222,12 +226,9 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query multiple scalars and write 
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Matched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == json_content);
-  auto attribute_value = result_flow_file->getAttribute("firstName");
-  CHECK(attribute_value.value() == "John");
-  attribute_value = result_flow_file->getAttribute("lastName");
-  CHECK(attribute_value.value() == "Doe");
-  attribute_value = result_flow_file->getAttribute("id");
-  CHECK(attribute_value.value() == "1234");
+  CHECK(*result_flow_file->getAttribute("firstName") == "John");
+  CHECK(*result_flow_file->getAttribute("lastName") == "Doe");
+  CHECK(*result_flow_file->getAttribute("id") == "1234");
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query a single scalar and write it to flow file", "[EvaluateJsonPathTests]") {
@@ -244,8 +245,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query a single scalar and write i
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Matched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == "John");
-  std::string attribute_value;
-  CHECK_FALSE(result_flow_file->getAttribute("firstName", attribute_value));
+  CHECK_FALSE(result_flow_file->getAttribute("firstName"));
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query has multiple results", "[EvaluateJsonPathTests]") {
@@ -262,8 +262,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query has multiple results", "[Ev
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Matched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == "[\"John\",\"Jane\"]");
-  std::string attribute_value;
-  CHECK_FALSE(result_flow_file->getAttribute("firstName", attribute_value));
+  CHECK_FALSE(result_flow_file->getAttribute("firstName"));
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flow file content", "[EvaluateJsonPathTests]") {
@@ -290,8 +289,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flo
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Matched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == expected_content);
-  std::string attribute_value;
-  CHECK_FALSE(result_flow_file->getAttribute("firstName", attribute_value));
+  CHECK_FALSE(result_flow_file->getAttribute("firstName"));
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flow file attribute", "[EvaluateJsonPathTests]") {
@@ -319,12 +317,8 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flo
   const auto result_flow_file = result.at(processors::EvaluateJsonPath::Matched).at(0);
 
   CHECK(controller_.plan->getContent(result_flow_file) == json_content);
-  auto attribute = result_flow_file->getAttribute("firstName");
-  REQUIRE(attribute);
-  CHECK(attribute.value() == "John");
-  attribute = result_flow_file->getAttribute("email");
-  REQUIRE(attribute);
-  CHECK(attribute.value() == expected_null_value);
+  CHECK(*result_flow_file->getAttribute("firstName") == "John");
+  CHECK(*result_flow_file->getAttribute("email") == expected_null_value);
 }
 
 }  // namespace org::apache::nifi::minifi::test
