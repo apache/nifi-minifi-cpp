@@ -48,7 +48,7 @@ void FlowStatusBuilder::setRepositoryPaths(const std::filesystem::path& flowfile
 }
 
 void FlowStatusBuilder::addProcessorStatus(core::Processor* processor, rapidjson::Value& processor_status_list, rapidjson::Document::AllocatorType& allocator,
-    const std::unordered_set<std::string>& options) {
+    const std::unordered_set<FlowStatusQueryOption>& options) {
   if (!processor) {
     return;
   }
@@ -61,7 +61,7 @@ void FlowStatusBuilder::addProcessorStatus(core::Processor* processor, rapidjson
     bulletins = bulletin_store_->getBulletinsForProcessor(processor->getUUIDStr());
   }
 
-  if (options.contains("health")) {
+  if (options.contains(FlowStatusQueryOption::health)) {
     processor_status.AddMember("processorHealth", rapidjson::Value(rapidjson::kObjectType), allocator);
     processor_status["processorHealth"].AddMember("runStatus", processor->isRunning() ? rapidjson::Value("Running") : rapidjson::Value("Stopped"), allocator);
     processor_status["processorHealth"].AddMember("hasBulletins", bulletins.empty() ? rapidjson::Value(false) : rapidjson::Value(true), allocator);
@@ -69,7 +69,7 @@ void FlowStatusBuilder::addProcessorStatus(core::Processor* processor, rapidjson
     processor_status.AddMember("processorHealth", rapidjson::Value(rapidjson::kNullType), allocator);
   }
 
-  if (options.contains("stats")) {
+  if (options.contains(FlowStatusQueryOption::stats)) {
     processor_status.AddMember("processorStats", rapidjson::Value(rapidjson::kObjectType), allocator);
     auto metrics = processor->getMetrics();
     processor_status["processorStats"].AddMember<uint64_t>("flowfilesReceived", metrics->incomingFlowFiles().load(), allocator);
@@ -84,7 +84,7 @@ void FlowStatusBuilder::addProcessorStatus(core::Processor* processor, rapidjson
     processor_status.AddMember("processorStats", rapidjson::Value(rapidjson::kNullType), allocator);
   }
 
-  if (options.contains("bulletins")) {
+  if (options.contains(FlowStatusQueryOption::bulletins)) {
     processor_status.AddMember("bulletinList", rapidjson::Value(rapidjson::kArrayType), allocator);
     for (const auto& bulletin : bulletins) {
       rapidjson::Value bulletin_node(rapidjson::kObjectType);
@@ -110,7 +110,20 @@ core::Processor* FlowStatusBuilder::findProcessor(const std::string& processor_i
 }
 
 nonstd::expected<void, std::string> FlowStatusBuilder::addProcessorStatuses(rapidjson::Value& processor_status_list, rapidjson::Document::AllocatorType& allocator,
-    const std::string& identifier, const std::unordered_set<std::string>& options) {
+    const std::string& identifier, const std::unordered_set<FlowStatusQueryOption>& options) {
+  static const std::unordered_set<FlowStatusQueryOption> valid_options = {
+    FlowStatusQueryOption::health,
+    FlowStatusQueryOption::stats,
+    FlowStatusQueryOption::bulletins
+  };
+
+  for (const auto& option : options) {
+    if (!valid_options.contains(option)) {
+      logger_->log_error("Unable to get processorStatus: Invalid query option for processor status '{}'", magic_enum::enum_name(option));
+      return nonstd::make_unexpected(fmt::format("Unable to get processorStatus: Invalid query option for processor status '{}'", magic_enum::enum_name(option)));
+    }
+  }
+
   std::lock_guard<std::mutex> guard(root_mutex_);
   if (identifier.empty()) {
     logger_->log_error("Unable to get processorStatus: Query is incomplete");
@@ -132,7 +145,7 @@ nonstd::expected<void, std::string> FlowStatusBuilder::addProcessorStatuses(rapi
 }
 
 void FlowStatusBuilder::addConnectionStatus(Connection* connection, rapidjson::Value& connection_status_list, rapidjson::Document::AllocatorType& allocator,
-    const std::unordered_set<std::string>& options) {
+    const std::unordered_set<FlowStatusQueryOption>& options) {
   if (!connection) {
     return;
   }
@@ -140,7 +153,7 @@ void FlowStatusBuilder::addConnectionStatus(Connection* connection, rapidjson::V
   connection_status.AddMember("id", rapidjson::Value(connection->getUUIDStr().c_str(), allocator), allocator);
   connection_status.AddMember("name", rapidjson::Value(connection->getName().c_str(), allocator), allocator);
 
-  if (options.contains("health")) {
+  if (options.contains(FlowStatusQueryOption::health)) {
     connection_status.AddMember("connectionHealth", rapidjson::Value(rapidjson::kObjectType), allocator);
     connection_status["connectionHealth"].AddMember("queuedCount", connection->getQueueSize(), allocator);
     connection_status["connectionHealth"].AddMember("queuedBytes", connection->getQueueDataSize(), allocator);
@@ -152,7 +165,13 @@ void FlowStatusBuilder::addConnectionStatus(Connection* connection, rapidjson::V
 }
 
 nonstd::expected<void, std::string> FlowStatusBuilder::addConnectionStatuses(rapidjson::Value& connection_status_list, rapidjson::Document::AllocatorType& allocator,
-    const std::string& identifier, const std::unordered_set<std::string>& options) {
+    const std::string& identifier, const std::unordered_set<FlowStatusQueryOption>& options) {
+  for (const auto& option : options) {
+    if (option != FlowStatusQueryOption::health) {
+      logger_->log_error("Unable to get connectionStatus: Invalid query option for connection status '{}'", magic_enum::enum_name(option));
+      return nonstd::make_unexpected(fmt::format("Unable to get connectionStatus: Invalid query option for connection status '{}'", magic_enum::enum_name(option)));
+    }
+  }
   std::lock_guard<std::mutex> guard(root_mutex_);
   if (identifier.empty()) {
     logger_->log_error("Unable to get connectionStatus: Query is incomplete");
@@ -175,10 +194,23 @@ nonstd::expected<void, std::string> FlowStatusBuilder::addConnectionStatuses(rap
   return {};
 }
 
-void FlowStatusBuilder::addInstanceStatus(rapidjson::Value& instance_status, rapidjson::Document::AllocatorType& allocator,
-   const std::unordered_set<std::string>& options) {
-  if (!options.contains("health") && !options.contains("stats") && !options.contains("bulletins")) {
-    return;
+nonstd::expected<void, std::string> FlowStatusBuilder::addInstanceStatus(rapidjson::Value& instance_status, rapidjson::Document::AllocatorType& allocator,
+   const std::unordered_set<FlowStatusQueryOption>& options) {
+  static const std::unordered_set<FlowStatusQueryOption> valid_options = {
+    FlowStatusQueryOption::health,
+    FlowStatusQueryOption::stats,
+    FlowStatusQueryOption::bulletins
+  };
+
+  for (const auto& option : options) {
+    if (!valid_options.contains(option)) {
+      logger_->log_error("Unable to get instance: Invalid query option for instance status '{}'", magic_enum::enum_name(option));
+      return nonstd::make_unexpected(fmt::format("Unable to get instance: Invalid query option for instance status '{}'", magic_enum::enum_name(option)));
+    }
+  }
+
+  if (options.empty()) {
+    return {};
   }
 
   instance_status = rapidjson::Value(rapidjson::kObjectType);
@@ -187,7 +219,7 @@ void FlowStatusBuilder::addInstanceStatus(rapidjson::Value& instance_status, rap
     bulletins = bulletin_store_->getBulletins(std::chrono::minutes(5));
   }
 
-  if (options.contains("health")) {
+  if (options.contains(FlowStatusQueryOption::health)) {
     instance_status.AddMember("instanceHealth", rapidjson::Value(rapidjson::kObjectType), allocator);
     uint64_t queued_count = 0;
     uint64_t queued_bytes = 0;
@@ -203,7 +235,7 @@ void FlowStatusBuilder::addInstanceStatus(rapidjson::Value& instance_status, rap
     instance_status.AddMember("instanceHealth", rapidjson::Value(rapidjson::kNullType), allocator);
   }
 
-  if (options.contains("bulletins")) {
+  if (options.contains(FlowStatusQueryOption::bulletins)) {
     instance_status.AddMember("bulletinList", rapidjson::Value(rapidjson::kArrayType), allocator);
     for (const auto& bulletin : bulletins) {
       rapidjson::Value bulletin_node(rapidjson::kObjectType);
@@ -215,7 +247,7 @@ void FlowStatusBuilder::addInstanceStatus(rapidjson::Value& instance_status, rap
     instance_status.AddMember("bulletinList", rapidjson::Value(rapidjson::kNullType), allocator);
   }
 
-  if (options.contains("stats")) {
+  if (options.contains(FlowStatusQueryOption::stats)) {
     instance_status.AddMember("instanceStats", rapidjson::Value(rapidjson::kObjectType), allocator);
 
     uint64_t flowfiles_transferred = 0;
@@ -237,15 +269,31 @@ void FlowStatusBuilder::addInstanceStatus(rapidjson::Value& instance_status, rap
   } else {
     instance_status.AddMember("instanceStats", rapidjson::Value(rapidjson::kNullType), allocator);
   }
+
+  return {};
 }
 
-void FlowStatusBuilder::addSystemDiagnosticsStatus(rapidjson::Value& system_diagnostics_status, rapidjson::Document::AllocatorType& allocator, const std::unordered_set<std::string>& options) {
-  if (!options.contains("processorstats") && !options.contains("flowfilerepositoryusage") && !options.contains("contentrepositoryusage")) {
-    return;
+nonstd::expected<void, std::string> FlowStatusBuilder::addSystemDiagnosticsStatus(rapidjson::Value& system_diagnostics_status, rapidjson::Document::AllocatorType& allocator,
+    const std::unordered_set<FlowStatusQueryOption>& options) {
+  static const std::unordered_set<FlowStatusQueryOption> valid_options = {
+    FlowStatusQueryOption::processorstats,
+    FlowStatusQueryOption::flowfilerepositoryusage,
+    FlowStatusQueryOption::contentrepositoryusage
+  };
+
+  for (const auto& option : options) {
+    if (!valid_options.contains(option)) {
+      logger_->log_error("Unable to get systemDiagnostics: Invalid query option for system diagnostics '{}'", magic_enum::enum_name(option));
+      return nonstd::make_unexpected(fmt::format("Unable to get systemDiagnostics: Invalid query option for system diagnostics '{}'", magic_enum::enum_name(option)));
+    }
+  }
+
+  if (options.empty()) {
+    return {};
   }
 
   system_diagnostics_status = rapidjson::Value(rapidjson::kObjectType);
-  if (options.contains("processorstats")) {
+  if (options.contains(FlowStatusQueryOption::processorstats)) {
     system_diagnostics_status.AddMember("processorStatus", rapidjson::Value(rapidjson::kObjectType), allocator);
     auto load_average = utils::OsUtils::getSystemLoadAverage();
     system_diagnostics_status["processorStatus"].AddMember("loadAverage", load_average ? load_average.value() : -1.0, allocator);
@@ -255,7 +303,7 @@ void FlowStatusBuilder::addSystemDiagnosticsStatus(rapidjson::Value& system_diag
     system_diagnostics_status.AddMember("processorStatus", rapidjson::Value(rapidjson::kNullType), allocator);
   }
 
-  if (options.contains("flowfilerepositoryusage")) {
+  if (options.contains(FlowStatusQueryOption::flowfilerepositoryusage)) {
     system_diagnostics_status.AddMember("flowfileRepositoryUsage", rapidjson::Value(rapidjson::kObjectType), allocator);
     if (!flowfile_repository_path_.empty()) {
       auto usage = std::filesystem::space(flowfile_repository_path_);
@@ -274,7 +322,7 @@ void FlowStatusBuilder::addSystemDiagnosticsStatus(rapidjson::Value& system_diag
     system_diagnostics_status.AddMember("flowfileRepositoryUsage", rapidjson::Value(rapidjson::kNullType), allocator);
   }
 
-  if (options.contains("contentrepositoryusage")) {
+  if (options.contains(FlowStatusQueryOption::contentrepositoryusage)) {
     system_diagnostics_status.AddMember("contentRepositoryUsage", rapidjson::Value(rapidjson::kObjectType), allocator);
     if (!content_repository_path_.empty()) {
       auto usage = std::filesystem::space(content_repository_path_);
@@ -292,6 +340,8 @@ void FlowStatusBuilder::addSystemDiagnosticsStatus(rapidjson::Value& system_diag
   } else {
     system_diagnostics_status.AddMember("contentRepositoryUsage", rapidjson::Value(rapidjson::kNullType), allocator);
   }
+
+  return {};
 }
 
 rapidjson::Document FlowStatusBuilder::buildFlowStatus(const std::vector<FlowStatusRequest>& requests) {
@@ -323,9 +373,9 @@ rapidjson::Document FlowStatusBuilder::buildFlowStatus(const std::vector<FlowSta
       doc["connectionStatusList"] = rapidjson::Value(rapidjson::kArrayType);
       handleError(addConnectionStatuses(doc["connectionStatusList"], allocator, request.identifier, request.options));
     } else if (request.query_type == FlowStatusQueryType::instance) {
-      addInstanceStatus(doc["instanceStatus"], allocator, request.options);
+      handleError(addInstanceStatus(doc["instanceStatus"], allocator, request.options));
     } else if (request.query_type == FlowStatusQueryType::systemdiagnostics) {
-      addSystemDiagnosticsStatus(doc["systemDiagnosticsStatus"], allocator, request.options);
+      handleError(addSystemDiagnosticsStatus(doc["systemDiagnosticsStatus"], allocator, request.options));
     }
   }
 
