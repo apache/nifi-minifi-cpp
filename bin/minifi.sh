@@ -195,7 +195,7 @@ flowStatus() {
 
     if [ "$#" -lt 3 ]; then
         exec "${bin_dir}/minificontroller" --flowstatus "$2"
-    elif [ "$#" -lt 3 ]; then
+    elif [ "$#" -lt 4 ]; then
         exec "${bin_dir}/minificontroller" --port "$2" --flowstatus "$3"
     else
         exec "${bin_dir}/minificontroller" --host "$2" --port "$3" --flowstatus "$4"
