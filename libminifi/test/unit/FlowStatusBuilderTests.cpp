@@ -37,17 +37,17 @@ TEST_CASE("Parse invalid flow status query type", "[flowstatusbuilder]") {
 }
 
 TEST_CASE("Parse two part flow status query", "[flowstatusbuilder]") {
-  c2::FlowStatusRequest request("processor:health,status");
+  c2::FlowStatusRequest request("processor:health,stats");
   CHECK(request.query_type == c2::FlowStatusQueryType::processor);
   CHECK(request.identifier.empty());
-  CHECK(request.options == std::unordered_set<std::string>{"health", "status"});
+  CHECK(request.options == std::unordered_set<c2::FlowStatusQueryOption>{c2::FlowStatusQueryOption::health, c2::FlowStatusQueryOption::stats});
 }
 
 TEST_CASE("Parse three part flow status query", "[flowstatusbuilder]") {
   c2::FlowStatusRequest request("processor:TailFile:health");
   CHECK(request.query_type == c2::FlowStatusQueryType::processor);
   CHECK(request.identifier == "TailFile");
-  CHECK(request.options == std::unordered_set<std::string>{"health"});
+  CHECK(request.options == std::unordered_set<c2::FlowStatusQueryOption>{c2::FlowStatusQueryOption::health});
 }
 
 TEST_CASE("Build empty flow status", "[flowstatusbuilder]") {
@@ -179,20 +179,28 @@ TEST_CASE("Non-existent processor generates an error", "[flowstatusbuilder]") {
   CHECK(status["errorsGeneratingReport"].GetArray()[0].GetString() == std::string{"Unable to get processorStatus: No processor with key 'InvalidProcessor' to report status on"});
 }
 
-TEST_CASE("Build processor status with only invalid options", "[flowstatusbuilder]") {
+TEST_CASE("Build processor status with only non-existent options", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
   auto processor = std::make_unique<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
   process_group.addProcessor(std::move(processor));
   flow_status_builder.setRoot(&process_group);
-  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor:DummyProcessor:invalid1,invalid2"}});
-  REQUIRE(status["processorStatusList"].GetArray().Size() == 1);
-  CHECK(status["processorStatusList"].GetArray()[0]["id"] == "4d7fa7e6-2459-46dd-b2ba-61517239edf5");
-  CHECK(status["processorStatusList"].GetArray()[0]["name"] == "DummyProcessor");
-  CHECK(status["processorStatusList"].GetArray()[0]["bulletinList"].IsNull());
-  CHECK(status["processorStatusList"].GetArray()[0]["processorHealth"].IsNull());
-  CHECK(status["processorStatusList"].GetArray()[0]["processorStats"].IsNull());
-  CHECK(status["errorsGeneratingReport"].Empty());
+  REQUIRE_THROWS_WITH(flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor:DummyProcessor:invalid1,invalid2"}}), "Invalid query option: invalid1");
+}
+
+TEST_CASE("Build processor status with invalid option", "[flowstatusbuilder]") {
+  c2::FlowStatusBuilder flow_status_builder;
+  core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
+  flow_status_builder.setRoot(&process_group);
+  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor:DummyProcessor:processorstats"}});
+  CHECK(status["controllerServiceStatusList"].IsNull());
+  CHECK(status["connectionStatusList"].IsNull());
+  CHECK(status["remoteProcessGroupStatusList"].IsNull());
+  CHECK(status["instanceStatus"].IsNull());
+  CHECK(status["systemDiagnosticsStatus"].IsNull());
+  CHECK(status["processorStatusList"].Empty());
+  CHECK(status["errorsGeneratingReport"].GetArray().Size() == 1);
+  CHECK(status["errorsGeneratingReport"].GetArray()[0].GetString() == std::string{"Unable to get processorStatus: Invalid query option for processor status 'processorstats'"});
 }
 
 TEST_CASE("Building processor status fails with incomplete query", "[flowstatusbuilder]") {
@@ -201,7 +209,7 @@ TEST_CASE("Building processor status fails with incomplete query", "[flowstatusb
   auto processor = std::make_unique<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
   process_group.addProcessor(std::move(processor));
   flow_status_builder.setRoot(&process_group);
-  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor:DummyProcessor"}});
+  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor::"}});
   CHECK(status["controllerServiceStatusList"].IsNull());
   CHECK(status["connectionStatusList"].IsNull());
   CHECK(status["remoteProcessGroupStatusList"].IsNull());
@@ -278,7 +286,7 @@ TEST_CASE("Non-existent connection generates an error", "[flowstatusbuilder]") {
   CHECK(status["errorsGeneratingReport"].GetArray()[0].GetString() == std::string{"Unable to get connectionStatus: No connection with key 'InvalidConnection' to report status on"});
 }
 
-TEST_CASE("Build connection status with only invalid options", "[flowstatusbuilder]") {
+TEST_CASE("Build connection status with only non-existent options", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
   auto connection = std::make_unique<ConnectionImpl>(nullptr, nullptr, "Conn1", minifi::utils::Identifier::parse("123fa7e6-2459-46dd-b2ba-61517239edf5").value());
@@ -286,12 +294,22 @@ TEST_CASE("Build connection status with only invalid options", "[flowstatusbuild
   connection->multiPut(flow_files);
   process_group.addConnection(std::move(connection));
   flow_status_builder.setRoot(&process_group);
-  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"connection:Conn1:invalid1,invalid2"}});
-  REQUIRE(status["connectionStatusList"].GetArray().Size() == 1);
-  CHECK(status["connectionStatusList"].GetArray()[0]["id"] == "123fa7e6-2459-46dd-b2ba-61517239edf5");
-  CHECK(status["connectionStatusList"].GetArray()[0]["name"] == "Conn1");
-  CHECK(status["connectionStatusList"].GetArray()[0]["connectionHealth"].IsNull());
-  CHECK(status["errorsGeneratingReport"].Empty());
+  REQUIRE_THROWS_WITH(flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"connection:Conn1:invalid1,invalid2"}}), "Invalid query option: invalid1");
+}
+
+TEST_CASE("Build connection status with invalid option", "[flowstatusbuilder]") {
+  c2::FlowStatusBuilder flow_status_builder;
+  core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
+  flow_status_builder.setRoot(&process_group);
+  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"connection:Conn1:stats"}});
+  CHECK(status["controllerServiceStatusList"].IsNull());
+  CHECK(status["connectionStatusList"].Empty());
+  CHECK(status["remoteProcessGroupStatusList"].IsNull());
+  CHECK(status["instanceStatus"].IsNull());
+  CHECK(status["systemDiagnosticsStatus"].IsNull());
+  CHECK(status["processorStatusList"].IsNull());
+  CHECK(status["errorsGeneratingReport"].GetArray().Size() == 1);
+  CHECK(status["errorsGeneratingReport"].GetArray()[0].GetString() == std::string{"Unable to get connectionStatus: Invalid query option for connection status 'stats'"});
 }
 
 TEST_CASE("Building connection status fails with incomplete query", "[flowstatusbuilder]") {
@@ -302,7 +320,7 @@ TEST_CASE("Building connection status fails with incomplete query", "[flowstatus
   connection->multiPut(flow_files);
   process_group.addConnection(std::move(connection));
   flow_status_builder.setRoot(&process_group);
-  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"connection:Conn1"}});
+  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"connection:"}});
   CHECK(status["controllerServiceStatusList"].IsNull());
   CHECK(status["connectionStatusList"].Empty());
   CHECK(status["remoteProcessGroupStatusList"].IsNull());
@@ -313,10 +331,24 @@ TEST_CASE("Building connection status fails with incomplete query", "[flowstatus
   CHECK(status["errorsGeneratingReport"].GetArray()[0].GetString() == std::string{"Unable to get connectionStatus: Query is incomplete"});
 }
 
+TEST_CASE("Test non-existent instance status options", "[flowstatusbuilder]") {
+  c2::FlowStatusBuilder flow_status_builder;
+  REQUIRE_THROWS_WITH(flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"instance:invalid1,invalid2"}}), "Invalid query option: invalid1");
+}
+
 TEST_CASE("Test invalid instance status options", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
-  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"instance:invalid1,invalid2"}});
-  REQUIRE(status["instanceStatus"].IsNull());
+  core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
+  flow_status_builder.setRoot(&process_group);
+  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"instance:contentrepositoryusage"}});
+  CHECK(status["controllerServiceStatusList"].IsNull());
+  CHECK(status["connectionStatusList"].IsNull());
+  CHECK(status["remoteProcessGroupStatusList"].IsNull());
+  CHECK(status["instanceStatus"].IsNull());
+  CHECK(status["systemDiagnosticsStatus"].IsNull());
+  CHECK(status["processorStatusList"].IsNull());
+  CHECK(status["errorsGeneratingReport"].GetArray().Size() == 1);
+  CHECK(status["errorsGeneratingReport"].GetArray()[0].GetString() == std::string{"Unable to get instance: Invalid query option for instance status 'contentrepositoryusage'"});
 }
 
 TEST_CASE("Build instance health and bulletin list", "[flowstatusbuilder]") {
@@ -385,10 +417,24 @@ TEST_CASE("Build instance stats", "[flowstatusbuilder]") {
   CHECK(status["errorsGeneratingReport"].Empty());
 }
 
-TEST_CASE("Test invalid system diagnostics status options", "[flowstatusbuilder]") {
+TEST_CASE("Test non-existent system diagnostics status options", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
-  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"systemdiagnostics:invalid1,invalid2"}});
-  REQUIRE(status["systemDiagnosticsStatus"].IsNull());
+  REQUIRE_THROWS_WITH(flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"systemdiagnostics:invalid1,invalid2"}}), "Invalid query option: invalid1");
+}
+
+TEST_CASE("Test invalid system diagnostics options", "[flowstatusbuilder]") {
+  c2::FlowStatusBuilder flow_status_builder;
+  core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
+  flow_status_builder.setRoot(&process_group);
+  auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"systemdiagnostics:health"}});
+  CHECK(status["controllerServiceStatusList"].IsNull());
+  CHECK(status["connectionStatusList"].IsNull());
+  CHECK(status["remoteProcessGroupStatusList"].IsNull());
+  CHECK(status["instanceStatus"].IsNull());
+  CHECK(status["systemDiagnosticsStatus"].IsNull());
+  CHECK(status["processorStatusList"].IsNull());
+  CHECK(status["errorsGeneratingReport"].GetArray().Size() == 1);
+  CHECK(status["errorsGeneratingReport"].GetArray()[0].GetString() == std::string{"Unable to get systemDiagnostics: Invalid query option for system diagnostics 'health'"});
 }
 
 TEST_CASE("Build system diagnostics processorStatus", "[flowstatusbuilder]") {
