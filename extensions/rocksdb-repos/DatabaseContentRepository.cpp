@@ -17,29 +17,32 @@
 
 #include "DatabaseContentRepository.h"
 
+#include <cinttypes>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <cinttypes>
 
-#include "encryption/RocksDbEncryptionProvider.h"
-#include "RocksDbStream.h"
-#include "utils/gsl.h"
 #include "Exception.h"
-#include "database/RocksDbUtils.h"
-#include "database/StringAppender.h"
+#include "RocksDbStream.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
+#include "database/RocksDbUtils.h"
+#include "database/StringAppender.h"
+#include "encryption/RocksDbEncryptionProvider.h"
+#include "utils/Locations.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
 bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configure> &configuration) {
+  const auto working_dir = utils::getMinifiDir();
+
   std::string value;
   if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value) && !value.empty()) {
     directory_ = value;
   } else {
-    directory_ = (configuration->getHome() / "dbcontentrepository").string();
+    directory_ = (working_dir / "dbcontentrepository").string();
   }
   auto purge_period_str = utils::string::trim(configuration->get(Configure::nifi_dbcontent_repository_purge_period).value_or("1 s"));
   if (purge_period_str == "0") {
@@ -50,7 +53,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
     logger_->log_error("Malformed delete period value, expected time format: '{}'", purge_period_str);
     purge_period_ = std::chrono::seconds{1};
   }
-  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
+  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{working_dir}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using {} DatabaseContentRepository", encrypted_env ? "encrypted" : "plaintext");
 
   setCompactionPeriod(configuration);

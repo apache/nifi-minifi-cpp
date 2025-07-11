@@ -71,7 +71,7 @@ const char* const AgentBuild::BUILD_REV = "$buildrev";
 const char* const AgentBuild::BUILD_DATE = "$date";
 const char* const AgentBuild::COMPILER = "$compiler";
 const char* const AgentBuild::COMPILER_VERSION = "$compiler_version";
-const char* const AgentBuild::COMPILER_FLAGS = "$flags";
+const char* const AgentBuild::COMPILER_FLAGS = R"($flags)";
 
 std::vector<std::string> AgentBuild::getExtensions() {
   static std::vector<std::string> extensions;

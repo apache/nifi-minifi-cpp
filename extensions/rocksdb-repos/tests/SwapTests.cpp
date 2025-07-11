@@ -84,7 +84,6 @@ TEST_CASE("Connection will on-demand swap flow files") {
   auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::ConfigureImpl>();
-  config->setHome(dir);
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 

@@ -90,8 +90,7 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
 
   minifi::ConfigureImpl configuration{decryptor};
   std::filesystem::path resources_dir{TEST_RESOURCES};
-  configuration.setHome(resources_dir);
-  configuration.loadConfigureFile("encrypted.minifi.properties");
+  configuration.loadConfigureFile(resources_dir / "encrypted.minifi.properties");
   REQUIRE_FALSE(configuration.getConfiguredKeys().empty());
 
   const auto passphrase = configuration.get(minifi::Configure::nifi_security_client_pass_phrase);

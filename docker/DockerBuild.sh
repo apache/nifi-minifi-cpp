@@ -230,6 +230,7 @@ fi
 
 if [ -n "${DUMP_LOCATION}" ]; then
   container_id=$(docker create "${TAG}")
-  docker cp "${container_id}:/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
+  docker cp "${container_id}:/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz" || true
+  docker cp "${container_id}:/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.rpm" "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.rpm" || true
   docker rm -f "${container_id}"
 fi

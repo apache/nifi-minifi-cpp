@@ -20,6 +20,7 @@
 
 #include "utils/Environment.h"
 #include "utils/StringUtils.h"
+#include "Defaults.h"
 #include "utils/file/FileUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -31,7 +32,7 @@ bool validHome(const std::filesystem::path& home_path) {
 }
 
 void setSyslogLogger() {
-  std::shared_ptr<logging::LoggerProperties> service_logger = std::make_shared<logging::LoggerProperties>();
+  std::shared_ptr<logging::LoggerProperties> service_logger = std::make_shared<logging::LoggerProperties>("");
   service_logger->set("appender.syslog", "syslog");
   service_logger->set("logger.root", "INFO,syslog");
   logging::LoggerConfiguration::getConfiguration().initialize(service_logger);
@@ -110,4 +111,46 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>
   utils::Environment::setEnvironmentVariable(MINIFI_HOME_ENV_KEY, minifi_home.string().c_str());
 
   return minifi_home;
+}
+
+Locations getFromMinifiHome(const std::filesystem::path& minifi_home) {
+  return {
+    .working_dir_ = minifi_home,
+    .lock_path_ = minifi_home / "LOCK",
+    .log_properties_path_ = minifi_home / DEFAULT_LOG_PROPERTIES_FILE,
+    .uid_properties_path_ = minifi_home / DEFAULT_UID_PROPERTIES_FILE,
+    .properties_path_ = minifi_home / DEFAULT_NIFI_PROPERTIES_FILE,
+    .logs_dir_ = minifi_home / "logs",
+    .fips_bin_path_ = minifi_home / "fips",
+    .fips_conf_path_ = minifi_home / "fips",
+  };
+}
+
+Locations getFromFHS() {
+  return {
+      .working_dir_ =  std::filesystem::path(RPM_WORK_DIR),
+      .lock_path_ = std::filesystem::path(RPM_WORK_DIR) / "LOCK",
+      .log_properties_path_ = std::filesystem::path(RPM_CONFIG_DIR) / "minifi-log.properties",
+      .uid_properties_path_ = std::filesystem::path(RPM_CONFIG_DIR) / "minifi-uid.properties",
+      .properties_path_ = std::filesystem::path(RPM_CONFIG_DIR) / "minifi.properties",
+      .logs_dir_ = std::filesystem::path(RPM_LOG_DIR),
+      .fips_bin_path_ = std::filesystem::path(RPM_LIB_DIR) / "fips",
+      .fips_conf_path_ = std::filesystem::path(RPM_CONFIG_DIR) / "fips"
+  };
+}
+
+std::optional<Locations> determineLocations(const std::shared_ptr<logging::Logger>& logger) {
+  if (const auto minifi_home_env = utils::Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY)) {
+    if (minifi_home_env == "FHS") {
+      return getFromFHS();
+    }
+  }
+  if (const auto executable_path = utils::file::get_executable_path(); executable_path.parent_path() == "/usr/bin") {
+    return getFromFHS();
+  }
+  const auto minifi_home = determineMinifiHome(logger);
+  if (minifi_home.empty()) {
+    return std::nullopt;
+  }
+  return getFromMinifiHome(minifi_home);
 }

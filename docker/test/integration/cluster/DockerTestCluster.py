@@ -68,6 +68,9 @@ class DockerTestCluster:
     def acquire_container(self, context, name: str, engine: str = 'minifi-cpp', command=None):
         return self.container_store.acquire_container(context=context, container_name=name, engine=engine, command=command)
 
+    def acquire_transient_minifi(self, context, name: str, engine: str = 'minifi-cpp'):
+        return self.container_store.acquire_transient_minifi(context=context, container_name=name, engine=engine)
+
     def deploy_container(self, name):
         self.container_store.deploy_container(name)
 
@@ -329,7 +332,7 @@ class DockerTestCluster:
 
     def wait_for_container_startup_to_finish(self, container_name):
         container_name = self.container_store.get_container_name_with_postfix(container_name)
-        startup_success = self.wait_for_startup_log(container_name, 300)
+        startup_success = self.wait_for_startup_log(container_name, 160)
         if not startup_success:
             logging.error("Cluster startup failed for %s", container_name)
             return False

@@ -155,7 +155,7 @@ void LogTestController::reset() {
   modified_loggers.clear();
   if (config)
     config = logging::LoggerConfiguration::newInstance();
-  my_properties_ = std::make_shared<logging::LoggerProperties>();
+  my_properties_ = std::make_shared<logging::LoggerProperties>("");
   clear();
   init(nullptr);
 }
@@ -176,7 +176,7 @@ void LogTestController::init(const std::shared_ptr<logging::LoggerProperties>& l
   my_properties_ = logger_props;
   bool initMain = false;
   if (nullptr == my_properties_) {
-    my_properties_ = std::make_shared<logging::LoggerProperties>();
+    my_properties_ = std::make_shared<logging::LoggerProperties>("");
     initMain = true;
   }
   my_properties_->set("logger.root", "ERROR,ostream");
@@ -717,7 +717,6 @@ TestController::TestController()
 std::shared_ptr<TestPlan> TestController::createPlan(PlanConfig config) {
   if (!config.configuration) {
     config.configuration = minifi::Configure::create();
-    config.configuration->setHome(createTempDirectory());
     config.configuration->set(minifi::Configure::nifi_state_storage_local_class_name, "VolatileMapStateStorage");
     config.configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory().string());
   }

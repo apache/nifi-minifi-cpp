@@ -50,8 +50,7 @@ ProcessContextImpl::ProcessContextImpl(
       content_repo_(content_repo),
       processor_(processor),
       configure_(minifi::Configure::create()),
-      info_(std::make_unique<StandardProcessorInfo>(processor)),
-      initialized_(false) {}
+      info_(std::make_unique<StandardProcessorInfo>(processor)) {}
 
 ProcessContextImpl::ProcessContextImpl(
     Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
@@ -66,8 +65,7 @@ ProcessContextImpl::ProcessContextImpl(
       content_repo_(content_repo),
       processor_(processor),
       configure_(configuration ? gsl::make_not_null(configuration) : minifi::Configure::create()),
-      info_(std::make_unique<StandardProcessorInfo>(processor)),
-      initialized_(false) {}
+      info_(std::make_unique<StandardProcessorInfo>(processor)) {}
 
 bool ProcessContextImpl::hasNonEmptyProperty(std::string_view name) const {
   auto val = getProcessor().getProperty(name);

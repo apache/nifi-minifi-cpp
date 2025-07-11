@@ -18,11 +18,13 @@
 
 #include <filesystem>
 #include <memory>
+
+#include "MainHelper.h"
 #include "core/logging/Logger.h"
 #include "minifi-cpp/properties/Configure.h"
 
 namespace org::apache::nifi::minifi::fips {
 
-void initializeFipsMode(const std::shared_ptr<Configure>& configure, const std::filesystem::path& minifi_home, const std::shared_ptr<core::logging::Logger>& logger);
+void initializeFipsMode(const std::shared_ptr<Configure>& configure, const Locations& locations, const std::shared_ptr<core::logging::Logger>& logger);
 
 }  // namespace org::apache::nifi::minifi::fips

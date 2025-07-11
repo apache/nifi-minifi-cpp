@@ -168,7 +168,20 @@ function(CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE BASE_IMAGE TAG_PREFIX INSTALL_P
             --build-arg ARCHIVE_LOCATION=nifi-minifi-cpp-${MINIFI_VERSION_STR}-bin-rockylinux.tar.gz
             --build-arg INSTALL_PACKAGE_CMD=${INSTALL_PACKAGE_CMD}
             -t apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
-            -f ${CMAKE_SOURCE_DIR}/docker/python-verify/installed.Dockerfile
+            -f ${CMAKE_SOURCE_DIR}/docker/installed/installed.Dockerfile
+            ${CMAKE_BINARY_DIR})
+endfunction()
+
+function(CREATE_DOCKER_TARGET_FROM_RPM_PACKAGE BASE_IMAGE TAG_PREFIX INSTALL_PACKAGE_CMD)
+    add_custom_target(
+            ${TAG_PREFIX}_from_rpm_package
+            COMMAND DOCKER_BUILDKIT=1 docker build
+            --build-arg MINIFI_VERSION=${MINIFI_VERSION_STR}
+            --build-arg BASE_IMAGE=${BASE_IMAGE}
+            --build-arg ARCHIVE_LOCATION=nifi-minifi-cpp-${MINIFI_VERSION_STR}-bin-rockylinux.rpm
+            --build-arg INSTALL_PACKAGE_CMD=${INSTALL_PACKAGE_CMD}
+            -t apacheminificpp:${TAG_PREFIX}-rpm-${MINIFI_VERSION_STR}
+            -f ${CMAKE_SOURCE_DIR}/docker/installed/rpm.Dockerfile
             ${CMAKE_BINARY_DIR})
 endfunction()
 
