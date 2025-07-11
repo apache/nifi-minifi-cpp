@@ -74,9 +74,6 @@ class ListSFTPTestsFixture {
     sftp_server = std::make_unique<SFTPTestServer>(working_directory);
     REQUIRE(true == sftp_server->start());
 
-    if (configuration) {
-      configuration->setHome(working_directory);
-    }
     // Build MiNiFi processing graph
     createPlan(nullptr, configuration);
   }
@@ -95,9 +92,6 @@ class ListSFTPTestsFixture {
     list_sftp = nullptr;
     plan.reset();
 
-    if (configuration) {
-      configuration->setHome(working_directory);
-    }
     plan = testController.createPlan(configuration, state_dir);
     if (list_sftp_uuid == nullptr) {
       list_sftp = plan->addProcessor(

@@ -26,7 +26,7 @@ spdlog.pattern=[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v
 #spdlog.pattern=[%D %H:%M:%S.%e] [%L] %v
 
 appender.rolling=rollingappender
-#appender.rolling.directory=${MINIFI_HOME}/logs
+#appender.rolling.directory=@MINIFI_PATH_APPENDER_ROLLING_DIR@
 appender.rolling.file_name=minifi-app.log
 appender.rolling.max_files=1
 appender.rolling.max_file_size=20 MB

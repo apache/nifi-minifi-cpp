@@ -74,6 +74,14 @@
   - [Shortening log messages](#shortening-log-messages)
 - [Recommended Antivirus Exclusions](#recommended-antivirus-exclusions)
 
+## Linux Installation types
+
+### Self-contained installation (from a .tar.gz archive)
+The `MINIFI_HOME` environment variable should point to the installation directory, if `MINIFI_HOME` is not defined minifi will try to infer it from binary's location.
+
+### Filesystem Hierarchy Standard installation (from .rpm package)
+The `MINIFI_HOME` environment variable should be set to `FHS`, if `MINIFI_HOME` is not defined but the binary is in the `/usr/bin` directory it will try to run as a FHS application.
+
 
 ## Configuring
 The 'conf' directory in the root contains a template config.yml document.
@@ -657,15 +665,22 @@ As stated before each of the repositories can be configured to be volatile (stat
 **NOTE:** If the volatile repository reaches the maximum number of entries, it will start to drop the oldest entries, and replace them with the new entries in round robin manner. Make sure to set the maximum number of entries to a reasonable value, so that the repository does not run out of memory.
 
 ### Configuring Repository storage locations
-Persistent repositories, such as the Flow File repository, use a configurable path to store data.
-The repository locations and their defaults are defined below. By default the MINIFI_HOME env
-variable is used. If this is not specified we extrapolate the path and use the root installation
-folder. You may specify your own path in place of these defaults.
+Persistent repositories, such as the Flow File repository, use configurable paths to store data. The application detects its installation type at runtime and uses the appropriate default locations.
+
+In a self-contained installation (from a .tar.gz archive), paths are relative to the application's root directory, which is typically configured using the ${MINIFI_HOME} environemnt variable. You may specify your own path in place of these defaults.
 
     # in minifi.properties
     nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
     nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
     nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
+
+In a Filesystem Hierarchy Standard (FHS) installation (from an RPM package), the default location for all persistent repositories is /var/lib/nifi-minifi-cpp/
+
+    # in minifi.properties
+    nifi.provenance.repository.directory.default=/var/lib/nifi-minifi-cpp/provenance_repository
+    nifi.flowfile.repository.directory.default=/var/lib/nifi-minifi-cpp/flowfile_repository
+    nifi.database.content.repository.directory.default=/var/lib/nifi-minifi-cpp/content_repository
+
 
 ### Configuring compression for rocksdb database
 
@@ -833,8 +848,14 @@ Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned 
 
 ### Asset directory
 
-There is an asset directory specified using the `nifi.asset.directory` agent property, which defaults to `${MINIFI_HOME}/asset`.
-The files referenced in the `.state` file in this directory are managed by the agent. They are deleted, updated, downloaded
+## Asset Directory
+
+The location for downloaded assets is specified by the `nifi.asset.directory` agent property. The default path depends on the installation mode:
+
+* In a **self-contained (TGZ)** installation, this defaults to **`${MINIFI_HOME}/asset`**.
+* In a **system-wide FHS** installation, the default is **/var/lib/nifi-minifi-cpp/asset**.
+
+The files referenced in the `.state` file in this directory are managed by the agent. They are deleted, updated, downloaded 
 using the asset sync c2 command. For the asset sync command to work, the c2 server must be made aware of the current state of the
 managed assets by adding the `AssetInformation` entry to the `nifi.c2.root.classes` property.
 
@@ -946,24 +967,45 @@ To enable FIPS support, and use MiNiFi C++ in FIPS compliant mode, there are a f
 
 Before first starting the application, the fipsmodule.cnf needs to be generated. This can be done in two ways, either automatically or manually.
 
-#### Generating the fipsmodule.cnf file automatically
+### Generating the `fipsmodule.cnf` File
 
-If the application is started with the nifi.openssl.fips.support.enable property set to true, and the fipsmodule.cnf file is not found in the $MINIFI_HOME/fips directory, the application will try to generate the fipsmodule.cnf file automatically. This is done by running the manual steps described in the next section, but this is done from the MiNiFi C++ process before loading the OpenSSL configuration. If the automatic generation is successful, the application will start in FIPS mode.
+#### Automatic Generation
 
-#### Generating the fipsmodule.cnf file manually
+If the application is started with the `nifi.openssl.fips.support.enable` property set to `true`, it will check for the `fipsmodule.cnf` file. If the file is not found, the application will attempt to generate it automatically before loading the OpenSSL configuration.
 
-To do this run the following command with the openssl binary (openssl on Unix and openssl.exe on windows) with the following parameters provided in the $MINIFI_HOME/fips directory:
+The location where the application looks for and generates the file depends on the installation type:
+* **FHS Installation (RPM):** The application checks for `/etc/nifi-minifi-cpp/fips/fipsmodule.cnf`.
+* **Self-Contained Installation (TGZ):** The application checks for `$MINIFI_HOME/fips/fipsmodule.cnf`.
 
-    # on Unix platform
-    ./openssl fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME/fips/fips.so
+If the automatic generation is successful, the application will start in FIPS mode.
 
-    # on Windows platform
-    openssl.exe fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME\fips\fips.dll
+#### Manual Generation
 
-If the command finishes successfully, the fipsmodule.cnf file will be generated in the $MINIFI_HOME/fips directory. After this the application can be started and it will configure OpenSSL to start in FIPS mode.
+If automatic generation fails, or you need to create the file manually, follow the steps below.
+
+#### For FHS Installations (RPM)
+
+Run the bundled `openssl` binary located in the application's private library directory, and specify the absolute path for the output configuration file.
+```bash
+cd /usr/lib64/nifi-minifi-cpp/fips
+./openssl fipsinstall -out /etc/nifi-minifi-cpp/fips/fipsmodule.cnf -module ./fips.so
+```
+
+#### For self-contained (TGZ) Unix installation
+```bash
+cd $MINIFI_HOME/fips
+./openssl fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME/fips/fips.so
+```
+
+#### For Windows
+```dos
+cd $MINIFI_HOME/fips
+openssl.exe fipsinstall -out fipsmodule.cnf -module $MINIFI_HOME\fips\fips.dll
+```
+
 
 ## Log configuration
-By default the application logs for Apache MiNiFi C++ can be found in the ${MINIFI_HOME}/logs/minifi-app.log file with default INFO level logging. The logger can be reconfigured in the ${MINIFI_HOME}/conf/minifi-log.properties file to use different output streams, log level, and output format.
+By default, the application logs for Apache MiNiFi C++ can be found in the ${MINIFI_HOME}/logs/minifi-app.log file with default INFO level logging. The logger can be reconfigured in the ${MINIFI_HOME}/conf/minifi-log.properties file to use different output streams, log level, and output format.
 
 ### Log appenders
 In the configuration file it is possible to define different output streams by defining what type of appenders (log sinks) should be used for logging. The following appenders are supported:
