@@ -45,31 +45,31 @@
 #include <iostream>
 #include <vector>
 
+#include "AgentDocs.h"
+#include "DiskSpaceWatchdog.h"
+#include "Fips.h"
+#include "FlowController.h"
+#include "MainHelper.h"
 #include "ResourceClaim.h"
+#include "agent/JsonSchema.h"
+#include "agent/agent_version.h"
+#include "argparse/argparse.hpp"
+#include "core/BulletinStore.h"
+#include "core/ConfigurationFactory.h"
 #include "core/Core.h"
 #include "core/FlowConfiguration.h"
-#include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
 #include "core/extension/ExtensionManager.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "core/repository/VolatileFlowFileRepository.h"
-#include "DiskSpaceWatchdog.h"
+#include "core/state/MetricsPublisherStore.h"
+#include "core/state/nodes/ResponseNodeLoader.h"
 #include "properties/Decryptor.h"
-#include "utils/file/PathUtils.h"
-#include "utils/file/FileUtils.h"
-#include "utils/file/AssetManager.h"
 #include "utils/Environment.h"
 #include "utils/FileMutex.h"
-#include "FlowController.h"
-#include "AgentDocs.h"
-#include "MainHelper.h"
-#include "agent/JsonSchema.h"
-#include "core/state/nodes/ResponseNodeLoader.h"
-#include "core/state/MetricsPublisherStore.h"
-#include "argparse/argparse.hpp"
-#include "agent/agent_version.h"
-#include "Fips.h"
-#include "core/BulletinStore.h"
+#include "utils/file/AssetManager.h"
+#include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -266,25 +266,27 @@ int main(int argc, char **argv) {
     return -1;
   }
 #endif
-  // Determine MINIFI_HOME
-  const auto minifiHome = determineMinifiHome(logger);
-  if (minifiHome.empty()) {
-    // determineMinifiHome already logged everything we need
+  const auto locations = determineLocations(logger);
+  if (!locations) {
+    // determineLocations already logged everything we need
     return -1;
   }
-  utils::FileMutex minifi_home_mtx(minifiHome / "LOCK");
+
+  logger->log_info("MiNiFi Locations={}", *locations);
+
+  utils::FileMutex minifi_home_mtx(locations->lock_path_);
   std::unique_lock minifi_home_lock(minifi_home_mtx, std::defer_lock);
   try {
     minifi_home_lock.lock();
   } catch (const std::exception& ex) {
-    logger->log_error("Could not acquire LOCK for minifi home '{}', maybe another minifi instance is running: {}", minifiHome, ex.what());
+    logger->log_error("Could not acquire LOCK '{}', maybe another minifi instance is running: {}", locations->lock_path_, ex.what());
     std::exit(1);
   }
   // chdir to MINIFI_HOME
   std::error_code current_path_error;
-  std::filesystem::current_path(minifiHome, current_path_error);
+  std::filesystem::current_path(locations->working_dir_, current_path_error);
   if (current_path_error) {
-    logger->log_error("Failed to change working directory to MINIFI_HOME ({})", minifiHome);
+    logger->log_error("Failed to change working directory to {}", locations->working_dir_);
     return -1;
   }
 
@@ -309,21 +311,16 @@ int main(int argc, char **argv) {
     std::string nifi_configuration_class_name = "adaptiveconfiguration";
     std::string content_repo_class = "filesystemrepository";
 
-    auto log_properties = std::make_shared<core::logging::LoggerProperties>();
-    log_properties->setHome(minifiHome);
-    log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE, "nifi.log.");
+    auto log_properties = std::make_shared<core::logging::LoggerProperties>(locations->logs_dir_);
+    log_properties->loadConfigureFile(locations->log_properties_path_, "nifi.log.");
 
     logger_configuration.initialize(log_properties);
 
     std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::PropertiesImpl>("UID properties");
-    uid_properties->setHome(minifiHome);
-    uid_properties->loadConfigureFile(DEFAULT_UID_PROPERTIES_FILE);
+    uid_properties->loadConfigureFile(locations->uid_properties_path_);
     utils::IdGenerator::getIdGenerator()->initialize(uid_properties);
 
-    // Make a record of minifi home in the configured log file.
-    logger->log_info("MINIFI_HOME={}", minifiHome);
-
-    auto decryptor = minifi::Decryptor::create(minifiHome);
+    auto decryptor = minifi::Decryptor::create(locations->working_dir_);
     if (decryptor) {
       logger->log_info("Found encryption key, will decrypt sensitive properties in the configuration");
     } else {
@@ -331,11 +328,10 @@ int main(int argc, char **argv) {
     }
 
     const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::ConfigureImpl>(std::move(decryptor), std::move(log_properties));
-    configure->setHome(minifiHome);
-    configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+    configure->loadConfigureFile(locations->properties_path_);
     overridePropertiesFromCommandLine(argument_parser, configure);
 
-    minifi::fips::initializeFipsMode(configure, minifiHome, logger);
+    minifi::fips::initializeFipsMode(configure, *locations, logger);
 
     minifi::core::extension::ExtensionManagerImpl::get().initialize(configure);
 
@@ -392,7 +388,7 @@ int main(int argc, char **argv) {
 
     auto filesystem = std::make_shared<utils::file::FileSystem>(
         should_encrypt_flow_config,
-        utils::crypto::EncryptionProvider::create(minifiHome));
+        utils::crypto::EncryptionProvider::create(locations->working_dir_));
 
     auto asset_manager = std::make_unique<utils::file::AssetManager>(*configure);
     auto bulletin_store = std::make_unique<core::BulletinStore>(*configure);
@@ -404,7 +400,7 @@ int main(int argc, char **argv) {
           .configuration = configure,
           .path = configure->get(minifi::Configure::nifi_flow_configuration_file),
           .filesystem = filesystem,
-          .sensitive_values_encryptor = utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(minifiHome),
+          .sensitive_values_encryptor = utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(locations->working_dir_),
           .asset_manager = asset_manager.get(),
           .bulletin_store = bulletin_store.get()
       }, nifi_configuration_class_name);

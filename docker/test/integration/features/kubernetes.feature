@@ -15,6 +15,7 @@
 
 @requires.kubernetes.cluster
 @ENABLE_KUBERNETES
+@SKIP_RPM
 Feature: TailFile can collect logs from Kubernetes pods
 
   Background:

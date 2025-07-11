@@ -35,7 +35,6 @@ class FFRepoFixture : public TestController {
     home_ = createTempDirectory();
     repo_dir_ = home_ / "flowfile_repo";
     config_ = std::make_shared<minifi::ConfigureImpl>();
-    config_->setHome(home_);
     container_ = std::make_unique<minifi::ConnectionImpl>(nullptr, nullptr, "container");
     content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo_->initialize(config_);
