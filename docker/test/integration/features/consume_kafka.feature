@@ -304,7 +304,8 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     Then exactly these flowfiles are in the monitored directory's "processed" subdirectory in less than 15 seconds: "<contents_after_tiberius>"
     And exactly these flowfiles are in the monitored directory's "committed" subdirectory in less than 15 seconds: "<contents_after_tiberius>"
 
-    When a message with content "Caligula" is published to the "ConsumeKafkaTest" topic
+    When "kafka-consumer-flow" flow is stopped
+    And a message with content "Caligula" is published to the "ConsumeKafkaTest" topic
     Then exactly these flowfiles are in the monitored directory's "processed" subdirectory in less than 15 seconds: "<contents_after_caligula>"
 
     When a message with content "Claudius" is published to the "ConsumeKafkaTest" topic
