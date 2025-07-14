@@ -30,6 +30,7 @@ from minifi.controllers.XMLRecordSetWriter import XMLRecordSetWriter
 from minifi.controllers.CouchbaseClusterService import CouchbaseClusterService
 from minifi.controllers.XMLReader import XMLReader
 from minifi.controllers.SparkplugBReader import SparkplugBReader
+from minifi.controllers.SparkplugBWriter import SparkplugBWriter
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -507,11 +508,28 @@ def step_impl(context):
     context.test.start('mqtt-broker')
 
 
+@given("a SparkplugBReader controller service is set up in the \"{minifi_container_name}\" flow")
+def step_impl(context, minifi_container_name: str):
+    sparkplug_record_set_reader = SparkplugBReader("SparkplugBReader")
+    container = context.test.acquire_container(context=context, name=minifi_container_name)
+    container.add_controller(sparkplug_record_set_reader)
+
+
+@given("a SparkplugBWriter controller service is set up in the \"{minifi_container_name}\" flow")
+def step_impl(context, minifi_container_name: str):
+    sparkplug_record_set_writer = SparkplugBWriter("SparkplugBWriter")
+    container = context.test.acquire_container(context=context, name=minifi_container_name)
+    container.add_controller(sparkplug_record_set_writer)
+
+
 @given("a SparkplugBReader controller service is set up")
 def step_impl(context):
-    sparkplug_record_set_reader = SparkplugBReader("SparkplugBReader")
-    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
-    container.add_controller(sparkplug_record_set_reader)
+    context.execute_steps("given a SparkplugBReader controller service is set up in the \"minifi-cpp-flow\" flow")
+
+
+@given("a SparkplugBWriter controller service is set up")
+def step_impl(context):
+    context.execute_steps("given a SparkplugBWriter controller service is set up in the \"minifi-cpp-flow\" flow")
 
 
 @when("a test Sparkplug payload is published to the topic \"{topic}\"")
