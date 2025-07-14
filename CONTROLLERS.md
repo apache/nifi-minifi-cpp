@@ -30,6 +30,7 @@ limitations under the License.
 - [RocksDbStateStorage](#RocksDbStateStorage)
 - [SmbConnectionControllerService](#SmbConnectionControllerService)
 - [SparkplugBReader](#SparkplugBReader)
+- [SparkplugBWriter](#SparkplugBWriter)
 - [SSLContextService](#SSLContextService)
 - [UpdatePolicyControllerService](#UpdatePolicyControllerService)
 - [VolatileMapStateStorage](#VolatileMapStateStorage)
@@ -283,6 +284,20 @@ In the list below, the names of required properties appear in bold. Any other pr
 ### Description
 
 Reads Sparkplug B messages and turns them into individual Record objects. The reader expects a single Sparkplug B payload in a read operation, which is a protobuf-encoded binary message. This reader is typically used with MQTT processors like ConsumeMQTT.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+|------|---------------|------------------|-------------|
+
+
+## SparkplugBWriter
+
+### Description
+
+Serializes recordset to Sparkplug B messages and writes them into a FlowFile. This writer is typically used with MQTT processors like PublishMQTT.
 
 ### Properties
 

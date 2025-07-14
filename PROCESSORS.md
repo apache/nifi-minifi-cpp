@@ -2164,6 +2164,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Retain                  | false         | true<br/>false                       | Retain published message in broker                                                                                          |
 | Message Expiry Interval |               |                                      | Time while message is valid and will be forwarded by broker. MQTT 5.x only.                                                 |
 | Content Type            |               |                                      | Content type of the message. MQTT 5.x only.<br/>**Supports Expression Language: true**                                      |
+| Record Reader           |               |                                      | The Record Reader to use for parsing the incoming FlowFile into Records.                                                    |
+| Record Writer           |               |                                      | The Record Writer to use for serializing Records before publishing them as an MQTT Message.                                 |
 | **Quality of Service**  | 0             | 0<br/>1<br/>2                        | The Quality of Service (QoS) of messages.                                                                                   |
 | Connection Timeout      | 10 sec        |                                      | Maximum time interval the client will wait for the network connection to the MQTT broker                                    |
 | Keep Alive Interval     | 60 sec        |                                      | Defines the maximum time interval between messages sent or received                                                         |
