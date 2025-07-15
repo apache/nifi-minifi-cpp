@@ -60,17 +60,10 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
       }
       ack_uri_ = rest_base_path.value() + ack_uri_;
     }
-    if (controller && configure->get(Configuration::nifi_c2_rest_ssl_context_service, "c2.rest.ssl.context.service", ssl_context_service_str)) {
-      if (auto service = controller->getControllerService(ssl_context_service_str)) {
-        ssl_context_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
-      }
-    }
-    if (nullptr == ssl_context_service_) {
-      std::string ssl_context_str;
-      if (configure->get(Configure::nifi_remote_input_secure, ssl_context_str) && org::apache::nifi::minifi::utils::string::toBool(ssl_context_str).value_or(false)) {
-        ssl_context_service_ = std::make_shared<minifi::controllers::SSLContextServiceImpl>("RESTSenderSSL", configure);
-        ssl_context_service_->onEnable();
-      }
+    std::string ssl_context_str;
+    if (configure->get(Configure::nifi_remote_input_secure, ssl_context_str) && org::apache::nifi::minifi::utils::string::toBool(ssl_context_str).value_or(false)) {
+      ssl_context_service_ = std::make_shared<minifi::controllers::SSLContextServiceImpl>("RESTSenderSSL", configure);
+      ssl_context_service_->onEnable();
     }
     if (auto req_encoding_str = configure->get(Configuration::nifi_c2_rest_request_encoding)) {
       if (auto req_encoding = magic_enum::enum_cast<RequestEncoding>(*req_encoding_str, magic_enum::case_insensitive)) {
@@ -137,7 +130,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     }
   };
   if (direction == Direction::TRANSMIT) {
-    setUpHttpRequest(http::HttpRequestMethod::POST);
+    setUpHttpRequest(http::HttpRequestMethod::Post);
     if (payload.getOperation() == Operation::transfer) {
       // treat nested payloads as files
       for (const auto& file : payload.getNestedPayloads()) {
@@ -178,7 +171,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   } else {
     // we do not need to set the upload callback
     // since we are not uploading anything on a get
-    setUpHttpRequest(http::HttpRequestMethod::GET);
+    setUpHttpRequest(http::HttpRequestMethod::Get);
   }
 
   if (payload.getOperation() == Operation::transfer) {
