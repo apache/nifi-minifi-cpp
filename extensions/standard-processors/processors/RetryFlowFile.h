@@ -75,7 +75,6 @@ class RetryFlowFile : public core::ProcessorImpl {
       .withDescription("The maximum number of times a FlowFile can be retried before being passed to the 'retries_exceeded' relationship.")
       .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("3")
-      .supportsExpressionLanguage(true)
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto PenalizeRetries = core::PropertyDefinitionBuilder<>::createProperty("Penalize Retries")

@@ -62,9 +62,8 @@ class PutOPCProcessor : public BaseOPCProcessor {
       .withAllowedValues(magic_enum::enum_names<opc::OPCNodeDataType>())
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto TargetNodeIDType = core::PropertyDefinitionBuilder<2>::createProperty("Target node ID type")
+  EXTENSIONAPI static constexpr auto TargetNodeIDType = core::PropertyDefinitionBuilder<>::createProperty("Target node ID type")
       .withDescription("ID type of target node. Allowed values are: Int, String.")
-      .withAllowedValues({"Int", "String"})
       .supportsExpressionLanguage(true)
       .isRequired(true)
       .build();
