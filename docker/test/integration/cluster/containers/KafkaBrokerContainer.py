@@ -18,6 +18,7 @@ import logging
 import tempfile
 import docker.types
 import jks
+import os
 from OpenSSL import crypto
 
 from .Container import Container
@@ -37,6 +38,8 @@ class KafkaBrokerContainer(Container):
             server_keystore.save(server_keystore_file.name, 'abcdefgh')
             self.server_keystore_file_path = server_keystore_file.name
 
+        os.chmod(self.server_keystore_file_path, 0o644)
+
         trusted_cert = jks.TrustedCertEntry.new(
             'root-ca',  # Alias for the certificate
             crypto.dump_certificate(crypto.FILETYPE_ASN1, feature_context.root_ca_cert)
@@ -48,6 +51,8 @@ class KafkaBrokerContainer(Container):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jks") as server_truststore_file:
             truststore.save(server_truststore_file.name, 'abcdefgh')
             self.server_truststore_file_path = server_truststore_file.name
+
+        os.chmod(self.server_truststore_file_path, 0o644)
 
         with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as jaas_config_file:
             jaas_config_file.write("""
@@ -66,6 +71,7 @@ Client {
 };
 """)
             self.jaas_config_file_path = jaas_config_file.name
+        os.chmod(self.jaas_config_file_path, 0o644)
 
     def get_startup_finished_log_entry(self):
         return "Kafka Server started"

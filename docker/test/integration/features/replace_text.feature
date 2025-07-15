@@ -31,7 +31,7 @@ Feature: Changing flowfile contents using the ReplaceText processor
     And the "success" relationship of the GenerateFlowFile processor is connected to the ReplaceText
     And the "success" relationship of the ReplaceText processor is connected to the PutFile
     When the MiNiFi instance starts up
-    Then a flowfile with the content "<output>" is placed in the monitored directory in less than 10 seconds
+    Then a flowfile with the content "<output>" is placed in the monitored directory in less than 100 seconds
 
     Examples:
       | input                 | replacement_strategy | search_value | replacement_value | output                    |

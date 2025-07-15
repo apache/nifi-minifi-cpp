@@ -75,7 +75,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the http proxy server is set up
     When all instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the object on the s3 server is "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{"
     And the object content type on the s3 server is "application/octet-stream" and the object metadata matches use metadata
     And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket/test_object_key"
@@ -96,7 +96,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When both instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the object bucket on the s3 server is empty
 
   Scenario: Deletion of a non-existent s3 object succeeds
@@ -111,7 +111,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When both instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the object bucket on the s3 server is empty
 
   Scenario: Deletion of a s3 object through a proxy-server succeeds
@@ -137,7 +137,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the object bucket on the s3 server is empty
     And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket/test_object_key"
 
@@ -159,7 +159,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
   Scenario: A MiNiFi instance can download s3 bucket objects via a http-proxy
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -186,7 +186,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket/test_object_key"
 
   Scenario: A MiNiFi instance can list an S3 bucket directly

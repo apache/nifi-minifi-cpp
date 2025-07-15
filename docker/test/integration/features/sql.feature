@@ -31,7 +31,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for PutSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 120 seconds on the PostgreSQL server
+    Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 60 seconds on the PostgreSQL server
 
   Scenario: A MiNiFi instance can query to test table with ExecuteSQL processor
     Given a MiNiFi CPP server with yaml config
@@ -47,7 +47,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for ExecuteSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then at least one flowfile with the content '[{"int_col":2,"text_col":"banana"},{"int_col":1,"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with the content '[{"int_col":2,"text_col":"banana"},{"int_col":1,"text_col":"apple"}]' is placed in the monitored directory in less than 60 seconds
 
   Scenario: A MiNiFi instance can query to test table containing mixed case column names with ExecuteSQL processor
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
@@ -63,7 +63,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for ExecuteSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then at least one flowfile with the content '[{"int_col":6,"tExT_Col":"BaNaNa"},{"int_col":5,"tExT_Col":"ApPlE"}]' is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with the content '[{"int_col":6,"tExT_Col":"BaNaNa"},{"int_col":5,"tExT_Col":"ApPlE"}]' is placed in the monitored directory in less than 60 seconds
 
   Scenario: A MiNiFi instance can query to test table with QueryDatabaseTable processor
     Given a QueryDatabaseTable processor with the "Table Name" property set to "test_table"
@@ -75,7 +75,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then at least one flowfile with the content '[{"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with the content '[{"text_col":"apple"}]' is placed in the monitored directory in less than 60 seconds
 
   Scenario: A MiNiFi instance can query to test table containing mixed case column names with QueryDatabaseTable processor
     Given a QueryDatabaseTable processor with the "Table Name" property set to "test_table2"
@@ -87,4 +87,4 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then at least one flowfile with the content '[{"tExT_Col":"ApPlE"}]' is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with the content '[{"tExT_Col":"ApPlE"}]' is placed in the monitored directory in less than 60 seconds
