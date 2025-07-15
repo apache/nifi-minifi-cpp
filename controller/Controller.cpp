@@ -267,4 +267,24 @@ nonstd::expected<void, std::string> getDebugBundle(const utils::net::SocketData&
   return {};
 }
 
+bool getFlowStatus(const utils::net::SocketData& socket_data, const std::string& status_query, std::ostream &out) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
+    return false;
+  }
+  io::BufferStream buffer;
+  auto op = static_cast<uint8_t>(c2::Operation::describe);
+  buffer.write(&op, 1);
+  buffer.write("flowstatus");
+  buffer.write(status_query);
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return false;
+  }
+  connection_stream->read(op);
+  std::string manifest;
+  connection_stream->read(manifest, true);
+  out << manifest << std::endl;
+  return true;
+}
+
 }  // namespace org::apache::nifi::minifi::controller
