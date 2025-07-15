@@ -49,11 +49,12 @@ namespace org::apache::nifi::minifi::wel {
  */
 class MetadataWalker : public pugi::xml_tree_walker {
  public:
-  MetadataWalker(const WindowsEventLogMetadata& windows_event_log_metadata, std::string log_name, bool update_xml, bool resolve, utils::Regex const* regex,
+  MetadataWalker(const WindowsEventLogMetadata& windows_event_log_metadata, std::string log_name, bool update_xml, bool resolve,
+      std::function<bool(std::string_view)> sid_matcher,
       std::function<std::string(std::string)> user_id_to_username_fn)
       : windows_event_log_metadata_(windows_event_log_metadata),
         log_name_(std::move(log_name)),
-        regex_(regex),
+        sid_matcher_(std::move(sid_matcher)),
         update_xml_(update_xml),
         resolve_(resolve),
         user_id_to_username_fn_(std::move(user_id_to_username_fn)) {
@@ -82,8 +83,6 @@ class MetadataWalker : public pugi::xml_tree_walker {
     return "N/A";
   }
 
-  static std::string to_string(const wchar_t* pChar);
-
   /**
    * Updates text within the XML representation
    */
@@ -96,7 +95,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
 
   const WindowsEventLogMetadata& windows_event_log_metadata_;
   const std::string log_name_;
-  utils::Regex const * const regex_;
+  std::function<bool(std::string_view)> sid_matcher_;
   const bool update_xml_;
   const bool resolve_;
   std::function<std::string(const std::string&)> user_id_to_username_fn_;

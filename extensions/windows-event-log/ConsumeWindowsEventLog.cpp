@@ -23,15 +23,10 @@
 #include <vector>
 #include <tuple>
 #include <utility>
-#include <queue>
 #include <map>
-#include <set>
 #include <sstream>
 #include <string>
-#include <iostream>
 #include <memory>
-#include <regex>
-#include <cinttypes>
 
 #include "wel/LookupCacher.h"
 #include "wel/MetadataWalker.h"
@@ -49,6 +44,8 @@
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
+#include "utils/RegexUtils.h"
+#include "utils/StringUtils.h"
 #include "utils/UnicodeConversion.h"
 #include "utils/ProcessorConfigUtils.h"
 
@@ -140,11 +137,7 @@ void ConsumeWindowsEventLog::onSchedule(core::ProcessContext& context, core::Pro
     }
   }
 
-  regex_.reset();
-  if (auto identifier_matcher = context.getProperty(IdentifierMatcher); identifier_matcher && !identifier_matcher->empty()) {
-    regex_.emplace(*identifier_matcher);
-  }
-
+  sid_matcher_ = cwel::parseSidMatcher(utils::parseOptionalProperty(context, IdentifierMatcher));
   output_format_ = utils::parseEnumProperty<cwel::OutputFormat>(context, OutputFormatProperty);
   json_format_ = utils::parseEnumProperty<cwel::JsonFormat>(context, JsonFormatProperty);
 
@@ -193,6 +186,20 @@ void ConsumeWindowsEventLog::onSchedule(core::ProcessContext& context, core::Pro
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + path_.str() + "?" + query;
   logger_->log_trace("Successfully configured CWEL");
+}
+
+std::function<bool(std::string_view)> cwel::parseSidMatcher(const std::optional<std::string>& sid_matcher) {
+  if (!sid_matcher || sid_matcher->empty()) {
+    return [](std::string_view){ return false; };
+  }
+
+  if (std::smatch match; utils::regexMatch(*sid_matcher, match, utils::Regex{R"_(\.\*(\w+))_"})) {
+    std::string suffix = match[1];
+    return [suffix](std::string_view field_name) { return utils::string::endsWith(field_name, suffix); };
+  }
+
+  utils::Regex sid_matcher_regex{*sid_matcher};
+  return [sid_matcher_regex](std::string_view field_name) { return utils::regexMatch(field_name, sid_matcher_regex); };
 }
 
 bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmark_xml, core::ProcessContext& context, core::ProcessSession& session) {
@@ -323,7 +330,7 @@ wel::WindowsEventLogHandler& ConsumeWindowsEventLog::getEventLogHandler(const st
   auto opened_publisher_metadata_provider = EvtOpenPublisherMetadata(nullptr, widechar, nullptr, 0, 0);
   if (!opened_publisher_metadata_provider)
     logger_->log_warn("EvtOpenPublisherMetadata failed due to {}", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
-  providers_[name] = wel::WindowsEventLogHandler(opened_publisher_metadata_provider);
+  providers_.emplace(name, opened_publisher_metadata_provider);
   logger_->log_info("Handler not found for {}, creating. Number of cached handlers: {}", name, providers_.size());
   return providers_[name];
 }
@@ -459,8 +466,8 @@ nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createE
 
   // this is a well known path.
   std::string provider_name = doc.child("Event").child("System").child("Provider").attribute("Name").value();
-  wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(provider_name).getMetadata(), hEvent};
-  wel::MetadataWalker walker{metadata, path_.str(), !resolve_as_attributes_, apply_identifier_function_, regex_ ? &*regex_ : nullptr, userIdToUsernameFunction()};
+  wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(provider_name), hEvent};
+  wel::MetadataWalker walker{metadata, path_.str(), !resolve_as_attributes_, apply_identifier_function_, sid_matcher_, userIdToUsernameFunction()};
 
   // resolve the event metadata
   doc.traverse(walker);
