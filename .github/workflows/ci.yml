@@ -328,25 +328,28 @@ jobs:
         id: performance-test
         run: ctest -j1 --verbose -L performance
         working-directory: build
-      - id: files
-        uses: Ana06/get-changed-files@v2.3.0
-        continue-on-error: true
+      - name: list-changed-cpp-files
+        id: list-changed-cpp-files
+        run: |
+          head_commit=${{github.sha}}
+          if [[ -n "${{github.event.pull_request.base.sha}}" ]]; then
+            base_commit=${{github.event.pull_request.base.sha}}
+            git fetch --depth=1 origin ${base_commit}
+          else
+            git fetch --depth=2 origin ${head_commit}
+            base_commit=$(git log -n2 --format=format:%H ${head_commit} | tail -n1)
+          fi
+          echo "Collecting added/copied/modified/renamed/type-changed .cpp files from ${base_commit} to ${head_commit}"
+          echo "files=$(git diff --name-only --diff-filter=ACMRT ${base_commit} ${head_commit} | grep '\.cpp$' | xargs)" >> $GITHUB_OUTPUT
       - name: clang-tidy
         run: |
-          if [[ -n "${{ steps.files.outputs.all }}" ]]; then
-            FILES="${{ steps.files.outputs.all }}"
-          else
-            git fetch origin main && git checkout -b main origin/main || true
-            FILES=$(git diff --name-only main ${{ github.sha }} --)
-            git checkout ${{ github.sha }}
-          fi
           # https://stackoverflow.com/questions/58466701/clang-tidy-cant-locate-stdlib-headers
           sed -i -e 's/\/usr\/lib\/ccache\/clang++-16/\/lib\/llvm-16\/bin\/clang++/g' build/compile_commands.json
           sed -i -e 's/\/usr\/lib\/ccache\/clang-16/\/lib\/llvm-16\/bin\/clang/g' build/compile_commands.json
           sed -i -e 's/\/usr\/lib\/ccache\/c++/\/lib\/llvm-16\/bin\/clang++/g' build/compile_commands.json
           sed -i -e 's/\/usr\/lib\/ccache\/cc/\/lib\/llvm-16\/bin\/clang/g' build/compile_commands.json
 
-          parallel -j$(( $(nproc) + 1 )) ./run_clang_tidy.sh ::: ${FILES}
+          parallel -j$(( $(nproc) + 1 )) ./run_clang_tidy.sh ::: ${{steps.list-changed-cpp-files.outputs.files}}
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
