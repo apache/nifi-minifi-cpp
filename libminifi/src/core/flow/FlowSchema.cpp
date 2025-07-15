@@ -77,6 +77,11 @@ FlowSchema FlowSchema::getDefault() {
       .rpg_output_ports = {"Output Ports"},
       .rpg_port_properties = {"Properties"},
       .rpg_port_target_id = {},
+      .rpg_port_use_compression = {"use compression"},
+      .rpg_port_batch_size = {"batch size"},
+      .rpg_port_batch_size_count = {"count"},
+      .rpg_port_batch_size_size = {"size"},
+      .rpg_port_batch_size_duration = {"duration"},
 
       .parameter_contexts = {"Parameter Contexts"},
       .parameters = {"Parameters"},
@@ -150,6 +155,11 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .rpg_output_ports = {"outputPorts"},
       .rpg_port_properties = {"properties"},
       .rpg_port_target_id = {"targetId"},
+      .rpg_port_use_compression = {"useCompression"},
+      .rpg_port_batch_size = {"batchSize"},
+      .rpg_port_batch_size_count = {"count"},
+      .rpg_port_batch_size_size = {"size"},
+      .rpg_port_batch_size_duration = {"duration"},
 
       .parameter_contexts = {"parameterContexts"},
       .parameters = {"parameters"},

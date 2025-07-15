@@ -45,7 +45,7 @@ Remote Processing Groups:
   - name: NiFi Flow
     id: 471deef6-2a6e-4a7d-912a-81cc17e3a208
     url: http://localhost:8098/nifi
-    timeout: 30 secs
+    timeout: 20 secs
     yield period: 1 sec
     transport protocol: HTTP
     Input Ports:
@@ -53,6 +53,10 @@ Remote Processing Groups:
         name: From Node A
         max concurrent tasks: 1
         use compression: false
+        batch size:
+          count: 5
+          size: 100 B
+          duration: 30 sec
         Properties: # Deviates from spec and will later be removed when this is autonegotiated
           Port UUID: 471deef6-2a6e-4a7d-912a-81cc17e3a204
           Port: 8082

@@ -80,6 +80,11 @@ struct FlowSchema {
   Keys rpg_output_ports;
   Keys rpg_port_properties;
   Keys rpg_port_target_id;
+  Keys rpg_port_use_compression;
+  Keys rpg_port_batch_size;
+  Keys rpg_port_batch_size_count;
+  Keys rpg_port_batch_size_size;
+  Keys rpg_port_batch_size_duration;
 
   Keys parameter_contexts;
   Keys parameters;
