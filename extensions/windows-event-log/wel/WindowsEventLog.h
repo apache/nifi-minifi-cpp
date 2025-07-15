@@ -58,7 +58,6 @@ enum METADATA {
   COMPUTER,
   UNKNOWN
 };
-// this is a continuous enum, so we can rely on the array
 using METADATA_NAMES = std::vector<std::pair<METADATA, std::string>>;
 
 class EventDataCache {
