@@ -18,9 +18,10 @@
 
 #include <filesystem>
 #include <memory>
+
+#include "MainHelper.h"
 #include "core/logging/Logger.h"
 #include "minifi-cpp/properties/Configure.h"
-#include "minifi-cpp/properties/Locations.h"
 
 namespace org::apache::nifi::minifi::fips {
 

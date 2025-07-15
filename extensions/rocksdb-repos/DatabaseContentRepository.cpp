@@ -17,26 +17,26 @@
 
 #include "DatabaseContentRepository.h"
 
+#include <cinttypes>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <cinttypes>
 
-#include "encryption/RocksDbEncryptionProvider.h"
-#include "RocksDbStream.h"
-#include "utils/gsl.h"
 #include "Exception.h"
-#include "database/RocksDbUtils.h"
-#include "database/StringAppender.h"
+#include "RocksDbStream.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
+#include "database/RocksDbUtils.h"
+#include "database/StringAppender.h"
+#include "encryption/RocksDbEncryptionProvider.h"
+#include "utils/Locations.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
 bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configure> &configuration) {
-  const auto locations = configuration->getLocations();
-  const auto working_dir = locations ? locations->getWorkingDir() : std::filesystem::current_path();  // TODO(mzink)
+  const auto working_dir = utils::getMinifiDir();
 
   std::string value;
   if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value) && !value.empty()) {

@@ -52,25 +52,25 @@ extern "C" {
 #endif
 #endif
 
-/**
- * Validates a MINIFI_HOME value.
- * @param home_path
- * @return true if home_path represents a valid MINIFI_HOME
- */
-bool validHome(const std::string &home_path);
+struct Locations {
+  std::filesystem::path working_dir_;
+  std::filesystem::path lock_path_;
+  std::filesystem::path log_properties_path_;
+  std::filesystem::path uid_properties_path_;
+  std::filesystem::path properties_path_;
+  std::filesystem::path logs_dir_;
+  std::filesystem::path fips_bin_path_;
+  std::filesystem::path fips_conf_path_;
+};
 
 /**
  * Configures the logger to log everything to syslog/Windows Event Log, and for the minimum log level to INFO
  */
 void setSyslogLogger();
 
-/**
- * Determines the full path of MINIFI_HOME
- * @return MINIFI_HOME on success, empty string on failure
- */
 std::filesystem::path determineMinifiHome(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
 
-std::shared_ptr<org::apache::nifi::minifi::Locations> determineLocations(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
+std::optional<Locations> determineLocations(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
 
 
 #endif /* MAIN_MAINHELPER_H_ */

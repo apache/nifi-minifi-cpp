@@ -112,18 +112,44 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>
   return minifi_home;
 }
 
-std::shared_ptr<minifi::Locations> determineLocations(const std::shared_ptr<logging::Logger>& logger) {
+Locations getFromMinifiHome(const std::filesystem::path& minifi_home) {
+  return {
+    .working_dir_ = minifi_home,
+    .lock_path_ = minifi_home / "LOCK",
+    .log_properties_path_ = minifi_home / DEFAULT_LOG_PROPERTIES_FILE,
+    .uid_properties_path_ = minifi_home / DEFAULT_UID_PROPERTIES_FILE,
+    .properties_path_ = minifi_home / DEFAULT_NIFI_PROPERTIES_FILE,
+    .logs_dir_ = minifi_home / "logs",
+    .fips_bin_path_ = minifi_home / "fips",
+    .fips_conf_path_ = minifi_home / "fips",
+  };
+}
+
+Locations getFromFHS() {
+  return {
+      .working_dir_ = "/var/lib/nifi-minifi-cpp",
+      .lock_path_ = "/var/lib/nifi-minifi-cpp/LOCK",
+      .log_properties_path_ = "/etc/nifi-minifi-cpp/minifi-log.properties",
+      .uid_properties_path_ = "/etc/nifi-minifi-cpp/minifi-uid.properties",
+      .properties_path_ = "/etc/nifi-minifi-cpp/minifi.properties",
+      .logs_dir_ = "/var/log/nifi-minifi-cpp",
+      .fips_bin_path_ = "/usr/lib64/nifi-minifi-cpp/fips",
+      .fips_conf_path_ = "/etc/nifi-minifi-cpp/fips"
+  };
+}
+
+std::optional<Locations> determineLocations(const std::shared_ptr<logging::Logger>& logger) {
   if (const auto minifi_home_env = utils::Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY)) {
     if (minifi_home_env == "FHS") {
-      return minifi::LocationsImpl::createForFHS();
+      return getFromFHS();
     }
   }
   if (const auto executable_path = utils::file::get_executable_path(); executable_path.parent_path() == "/usr/bin") {
-    return minifi::LocationsImpl::createForFHS();
+    return getFromFHS();
   }
   const auto minifi_home = determineMinifiHome(logger);
   if (minifi_home.empty()) {
-    return nullptr;
+    return std::nullopt;
   }
-  return minifi::LocationsImpl::createFromMinifiHome(minifi_home);
+  return getFromMinifiHome(minifi_home);
 }

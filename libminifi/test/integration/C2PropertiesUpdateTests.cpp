@@ -212,7 +212,6 @@ TEST_CASE("C2PropertiesUpdateTests", "[c2test]") {
     }
   });
 
-  harness.getConfiguration()->setLocations(minifi::LocationsImpl::createFromMinifiHome(home_dir.string()));
   harness.getConfiguration()->loadConfigureFile(home_dir / "conf/minifi.properties");
   ConfigTestAccessor::call_setLoggerProperties(harness.getConfiguration(), logger_properties);
 

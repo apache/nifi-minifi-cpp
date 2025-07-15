@@ -16,11 +16,13 @@
  */
 
 #include "utils/file/AssetManager.h"
-#include "utils/file/FileUtils.h"
+
+#include "core/logging/LoggerFactory.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
-#include "core/logging/LoggerFactory.h"
 #include "utils/Hash.h"
+#include "utils/Locations.h"
+#include "utils/file/FileUtils.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
@@ -30,10 +32,7 @@ std::filesystem::path getRootFromConfigure(const Configure& configuration) {
   if (auto nifi_asset_directory = configuration.get(Configure::nifi_asset_directory)) {
     return *nifi_asset_directory;
   }
-  if (const auto locations = configuration.getLocations()) {
-    return locations->getWorkingDir() / "asset";
-  }
-  return std::filesystem::path("") / "asset";
+  return utils::getMinifiDir() / "asset";
 }
 
 AssetManager::AssetManager(const Configure& configuration)

@@ -16,15 +16,18 @@
  */
 #include "Fips.h"
 
-#include <fstream>
-#include <algorithm>
-#include <string>
-#include <openssl/provider.h>
-#include <openssl/evp.h>
 #include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/provider.h>
+
+#include <algorithm>
+#include <fstream>
+#include <string>
+
+#include "MainHelper.h"
 #include "utils/Environment.h"
-#include "utils/StringUtils.h"
 #include "utils/OptionalUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::fips {
 
@@ -73,8 +76,8 @@ bool substituteFipsDirVariable(const std::filesystem::path& file_path, const std
 }
 
 bool generateFipsModuleConfig(const Locations& locations, const std::shared_ptr<core::logging::Logger>& logger) {
-  const auto& fips_bin_path = locations.getFipsBinPath();
-  const auto& fips_conf_path = locations.getFipsConfPath();
+  const auto& fips_bin_path = locations.fips_bin_path_;
+  const auto& fips_conf_path = locations.fips_conf_path_;
   std::filesystem::path output_file(fips_conf_path / "fipsmodule.cnf");
   logger->log_info("fipsmodule.cnf was not found, trying to run fipsinstall command to generate the file");
 
@@ -93,8 +96,8 @@ bool generateFipsModuleConfig(const Locations& locations, const std::shared_ptr<
 }  // namespace
 
 void initializeFipsMode(const std::shared_ptr<minifi::Configure>& configure, const Locations& locations, const std::shared_ptr<core::logging::Logger>& logger) {
-  const auto& fips_bin_path = locations.getFipsBinPath();
-  const auto& fips_conf_path = locations.getFipsConfPath();
+  const auto& fips_bin_path = locations.fips_bin_path_;
+  const auto& fips_conf_path = locations.fips_conf_path_;
   if (!(configure->get(minifi::Configure::nifi_openssl_fips_support_enable) | utils::andThen(utils::string::toBool)).value_or(false)) {
     logger->log_info("FIPS mode is disabled. FIPS configs and modules will NOT be loaded.");
     return;

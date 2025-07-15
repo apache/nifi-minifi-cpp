@@ -24,13 +24,14 @@
 #include <utility>
 #include <vector>
 
+#include "FlowFileRecord.h"
+#include "core/Resource.h"
+#include "core/TypedValues.h"
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
-#include "utils/gsl.h"
-#include "core/Resource.h"
+#include "utils/Locations.h"
 #include "utils/OptionalUtils.h"
-#include "core/TypedValues.h"
-#include "FlowFileRecord.h"
+#include "utils/gsl.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -210,8 +211,7 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
 
   setCompactionPeriod(configure);
 
-  const auto locations = configure->getLocations();
-  const auto working_dir = locations ? locations->getWorkingDir() : std::filesystem::current_path();  // TODO(mzink)
+  const auto working_dir = utils::getMinifiDir();
 
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{working_dir}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using {} FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");

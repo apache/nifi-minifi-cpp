@@ -97,11 +97,10 @@ int main(int argc, char **argv) {
   }
 
   const auto configuration = std::make_shared<minifi::ConfigureImpl>();
-  configuration->setLocations(locations);
-  configuration->loadConfigureFile(locations->getPropertiesPath());
+  configuration->loadConfigureFile(locations->properties_path_);
 
-  const auto log_properties = std::make_shared<minifi::core::logging::LoggerProperties>(locations->getLogsDirs());
-  log_properties->loadConfigureFile(locations->getLogPropertiesPath(), "nifi.log.");
+  const auto log_properties = std::make_shared<minifi::core::logging::LoggerProperties>(locations->logs_dir_);
+  log_properties->loadConfigureFile(locations->log_properties_path_, "nifi.log.");
 
   minifi::core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 

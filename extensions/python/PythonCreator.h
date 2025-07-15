@@ -18,26 +18,28 @@
 
 #pragma once
 
-#include <vector>
 #include <algorithm>
-#include <string>
-#include <memory>
 #include <filesystem>
-#include "core/Core.h"
-#include "core/logging/LoggerFactory.h"
-#include "core/Resource.h"
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "ExecutePythonProcessor.h"
 #include "PythonConfigState.h"
+#include "PythonDependencyInstaller.h"
 #include "PythonObjectFactory.h"
+#include "core/Core.h"
+#include "core/Resource.h"
+#include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "minifi-cpp/agent/build_description.h"
-#include "utils/file/FileUtils.h"
-#include "utils/StringUtils.h"
 #include "range/v3/algorithm.hpp"
-#include "utils/file/FilePattern.h"
 #include "range/v3/view/filter.hpp"
-#include "PythonDependencyInstaller.h"
-#include "utils/file/PathUtils.h"
+#include "utils/Environment.h"
+#include "utils/Locations.h"
+#include "utils/StringUtils.h"
+#include "utils/file/FilePattern.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -162,19 +164,13 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
   }
 
   std::filesystem::path getPythonLibPath(const std::shared_ptr<Configure>& configuration) {
-    constexpr std::string_view DEFAULT_EXTENSION_PATH = "../extensions/*";
     const std::string pattern = [&] {
-      if (const auto opt_pattern = configuration->get(minifi::Configuration::nifi_extension_path)) {
+      if (const auto opt_pattern = configuration->get(Configuration::nifi_extension_path)) {
         return *opt_pattern;
       };
-
-      if (const auto locations = configuration->getLocations()) {
-        logger_->log_warn("No extension path is provided in properties, using default : '{}'", locations->getDefaultExtensionsPattern());
-        return std::string(locations->getDefaultExtensionsPattern());
-      };
-
-      logger_->log_error("No extension path is provided in properties and locations is empty, using hard-coded default: '{}'", DEFAULT_EXTENSION_PATH);
-      return std::string(DEFAULT_EXTENSION_PATH);
+      const auto default_extension_path = utils::getDefaultExtensionsPattern();
+      logger_->log_warn("No extension path is provided in properties, using default: '{}'", default_extension_path);
+      return default_extension_path;
     }();
     const auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
       logger_->log_error("Error in subpattern '{}': {}", subpattern, error_msg);

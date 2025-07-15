@@ -15,14 +15,16 @@
  * limitations under the License.
  */
 
+#include "RocksDbStateStorage.h"
+
 #include <cinttypes>
 #include <fstream>
 #include <utility>
 
-#include "RocksDbStateStorage.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
-#include "utils/StringUtils.h"
 #include "core/Resource.h"
+#include "utils/Locations.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -61,8 +63,7 @@ void RocksDbStateStorage::onEnable() {
   db_.reset();
 
 
-  const auto locations = configuration_->getLocations();
-  const auto working_dir = locations ? locations->getWorkingDir() : std::filesystem::current_path();  // TODO(mzink)
+  const auto working_dir = utils::getMinifiDir();
 
   auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{working_dir}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   if (!encrypted_env) {
