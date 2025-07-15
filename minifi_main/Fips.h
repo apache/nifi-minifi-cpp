@@ -25,4 +25,4 @@ namespace org::apache::nifi::minifi::fips {
 
 void initializeFipsMode(const std::shared_ptr<Configure>& configure, const std::filesystem::path& minifi_home, const std::shared_ptr<core::logging::Logger>& logger);
 
-}  // namespace org::apache::nifi::minifi::utils::fips
+}  // namespace org::apache::nifi::minifi::fips

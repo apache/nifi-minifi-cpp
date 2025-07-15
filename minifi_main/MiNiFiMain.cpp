@@ -35,10 +35,10 @@
 #endif
 
 #include <fcntl.h>
-#include <cstdio>
 #include <semaphore.h>
-#include <csignal>
 #include <sodium.h>
+#include <cstdio>
+#include <csignal>
 
 #include <atomic>
 #include <cstdlib>

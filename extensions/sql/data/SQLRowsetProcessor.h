@@ -23,11 +23,7 @@
 #include "SQLRowSubscriber.h"
 #include "DatabaseConnectors.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 class SQLRowsetProcessor {
  public:
@@ -36,23 +32,18 @@ class SQLRowsetProcessor {
   size_t process(size_t max);
 
  private:
-   void addRow(const Row& row, size_t rowCount);
+  void addRow(const Row& row, size_t rowCount);
 
-   template <typename T>
-   void processColumn(const std::string& name, const T& value) const {
-     for (const auto& subscriber : row_subscribers_) {
-       subscriber.get().processColumn(name, value);
-     }
-   }
+  template <typename T>
+  void processColumn(const std::string& name, const T& value) const {
+    for (const auto& subscriber : row_subscribers_) {
+      subscriber.get().processColumn(name, value);
+    }
+  }
 
  private:
   std::unique_ptr<Rowset> rowset_;
   std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers_;
 };
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::sql

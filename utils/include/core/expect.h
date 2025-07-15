@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_EXPECT_H_
-#define LIBMINIFI_INCLUDE_CORE_EXPECT_H_
-
+#pragma once
 
 // various likely/unlikely pragmas I've carried over the years.
 // you'll see this in many projects
@@ -28,5 +26,3 @@
 #define LIKELY(x)   (x)
 #define UNLIKELY(x) (x)
 #endif
-
-#endif  // LIBMINIFI_INCLUDE_CORE_EXPECT_H_

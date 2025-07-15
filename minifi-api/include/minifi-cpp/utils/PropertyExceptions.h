@@ -77,6 +77,6 @@ class RequiredPropertyMissingException : public PropertyException {
   using PropertyException::PropertyException;
 };
 
-} // namespace utils::internal
+}  // namespace utils::internal
 
-} // namespace org::apache::nifi::minifi
+}  // namespace org::apache::nifi::minifi

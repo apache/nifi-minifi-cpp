@@ -99,8 +99,8 @@ class FlowFileSource {
     void processColumn(const std::string& /*name*/, const std::string& /*value*/) override {}
     void processColumn(const std::string& /*name*/, double /*value*/) override {}
     void processColumn(const std::string& /*name*/, int /*value*/) override {}
-    void processColumn(const std::string& /*name*/, long long /*value*/) override {}
-    void processColumn(const std::string& /*name*/, unsigned long long /*value*/) override {}
+    void processColumn(const std::string& /*name*/, long long /*value*/) override {}  // NOLINT(runtime/int)
+    void processColumn(const std::string& /*name*/, unsigned long long /*value*/) override {}  // NOLINT(runtime/int)
     void processColumn(const std::string& /*name*/, const char* /*value*/) override {}
 
     std::shared_ptr<core::FlowFile> getLastFlowFile() const {

@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <memory>
+#include <utility>
 
 #include "io/ZlibStream.h"
 #include "Exception.h"
@@ -162,7 +164,7 @@ size_t ZlibDecompressStream::write(const uint8_t* value, size_t size) {
    * but in this case we do not have to close the stream, because it will detect the end of the compressed format
    * and signal that it is ended by returning Z_STREAM_END and not accepting any more input data.
    */
-  int ret;
+  int ret = 0;
   do {
     logger_->log_trace("writeData has {} B of input data left", strm_.avail_in);
 
