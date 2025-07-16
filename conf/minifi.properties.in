@@ -132,7 +132,7 @@ nifi.c2.full.heartbeat=false
 #controller.ssl.context.service=SSLContextService
 
 ## specify the destination of c2 directed assets
-#nifi.asset.directory=@MINIFI_PATH_ASSET_DIR@
+nifi.asset.directory=@MINIFI_PATH_ASSET_DIR@
 
 ## You probably don't need to touch this, but you can if you want to
 # nifi.default.internal.buffer.size=4096
