@@ -43,7 +43,7 @@ jobs:
 
       - id: check-rpm-contents
         run: |
-          packaging/check_rpm_contents.sh build/*.rpm packaging/expected-rpm-contents.txt
+          packaging/rpm/check_rpm_contents.sh build/*.rpm packaging/rpm/expected-rpm-contents.txt
 
       - uses: actions/upload-artifact@v4
         with:
