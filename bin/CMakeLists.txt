@@ -34,7 +34,6 @@ else()
     message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
 endif()
 
-
 if(APPLE)
     configure_file(
             minifi.plist
@@ -57,14 +56,14 @@ configure_file(
 )
 
 if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/minifi.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
     install(FILES ${CMAKE_BINARY_DIR}/bin/minifi.service DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/system COMPONENT bin)
 elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+    message("SAJT ${CMAKE_INSTALL_BINDIR}")
     install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/minifi.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
     if (APPLE)
-        install(FILES ${CMAKE_BINARY_DIR}/minifi.plist DESTINATION bin COMPONENT bin)
+        install(FILES ${CMAKE_BINARY_DIR}/bin/minifi.plist DESTINATION bin COMPONENT bin)
     else()
-        install(FILES ${CMAKE_BINARY_DIR}/minifi.service DESTINATION bin COMPONENT bin)
+        install(FILES ${CMAKE_BINARY_DIR}/bin/minifi.service DESTINATION bin COMPONENT bin)
     endif()
 else()
     message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
