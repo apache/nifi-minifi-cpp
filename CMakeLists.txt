@@ -643,6 +643,7 @@ elseif(APPLE)
     set(CPACK_GENERATOR "TGZ")
 else()
     if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        set(RPM_EXPECTED_EXTENSION_LIST)
         set(CPACK_GENERATOR "RPM")
         set(CPACK_BINARY_RPM, "ON")
         set(CPACK_RPM_PACKAGE_NAME "nifi-minifi-cpp")
@@ -824,3 +825,5 @@ if (MINIFI_ADVANCED_CODE_COVERAGE)
             "controller/MiNiFiController.cpp"
     )
 endif()
+
+add_subdirectory(packaging)

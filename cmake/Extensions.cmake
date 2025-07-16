@@ -82,6 +82,7 @@ macro(register_extension extension-name extension-display-name extension-guard d
                 install(TARGETS ${extension-name}
                         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/extensions/
                         COMPONENT ${component-name})
+                set(RPM_EXPECTED_EXTENSION_LIST ${RPM_EXPECTED_EXTENSION_LIST} /usr/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/extensions/lib${extension-name}.so PARENT_SCOPE)
             elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
                 install(TARGETS ${extension-name} LIBRARY DESTINATION extensions COMPONENT ${component-name})
             else()
