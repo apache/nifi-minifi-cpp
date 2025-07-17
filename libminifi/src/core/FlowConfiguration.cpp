@@ -80,8 +80,10 @@ std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::s
   return processor;
 }
 
-std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> FlowConfiguration::createProvenanceReportTask() {
-  return std::make_unique<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(this->configuration_);
+std::unique_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask() {
+  auto processor = std::make_unique<core::Processor>("", std::make_unique<core::reporting::SiteToSiteProvenanceReportingTask>(this->configuration_));
+  processor->initialize();
+  return processor;
 }
 
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const std::string& url, const std::string& yamlConfigPayload, const std::optional<std::string>& flow_id) {

@@ -96,7 +96,7 @@ class FlowConfiguration : public CoreComponentImpl {
   // Create Connection
   [[nodiscard]] std::unique_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
   // Create Provenance Report Task
-  std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> createProvenanceReportTask();
+  std::unique_ptr<core::Processor> createProvenanceReportTask();
 
   static std::unique_ptr<core::ParameterProvider> createParameterProvider(const std::string &class_name, const std::string &full_class_name, const utils::Identifier& uuid);
 

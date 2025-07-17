@@ -46,12 +46,12 @@ class ProcessorFactoryImpl : public ProcessorFactory {
   }
 
   std::string getClassName() const override {
-    return class_name_;
+    return std::string{class_name_};
   }
 
  protected:
   std::string group_name_;
-  std::string class_name_;
+  std::string_view class_name_;
 };
 
 }  // namespace org::apache::nifi::minifi::core
