@@ -29,7 +29,7 @@
 #include "agent/agent_docs.h"
 #include "utils/OptionalUtils.h"
 #include "utils/Macro.h"
-#include "core/ProcessorFactory.h"
+#include "core/ProcessorFactoryImpl.h"
 
 namespace org::apache::nifi::minifi::core {
 

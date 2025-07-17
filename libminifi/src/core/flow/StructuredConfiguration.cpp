@@ -582,9 +582,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
     return;
   }
 
-  auto report_task_impl = createProvenanceReportTask();
-  auto* reportTask = report_task_impl.get();
-  auto report_task_wrapper = std::make_unique<core::Processor>("", std::move(report_task_impl));
+  auto report_task = createProvenanceReportTask();
 
   checkRequiredField(node, schema_.scheduling_strategy);
   auto schedulingStrategyStr = node[schema_.scheduling_strategy].getString().value();
@@ -593,11 +591,11 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
 
   if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(schedulingPeriodStr)) {
     logger_->log_debug("ProvenanceReportingTask schedulingPeriod {}", scheduling_period);
-    report_task_wrapper->setSchedulingPeriod(*scheduling_period);
+    report_task->setSchedulingPeriod(*scheduling_period);
   }
 
   if (schedulingStrategyStr == "TIMER_DRIVEN") {
-    report_task_wrapper->setSchedulingStrategy(core::TIMER_DRIVEN);
+    report_task->setSchedulingStrategy(core::TIMER_DRIVEN);
     logger_->log_debug("ProvenanceReportingTask scheduling strategy {}", schedulingStrategyStr);
   } else {
     throw std::invalid_argument("Invalid scheduling strategy " + schedulingStrategyStr);
@@ -610,14 +608,14 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
     if (auto port = parsing::parseIntegral<int64_t>(portStr); port && !hostStr.empty()) {
       logger_->log_debug("ProvenanceReportingTask port {}", *port);
       std::string url = hostStr + ":" + portStr;
-      reportTask->setURL(url);
+      report_task->getImpl<core::reporting::SiteToSiteProvenanceReportingTask>().setURL(url);
     }
   }
 
   if (node["url"]) {
     auto urlStr = node["url"].getString().value();
     if (!urlStr.empty()) {
-      reportTask->setURL(urlStr);
+      report_task->getImpl<core::reporting::SiteToSiteProvenanceReportingTask>().setURL(urlStr);
       logger_->log_debug("ProvenanceReportingTask URL {}", urlStr);
     }
   }
@@ -628,17 +626,15 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
 
   logger_->log_debug("ProvenanceReportingTask port uuid {}", portUUIDStr);
   port_uuid = portUUIDStr;
-  reportTask->setPortUUID(port_uuid);
+  report_task->getImpl<core::reporting::SiteToSiteProvenanceReportingTask>().setPortUUID(port_uuid);
 
   if (auto batch_size = parsing::parseIntegral<int>(batchSizeStr)) {
-    reportTask->setBatchSize(*batch_size);
+    report_task->getImpl<core::reporting::SiteToSiteProvenanceReportingTask>().setBatchSize(*batch_size);
   }
 
-  report_task_wrapper->initialize();
-
   // add processor to parent
-  report_task_wrapper->setScheduledState(core::RUNNING);
-  parent_group->addProcessor(std::move(report_task_wrapper));
+  report_task->setScheduledState(core::RUNNING);
+  parent_group->addProcessor(std::move(report_task));
 }
 
 void StructuredConfiguration::parseControllerServices(const Node& controller_services_node, core::ProcessGroup* parent_group) {
