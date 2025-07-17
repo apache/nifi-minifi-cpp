@@ -84,7 +84,8 @@ class SchedulingAgentTestFixture {
       std::make_unique<minifi::core::controller::ControllerServiceNodeMap>(), configuration_);
   utils::ThreadPool thread_pool_;
 
-  std::shared_ptr<CountOnTriggersProcessor> count_proc_ = std::make_shared<CountOnTriggersProcessor>("count_proc");
+  std::shared_ptr<core::Processor> count_proc_ = minifi::test::utils::make_processor<CountOnTriggersProcessor>("count_proc");
+  CountOnTriggersProcessor* count_proc_impl_ = &count_proc_->getImpl<CountOnTriggersProcessor>();
   std::shared_ptr<core::ProcessContext> context_ = std::make_shared<core::ProcessContextImpl>(*count_proc_, nullptr, test_repo_, test_repo_, content_repo_);
   std::shared_ptr<core::ProcessSessionFactory> factory_ = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
 };
@@ -100,20 +101,20 @@ TEST_CASE_METHOD(SchedulingAgentTestFixture, "TimerDrivenSchedulingAgent") {
   auto first_task_reschedule_info = timer_driven_agent->run(count_proc_.get(), context_, factory_);
   CHECK(!first_task_reschedule_info.isFinished());
   CHECK(first_task_reschedule_info.getNextExecutionTime() <= std::chrono::steady_clock::now() + 125ms);
-  CHECK(count_proc_->getNumberOfTriggers() == 1);
+  CHECK(count_proc_impl_->getNumberOfTriggers() == 1);
 
-  count_proc_->setOnTriggerDuration(50ms);
+  count_proc_impl_->setOnTriggerDuration(50ms);
   auto second_task_reschedule_info = timer_driven_agent->run(count_proc_.get(), context_, factory_);
 
   CHECK(!second_task_reschedule_info.isFinished());
   CHECK(first_task_reschedule_info.getNextExecutionTime() <= std::chrono::steady_clock::now() + 75ms);
-  CHECK(count_proc_->getNumberOfTriggers() == 2);
+  CHECK(count_proc_impl_->getNumberOfTriggers() == 2);
 
-  count_proc_->setOnTriggerDuration(150ms);
+  count_proc_impl_->setOnTriggerDuration(150ms);
   auto third_task_reschedule_info = timer_driven_agent->run(count_proc_.get(), context_, factory_);
   CHECK(!third_task_reschedule_info.isFinished());
   CHECK(first_task_reschedule_info.getNextExecutionTime() < std::chrono::steady_clock::now());
-  CHECK(count_proc_->getNumberOfTriggers() == 3);
+  CHECK(count_proc_impl_->getNumberOfTriggers() == 3);
 }
 
 TEST_CASE_METHOD(SchedulingAgentTestFixture, "EventDrivenSchedulingAgent") {
@@ -122,13 +123,13 @@ TEST_CASE_METHOD(SchedulingAgentTestFixture, "EventDrivenSchedulingAgent") {
   auto first_task_reschedule_info = event_driven_agent->run(count_proc_.get(), context_, factory_);
   CHECK(!first_task_reschedule_info.isFinished());
   CHECK(first_task_reschedule_info.getNextExecutionTime() < std::chrono::steady_clock::now());
-  auto count_num_after_one_schedule = count_proc_->getNumberOfTriggers();
+  auto count_num_after_one_schedule = count_proc_impl_->getNumberOfTriggers();
   CHECK(count_num_after_one_schedule > 100);
 
   auto second_task_reschedule_info = event_driven_agent->run(count_proc_.get(), context_, factory_);
   CHECK(!second_task_reschedule_info.isFinished());
   CHECK(second_task_reschedule_info.getNextExecutionTime() < std::chrono::steady_clock::now());
-  auto count_num_after_two_schedule = count_proc_->getNumberOfTriggers();
+  auto count_num_after_two_schedule = count_proc_impl_->getNumberOfTriggers();
   CHECK(count_num_after_two_schedule > count_num_after_one_schedule+100);
 }
 
@@ -148,13 +149,13 @@ TEST_CASE_METHOD(SchedulingAgentTestFixture, "Cron Driven every year") {
     auto time_until_new_years_day = new_years_day.get_local_time() - current_time.get_local_time();
 
     CHECK(std::chrono::abs(time_until_new_years_day - wait_time_till_next_execution_time) < 1min);
-    CHECK(count_proc_->getNumberOfTriggers() == 0);
+    CHECK(count_proc_impl_->getNumberOfTriggers() == 0);
 
     auto second_task_reschedule_info = cron_driven_agent->run(count_proc_.get(), context_, factory_);
     CHECK(!second_task_reschedule_info.isFinished());
     CHECK(std::chrono::abs(first_task_reschedule_info.getNextExecutionTime() - second_task_reschedule_info.getNextExecutionTime()) < 1min);
 
-    CHECK(count_proc_->getNumberOfTriggers() == 0);
+    CHECK(count_proc_impl_->getNumberOfTriggers() == 0);
   }
 }
 
@@ -165,13 +166,13 @@ TEST_CASE_METHOD(SchedulingAgentTestFixture, "Cron Driven every sec") {
   auto first_task_reschedule_info = cron_driven_agent->run(count_proc_.get(), context_, factory_);
   CHECK(!first_task_reschedule_info.isFinished());
   CHECK(first_task_reschedule_info.getNextExecutionTime() <= std::chrono::steady_clock::now() + 1s);
-  CHECK(count_proc_->getNumberOfTriggers() == 0);
+  CHECK(count_proc_impl_->getNumberOfTriggers() == 0);
 
   std::this_thread::sleep_until(first_task_reschedule_info.getNextExecutionTime());
   auto second_task_reschedule_info = cron_driven_agent->run(count_proc_.get(), context_, factory_);
   CHECK(!second_task_reschedule_info.isFinished());
   CHECK(second_task_reschedule_info.getNextExecutionTime() <= std::chrono::steady_clock::now() + 1s);
-  CHECK(count_proc_->getNumberOfTriggers() == 1);
+  CHECK(count_proc_impl_->getNumberOfTriggers() == 1);
 }
 
 TEST_CASE_METHOD(SchedulingAgentTestFixture, "Cron Driven no future triggers") {
@@ -191,13 +192,13 @@ TEST_CASE_METHOD(SchedulingAgentTestFixture, "Timer driven should respect both y
     count_proc_->setSchedulingPeriod(10ms);
     count_proc_->setYieldPeriodMsec(1min);
   }
-  count_proc_->setShouldYield(true);
+  count_proc_impl_->setShouldYield(true);
   auto timer_driven_agent = std::make_shared<TimerDrivenSchedulingAgent>(gsl::make_not_null(controller_services_provider_.get()), test_repo_, test_repo_, content_repo_, configuration_, thread_pool_);
   timer_driven_agent->start();
   auto first_task_reschedule_info = timer_driven_agent->run(count_proc_.get(), context_, factory_);
   CHECK(!first_task_reschedule_info.isFinished());
   CHECK(first_task_reschedule_info.getNextExecutionTime() > std::chrono::steady_clock::now() + 100ms);
-  CHECK(count_proc_->getNumberOfTriggers() == 1);
+  CHECK(count_proc_impl_->getNumberOfTriggers() == 1);
 }
 
 }  // namespace org::apache::nifi::minifi::testing

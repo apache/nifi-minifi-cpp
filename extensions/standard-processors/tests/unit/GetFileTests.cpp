@@ -265,7 +265,7 @@ TEST_CASE("GetFile sets attributes correctly") {
   using minifi::processors::GetFile;
 
   LogTestController::getInstance().setTrace<GetFile>();
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<GetFile>("GetFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<GetFile>("GetFile"));
   const auto get_file = test_controller.getProcessor();
   std::filesystem::path dir = test_controller.createTempDirectory();
   REQUIRE(get_file->setProperty(GetFile::Directory.name, dir.string()));
@@ -297,7 +297,7 @@ TEST_CASE("GetFile can use expression language in Directory property") {
   using minifi::processors::GetFile;
   LogTestController::getInstance().setTrace<GetFile>();
 
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<GetFile>("GetFile"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<GetFile>("GetFile"));
   const auto get_file = test_controller.getProcessor();
 
   std::filesystem::path base_dir = test_controller.createTempDirectory();

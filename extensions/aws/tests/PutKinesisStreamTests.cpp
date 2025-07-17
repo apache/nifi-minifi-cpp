@@ -24,6 +24,7 @@
 #include "unit/Catch.h"
 #include "unit/SingleProcessorTestController.h"
 #include "unit/TestBase.h"
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors::test {
 
@@ -82,18 +83,11 @@ class MockKinesisClient final : public Aws::Kinesis::KinesisClient {
   mutable uint32_t sequence_number_ = 0;
 };
 
-class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream {
+class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   static constexpr const char* Description = "PutKinesisStreamMocked";
 
-  explicit PutKinesisStreamMocked(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-  : PutKinesisStream(name, uuid) {
-  }
-
-  PutKinesisStreamMocked(const PutKinesisStreamMocked&) = delete;
-  PutKinesisStreamMocked(PutKinesisStreamMocked&&) = delete;
-  PutKinesisStreamMocked& operator=(const PutKinesisStreamMocked&) = delete;
-  PutKinesisStreamMocked& operator=(PutKinesisStreamMocked&&) = delete;
+  using PutKinesisStream::PutKinesisStream;
 
   ~PutKinesisStreamMocked() override = default;
 
@@ -110,10 +104,10 @@ class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream {
 REGISTER_RESOURCE(PutKinesisStreamMocked, Processor);
 
 TEST_CASE("PutKinesisStream record size mismatch path") {
-  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
-  auto put_kinesis_stream = dynamic_cast<PutKinesisStreamMocked*>(controller.getProcessor());
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_processor<PutKinesisStreamMocked>("PutKinesisStream"));
+  auto put_kinesis_stream = controller.getProcessor<PutKinesisStreamMocked>();
   REQUIRE(put_kinesis_stream);
-  put_kinesis_stream->behaviour_ = MockKinesisClient::KinesisBehaviour::RecordSizeMismatch;
+  put_kinesis_stream.get().behaviour_ = MockKinesisClient::KinesisBehaviour::RecordSizeMismatch;
 
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
@@ -134,10 +128,10 @@ TEST_CASE("PutKinesisStream record size mismatch path") {
 }
 
 TEST_CASE("PutKinesisStream record size failure path") {
-  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
-  auto put_kinesis_stream = dynamic_cast<PutKinesisStreamMocked*>(controller.getProcessor());
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_processor<PutKinesisStreamMocked>("PutKinesisStream"));
+  auto put_kinesis_stream = controller.getProcessor<PutKinesisStreamMocked>();
   REQUIRE(put_kinesis_stream);
-  put_kinesis_stream->behaviour_ = MockKinesisClient::KinesisBehaviour::Failure;
+  put_kinesis_stream.get().behaviour_ = MockKinesisClient::KinesisBehaviour::Failure;
 
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
@@ -160,10 +154,9 @@ TEST_CASE("PutKinesisStream record size failure path") {
 }
 
 TEST_CASE("PutKinesisStream partial failure path") {
-  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
-  auto put_kinesis_stream = dynamic_cast<PutKinesisStreamMocked*>(controller.getProcessor());
-  REQUIRE(put_kinesis_stream);
-  put_kinesis_stream->behaviour_ = MockKinesisClient::KinesisBehaviour::OddsFail;
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_processor<PutKinesisStreamMocked>("PutKinesisStream"));
+  auto put_kinesis_stream = controller.getProcessor<PutKinesisStreamMocked>();
+  put_kinesis_stream.get().behaviour_ = MockKinesisClient::KinesisBehaviour::OddsFail;
 
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
@@ -187,7 +180,7 @@ TEST_CASE("PutKinesisStream partial failure path") {
 
 
 TEST_CASE("PutKinesisStream simple happy path") {
-  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_processor<PutKinesisStreamMocked>("PutKinesisStream"));
   auto put_kinesis_stream = controller.getProcessor();
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
@@ -210,7 +203,7 @@ TEST_CASE("PutKinesisStream simple happy path") {
 }
 
 TEST_CASE("PutKinesisStream smaller batch size than available ffs") {
-  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_processor<PutKinesisStreamMocked>("PutKinesisStream"));
   auto put_kinesis_stream = controller.getProcessor();
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
@@ -237,7 +230,7 @@ TEST_CASE("PutKinesisStream smaller batch size than available ffs") {
 }
 
 TEST_CASE("PutKinesisStream max batch data size fills up") {
-  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_processor<PutKinesisStreamMocked>("PutKinesisStream"));
   auto put_kinesis_stream = controller.getProcessor();
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
@@ -268,7 +261,7 @@ TEST_CASE("PutKinesisStream max batch data size fills up") {
 }
 
 TEST_CASE("PutKinesisStream max batch data size to different streams") {
-  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_processor<PutKinesisStreamMocked>("PutKinesisStream"));
   auto put_kinesis_stream = controller.getProcessor();
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");
@@ -296,7 +289,7 @@ TEST_CASE("PutKinesisStream max batch data size to different streams") {
 }
 
 TEST_CASE("PutKinesisStream with too large message") {
-  minifi::test::SingleProcessorTestController controller(std::make_unique<PutKinesisStreamMocked>("PutKinesisStream"));
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_processor<PutKinesisStreamMocked>("PutKinesisStream"));
   auto put_kinesis_stream = controller.getProcessor();
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::AccessKey, "access_key");
   controller.plan->setProperty(put_kinesis_stream, PutKinesisStream::SecretKey, "secret_key");

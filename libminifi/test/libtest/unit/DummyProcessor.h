@@ -20,18 +20,23 @@
 #include <string_view>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "agent/agent_docs.h"
 #include "core/PropertyDefinitionBuilder.h"
 
 namespace org::apache::nifi::minifi::test {
 
 class DummyProcessor : public minifi::core::ProcessorImpl {
-  using minifi::core::ProcessorImpl::ProcessorImpl;
-
  public:
-  DummyProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : ProcessorImpl(name, uuid) {}
-  explicit DummyProcessor(std::string_view name) : ProcessorImpl(name) {}
+  using ProcessorImpl::ProcessorImpl;
+
+  explicit DummyProcessor(std::string_view name)
+    : ProcessorImpl{minifi::core::ProcessorMetadata{
+      .uuid = minifi::utils::IdGenerator::getIdGenerator()->generate(),
+      .name = std::string{name},
+      .logger = minifi::core::logging::LoggerFactory<DummyProcessor>::getLogger()
+    }} {}
+
   static constexpr const char* Description = "A processor that does nothing.";
   static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")
       .withDescription("Just a simple string property")

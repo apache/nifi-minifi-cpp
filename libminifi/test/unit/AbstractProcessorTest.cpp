@@ -20,10 +20,12 @@
 #include "unit/Catch.h"
 #include "core/AbstractProcessor.h"
 #include "core/PropertyDefinitionBuilder.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
 struct AbstractProcessorTestCase1 : core::AbstractProcessor<AbstractProcessorTestCase1> {
+  using AbstractProcessor::AbstractProcessor;
   static constexpr auto SupportsDynamicProperties = true;
   static constexpr auto SupportsDynamicRelationships = true;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
@@ -41,13 +43,13 @@ struct AbstractProcessorTestCase1 : core::AbstractProcessor<AbstractProcessorTes
   static constexpr auto Properties = std::to_array<core::PropertyReference>({Property1, Property2});
   static constexpr core::RelationshipDefinition Rel1{"rel1", "rel1 description"};
   static constexpr auto Relationships = std::array{Rel1};
-  AbstractProcessorTestCase1() :core::AbstractProcessor<AbstractProcessorTestCase1>{"TestCase1"} {}
   void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override {}
   void onTrigger(core::ProcessContext&, core::ProcessSession&) override {}
 };
 
 TEST_CASE("AbstractProcessor case1", "[processor][abstractprocessor][case1]") {
-  AbstractProcessorTestCase1 processor;
+  auto proc = minifi::test::utils::make_processor<AbstractProcessorTestCase1>("TestCase1");
+  auto& processor = *proc;
   processor.initialize();
   REQUIRE(processor.getName() == "TestCase1");
   REQUIRE(processor.supportsDynamicProperties() == true);
@@ -68,6 +70,7 @@ TEST_CASE("AbstractProcessor case1", "[processor][abstractprocessor][case1]") {
 }
 
 struct AbstractProcessorTestCase2 : core::AbstractProcessor<AbstractProcessorTestCase2> {
+  using AbstractProcessor::AbstractProcessor;
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
@@ -85,13 +88,13 @@ struct AbstractProcessorTestCase2 : core::AbstractProcessor<AbstractProcessorTes
   static constexpr auto Properties = std::to_array<core::PropertyReference>({Property1, Property2});
   static constexpr core::RelationshipDefinition Rel1{"Relationship1", "rel1 description"};
   static constexpr auto Relationships = std::array{Rel1};
-  AbstractProcessorTestCase2() :core::AbstractProcessor<AbstractProcessorTestCase2>{"TestCase2"} {}
   void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override {}
   void onTrigger(core::ProcessContext&, core::ProcessSession&) override {}
 };
 
 TEST_CASE("AbstractProcessor case2", "[processor][abstractprocessor][case2]") {
-  AbstractProcessorTestCase2 processor;
+  auto proc = minifi::test::utils::make_processor<AbstractProcessorTestCase2>("TestCase2");
+  auto& processor = *proc;
   processor.initialize();
   REQUIRE(processor.getName() == "TestCase2");
   REQUIRE(!processor.supportsDynamicProperties());

@@ -23,7 +23,7 @@
 
 #include "../controllerservices/GCPCredentialsControllerService.h"
 #include "core/logging/Logger.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -34,10 +34,7 @@
 namespace org::apache::nifi::minifi::extensions::gcp {
 class GCSProcessor : public core::ProcessorImpl {
  public:
-  GCSProcessor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-      : core::ProcessorImpl(name, uuid),
-   logger_(std::move(logger)) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr auto GCPCredentials = core::PropertyDefinitionBuilder<>::createProperty("GCP Credentials Provider Service")
       .withDescription("The Controller Service used to obtain Google Cloud Platform credentials. Should be the name of a GCPCredentialsControllerService.")
@@ -72,7 +69,6 @@ class GCSProcessor : public core::ProcessorImpl {
   std::optional<std::string> endpoint_url_;
   std::shared_ptr<google::cloud::storage::oauth2::Credentials> gcp_credentials_;
   google::cloud::storage::RetryPolicyOption::Type retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(6);
-  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp

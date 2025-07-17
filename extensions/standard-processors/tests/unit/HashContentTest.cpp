@@ -49,7 +49,7 @@ namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Test Creation of HashContent", "[HashContentCreate]") {
   TestController testController;
-  auto processor = std::make_shared<org::apache::nifi::minifi::processors::HashContent>("processorname");
+  auto processor = minifi::test::utils::make_processor<org::apache::nifi::minifi::processors::HashContent>("processorname");
   REQUIRE(processor->getName() == "processorname");
   REQUIRE(processor->getUUID());
 }
@@ -166,7 +166,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
 }
 
 TEST_CASE("Invalid hash algorithm throws in onSchedule", "[HashContent]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<HashContent>("HashContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<HashContent>("HashContent")};
   auto hash_content = controller.getProcessor();
   REQUIRE(hash_content->setProperty(HashContent::HashAlgorithm.name, "My-Algo"));
   REQUIRE_THROWS_WITH(controller.plan->scheduleProcessor(hash_content), "Process Schedule Operation: MYALGO is not supported, supported algorithms are: MD5, SHA1, SHA256");

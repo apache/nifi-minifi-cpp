@@ -21,7 +21,7 @@
 #include <string>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "utils/Enum.h"
 #include "SmbConnectionControllerService.h"
@@ -31,10 +31,7 @@ namespace org::apache::nifi::minifi::extensions::smb {
 
 class PutSmb final : public core::ProcessorImpl {
  public:
-  explicit PutSmb(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<PutSmb>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   enum class FileExistsResolutionStrategy {
     fail,

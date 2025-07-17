@@ -26,7 +26,7 @@
 
 #include "core/Core.h"
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -44,9 +44,7 @@ const char log_name[255] = "Application";
 
 class TailEventLog : public core::ProcessorImpl {
  public:
-  explicit TailEventLog(const std::string& name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
   virtual ~TailEventLog() = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Windows event log reader that functions as a stateful tail of the provided windows event log name";
@@ -129,7 +127,6 @@ class TailEventLog : public core::ProcessorImpl {
   DWORD num_records_;
 
   HANDLE log_handle_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailEventLog>::getLogger();
 };
 
 } /* namespace processors */

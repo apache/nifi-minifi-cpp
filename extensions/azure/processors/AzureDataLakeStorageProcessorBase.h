@@ -52,19 +52,15 @@ class AzureDataLakeStorageProcessorBase : public AzureStorageProcessorBase {
       DirectoryName
   }));
 
-
-  explicit AzureDataLakeStorageProcessorBase(std::string_view name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
-    : AzureStorageProcessorBase(name, uuid, logger) {
-  }
+  using AzureStorageProcessorBase::AzureStorageProcessorBase;
 
   ~AzureDataLakeStorageProcessorBase() override = default;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& sessionFactory) override;
 
  protected:
-  explicit AzureDataLakeStorageProcessorBase(std::string_view name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger,
-    std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureStorageProcessorBase(name, uuid, logger),
+  explicit AzureDataLakeStorageProcessorBase(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+    : AzureStorageProcessorBase(metadata),
       azure_data_lake_storage_(std::move(data_lake_storage_client)) {
   }
 

@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "core/Annotation.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -115,6 +115,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ReplaceText : public core::ProcessorImpl {
  public:
+  using ProcessorImpl::ProcessorImpl;
+
   EXTENSIONAPI static constexpr const char* Description = "Updates the content of a FlowFile by replacing parts of it using various replacement strategies.";
 
   EXTENSIONAPI static constexpr auto EvaluationMode = core::PropertyDefinitionBuilder<magic_enum::enum_count<EvaluationModeType>()>::createProperty("Evaluation Mode")
@@ -177,7 +179,6 @@ class ReplaceText : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ReplaceText(std::string_view name, const utils::Identifier& uuid = {});
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
@@ -204,7 +205,6 @@ class ReplaceText : public core::ProcessorImpl {
   EvaluationModeType evaluation_mode_ = EvaluationModeType::LINE_BY_LINE;
   LineByLineEvaluationModeType line_by_line_evaluation_mode_ = LineByLineEvaluationModeType::ALL;
   ReplacementStrategyType replacement_strategy_ = ReplacementStrategyType::REGEX_REPLACE;
-  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

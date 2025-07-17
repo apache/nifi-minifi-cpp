@@ -28,7 +28,7 @@
 #include "FocusArchiveEntry.h"
 #include "FlowFileRecord.h"
 #include "ArchiveMetadata.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/RelationshipDefinition.h"
 #include "core/Core.h"
@@ -40,10 +40,7 @@ using core::logging::Logger;
 
 class UnfocusArchiveEntry : public core::ProcessorImpl {
  public:
-  explicit UnfocusArchiveEntry(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<UnfocusArchiveEntry>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~UnfocusArchiveEntry() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.";

@@ -22,7 +22,6 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "ProcessContext.h"
-#include "Processor.h"
 #include "minifi-cpp/core/Repository.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -34,6 +33,8 @@ namespace org::apache::nifi::minifi::core {
  * While this incurs a tiny cost to look up, it allows us to have a replaceable builder that erases the type we are
  * constructing.
  */
+class Processor;
+
 class ProcessContextBuilder : public virtual core::CoreComponent, public virtual utils::EnableSharedFromThis {
  public:
   virtual std::shared_ptr<ProcessContextBuilder> withProvider(core::controller::ControllerServiceProvider* controller_service_provider) = 0;

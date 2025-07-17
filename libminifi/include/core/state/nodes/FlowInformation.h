@@ -52,7 +52,7 @@ class FlowVersion : public DeviceInformation {
     return "FlowVersion";
   }
 
-  std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const override {
+  std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const {
     std::lock_guard<std::mutex> lock(guard);
     return identifier;
   }

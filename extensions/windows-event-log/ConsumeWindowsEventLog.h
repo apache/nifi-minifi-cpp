@@ -35,7 +35,7 @@
 #include <string>
 
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -80,7 +80,7 @@ class Bookmark;
 
 class ConsumeWindowsEventLog : public core::ProcessorImpl {
  public:
-  explicit ConsumeWindowsEventLog(const std::string_view name, const utils::Identifier& uuid = {});
+  explicit ConsumeWindowsEventLog(core::ProcessorMetadata metadata);
 
   ~ConsumeWindowsEventLog() override;
 
