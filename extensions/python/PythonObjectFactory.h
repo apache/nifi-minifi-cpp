@@ -27,7 +27,7 @@
 #include "core/ClassLoader.h"
 #include "ExecutePythonProcessor.h"
 #include "utils/StringUtils.h"
-#include "core/ProcessorFactory.h"
+#include "core/ProcessorFactoryImpl.h"
 
 enum class PythonProcessorType {
   MINIFI_TYPE,

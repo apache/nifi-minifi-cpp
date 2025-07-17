@@ -213,10 +213,11 @@ inline std::error_code hide_file(const std::filesystem::path& file_name) {
 #endif /* WIN32 */
 
 template<typename T>
-concept NetworkingProcessor =  requires(T x) {
+concept NetworkingProcessor = std::derived_from<T, minifi::core::ProcessorApi>
+    && requires(T x) {
   {T::Port} -> std::convertible_to<core::PropertyReference>;
   {x.getPort()} -> std::convertible_to<uint16_t>;
-};  // NOLINT(readability/braces)
+    };  // NOLINT(readability/braces)
 
 template<NetworkingProcessor T>
 uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_plan, const TypedProcessorWrapper<T>& processor) {
