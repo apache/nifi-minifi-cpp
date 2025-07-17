@@ -17,18 +17,15 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <span>
 #include <string>
-#include <string_view>
-#include <unordered_set>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 #include "core/ConfigurableComponentImpl.h"
 #include "core/Connectable.h"
