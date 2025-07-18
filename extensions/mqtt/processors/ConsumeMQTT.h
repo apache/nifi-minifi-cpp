@@ -34,8 +34,6 @@
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
-#include "controllers/RecordSetReader.h"
-#include "controllers/RecordSetWriter.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -240,8 +238,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   std::unordered_map<uint16_t, std::string> alias_to_topic_;
 
   moodycamel::ConcurrentQueue<SmartMessage> queue_;
-  std::shared_ptr<core::RecordSetReader> record_set_reader_;
-  std::shared_ptr<core::RecordSetWriter> record_set_writer_;
   bool add_attributes_as_fields_ = true;
 };
 

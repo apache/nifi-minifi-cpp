@@ -65,11 +65,21 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
       .withDescription("Content type of the message. MQTT 5.x only.")
       .supportsExpressionLanguage(true)
       .build();
+  EXTENSIONAPI static constexpr auto RecordReader = core::PropertyDefinitionBuilder<>::createProperty("Record Reader")
+      .withDescription("The Record Reader to use for parsing the incoming FlowFile into Records.")
+      .withAllowedTypes<minifi::core::RecordSetReader>()
+      .build();
+  EXTENSIONAPI static constexpr auto RecordWriter = core::PropertyDefinitionBuilder<>::createProperty("Record Writer")
+      .withDescription("The Record Writer to use for serializing Records before publishing them as an MQTT Message.")
+      .withAllowedTypes<minifi::core::RecordSetWriter>()
+      .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::to_array<core::PropertyReference>({
       Topic,
       Retain,
       MessageExpiryInterval,
-      ContentType
+      ContentType,
+      RecordReader,
+      RecordWriter
   }), AbstractMQTTProcessor::AdvancedProperties);
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are transferred to this relationship"};
@@ -83,9 +93,13 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
   void readProperties(core::ProcessContext& context) override;
   void onTriggerImpl(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
+
+ protected:
+  virtual bool sendMessage(const std::vector<std::byte>& buffer, const std::string& topic, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file);
 
  private:
   /**
@@ -134,16 +148,6 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
    * Resolves content type from expression language
    */
   std::string getContentType(core::ProcessContext& context, const core::FlowFile* const flow_file) const;
-
-  /**
-   * Sends an MQTT message asynchronously
-   * @param buffer contents of the message
-   * @param topic topic of the message
-   * @param content_type Content Type for MQTT 5
-   * @param flow_file Flow File being processed
-   * @return success of message sending
-   */
-  bool sendMessage(const std::vector<std::byte>& buffer, const std::string& topic, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file);
 
   /**
    * Callback for asynchronous message sending
