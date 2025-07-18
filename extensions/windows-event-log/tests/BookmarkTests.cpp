@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-#include "Bookmark.h"
-
 #include <memory>
 #include <regex>
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "utils/gsl.h"
+#include "wel/Bookmark.h"
 #include "wel/UniqueEvtHandle.h"
 #include "CWELTestUtils.h"
 
@@ -68,7 +67,7 @@ std::wstring bookmarkHandleAsXml(EVT_HANDLE event) {
 
 std::wstring bookmarkAsXml(const std::unique_ptr<Bookmark>& bookmark) {
   REQUIRE(bookmark);
-  REQUIRE(*bookmark);
+  REQUIRE(bookmark->isValid());
   return bookmarkHandleAsXml(bookmark->getBookmarkHandleFromXML());
 }
 
@@ -108,7 +107,7 @@ TEST_CASE("Bookmark constructor works", "[create]") {
   auto state_manager = test_plan->getStateStorage()->getStateManager(uuid);
   std::unique_ptr<Bookmark> bookmark = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid, state_manager.get());
   REQUIRE(bookmark);
-  REQUIRE(*bookmark);
+  REQUIRE(bookmark->isValid());
 
   std::wregex pattern{L"<BookmarkList Direction='backward'>\r\n"
                       L"  <Bookmark Channel='Application' RecordId='\\d+' IsCurrent='true'/>\r\n"
@@ -130,7 +129,7 @@ TEST_CASE("Bookmark constructor works for log file path", "[create]") {
   auto state_manager = test_plan->getStateStorage()->getStateManager(uuid);
   std::unique_ptr<Bookmark> bookmark = createBookmark(*test_plan, L"SavedLog:" + log_file.wstring(), uuid, state_manager.get());
   REQUIRE(bookmark);
-  REQUIRE(*bookmark);
+  REQUIRE(bookmark->isValid());
 
   std::string log_file_str = log_file.string();
   utils::string::replaceAll(log_file_str, "\\", "\\\\");

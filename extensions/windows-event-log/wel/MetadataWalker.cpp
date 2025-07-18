@@ -122,32 +122,42 @@ std::vector<std::string> MetadataWalker::getIdentifiers(const std::string &text)
   return found_strings;
 }
 
-std::string MetadataWalker::getMetadata(METADATA metadata) const {
-    switch (metadata) {
-      case LOG_NAME:
-        return log_name_;
-      case SOURCE:
-        return getString(metadata_, "Provider");
-      case TIME_CREATED:
-        return windows_event_log_metadata_.getEventTimestamp();
-      case EVENTID:
-        return getString(metadata_, "EventID");
-      case EVENT_RECORDID:
-        return getString(metadata_, "EventRecordID");
-      case OPCODE:
-        return getString(metadata_, "Opcode");
-      case TASK_CATEGORY:
-        return getString(metadata_, "Task");
-      case LEVEL:
-        return getString(metadata_, "Level");
-      case KEYWORDS:
-        return getString(metadata_, "Keywords");
-      case EVENT_TYPE:
-        return std::to_string(windows_event_log_metadata_.getEventTypeIndex());
-      case COMPUTER:
-        return WindowsEventLogMetadata::getComputerName();
+std::string MetadataWalker::getMetadata(Metadata metadata) const {
+  static constexpr auto get_from_map = [](const std::map<std::string, std::string>& map, const std::string& field) {
+    auto it = map.find(field);
+    if (it != std::end(map)) {
+      return it->second;
     }
-    return "N/A";
+    return std::string{"N/A"};
+  };
+
+  switch (metadata) {
+    case Metadata::LOG_NAME:
+      return log_name_;
+    case Metadata::SOURCE:
+      return get_from_map(metadata_, "Provider");
+    case Metadata::TIME_CREATED:
+      return windows_event_log_metadata_.getEventTimestamp();
+    case Metadata::EVENTID:
+      return get_from_map(metadata_, "EventID");
+    case Metadata::EVENT_RECORDID:
+      return get_from_map(metadata_, "EventRecordID");
+    case Metadata::OPCODE:
+      return get_from_map(metadata_, "Opcode");
+    case Metadata::TASK_CATEGORY:
+      return get_from_map(metadata_, "Task");
+    case Metadata::LEVEL:
+      return get_from_map(metadata_, "Level");
+    case Metadata::KEYWORDS:
+      return get_from_map(metadata_, "Keywords");
+    case Metadata::EVENT_TYPE:
+      return std::to_string(windows_event_log_metadata_.getEventTypeIndex());
+    case Metadata::COMPUTER:
+      return WindowsEventLogMetadata::getComputerName();
+    case Metadata::USER:
+      break;
+  }
+  return "N/A";
 }
 
 std::map<std::string, std::string> MetadataWalker::getFieldValues() const {

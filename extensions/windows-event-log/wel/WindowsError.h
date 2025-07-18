@@ -19,14 +19,24 @@
 
 #include <Windows.h>
 
-#include <memory>
+#include <system_error>
+
+#include "fmt/format.h"
 
 namespace org::apache::nifi::minifi::wel {
 
-struct unique_evt_handle_deleter {
-  void operator()(EVT_HANDLE event) const noexcept { EvtClose(event); }
+struct WindowsError {
+  DWORD error_code;
 };
 
-using unique_evt_handle = std::unique_ptr<std::remove_pointer<EVT_HANDLE>::type, unique_evt_handle_deleter>;
+inline WindowsError getLastError() {
+  return {GetLastError()};
+}
+
+// this is called by fmt::format; see https://fmt.dev/11.1/api/#formatting-user-defined-types
+inline std::string format_as(WindowsError windows_error) {
+  std::error_code error_code(windows_error.error_code, std::system_category());
+  return fmt::format("error 0x{:X}: {}", error_code.value(), error_code.message());
+}
 
 }  // namespace org::apache::nifi::minifi::wel

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <windows.h>
+#include <Windows.h>
 #include <winevt.h>
 #include <string>
 #include <memory>
@@ -26,14 +26,12 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "wel/UniqueEvtHandle.h"
 #include "core/logging/Logger.h"
 #include "utils/expected.h"
-#include "wel/EventPath.h"
+#include "EventPath.h"
+#include "UniqueEvtHandle.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-#define LOG_LAST_ERROR(func) logger_->log_error("!"#func" error {:#x}", GetLastError())
 
 class Bookmark {
  public:
@@ -45,8 +43,7 @@ class Bookmark {
       core::StateManager* state_manager,
       std::shared_ptr<core::logging::Logger> logger);
   ~Bookmark();
-  explicit operator bool() const noexcept;
-
+  bool isValid() const noexcept;
   /* non-owning */ EVT_HANDLE getBookmarkHandleFromXML();
   nonstd::expected<std::wstring, std::string> getNewBookmarkXml(EVT_HANDLE hEvent);
   bool saveBookmarkXml(const std::wstring& bookmarkXml);
