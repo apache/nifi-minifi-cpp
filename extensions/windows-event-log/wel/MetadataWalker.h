@@ -60,32 +60,13 @@ class MetadataWalker : public pugi::xml_tree_walker {
         user_id_to_username_fn_(std::move(user_id_to_username_fn)) {
   }
 
-  /**
-   * Overloaded function to visit a node
-   * @param node Node that we are visiting.
-   */
   bool for_each(pugi::xml_node &node) override;
-
   [[nodiscard]] std::map<std::string, std::string> getFieldValues() const;
-
   [[nodiscard]] std::map<std::string, std::string> getIdentifiers() const;
-
-  [[nodiscard]] std::string getMetadata(METADATA metadata) const;
+  [[nodiscard]] std::string getMetadata(Metadata metadata) const;
 
  private:
   static std::vector<std::string> getIdentifiers(const std::string &text);
-
-  static std::string getString(const std::map<std::string, std::string> &map, const std::string &field) {
-    auto srch = map.find(field);
-    if (srch != std::end(map)) {
-      return srch->second;
-    }
-    return "N/A";
-  }
-
-  /**
-   * Updates text within the XML representation
-   */
   template<typename Fn>
   requires std::is_convertible_v<std::invoke_result_t<Fn, std::string>, std::string>
   void updateText(pugi::xml_node &node, const std::string &field_name, Fn &&fn);
