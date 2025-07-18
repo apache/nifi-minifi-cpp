@@ -17,7 +17,7 @@
 # under the License.
 #
 
-set(WEL_TESTS  "BookmarkTests.cpp" "ConsumeWindowsEventLogTests.cpp" "LookupCacherTests.cpp" "MetadataWalkerTests.cpp")
+set(WEL_TESTS  "BookmarkTests.cpp" "ConsumeWindowsEventLogTests.cpp" "LookupCacherTests.cpp" "MetadataWalkerTests.cpp" "WindowsErrorTests.cpp")
 if (TEST_CUSTOM_WEL_PROVIDER)
     execute_process(COMMAND
         "${CMAKE_CURRENT_LIST_DIR}/custom-provider/generate-and-register.bat"

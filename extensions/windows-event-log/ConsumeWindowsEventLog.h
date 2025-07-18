@@ -1,7 +1,4 @@
 /**
- * @file ConsumeWindowsEventLog.h
- * ConsumeWindowsEventLog class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -55,7 +52,7 @@
 namespace org::apache::nifi::minifi::processors {
 
 namespace cwel {
-struct EventRender {
+struct ProcessedEvent {
   std::map<std::string, std::string> matched_fields;
   std::string xml;
   std::string plaintext;
@@ -216,31 +213,19 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
 
  private:
   void refreshTimeZoneData();
-  void putEventRenderFlowFileToSession(const cwel::EventRender& eventRender, core::ProcessSession& session) const;
-  wel::WindowsEventLogHandler& getEventLogHandler(const std::string& name);
-  static bool insertHeaderName(wel::METADATA_NAMES& header, const std::string& key, const std::string& value);
-  nonstd::expected<cwel::EventRender, std::string> createEventRender(EVT_HANDLE eventHandle);
+  void createAndCommitFlowFile(const cwel::ProcessedEvent& processed_event, core::ProcessSession& session) const;
+  wel::WindowsEventLogProvider& getEventLogProvider(const std::string& name);
+  wel::HeaderNames createHeaderNames(const std::optional<std::string>& event_header_property) const;
+  nonstd::expected<cwel::ProcessedEvent, std::string> processEvent(EVT_HANDLE event_handle);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
   std::function<std::string(const std::string&)> userIdToUsernameFunction() const;
-
   nonstd::expected<std::string, std::string> renderEventAsXml(EVT_HANDLE event_handle);
-
-  struct TimeDiff {
-    auto operator()() const {
-      return std::chrono::steady_clock::now() - time_;
-    }
-    const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
-  };
-
   bool commitAndSaveBookmark(const std::wstring& bookmarkXml, core::ProcessContext& context, core::ProcessSession& session);
-
-  std::tuple<size_t, std::wstring> processEventLogs(core::ProcessSession& session,
-                                                    const EVT_HANDLE& event_query_results);
-
-  void addMatchedFieldsAsAttributes(const cwel::EventRender &eventRender, core::ProcessSession &session, const std::shared_ptr<core::FlowFile> &flowFile) const;
+  std::tuple<size_t, std::wstring> processEventLogs(core::ProcessSession& session, EVT_HANDLE event_query_results);
+  std::unique_ptr<Bookmark> createBookmark(const core::ProcessContext& context) const;
 
   core::StateManager* state_manager_{nullptr};
-  wel::METADATA_NAMES header_names_;
+  wel::HeaderNames header_names_;
   std::optional<std::string> header_delimiter_;
   wel::EventPath path_;
   std::wstring wstr_query_;
@@ -250,7 +235,7 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
   std::string provenanceUri_;
   std::string computerName_;
   uint64_t max_buffer_size_{};
-  std::map<std::string, wel::WindowsEventLogHandler> providers_;
+  std::map<std::string, wel::WindowsEventLogProvider> providers_;
   uint64_t batch_commit_size_{};
   bool cache_sid_lookups_ = true;
 
