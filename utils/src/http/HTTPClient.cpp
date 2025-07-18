@@ -16,16 +16,16 @@
  */
 #include "http/HTTPClient.h"
 
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+#include <openssl/bio.h>
+#include <openssl/pkcs12.h>
+
 #include <cinttypes>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-#include <openssl/bio.h>
-#include <openssl/pkcs12.h>
 
 #include "core/Resource.h"
 #include "magic_enum.hpp"

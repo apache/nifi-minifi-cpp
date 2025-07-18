@@ -68,7 +68,11 @@ void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession&
     return;
   }
 
-  auto record_set = record_set_reader_->read(original_flow_file, session);
+  nonstd::expected<core::RecordSet, std::error_code> record_set;
+  session.read(original_flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) {
+    record_set = record_set_reader_->read(*input_stream);
+    return gsl::narrow<int64_t>(input_stream->size());
+  });
   if (!record_set) {
     logger_->log_error("Failed to read record set from flow file: {}", record_set.error().message());
     session.transfer(original_flow_file, Failure);

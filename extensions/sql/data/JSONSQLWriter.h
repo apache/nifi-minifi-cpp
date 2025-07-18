@@ -34,7 +34,7 @@ class JSONSQLWriter: public SQLWriter {
 
   std::string toString() override;
 
-private:
+ private:
   void beginProcessBatch() override;
   void endProcessBatch() override;
   void beginProcessRow() override;
@@ -44,8 +44,8 @@ private:
   void processColumn(const std::string& name, const std::string& value) override;
   void processColumn(const std::string& name, double value) override;
   void processColumn(const std::string& name, int value) override;
-  void processColumn(const std::string& name, long long value) override;
-  void processColumn(const std::string& name, unsigned long long value) override;
+  void processColumn(const std::string& name, long long value) override;  // NOLINT(runtime/int)
+  void processColumn(const std::string& name, unsigned long long value) override;  // NOLINT(runtime/int)
   void processColumn(const std::string& name, const char* value) override;
 
   void addToJSONRow(const std::string& column_name, rapidjson::Value&& json_value);

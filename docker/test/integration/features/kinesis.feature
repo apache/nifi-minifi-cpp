@@ -29,6 +29,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS Kinesis server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PutKinesisStream
     And the "success" relationship of the PutKinesisStream processor is connected to the PutFile
+    And the "failure" relationship of the PutKinesisStream processor is connected to the PutKinesisStream
 
     And a kinesis server is set up in correspondence with the PutKinesisStream
 

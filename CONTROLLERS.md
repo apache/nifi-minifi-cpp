@@ -29,6 +29,7 @@ limitations under the License.
 - [PersistentMapStateStorage](#PersistentMapStateStorage)
 - [RocksDbStateStorage](#RocksDbStateStorage)
 - [SmbConnectionControllerService](#SmbConnectionControllerService)
+- [SparkplugBReader](#SparkplugBReader)
 - [SSLContextService](#SSLContextService)
 - [UpdatePolicyControllerService](#UpdatePolicyControllerService)
 - [VolatileMapStateStorage](#VolatileMapStateStorage)
@@ -275,6 +276,20 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Domain       |               |                  | The domain used for authentication. Optional, in most cases username and password is sufficient.                                |
 | Username     |               |                  | The username used for authentication. If no username is set then anonymous authentication is attempted.                         |
 | Password     |               |                  | The password used for authentication. Required if Username is set.<br/>**Sensitive Property: true**                             |
+
+
+## SparkplugBReader
+
+### Description
+
+Reads Sparkplug B messages and turns them into individual Record objects. The reader expects a single Sparkplug B payload in a read operation, which is a protobuf-encoded binary message. This reader is typically used with MQTT processors like ConsumeMQTT.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+|------|---------------|------------------|-------------|
 
 
 ## SSLContextService

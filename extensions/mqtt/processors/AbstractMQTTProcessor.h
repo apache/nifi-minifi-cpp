@@ -262,7 +262,7 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
   /**
    * Initializes local MQTT client and connects to broker.
    */
-  void initializeClient();
+  virtual void initializeClient();
 
   /**
    * Calls disconnect() and releases local MQTT client

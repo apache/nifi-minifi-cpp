@@ -1,0 +1,22 @@
+diff --git a/cmake/protobuf.cmake b/cmake/protobuf.cmake
+index ad80ca6e46..8df42dde40 100644
+--- a/cmake/protobuf.cmake
++++ b/cmake/protobuf.cmake
+@@ -55,7 +55,7 @@ if(gRPC_PROTOBUF_PROVIDER STREQUAL "module")
+     set(gRPC_INSTALL FALSE)
+   endif()
+ elseif(gRPC_PROTOBUF_PROVIDER STREQUAL "package")
+-  find_package(Protobuf REQUIRED CONFIG)
++  find_package(Protobuf REQUIRED)
+ 
+   if(Protobuf_FOUND OR PROTOBUF_FOUND)
+     if(TARGET protobuf::${_gRPC_PROTOBUF_LIBRARY_NAME})
+@@ -69,7 +69,7 @@ elseif(gRPC_PROTOBUF_PROVIDER STREQUAL "package")
+       set(_gRPC_PROTOBUF_PROTOC_LIBRARIES ${PROTOBUF_PROTOC_LIBRARIES})
+     endif()
+     # Well-known proto files are expected to be in the Protobuf include directory.
+-    get_target_property(_gRPC_PROTOBUF_WELLKNOWN_INCLUDE_DIR ${_gRPC_PROTOBUF_LIBRARIES} INTERFACE_INCLUDE_DIRECTORIES)
++    set(_gRPC_PROTOBUF_WELLKNOWN_INCLUDE_DIR ${PROTOBUF_INCLUDE_DIR})
+     if(TARGET protobuf::protoc)
+       set(_gRPC_PROTOBUF_PROTOC protobuf::protoc)
+       if(CMAKE_CROSSCOMPILING)

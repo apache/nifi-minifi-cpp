@@ -35,7 +35,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
 
     When both instances start up
-    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
   Scenario: A MiNiFi instance sends data through a HTTP proxy and another one listens
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -58,7 +58,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
 
     When all instances start up
-    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And no errors were generated on the http-proxy regarding "http://minifi-listen-${feature_id}:8080/contentListener"
 
   Scenario: A MiNiFi instance and transfers hashed data to another MiNiFi instance
@@ -76,7 +76,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
 
     When both instances start up
-    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
   Scenario: A MiNiFi instance transfers data to another MiNiFi instance without message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -92,7 +92,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
 
     When both instances start up
-    Then at least one empty flowfile is placed in the monitored directory in less than 120 seconds
+    Then at least one empty flowfile is placed in the monitored directory in less than 60 seconds
 
   Scenario: A MiNiFi instance transfers data to a NiFi instance with message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -108,7 +108,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
 
     When both instances start up
-    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
   Scenario: A MiNiFi instance transfers data to another MiNiFi instance with message body and limited speed
     Given a GenerateFlowFile processor with the "File Size" property set to "10 MB"
@@ -125,7 +125,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
 
     When both instances start up
-    Then at least one flowfile with minimum size of "1 MB" is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with minimum size of "1 MB" is placed in the monitored directory in less than 60 seconds
     And the Minifi logs contain the following message: "[warning] InvokeHTTP::onTrigger has been running for" in less than 10 seconds
 
   Scenario: A MiNiFi instance retrieves data from another MiNiFi instance with message body and limited speed
@@ -148,5 +148,5 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the UpdateAttribute processor is connected to the ListenHTTP
 
     When both instances start up
-    Then at least one flowfile with minimum size of "10 MB" is placed in the monitored directory in less than 120 seconds
+    Then at least one flowfile with minimum size of "10 MB" is placed in the monitored directory in less than 60 seconds
     And the Minifi logs contain the following message: "[warning] InvokeHTTP::onTrigger has been running for" in less than 10 seconds

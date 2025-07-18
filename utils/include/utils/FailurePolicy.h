@@ -14,14 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_FAILUREPOLICY_H_
-#define LIBMINIFI_INCLUDE_UTILS_FAILUREPOLICY_H_
+#pragma once
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 /**
  * Basic failure policy enumeration
@@ -47,10 +42,4 @@ enum FailurePolicy {
   EXIT
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_FAILUREPOLICY_H_
+}  // namespace org::apache::nifi::minifi::utils

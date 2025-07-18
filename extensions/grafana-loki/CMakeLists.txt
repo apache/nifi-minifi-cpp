@@ -23,7 +23,6 @@ endif()
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 if (ENABLE_GRPC_FOR_LOKI)
-    include(Abseil)
     include(Grpc)
 
     set(LOKI_PROTOBUF_GENERATED_DIR ${CMAKE_BINARY_DIR}/grafana-loki-protobuf-generated)

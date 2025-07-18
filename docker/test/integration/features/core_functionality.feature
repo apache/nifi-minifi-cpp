@@ -59,7 +59,7 @@ Feature: Core flow functionalities
     Given a transient MiNiFi flow with the name "transient-minifi" is set up
     And a LogOnDestructionProcessor processor with the name "logOnDestruction" in the "transient-minifi" flow
     When the MiNiFi instance starts up
-    Then the Minifi logs contain the following message: "LogOnDestructionProcessor is being destructed" in less than 100 seconds
+    Then the Minifi logs contain the following message: "LogOnDestructionProcessor is being destructed" in less than 40 seconds
 
   @CORE
   Scenario: Agent does not crash when using provenance repositories

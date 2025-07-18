@@ -58,11 +58,11 @@ void JSONSQLWriter::processColumn(const std::string& name, int value) {
   addToJSONRow(name, rapidjson::Value(value));
 }
 
-void JSONSQLWriter::processColumn(const std::string& name, long long value) {  // NOLINT(google-runtime-int)
+void JSONSQLWriter::processColumn(const std::string& name, long long value) {  // NOLINT(google-runtime-int,runtime/int)
   addToJSONRow(name, rapidjson::Value(gsl::narrow<int64_t>(value)));
 }
 
-void JSONSQLWriter::processColumn(const std::string& name, unsigned long long value) {  // NOLINT(google-runtime-int)
+void JSONSQLWriter::processColumn(const std::string& name, unsigned long long value) {  // NOLINT(google-runtime-int,runtime/int)
   addToJSONRow(name, rapidjson::Value(gsl::narrow<uint64_t>(value)));
 }
 

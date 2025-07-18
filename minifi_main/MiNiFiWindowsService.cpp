@@ -21,8 +21,9 @@
 
 #include <Windows.h>
 #include <Strsafe.h>
-#include <tuple>
 #include <tlhelp32.h>
+
+#include <tuple>
 
 #include "MainHelper.h"
 
@@ -129,8 +130,7 @@ void RunAsServiceIfNeeded() {
                 }
               }
             }
-          }
-        );
+          });
 
         if (!s_statusHandle) {
           Log()->log_error("!RegisterServiceCtrlHandler lastError {:#x}", GetLastError());

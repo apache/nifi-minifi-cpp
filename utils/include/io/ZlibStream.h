@@ -104,4 +104,4 @@ class ZlibDecompressStream : public ZlibBaseStream {
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace org::apache::nifi::minifi:io
+}  // namespace org::apache::nifi::minifi::io

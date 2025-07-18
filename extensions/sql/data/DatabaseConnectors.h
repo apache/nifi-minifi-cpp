@@ -45,8 +45,8 @@ class Row {
   virtual std::string getString(std::size_t index) const = 0;
   virtual double getDouble(std::size_t index) const = 0;
   virtual int getInteger(std::size_t index) const = 0;
-  virtual long long getLongLong(std::size_t index) const = 0;
-  virtual unsigned long long getUnsignedLongLong(std::size_t index) const = 0;
+  virtual long long getLongLong(std::size_t index) const = 0;  // NOLINT(runtime/int)
+  virtual unsigned long long getUnsignedLongLong(std::size_t index) const = 0;  // NOLINT(runtime/int)
   virtual std::tm getDate(std::size_t index) const = 0;
 };
 

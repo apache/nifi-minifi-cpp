@@ -17,11 +17,12 @@
 
 #pragma once
 
+#include <span>
+
 #include "minifi-cpp/core/ConfigurableComponent.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
-#include <span>
 #include "core/Property.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -29,27 +30,27 @@ namespace org::apache::nifi::minifi::core {
 
 class ConfigurableComponentImpl : public virtual ConfigurableComponent {
  public:
- [[nodiscard]] nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const override;
- nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
- nonstd::expected<void, std::error_code> clearProperty(std::string_view name) override;
+  [[nodiscard]] nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const override;
+  nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
+  nonstd::expected<void, std::error_code> clearProperty(std::string_view name) override;
 
- [[nodiscard]] nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name) const override;
- nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
+  [[nodiscard]] nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name) const override;
+  nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
 
- void setSupportedProperties(std::span<const PropertyReference> properties);
+  void setSupportedProperties(std::span<const PropertyReference> properties);
 
- [[nodiscard]] std::map<std::string, Property, std::less<>> getSupportedProperties() const override;
- [[nodiscard]] nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const override;
- [[nodiscard]] std::vector<std::string> getDynamicPropertyKeys() const override;
+  [[nodiscard]] std::map<std::string, Property, std::less<>> getSupportedProperties() const override;
+  [[nodiscard]] nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const override;
+  [[nodiscard]] std::vector<std::string> getDynamicPropertyKeys() const override;
 
- [[nodiscard]] std::map<std::string, std::string> getDynamicProperties() const override;
+  [[nodiscard]] std::map<std::string, std::string> getDynamicProperties() const override;
 
 
- // for property sequences
- nonstd::expected<void, std::error_code> appendProperty(std::string_view name, std::string value) override;
- nonstd::expected<void, std::error_code> appendDynamicProperty(std::string_view name, std::string value) override;
- [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const;
- [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllDynamicPropertyValues(std::string_view name) const;
+  // for property sequences
+  nonstd::expected<void, std::error_code> appendProperty(std::string_view name, std::string value) override;
+  nonstd::expected<void, std::error_code> appendDynamicProperty(std::string_view name, std::string value) override;
+  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const;
+  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllDynamicPropertyValues(std::string_view name) const;
 
  private:
   std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<ConfigurableComponentImpl>::getLogger();

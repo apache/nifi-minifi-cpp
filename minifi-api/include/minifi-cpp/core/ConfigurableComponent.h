@@ -29,8 +29,8 @@
 namespace org::apache::nifi::minifi::core {
 
 class ConfigurableComponent : public virtual CoreComponent {
-public:
- virtual ~ConfigurableComponent() = default;
+ public:
+  virtual ~ConfigurableComponent() = default;
 
   virtual void initialize() {};
   virtual bool canEdit() = 0;

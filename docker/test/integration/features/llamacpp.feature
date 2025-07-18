@@ -29,4 +29,4 @@ Feature: Run language model inference using LlamaCpp processor
     And the "success" relationship of the RunLlamaCppInference processor is connected to the LogAttribute
 
     When all instances start up
-    Then the Minifi logs contain the following message: "banana" in less than 120 seconds
+    Then the Minifi logs contain the following message: "banana" in less than 60 seconds

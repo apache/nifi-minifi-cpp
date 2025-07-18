@@ -11,3 +11,5 @@ prometheus-api-client==0.5.5
 humanfriendly==10.0
 requests<2.29  # https://github.com/docker/docker-py/issues/3113
 couchbase==4.3.5
+paho-mqtt==2.1.0
+protobuf==6.31.1
