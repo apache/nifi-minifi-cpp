@@ -179,4 +179,98 @@ TEST_CASE("Test trusted certs path must be valid", "[fetchopcprocessor]") {
   REQUIRE_THROWS_WITH(controller.trigger("42"), "Process Schedule Operation: Failed to load trusted server certs from path: /invalid/trusted");
 }
 
+TEST_CASE("Test no fetch result using lazy mode when no timestamps are changed", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  LogTestController::getInstance().setDebug<processors::FetchOPCProcessor>();
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::Lazy.name, "On"));
+
+  auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 4);
+
+  results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).empty());
+  REQUIRE(LogTestController::getInstance().contains("Node Simulator/Default/Device1/INT3 has no new source timestamp, skipping"));
+}
+
+TEST_CASE("Test fetch for nodes with changed timestamps with lazy mode", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  LogTestController::getInstance().setDebug<processors::FetchOPCProcessor>();
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::Lazy.name, "On"));
+
+  auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 4);
+
+  server.updateNodeTimestamp("Simulator/Default/Device1/INT3");
+  results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
+  auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
+  CHECK(flow_file->getAttribute("Browsename") == "INT3");
+}
+
+TEST_CASE("Test no fetch result using lazy new value mode when no values are changed", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  LogTestController::getInstance().setDebug<processors::FetchOPCProcessor>();
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::Lazy.name, "New Value"));
+
+  auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 4);
+
+  server.updateNodeTimestamp("Simulator/Default/Device1/INT3");
+  results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).empty());
+  REQUIRE(LogTestController::getInstance().contains("Node Simulator/Default/Device1/INT3 has no new value, skipping"));
+}
+
+TEST_CASE("Test fetching new values using lazy new value mode", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  LogTestController::getInstance().setDebug<processors::FetchOPCProcessor>();
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::Lazy.name, "New Value"));
+
+  auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 4);
+
+  server.updateNodeTimestamp("Simulator/Default/Device1/INT3");
+  server.updateNodeValue("Simulator/Default/Device1/INT2", 42);
+  results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
+  auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
+  CHECK(flow_file->getAttribute("Browsename") == "INT2");
+}
+
 }  // namespace org::apache::nifi::minifi::test
