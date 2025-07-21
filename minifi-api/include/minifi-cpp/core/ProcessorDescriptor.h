@@ -16,9 +16,9 @@
  */
 #pragma once
 
-#include "minifi-cpp/core/RelationshipDefinition.h"
-#include "minifi-cpp/core/PropertyDefinition.h"
 #include <span>
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 
 namespace org::apache::nifi::minifi::core {
 

@@ -41,7 +41,8 @@ void StructuredConnectionParser::addFunnelRelationshipToConnection(minifi::Conne
     return;
   }
 
-  if (typeid(minifi::Funnel) == typeid(processor->getImpl())) {
+  auto& impl = processor->getImpl();
+  if (typeid(minifi::Funnel) == typeid(impl)) {
     addNewRelationshipToConnection(minifi::Funnel::Success.name, connection);
   }
 }
