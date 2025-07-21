@@ -63,10 +63,14 @@ class OpcUaTestServer {
     UA_NodeId default_node = addObject("Default", simulator_node);
     UA_NodeId device1_node = addObject("Device1", default_node);
 
-    addIntVariable("INT1", device1_node, 1);
-    addIntVariable("INT2", device1_node, 2);
+    auto int1_node = addIntVariable("INT1", device1_node, 1);
+    node_ids_["Simulator/Default/Device1/INT1"] = int1_node;
+    auto int2_node = addIntVariable("INT2", device1_node, 2);
+    node_ids_["Simulator/Default/Device1/INT2"] = int2_node;
     auto int3_node = addIntVariable("INT3", device1_node, 3);
-    addIntVariable("INT4", int3_node, 4);
+    node_ids_["Simulator/Default/Device1/INT3"] = int3_node;
+    auto int4_node = addIntVariable("INT4", int3_node, 4);
+    node_ids_["Simulator/Default/Device1/INT4"] = int4_node;
   }
 
   void start() {
@@ -106,6 +110,25 @@ class OpcUaTestServer {
   std::vector<std::string> getLogs() const {
     std::lock_guard<std::mutex> lock(server_logs_mutex_);
     return server_logs_;
+  }
+
+  void updateNodeTimestamp(const std::string& full_path) {
+    UA_Int32 new_value = full_path[full_path.size() - 1] - '0';
+    updateNodeValue(full_path, new_value);
+  }
+
+  void updateNodeValue(const std::string& full_path, int32_t new_value) {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    UA_Variant variant;
+    UA_Variant_init(&variant);
+    UA_Variant_setScalar(&variant, &new_value, &UA_TYPES[UA_TYPES_INT32]);
+
+    UA_StatusCode status = UA_Server_writeValue(server_, node_ids_[full_path], variant);
+
+    if (status != UA_STATUSCODE_GOOD) {
+      throw std::runtime_error("Failed to write value to node");
+    }
   }
 
  private:
@@ -171,6 +194,7 @@ class OpcUaTestServer {
   std::thread server_thread_;
   mutable std::mutex server_logs_mutex_;
   std::vector<std::string> server_logs_;
+  std::unordered_map<std::string, UA_NodeId> node_ids_;
 };
 
 }  // namespace org::apache::nifi::minifi::test

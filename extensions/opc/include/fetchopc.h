@@ -36,15 +36,39 @@
 #include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 #include "utils/gsl.h"
+#include "minifi-cpp/core/StateManager.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 enum class LazyModeOptions {
   On,
+  NewValue,
   Off
 };
 
-class FetchOPCProcessor : public BaseOPCProcessor {
+}  // namespace org::apache::nifi::minifi::processors
+
+namespace magic_enum::customize {
+
+using LazyModeOptions = org::apache::nifi::minifi::processors::LazyModeOptions;
+
+template <>
+constexpr customize_t enum_name<LazyModeOptions>(LazyModeOptions value) noexcept {
+  switch (value) {
+    case LazyModeOptions::On:
+      return "On";
+    case LazyModeOptions::NewValue:
+      return "New Value";
+    case LazyModeOptions::Off:
+      return "Off";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::processors {
+
+class FetchOPCProcessor final : public BaseOPCProcessor {
  public:
   explicit FetchOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
       : BaseOPCProcessor(name, uuid) {
@@ -75,7 +99,8 @@ class FetchOPCProcessor : public BaseOPCProcessor {
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto Lazy = core::PropertyDefinitionBuilder<magic_enum::enum_count<LazyModeOptions>()>::createProperty("Lazy mode")
-      .withDescription("Only creates flowfiles from nodes with new timestamp from the server.")
+      .withDescription("Only creates flowfiles from nodes with new timestamp from the server. If set to 'New Value', it will only create flowfiles "
+                       "if the value of the node data has changed since the last fetch, the timestamp is ignored.")
       .isRequired(true)
       .withAllowedValues(magic_enum::enum_names<LazyModeOptions>())
       .withDefaultValue(magic_enum::enum_name(LazyModeOptions::Off))
@@ -116,19 +141,20 @@ class FetchOPCProcessor : public BaseOPCProcessor {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
- protected:
+ private:
   bool nodeFoundCallBack(const UA_ReferenceDescription *ref, const std::string& path,
                          core::ProcessContext& context, core::ProcessSession& session,
-                         size_t& nodes_found, size_t& variables_found);
-
-  void OPCData2FlowFile(const opc::NodeData& opc_node, core::ProcessContext& context, core::ProcessSession& session);
+                         size_t& nodes_found, size_t& variables_found, std::unordered_map<std::string, std::string>& state_map);
+  void OPCData2FlowFile(const opc::NodeData& opc_node, core::ProcessContext& context, core::ProcessSession& session) const;
+  void writeFlowFileUsingLazyModeWithTimestamp(const opc::NodeData& nodedata, core::ProcessContext& context, core::ProcessSession& session, size_t& variables_found,
+    std::unordered_map<std::string, std::string>& state_map) const;
+  void writeFlowFileUsingLazyModeWithNewValue(const opc::NodeData& nodedata, core::ProcessContext& context, core::ProcessSession& session, size_t& variables_found,
+    std::unordered_map<std::string, std::string>& state_map) const;
 
   uint64_t max_depth_ = 0;
-  bool lazy_mode_ = false;
-
- private:
+  LazyModeOptions lazy_mode_ = LazyModeOptions::Off;
   std::vector<UA_NodeId> translated_node_ids_;  // Only used when user provides path, path->nodeid translation is only done once
-  std::unordered_map<std::string, std::string> node_timestamp_;  // Key = Full path, Value = Timestamp
+  core::StateManager* state_manager_ = nullptr;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

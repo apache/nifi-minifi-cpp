@@ -38,7 +38,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class PutOPCProcessor : public BaseOPCProcessor {
+class PutOPCProcessor final : public BaseOPCProcessor {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Creates/updates OPC nodes";
 
