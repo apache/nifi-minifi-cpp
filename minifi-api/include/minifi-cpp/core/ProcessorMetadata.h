@@ -16,10 +16,10 @@
  */
 #pragma once
 
-#include "minifi-cpp/utils/Id.h"
-#include "minifi-cpp/core/logging/Logger.h"
 #include <memory>
 #include <string>
+#include "minifi-cpp/utils/Id.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::core {
 
