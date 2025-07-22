@@ -23,16 +23,18 @@ set(PAHO_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(PAHO_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
 
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/cmake-openssl.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/cmake-openssl.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/1576-Changed-bool-typedef-to-bit.patch")
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
 
 FetchContent_Declare(
-    paho.mqtt.c-external
-    URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.14.tar.gz"
-    URL_HASH "SHA256=7af7d906e60a696a80f1b7c2bd7d6eb164aaad908ff4c40c3332ac2006d07346"
-    PATCH_COMMAND "${PC}"
-    SYSTEM
+        paho.mqtt.c-external
+        URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.14.tar.gz"
+        URL_HASH "SHA256=7af7d906e60a696a80f1b7c2bd7d6eb164aaad908ff4c40c3332ac2006d07346"
+        PATCH_COMMAND "${PC}"
+        SYSTEM
 )
 
 FetchContent_MakeAvailable(paho.mqtt.c-external)

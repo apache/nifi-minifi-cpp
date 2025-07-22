@@ -1,0 +1,25 @@
+From 2d9ed2ef9d1cc320df388235356574890d7046d6 Mon Sep 17 00:00:00 2001
+From: Martin Zink <martin.zink@apache.org>
+Date: Tue, 22 Jul 2025 13:28:10 +0200
+Subject: [PATCH] GCC 15 needs typedef SQLRETURN (* HPROC) (...);
+
+---
+ iodbc/dlproc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/iodbc/dlproc.h b/iodbc/dlproc.h
+index be2062b..ed15754 100644
+--- a/iodbc/dlproc.h
++++ b/iodbc/dlproc.h
+@@ -80,7 +80,7 @@
+ 
+ #include <dlf.h>
+ 
+-#if defined(_MAC) || defined (__cplusplus)
++#if defined(_MAC) || defined (__cplusplus) || (defined(__GNUC__) && __GNUC__ >= 15)
+ typedef SQLRETURN (* HPROC) (...);
+ #else
+ typedef SQLRETURN (* HPROC) ();
+-- 
+2.50.1
+

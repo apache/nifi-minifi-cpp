@@ -288,7 +288,7 @@ jobs:
           echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main" | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install -y ccache libfl-dev clang-20 clang-tidy-20 libc++-20-dev libc++abi-20-dev libc++1-20 libc++abi1-20 libunwind-20 libsqliteodbc parallel
+          sudo apt install -y ccache libfl-dev clang-20 clang-tidy-20 libc++-20-dev libc++abi-20-dev libsqliteodbc parallel
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - id: free_disk_space

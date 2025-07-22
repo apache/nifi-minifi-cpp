@@ -52,7 +52,8 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
                       "No incoming FlowFile and the \"" + std::string{SQLSelectQuery.name} + "\" processor property is not specified");  // NOLINT(whitespace/braces)
     }
     logger_->log_debug("Using the contents of the flow file as the SQL statement");
-    query = to_string(session.readBuffer(input_flow_file));
+    std::string buffer_str = to_string(session.readBuffer(input_flow_file));
+    query = buffer_str;
   }
   if (query->empty()) {
     logger_->log_error("Empty sql statement");

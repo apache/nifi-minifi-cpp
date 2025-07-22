@@ -17,6 +17,7 @@ env:
 
 jobs:
   build-packages:
+    if: (github.event_name == 'schedule' && github.repository == 'apache/nifi-minifi-cpp') || (github.event_name != 'schedule')
     name: "Build package (${{ matrix.platform.arch }})"
     runs-on: ${{ matrix.platform.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 180

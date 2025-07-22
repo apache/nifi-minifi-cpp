@@ -18,8 +18,10 @@
 include(FetchContent)
 
 FetchContent_Declare(expected-lite
-    URL      https://github.com/martinmoene/expected-lite/archive/refs/tags/v0.8.0.tar.gz
-    URL_HASH SHA256=27649f30bd9d4fe7b193ab3eb6f78c64d0f585c24c085f340b4722b3d0b5e701
+    URL      https://github.com/martinmoene/expected-lite/archive/refs/tags/v0.9.0.tar.gz
+    URL_HASH SHA256=e1b3ac812295ef8512c015d8271204105a71957323f8ab4e75f6856d71b8868d
     SYSTEM
 )
+
+add_compile_definitions(nsel_CONFIG_SELECT_EXPECTED=1) # Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119714
 FetchContent_MakeAvailable(expected-lite)
