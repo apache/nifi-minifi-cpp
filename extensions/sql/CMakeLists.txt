@@ -40,6 +40,7 @@ else()
 
     set(IODBC_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-install/")
 
+    set(IODBC_PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/iODBC/GCC-15-needs-typedef-SQLRETURN-HPROC.patch")
     # Build project
     ExternalProject_Add(
         iodbc-external
@@ -47,6 +48,7 @@ else()
         URL_HASH "SHA256=896d7e16b283cf9a6f5b5f46e8e9549aef21a11935726b0170987cd4c59d16db"
         BUILD_IN_SOURCE true
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-src"
+        PATCH_COMMAND "${IODBC_PC}"
         BUILD_COMMAND make
         CMAKE_COMMAND ""
         UPDATE_COMMAND ""
