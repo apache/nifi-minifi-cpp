@@ -1,0 +1,24 @@
+From 072bd8ce7e10a0fffb1e2bc755c2964e472909ed Mon Sep 17 00:00:00 2001
+From: Martin Zink <martinzink@apache.org>
+Date: Tue, 22 Jul 2025 12:49:42 +0200
+Subject: [PATCH] c++23 fixes
+
+---
+ src/llama-hparams.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/llama-hparams.cpp b/src/llama-hparams.cpp
+index c6c67d26..db36de4d 100644
+--- a/src/llama-hparams.cpp
++++ b/src/llama-hparams.cpp
+@@ -1,5 +1,7 @@
+ #include "llama-hparams.h"
+ 
++#include <algorithm>
++
+ #include "ggml.h"
+ 
+ void llama_hparams::set_swa_pattern(uint32_t n_pattern) {
+-- 
+2.39.5 (Apple Git-154)
+

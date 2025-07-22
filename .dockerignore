@@ -64,3 +64,5 @@ libminifi/src/agent/agent_version.cpp
 **/cmake_install.cmake
 **/install_manifest.txt
 **/CTestTestfile.cmake
+bootstrap/venv
+bootstrap/option_state.json
