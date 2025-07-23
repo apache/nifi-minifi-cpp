@@ -75,7 +75,8 @@ class ClassLoader {
 
   [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
 
-  [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
+  [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(
+      const std::string &class_name, const std::string &name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
 
   [[nodiscard]] virtual CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
 

@@ -58,8 +58,6 @@ class VerifyC2Metrics : public VerifyC2Base {
   const std::atomic_bool& metrics_updated_successfully_;
 };
 
-#define CHECK_EXPR(expr) (expr ? true : (std::cout << #expr << " failed" << std::endl, false))
-
 class MetricsHandler: public HeartbeatHandler {
  public:
   explicit MetricsHandler(std::atomic_bool& metrics_updated_successfully, std::shared_ptr<minifi::Configure> configuration, const std::filesystem::path& replacement_config_path)
@@ -107,13 +105,13 @@ class MetricsHandler: public HeartbeatHandler {
 
   void verifyMetrics(const rapidjson::Document& root) {
     auto initial_metrics_verified =
-      CHECK_EXPR(root.HasMember("metrics")) &&
-      CHECK_EXPR(root["metrics"].HasMember("RuntimeMetrics")) &&
-      CHECK_EXPR(root["metrics"].HasMember("LoadMetrics")) &&
-      CHECK_EXPR(root["metrics"].HasMember("ProcessorMetrics")) &&
-      CHECK_EXPR(verifyRuntimeMetrics(root["metrics"]["RuntimeMetrics"])) &&
-      CHECK_EXPR(verifyLoadMetrics(root["metrics"]["LoadMetrics"])) &&
-      CHECK_EXPR(verifyProcessorMetrics(root["metrics"]["ProcessorMetrics"]));
+      root.HasMember("metrics") &&
+      root["metrics"].HasMember("RuntimeMetrics") &&
+      root["metrics"].HasMember("LoadMetrics") &&
+      root["metrics"].HasMember("ProcessorMetrics") &&
+      verifyRuntimeMetrics(root["metrics"]["RuntimeMetrics"]) &&
+      verifyLoadMetrics(root["metrics"]["LoadMetrics"]) &&
+      verifyProcessorMetrics(root["metrics"]["ProcessorMetrics"]);
     if (initial_metrics_verified) {
       test_state_ = TestState::SEND_NEW_CONFIG;
     }
@@ -165,42 +163,41 @@ class MetricsHandler: public HeartbeatHandler {
 
   static bool verifyProcessorBulletins(const rapidjson::Value& runtime_metrics) {
     if (!runtime_metrics["flowInfo"].HasMember("processorBulletins")) {
-      std::cout << "!runtime_metrics[\"flowInfo\"].HasMember(\"processorBulletins\")" << std::endl;
+      std::cout << R"(!runtime_metrics["flowInfo"].HasMember("processorBulletins"))" << std::endl;
       return false;
     }
     auto bulletins = runtime_metrics["flowInfo"]["processorBulletins"].GetArray();
     return std::any_of(bulletins.begin(), bulletins.end(), [](const auto& bulletin) {
       std::string message = bulletin["message"].GetString();
-      return CHECK_EXPR(bulletin["id"].GetInt() > 0) &&
-        CHECK_EXPR(bulletin["timestamp"].GetInt64() > 0) &&
-        CHECK_EXPR(bulletin["level"].GetString() == std::string("ERROR")) &&
-        CHECK_EXPR(bulletin["category"].GetString() == std::string("Log Message")) &&
-        CHECK_EXPR(message.find("Error connecting to") != std::string::npos) &&
-        CHECK_EXPR(message.find(GETTCP_UUID) != std::string::npos) &&
-        CHECK_EXPR(bulletin["groupId"].GetString() == std::string(PROCESS_GROUP_UUID)) &&
-        CHECK_EXPR(bulletin["groupName"].GetString() == std::string("MiNiFi Flow")) &&
-        CHECK_EXPR(bulletin["groupPath"].GetString() == std::string("MiNiFi Flow")) &&
-        CHECK_EXPR(bulletin["sourceId"].GetString() == std::string(GETTCP_UUID)) &&
-        CHECK_EXPR(bulletin["sourceName"].GetString() == std::string("GetTCP"));
+      return bulletin["id"].GetInt() > 0 &&
+        bulletin["timestamp"].GetInt64() > 0 &&
+        bulletin["level"].GetString() == std::string("ERROR") &&
+        bulletin["category"].GetString() == std::string("Log Message") &&
+        message.find("Error connecting to") != std::string::npos &&
+        message.find(GETTCP_UUID) != std::string::npos &&
+        bulletin["groupId"].GetString() == std::string(PROCESS_GROUP_UUID) &&
+        bulletin["groupName"].GetString() == std::string("MiNiFi Flow") &&
+        bulletin["groupPath"].GetString() == std::string("MiNiFi Flow") &&
+        bulletin["sourceId"].GetString() == std::string(GETTCP_UUID) &&
+        bulletin["sourceName"].GetString() == std::string("GetTCP");
     });
   }
 
   static bool verifyRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
-    return CHECK_EXPR(verifyCommonRuntimeMetricNodes(runtime_metrics, "2438e3c8-015a-1000-79ca-83af40ec1997")) &&
+    return verifyCommonRuntimeMetricNodes(runtime_metrics, "2438e3c8-015a-1000-79ca-83af40ec1997") &&
       [&]() {
         const auto processor_statuses = runtime_metrics["flowInfo"]["processorStatuses"].GetArray();
         if (processor_statuses.Size() != 2) {
-          std::cout << "processor_statuses.Size() != 2" << std::endl;
           return false;
         }
         return std::all_of(processor_statuses.begin(), processor_statuses.end(), [&](const auto& processor) {
           if (processor["id"].GetString() != std::string(GETTCP_UUID) && processor["id"].GetString() != std::string(LOGATTRIBUTE1_UUID)) {
             throw std::runtime_error(std::string("Unexpected processor id in processorStatuses: ") + processor["id"].GetString());
           }
-          return CHECK_EXPR(processorMetricsAreValid(processor));
+          return processorMetricsAreValid(processor);
         });
       }() &&
-      CHECK_EXPR(verifyProcessorBulletins(runtime_metrics));
+      verifyProcessorBulletins(runtime_metrics);
   }
 
   static bool verifyUpdatedRuntimeMetrics(const rapidjson::Value& runtime_metrics) {

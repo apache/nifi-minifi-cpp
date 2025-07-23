@@ -43,7 +43,7 @@ void PutSFTP::initialize() {
 }
 
 PutSFTP::PutSFTP(core::ProcessorMetadata metadata)
-  : SFTPProcessorBase(metadata),
+  : SFTPProcessorBase(std::move(metadata)),
     create_directory_(false),
     batch_size_(0),
     reject_zero_byte_(false),

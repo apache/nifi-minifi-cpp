@@ -117,7 +117,7 @@ void FetchModbusTcp::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-std::shared_ptr<core::FlowFile> FetchModbusTcp::getOrCreateFlowFile(core::ProcessContext& context, core::ProcessSession& session) const {
+std::shared_ptr<core::FlowFile> FetchModbusTcp::getOrCreateFlowFile(core::ProcessContext& context, core::ProcessSession& session) {
   if (context.hasIncomingConnections()) {
     return session.get();
   }

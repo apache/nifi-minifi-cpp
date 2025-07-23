@@ -231,6 +231,11 @@ class TypedProcessorWrapper {
     return proc_;
   }
 
+  core::Processor& operator*() const {
+    gsl_Assert(proc_);
+    return *proc_;
+  }
+
  private:
   core::Processor* proc_{nullptr};
 };
