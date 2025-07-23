@@ -324,7 +324,7 @@ class FragmentGenerator : public core::ProcessorImpl {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit FragmentGenerator(minifi::core::ProcessorMetadata metadata)
-      : ProcessorImpl(metadata) {
+      : ProcessorImpl(std::move(metadata)) {
   }
 
   void onTrigger(core::ProcessContext&, core::ProcessSession& session) override {
