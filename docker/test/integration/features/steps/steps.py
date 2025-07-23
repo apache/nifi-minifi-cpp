@@ -26,6 +26,7 @@ from minifi.controllers.KubernetesControllerService import KubernetesControllerS
 from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
 from minifi.controllers.JsonTreeReader import JsonTreeReader
 from minifi.controllers.CouchbaseClusterService import CouchbaseClusterService
+from minifi.controllers.XMLReader import XMLReader
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -403,6 +404,13 @@ def step_impl(context):
     json_record_set_reader = JsonTreeReader("JsonTreeReader")
     container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
     container.add_controller(json_record_set_reader)
+
+
+@given("a XMLReader controller service is set up")
+def step_impl(context):
+    xml_reader = XMLReader("XMLReader")
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(xml_reader)
 
 
 # Kubernetes
