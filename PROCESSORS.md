@@ -27,6 +27,7 @@ limitations under the License.
 - [ConsumeKafka](#ConsumeKafka)
 - [ConsumeMQTT](#ConsumeMQTT)
 - [ConsumeWindowsEventLog](#ConsumeWindowsEventLog)
+- [ConvertRecord](#ConvertRecord)
 - [DefragmentText](#DefragmentText)
 - [DeleteAzureBlobStorage](#DeleteAzureBlobStorage)
 - [DeleteAzureDataLakeStorage](#DeleteAzureDataLakeStorage)
@@ -472,6 +473,37 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                    |
 |---------|------------------------------------------------|
 | success | Relationship for successfully consumed events. |
+
+
+## ConvertRecord
+
+### Description
+
+Converts records from one data format to another using configured Record Reader and Record Write Controller Services.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                              | Default Value | Allowable Values | Description                                                                                                                                                                   |
+|-----------------------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Record Reader**                 |               |                  | Specifies the Controller Service to use for reading incoming data                                                                                                             |
+| **Record Writer**                 |               |                  | Specifies the Controller Service to use for writing out the records                                                                                                           |
+| **Include Zero Record FlowFiles** | true          | true<br/>false   | When converting an incoming FlowFile, if the conversion results in no data, this property specifies whether or not a FlowFile will be sent to the corresponding relationship. |
+
+### Relationships
+
+| Name    | Description                                                                                                                                                      |
+|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| failure | If a FlowFile cannot be transformed from the configured input format to the configured output format, the unchanged FlowFile will be routed to this relationship |
+| success | FlowFiles that are successfully transformed will be routed to this relationship                                                                                  |
+
+### Output Attributes
+
+| Attribute            | Relationship | Description                                                                               |
+|----------------------|--------------|-------------------------------------------------------------------------------------------|
+| record.count         | success      | The number of records in the FlowFile                                                     |
+| record.error.message | failure      | This attribute provides on failure the error message encountered by the Reader or Writer. |
 
 
 ## DefragmentText

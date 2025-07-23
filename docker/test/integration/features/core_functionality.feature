@@ -123,3 +123,18 @@ Feature: Core flow functionalities
       | config_format |
       | yaml          |
       | json          |
+
+  @CORE
+  Scenario: ConvertRecord processor can convert records from one format to another
+    Given a XMLReader controller service is set up
+    And a JsonRecordSetWriter controller service is set up with "Array" output grouping
+    And a GenerateFlowFile processor with the "Data Format" property set to "Text"
+    And the "Custom Text" property of the GenerateFlowFile processor is set to "<record><numbers>1</numbers><numbers>2</numbers></record>"
+    And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
+    And a ConvertRecord processor with the "Record Reader" property set to "XMLReader"
+    And the "Record Writer" property of the ConvertRecord processor is set to "JsonRecordSetWriter"
+    And the "success" relationship of the GenerateFlowFile processor is connected to the ConvertRecord
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the ConvertRecord processor is connected to the PutFile
+    When the MiNiFi instance starts up
+    Then a flowfile with the JSON content '[{"numbers":[1,2]}]' is placed in the monitored directory in less than 60 seconds
