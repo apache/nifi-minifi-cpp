@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,22 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
+include(FetchContent)
 
+set(PUGIXML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-file(GLOB SOURCES "processors/*.cpp" "controllers/*.cpp" "utils/*.cpp" "modbus/*.cpp")
-
-add_minifi_library(minifi-standard-processors SHARED ${SOURCES})
-target_include_directories(minifi-standard-processors PUBLIC "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
-
-include(RangeV3)
-include(Asio)
-target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3 asio pugixml)
-
-include(Coroutines)
-enable_coroutines()
-
-register_extension(minifi-standard-processors "STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors" "extensions/standard-processors/tests/")
-
+FetchContent_Declare(
+    pugixml
+    URL      https://github.com/zeux/pugixml/archive/refs/tags/v1.15.tar.gz
+    URL_HASH SHA256=b39647064d9e28297a34278bfb897092bf33b7c487906ddfc094c9e8868bddcb
+)
+FetchContent_MakeAvailable(pugixml)
