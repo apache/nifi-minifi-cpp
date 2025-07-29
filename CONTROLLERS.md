@@ -33,6 +33,7 @@ limitations under the License.
 - [UpdatePolicyControllerService](#UpdatePolicyControllerService)
 - [VolatileMapStateStorage](#VolatileMapStateStorage)
 - [XMLReader](#XMLReader)
+- [XMLRecordSetWriter](#XMLRecordSetWriter)
 
 
 ## AWSCredentialsService
@@ -351,3 +352,23 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Parse XML Attributes**    | false         | true<br/>false   | When 'Schema Access Strategy' is 'Infer Schema' and this property is 'true' then XML attributes are parsed and added to the record as new fields. When the schema is inferred but this property is 'false', XML attributes and their values are ignored.                                                                                                                                                                                                                                                                                                                                      |
 | Attribute Prefix            |               |                  | If this property is set, the name of attributes will be prepended with a prefix when they are added to a record.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | **Expect Records as Array** | false         | true<br/>false   | This property defines whether the reader expects a FlowFile to consist of a single Record or a series of Records with a "wrapper element". Because XML does not provide for a way to read a series of XML documents from a stream directly, it is common to combine many XML documents by concatenating them and then wrapping the entire XML blob with a "wrapper element". This property dictates whether the reader expects a FlowFile to consist of a single Record or a series of Records with a "wrapper element" that will be ignored.                                                 |
+
+
+## XMLRecordSetWriter
+
+### Description
+
+Writes a RecordSet to XML. The records are wrapped by a root tag.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                        | Default Value | Allowable Values                                                      | Description                                                                                                                                                               |
+|-----------------------------|---------------|-----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Array Tag Name              |               |                                                                       | Name of the tag used by property "Wrap Elements of Arrays" to write arrays                                                                                                |
+| **Wrap Elements of Arrays** | No Wrapping   | Use Property as Wrapper<br/>Use Property for Elements<br/>No Wrapping | Specifies how the writer wraps elements of fields of type array                                                                                                           |
+| **Omit XML Declaration**    | false         | true<br/>false                                                        | Specifies whether or not to include XML declaration                                                                                                                       |
+| **Pretty Print XML**        | false         | true<br/>false                                                        | Specifies whether or not the XML should be pretty printed                                                                                                                 |
+| **Name of Record Tag**      |               |                                                                       | Specifies the name of the XML record tag wrapping the record fields.                                                                                                      |
+| **Name of Root Tag**        |               |                                                                       | Specifies the name of the XML root tag wrapping the record set. This property has to be defined if the writer is supposed to write multiple records in a single FlowFile. |
