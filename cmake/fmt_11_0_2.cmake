@@ -1,3 +1,4 @@
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,23 +15,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+include(FetchContent)
 
-function(get_spdlog)
-    if (WIN32)
-        include(GetFmt_11_0_2)
-        get_fmt_11_0_2()
-    else()
-        include(GetFmt)
-        get_fmt()
-    endif()
-
-    if(MINIFI_SPDLOG_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install spdlog")
-        find_package(spdlog REQUIRED)
-
-        add_library(spdlog ALIAS spdlog::spdlog)
-    elseif(MINIFI_SPDLOG_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build spdlog from source")
-        include(Spdlog)
-    endif()
-endfunction(get_spdlog)
+FetchContent_Declare(Fmt
+        URL  https://github.com/fmtlib/fmt/archive/refs/tags/11.0.2.tar.gz
+        URL_HASH SHA256=6cb1e6d37bdcb756dbbe59be438790db409cdb4868c66e888d5df9f13f7c027f
+        OVERRIDE_FIND_PACKAGE
+        SYSTEM
+        )
+FetchContent_MakeAvailable(Fmt)

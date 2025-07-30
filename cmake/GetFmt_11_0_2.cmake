@@ -15,22 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_spdlog)
-    if (WIN32)
-        include(GetFmt_11_0_2)
-        get_fmt_11_0_2()
-    else()
-        include(GetFmt)
-        get_fmt()
+function(get_fmt_11_0_2)
+    if(MINIFI_FMT_SOURCE STREQUAL "CONAN")
+        message("Using Conan to install Fmt")
+        find_package(fmt REQUIRED)
+    elseif(MINIFI_FMT_SOURCE STREQUAL "BUILD")
+	message("Using CMake to build Fmt from source (version 11.0.2)")
+        include(fmt_11_0_2)
     endif()
-
-    if(MINIFI_SPDLOG_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install spdlog")
-        find_package(spdlog REQUIRED)
-
-        add_library(spdlog ALIAS spdlog::spdlog)
-    elseif(MINIFI_SPDLOG_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build spdlog from source")
-        include(Spdlog)
-    endif()
-endfunction(get_spdlog)
+endfunction(get_fmt_11_0_2)
