@@ -21,7 +21,12 @@ if (NOT (ENABLE_ALL OR ENABLE_COUCHBASE))
     return()
 endif()
 
-include(Couchbase)
+if (WIN32)
+    include(Couchbase_1_0_2)
+else()
+    include(Couchbase)
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
