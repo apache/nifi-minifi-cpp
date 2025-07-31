@@ -96,8 +96,8 @@ TEST_CASE("utils::net::getSslContext") {
   REQUIRE_NOTHROW(plan->finalize());
   auto ssl_context = utils::net::getSslContext(*ssl_context_service);
   asio::error_code verification_error;
-  CHECK(ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error));
-  CHECK(!verification_error);
+  CHECK_FALSE(ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error));
+  CHECK_FALSE(verification_error);
 }
 
 TEST_CASE("utils::net::getSslContext passphrase problems") {
@@ -146,6 +146,6 @@ TEST_CASE("utils::net::getSslContext missing CA") {
   REQUIRE_NOTHROW(plan->finalize());
   auto ssl_context = utils::net::getSslContext(*ssl_context_service);
   asio::error_code verification_error;
-  CHECK(ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error));
-  CHECK(!verification_error);
+  CHECK_FALSE(ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error));
+  CHECK_FALSE(verification_error);
 }
