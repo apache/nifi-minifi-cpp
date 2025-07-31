@@ -2,8 +2,7 @@
 
 name: 'Check supported Compilers'
 
-on:
-  workflow_dispatch:
+on: [workflow_dispatch]
 
 jobs:
   gcc-build:
