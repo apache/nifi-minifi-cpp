@@ -114,9 +114,11 @@ void JsonRecordSetWriter::writeAsArray(const core::RecordSet& record_set, const 
 void JsonRecordSetWriter::write(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
   switch (output_grouping_) {
     case OutputGroupingType::ARRAY:
-      return writeAsArray(record_set, flow_file, session);
+      writeAsArray(record_set, flow_file, session);
     case OutputGroupingType::ONE_LINE_PER_OBJECT:
-        return writePerLine(record_set, flow_file, session);
+      writePerLine(record_set, flow_file, session);
+    default:
+      throw std::invalid_argument(fmt::format("Invalid OutputGroupingType: {}", magic_enum::enum_underlying(output_grouping_)));
   }
 }
 
