@@ -563,8 +563,7 @@ TEST_CASE("expected orThrow") {
   CHECK((expected | utils::orThrow("should be 5")) == 5);
 }
 
-// This fails to compile with std::expected on GCC 15.1 due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119714
-TEST_CASE("") {
+TEST_CASE("This fails to compile with std::expected on GCC 15.1 due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119714") {
   nonstd::expected<int, std::string> a;
   nonstd::expected<int, std::string> b;
 
