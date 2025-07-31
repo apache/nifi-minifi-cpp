@@ -276,7 +276,7 @@ void StructuredConfiguration::parseParameterContextInheritance(const Node& param
     auto inherited_parameters_node = parameter_context_node[schema_.inherited_parameter_contexts];
     for (const auto& inherited_parameter_context_name : inherited_parameters_node) {
       auto name = inherited_parameter_context_name.getString().value();
-      if (parameter_contexts_.find(name) == parameter_contexts_.end()) {
+      if (!parameter_contexts_.contains(name)) {
         throw std::invalid_argument("Inherited parameter context '" + name + "' does not exist!");
       }
 
@@ -994,7 +994,7 @@ void StructuredConfiguration::parseParameterContext(const flow::Node& node, core
     return;
   }
 
-  if (parameter_contexts_.find(parameter_context_name) != parameter_contexts_.end()) {
+  if (parameter_contexts_.contains(parameter_context_name)) {
     parent.setParameterContext(parameter_contexts_.at(parameter_context_name).get());
   }
 }

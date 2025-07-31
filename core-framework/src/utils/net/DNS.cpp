@@ -27,7 +27,7 @@ namespace org::apache::nifi::minifi::utils::net {
 
 nonstd::expected<asio::ip::address, std::error_code> addressFromString(const std::string_view ip_address_str) {
   std::error_code ip_address_from_string_error;
-  auto ip_address = asio::ip::make_address(ip_address_str.data(), ip_address_from_string_error);
+  auto ip_address = asio::ip::make_address(ip_address_str, ip_address_from_string_error);
   if (ip_address_from_string_error)
     return nonstd::make_unexpected(ip_address_from_string_error);
   return ip_address;
