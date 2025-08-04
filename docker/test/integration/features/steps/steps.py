@@ -313,7 +313,7 @@ def step_impl(context, processor_name):
 
 
 # NiFi setups
-@given("a NiFi flow is receiving data in an input port named \"{input_port_name}\" with the id of the port named \"{rpg_port_name}\" from the RemoteProcessGroup named \"{rpg_name}\"")
+@given("a NiFi flow is receiving data from the RemoteProcessGroup named \"{rpg_name}\" in an input port named \"{input_port_name}\" which has the same id as the port named \"{rpg_port_name}\"")
 def step_impl(context, input_port_name, rpg_port_name, rpg_name):
     remote_process_group = context.test.get_remote_process_group_by_name(rpg_name)
     source = context.test.generate_input_port_for_remote_process_group(remote_process_group, input_port_name)

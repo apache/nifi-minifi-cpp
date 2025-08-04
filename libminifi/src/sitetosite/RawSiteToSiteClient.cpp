@@ -1,5 +1,4 @@
 /**
- * Site2SiteProtocol class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -122,7 +121,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
   }
 
   logger_->log_debug("Negotiate protocol version with destination port {} current version {}", port_id_.to_string(), current_version_);
-  return negotiateVersion(*peer_, std::string{PROTOCOL_RESOURCE_NAME}, "protocol", current_version_, current_version_index_, supported_version_, logger_);
+  return negotiateVersion(*peer_, std::string{PROTOCOL_RESOURCE_NAME}, "protocol", current_version_, current_version_index_, supported_versions_, logger_);
 }
 
 bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
@@ -132,7 +131,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
   }
 
   logger_->log_trace("Negotiate Codec version with destination port {} current version {}", port_id_.to_string(), current_codec_version_);
-  return negotiateVersion(*peer_, std::string{CODEC_RESOURCE_NAME}, "codec", current_codec_version_, current_codec_version_index_, supported_codec_version_, logger_);
+  return negotiateVersion(*peer_, std::string{CODEC_RESOURCE_NAME}, "codec", current_codec_version_, current_codec_version_index_, supported_codec_versions_, logger_);
 }
 
 bool RawSiteToSiteClient::handShake() {

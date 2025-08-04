@@ -1843,7 +1843,7 @@ TEST_CASE("Output port can also be used in RPG") {
       "name": "NiFi Flow",
       "targetUri": "https://localhost:8090/nifi",
       "communicationsTimeout": "19 sec",
-      "inputPorts": [{
+      "outputPorts": [{
         "identifier": "00000000-0000-0000-0000-000000000003",
         "name": "AmazingOutputPort",
         "targetId": "00000000-0000-0000-0000-000000000005",

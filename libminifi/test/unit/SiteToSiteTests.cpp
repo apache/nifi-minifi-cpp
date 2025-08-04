@@ -56,22 +56,22 @@ class SiteToSiteClientTestAccessor {
   }
 };
 
-void initializeMockBootstrapResponses(const std::unique_ptr<SiteToSiteResponder>& collector) {
+void initializeMockBootstrapResponses(SiteToSiteResponder& collector) {
   const char resource_ok_code = magic_enum::enum_underlying(sitetosite::ResourceNegotiationStatusCode::RESOURCE_OK);
   std::string resp_code;
   resp_code.insert(resp_code.begin(), resource_ok_code);
-  collector->push_response(resp_code);
+  collector.push_response(resp_code);
 
   // Handshake response code
-  collector->push_response("R");
-  collector->push_response("C");
+  collector.push_response("R");
+  collector.push_response("C");
   const char resource_code_properties_ok = magic_enum::enum_underlying(sitetosite::ResponseCode::PROPERTIES_OK);
   resp_code = resource_code_properties_ok;
-  collector->push_response(resp_code);
+  collector.push_response(resp_code);
 
   // Codec Negotiation
   resp_code = resource_ok_code;
-  collector->push_response(resp_code);
+  collector.push_response(resp_code);
 }
 
 void verifyBootstrapMessages(sitetosite::RawSiteToSiteClient& protocol, SiteToSiteResponder& collector) {
@@ -143,7 +143,7 @@ TEST_CASE("TestSiteToSiteVerifySend using data packet", "[S2S]") {
   auto collector = std::make_unique<SiteToSiteResponder>();
   auto collector_ptr = collector.get();
 
-  initializeMockBootstrapResponses(collector);
+  initializeMockBootstrapResponses(*collector);
 
   auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));
@@ -173,7 +173,7 @@ TEST_CASE("TestSiteToSiteVerifySend using flowfile data", "[S2S]") {
   auto collector = std::make_unique<SiteToSiteResponder>();
   auto collector_ptr = collector.get();
 
-  initializeMockBootstrapResponses(collector);
+  initializeMockBootstrapResponses(*collector);
 
   auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));
@@ -252,15 +252,10 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S]") {
   REQUIRE_FALSE(SiteToSiteClientTestAccessor::bootstrap(protocol));
 }
 
-void iniitalizeMockRemoteClientReceiveDataResponses(SiteToSiteResponder& collector) {
+void initializeMockRemoteClientReceiveDataResponses(SiteToSiteResponder& collector) {
   collector.push_response("R");
   collector.push_response("C");
-  auto addResponseCode = [&collector](sitetosite::ResponseCode code) {
-    std::string resp_code;
-    resp_code.insert(resp_code.begin(), magic_enum::enum_underlying(code));
-    collector.push_response(resp_code);
-  };
-  addResponseCode(sitetosite::ResponseCode::MORE_DATA);
+  collector.push_response(std::string{static_cast<char>(magic_enum::enum_underlying(sitetosite::ResponseCode::MORE_DATA))});
 
   auto addUInt32 = [&collector](uint32_t number) {
     std::string result(4, '\0');
@@ -300,8 +295,8 @@ TEST_CASE("Test receiving flow file through site to site", "[S2S]") {
   auto collector = std::make_unique<SiteToSiteResponder>();
   auto collector_ptr = collector.get();
 
-  initializeMockBootstrapResponses(collector);
-  iniitalizeMockRemoteClientReceiveDataResponses(*collector);
+  initializeMockBootstrapResponses(*collector);
+  initializeMockRemoteClientReceiveDataResponses(*collector);
 
   auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));

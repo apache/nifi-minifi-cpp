@@ -80,172 +80,43 @@ Remote Process Groups:
     Output Ports: []
 ```
 
-Here is another example in NiFi style json format how to configure site-to-site protocol in MiNiFi C++ where the MiNiFi C++ instance is receiving data from NiFi using the HTTP protocol:
+Here is another example in yaml format how to configure site-to-site protocol in MiNiFi C++ where the MiNiFi C++ instance is receiving data from NiFi using the HTTP protocol:
 
-```json
-{
-    "encodingVersion": {
-        "majorVersion": 2,
-        "minorVersion": 0
-    },
-    "maxTimerDrivenThreadCount": 1,
-    "maxEventDrivenThreadCount": 1,
-    "parameterContexts": [],
-    "rootGroup": {
-        "identifier": "c5bceca3-9c20-4068-bf2d-425e14026471",
-        "instanceIdentifier": "3cb4b3ce-7cd8-4ab7-a6bf-d4640ac5db43",
-        "name": "root",
-        "position": {
-            "x": 0.0,
-            "y": 0.0
-        },
-        "processGroups": [],
-        "remoteProcessGroups": [
-            {
-                "identifier": "327b446a-0043-48d1-8bb4-df65ba1afa60",
-                "instanceIdentifier": "2ed47dca-38f5-476d-9c37-5ea0a5072f1e",
-                "name": "https://localhost:8443/nifi",
-                "position": {
-                    "x": 235.0,
-                    "y": 71.00000762939453
-                },
-                "targetUri": "https://localhost:8443/nifi",
-                "targetUris": "https://localhost:8443/nifi",
-                "communicationsTimeout": "30 secs",
-                "yieldDuration": "10 sec",
-                "transportProtocol": "HTTP",
-                "inputPorts": [],
-                "outputPorts": [
-                    {
-                        "identifier": "de7cc09a-0196-1000-2c63-ee6b4319ffb6",
-                        "instanceIdentifier": "de7cc09a-0196-1000-2c63-ee6b4319ffb6",
-                        "name": "nifi-outputport",
-                        "remoteGroupId": "327b446a-0043-48d1-8bb4-df65ba1afa60",
-                        "componentType": "REMOTE_OUTPUT_PORT",
-                        "targetId": "de7cc09a-0196-1000-2c63-ee6b4319ffb6",
-                        "groupIdentifier": "c5bceca3-9c20-4068-bf2d-425e14026471"
-                    }
-                ],
-                "componentType": "REMOTE_PROCESS_GROUP",
-                "groupIdentifier": "c5bceca3-9c20-4068-bf2d-425e14026471"
-            }
-        ],
-        "processors": [
-            {
-                "identifier": "f29a2667-7c86-4b22-a5d3-a23ee88f3c66",
-                "instanceIdentifier": "7511c14c-9923-43ef-90b4-ac3e05b1a9fa",
-                "name": "PutFile",
-                "comments": "",
-                "position": {
-                    "x": 1042.0,
-                    "y": 90.5
-                },
-                "type": "org.apache.nifi.minifi.processors.PutFile",
-                "bundle": {
-                    "group": "org.apache.nifi.minifi",
-                    "artifact": "minifi-standard-processors",
-                    "version": "1.0.0"
-                },
-                "properties": {
-                    "Create Missing Directories": "true",
-                    "Maximum File Count": "-1",
-                    "Directory": ".",
-                    "Conflict Resolution Strategy": "fail"
-                },
-                "propertyDescriptors": {
-                    "Permissions": {
-                        "name": "Permissions",
-                        "identifiesControllerService": false,
-                        "sensitive": false
-                    },
-                    "Create Missing Directories": {
-                        "name": "Create Missing Directories",
-                        "identifiesControllerService": false,
-                        "sensitive": false
-                    },
-                    "Maximum File Count": {
-                        "name": "Maximum File Count",
-                        "identifiesControllerService": false,
-                        "sensitive": false
-                    },
-                    "Directory Permissions": {
-                        "name": "Directory Permissions",
-                        "identifiesControllerService": false,
-                        "sensitive": false
-                    },
-                    "Directory": {
-                        "name": "Directory",
-                        "identifiesControllerService": false,
-                        "sensitive": false
-                    },
-                    "Conflict Resolution Strategy": {
-                        "name": "Conflict Resolution Strategy",
-                        "identifiesControllerService": false,
-                        "sensitive": false
-                    }
-                },
-                "style": {},
-                "schedulingPeriod": "1000 ms",
-                "schedulingStrategy": "TIMER_DRIVEN",
-                "executionNode": "ALL",
-                "penaltyDuration": "30000 ms",
-                "yieldDuration": "1000 ms",
-                "bulletinLevel": "WARN",
-                "runDurationMillis": 0,
-                "concurrentlySchedulableTaskCount": 1,
-                "autoTerminatedRelationships": [
-                    "success",
-                    "failure"
-                ],
-                "componentType": "PROCESSOR",
-                "groupIdentifier": "c5bceca3-9c20-4068-bf2d-425e14026471"
-            }
-        ],
-        "inputPorts": [],
-        "outputPorts": [],
-        "connections": [
-            {
-                "identifier": "bab1ce73-e9e5-4a9a-a990-ee9c65668d8c",
-                "instanceIdentifier": "9526b397-190a-4fe3-bf0f-bd7dfc2dfafc",
-                "name": "nifi-outputport/undefined/PutFile",
-                "position": {
-                    "x": 0.0,
-                    "y": 0.0
-                },
-                "source": {
-                    "id": "de7cc09a-0196-1000-2c63-ee6b4319ffb6",
-                    "type": "REMOTE_OUTPUT_PORT",
-                    "groupId": "327b446a-0043-48d1-8bb4-df65ba1afa60",
-                    "name": "nifi-outputport"
-                },
-                "destination": {
-                    "id": "f29a2667-7c86-4b22-a5d3-a23ee88f3c66",
-                    "type": "PROCESSOR",
-                    "groupId": "c5bceca3-9c20-4068-bf2d-425e14026471",
-                    "name": "PutFile",
-                    "instanceIdentifier": "7511c14c-9923-43ef-90b4-ac3e05b1a9fa"
-                },
-                "labelIndex": 1,
-                "zIndex": 0,
-                "selectedRelationships": [
-                    "undefined"
-                ],
-                "backPressureObjectThreshold": 2000,
-                "backPressureDataSizeThreshold": "100 MB",
-                "flowFileExpiration": "0 seconds",
-                "prioritizers": [],
-                "bends": [],
-                "componentType": "CONNECTION",
-                "groupIdentifier": "c5bceca3-9c20-4068-bf2d-425e14026471"
-            }
-        ],
-        "labels": [],
-        "funnels": [],
-        "controllerServices": [],
-        "variables": {},
-        "componentType": "PROCESS_GROUP"
-    }
-}
+```yaml
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- Properties:
+    Directory: /tmp/output
+  auto-terminated relationships list:
+  - success
+  - failure
+  class: org.apache.nifi.processors.standard.PutFile
+  id: 6d6917dd-02ca-4add-b1e8-91468873009e
+  max concurrent tasks: 1
+  name: PutFile
+  penalization period: 30 sec
+  run duration nanos: 0
+  scheduling period: 1 sec
+  scheduling strategy: EVENT_DRIVEN
+  yield period: 1 sec
+Connections:
+- destination id: 6d6917dd-02ca-4add-b1e8-91468873009e
+  name: 64b65a70-4560-4717-89bb-d8335db99f27
+  source id: 22d38f35-4d25-4e68-878c-f46f46d5781c
+  source relationship name: undefined
+Remote Processing Groups:
+- Output Ports:
+  - Properties: {}
+    id: 22d38f35-4d25-4e68-878c-f46f46d5781c
+    max concurrent tasks: 1
+    name: from_nifi
+  id: 20ed42b0-d41e-4add-9e6d-8777223370b8
+  name: RemoteProcessGroup
+  timeout: 30 sec
+  url: http://localhost:8080/nifi
+  yield period: 3 sec
 ```
 
 Notes on the configuration:
@@ -253,7 +124,7 @@ Notes on the configuration:
 - In the MiNiFi C++ configuration, in yaml configuration the remote input and output ports' `id` field, and in json configuration the ports' `identifier`, `instanceIdentifier`, and `targetId` fields should be set to the instance id of the input and output ports created in NiFi (`de7cc09a-0196-1000-2c63-ee6b4319ffb6` in the examples).
 - Connections from the remote output port to the processor should use the `undefined` relationship
 - `useCompression` can be set, but it is currently not supported in MiNiFi C++ so it will be set to false in the site-to-site messages
-- the `targetUri` and `targetUris` field in the remote process group should be set to the NiFi instance's URL, this can also use comma separated list of URLs if the remote process group is configured to use multiple NiFi nodes
+- the `url` field (`targetUri` or `targetUris` in JSON) field in the remote process group should be set to the NiFi instance's URL, this can also use comma separated list of URLs if the remote process group is configured to use multiple NiFi nodes
 
 ## Additional examples
 

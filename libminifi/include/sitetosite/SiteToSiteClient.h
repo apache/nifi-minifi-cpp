@@ -51,7 +51,6 @@ struct DataPacket {
         payload{payload} {
   }
   std::map<std::string, std::string> attributes;
-  uint64_t size{0};
   std::shared_ptr<Transaction> transaction;
   const std::string& payload;
 };
@@ -153,17 +152,17 @@ class SiteToSiteClient {
 
   PeerState peer_state_{PeerState::IDLE};
   utils::Identifier port_id_;
-  std::chrono::milliseconds idle_timeout_{15000};
+  std::chrono::milliseconds idle_timeout_{15s};
   std::unique_ptr<SiteToSitePeer> peer_;
   std::map<utils::Identifier, std::shared_ptr<Transaction>> known_transactions_;
   std::chrono::nanoseconds batch_send_nanos_{5s};
 
-  const std::vector<uint32_t> supported_version_ = {5, 4, 3, 2, 1};
+  const std::vector<uint32_t> supported_versions_ = {5, 4, 3, 2, 1};
   uint32_t current_version_index_{0};
-  uint32_t current_version_{supported_version_[current_version_index_]};
-  const std::vector<uint32_t> supported_codec_version_ = {1};
+  uint32_t current_version_{supported_versions_[current_version_index_]};
+  const std::vector<uint32_t> supported_codec_versions_ = {1};
   uint32_t current_codec_version_index_{0};
-  uint32_t current_codec_version_{supported_codec_version_[current_codec_version_index_]};
+  uint32_t current_codec_version_{supported_codec_versions_[current_codec_version_index_]};
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 

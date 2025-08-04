@@ -96,7 +96,7 @@ TransactionResponder::TransactionResponder(std::string base_url, std::string por
 
 bool TransactionResponder::handlePost(CivetServer* /*server*/, struct mg_connection *conn) {
   auto req_info = mg_get_request_info(conn);
-  std::unordered_map<std::string, std::string> expected_headers {
+  static const std::unordered_map<std::string, std::string> expected_headers {
     {std::string{minifi::sitetosite::HttpSiteToSiteClient::PROTOCOL_VERSION_HEADER}, "1"},
     {std::string{minifi::sitetosite::HttpSiteToSiteClient::HANDSHAKE_PROPERTY_USE_COMPRESSION}, "false"},
     {std::string{minifi::sitetosite::HttpSiteToSiteClient::HANDSHAKE_PROPERTY_REQUEST_EXPIRATION}, "20000"},

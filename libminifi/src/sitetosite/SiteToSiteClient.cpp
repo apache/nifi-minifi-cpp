@@ -748,10 +748,10 @@ bool SiteToSiteClient::receiveFlowFiles(core::ProcessContext& context, core::Pro
 }
 
 const ResponseCodeContext* SiteToSiteClient::getResponseCodeContext(ResponseCode code) {
-  auto it = std::find_if(respond_code_contexts.begin(), respond_code_contexts.end(), [code](const ResponseCodeContext& context) {
+  auto it = std::find_if(response_code_contexts.begin(), response_code_contexts.end(), [code](const ResponseCodeContext& context) {
     return context.code == code;
   });
-  if (it != respond_code_contexts.end()) {
+  if (it != response_code_contexts.end()) {
     return &(*it);
   }
   return nullptr;

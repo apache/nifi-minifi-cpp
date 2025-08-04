@@ -179,8 +179,8 @@ class Minifi_flow_json_serializer:
             for proc in conn_procs:
                 root['connections'].append({
                     'name': str(uuid.uuid4()),
-                    'source': {'id': str(connectable.uuid) if not isinstance(connectable, InputPort) and not isinstance(connectable, OutputPort) else str(connectable.instance_id)},
-                    'destination': {'id': str(proc.uuid) if not isinstance(proc, InputPort) and not isinstance(proc, OutputPort) else str(proc.instance_id)}
+                    'source': {'id': str(connectable.id_for_connection())},
+                    'destination': {'id': str(proc.id_for_connection())}
                 })
                 if (all(str(connectable.uuid) != x['identifier'] for x in root['funnels'])):
                     root['connections'][-1]['selectedRelationships'] = [conn_name]

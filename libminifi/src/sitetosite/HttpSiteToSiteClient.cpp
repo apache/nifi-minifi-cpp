@@ -49,17 +49,12 @@ std::optional<std::vector<PeerStatus>> parsePeerStatuses(const std::shared_ptr<c
     rapidjson::Document root;
     rapidjson::ParseResult ok = root.Parse(entity.c_str());
     if (!ok) {
-      std::stringstream ss;
-      ss << "Failed to parse archive lens stack from JSON string with reason: "
-          << rapidjson::GetParseError_En(ok.Code())
-          << " at offset " << ok.Offset();
-
-      throw Exception(ExceptionType::GENERAL_EXCEPTION, ss.str());
+      throw Exception(ExceptionType::GENERAL_EXCEPTION, fmt::format("Failed to parse peer status json response: {} at {}", rapidjson::GetParseError_En(ok.Code()), ok.Offset()));
     }
 
     std::vector<PeerStatus> peer_statuses;
     if (!root.HasMember("peers") || !root["peers"].IsArray() || root["peers"].Size() <= 0) {
-      logger->log_debug("Peers is either not a member or is empty. String to analyze: {}", entity);
+      logger->log_warn("Peers is either not a member or is empty. String to analyze: {}", entity);
       return peer_statuses;
     }
 

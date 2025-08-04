@@ -42,7 +42,7 @@ class DummyProcessor : public minifi::core::ProcessorImpl {
       .build();
   static constexpr auto Properties = std::array<core::PropertyReference, 2>{SimpleProperty, SensitiveProperty};
   static constexpr core::RelationshipDefinition Success{"success", "Success relationship"};
-  static constexpr auto Relationships = std::array<core::RelationshipDefinition, 1>{Success};
+  static constexpr auto Relationships = std::array{Success};
   static constexpr bool SupportsDynamicProperties = true;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;

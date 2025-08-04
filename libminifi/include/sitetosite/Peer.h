@@ -32,7 +32,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::sitetosite {
 
-static constexpr std::array<char, 4> MAGIC_BYTES = { 'N', 'i', 'F', 'i' };
+inline constexpr std::array<char, 4> MAGIC_BYTES = { 'N', 'i', 'F', 'i' };
 
 class PeerStatus {
  public:
@@ -90,7 +90,6 @@ class SiteToSitePeer : public io::BaseStreamImpl {
         port_(port),
         url_("nifi://" + host_ + ":" + std::to_string(port_)),
         local_network_interface_(io::NetworkInterface(ifc, nullptr)) {
-    timeout_.store(30s);
   }
 
   SiteToSitePeer(SiteToSitePeer &&ss) = delete;

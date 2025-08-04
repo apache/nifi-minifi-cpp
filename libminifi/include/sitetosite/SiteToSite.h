@@ -37,8 +37,8 @@ enum class ResourceNegotiationStatusCode : uint8_t {
 static constexpr uint32_t MAX_NUM_ATTRIBUTES = 25000;
 
 // Response Code Sequence Pattern
-static constexpr uint8_t CODE_SEQUENCE_VALUE_1 = static_cast<uint8_t>('R');
-static constexpr uint8_t CODE_SEQUENCE_VALUE_2 = static_cast<uint8_t>('C');
+inline constexpr uint8_t CODE_SEQUENCE_VALUE_1 = static_cast<uint8_t>('R');
+inline constexpr uint8_t CODE_SEQUENCE_VALUE_2 = static_cast<uint8_t>('C');
 
 /**
  * Enumeration of Properties that can be used for the Site-to-Site Socket
@@ -155,7 +155,7 @@ struct ResponseCodeContext {
   bool has_description = false;
 };
 
-static constexpr std::array<ResponseCodeContext, 21> respond_code_contexts = {{
+inline constexpr std::array<ResponseCodeContext, 21> response_code_contexts = {{
   { ResponseCode::RESERVED, "Reserved for Future Use", false },
   { ResponseCode::PROPERTIES_OK, "Properties OK", false },
   { ResponseCode::UNKNOWN_PROPERTY_NAME, "Unknown Property Name", true },
@@ -405,7 +405,7 @@ class SiteToSiteClientConfiguration {
   uint16_t port_;
   ClientType client_type_;
   std::string local_network_interface_;
-  std::chrono::milliseconds idle_timeout_{15000};
+  std::chrono::milliseconds idle_timeout_{15s};
   std::shared_ptr<controllers::SSLContextService> ssl_service_;
   http::HTTPProxy proxy_;
   bool use_compression_{false};
