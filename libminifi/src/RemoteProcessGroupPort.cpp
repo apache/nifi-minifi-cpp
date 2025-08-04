@@ -74,7 +74,7 @@ void RemoteProcessGroupPort::setURL(const std::string& val) {
   }
 }
 
-std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const {
+gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> RemoteProcessGroupPort::initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const {
   config.setSecurityContext(ssl_service_);
   config.setHTTPProxy(proxy_);
   config.setIdleTimeout(idle_timeout_);

@@ -28,10 +28,10 @@
 namespace org::apache::nifi::minifi::sitetosite {
 
 namespace {
-std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClientConfiguration &client_configuration) {
+gsl::not_null<std::unique_ptr<SiteToSitePeer>> createStreamingPeer(const SiteToSiteClientConfiguration &client_configuration) {
   utils::net::SocketData socket_data{client_configuration.getHost(), client_configuration.getPort(), client_configuration.getSecurityContext()};
   auto connection = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
-  return std::make_unique<SiteToSitePeer>(std::move(connection), client_configuration.getHost(), client_configuration.getPort(), client_configuration.getInterface());
+  return gsl::make_not_null(std::make_unique<SiteToSitePeer>(std::move(connection), client_configuration.getHost(), client_configuration.getPort(), client_configuration.getInterface()));
 }
 
 void setCommonConfigurationOptions(SiteToSiteClient& client, const SiteToSiteClientConfiguration &client_configuration) {
@@ -51,18 +51,18 @@ void setCommonConfigurationOptions(SiteToSiteClient& client, const SiteToSiteCli
   }
 }
 
-std::unique_ptr<SiteToSiteClient> createRawSocketSiteToSiteClient(const SiteToSiteClientConfiguration &client_configuration) {
-  auto raw_site_to_site_client = std::make_unique<RawSiteToSiteClient>(createStreamingPeer(client_configuration));
+gsl::not_null<std::unique_ptr<SiteToSiteClient>> createRawSocketSiteToSiteClient(const SiteToSiteClientConfiguration &client_configuration) {
+  auto raw_site_to_site_client = gsl::make_not_null(std::make_unique<RawSiteToSiteClient>(createStreamingPeer(client_configuration)));
   raw_site_to_site_client->setPortId(client_configuration.getPortId());
   setCommonConfigurationOptions(*raw_site_to_site_client, client_configuration);
   return raw_site_to_site_client;
 }
 
-std::unique_ptr<SiteToSiteClient> createHttpSiteToSiteClient(const SiteToSiteClientConfiguration &client_configuration) {
-  auto peer = std::make_unique<SiteToSitePeer>(client_configuration.getHost(), client_configuration.getPort(), client_configuration.getInterface());
+gsl::not_null<std::unique_ptr<SiteToSiteClient>> createHttpSiteToSiteClient(const SiteToSiteClientConfiguration &client_configuration) {
+  auto peer = gsl::make_not_null(std::make_unique<SiteToSitePeer>(client_configuration.getHost(), client_configuration.getPort(), client_configuration.getInterface()));
   peer->setHTTPProxy(client_configuration.getHTTPProxy());
 
-  auto http_site_to_site_client = std::make_unique<HttpSiteToSiteClient>(std::move(peer));
+  auto http_site_to_site_client = gsl::make_not_null(std::make_unique<HttpSiteToSiteClient>(std::move(peer)));
   http_site_to_site_client->setPortId(client_configuration.getPortId());
   http_site_to_site_client->setIdleTimeout(client_configuration.getIdleTimeout());
   setCommonConfigurationOptions(*http_site_to_site_client, client_configuration);
@@ -70,14 +70,14 @@ std::unique_ptr<SiteToSiteClient> createHttpSiteToSiteClient(const SiteToSiteCli
 }
 }  // namespace
 
-std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConfiguration &client_configuration) {
+gsl::not_null<std::unique_ptr<SiteToSiteClient>> createClient(const SiteToSiteClientConfiguration &client_configuration) {
   switch (client_configuration.getClientType()) {
     case ClientType::RAW:
       return createRawSocketSiteToSiteClient(client_configuration);
     case ClientType::HTTP:
       return createHttpSiteToSiteClient(client_configuration);
   }
-  return nullptr;
+  std::terminate();
 }
 
 }  // namespace org::apache::nifi::minifi::sitetosite

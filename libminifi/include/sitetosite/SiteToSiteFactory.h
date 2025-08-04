@@ -23,6 +23,6 @@
 
 namespace org::apache::nifi::minifi::sitetosite {
 
-std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConfiguration &client_configuration);
+gsl::not_null<std::unique_ptr<SiteToSiteClient>> createClient(const SiteToSiteClientConfiguration &client_configuration);
 
 }  // namespace org::apache::nifi::minifi::sitetosite

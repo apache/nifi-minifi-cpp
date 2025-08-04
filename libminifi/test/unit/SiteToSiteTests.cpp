@@ -132,7 +132,7 @@ void verifySendResponses(SiteToSiteResponder& collector, const std::vector<std::
 }
 
 TEST_CASE("TestSetPortId", "[S2S]") {
-  auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::make_unique<org::apache::nifi::minifi::io::BufferStream>(), "fake_host", 65433, "");
+  auto peer = gsl::make_not_null(std::make_unique<sitetosite::SiteToSitePeer>(std::make_unique<org::apache::nifi::minifi::io::BufferStream>(), "fake_host", 65433, ""));
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));
   auto fake_uuid = minifi::utils::Identifier::parse("c56a4180-65aa-42ec-a945-5fd21dec0538").value();
   protocol.setPortId(fake_uuid);
@@ -145,7 +145,7 @@ TEST_CASE("TestSiteToSiteVerifySend using data packet", "[S2S]") {
 
   initializeMockBootstrapResponses(*collector);
 
-  auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
+  auto peer = gsl::make_not_null(std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, ""));
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
   std::vector<std::string> expected_responses;
@@ -175,7 +175,7 @@ TEST_CASE("TestSiteToSiteVerifySend using flowfile data", "[S2S]") {
 
   initializeMockBootstrapResponses(*collector);
 
-  auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
+  auto peer = gsl::make_not_null(std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, ""));
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
   std::vector<std::string> expected_responses;
@@ -241,7 +241,7 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S]") {
   collector->push_response(resp_code);
   collector->push_response(resp_code);
 
-  auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
+  auto peer = gsl::make_not_null(std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, ""));
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
   std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
@@ -298,7 +298,7 @@ TEST_CASE("Test receiving flow file through site to site", "[S2S]") {
   initializeMockBootstrapResponses(*collector);
   initializeMockRemoteClientReceiveDataResponses(*collector);
 
-  auto peer = std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
+  auto peer = gsl::make_not_null(std::make_unique<sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, ""));
   sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
   verifyBootstrapMessages(protocol, *collector_ptr);

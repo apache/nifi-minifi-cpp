@@ -62,9 +62,8 @@ struct SiteToSiteResponse {
 
 class SiteToSiteClient {
  public:
-  explicit SiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
+  explicit SiteToSiteClient(gsl::not_null<std::unique_ptr<SiteToSitePeer>> peer)
       : peer_(std::move(peer)) {
-    gsl_Assert(peer_);
   }
 
   SiteToSiteClient(const SiteToSiteClient&) = delete;
@@ -153,7 +152,7 @@ class SiteToSiteClient {
   PeerState peer_state_{PeerState::IDLE};
   utils::Identifier port_id_;
   std::chrono::milliseconds idle_timeout_{15s};
-  std::unique_ptr<SiteToSitePeer> peer_;
+  gsl::not_null<std::unique_ptr<SiteToSitePeer>> peer_;
   std::map<utils::Identifier, std::shared_ptr<Transaction>> known_transactions_;
   std::chrono::nanoseconds batch_send_nanos_{5s};
 

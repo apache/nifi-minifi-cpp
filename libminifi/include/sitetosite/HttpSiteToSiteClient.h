@@ -42,7 +42,7 @@ class HttpSiteToSiteClient final : public SiteToSiteClient {
   static constexpr char const* HANDSHAKE_PROPERTY_BATCH_SIZE = "x-nifi-site-to-site-batch-size";
   static constexpr char const* HANDSHAKE_PROPERTY_BATCH_DURATION = "x-nifi-site-to-site-batch-duration";
 
-  explicit HttpSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
+  explicit HttpSiteToSiteClient(gsl::not_null<std::unique_ptr<SiteToSitePeer>> peer)
       : SiteToSiteClient(std::move(peer)),
         current_code_(ResponseCode::UNRECOGNIZED_RESPONSE_CODE) {
     peer_state_ = PeerState::READY;

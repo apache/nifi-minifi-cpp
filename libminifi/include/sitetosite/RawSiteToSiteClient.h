@@ -49,7 +49,7 @@ namespace sitetosite {
 
 class RawSiteToSiteClient final : public SiteToSiteClient {
  public:
-  explicit RawSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer) : SiteToSiteClient(std::move(peer)) {
+  explicit RawSiteToSiteClient(gsl::not_null<std::unique_ptr<SiteToSitePeer>> peer) : SiteToSiteClient(std::move(peer)) {
     timeout_ = 30s;
   }
 
@@ -65,9 +65,7 @@ class RawSiteToSiteClient final : public SiteToSiteClient {
  public:
   void setTimeout(std::chrono::milliseconds time) override {
     timeout_ = time;
-    if (peer_) {
-      peer_->setTimeout(time);
-    }
+    peer_->setTimeout(time);
   }
 
   std::optional<std::vector<PeerStatus>> getPeerList() override;

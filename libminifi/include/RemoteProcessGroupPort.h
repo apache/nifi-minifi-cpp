@@ -236,7 +236,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
   std::optional<std::chrono::milliseconds> batch_duration_;
 
  private:
-  std::unique_ptr<sitetosite::SiteToSiteClient> initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const;
+  gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const;
   [[nodiscard]] std::optional<std::string> getRestApiToken(const RPG& nifi) const;
   std::optional<std::pair<std::string, uint16_t>> parseSiteToSiteDataFromControllerConfig(const RPG& nifi, const std::string& controller) const;
   std::optional<std::pair<std::string, uint16_t>> tryRefreshSiteToSiteInstance(RPG nifi) const;
