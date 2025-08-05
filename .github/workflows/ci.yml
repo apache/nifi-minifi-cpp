@@ -183,7 +183,7 @@ jobs:
             ${{ runner.os }}-2022-sccache-refs/heads/main
             ${{ runner.os }}-2022-sccache
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
+        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
       - name: Set up Python
         run: choco -y install python & refreshenv
         shell: cmd
@@ -520,7 +520,7 @@ jobs:
         run: make docker-verify
       - name: Test Reporter
         if: always()
-        uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e
+        uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
         with:
           name: Docker integration tests
           path: build/behavex_output/behave/*.xml
