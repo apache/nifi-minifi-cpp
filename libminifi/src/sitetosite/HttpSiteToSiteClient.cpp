@@ -155,57 +155,45 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(TransferDir
 }
 
 std::optional<SiteToSiteResponse> HttpSiteToSiteClient::readResponseForReceiveTransfer(const std::shared_ptr<Transaction>& transaction) {
-  SiteToSiteResponse response;
-  if (current_code_ == ResponseCode::FINISH_TRANSACTION) {
-    return response;
-  }
-
   if (transaction->getState() == TransactionState::TRANSACTION_STARTED || transaction->getState() == TransactionState::DATA_EXCHANGED) {
     if (current_code_ == ResponseCode::CONFIRM_TRANSACTION && transaction->getState() == TransactionState::DATA_EXCHANGED) {
       auto stream = dynamic_cast<http::HttpStream*>(peer_->getStream());
       if (!stream->isFinished()) {
         logger_->log_debug("confirm read for {}, but not finished ", transaction->getUUIDStr());
         if (stream->waitForDataAvailable()) {
-          response.code = ResponseCode::CONTINUE_TRANSACTION;
-          return response;
+          return SiteToSiteResponse{.code= ResponseCode::CONTINUE_TRANSACTION, .message = ""};
         }
       }
 
-      response.code = ResponseCode::CONFIRM_TRANSACTION;
-      return response;
+      return SiteToSiteResponse{.code= ResponseCode::CONFIRM_TRANSACTION, .message = ""};
     }
 
     auto stream = dynamic_cast<http::HttpStream*>(peer_->getStream());
     if (stream->isFinished()) {
       logger_->log_debug("Finished {} ", transaction->getUUIDStr());
-      response.code = ResponseCode::FINISH_TRANSACTION;
       current_code_ = ResponseCode::FINISH_TRANSACTION;
-      return response;
+      return SiteToSiteResponse{.code= ResponseCode::FINISH_TRANSACTION, .message = ""};
     }
 
     if (stream->waitForDataAvailable()) {
       logger_->log_debug("data is available, so continuing transaction  {} ", transaction->getUUIDStr());
-      response.code = ResponseCode::CONTINUE_TRANSACTION;
-      return response;
+      return SiteToSiteResponse{.code= ResponseCode::CONTINUE_TRANSACTION, .message = ""};
     }
 
     logger_->log_debug("No data available for transaction {} ", transaction->getUUIDStr());
-    response.code = ResponseCode::FINISH_TRANSACTION;
     current_code_ = ResponseCode::FINISH_TRANSACTION;
-    return response;
+    return SiteToSiteResponse{.code= ResponseCode::FINISH_TRANSACTION, .message = ""};
   }
 
   if (transaction->getState() == TransactionState::TRANSACTION_CONFIRMED) {
     closeTransaction(transaction->getUUID());
-    response.code = ResponseCode::CONFIRM_TRANSACTION;
-    return response;
+    return SiteToSiteResponse{.code= ResponseCode::CONFIRM_TRANSACTION, .message = ""};
   }
 
-  return response;
+  return SiteToSiteResponse{.code= ResponseCode::UNRECOGNIZED_RESPONSE_CODE, .message = ""};
 }
 
 std::optional<SiteToSiteResponse> HttpSiteToSiteClient::readResponseForSendTransfer(const std::shared_ptr<Transaction>& transaction) {
-  SiteToSiteResponse response;
   if (current_code_ == ResponseCode::FINISH_TRANSACTION) {
     auto stream = dynamic_cast<http::HttpStream*>(peer_->getStream());
     if (!stream) {
@@ -215,20 +203,16 @@ std::optional<SiteToSiteResponse> HttpSiteToSiteClient::readResponseForSendTrans
     stream->close();
     auto client = stream->getClient();
     if (client->getResponseCode() == 202) {
-      response.code = ResponseCode::CONFIRM_TRANSACTION;
-      response.message = std::string(client->getResponseBody().data(), client->getResponseBody().size());
-      return response;
+      return SiteToSiteResponse{.code= ResponseCode::CONFIRM_TRANSACTION, .message = std::string(client->getResponseBody().data(), client->getResponseBody().size())};
     }
 
     logger_->log_debug("Received response code {}", client->getResponseCode());
-    response.code = ResponseCode::UNRECOGNIZED_RESPONSE_CODE;
-    return response;
+    return SiteToSiteResponse{.code= ResponseCode::UNRECOGNIZED_RESPONSE_CODE, .message = ""};
   }
 
   if (transaction->getState() == TransactionState::TRANSACTION_CONFIRMED) {
     closeTransaction(transaction->getUUID());
-    response.code = ResponseCode::TRANSACTION_FINISHED;
-    return response;
+    return SiteToSiteResponse{.code= ResponseCode::TRANSACTION_FINISHED, .message = ""};
   }
 
   return SiteToSiteClient::readResponse(transaction);
