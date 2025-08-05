@@ -113,12 +113,12 @@ bool readAsArray(const std::string& content, core::RecordSet& record_set) {
   return true;
 }
 
-nonstd::expected<core::RecordSet, std::error_code> JsonTreeReader::read(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
+nonstd::expected<core::RecordSet, std::error_code> JsonTreeReader::read(io::InputStream& input_stream) {
   core::RecordSet record_set{};
-  const auto read_result = session.read(flow_file, [&record_set](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+  const auto read_result = [&record_set](io::InputStream& input_stream) -> int64_t {
     std::string content;
-    content.resize(input_stream->size());
-    const auto read_ret = gsl::narrow<int64_t>(input_stream->read(as_writable_bytes(std::span(content))));
+    content.resize(input_stream.size());
+    const auto read_ret = gsl::narrow<int64_t>(input_stream.read(as_writable_bytes(std::span(content))));
     if (io::isError(read_ret)) {
       return -1;
     }
@@ -128,7 +128,7 @@ nonstd::expected<core::RecordSet, std::error_code> JsonTreeReader::read(const st
       readAsJsonLines(content, record_set);
     }
     return read_ret;
-  });
+  }(input_stream);
   if (io::isError(read_result))
     return nonstd::make_unexpected(std::make_error_code(std::errc::invalid_argument));
   return record_set;

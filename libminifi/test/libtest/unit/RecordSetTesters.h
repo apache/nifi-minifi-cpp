@@ -62,15 +62,10 @@ bool testRecordWriter(RecordSetWriter& record_set_writer, const RecordSet& recor
 }
 
 inline bool testRecordReader(RecordSetReader& record_set_reader, const std::string_view serialized_record_set, const RecordSet& expected_record_set) {
-  const RecordSetFixture fixture;
-  ProcessSession& process_session = fixture.processSession();
+  io::BufferStream buffer_stream;
+  buffer_stream.write(reinterpret_cast<const uint8_t*>(serialized_record_set.data()), serialized_record_set.size());
 
-  const auto flow_file = process_session.create();
-  process_session.writeBuffer(flow_file, serialized_record_set);
-  process_session.transfer(flow_file, fixture.getRelationship());
-  process_session.commit();
-
-  const auto record_set = record_set_reader.read(flow_file, process_session);
+  const auto record_set = record_set_reader.read(buffer_stream);
   if (!record_set)
     return false;
 
