@@ -227,7 +227,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
   http::HTTPProxy proxy_;
   sitetosite::ClientType client_type_;
   std::vector<sitetosite::PeerStatus> peers_;
-  std::atomic<int64_t> peer_index_;
+  int64_t peer_index_;
   std::mutex peer_mutex_;
   std::shared_ptr<controllers::SSLContextService> ssl_service_;
   bool use_compression_{false};

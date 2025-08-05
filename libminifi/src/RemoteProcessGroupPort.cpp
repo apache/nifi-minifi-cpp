@@ -90,9 +90,9 @@ gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> RemoteProcessGroupP
 std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::getNextProtocol() {
   std::unique_ptr<sitetosite::SiteToSiteClient> next_protocol = nullptr;
   if (!available_protocols_.try_dequeue(next_protocol)) {
+    std::lock_guard<std::mutex> lock(peer_mutex_);
     if (peer_index_ >= 0) {
-      std::lock_guard<std::mutex> lock(peer_mutex_);
-      logger_->log_debug("Creating client from peer {}", peer_index_.load());
+      logger_->log_debug("Creating client from peer {}", peer_index_);
       auto& peer_status = peers_[peer_index_];
       sitetosite::SiteToSiteClientConfiguration config(peer_status.getPortId(), peer_status.getHost(), peer_status.getPort(), local_network_interface_, client_type_);
       peer_index_++;
