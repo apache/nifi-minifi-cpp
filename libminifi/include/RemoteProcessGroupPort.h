@@ -42,33 +42,6 @@
 
 namespace org::apache::nifi::minifi {
 
-/**
- * Count down latch implementation that's used across
- * all threads of the RPG. This is okay since the latch increments
- * and decrements based on its construction. Using RAII we should
- * never have the concern of thread safety.
- */
-class RPGLatch {
- public:
-  RPGLatch(bool increment = true) { // NOLINT
-    static std::atomic<int64_t> latch_count(0);
-    count = &latch_count;
-    if (increment)
-      count++;
-  }
-
-  ~RPGLatch() {
-    count--;
-  }
-
-  int64_t getCount() {
-    return *count;
-  }
-
- private:
-  std::atomic<int64_t> *count;
-};
-
 struct RPG {
   std::string host;
   int port;

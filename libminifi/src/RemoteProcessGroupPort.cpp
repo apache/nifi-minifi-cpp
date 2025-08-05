@@ -183,10 +183,6 @@ void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::Pro
 
 void RemoteProcessGroupPort::notifyStop() {
   transmitting_ = false;
-  RPGLatch count(false);  // we're just a monitor
-  // we use the latch
-  while (count.getCount() > 0) {
-  }
   std::unique_ptr<sitetosite::SiteToSiteClient> next_protocol = nullptr;
   while (available_protocols_.try_dequeue(next_protocol)) {
     // clear all protocols now
