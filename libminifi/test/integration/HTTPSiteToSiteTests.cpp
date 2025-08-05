@@ -20,11 +20,11 @@
 #include <vector>
 #include <iostream>
 #include <memory>
-#include "sitetosite/HTTPProtocol.h"
+#include "sitetosite/HttpSiteToSiteClient.h"
 #include "processors/InvokeHTTP.h"
 #include "unit/TestBase.h"
 #include "FlowController.h"
-#include "RemoteProcessorGroupPort.h"
+#include "RemoteProcessGroupPort.h"
 #include "core/ConfigurableComponentImpl.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "integration/HTTPHandlers.h"
@@ -44,7 +44,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
   }
 
   void testSetup() override {
-    LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
+    LogTestController::getInstance().setTrace<minifi::RemoteProcessGroupPort>();
     LogTestController::getInstance().setTrace<minifi::sitetosite::HttpSiteToSiteClient>();
     LogTestController::getInstance().setTrace<minifi::sitetosite::SiteToSiteClient>();
     LogTestController::getInstance().setTrace<minifi::http::HTTPClient>();
@@ -174,7 +174,7 @@ void run_variance(const std::string& test_file_location, const std::string& url,
     assertStr << "Site2Site delete transaction " << transaction_id;
     REQUIRE(LogTestController::getInstance().contains(assertStr.str()));
   } else {
-    assertStr << "Site2Site transaction " << transaction_id << " peer unknown respond code 254";
+    assertStr << "Site2Site transaction " << transaction_id << " peer unknown response code 254";
     REQUIRE(LogTestController::getInstance().contains(assertStr.str()));
   }
   LogTestController::getInstance().reset();
