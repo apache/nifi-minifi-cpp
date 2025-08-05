@@ -123,7 +123,7 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
 void FetchOPCProcessor::writeFlowFileUsingLazyModeWithTimestamp(const opc::NodeData& nodedata, core::ProcessContext& context, core::ProcessSession& session, size_t& variables_found,
     std::unordered_map<std::string, std::string>& state_map) const {
   auto writeDataToFlowFile = [this, &nodedata, &context, &session, &variables_found]() {
-    OPCData2FlowFile(nodedata, context, session, opc::nodeValue2String(nodedata));
+    OPCData2FlowFile(nodedata, context, session);
     ++variables_found;
   };
 
@@ -156,15 +156,15 @@ void FetchOPCProcessor::writeFlowFileUsingLazyModeWithTimestamp(const opc::NodeD
 
 void FetchOPCProcessor::writeFlowFileUsingLazyModeWithNewValue(const opc::NodeData& nodedata, core::ProcessContext& context, core::ProcessSession& session, size_t& variables_found,
     std::unordered_map<std::string, std::string>& state_map) const {
-  auto writeDataToFlowFile = [this, &nodedata, &context, &session, &variables_found](const std::string& data_to_write) {
-    OPCData2FlowFile(nodedata, context, session, data_to_write);
+  auto writeDataToFlowFile = [this, &nodedata, &context, &session, &variables_found]() {
+    OPCData2FlowFile(nodedata, context, session);
     ++variables_found;
   };
 
   auto full_path_it = nodedata.attributes.find("Full path");
   if (full_path_it == nodedata.attributes.end()) {
     logger_->log_error("Node data does not contain 'Full path' attribute, cannot read state for node");
-    writeDataToFlowFile(opc::nodeValue2String(nodedata));
+    writeDataToFlowFile();
     return;
   }
 
@@ -174,7 +174,7 @@ void FetchOPCProcessor::writeFlowFileUsingLazyModeWithNewValue(const opc::NodeDa
   if (cur_state_value.empty() || cur_state_value != new_state_value) {
     logger_->log_debug("Node {} has new value", full_path_it->second);
     state_map[nodeid] = new_state_value;
-    writeDataToFlowFile(new_state_value);
+    writeDataToFlowFile();
     return;
   }
 
@@ -195,7 +195,7 @@ bool FetchOPCProcessor::nodeFoundCallBack(const UA_ReferenceDescription *ref, co
     } else if (lazy_mode_ == LazyModeOptions::NewValue) {
       writeFlowFileUsingLazyModeWithNewValue(nodedata, context, session, variables_found, state_map);
     } else {
-      OPCData2FlowFile(nodedata, context, session, opc::nodeValue2String(nodedata));
+      OPCData2FlowFile(nodedata, context, session);
       ++variables_found;
     }
   } catch (const std::exception& exception) {
@@ -205,7 +205,7 @@ bool FetchOPCProcessor::nodeFoundCallBack(const UA_ReferenceDescription *ref, co
   return true;
 }
 
-void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opc_node, core::ProcessContext&, core::ProcessSession& session, const std::string& node_value) const {
+void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opc_node, core::ProcessContext&, core::ProcessSession& session) const {
   auto flow_file = session.create();
   if (flow_file == nullptr) {
     logger_->log_error("Failed to create flowfile!");
@@ -216,7 +216,7 @@ void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opc_node, core::Pr
   }
   if (!opc_node.data.empty()) {
     try {
-      session.writeBuffer(flow_file, node_value);
+      session.writeBuffer(flow_file, opc::nodeValue2String(opc_node));
     } catch (const std::exception& e) {
       std::string browsename;
       flow_file->getAttribute("Browsename", browsename);

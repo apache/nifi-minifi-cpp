@@ -145,7 +145,7 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
   bool nodeFoundCallBack(const UA_ReferenceDescription *ref, const std::string& path,
                          core::ProcessContext& context, core::ProcessSession& session,
                          size_t& nodes_found, size_t& variables_found, std::unordered_map<std::string, std::string>& state_map);
-  void OPCData2FlowFile(const opc::NodeData& opc_node, core::ProcessContext& context, core::ProcessSession& session, const std::string& node_value) const;
+  void OPCData2FlowFile(const opc::NodeData& opc_node, core::ProcessContext& context, core::ProcessSession& session) const;
   void writeFlowFileUsingLazyModeWithTimestamp(const opc::NodeData& nodedata, core::ProcessContext& context, core::ProcessSession& session, size_t& variables_found,
     std::unordered_map<std::string, std::string>& state_map) const;
   void writeFlowFileUsingLazyModeWithNewValue(const opc::NodeData& nodedata, core::ProcessContext& context, core::ProcessSession& session, size_t& variables_found,
