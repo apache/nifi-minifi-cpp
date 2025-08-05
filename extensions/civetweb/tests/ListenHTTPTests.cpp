@@ -69,7 +69,7 @@ class ListenHTTPTestsFixture {
     LogTestController::getInstance().setTrace<minifi::processors::ListenHTTP::Handler>();
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<minifi::http::HTTPClient>();
-    LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
+    LogTestController::getInstance().setDebug<minifi::controllers::SSLContextServiceInterface>();
 
     // Create temporary directories
     tmp_dir = testController.createTempDirectory();
@@ -135,7 +135,7 @@ class ListenHTTPTestsFixture {
       config->set(minifi::Configure::nifi_security_client_private_key, (executable_dir / "resources" / client_cert).string());
       config->set(minifi::Configure::nifi_security_client_pass_phrase, "Password12");
     }
-    ssl_context_service = std::make_shared<minifi::controllers::SSLContextServiceImpl>("SSLContextService", config);
+    ssl_context_service = std::make_shared<minifi::controllers::SSLContextService>("SSLContextService", config);
     ssl_context_service->onEnable();
   }
 
@@ -259,7 +259,7 @@ class ListenHTTPTestsFixture {
   core::Processor* listen_http = nullptr;
   core::Processor* log_attribute = nullptr;
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service;
   HttpRequestMethod method = HttpRequestMethod::GET;
   std::map<std::string, std::string> headers;
   std::string payload;

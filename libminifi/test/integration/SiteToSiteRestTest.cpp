@@ -16,17 +16,18 @@
  * limitations under the License.
  */
 #include <cstdio>
-#include <string>
 #include <iostream>
+#include <string>
+
+#include "CivetServer.h"
+#include "FlowController.h"
+#include "RemoteProcessorGroupPort.h"
+#include "controllers/SSLContextService.h"
+#include "core/ConfigurableComponentImpl.h"
+#include "core/logging/Logger.h"
+#include "integration/HTTPIntegrationBase.h"
 #include "processors/InvokeHTTP.h"
 #include "unit/TestBase.h"
-#include "core/logging/Logger.h"
-#include "FlowController.h"
-#include "CivetServer.h"
-#include "RemoteProcessorGroupPort.h"
-#include "core/ConfigurableComponentImpl.h"
-#include "controllers/SSLContextService.h"
-#include "integration/HTTPIntegrationBase.h"
 #include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -69,7 +70,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
     LogTestController::getInstance().setDebug<minifi::http::HTTPClient>();
-    LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
+    LogTestController::getInstance().setTrace<minifi::controllers::SSLContextServiceInterface>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
 

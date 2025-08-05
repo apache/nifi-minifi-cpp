@@ -72,7 +72,7 @@ std::string getCertName(const utils::tls::X509_unique_ptr& cert) {
 #endif
 }  // namespace
 
-void SSLContextServiceImpl::initialize() {
+void SSLContextService::initialize() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (initialized_) {
     return;
@@ -85,7 +85,7 @@ void SSLContextServiceImpl::initialize() {
   initialized_ = true;
 }
 
-bool SSLContextServiceImpl::configure_ssl_context(void* raw_ctx) {
+bool SSLContextService::configure_ssl_context(void* raw_ctx) {
   auto* const ctx = static_cast<SSL_CTX*>(raw_ctx);
   if (!certificate_.empty()) {
     if (isFileTypeP12(certificate_)) {
@@ -141,7 +141,7 @@ bool SSLContextServiceImpl::configure_ssl_context(void* raw_ctx) {
   return true;
 }
 
-bool SSLContextServiceImpl::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
+bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
   auto error = utils::tls::processP12Certificate(certificate_, passphrase_, {
       .cert_cb = [&] (auto cert) -> std::error_code {
         if (SSL_CTX_use_certificate(ctx, cert.get()) != 1) {
@@ -170,7 +170,7 @@ bool SSLContextServiceImpl::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
   return true;
 }
 
-bool SSLContextServiceImpl::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
+bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
   if (SSL_CTX_use_certificate_chain_file(ctx, certificate_.string().c_str()) <= 0) {
     logger_->log_error("Could not load client certificate {}, {}", certificate_.string(), getLatestOpenSSLErrorString());
     return false;
@@ -194,7 +194,7 @@ bool SSLContextServiceImpl::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
 }
 
 #ifdef WIN32
-bool SSLContextServiceImpl::findClientCertificate(ClientCertCallback cb) const {
+bool SSLContextService::findClientCertificate(ClientCertCallback cb) const {
   utils::tls::WindowsCertStore cert_store(utils::tls::WindowsCertStoreLocation{cert_store_location_}, client_cert_store_);
   if (auto error = cert_store.error()) {
     logger_->log_error("Could not open system certificate store {}/{} (client certificates): {}", cert_store_location_, client_cert_store_, error.message());
@@ -216,7 +216,7 @@ bool SSLContextServiceImpl::findClientCertificate(ClientCertCallback cb) const {
 #endif
 
 #ifdef WIN32
-bool SSLContextServiceImpl::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const {
+bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const {
   return findClientCertificate([&] (auto cert, auto priv_key) -> bool {
     auto cert_name = getCertName(cert);
     if (SSL_CTX_use_certificate(ctx, cert.get()) != 1) {
@@ -232,14 +232,14 @@ bool SSLContextServiceImpl::addClientCertificateFromSystemStoreToSSLContext(SSL_
   });
 }
 #else
-bool SSLContextServiceImpl::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* /*ctx*/) const {
+bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* /*ctx*/) const {
   logger_->log_error("Getting client certificate from the system store is only supported on Windows");
   return false;
 }
 #endif  // WIN32
 
 #ifdef WIN32
-bool SSLContextServiceImpl::useClientCertificate(PCCERT_CONTEXT certificate, ClientCertCallback cb) const {
+bool SSLContextService::useClientCertificate(PCCERT_CONTEXT certificate, ClientCertCallback cb) const {
   utils::tls::X509_unique_ptr x509_cert = utils::tls::convertWindowsCertificate(certificate);
   if (!x509_cert) {
     logger_->log_error("Failed to convert system store client certificate to X.509 format");
@@ -283,7 +283,7 @@ bool SSLContextServiceImpl::useClientCertificate(PCCERT_CONTEXT certificate, Cli
 }
 #endif  // WIN32
 
-bool SSLContextServiceImpl::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX* ctx) const {  // NOLINT(readability-convert-member-functions-to-static)
+bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX* ctx) const {  // NOLINT(readability-convert-member-functions-to-static)
 #ifdef WIN32
   X509_STORE* ssl_store = SSL_CTX_get_cert_store(ctx);
   if (!ssl_store) {
@@ -323,7 +323,7 @@ bool SSLContextServiceImpl::addServerCertificatesFromSystemStoreToSSLContext(SSL
 }
 
 #ifdef WIN32
-bool SSLContextServiceImpl::findServerCertificate(ServerCertCallback cb) const {
+bool SSLContextService::findServerCertificate(ServerCertCallback cb) const {
   utils::tls::WindowsCertStore cert_store(utils::tls::WindowsCertStoreLocation{cert_store_location_}, server_cert_store_);
   if (auto error = cert_store.error()) {
     logger_->log_error("Could not open system certificate store {}/{} (server certificates): {}", cert_store_location_, server_cert_store_, error.message());
@@ -343,7 +343,7 @@ bool SSLContextServiceImpl::findServerCertificate(ServerCertCallback cb) const {
 #endif
 
 #ifdef WIN32
-bool SSLContextServiceImpl::useServerCertificate(PCCERT_CONTEXT certificate, ServerCertCallback cb) const {
+bool SSLContextService::useServerCertificate(PCCERT_CONTEXT certificate, ServerCertCallback cb) const {
   utils::tls::X509_unique_ptr x509_cert = utils::tls::convertWindowsCertificate(certificate);
   if (!x509_cert) {
     logger_->log_error("Failed to convert system store server certificate to X.509 format");
@@ -359,7 +359,7 @@ bool SSLContextServiceImpl::useServerCertificate(PCCERT_CONTEXT certificate, Ser
  * be returned and it will be up to the caller to determine if this failure is
  * recoverable.
  */
-std::unique_ptr<SSLContext> SSLContextServiceImpl::createSSLContext() {
+std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
   SSL_library_init();
   const SSL_METHOD *method = nullptr;
 
@@ -380,27 +380,27 @@ std::unique_ptr<SSLContext> SSLContextServiceImpl::createSSLContext() {
   return std::make_unique<SSLContext>(ctx);
 }
 
-const std::filesystem::path &SSLContextServiceImpl::getCertificateFile() const {
+const std::filesystem::path &SSLContextService::getCertificateFile() const {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return certificate_;
 }
 
-const std::string &SSLContextServiceImpl::getPassphrase() const {
+const std::string &SSLContextService::getPassphrase() const {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return passphrase_;
 }
 
-const std::filesystem::path &SSLContextServiceImpl::getPrivateKeyFile() const {
+const std::filesystem::path &SSLContextService::getPrivateKeyFile() const {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return private_key_;
 }
 
-const std::filesystem::path &SSLContextServiceImpl::getCACertificate() const {
+const std::filesystem::path &SSLContextService::getCACertificate() const {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return ca_certificate_;
 }
 
-void SSLContextServiceImpl::onEnable() {
+void SSLContextService::onEnable() {
   std::filesystem::path default_dir;
 
   if (configuration_) {
@@ -505,11 +505,11 @@ void SSLContextServiceImpl::onEnable() {
   verifyCertificateExpiration();
 }
 
-void SSLContextServiceImpl::initializeProperties() {
+void SSLContextService::initializeProperties() {
   setSupportedProperties(Properties);
 }
 
-void SSLContextServiceImpl::verifyCertificateExpiration() {
+void SSLContextService::verifyCertificateExpiration() {
   auto verify = [&] (const std::filesystem::path& cert_file, const utils::tls::X509_unique_ptr& cert) {
     if (auto end_date = utils::tls::getCertificateExpiration(cert)) {
       std::string end_date_str = utils::timeutils::getTimeStr(*end_date);
@@ -594,6 +594,6 @@ void SSLContextServiceImpl::verifyCertificateExpiration() {
 #endif
 }
 
-REGISTER_RESOURCE_IMPLEMENTATION(SSLContextServiceImpl, "SSLContextService", ControllerService);
+REGISTER_RESOURCE_IMPLEMENTATION(SSLContextService, "SSLContextService", ControllerService);
 
 }  // namespace org::apache::nifi::minifi::controllers

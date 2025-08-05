@@ -35,7 +35,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
 #include "sitetosite/SiteToSiteClient.h"
-#include "minifi-cpp/controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
 #include "core/ClassLoader.h"
@@ -248,7 +248,7 @@ class RemoteProcessorGroupPort : public core::ProcessorImpl {
   std::string rest_user_name_;
   std::string rest_password_;
 
-  std::shared_ptr<controllers::SSLContextService> ssl_service;
+  std::shared_ptr<controllers::SSLContextServiceInterface> ssl_service;
 
  private:
   std::shared_ptr<core::logging::Logger> logger_;

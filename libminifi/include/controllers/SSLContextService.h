@@ -25,28 +25,28 @@
 #include <wincrypt.h>
 #endif
 
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-#include <openssl/bio.h>
-#include <openssl/pkcs12.h>
-
 #include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "utils/StringUtils.h"
-#include "utils/tls/ExtendedKeyUsage.h"
-#include "io/validation.h"
-#include "core/controller/ControllerService.h"
-#include "core/logging/LoggerFactory.h"
+#include "openssl/bio.h"
+#include "openssl/err.h"
+#include "openssl/pkcs12.h"
+#include "openssl/ssl.h"
+
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
+#include "core/controller/ControllerService.h"
+#include "core/logging/LoggerFactory.h"
+#include "io/validation.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/Export.h"
+#include "utils/StringUtils.h"
 #include "utils/tls/CertificateUtils.h"
-#include "minifi-cpp/controllers/SSLContextService.h"
+#include "utils/tls/ExtendedKeyUsage.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -72,20 +72,20 @@ class SSLContext {
  * Justification: Abstracts SSL support out of processors into a
  * configurable controller service.
  */
-class SSLContextServiceImpl : public core::controller::ControllerServiceImpl, public SSLContextService {
+class SSLContextService : public core::controller::ControllerServiceImpl, public SSLContextServiceInterface {
  public:
-  explicit SSLContextServiceImpl(std::string_view name, const utils::Identifier &uuid = {})
+  explicit SSLContextService(std::string_view name, const utils::Identifier &uuid = {})
       : ControllerServiceImpl(name, uuid),
         initialized_(false),
-        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
+        logger_(core::logging::LoggerFactory<SSLContextServiceInterface>::getLogger(uuid_)) {
   }
 
-  explicit SSLContextServiceImpl(std::string_view name, const std::shared_ptr<Configure> &configuration)
+  explicit SSLContextService(std::string_view name, const std::shared_ptr<Configure> &configuration)
       : ControllerServiceImpl(name),
         initialized_(false),
-        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
+        logger_(core::logging::LoggerFactory<SSLContextServiceInterface>::getLogger(uuid_)) {
     ControllerServiceImpl::setConfiguration(configuration);
-    SSLContextServiceImpl::initialize();
+    SSLContextService::initialize();
     auto setPropertyAndHandleError = [this](std::string_view property_name, std::string value) {
       auto result = ControllerServiceImpl::setProperty(property_name, std::move(value));
       if (!result) {
@@ -137,6 +137,10 @@ class SSLContextServiceImpl : public core::controller::ControllerServiceImpl, pu
     }
 #endif  // WIN32
   }
+
+  static constexpr auto ApiImplementations = std::to_array<core::ControllerServiceApiDefinition>({
+    SSLContextServiceInterface::ControllerServiceApiDefinition
+  });
 
   void initialize() override;
 

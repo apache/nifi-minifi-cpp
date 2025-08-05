@@ -70,7 +70,8 @@ void AgentDocs::createClassDescription(const std::string& group, const std::stri
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::Properties),
-        .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
+        .api_implementations = Class::ApiImplementations,
+        .supports_dynamic_properties_ = Class::SupportsDynamicProperties
     });
   } else if constexpr (Type == ResourceType::InternalResource) {
     components.other_components_.push_back(ClassDescription{

@@ -16,8 +16,8 @@
  */
 #pragma once
 
-#include "controllers/SSLContextService.h"
 #include "controllers/RecordSetWriter.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/logging/LoggerFactory.h"
@@ -80,7 +80,7 @@ class FetchModbusTcp final : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.")
       .isRequired(false)
-      .withAllowedTypes<minifi::controllers::SSLContextService>()
+      .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto RecordSetWriter = core::PropertyDefinitionBuilder<>::createProperty("Record Set Writer")
       .withDescription("Specifies the Controller Service to use for writing results to a FlowFile. ")

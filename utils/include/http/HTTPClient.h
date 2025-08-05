@@ -29,6 +29,7 @@
 #include <curl/curl.h>
 #endif
 #include <curl/easy.h>
+
 #include <chrono>
 #include <limits>
 #include <map>
@@ -40,11 +41,11 @@
 #include <utility>
 #include <vector>
 
-#include "utils/ByteArrayCallback.h"
-#include "minifi-cpp/controllers/SSLContextService.h"
+#include "core/Connectable.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/Connectable.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
+#include "utils/ByteArrayCallback.h"
 
 namespace org::apache::nifi::minifi::http {
 
@@ -76,7 +77,7 @@ class HTTPClient : public BaseHTTPClient, public core::ConnectableImpl {
   HTTPClient(const HTTPClient&) = delete;
   HTTPClient& operator=(const HTTPClient&) = delete;
 
-  explicit HTTPClient(std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
+  explicit HTTPClient(std::string url, std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service = nullptr);
 
   ~HTTPClient() override;
 
@@ -92,7 +93,7 @@ class HTTPClient : public BaseHTTPClient, public core::ConnectableImpl {
 
   void forceClose();
 
-  void initialize(http::HttpRequestMethod method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) override;
+  void initialize(http::HttpRequestMethod method, std::string url, std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service) override;
 
   void setConnectionTimeout(std::chrono::milliseconds timeout) override;
 
@@ -216,7 +217,7 @@ class HTTPClient : public BaseHTTPClient, public core::ConnectableImpl {
   static CURLcode configure_ssl_context(CURL* /*curl*/, void *ctx, void *param) {
     gsl_Expects(ctx);
     gsl_Expects(param);
-    auto& ssl_context_service = *static_cast<minifi::controllers::SSLContextService*>(param);
+    auto& ssl_context_service = *static_cast<minifi::controllers::SSLContextServiceInterface*>(param);
     if (!ssl_context_service.configure_ssl_context(ctx)) {
       return CURLE_FAILED_INIT;
     }
@@ -229,7 +230,7 @@ class HTTPClient : public BaseHTTPClient, public core::ConnectableImpl {
 
   HTTPReadCallback content_{std::numeric_limits<size_t>::max()};
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service_;
   std::string url_;
   std::optional<http::HttpRequestMethod> method_;
 

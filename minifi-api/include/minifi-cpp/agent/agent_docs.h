@@ -24,6 +24,7 @@
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/DynamicProperty.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
+#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Relationship.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
@@ -43,6 +44,7 @@ struct ClassDescription {
   std::span<const core::DynamicProperty> dynamic_properties_{};
   std::vector<core::Relationship> class_relationships_{};
   std::span<const core::OutputAttributeReference> output_attributes_{};
+  std::span<const core::ControllerServiceApiDefinition> api_implementations{};
   bool supports_dynamic_properties_ = false;
   bool supports_dynamic_relationships_ = false;
   std::string inputRequirement_{};

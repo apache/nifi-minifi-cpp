@@ -22,7 +22,7 @@
 #include <memory>
 #include <vector>
 
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "ElasticsearchCredentialsControllerService.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
@@ -63,7 +63,7 @@ class PostElasticsearch : public core::ProcessorImpl {
       .withDescription("The SSL Context Service used to provide client certificate "
           "information for TLS/SSL (https) connections.")
       .isRequired(false)
-      .withAllowedTypes<minifi::controllers::SSLContextService>()
+      .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto Hosts = core::PropertyDefinitionBuilder<>::createProperty("Hosts")
       .withDescription("A comma-separated list of HTTP hosts that host Elasticsearch query nodes. Currently only supports a single host.")

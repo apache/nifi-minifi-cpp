@@ -40,7 +40,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::http {
 
-HTTPClient::HTTPClient(std::string url, std::shared_ptr<minifi::controllers::SSLContextService>  ssl_context_service)
+HTTPClient::HTTPClient(std::string url, std::shared_ptr<minifi::controllers::SSLContextServiceInterface>  ssl_context_service)
     : core::ConnectableImpl("HTTPClient"),
       ssl_context_service_(std::move(ssl_context_service)),
       url_(std::move(url)) {
@@ -115,7 +115,7 @@ bool isSecure(const std::string& url) {
 }
 }  // namespace
 
-void HTTPClient::initialize(http::HttpRequestMethod method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
+void HTTPClient::initialize(http::HttpRequestMethod method, std::string url, std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service) {
   set_request_method(method);
   if (ssl_context_service) {
     ssl_context_service_ = std::move(ssl_context_service);

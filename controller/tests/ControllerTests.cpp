@@ -204,7 +204,7 @@ class TestControllerSocketReporter : public c2::ControllerSocketReporter {
 
 class TestControllerServiceProvider : public core::controller::ControllerServiceProviderImpl {
  public:
-  explicit TestControllerServiceProvider(std::shared_ptr<controllers::SSLContextService> ssl_context_service)
+  explicit TestControllerServiceProvider(std::shared_ptr<controllers::SSLContextServiceInterface> ssl_context_service)
     : core::controller::ControllerServiceProviderImpl("TestControllerServiceProvider"),
       ssl_context_service_(std::move(ssl_context_service)) {
   }
@@ -228,7 +228,7 @@ class TestControllerServiceProvider : public core::controller::ControllerService
 
  private:
   bool is_ssl_{};
-  std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
+  std::shared_ptr<controllers::SSLContextServiceInterface> ssl_context_service_;
 };
 
 class ControllerTestFixture {
@@ -250,7 +250,7 @@ class ControllerTestFixture {
     configuration_->set(minifi::Configure::nifi_security_client_pass_phrase, "abcdefgh");
     configuration_->set(minifi::Configure::nifi_security_client_ca_certificate, (minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "root-ca.pem").string());
     configuration_->set(minifi::Configure::controller_ssl_context_service, "SSLContextService");
-    ssl_context_service_ = std::make_shared<controllers::SSLContextServiceImpl>("SSLContextService", configuration_);
+    ssl_context_service_ = std::make_shared<controllers::SSLContextService>("SSLContextService", configuration_);
     ssl_context_service_->onEnable();
     controller_service_provider_ = std::make_unique<TestControllerServiceProvider>(ssl_context_service_);
     controller_socket_data_.host = "localhost";
@@ -283,7 +283,7 @@ class ControllerTestFixture {
   std::shared_ptr<TestStateController> controller_;
   std::unique_ptr<TestUpdateSink> update_sink_;
   std::unique_ptr<minifi::c2::ControllerSocketProtocol> controller_socket_protocol_;
-  std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
+  std::shared_ptr<controllers::SSLContextServiceInterface> ssl_context_service_;
   std::unique_ptr<TestControllerServiceProvider> controller_service_provider_;
   minifi::utils::net::SocketData controller_socket_data_;
 };

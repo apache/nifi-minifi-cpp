@@ -21,22 +21,21 @@
 #include <ifaddrs.h>
 #endif
 
-#include <string>
-#include <utility>
-#include <tuple>
 #include <memory>
-
-#include "asio/ssl.hpp"
-#include "asio/ip/tcp.hpp"
+#include <string>
+#include <tuple>
+#include <utility>
 
 #include "AsioCoro.h"
+#include "asio/ip/tcp.hpp"
+#include "asio/ssl.hpp"
+#include "core/logging/LoggerFactory.h"
+#include "io/BaseStream.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
+#include "utils/Deleters.h"
 #include "utils/Hash.h"
 #include "utils/StringUtils.h"  // for string <=> on libc++
-#include "minifi-cpp/controllers/SSLContextService.h"
-#include "io/BaseStream.h"
-#include "utils/Deleters.h"
 #include "utils/net/Socket.h"
-#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 
@@ -73,12 +72,12 @@ template<>
 asio::awaitable<std::tuple<std::error_code>> handshake(SslSocket& socket, asio::steady_timer::duration);
 
 
-asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_context_service, asio::ssl::context::method ssl_context_method = asio::ssl::context::tls_client);
+asio::ssl::context getSslContext(const controllers::SSLContextServiceInterface& ssl_context_service, asio::ssl::context::method ssl_context_method = asio::ssl::context::tls_client);
 
 struct SocketData {
   std::string host = "localhost";
   int port = -1;
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service;
 };
 
 class AsioSocketConnection : public io::BaseStreamImpl {

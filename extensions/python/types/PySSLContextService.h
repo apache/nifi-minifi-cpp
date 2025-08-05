@@ -18,14 +18,14 @@
 
 #include <memory>
 
-#include "controllers/SSLContextService.h"
 #include "../PythonBindings.h"
+#include "controllers/SSLContextServiceInterface.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
 struct PySSLContextService {
   PySSLContextService() {}
-  using HeldType = std::weak_ptr<controllers::SSLContextService>;
+  using HeldType = std::weak_ptr<controllers::SSLContextServiceInterface>;
   static constexpr const char* HeldTypeName = "PySSLContextService::HeldType";
 
   PyObject_HEAD

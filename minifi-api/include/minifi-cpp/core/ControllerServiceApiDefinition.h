@@ -16,27 +16,14 @@
  */
 #pragma once
 
-
-#include "core/controller/ControllerService.h"
-
-#include "minifi-cpp/core/FlowFile.h"
-#include "minifi-cpp/core/ProcessSession.h"
-#include "minifi-cpp/core/Record.h"
-#include "utils/Enum.h"
-#include "utils/ProcessorConfigUtils.h"
-
+#include <string_view>
 
 namespace org::apache::nifi::minifi::core {
 
-class RecordSetReader : public virtual controller::ControllerService {
- public:
-  static constexpr auto ControllerServiceApiDefinition = core::ControllerServiceApiDefinition{
-    .artifact = "minifi-system",
-    .group = "org.apache.nifi.minifi",
-    .type = "org.apache.nifi.minifi.core.RecordSetReader",
-  };
-
-  virtual nonstd::expected<RecordSet, std::error_code> read(const std::shared_ptr<FlowFile>& flow_file, ProcessSession& session) = 0;
+struct ControllerServiceApiDefinition {
+  std::string_view artifact;
+  std::string_view group;
+  std::string_view type;
 };
 
 }  // namespace org::apache::nifi::minifi::core

@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/controller/ControllerService.h"
 
 namespace org::apache::nifi::minifi::controllers {
@@ -33,8 +34,14 @@ namespace org::apache::nifi::minifi::controllers {
  * Justification: Abstracts SSL support out of processors into a
  * configurable controller service.
  */
-class SSLContextService : public virtual core::controller::ControllerService {
+class SSLContextServiceInterface : public virtual core::controller::ControllerService {
  public:
+  static constexpr auto ControllerServiceApiDefinition = core::ControllerServiceApiDefinition{
+    .artifact = "minifi-system",
+    .group = "org.apache.nifi.minifi",
+    .type = "org.apache.nifi.minifi.controllers.SSLContextServiceInterface",
+  };
+
   virtual const std::filesystem::path& getCertificateFile() const = 0;
   virtual const std::string& getPassphrase() const = 0;
   virtual const std::filesystem::path& getPrivateKeyFile() const = 0;
@@ -46,5 +53,6 @@ class SSLContextService : public virtual core::controller::ControllerService {
   virtual void setMaxTlsVersion(long max_version) = 0;  // NOLINT(runtime/int) long due to SSL lib API
   virtual bool configure_ssl_context(void* ssl_ctx) = 0;
 };
+
 
 }  // namespace org::apache::nifi::minifi::controllers

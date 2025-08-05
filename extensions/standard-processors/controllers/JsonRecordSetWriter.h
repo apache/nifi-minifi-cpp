@@ -83,6 +83,9 @@ class JsonRecordSetWriter final : public core::RecordSetWriterImpl {
   });
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr auto ApiImplementations = std::to_array<core::ControllerServiceApiDefinition>({
+    RecordSetWriter::ControllerServiceApiDefinition
+  });
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void write(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) override;

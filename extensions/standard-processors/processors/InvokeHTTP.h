@@ -34,7 +34,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/Id.h"
 #include "utils/ResourceQueue.h"
@@ -176,7 +176,7 @@ class InvokeHTTP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("SSL Context Service")
       .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
       .isRequired(false)
-      .withAllowedTypes<controllers::SSLContextService>()
+      .withAllowedTypes<controllers::SSLContextServiceInterface>()
       .withExclusiveOfProperties({{{"Remote URL", "^http:.*$"}}})
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
@@ -359,7 +359,7 @@ class InvokeHTTP : public core::ProcessorImpl {
   std::optional<uint64_t> maximum_upload_speed_ = std::nullopt;
   std::optional<uint64_t> maximum_download_speed_ = std::nullopt;
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service_;
 
   std::chrono::milliseconds connect_timeout_{std::chrono::seconds(30)};
   std::chrono::milliseconds read_timeout_{std::chrono::seconds(30)};

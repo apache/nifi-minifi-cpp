@@ -39,8 +39,8 @@ void PostElasticsearch::initialize() {
 
 auto PostElasticsearch::getSSLContextService(core::ProcessContext& context) const {
   if (auto ssl_context = context.getProperty(PostElasticsearch::SSLContext))
-    return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*ssl_context, getUUID()));
-  return std::shared_ptr<minifi::controllers::SSLContextService>{};
+    return std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(context.getControllerService(*ssl_context, getUUID()));
+  return std::shared_ptr<minifi::controllers::SSLContextServiceInterface>{};
 }
 
 auto PostElasticsearch::getCredentialsService(core::ProcessContext& context) const {

@@ -21,7 +21,7 @@
 #include "http/BaseHTTPClient.h"
 #include "utils/Hash.h"
 #include "core/logging/Utils.h"
-#include "controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
@@ -103,7 +103,7 @@ void AlertSink::initialize(core::controller::ControllerServiceProvider* controll
       return;
     }
     if (auto service = controller->getControllerService(config_.ssl_service_name.value())) {
-      if (auto ssl_service = std::dynamic_pointer_cast<controllers::SSLContextService>(service)) {
+      if (auto ssl_service = std::dynamic_pointer_cast<controllers::SSLContextServiceInterface>(service)) {
         services->ssl_service = ssl_service;
       } else {
         logger_->log_error("Service '{}' is not an SSLContextService", config_.ssl_service_name.value());

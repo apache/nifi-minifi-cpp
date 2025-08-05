@@ -76,7 +76,7 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
             utils::string::replaceAll(typeClazz, "::", ".");
             allowed_type.children.push_back({.name = "type", .value = typeClazz});
             allowed_type.children.push_back({.name = "group", .value = GROUP_STR});
-            allowed_type.children.push_back({.name = "artifact", .value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(class_name).value_or("")});
+            allowed_type.children.push_back({.name = "artifact", .value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(class_name).value_or("minifi-system")});
           }
           child.children.push_back(allowed_type);
         }
@@ -143,6 +143,17 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
     desc.children.push_back({.name = "supportsDynamicRelationships", .value = group.supports_dynamic_relationships_});
     desc.children.push_back({.name = "supportsDynamicProperties", .value = group.supports_dynamic_properties_});
     desc.children.push_back({.name = "type", .value = group.full_name_});
+    if (!group.api_implementations.empty()) {
+      SerializedResponseNode provided_api_impls{.name = "providedApiImplementations", .array = true};
+      for (const auto& api_implementation : group.api_implementations) {
+        SerializedResponseNode child{.name = std::string(api_implementation.type)};
+        child.children.push_back({.name = "artifact", .value = std::string(api_implementation.artifact)});
+        child.children.push_back({.name = "group", .value = std::string(api_implementation.group)});
+        child.children.push_back({.name = "type", .value = std::string(api_implementation.type)});
+        provided_api_impls.children.push_back(child);
+      }
+      desc.children.push_back(provided_api_impls);
+    }
 
     type.children.push_back(desc);
   }

@@ -23,7 +23,7 @@
 #include <memory>
 #include <regex>
 
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/OutputAttributeDefinition.h"
@@ -79,7 +79,7 @@ class ListenSyslog : public NetworkListenerProcessor {
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection. "
           "This Property is only considered if the <Protocol> Property has a value of \"TCP\".")
-      .withAllowedTypes<minifi::controllers::SSLContextService>()
+      .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto ClientAuth = core::PropertyDefinitionBuilder<magic_enum::enum_count<utils::net::ClientAuthOption>()>::createProperty("Client Auth")
       .withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")

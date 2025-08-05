@@ -21,7 +21,7 @@
 #include <string>
 #include <utility>
 
-#include "minifi-cpp/controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "Peer.h"
 #include "core/Property.h"
 #include "properties/Configure.h"
@@ -341,11 +341,11 @@ class SiteToSiteClientConfiguration {
     return peer_;
   }
 
-  void setSecurityContext(const std::shared_ptr<controllers::SSLContextService> &ssl_service) {
+  void setSecurityContext(const std::shared_ptr<controllers::SSLContextServiceInterface> &ssl_service) {
     ssl_service_ = ssl_service;
   }
 
-  const std::shared_ptr<controllers::SSLContextService> &getSecurityContext() const {
+  const std::shared_ptr<controllers::SSLContextServiceInterface> &getSecurityContext() const {
     return ssl_service_;
   }
 
@@ -382,7 +382,7 @@ class SiteToSiteClientConfiguration {
 
   // secore comms
 
-  std::shared_ptr<controllers::SSLContextService> ssl_service_;
+  std::shared_ptr<controllers::SSLContextServiceInterface> ssl_service_;
 
   http::HTTPProxy proxy_;
 };

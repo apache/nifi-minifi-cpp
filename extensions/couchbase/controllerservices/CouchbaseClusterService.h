@@ -31,7 +31,7 @@
 #include "couchbase/cluster.hxx"
 #include "core/ProcessContext.h"
 #include "core/logging/LoggerFactory.h"
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 
 namespace org::apache::nifi::minifi::couchbase {
 
@@ -70,7 +70,7 @@ enum class CouchbaseErrorType {
 
 class CouchbaseClient {
  public:
-  CouchbaseClient(std::string connection_string, std::string username, std::string password, controllers::SSLContextService* ssl_context_service,
+  CouchbaseClient(std::string connection_string, std::string username, std::string password, controllers::SSLContextServiceInterface* ssl_context_service,
     const std::shared_ptr<core::logging::Logger>& logger);
 
   ~CouchbaseClient() {
@@ -89,7 +89,7 @@ class CouchbaseClient {
   void close();
 
  private:
-  ::couchbase::cluster_options buildClusterOptions(std::string username, std::string password, minifi::controllers::SSLContextService* ssl_context_service);
+  ::couchbase::cluster_options buildClusterOptions(std::string username, std::string password, minifi::controllers::SSLContextServiceInterface* ssl_context_service);
   nonstd::expected<::couchbase::collection, CouchbaseErrorType> getCollection(const CouchbaseCollection& collection);
 
   std::string connection_string_;

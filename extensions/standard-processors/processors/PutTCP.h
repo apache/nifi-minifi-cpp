@@ -17,28 +17,28 @@
 
 #pragma once
 
+
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
-#include "io/InputStream.h"
-#include "core/Processor.h"
-#include "utils/Export.h"
-#include "controllers/SSLContextService.h"
+#include "asio/io_context.hpp"
+#include "asio/ssl/context.hpp"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/Core.h"
+#include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
+#include "io/InputStream.h"
+#include "minifi-cpp/core/PropertyValidator.h"
+#include "utils/Export.h"
 #include "utils/StringUtils.h"  // for string <=> on libc++
 #include "utils/net/AsioSocketUtils.h"
 #include "utils/net/ConnectionHandler.h"
-
-#include <asio/io_context.hpp>
-#include <asio/ssl/context.hpp>
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -97,7 +97,7 @@ class PutTCP final : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.")
       .isRequired(false)
-      .withAllowedTypes<minifi::controllers::SSLContextService>()
+      .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto MaxSizeOfSocketSendBuffer = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Socket Send Buffer")
       .withDescription("The maximum size of the socket send buffer that should be used. This is a suggestion to the Operating System to indicate how big the socket buffer should be.")

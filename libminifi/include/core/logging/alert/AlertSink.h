@@ -34,7 +34,7 @@
 #include "spdlog/sinks/base_sink.h"
 
 namespace org::apache::nifi::minifi::controllers {
-class SSLContextService;
+class SSLContextServiceInterface;
 }  // namespace org::apache::nifi::minifi::controllers
 
 namespace org::apache::nifi::minifi::core::logging {
@@ -65,7 +65,7 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
   };
 
   struct Services {
-    std::shared_ptr<controllers::SSLContextService> ssl_service;
+    std::shared_ptr<controllers::SSLContextServiceInterface> ssl_service;
     std::shared_ptr<AgentIdentificationProvider> agent_id;
   };
 

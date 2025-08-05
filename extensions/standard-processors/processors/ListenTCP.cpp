@@ -16,9 +16,9 @@
  */
 #include "ListenTCP.h"
 
-#include "core/Resource.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/ProcessContext.h"
-#include "controllers/SSLContextService.h"
+#include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {

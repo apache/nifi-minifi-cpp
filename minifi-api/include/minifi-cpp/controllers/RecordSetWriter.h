@@ -18,6 +18,7 @@
 
 #include "minifi-cpp/core/controller/ControllerService.h"
 
+#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/FlowFile.h"
 #include "minifi-cpp/core/ProcessSession.h"
 #include "minifi-cpp/core/Record.h"
@@ -26,6 +27,12 @@ namespace org::apache::nifi::minifi::core {
 
 class RecordSetWriter : public virtual controller::ControllerService {
  public:
+  static constexpr auto ControllerServiceApiDefinition = core::ControllerServiceApiDefinition{
+    .artifact = "minifi-system",
+    .group = "org.apache.nifi.minifi",
+    .type = "org.apache.nifi.minifi.core.RecordSetWriter",
+  };
+
   virtual void write(const RecordSet& record_set, const std::shared_ptr<FlowFile>& flow_file, ProcessSession& session) = 0;
 };
 

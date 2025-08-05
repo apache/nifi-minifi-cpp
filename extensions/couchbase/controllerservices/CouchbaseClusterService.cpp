@@ -50,12 +50,12 @@ CouchbaseErrorType getErrorType(const std::error_code& error_code) {
 
 }  // namespace
 
-CouchbaseClient::CouchbaseClient(std::string connection_string, std::string username, std::string password, minifi::controllers::SSLContextService* ssl_context_service,
+CouchbaseClient::CouchbaseClient(std::string connection_string, std::string username, std::string password, minifi::controllers::SSLContextServiceInterface* ssl_context_service,
   const std::shared_ptr<core::logging::Logger>& logger)
     : connection_string_(std::move(connection_string)), logger_(logger), cluster_options_(buildClusterOptions(std::move(username), std::move(password), ssl_context_service)) {
 }
 
-::couchbase::cluster_options CouchbaseClient::buildClusterOptions(std::string username, std::string password, minifi::controllers::SSLContextService* ssl_context_service) {
+::couchbase::cluster_options CouchbaseClient::buildClusterOptions(std::string username, std::string password, minifi::controllers::SSLContextServiceInterface* ssl_context_service) {
   if (username.empty() && (!ssl_context_service || (ssl_context_service && ssl_context_service->getCertificateFile().empty()))) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Neither username and password nor SSLContextService is provided for Couchbase authentication");
   }
@@ -228,9 +228,9 @@ void CouchbaseClusterService::onEnable() {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing username and password or SSLContextService as a linked service");
   }
 
-  minifi::controllers::SSLContextService* ssl_context_service_ptr = nullptr;
+  minifi::controllers::SSLContextServiceInterface* ssl_context_service_ptr = nullptr;
   if (!linked_services_.empty()) {
-    auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(linked_services_[0]);
+    auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(linked_services_[0]);
     if (!ssl_context_service) {
       throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Linked service is not an SSLContextService");
     }

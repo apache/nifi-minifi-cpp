@@ -18,21 +18,22 @@
 #include "c2/ControllerSocketProtocol.h"
 
 #include <fstream>
+#include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
-#include <string>
-#include <sstream>
 
-#include "utils/gsl.h"
-#include "utils/StringUtils.h"
-#include "c2/C2Payload.h"
-#include "properties/Configuration.h"
-#include "io/AsioStream.h"
-#include "asio/ssl/stream.hpp"
 #include "asio/detached.hpp"
-#include "utils/ConfigurationUtils.h"
-#include "utils/net/AsioSocketUtils.h"
+#include "asio/ssl/stream.hpp"
+#include "c2/C2Payload.h"
 #include "c2/C2Utils.h"
+#include "controllers/SSLContextService.h"
+#include "io/AsioStream.h"
+#include "properties/Configuration.h"
+#include "utils/ConfigurationUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/gsl.h"
+#include "utils/net/AsioSocketUtils.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -110,7 +111,7 @@ asio::awaitable<void> ControllerSocketProtocol::startAccept() {
   }
 }
 
-asio::awaitable<void> ControllerSocketProtocol::handshakeAndHandleCommand(asio::ip::tcp::socket&& socket, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
+asio::awaitable<void> ControllerSocketProtocol::handshakeAndHandleCommand(asio::ip::tcp::socket&& socket, std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service) {
   asio::ssl::context ssl_context = utils::net::getSslContext(*ssl_context_service, asio::ssl::context::tls_server);
   ssl_context.set_options(utils::net::MINIFI_SSL_OPTIONS);
   asio::ssl::stream<asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
@@ -125,7 +126,7 @@ asio::awaitable<void> ControllerSocketProtocol::handshakeAndHandleCommand(asio::
   co_return co_await handleCommand(std::move(stream));
 }
 
-asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
+asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service) {
   while (true) {  // NOLINT(clang-analyzer-core.NullDereference) suppressing asio library linter warning
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
     if (accept_error) {
@@ -143,18 +144,18 @@ asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<m
 
 void ControllerSocketProtocol::initialize() {
   std::unique_lock<std::mutex> lock(initialization_mutex_);
-  std::shared_ptr<minifi::controllers::SSLContextService> secure_context;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> secure_context;
   std::string context_name;
   if (configuration_->get(Configure::controller_ssl_context_service, context_name)) {
     std::shared_ptr<core::controller::ControllerService> service = controller_.getControllerService(context_name);
     if (nullptr != service) {
-      secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
+      secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(service);
     }
   }
   if (nullptr == secure_context) {
     std::string secure_str;
     if (configuration_->get(Configure::nifi_remote_input_secure, secure_str) && org::apache::nifi::minifi::utils::string::toBool(secure_str).value_or(false)) {
-      secure_context = std::make_shared<minifi::controllers::SSLContextServiceImpl>("ControllerSocketProtocolSSL", configuration_);
+      secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration_);
       secure_context->onEnable();
     }
   }

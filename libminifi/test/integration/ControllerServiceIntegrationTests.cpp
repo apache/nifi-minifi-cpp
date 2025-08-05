@@ -21,23 +21,23 @@
 #include <chrono>
 #include <memory>
 #include <string>
-#include <utility>
 #include <thread>
+#include <utility>
 #include <vector>
 
-#include "core/controller/ControllerServiceNodeMap.h"
-#include "core/controller/StandardControllerServiceProvider.h"
+#include "FlowController.h"
 #include "controllers/SSLContextService.h"
 #include "core/ProcessGroup.h"
 #include "core/Resource.h"
+#include "core/controller/ControllerServiceNodeMap.h"
+#include "core/controller/StandardControllerServiceProvider.h"
 #include "core/yaml/YamlConfiguration.h"
-#include "FlowController.h"
+#include "integration/IntegrationBase.h"
 #include "properties/Configure.h"
+#include "unit/Catch.h"
 #include "unit/MockClasses.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "integration/IntegrationBase.h"
 #include "unit/TestUtils.h"
-#include "unit/Catch.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -106,7 +106,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
   core::controller::ControllerServiceNode* notexistNode = pg->findControllerService("MockItLikeItsWrong");
   REQUIRE(notexistNode == nullptr);
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_client;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_client;
   {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->load();
@@ -115,7 +115,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
     REQUIRE(ssl_client_node != nullptr);
     ssl_client_node->enable();
     REQUIRE(ssl_client_node->getControllerServiceImplementation() != nullptr);
-    ssl_client = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_node->getControllerServiceImplementation());
+    ssl_client = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(ssl_client_node->getControllerServiceImplementation());
   }
   REQUIRE(!ssl_client->getCACertificate().empty());
   // now let's disable one of the controller services.

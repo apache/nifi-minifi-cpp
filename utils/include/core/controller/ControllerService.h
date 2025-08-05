@@ -27,6 +27,7 @@
 #include "core/ConfigurableComponentImpl.h"
 #include "core/Connectable.h"
 #include "minifi-cpp/core/controller/ControllerService.h"
+#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 
 #define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES \
   bool supportsDynamicProperties() const override { return SupportsDynamicProperties; }
@@ -104,6 +105,9 @@ class ControllerServiceImpl : public ConfigurableComponentImpl, public Connectab
   void setLinkedControllerServices(const std::vector<std::shared_ptr<controller::ControllerService>> &services) override {
     linked_services_ = services;
   }
+
+
+  static constexpr auto ApiImplementations = std::array<ControllerServiceApiDefinition, 0>{};
 
  protected:
   std::vector<std::shared_ptr<controller::ControllerService> > linked_services_;

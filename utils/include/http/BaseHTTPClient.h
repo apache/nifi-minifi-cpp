@@ -22,11 +22,11 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "utils/ByteArrayCallback.h"
-#include "minifi-cpp/controllers/SSLContextService.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::http {
@@ -191,7 +191,7 @@ class BaseHTTPClient {
 
   virtual void setVerbose(bool use_stderr) = 0;
 
-  virtual void initialize(HttpRequestMethod method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) = 0;
+  virtual void initialize(HttpRequestMethod method, std::string url, std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service) = 0;
 
   virtual void setConnectionTimeout(std::chrono::milliseconds timeout) = 0;
 
