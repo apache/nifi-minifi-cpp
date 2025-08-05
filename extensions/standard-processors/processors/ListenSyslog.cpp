@@ -17,8 +17,7 @@
 
 #include "ListenSyslog.h"
 
-
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"

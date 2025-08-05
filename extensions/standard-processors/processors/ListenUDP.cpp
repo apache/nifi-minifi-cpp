@@ -16,8 +16,8 @@
  */
 #include "ListenUDP.h"
 
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/Resource.h"
-#include "controllers/SSLContextService.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {

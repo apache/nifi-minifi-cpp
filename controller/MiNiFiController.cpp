@@ -15,23 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <filesystem>
+#include <vector>
 
-#include "MainHelper.h"
-#include "properties/Configure.h"
 #include "Controller.h"
+#include "Exception.h"
+#include "MainHelper.h"
+#include "agent/agent_version.h"
+#include "argparse/argparse.hpp"
 #include "c2/ControllerSocketProtocol.h"
+#include "controllers/SSLContextService.h"
+#include "core/ConfigurationFactory.h"
 #include "core/controller/ControllerService.h"
 #include "core/extension/ExtensionManager.h"
-#include "core/ConfigurationFactory.h"
-#include "Exception.h"
-#include "argparse/argparse.hpp"
+#include "properties/Configure.h"
 #include "range/v3/algorithm/contains.hpp"
-#include "agent/agent_version.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -61,14 +62,14 @@ std::shared_ptr<minifi::core::controller::ControllerService> getControllerServic
   return controller->getControllerServiceImplementation();
 }
 
-std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(const std::shared_ptr<minifi::Configure>& configuration) {
-  std::shared_ptr<minifi::controllers::SSLContextService> secure_context;
+std::shared_ptr<minifi::controllers::SSLContextServiceInterface> getSSLContextService(const std::shared_ptr<minifi::Configure>& configuration) {
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> secure_context;
   std::string context_name;
   // if the user wishes to use a controller service we need to instantiate the flow
   if (configuration->get(minifi::Configure::controller_ssl_context_service, context_name) && !context_name.empty()) {
     const auto service = getControllerService(configuration, context_name);
     if (nullptr != service) {
-      secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
+      secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(service);
     }
     if (secure_context == nullptr) {
       throw minifi::Exception(minifi::GENERAL_EXCEPTION, "SSL Context was set, but the context name '" + context_name + "' could not be found");
@@ -78,7 +79,7 @@ std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(con
   if (nullptr == secure_context) {
     std::string secureStr;
     if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && minifi::utils::string::toBool(secureStr).value_or(false)) {
-      secure_context = std::make_shared<minifi::controllers::SSLContextServiceImpl>("ControllerSocketProtocolSSL", configuration);
+      secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
       secure_context->onEnable();
     }
   } else {

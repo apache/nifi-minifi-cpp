@@ -16,10 +16,10 @@
  */
 
 #include "utils/net/AsioSocketUtils.h"
-#include "minifi-cpp/controllers/SSLContextService.h"
-#include "io/AsioStream.h"
 
 #include "asio/connect.hpp"
+#include "io/AsioStream.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 
@@ -33,7 +33,7 @@ asio::awaitable<std::tuple<std::error_code>> handshake(SslSocket& socket, asio::
   co_return co_await asyncOperationWithTimeout(socket.async_handshake(HandshakeType::client, use_nothrow_awaitable), timeout_duration);  // NOLINT
 }
 
-asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_context_service, asio::ssl::context::method ssl_context_method) {
+asio::ssl::context getSslContext(const controllers::SSLContextServiceInterface& ssl_context_service, asio::ssl::context::method ssl_context_method) {
   asio::ssl::context ssl_context(ssl_context_method);
   ssl_context.set_options(MINIFI_SSL_OPTIONS);
   if (const auto& ca_cert = ssl_context_service.getCACertificate(); !ca_cert.empty())

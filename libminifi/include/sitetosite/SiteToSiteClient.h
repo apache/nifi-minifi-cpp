@@ -62,7 +62,7 @@ class SiteToSiteClient : public core::ConnectableImpl {
 
   ~SiteToSiteClient() override = default;
 
-  void setSSLContextService(const std::shared_ptr<minifi::controllers::SSLContextService> &context_service) {
+  void setSSLContextService(const std::shared_ptr<minifi::controllers::SSLContextServiceInterface> &context_service) {
     ssl_context_service_ = context_service;
   }
 
@@ -255,7 +255,7 @@ class SiteToSiteClient : public core::ConnectableImpl {
   int _currentCodecVersionIndex{0};
   uint32_t _currentCodecVersion{_supportedCodecVersion[_currentCodecVersionIndex]};
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service_;
 
  private:
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<SiteToSiteClient>::getLogger()};

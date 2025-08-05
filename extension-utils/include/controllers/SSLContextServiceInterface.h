@@ -16,4 +16,4 @@
  */
 #pragma once
 
-#include "minifi-cpp/controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"

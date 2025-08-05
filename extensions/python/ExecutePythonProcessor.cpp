@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "PythonConfigState.h"
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/Resource.h"
 #include "range/v3/algorithm/find_if.hpp"
 #include "range/v3/range/conversion.hpp"
@@ -205,7 +205,7 @@ void ExecutePythonProcessor::addProperty(const std::string &name, const std::str
     builder.withValidator(translateCodeToPropertyValidator(static_cast<PropertyValidatorCode>(*property_type_code)));
   }
   if (controller_service_type_name && *controller_service_type_name == "SSLContextService") {
-    builder.withAllowedTypes<controllers::SSLContextService>();
+    builder.withAllowedTypes<controllers::SSLContextServiceInterface>();
   }
   const auto property_definition = builder.build();
 

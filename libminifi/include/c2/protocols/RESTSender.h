@@ -23,7 +23,7 @@
 
 #include "c2/C2Protocol.h"
 #include "c2/protocols/RESTProtocol.h"
-#include "minifi-cpp/controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "http/HTTPClient.h"
 #include "utils/Enum.h"
 
@@ -70,7 +70,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
    */
   void setSecurityContext(http::HTTPClient &client, http::HttpRequestMethod type, const std::string &url);
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service_;
 
   std::string rest_uri_;
   std::string ack_uri_;

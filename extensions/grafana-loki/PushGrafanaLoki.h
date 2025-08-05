@@ -21,7 +21,7 @@
 #include <vector>
 #include <map>
 
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -79,7 +79,7 @@ class PushGrafanaLoki : public core::ProcessorImpl {
     .build();
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
     .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
-    .withAllowedTypes<minifi::controllers::SSLContextService>()
+    .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
     .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(std::to_array<core::PropertyReference>({
       Url,
@@ -135,7 +135,7 @@ class PushGrafanaLoki : public core::ProcessorImpl {
 
   static std::map<std::string, std::string> buildStreamLabelMap(core::ProcessContext& context);
 
-  std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(core::ProcessContext& context) const;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> getSSLContextService(core::ProcessContext& context) const;
   void processBatch(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session);
   virtual nonstd::expected<void, std::string> submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) = 0;
   void initializeHttpClient(core::ProcessContext& context);

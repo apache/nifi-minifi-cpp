@@ -20,15 +20,15 @@
 #include <string>
 #include <utility>
 
-#include "controllers/SSLContextService.h"
 #include "NetworkListenerProcessor.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/Core.h"
-#include "core/logging/LoggerFactory.h"
 #include "core/OutputAttributeDefinition.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
+#include "core/logging/LoggerFactory.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/Enum.h"
 #include "utils/net/Ssl.h"
 
@@ -63,7 +63,7 @@ class ListenTCP : public NetworkListenerProcessor {
       .build();
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection.")
-      .withAllowedTypes<minifi::controllers::SSLContextService>()
+      .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto ClientAuth = core::PropertyDefinitionBuilder<magic_enum::enum_count<utils::net::ClientAuthOption>()>::createProperty("Client Auth")
       .withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")

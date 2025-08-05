@@ -20,24 +20,22 @@
 
 #include "RemoteProcessorGroupPort.h"
 
-#include <memory>
+#include <cinttypes>
 #include <iostream>
-#include <vector>
+#include <memory>
 #include <string>
 #include <utility>
-#include <cinttypes>
+#include <vector>
 
-#include "sitetosite/Peer.h"
 #include "Exception.h"
-#include "sitetosite/SiteToSiteFactory.h"
-
-#include "rapidjson/document.h"
-
-#include "core/logging/Logger.h"
+#include "controllers/SSLContextService.h"
 #include "core/ProcessContext.h"
 #include "core/Processor.h"
+#include "core/logging/Logger.h"
 #include "http/BaseHTTPClient.h"
-#include "controllers/SSLContextService.h"
+#include "rapidjson/document.h"
+#include "sitetosite/Peer.h"
+#include "sitetosite/SiteToSiteFactory.h"
 #include "utils/net/DNS.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
@@ -122,11 +120,11 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
 
   std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(*context_name, getUUID());
   if (nullptr != service) {
-    ssl_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
+    ssl_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(service);
   } else {
     std::string secureStr;
     if (configure_->get(Configure::nifi_remote_input_secure, secureStr) && utils::string::toBool(secureStr).value_or(false)) {
-      ssl_service = std::make_shared<minifi::controllers::SSLContextServiceImpl>(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
+      ssl_service = std::make_shared<minifi::controllers::SSLContextService>(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
       ssl_service->onEnable();
     }
   }

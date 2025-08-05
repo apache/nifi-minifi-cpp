@@ -126,7 +126,7 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
   if (auto controller_service = context->getControllerService(controller_service_name, context->getProcessor().getUUID())) {
     std::string controller_service_type_str = controller_service_type;
     if (controller_service_type_str == "SSLContextService") {
-      auto ssl_ctx_service = std::dynamic_pointer_cast<controllers::SSLContextService>(controller_service);
+      auto ssl_ctx_service = std::dynamic_pointer_cast<controllers::SSLContextServiceInterface>(controller_service);
       return object::returnReference(std::weak_ptr(ssl_ctx_service));
     } else if (controller_service_type_str == "RecordSetReader") {
       auto record_set_reader = std::dynamic_pointer_cast<core::RecordSetReader>(controller_service);

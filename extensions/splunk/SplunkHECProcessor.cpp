@@ -40,13 +40,13 @@ std::string SplunkHECProcessor::getNetworkLocation() const {
   return hostname_ + ":" + port_;
 }
 
-std::shared_ptr<minifi::controllers::SSLContextService> SplunkHECProcessor::getSSLContextService(core::ProcessContext& context) const {
+std::shared_ptr<minifi::controllers::SSLContextServiceInterface> SplunkHECProcessor::getSSLContextService(core::ProcessContext& context) const {
   if (const auto context_name = context.getProperty(SSLContext); context_name && !IsNullOrEmpty(*context_name))
-    return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*context_name, getUUID()));
+    return std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(context.getControllerService(*context_name, getUUID()));
   return nullptr;
 }
 
-void SplunkHECProcessor::initializeClient(http::HTTPClient& client, const std::string &url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) const {
+void SplunkHECProcessor::initializeClient(http::HTTPClient& client, const std::string &url, std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service) const {
   client.initialize(http::HttpRequestMethod::POST, url, std::move(ssl_context_service));
   client.setRequestHeader("Authorization", token_);
   client.setRequestHeader("X-Splunk-Request-Channel", request_channel_);

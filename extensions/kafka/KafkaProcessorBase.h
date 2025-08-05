@@ -20,7 +20,7 @@
 #include <optional>
 #include <string_view>
 
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "rdkafka_utils.h"
@@ -40,7 +40,7 @@ class KafkaProcessorBase : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto SSLContextService =
       core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
           .withDescription("SSL Context Service Name")
-          .withAllowedTypes<minifi::controllers::SSLContextService>()
+          .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
           .build();
   EXTENSIONAPI static constexpr auto SecurityProtocol =
       core::PropertyDefinitionBuilder<magic_enum::enum_count<kafka::SecurityProtocolOption>()>::createProperty(

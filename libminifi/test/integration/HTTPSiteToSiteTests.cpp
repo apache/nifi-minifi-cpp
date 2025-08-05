@@ -48,7 +48,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setTrace<minifi::sitetosite::HttpSiteToSiteClient>();
     LogTestController::getInstance().setTrace<minifi::sitetosite::SiteToSiteClient>();
     LogTestController::getInstance().setTrace<minifi::http::HTTPClient>();
-    LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
+    LogTestController::getInstance().setTrace<minifi::controllers::SSLContextServiceInterface>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
     LogTestController::getInstance().setTrace<minifi::http::HttpStreamingCallback>();

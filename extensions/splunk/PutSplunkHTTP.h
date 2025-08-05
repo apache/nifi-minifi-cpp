@@ -110,7 +110,7 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
  private:
   std::string getEndpoint(http::HTTPClient& client);
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service_;
   std::optional<std::string> source_type_;
   std::optional<std::string> source_;
   std::optional<std::string> host_;

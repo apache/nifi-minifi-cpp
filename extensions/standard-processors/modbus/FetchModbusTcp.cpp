@@ -61,7 +61,7 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
   ssl_context_.reset();
   if (const auto controller_service_name = context.getProperty(SSLContextService); controller_service_name && !IsNullOrEmpty(*controller_service_name)) {
     if (auto controller_service = context.getControllerService(*controller_service_name, getUUID())) {
-      if (const auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(controller_service)) {
+      if (const auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(controller_service)) {
         ssl_context_ = utils::net::getSslContext(*ssl_context_service);
       } else {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, *controller_service_name + " is not an SSL Context Service");

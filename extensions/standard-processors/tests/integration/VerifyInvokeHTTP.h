@@ -51,7 +51,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
-    LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
+    LogTestController::getInstance().setDebug<minifi::controllers::SSLContextServiceInterface>();
   }
 
   void setUrl(const std::string &url, ServerAwareHandler *handler) override {

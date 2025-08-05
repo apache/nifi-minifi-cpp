@@ -36,7 +36,7 @@
 #include "concurrentqueue.h"
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerFactory.h"
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
 #include "utils/net/AsioSocketUtils.h"
@@ -69,7 +69,7 @@ class GetTCP : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("SSL Context Service Name")
-      .withAllowedTypes<minifi::controllers::SSLContextService>()
+      .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto MessageDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Message Delimiter")
       .withDescription("Character that denotes the end of the message.")

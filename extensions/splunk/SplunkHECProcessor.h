@@ -20,13 +20,13 @@
 #include <string>
 #include <utility>
 
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/Core.h"
 #include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "minifi-cpp/core/PropertyValidator.h"
 #include "http/HTTPClient.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 
 namespace org::apache::nifi::minifi::extensions::curl {
 class HTTPClient;
@@ -59,7 +59,7 @@ class SplunkHECProcessor : public core::ProcessorImpl {
       .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
       .isRequired(false)
       .withExclusiveOfProperties({{{"Hostname", "^http:.*$"}}})
-      .withAllowedTypes<minifi::controllers::SSLContextService>()
+      .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       Hostname,
@@ -80,8 +80,8 @@ class SplunkHECProcessor : public core::ProcessorImpl {
 
  protected:
   std::string getNetworkLocation() const;
-  std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(core::ProcessContext& context) const;
-  void initializeClient(http::HTTPClient& client, const std::string &url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) const;
+  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> getSSLContextService(core::ProcessContext& context) const;
+  void initializeClient(http::HTTPClient& client, const std::string &url, std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service) const;
 
   std::string token_;
   std::string hostname_;

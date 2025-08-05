@@ -32,7 +32,7 @@
 #include "asio/ip/tcp.hpp"
 #include "asio/ssl/context.hpp"
 #include "utils/net/AsioCoro.h"
-#include "controllers/SSLContextService.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -62,10 +62,10 @@ class ControllerSocketProtocol {
   void writeDebugBundleResponse(io::BaseStream &stream);
   void handleDescribe(io::BaseStream &stream);
   asio::awaitable<void> handleCommand(std::unique_ptr<io::BaseStream> stream);
-  asio::awaitable<void> handshakeAndHandleCommand(asio::ip::tcp::socket&& socket, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);
+  asio::awaitable<void> handshakeAndHandleCommand(asio::ip::tcp::socket&& socket, std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service);
   std::string getJstack();
   asio::awaitable<void> startAccept();
-  asio::awaitable<void> startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);
+  asio::awaitable<void> startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service);
   void stopListener();
 
   core::controller::ControllerServiceProvider& controller_;
