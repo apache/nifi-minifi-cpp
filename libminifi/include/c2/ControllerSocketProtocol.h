@@ -42,8 +42,7 @@ namespace org::apache::nifi::minifi::c2 {
  */
 class ControllerSocketProtocol {
  public:
-  ControllerSocketProtocol(core::controller::ControllerServiceProvider& controller, state::StateMonitor& update_sink,
-    std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter);
+  ControllerSocketProtocol(state::StateMonitor& update_sink, std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter);
   ~ControllerSocketProtocol();
   void initialize();
 
@@ -68,7 +67,6 @@ class ControllerSocketProtocol {
   asio::awaitable<void> startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);
   void stopListener();
 
-  core::controller::ControllerServiceProvider& controller_;
   state::StateMonitor& update_sink_;
 
   asio::io_context io_context_;
