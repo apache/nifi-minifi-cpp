@@ -77,13 +77,6 @@ void PushGrafanaLoki::LogBatch::setStartPushTime(std::chrono::system_clock::time
 
 const core::Relationship PushGrafanaLoki::Self("__self__", "Marks the FlowFile to be owned by this processor");
 
-std::shared_ptr<minifi::controllers::SSLContextServiceInterface> PushGrafanaLoki::getSSLContextService(core::ProcessContext& context) const {
-  if (auto ssl_context = context.getProperty(PushGrafanaLoki::SSLContextService)) {
-    return std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(context.getControllerService(*ssl_context, getUUID()));
-  }
-  return std::shared_ptr<minifi::controllers::SSLContextServiceInterface>{};
-}
-
 void PushGrafanaLoki::setUpStateManager(core::ProcessContext& context) {
   auto state_manager = context.getStateManager();
   if (state_manager == nullptr) {
@@ -110,11 +103,11 @@ std::map<std::string, std::string> PushGrafanaLoki::buildStreamLabelMap(core::Pr
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Labels property");
     }
     for (const auto& label : stream_labels) {
-      auto stream_labels = utils::string::splitAndTrimRemovingEmpty(label, "=");
-      if (stream_labels.size() != 2) {
+      auto key_value = utils::string::splitAndTrimRemovingEmpty(label, "=");
+      if (key_value.size() != 2) {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Labels property");
       }
-      stream_label_map[stream_labels[0]] = stream_labels[1];
+      stream_label_map[key_value[0]] = key_value[1];
     }
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Labels property");

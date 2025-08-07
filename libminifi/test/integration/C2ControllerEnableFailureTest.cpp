@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include <string>
+#include <utility>
 
 #include "unit/TestBase.h"
 #include "integration/HTTPIntegrationBase.h"
@@ -24,6 +25,7 @@
 #include "core/Processor.h"
 #include "core/controller/ControllerService.h"
 #include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -85,13 +87,7 @@ class DummmyControllerUserProcessor : public minifi::core::ProcessorImpl {
   }
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*session_factory*/) override {
-    if (auto controller_service = context.getProperty(DummmyControllerUserProcessor::DummyControllerService)) {
-      if (!std::dynamic_pointer_cast<DummyController>(context.getControllerService(*controller_service, getUUID()))) {
-        throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service");
-      }
-    } else {
-      throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing controller service");
-    }
+    std::ignore = minifi::utils::parseControllerService<DummyController>(context, DummyControllerService, getUUID());
     logger_->log_debug("DummyControllerUserProcessor::onSchedule successful");
   }
 
@@ -143,7 +139,8 @@ class ControllerUpdateHandler: public HeartbeatHandler {
       case TestState::VERIFY_INITIAL_METRICS: {
         sendEmptyHeartbeatResponse(conn);
         REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(5s, "Could not enable DummyController"));
-        REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(5s, "(DummmyControllerUserProcessor): Process Schedule Operation: Invalid controller service"));
+        REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(5s,
+            "(DummmyControllerUserProcessor): Process Schedule Operation: Controller service 'Dummy Controller Service' = 'DummyController' not found"));
         test_state_ = TestState::SEND_NEW_CONFIG;
         break;
       }

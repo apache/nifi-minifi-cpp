@@ -109,8 +109,6 @@ class PostElasticsearch : public core::ProcessorImpl {
 
  private:
   std::string collectPayload(core::ProcessContext&, core::ProcessSession&, std::vector<std::shared_ptr<core::FlowFile>>&) const;
-  auto getSSLContextService(core::ProcessContext& context) const;
-  auto getCredentialsService(core::ProcessContext& context) const;
 
   uint64_t max_batch_size_ = 100;
   std::string host_url_;

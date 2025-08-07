@@ -113,7 +113,7 @@ void setFlowFileAsPayload(core::ProcessSession& session,
 
 void PutSplunkHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   SplunkHECProcessor::onSchedule(context, session_factory);
-  ssl_context_service_ = getSSLContextService(context);
+  ssl_context_service_ = utils::parseOptionalControllerService<minifi::controllers::SSLContextService>(context, SSLContext, getUUID());
   auto create_client = [this]() -> std::unique_ptr<minifi::http::HTTPClient> {
     auto client = std::make_unique<http::HTTPClient>();
     initializeClient(*client, getNetworkLocation().append(getEndpoint(*client)), ssl_context_service_);
