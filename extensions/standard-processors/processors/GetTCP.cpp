@@ -83,7 +83,7 @@ void GetTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   auto connections_to_make = parseEndpointList(context);
   auto delimiter = parseDelimiter(context);
   auto ssl_context = [&]() -> std::optional<asio::ssl::context> {
-    if (auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, SSLContextService, getUUID()); ssl_context_service) {
+    if (auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, SSLContextService, getUUID())) {
       return {utils::net::getSslContext(*ssl_context_service)};
     }
     return std::nullopt;

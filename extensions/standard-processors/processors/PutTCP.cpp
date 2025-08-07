@@ -70,7 +70,7 @@ void PutTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   else
     connections_.emplace();
 
-  if (auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, SSLContextService, getUUID()); ssl_context_service) {
+  if (auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, SSLContextService, getUUID())) {
     ssl_context_ = {utils::net::getSslContext(*ssl_context_service)};
   }
 

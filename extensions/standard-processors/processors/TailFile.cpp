@@ -269,7 +269,7 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
     tail_mode_ = Mode::MULTIPLE;
     pattern_regex_ = utils::Regex(file_name_str);
 
-    if (auto service = utils::parseOptionalControllerService<minifi::controllers::AttributeProviderService>(context, AttributeProviderService, getUUID()); service) {
+    if (auto service = utils::parseOptionalControllerService<minifi::controllers::AttributeProviderService>(context, AttributeProviderService, getUUID())) {
       // we drop ownership of the service here -- in the long term, getControllerService/parseControllerService should return a non-owning pointer or optional reference
       attribute_provider_service_ = service.get();
     }
