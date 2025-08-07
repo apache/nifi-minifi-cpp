@@ -36,7 +36,7 @@ namespace org::apache::nifi::minifi::controllers {
  */
 class SSLContextServiceInterface : public virtual core::controller::ControllerService {
  public:
-  static constexpr auto ControllerServiceApiDefinition = core::ControllerServiceApiDefinition{
+  static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.controllers.SSLContextServiceInterface",

@@ -77,13 +77,13 @@ class SSLContextService : public core::controller::ControllerServiceImpl, public
   explicit SSLContextService(std::string_view name, const utils::Identifier &uuid = {})
       : ControllerServiceImpl(name, uuid),
         initialized_(false),
-        logger_(core::logging::LoggerFactory<SSLContextServiceInterface>::getLogger(uuid_)) {
+        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
   }
 
   explicit SSLContextService(std::string_view name, const std::shared_ptr<Configure> &configuration)
       : ControllerServiceImpl(name),
         initialized_(false),
-        logger_(core::logging::LoggerFactory<SSLContextServiceInterface>::getLogger(uuid_)) {
+        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
     ControllerServiceImpl::setConfiguration(configuration);
     SSLContextService::initialize();
     auto setPropertyAndHandleError = [this](std::string_view property_name, std::string value) {
@@ -138,9 +138,7 @@ class SSLContextService : public core::controller::ControllerServiceImpl, public
 #endif  // WIN32
   }
 
-  static constexpr auto ApiImplementations = std::to_array<core::ControllerServiceApiDefinition>({
-    SSLContextServiceInterface::ControllerServiceApiDefinition
-  });
+  static constexpr auto ApiImplementations = std::array{ SSLContextServiceInterface::ProvidesApi };
 
   void initialize() override;
 

@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::core {
 
 class RecordSetReader : public virtual controller::ControllerService {
  public:
-  static constexpr auto ControllerServiceApiDefinition = core::ControllerServiceApiDefinition{
+  static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.core.RecordSetReader",
