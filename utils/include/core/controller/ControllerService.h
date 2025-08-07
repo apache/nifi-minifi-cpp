@@ -107,7 +107,7 @@ class ControllerServiceImpl : public ConfigurableComponentImpl, public Connectab
   }
 
 
-  static constexpr auto ApiImplementations = std::array<ControllerServiceApiDefinition, 0>{};
+  static constexpr auto ImplementsApis = std::array<ControllerServiceApiDefinition, 0>{};
 
  protected:
   std::vector<std::shared_ptr<controller::ControllerService> > linked_services_;

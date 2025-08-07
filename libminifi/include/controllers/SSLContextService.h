@@ -138,7 +138,7 @@ class SSLContextService : public core::controller::ControllerServiceImpl, public
 #endif  // WIN32
   }
 
-  static constexpr auto ApiImplementations = std::array{ SSLContextServiceInterface::ProvidesApi };
+  static constexpr auto ImplementsApis = std::array{ SSLContextServiceInterface::ProvidesApi };
 
   void initialize() override;
 
