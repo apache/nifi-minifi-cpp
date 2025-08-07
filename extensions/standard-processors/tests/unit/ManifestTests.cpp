@@ -306,7 +306,9 @@ std::vector<AllowedType> getControllerServiceProvidedApiImplementations(const Se
     const auto artifact_node = ranges::find_if(provided_api_implementation.children, [](const auto& c) { return c.name == "artifact"; });
     const auto group_node = ranges::find_if(provided_api_implementation.children, [](const auto& c) { return c.name == "group"; });
     const auto type_node = ranges::find_if(provided_api_implementation.children, [](const auto& c) { return c.name == "type"; });
-    if (artifact_node == std::end(provided_api_implementation.children) || group_node == std::end(provided_api_implementation.children) || type_node == std::end(provided_api_implementation.children)) {
+    if (artifact_node == std::end(provided_api_implementation.children)
+      || group_node == std::end(provided_api_implementation.children)
+      || type_node == std::end(provided_api_implementation.children)) {
       continue;
     }
     allowed_types.push_back({
