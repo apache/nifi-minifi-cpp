@@ -217,3 +217,153 @@ TEST_CASE("Compiled but not loaded extensions are not included in the manifest")
   CHECK(ranges::contains(extensions, "minifi-standard-processors"));
   CHECK_FALSE(ranges::contains(extensions, "minifi-test-processors"));
 }
+
+enum ComponentType {
+  kProcessor,
+  kControllerService,
+};
+
+struct AllowedType {
+  std::string type;
+  std::string group;
+  std::string artifact;
+
+  auto operator<=>(const AllowedType&) const = default;
+};
+
+using minifi::state::response::SerializedResponseNode;
+
+const SerializedResponseNode* getBundle(const std::vector<SerializedResponseNode>& manifest, const std::string_view bundle_artifact_name) {
+  const auto bundle_it = ranges::find_if(manifest, [bundle_artifact_name](const auto& node) {
+    return node.name == "bundles" && std::end(node.children) != ranges::find_if(node.children, [bundle_artifact_name](const auto& child) {
+      return child.name == "artifact" && child.value.to_string() == bundle_artifact_name;
+    });
+  });
+  if (bundle_it == std::end(manifest)) {
+    return nullptr;
+  }
+  return &(*bundle_it);
+}
+
+
+const SerializedResponseNode* getComponentFromBundle(const auto& bundle, const std::string_view name, const ComponentType type) {
+  const auto component_manifest = ranges::find_if(bundle.children, [](const auto& bundle_child) { return bundle_child.name == "componentManifest"; });
+  if (component_manifest == std::end(bundle.children)) {
+    return nullptr;
+  }
+  if (type == ComponentType::kProcessor) {
+    const auto processors = ranges::find_if(component_manifest->children, [](const auto& c) { return c.name == "processors"; });
+    if (processors != std::end(component_manifest->children)) {
+      const auto proc_it = ranges::find_if(processors->children, [name](const auto& c) { return c.name == name; });
+      if (proc_it != std::end(processors->children)) {
+        return &(*proc_it);
+      }
+    }
+  } else if (type == ComponentType::kControllerService) {
+    const auto controller_services = ranges::find_if(component_manifest->children, [](const auto& c) { return c.name == "controllerServices"; });
+    if (controller_services != std::end(component_manifest->children)) {
+      const auto controller_service_it = ranges::find_if(controller_services->children, [name](const auto& c) { return c.name == name; });
+      if (controller_service_it != std::end(controller_services->children)) {
+        return &(*controller_service_it);
+      }
+    }
+  }
+  return nullptr;
+}
+
+std::optional<AllowedType> getProcessorPropertyAllowedType(const SerializedResponseNode& processor_node, const std::string_view property) {
+  const auto property_descriptors = ranges::find_if(processor_node.children, [](const auto& c) { return c.name == "propertyDescriptors"; });
+  if (property_descriptors == std::end(processor_node.children)) {
+    return std::nullopt;
+  }
+  const auto property_descriptor = ranges::find_if(property_descriptors->children, [property](const auto& c) { return c.name == property; });
+  if (property_descriptor == std::end(property_descriptors->children)) {
+    return std::nullopt;
+  }
+  const auto type_provided_by_value = ranges::find_if(property_descriptor->children, [](const auto& c) { return c.name == "typeProvidedByValue"; });
+  if (type_provided_by_value == std::end(property_descriptor->children)) {
+    return std::nullopt;
+  }
+  const auto artifact_node = ranges::find_if(type_provided_by_value->children, [](const auto& c) { return c.name == "artifact"; });
+  const auto group_node = ranges::find_if(type_provided_by_value->children, [](const auto& c) { return c.name == "group"; });
+  const auto type_node = ranges::find_if(type_provided_by_value->children, [](const auto& c) { return c.name == "type"; });
+  if (artifact_node == std::end(type_provided_by_value->children) || group_node == std::end(type_provided_by_value->children) || type_node == std::end(type_provided_by_value->children)) {
+    return std::nullopt;
+  }
+  return AllowedType{
+    .type = type_node->value.to_string(),
+    .group = group_node->value.to_string(),
+    .artifact = artifact_node->value.to_string()};
+}
+
+std::vector<AllowedType> getControllerServiceProvidedApiImplementations(const SerializedResponseNode& controller_service_node) {
+  std::vector<AllowedType> allowed_types;
+  const auto provided_api_implementations = ranges::find_if(controller_service_node.children, [](const auto& c) { return c.name == "providedApiImplementations"; });
+  if (provided_api_implementations == std::end(controller_service_node.children)) {
+    return allowed_types;
+  }
+  for (const auto& provided_api_implementation : provided_api_implementations->children) {
+    const auto artifact_node = ranges::find_if(provided_api_implementation.children, [](const auto& c) { return c.name == "artifact"; });
+    const auto group_node = ranges::find_if(provided_api_implementation.children, [](const auto& c) { return c.name == "group"; });
+    const auto type_node = ranges::find_if(provided_api_implementation.children, [](const auto& c) { return c.name == "type"; });
+    if (artifact_node == std::end(provided_api_implementation.children) || group_node == std::end(provided_api_implementation.children) || type_node == std::end(provided_api_implementation.children)) {
+      continue;
+    }
+    allowed_types.push_back({
+      .type = type_node->value.to_string(),
+      .group = group_node->value.to_string(),
+      .artifact = artifact_node->value.to_string()});
+  }
+  return allowed_types;
+}
+
+TEST_CASE("Test providedApiImplementations") {
+  minifi::state::response::AgentManifest manifest("minifi-system");
+  const auto manifest_serialized = manifest.serialize();
+
+  const auto minifi_system_bundle = getBundle(manifest_serialized, "minifi-system");
+  const auto minifi_standard_processors_bundle = getBundle(manifest_serialized, "minifi-standard-processors");
+
+  REQUIRE(minifi_system_bundle);
+  REQUIRE(minifi_standard_processors_bundle);
+
+  {
+    const auto ssl_context_service = getComponentFromBundle(*minifi_system_bundle, "org.apache.nifi.minifi.controllers.SSLContextService", ComponentType::kControllerService);
+    const auto listen_tcp = getComponentFromBundle(*minifi_standard_processors_bundle, "org.apache.nifi.minifi.processors.ListenTCP", ComponentType::kProcessor);
+
+    REQUIRE(ssl_context_service);
+    REQUIRE(listen_tcp);
+
+    const auto listen_tcp_ssl_context_service_allowed_type = getProcessorPropertyAllowedType(*listen_tcp, "SSL Context Service");
+    const auto ssl_context_service_provided_api_imps = getControllerServiceProvidedApiImplementations(*ssl_context_service);
+
+    REQUIRE(listen_tcp_ssl_context_service_allowed_type);
+    REQUIRE(ssl_context_service_provided_api_imps.size() == 1);
+    CHECK(*listen_tcp_ssl_context_service_allowed_type == ssl_context_service_provided_api_imps[0]);
+  }
+
+  {
+    const auto json_tree_reader = getComponentFromBundle(*minifi_standard_processors_bundle, "org.apache.nifi.minifi.standard.JsonTreeReader", ComponentType::kControllerService);
+    const auto json_record_set_writer = getComponentFromBundle(*minifi_standard_processors_bundle, "org.apache.nifi.minifi.standard.JsonRecordSetWriter", ComponentType::kControllerService);
+    const auto split_record = getComponentFromBundle(*minifi_standard_processors_bundle, "org.apache.nifi.minifi.processors.SplitRecord", ComponentType::kProcessor);
+
+    REQUIRE(json_tree_reader);
+    REQUIRE(json_record_set_writer);
+    REQUIRE(split_record);
+
+    const auto split_record_record_reader_allowed_type = getProcessorPropertyAllowedType(*split_record, "Record Reader");
+    const auto split_record_record_writer_allowed_type = getProcessorPropertyAllowedType(*split_record, "Record Writer");
+
+    const auto json_tree_reader_api_imps = getControllerServiceProvidedApiImplementations(*json_tree_reader);
+    const auto json_record_set_writer_api_imps = getControllerServiceProvidedApiImplementations(*json_record_set_writer);
+
+    REQUIRE(split_record_record_reader_allowed_type);
+    REQUIRE(split_record_record_writer_allowed_type);
+
+    REQUIRE(json_tree_reader_api_imps.size() == 1);
+    REQUIRE(json_record_set_writer_api_imps.size() == 1);
+
+    CHECK(*split_record_record_reader_allowed_type == json_tree_reader_api_imps[0]);
+    CHECK(*split_record_record_writer_allowed_type == json_record_set_writer_api_imps[0]);
+  }
+}
