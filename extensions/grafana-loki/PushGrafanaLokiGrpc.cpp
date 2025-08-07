@@ -73,16 +73,18 @@ void PushGrafanaLokiGrpc::setUpGrpcChannel(const std::string& url, core::Process
 
   args.SetInt(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1);
 
-  std::shared_ptr<::grpc::ChannelCredentials> creds;
-  if (auto ssl_context_service = getSSLContextService(context)) {
-    ::grpc::SslCredentialsOptions ssl_credentials_options;
-    ssl_credentials_options.pem_cert_chain = utils::file::FileUtils::get_content(ssl_context_service->getCertificateFile());
-    ssl_credentials_options.pem_private_key = utils::file::FileUtils::get_content(ssl_context_service->getPrivateKeyFile());
-    ssl_credentials_options.pem_root_certs = utils::file::FileUtils::get_content(ssl_context_service->getCACertificate());
-    creds = ::grpc::SslCredentials(ssl_credentials_options);
-  } else {
-    creds = ::grpc::InsecureChannelCredentials();
-  }
+  std::shared_ptr<::grpc::ChannelCredentials> creds = [&]() {
+    auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextService>(context, PushGrafanaLoki::SSLContextService, getUUID());
+    if (ssl_context_service) {
+      ::grpc::SslCredentialsOptions ssl_credentials_options;
+      ssl_credentials_options.pem_cert_chain = utils::file::FileUtils::get_content(ssl_context_service->getCertificateFile());
+      ssl_credentials_options.pem_private_key = utils::file::FileUtils::get_content(ssl_context_service->getPrivateKeyFile());
+      ssl_credentials_options.pem_root_certs = utils::file::FileUtils::get_content(ssl_context_service->getCACertificate());
+      return ::grpc::SslCredentials(ssl_credentials_options);
+    } else {
+      return ::grpc::InsecureChannelCredentials();
+    }
+  }();
 
   push_channel_ = ::grpc::CreateCustomChannel(url, creds, args);
   if (!push_channel_) {
