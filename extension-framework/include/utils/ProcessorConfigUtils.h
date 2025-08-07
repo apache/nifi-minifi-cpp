@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "core/ClassName.h"
 #include "core/ProcessContext.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/Enum.h"
@@ -166,30 +167,31 @@ std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& context, 
 }
 
 template<typename ControllerServiceType>
-std::optional<std::shared_ptr<ControllerServiceType>> parseOptionalControllerService(const core::ProcessContext& context,
-    const core::PropertyReference& prop,
-    const utils::Identifier& processor_uuid) {
+std::shared_ptr<ControllerServiceType> parseOptionalControllerService(const core::ProcessContext& context, const core::PropertyReference& prop, const utils::Identifier& processor_uuid) {
   const auto controller_service_name = context.getProperty(prop.name);
-  if (!controller_service_name) {
-    return std::nullopt;
+  if (!controller_service_name || controller_service_name->empty()) {
+    return nullptr;
   }
 
   const std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(*controller_service_name, processor_uuid);
   if (!service) {
-    return std::nullopt;
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Controller service '{}' = '{}' not found", prop.name, *controller_service_name));
   }
 
   auto typed_controller_service = std::dynamic_pointer_cast<ControllerServiceType>(service);
   if (!typed_controller_service) {
-    return std::nullopt;
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Controller service '{}' = '{}' is not of type {}", prop.name, *controller_service_name, core::className<ControllerServiceType>()));
   }
 
   return typed_controller_service;
 }
 
 template<typename ControllerServiceType>
-std::shared_ptr<ControllerServiceType> parseControllerService(const core::ProcessContext& context, const core::PropertyReference& prop, const utils::Identifier& processor_uuid) {
-  return parseOptionalControllerService<ControllerServiceType>(context, prop, processor_uuid)
-      | utils::orThrow("Required Controller Service");
+gsl::not_null<std::shared_ptr<ControllerServiceType>> parseControllerService(const core::ProcessContext& context, const core::PropertyReference& prop, const utils::Identifier& processor_uuid) {
+  auto controller_service = parseOptionalControllerService<ControllerServiceType>(context, prop, processor_uuid);
+  if (!controller_service) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Required controller service property '{}' is missing", prop.name));
+  }
+  return gsl::make_not_null(controller_service);
 }
 }  // namespace org::apache::nifi::minifi::utils

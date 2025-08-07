@@ -157,9 +157,11 @@ nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(co
       logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' due to timeout", document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
       return nonstd::make_unexpected(CouchbaseErrorType::TEMPORARY);
     }
-    std::string cause = get_err.cause() ? get_err.cause()->message() : "";
     logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' with error code: '{}', message: '{}'", document_id, collection.bucket_name, collection.scope_name,
         collection.collection_name, get_err.ec(), get_err.message());
+    if (get_err.cause()) {
+      logger_->log_error("... root cause error code: '{}', message: '{}'", get_err.cause()->ec(), get_err.cause()->message());
+    }
     return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
   } else {
     try {
@@ -245,17 +247,6 @@ void CouchbaseClusterService::onEnable() {
     }
     logger_->log_warn("Failed to connect to Couchbase cluster with temporary error, will retry connection when a Couchbase processor is triggered");
   }
-}
-
-gsl::not_null<std::shared_ptr<CouchbaseClusterService>> CouchbaseClusterService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
-  std::shared_ptr<CouchbaseClusterService> couchbase_cluster_service;
-  if (auto connection_controller_name = context.getProperty(property)) {
-    couchbase_cluster_service = std::dynamic_pointer_cast<CouchbaseClusterService>(context.getControllerService(*connection_controller_name, context.getProcessorInfo().getUUID()));
-  }
-  if (!couchbase_cluster_service) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing Couchbase Cluster Service");
-  }
-  return gsl::make_not_null(couchbase_cluster_service);
 }
 
 REGISTER_RESOURCE(CouchbaseClusterService, ControllerService);

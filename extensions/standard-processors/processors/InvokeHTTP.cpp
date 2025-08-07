@@ -159,22 +159,13 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
 
   proxy_.host = context.getProperty(InvokeHTTP::ProxyHost).value_or("");
   proxy_.port = (context.getProperty(InvokeHTTP::ProxyPort) | utils::andThen(parsing::parseIntegral<int>)).value_or(0);
-  std::string port_str;
   proxy_.username = context.getProperty(InvokeHTTP::ProxyUsername).value_or("");
   proxy_.password = context.getProperty(InvokeHTTP::ProxyPassword).value_or("");
 
   follow_redirects_ = utils::parseBoolProperty(context, FollowRedirects);  // Shouldn't fail due to default value;
   content_type_ = utils::parseProperty(context, InvokeHTTP::ContentType);  // Shouldn't fail due to default value;
 
-  if (auto ssl_context_name = context.getProperty(SSLContext)) {
-    if (auto service = context.getControllerService(*ssl_context_name, getUUID())) {
-      ssl_context_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(service);
-      if (!ssl_context_service_)
-        logger_->log_error("Controller service '{}' is not an SSLContextService", *ssl_context_name);
-    } else {
-      logger_->log_error("Couldn't find controller service with name '{}'", *ssl_context_name);
-    }
-  }
+  ssl_context_service_ = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, SSLContext, getUUID());
 }
 
 gsl::not_null<std::unique_ptr<http::HTTPClient>> InvokeHTTP::createHTTPClientFromMembers(const std::string& url) const {

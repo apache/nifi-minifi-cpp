@@ -33,7 +33,7 @@ void ListSmb::initialize() {
 }
 
 void ListSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(context, ListSmb::ConnectionControllerService);
+  smb_connection_controller_service_ = utils::parseControllerService<SmbConnectionControllerService>(context, ListSmb::ConnectionControllerService, getUUID());
 
   auto state_manager = context.getStateManager();
   if (state_manager == nullptr) {

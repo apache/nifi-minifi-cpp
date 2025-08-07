@@ -166,8 +166,6 @@ class CouchbaseClusterService : public core::controller::ControllerServiceImpl {
     return client_->get(collection, document_id, return_type);
   }
 
-  static gsl::not_null<std::shared_ptr<CouchbaseClusterService>> getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property);
-
  private:
   std::unique_ptr<CouchbaseClient> client_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CouchbaseClusterService>::getLogger(uuid_);

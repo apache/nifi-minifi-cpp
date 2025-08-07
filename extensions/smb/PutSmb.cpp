@@ -32,7 +32,7 @@ void PutSmb::initialize() {
 }
 
 void PutSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(context, PutSmb::ConnectionControllerService);
+  smb_connection_controller_service_ = utils::parseControllerService<SmbConnectionControllerService>(context, PutSmb::ConnectionControllerService, getUUID());
   create_missing_dirs_ = utils::parseBoolProperty(context, PutSmb::CreateMissingDirectories);
   conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(context, ConflictResolution);
 }

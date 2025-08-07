@@ -44,10 +44,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const char *TailFile::CURRENT_STR = "CURRENT.";
-const char *TailFile::POSITION_STR = "POSITION.";
-
 namespace {
+inline constexpr std::string_view CURRENT_STR = "CURRENT.";
+inline constexpr std::string_view POSITION_STR = "POSITION.";
+
 template<typename Container, typename Key>
 bool containsKey(const Container &container, const Key &key) {
   return container.find(key) != container.end();
@@ -269,7 +269,10 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
     tail_mode_ = Mode::MULTIPLE;
     pattern_regex_ = utils::Regex(file_name_str);
 
-    parseAttributeProviderServiceProperty(context);
+    if (auto service = utils::parseOptionalControllerService<minifi::controllers::AttributeProviderService>(context, AttributeProviderService, getUUID())) {
+      // we drop ownership of the service here -- in the long term, getControllerService/parseControllerService should return a non-owning pointer or optional reference
+      attribute_provider_service_ = service.get();
+    }
 
     if (auto base_dir = context.getProperty(BaseDirectory); !base_dir) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory is required for multiple tail mode.");
@@ -307,24 +310,6 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   initial_start_position_ = utils::parseEnumProperty<InitialStartPositions>(context, InitialStartPosition);
   batch_size_ = gsl::narrow<uint32_t>(utils::parseU64Property(context, BatchSize));
   if (batch_size_ == 0) { batch_size_.reset(); }
-}
-
-void TailFile::parseAttributeProviderServiceProperty(const core::ProcessContext& context) {
-  const auto attribute_provider_service_name = context.getProperty(AttributeProviderService);
-  if (!attribute_provider_service_name || attribute_provider_service_name->empty()) {
-    return;
-  }
-
-  std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name, getUUID());
-  if (!controller_service) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
-  }
-
-  // we drop ownership of the service here -- in the long term, getControllerService() should return a non-owning pointer or optional reference
-  attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
-  if (!attribute_provider_service_) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
-  }
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, TailState> &state) const {
@@ -379,8 +364,8 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
     logger_->log_debug("Received position {}", position);
     state.begin()->second.position_ = gsl::narrow<uint64_t>(position);
   }
-  if (key.find(CURRENT_STR) == 0) {
-    const auto file = key.substr(strlen(CURRENT_STR));
+  if (key.starts_with(CURRENT_STR)) {
+    const auto file = key.substr(CURRENT_STR.size());
     std::filesystem::path file_path = value;
     if (file_path.has_filename() && file_path.has_parent_path()) {
       state[file].path_ = file_path.parent_path();
@@ -390,8 +375,8 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
     }
   }
 
-  if (key.find(POSITION_STR) == 0) {
-    const auto file = key.substr(strlen(POSITION_STR));
+  if (key.starts_with(POSITION_STR)) {
+    const auto file = key.substr(POSITION_STR.size());
     state[file].position_ = std::stoull(value);
   }
 }

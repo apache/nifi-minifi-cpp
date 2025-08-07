@@ -133,7 +133,6 @@ class PushGrafanaLoki : public core::ProcessorImpl {
 
   static std::map<std::string, std::string> buildStreamLabelMap(core::ProcessContext& context);
 
-  std::shared_ptr<minifi::controllers::SSLContextServiceInterface> getSSLContextService(core::ProcessContext& context) const;
   void processBatch(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session);
   virtual nonstd::expected<void, std::string> submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) = 0;
   void initializeHttpClient(core::ProcessContext& context);
