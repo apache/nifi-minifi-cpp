@@ -33,7 +33,7 @@
 namespace org::apache::nifi::minifi::aws::processors {
 
 std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentialsFromControllerService(core::ProcessContext& context) const {
-  if (auto service = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID()); service) {
+  if (auto service = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID())) {
     return service->getAWSCredentials();
   }
   logger_->log_error("AWS credentials service could not be found");
