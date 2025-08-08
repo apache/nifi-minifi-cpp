@@ -366,6 +366,7 @@ SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 include(Extensions)
 
 add_subdirectory(minifi-api)
+add_subdirectory(minifi-c-cpp)
 add_subdirectory(core-framework)
 add_subdirectory(extension-framework)
 add_subdirectory(libminifi)
