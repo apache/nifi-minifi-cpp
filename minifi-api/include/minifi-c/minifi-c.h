@@ -30,6 +30,8 @@ extern "C" {
 #define OWNED
 
 typedef uint32_t MinifiBool;
+#define MINIFI_TRUE MinifiBool(1)
+#define MINIFI_FALSE MinifiBool(0)
 
 typedef enum MinifiInputRequirement {
   MINIFI_INPUT_REQUIRED = 0,
@@ -73,11 +75,29 @@ typedef struct MinifiProcessSessionFactory_T* MinifiProcessSessionFactory;
 typedef struct MinifiProcessSession_T* MinifiProcessSession;
 typedef struct MinifiInputStream_T* MinifiInputStream;
 typedef struct MinifiOutputStream_T* MinifiOutputStream;
+typedef struct MinifiString_T* MinifiString;
+typedef struct MinifiConfigure_T* MinifiConfigure;
+typedef struct MinifiExtension_T* MinifiExtension;
 
 typedef struct MinifiPropertyValidatorCreateInfo {
   MinifiStringView equivalent_nifi_standard_validator_name;
   MinifiBool(*validate)(MinifiStringView);
 } MinifiPropertyValidatorCreateInfo;
+
+typedef struct MinifiExtensionCreateInfo {
+  MinifiStringView name;
+  MinifiBool(*initialize)(void*, MinifiConfigure);
+  void* user_data;
+} MinifiExtensionCreateInfo;
+
+typedef enum MinifiStatus {
+  MINIFI_SUCCESS = 0,
+  MINIFI_UNKNOWN_ERROR = 1,
+  MINIFI_NOT_SUPPORTED_PROPERTY = 2,
+  MINIFI_DYNAMIC_PROPERTIES_NOT_SUPPORTED = 3,
+  MINIFI_PROPERTY_NOT_SET = 4,
+  MINIFI_VALIDATION_FAILED = 5
+} MinifiStatus;
 
 typedef struct MinifiProperty {
   MinifiStringView name;
@@ -159,10 +179,10 @@ typedef struct MinifiProcessorCallbacks {
   MinifiBool(*supportsDynamicRelationships)(void*);
   void(*initialize)(void*, MinifiProcessorDescriptor);
   MinifiBool(*isSingleThreaded)(void*);
-  void(*getProcessorType)(void*, void(*cb)(void*, MinifiStringView), void*);
+  void(*getProcessorType)(void*, MinifiString);
   MinifiBool(*getTriggerWhenEmpty)(void*);
-  void(*onTrigger)(void*, MinifiProcessContext, MinifiProcessSession);
-  void(*onSchedule)(void*, MinifiProcessContext, MinifiProcessSessionFactory);
+  void(*onTrigger)(void*, MinifiProcessContext, MinifiProcessSession, MinifiString error);
+  void(*onSchedule)(void*, MinifiProcessContext, MinifiProcessSessionFactory, MinifiString error);
   void(*onUnSchedule)(void*);
   void(*notifyStop)(void*);
   MinifiInputRequirement(*getInputRequirement)(void*);
@@ -204,6 +224,9 @@ typedef enum MinifiStandardPropertyValidator {
   MINIFI_PORT_VALIDATOR = 7
 } MinifiStandardPropertyValidator;
 
+OWNED MinifiExtension MinifiCreateExtension(const MinifiExtensionCreateInfo*);
+void MinifiDestroyExtension(OWNED MinifiExtension);
+
 MinifiPropertyValidator MinifiGetStandardValidator(MinifiStandardPropertyValidator);
 MinifiPropertyValidator MinifiCreatePropertyValidator(const MinifiPropertyValidatorCreateInfo*);
 void MinifiSerializedResponseNodeVecPush(MinifiSerializedResponseNodeVec, const MinifiSerializedResponseNode*);
@@ -213,10 +236,15 @@ void MinifiMinifiLoggerCallbackCall(MinifiLoggerCallback, MinifiLogger);
 void MinifiProcessorDescriptorSetSupportedRelationships(MinifiProcessorDescriptor, uint32_t relationships_count, const MinifiRelationship* relationships_ptr);
 void MinifiProcessorDescriptorSetSupportedProperties(MinifiProcessorDescriptor, uint32_t properties_count, const MinifiProperty* properties_ptr);
 
-void MinifiProcessContextGetProperty(MinifiProcessContext, MinifiStringView, MinifiFlowFile, void(*result_cb)(void* data, MinifiStringView result), void(*error_cb)(void* data, MinifiStringView error), void* data);
+MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext, MinifiStringView, MinifiFlowFile, void(*result_cb)(void* data, MinifiStringView result), void* data);
+void MinifiProcessContextYield(MinifiProcessContext);
+void MinifiProcessContextGetProcessorName(MinifiProcessContext, void(*result_cb)(void* data, MinifiStringView result), void* data);
+MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext, MinifiStringView);
+
+void MinifiStringAssign(MinifiString, MinifiStringView);
 
 void MinifiLoggerSetMaxLogSize(MinifiLogger, int32_t);
-void MinifiLoggerGetId(MinifiLogger, void(*cb)(void* data, MinifiStringView), void* data);
+void MinifiLoggerGetId(MinifiLogger, void(*cb)(void* data, MinifiStringView error), void* data);
 void MinifiLoggerLogString(MinifiLogger, MinifiLogLevel, MinifiStringView);
 MinifiBool MinifiLoggerShouldLog(MinifiLogger, MinifiLogLevel);
 MinifiLogLevel MinifiLoggerLevel(MinifiLogger);
@@ -230,10 +258,14 @@ void MinifiProcessSessionTransfer(MinifiProcessSession, MinifiFlowFile, MinifiSt
 void MinifiProcessSessionRead(MinifiProcessSession, MinifiFlowFile, int64_t(*cb)(void* data, MinifiInputStream), void* data);
 void MinifiProcessSessionWrite(MinifiProcessSession, MinifiFlowFile, int64_t(*cb)(void* data, MinifiOutputStream), void* data);
 
+void MinifiConfigureGet(MinifiConfigure, MinifiStringView, void(*cb)(void*, MinifiStringView), void*);
+
 uint64_t MinifiInputStreamSize(MinifiInputStream);
 
 int64_t MinifiInputStreamRead(MinifiInputStream, char*, uint64_t);
 int64_t MinifiOutputStreamWrite(MinifiOutputStream, const char*, uint64_t);
+
+void MinifiStatusToString(MinifiStatus, void(*cb)(void* data, MinifiStringView str), void* data);
 
 #ifdef __cplusplus
 } // extern "C"

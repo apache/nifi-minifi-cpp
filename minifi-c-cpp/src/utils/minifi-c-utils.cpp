@@ -1,8 +1,5 @@
 /**
- * @file UnicodeConversion.h
- * Unicode conversion functions
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -18,22 +15,19 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <atlbase.h>
-#include <atlconv.h>
-#include <string>
+#include "utils/minifi-c-utils.h"
+#include "utils/PropertyErrors.h"
 
 namespace org::apache::nifi::minifi::utils {
 
-inline std::string to_string(const std::wstring& utf16_string) {
-  ATL::CW2A utf8_string(utf16_string.c_str(), CP_UTF8);
-  return {LPSTR{utf8_string}};
+std::error_code make_error_code(MinifiStatus status) {
+  switch (status) {
+    case MINIFI_NOT_SUPPORTED_PROPERTY: return make_error_code(core::PropertyErrorCode::NotSupportedProperty);
+    case MINIFI_DYNAMIC_PROPERTIES_NOT_SUPPORTED: return make_error_code(core::PropertyErrorCode::DynamicPropertiesNotSupported);
+    case MINIFI_PROPERTY_NOT_SET: return make_error_code(core::PropertyErrorCode::PropertyNotSet);
+    case MINIFI_VALIDATION_FAILED: return make_error_code(core::PropertyErrorCode::ValidationFailed);
+    default: return std::error_code{};
+  }
 }
 
-inline std::wstring to_wstring(const std::string& utf8_string) {
-  ATL::CA2W utf16_string(utf8_string.c_str(), CP_UTF8);
-  return {LPWSTR{utf16_string}};
-}
-
-}  // namespace org::apache::nifi::minifi::utils
+} //  namespace org::apache::nifi::minifi::cpp::utils

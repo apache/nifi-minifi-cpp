@@ -1,4 +1,7 @@
 /**
+ * @file ProcessSessionFactory.h
+ * ProcessSessionFactory class declaration
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,13 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include "minifi-cpp/core/Relationship.h"
+#include "minifi-c.h"
 
-template<>
-struct std::hash<org::apache::nifi::minifi::core::Relationship> {
-  size_t operator()(const org::apache::nifi::minifi::core::Relationship& relationship) const noexcept {
-    return std::hash<std::string>{}(relationship.getName());
-  }
+namespace org::apache::nifi::minifi::core {
+
+class ProcessSessionFactory {
+public:
+  explicit ProcessSessionFactory(MinifiProcessSessionFactory impl): impl_(impl) {}
+
+private:
+  MinifiProcessSessionFactory impl_;
 };
+
+}  // namespace org::apache::nifi::minifi::core
