@@ -16,13 +16,21 @@
  */
 #pragma once
 
-#include <string_view>
+#include "minifi-c.h"
+#include "core/RelationshipDefinition.h"
+#include "core/PropertyDefinition.h"
+#include <span>
 
 namespace org::apache::nifi::minifi::core {
 
-struct RelationshipDefinition {
-  std::string_view name;
-  std::string_view description;
+class ProcessorDescriptor {
+ public:
+  explicit ProcessorDescriptor(MinifiProcessorDescriptor impl): impl_(impl) {}
+  void setSupportedRelationships(std::span<const RelationshipDefinition> relationships);
+  void setSupportedProperties(std::span<const PropertyReference> properties);
+
+ private:
+  MinifiProcessorDescriptor impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::core
