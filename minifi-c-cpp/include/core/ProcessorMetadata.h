@@ -14,30 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <optional>
+#include "utils/Id.h"
+#include "core/logging/Logger.h"
+#include <memory>
 #include <string>
-#include <string_view>
-#include <stdexcept>
 
-#include "magic_enum.hpp"
+namespace org::apache::nifi::minifi::core {
 
-namespace org::apache::nifi::minifi::utils {
+struct ProcessorMetadata {
+  utils::Identifier uuid;
+  std::string name;
+  std::shared_ptr<logging::Logger> logger;
+};
 
-template<typename T>
-T enumCast(std::string_view str, bool case_insensitive = false) {
-  std::optional<T> enum_optional_value;
-  if (case_insensitive) {
-    enum_optional_value = magic_enum::enum_cast<T>(str, magic_enum::case_insensitive);
-  } else {
-    enum_optional_value = magic_enum::enum_cast<T>(str);
-  }
-  if (enum_optional_value) {
-    return enum_optional_value.value();
-  }
-  throw std::runtime_error("Cannot convert \"" + std::string(str) + "\" to enum class value of enum type \"" + std::string(magic_enum::enum_type_name<T>()) + "\"");
-}
-
-}  // namespace org::apache::nifi::minifi::utils
+}  // namespace org::apache::nifi::minifi::core
