@@ -17,22 +17,23 @@
  */
 #pragma once
 
-#include <string>
-#include <mutex>
+#include <algorithm>
+#include <iostream>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <sstream>
+#include <string>
 #include <utility>
-#include <iostream>
 #include <vector>
-#include <algorithm>
 
-#include "utils/gsl.h"
+#include "fmt/chrono.h"
+#include "fmt/ostream.h"
+#include "fmt/std.h"
+#include "minifi-c.h"
 #include "utils/Enum.h"
 #include "utils/GeneralUtils.h"
-#include "fmt/chrono.h"
-#include "fmt/std.h"
-#include "fmt/ostream.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::logging {
 
@@ -56,6 +57,7 @@ using log_format_string = fmt::format_string<std::invoke_result_t<decltype(map_a
 
 class Logger {
  public:
+  explicit Logger(MinifiLogger impl): impl_(impl) {}
   template<typename ...Args>
   void log_with_level(LOG_LEVEL log_level, log_format_string<Args...> fmt, Args&& ...args) {
     return log(log_level, std::move(fmt), std::forward<Args>(args)...);
@@ -91,15 +93,14 @@ class Logger {
     log(LOG_LEVEL::trace, std::move(fmt), std::forward<Args>(args)...);
   }
 
-  virtual void set_max_log_size(int size) = 0;
-  virtual std::optional<std::string> get_id() = 0;
-  virtual void log_string(LOG_LEVEL level, std::string str) = 0;
-  virtual bool should_log(LOG_LEVEL level) = 0;
-  [[nodiscard]] virtual LOG_LEVEL level() const = 0;
+  void set_max_log_size(int size);
+  std::optional<std::string> get_id();
+  void log_string(LOG_LEVEL level, std::string str);
+  bool should_log(LOG_LEVEL level);
+  [[nodiscard]] LOG_LEVEL level() const;
+  int getMaxLogSize();
 
-  virtual ~Logger() = default;
-
-  virtual int getMaxLogSize() = 0;
+  MinifiLogger getImpl() const {return impl_;}
 
  private:
   std::string trimToMaxSizeAndAddId(std::string my_string) {
@@ -125,6 +126,8 @@ class Logger {
     }
     log_string(level, stringify(std::move(fmt), map_args(std::forward<Args>(args))...));
   }
+
+  MinifiLogger impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::logging

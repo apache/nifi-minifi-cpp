@@ -25,25 +25,49 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessorMetricsImpl::ProcessorMetricsImpl(const ProcessorImpl& source_processor)
-    : source_processor_(source_processor),
+namespace {
+class StandardProcessorInfoProvider : public ProcessorMetricsImpl::ProcessorInfoProvider {
+ public:
+  StandardProcessorInfoProvider(const ProcessorImpl& source_processor): source_processor_(source_processor) {}
+
+  std::string getProcessorType() const override {
+    return source_processor_.getProcessorType();
+  }
+  std::string getName() const override {
+    return source_processor_.getName();
+  }
+  utils::SmallString<36> getUUIDStr() const override {
+    return source_processor_.getUUIDStr();
+  }
+
+  ~StandardProcessorInfoProvider() override = default;
+
+ private:
+  const ProcessorImpl& source_processor_;
+};
+}  // namespace
+
+ProcessorMetricsImpl::ProcessorMetricsImpl(const ProcessorImpl& source_processor): ProcessorMetricsImpl(std::make_unique<StandardProcessorInfoProvider>(source_processor)) {}
+
+ProcessorMetricsImpl::ProcessorMetricsImpl(std::unique_ptr<ProcessorInfoProvider> source_processor)
+    : source_processor_(std::move(source_processor)),
       on_trigger_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT),
       session_commit_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT) {
 }
 
 std::string ProcessorMetricsImpl::getName() const {
-  return source_processor_.getProcessorType() + "Metrics";
+  return source_processor_->getProcessorType() + "Metrics";
 }
 
 std::unordered_map<std::string, std::string> ProcessorMetricsImpl::getCommonLabels() const {
-  return {{"metric_class", getName()}, {"processor_name", source_processor_.getName()}, {"processor_uuid", source_processor_.getUUIDStr()}};
+  return {{"metric_class", getName()}, {"processor_name", source_processor_->getName()}, {"processor_uuid", source_processor_->getUUIDStr()}};
 }
 
 std::vector<state::response::SerializedResponseNode> ProcessorMetricsImpl::serialize() {
   std::vector<state::response::SerializedResponseNode> resp;
 
   state::response::SerializedResponseNode root_node {
-    .name = source_processor_.getUUIDStr(),
+    .name = source_processor_->getUUIDStr(),
     .children = {
       {.name = "OnTriggerInvocations", .value = static_cast<uint32_t>(invocations())},
       {.name = "AverageOnTriggerRunTime", .value = static_cast<uint64_t>(getAverageOnTriggerRuntime().count())},
@@ -97,7 +121,7 @@ std::vector<state::PublishedMetric> ProcessorMetricsImpl::calculateMetrics() {
     std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
     for (const auto& [relationship, count] : transferred_relationships_) {
       metrics.push_back({"transferred_to_" + relationship, static_cast<double>(count),
-        {{"metric_class", getName()}, {"processor_name", source_processor_.getName()}, {"processor_uuid", source_processor_.getUUIDStr()}}});
+        {{"metric_class", getName()}, {"processor_name", source_processor_->getName()}, {"processor_uuid", source_processor_->getUUIDStr()}}});
     }
   }
 

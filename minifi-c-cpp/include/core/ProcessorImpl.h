@@ -17,32 +17,29 @@
 #pragma once
 
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <span>
 #include <string>
+#include <string_view>
+#include <unordered_set>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include "core/ConfigurableComponentImpl.h"
-#include "core/Connectable.h"
-#include "core/Property.h"
-#include "core/Core.h"
-#include "minifi-cpp/core/Annotation.h"
-#include "minifi-cpp/core/DynamicProperty.h"
-#include "minifi-cpp/core/Scheduling.h"
-#include "minifi-cpp/core/state/nodes/MetricsBase.h"
-#include "minifi-cpp/core/ProcessorMetrics.h"
+#include "core/Annotation.h"
+#include "core/DynamicProperty.h"
+// #include "minifi-cpp/core/ProcessorMetrics.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
-#include "minifi-cpp/core/OutputAttributeDefinition.h"
-#include "minifi-cpp/core/ProcessorApi.h"
-#include "utils/PropertyErrors.h"
-#include "minifi-cpp/core/ProcessorMetadata.h"
-#include "Exception.h"
+#include "core/OutputAttributeDefinition.h"
+#include "core/ProcessorMetadata.h"
+#include "core/ProcessorDescriptor.h"
+#include "core/FlowFile.h"
+#include "utils/StringUtils.h"
 
 #define ADD_GET_PROCESSOR_NAME \
   std::string getProcessorType() const override { \
@@ -68,9 +65,7 @@ class ProcessContext;
 class ProcessSession;
 class ProcessSessionFactory;
 
-#define BUILDING_DLL 1
-
-class ProcessorImpl : public virtual ProcessorApi {
+class ProcessorImpl {
  public:
   explicit ProcessorImpl(ProcessorMetadata metadata);
 
@@ -79,25 +74,27 @@ class ProcessorImpl : public virtual ProcessorApi {
   ProcessorImpl& operator=(const ProcessorImpl&) = delete;
   ProcessorImpl& operator=(ProcessorImpl&&) = delete;
 
-  ~ProcessorImpl() override;
+  virtual ~ProcessorImpl();
 
-  bool isSingleThreaded() const override = 0;
+  virtual bool isSingleThreaded() const = 0;
 
-  [[nodiscard]] bool supportsDynamicProperties() const override = 0;
+  [[nodiscard]]
+  virtual bool supportsDynamicProperties() const = 0;
 
-  [[nodiscard]] bool supportsDynamicRelationships() const override = 0;
+  [[nodiscard]]
+  virtual bool supportsDynamicRelationships() const = 0;
 
-  std::string getProcessorType() const override = 0;
+  virtual std::string getProcessorType() const = 0;
 
   void setTriggerWhenEmpty(bool trigger_when_empty) {
     trigger_when_empty_ = trigger_when_empty;
   }
 
-  bool getTriggerWhenEmpty() const override {
+  virtual bool getTriggerWhenEmpty() const {
     return trigger_when_empty_;
   }
 
-  void initialize(ProcessorDescriptor& self) final;
+  void initialize(ProcessorDescriptor& self);
 
   void setSupportedRelationships(std::span<const RelationshipDefinition> relationships);
 
@@ -105,45 +102,44 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   virtual void initialize() {}
 
-  void onTrigger(ProcessContext&, ProcessSession&) override {}
+  virtual void onTrigger(ProcessContext&, ProcessSession&) {}
 
-  void onSchedule(ProcessContext&, ProcessSessionFactory&) override {}
+  virtual void onSchedule(ProcessContext&, ProcessSessionFactory&) {}
 
   // Hook executed when onSchedule fails (throws). Configuration should be reset in this
-  void onUnSchedule() override {
+  virtual void onUnSchedule() {
     notifyStop();
   }
 
   // Check all incoming connections for work
-  bool isWorkAvailable() override;
+  virtual bool isWorkAvailable();
 
-  annotation::Input getInputRequirement() const override = 0;
+  virtual annotation::Input getInputRequirement() const = 0;
 
-  gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const override {
-    return metrics_;
-  }
+  // virtual gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const {
+  //   return metrics_;
+  // }
 
   static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
 
   static constexpr auto OutputAttributes = std::array<OutputAttributeReference, 0>{};
 
-  void restore(const std::shared_ptr<FlowFile>& file) override;
+  virtual void restore(const std::shared_ptr<FlowFile>& file);
 
-  void forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) override;
+  virtual void forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback);
 
   std::string getName() const;
   utils::Identifier getUUID() const;
   utils::SmallString<36> getUUIDStr() const;
 
- protected:
-  void notifyStop() override {
-  }
+  virtual void notifyStop() {}
 
+ protected:
   ProcessorMetadata metadata_;
 
   std::atomic<bool> trigger_when_empty_;
 
-  gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
+  // gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
 
   std::shared_ptr<logging::Logger> logger_;
 

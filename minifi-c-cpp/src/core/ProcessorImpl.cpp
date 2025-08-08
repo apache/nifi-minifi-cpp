@@ -27,18 +27,7 @@
 #include <string>
 #include <vector>
 
-#include "minifi-cpp/Connection.h"
-#include "core/Connectable.h"
-#include "core/logging/LoggerFactory.h"
-#include "minifi-cpp/core/ProcessorConfig.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "minifi-cpp/core/ProcessSessionFactory.h"
-#include "utils/gsl.h"
-#include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
-#include "Exception.h"
-#include "core/ProcessorMetrics.h"
-#include "minifi-cpp/core/ProcessorDescriptor.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -47,7 +36,7 @@ namespace org::apache::nifi::minifi::core {
 ProcessorImpl::ProcessorImpl(ProcessorMetadata metadata)
     : metadata_(std::move(metadata)),
       trigger_when_empty_(false),
-      metrics_(std::make_shared<ProcessorMetricsImpl>(*this)),
+      // metrics_(std::make_shared<ProcessorMetricsImpl>(*this)),
       logger_(metadata_.logger) {
   logger_->log_debug("Processor {} created with uuid {}", getName(), getUUIDStr());
 }
