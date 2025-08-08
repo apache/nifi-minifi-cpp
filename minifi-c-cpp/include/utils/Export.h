@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,15 +16,4 @@
  */
 #pragma once
 
-#include <string_view>
-
-namespace org::apache::nifi::minifi::core {
-
-struct DynamicProperty {
-  std::string_view name;
-  std::string_view value;
-  std::string_view description;
-  bool supports_expression_language = false;
-};
-
-}  // namespace org::apache::nifi::minifi::core
+#define EXTENSIONAPI
