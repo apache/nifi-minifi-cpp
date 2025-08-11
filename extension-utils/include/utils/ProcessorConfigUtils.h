@@ -170,4 +170,18 @@ template<typename ControllerServiceType>
 std::shared_ptr<ControllerServiceType> parseControllerService(const core::ProcessContext& context, const core::PropertyReference& prop, const utils::Identifier& processor_uuid) {
   return parseOptionalControllerService<ControllerServiceType>(context, prop, processor_uuid) | utils::orThrow("Required Controller Service");
 }
+
+template<typename RecordSetIO>
+std::shared_ptr<RecordSetIO> getRecordSetIO(core::ProcessContext& context, const core::PropertyReference& property,
+    const utils::Identifier& processor_uuid) {
+  std::string service_name = context.getProperty(property).value_or("");
+  if (!IsNullOrEmpty(service_name)) {
+    auto record_set_io = std::dynamic_pointer_cast<RecordSetIO>(context.getControllerService(service_name, processor_uuid));
+    if (!record_set_io) {
+      throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("'{}' property is set to invalid controller service '{}'", property.name, service_name));
+    }
+    return record_set_io;
+  }
+  return nullptr;
+}
 }  // namespace org::apache::nifi::minifi::utils

@@ -34,6 +34,7 @@ class MqttBrokerContainer(Container):
             self.image_store.get_image(self.get_engine()),
             detach=True,
             name=self.name,
+            ports={'1883/tcp': 1883},
             network=self.network.name,
             entrypoint=self.command)
         logging.info('Added container \'%s\'', self.name)

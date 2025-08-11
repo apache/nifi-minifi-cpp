@@ -30,6 +30,7 @@ namespace org::apache::nifi::minifi::core {
 class Record final {
  public:
   Record() = default;
+  Record(core::RecordObject&& record_object) : fields_(std::move(record_object)) {}
   Record(Record&& rhs) noexcept = default;
   Record& operator=(Record&& rhs) noexcept = default;
 
@@ -44,6 +45,10 @@ class Record final {
 
   [[nodiscard]] const RecordField& at(const std::string& key) const {
     return fields_.at(key);
+  }
+
+  [[nodiscard]] bool contains(const std::string& key) const {
+    return fields_.contains(key);
   }
 
   [[nodiscard]] std::unordered_map<std::string, RecordField>::const_iterator begin() const {

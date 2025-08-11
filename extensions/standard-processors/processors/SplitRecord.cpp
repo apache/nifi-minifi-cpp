@@ -19,28 +19,16 @@
 #include "core/Resource.h"
 #include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
-namespace {
-template<typename RecordSetIO>
-std::shared_ptr<RecordSetIO> getRecordSetIO(core::ProcessContext& context, const core::PropertyReference& property, const utils::Identifier& processor_uuid) {
-  std::string service_name = context.getProperty(property).value_or("");
-  if (!IsNullOrEmpty(service_name)) {
-    auto record_set_io = std::dynamic_pointer_cast<RecordSetIO>(context.getControllerService(service_name, processor_uuid));
-    if (!record_set_io)
-      return nullptr;
-    return record_set_io;
-  }
-  return nullptr;
-}
-}  // namespace
 
 void SplitRecord::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  record_set_reader_ = getRecordSetIO<core::RecordSetReader>(context, RecordReader, getUUID());
+  record_set_reader_ = utils::getRecordSetIO<core::RecordSetReader>(context, RecordReader, getUUID());
   if (!record_set_reader_) {
     throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Reader property is missing or invalid");
   }
-  record_set_writer_ = getRecordSetIO<core::RecordSetWriter>(context, RecordWriter, getUUID());
+  record_set_writer_ = utils::getRecordSetIO<core::RecordSetWriter>(context, RecordWriter, getUUID());
   if (!record_set_writer_) {
     throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Record Writer property is missing or invalid");
   }
