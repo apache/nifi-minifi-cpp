@@ -188,6 +188,12 @@ void ControllerSocketProtocol::initialize() {
   }
 }
 
+void ControllerSocketProtocol::setRoot(core::ProcessGroup* root) {
+  if (auto controller_socket_reporter = controller_socket_reporter_.lock()) {
+    controller_socket_reporter->setRoot(root);
+  }
+}
+
 void ControllerSocketProtocol::handleStart(io::BaseStream &stream) {
   std::string component_str;
   const auto size = stream.read(component_str);
@@ -363,6 +369,35 @@ void ControllerSocketProtocol::writeJstackResponse(io::BaseStream &stream) {
   stream.write(resp.getBuffer());
 }
 
+void ControllerSocketProtocol::writeFlowStatusResponse(io::BaseStream &stream) {
+  std::string query;
+  {
+    const auto size = stream.read(query);
+    if (io::isError(size)) {
+      logger_->log_error("Connection broke");
+      return;
+    }
+  }
+  auto request_strings = utils::string::splitAndTrimRemovingEmpty(query, ";");
+  std::vector<FlowStatusRequest> requests;
+  for (const auto& request_string : request_strings) {
+    try {
+      requests.push_back(FlowStatusRequest(request_string));
+    } catch (const std::exception& e) {
+      logger_->log_error("Invalid flow status request: {}", e.what());
+    }
+  }
+  io::BufferStream resp;
+  auto op = static_cast<uint8_t>(Operation::describe);
+  resp.write(&op, 1);
+  std::string flowstatus_response;
+  if (auto controller_socket_reporter = controller_socket_reporter_.lock()) {
+    flowstatus_response = controller_socket_reporter->getFlowStatus(requests);
+  }
+  resp.write(flowstatus_response, true);
+  stream.write(resp.getBuffer());
+}
+
 void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
   std::string what;
   const auto size = stream.read(what);
@@ -382,6 +417,8 @@ void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
     writeManifestResponse(stream);
   } else if (what == "jstack") {
     writeJstackResponse(stream);
+  } else if (what == "flowstatus") {
+    writeFlowStatusResponse(stream);
   } else {
     logger_->log_error("Unknown C2 describe parameter: {}", what);
   }
