@@ -21,7 +21,7 @@
 #include <vector>
 #include <map>
 
-#include "controllers/SSLContextService.h"
+#include "controllers/SSLContextServiceInterface.h"
 #include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
