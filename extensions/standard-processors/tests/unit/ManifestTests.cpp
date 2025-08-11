@@ -69,9 +69,9 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
   REQUIRE_FALSE(resp.children.empty());
   const auto &processors = resp.children[0];
   REQUIRE_FALSE(processors.children.empty());
-  const auto &proc_0 = processors.children[0];
-  REQUIRE_FALSE(proc_0.children.empty());
-  const auto &prop_descriptors = proc_0.children[0];
+  const auto &processor_with_properties = "org.apache.nifi.minifi.processors.UpdateAttribute" != processors.children[0].name ? processors.children[0] : processors.children[1];
+  REQUIRE_FALSE(processor_with_properties.children.empty());
+  const auto &prop_descriptors = processor_with_properties.children[0];
   REQUIRE_FALSE(prop_descriptors.children.empty());
   const auto &prop_0 = prop_descriptors.children[0];
   REQUIRE(prop_0.children.size() >= 7);
