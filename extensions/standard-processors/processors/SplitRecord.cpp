@@ -19,6 +19,7 @@
 #include "core/Resource.h"
 #include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 

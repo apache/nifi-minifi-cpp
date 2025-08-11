@@ -392,7 +392,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile
+This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile. If Record Reader and Record Writer are set, then the MQTT message specific attributes are not set in the flow file, because different attributes can be set for different records. In this case if Add Attributes As Fields is set to true, the attributes will be added to each record as fields.
 
 ### Properties
 
@@ -411,6 +411,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Attribute From Content Type |               |                                      | Name of FlowFile attribute to be filled from content type of received message. MQTT 5.x only.                                                             |
 | Topic Alias Maximum         | 0             |                                      | Maximum number of topic aliases to use. If set to 0, then topic aliases cannot be used. MQTT 5.x only.                                                    |
 | Receive Maximum             | 65535         |                                      | Maximum number of unacknowledged messages allowed. MQTT 5.x only.                                                                                         |
+| Record Reader               |               |                                      | The Record Reader to use for parsing received MQTT Messages into Records.                                                                                 |
+| Record Writer               |               |                                      | The Record Writer to use for serializing Records before writing them to a FlowFile.                                                                       |
+| Add Attributes As Fields    | true          | true<br/>false                       | If setting this property to true, default fields are going to be added in each record: _topic, _qos, _isDuplicate, _isRetained.                           |
 | **Quality of Service**      | 0             | 0<br/>1<br/>2                        | The Quality of Service (QoS) of messages.                                                                                                                 |
 | Connection Timeout          | 10 sec        |                                      | Maximum time interval the client will wait for the network connection to the MQTT broker                                                                  |
 | Keep Alive Interval         | 60 sec        |                                      | Defines the maximum time interval between messages sent or received                                                                                       |
@@ -435,10 +438,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute   | Relationship | Description               |
-|-------------|--------------|---------------------------|
-| mqtt.broker |              | URI of the sending broker |
-| mqtt.topic  |              | Topic of the message      |
+| Attribute            | Relationship | Description                                                                                                                           |
+|----------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| mqtt.broker          |              | URI of the sending broker                                                                                                             |
+| mqtt.topic           |              | Topic of the message                                                                                                                  |
+| mqtt.topic.segment.n |              | The nth topic segment of the message                                                                                                  |
+| mqtt.qos             |              | The quality of service for this message.                                                                                              |
+| mqtt.isDuplicate     |              | Whether or not this message might be a duplicate of one which has already been received.                                              |
+| mqtt.isRetained      |              | Whether or not this message was from a current publisher, or was "retained" by the server as the last message published on the topic. |
+| record.count         |              | The number of records received                                                                                                        |
 
 
 ## ConsumeWindowsEventLog
@@ -2198,6 +2206,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Retain                  | false         | true<br/>false                       | Retain published message in broker                                                                                          |
 | Message Expiry Interval |               |                                      | Time while message is valid and will be forwarded by broker. MQTT 5.x only.                                                 |
 | Content Type            |               |                                      | Content type of the message. MQTT 5.x only.<br/>**Supports Expression Language: true**                                      |
+| Record Reader           |               |                                      | The Record Reader to use for parsing the incoming FlowFile into Records.                                                    |
+| Record Writer           |               |                                      | The Record Writer to use for serializing Records before publishing them as an MQTT Message.                                 |
 | **Quality of Service**  | 0             | 0<br/>1<br/>2                        | The Quality of Service (QoS) of messages.                                                                                   |
 | Connection Timeout      | 10 sec        |                                      | Maximum time interval the client will wait for the network connection to the MQTT broker                                    |
 | Keep Alive Interval     | 60 sec        |                                      | Defines the maximum time interval between messages sent or received                                                         |

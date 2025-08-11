@@ -32,6 +32,8 @@
 #include "core/logging/LoggerFactory.h"
 #include "utils/Enum.h"
 #include "MQTTAsync.h"
+#include "controllers/RecordSetReader.h"
+#include "controllers/RecordSetWriter.h"
 
 namespace org::apache::nifi::minifi::processors::mqtt {
 enum class MqttVersions {
@@ -256,13 +258,16 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
   std::optional<std::chrono::seconds> maximum_session_expiry_interval_;
   std::optional<std::chrono::seconds> server_keep_alive_;
 
+  std::shared_ptr<core::RecordSetReader> record_set_reader_;
+  std::shared_ptr<core::RecordSetWriter> record_set_writer_;
+
  private:
   using ConnectFinishedTask = std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>;
 
   /**
    * Initializes local MQTT client and connects to broker.
    */
-  void initializeClient();
+  virtual void initializeClient();
 
   /**
    * Calls disconnect() and releases local MQTT client

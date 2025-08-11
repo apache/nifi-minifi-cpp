@@ -517,3 +517,6 @@ class MiNiFi_integration_test:
 
     def check_is_data_present_on_couchbase(self, doc_id: str, bucket_name: str, expected_data: str, expected_data_type: str):
         assert self.cluster.is_data_present_in_couchbase(doc_id, bucket_name, expected_data, expected_data_type)
+
+    def publish_test_mqtt_message(self, topic, message):
+        self.cluster.publish_test_mqtt_message(topic, message)

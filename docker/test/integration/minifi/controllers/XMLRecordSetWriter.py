@@ -14,27 +14,10 @@
 # limitations under the License.
 
 
-import uuid
-import logging
+from ..core.ControllerService import ControllerService
 
 
-class ControllerService(object):
-    def __init__(self, name=None, properties=None):
-
-        self.id = str(uuid.uuid4())
-        self.instance_id = str(uuid.uuid4())
-
-        if name is None:
-            self.name = str(uuid.uuid4())
-            logging.info('Controller service name was not provided; using generated name \'%s\'', self.name)
-        else:
-            self.name = name
-
-        if properties is None:
-            properties = {}
-
-        self.properties = properties
-        self.linked_services = []
-
-    def set_property(self, name, value):
-        self.properties[name] = value
+class XMLRecordSetWriter(ControllerService):
+    def __init__(self, name=None):
+        super(XMLRecordSetWriter, self).__init__(name=name)
+        self.service_class = 'XMLRecordSetWriter'

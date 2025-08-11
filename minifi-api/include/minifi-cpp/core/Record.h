@@ -47,6 +47,10 @@ class Record final {
     return fields_.at(key);
   }
 
+  [[nodiscard]] bool contains(const std::string& key) const {
+    return fields_.contains(key);
+  }
+
   [[nodiscard]] std::unordered_map<std::string, RecordField>::const_iterator begin() const {
     return fields_.begin();
   }
