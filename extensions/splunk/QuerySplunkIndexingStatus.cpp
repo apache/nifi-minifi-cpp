@@ -141,7 +141,7 @@ void QuerySplunkIndexingStatus::onSchedule(core::ProcessContext& context, core::
   SplunkHECProcessor::onSchedule(context, session_factory);
   max_age_ = utils::parseDurationProperty(context, MaximumWaitingTime);
   batch_size_ = utils::parseU64Property(context, MaxQuerySize);
-  auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextService>(context, SSLContext, getUUID());
+  auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, SSLContext, getUUID());
   initializeClient(client_, getNetworkLocation().append(getEndpoint()), ssl_context_service);
 }
 

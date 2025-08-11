@@ -82,7 +82,7 @@ void PushGrafanaLokiREST::initializeHttpClient(core::ProcessContext& context) {
     url += "/loki/api/v1/push";
   }
   logger_->log_debug("PushGrafanaLokiREST push url is set to: {}", url);
-  auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextService>(context, PushGrafanaLoki::SSLContextService, getUUID());
+  auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, PushGrafanaLoki::SSLContextService, getUUID());
   client_.initialize(http::HttpRequestMethod::POST, url, ssl_context_service);
 }
 

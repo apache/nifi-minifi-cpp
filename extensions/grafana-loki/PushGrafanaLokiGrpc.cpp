@@ -74,7 +74,7 @@ void PushGrafanaLokiGrpc::setUpGrpcChannel(const std::string& url, core::Process
   args.SetInt(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1);
 
   std::shared_ptr<::grpc::ChannelCredentials> creds = [&]() {
-    auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextService>(context, PushGrafanaLoki::SSLContextService, getUUID());
+    auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, PushGrafanaLoki::SSLContextService, getUUID());
     if (ssl_context_service) {
       ::grpc::SslCredentialsOptions ssl_credentials_options;
       ssl_credentials_options.pem_cert_chain = utils::file::FileUtils::get_content(ssl_context_service->getCertificateFile());
