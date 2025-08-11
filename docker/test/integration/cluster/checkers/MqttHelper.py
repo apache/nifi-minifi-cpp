@@ -12,29 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import paho.mqtt.client as mqtt
 
 
-import uuid
-import logging
-
-
-class ControllerService(object):
-    def __init__(self, name=None, properties=None):
-
-        self.id = str(uuid.uuid4())
-        self.instance_id = str(uuid.uuid4())
-
-        if name is None:
-            self.name = str(uuid.uuid4())
-            logging.info('Controller service name was not provided; using generated name \'%s\'', self.name)
-        else:
-            self.name = name
-
-        if properties is None:
-            properties = {}
-
-        self.properties = properties
-        self.linked_services = []
-
-    def set_property(self, name, value):
-        self.properties[name] = value
+class MqttHelper:
+    def publish_test_mqtt_message(self, topic: str, message: str):
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "docker_test_client_id")
+        client.connect("localhost", 1883, 60)
+        client.publish(topic, message)
+        client.disconnect()
