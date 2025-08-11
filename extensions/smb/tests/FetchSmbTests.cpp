@@ -24,13 +24,14 @@
 #include "unit/SingleProcessorTestController.h"
 #include "utils/OsUtils.h"
 #include "core/Resource.h"
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::smb::test {
 
 REGISTER_RESOURCE(MockSmbConnectionControllerService, ControllerService);
 
 TEST_CASE("FetchSmb invalid network path") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<FetchSmb>("FetchSmb")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<FetchSmb>("FetchSmb")};
   const auto fetch_smb = controller.getProcessor();
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
   REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Hostname, utils::OsUtils::getHostName().value_or("localhost")));
@@ -43,7 +44,7 @@ TEST_CASE("FetchSmb invalid network path") {
 }
 
 TEST_CASE("FetchSmb tests") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<FetchSmb>("FetchSmb")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<FetchSmb>("FetchSmb")};
   const auto fetch_smb = controller.getProcessor();
 
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");

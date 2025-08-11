@@ -29,7 +29,7 @@
 #include "http/BaseHTTPClient.h"
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -77,15 +77,14 @@ struct RPG {
 
 class RemoteProcessorGroupPort : public core::ProcessorImpl {
  public:
-  RemoteProcessorGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
-      : core::ProcessorImpl(name, uuid),
+  RemoteProcessorGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid, std::shared_ptr<core::logging::Logger> logger = nullptr)
+      : core::ProcessorImpl({.uuid = uuid, .name = std::string{name}, .logger = logger ? logger : core::logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger(uuid)}),
         configure_(std::move(configure)),
         direction_(sitetosite::SEND),
         transmitting_(false),
         timeout_(0),
         bypass_rest_api_(false),
-        ssl_service(nullptr),
-        logger_(core::logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger(uuid)) {
+        ssl_service(nullptr) {
     client_type_ = sitetosite::CLIENT_TYPE::RAW;
     protocol_uuid_ = uuid;
     site2site_secure_ = false;
@@ -212,7 +211,7 @@ class RemoteProcessorGroupPort : public core::ProcessorImpl {
   }
 
   std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol(bool create);
-  void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
+  void returnProtocol(core::ProcessContext& context, std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
 
   moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
 
@@ -251,7 +250,6 @@ class RemoteProcessorGroupPort : public core::ProcessorImpl {
   std::shared_ptr<controllers::SSLContextServiceInterface> ssl_service;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_;
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };
 

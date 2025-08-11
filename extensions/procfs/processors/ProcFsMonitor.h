@@ -25,7 +25,7 @@
 #include <optional>
 
 #include "../ProcFs.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
@@ -55,10 +55,7 @@ enum class ResultRelativeness {
 
 class ProcFsMonitor final : public core::ProcessorImpl {
  public:
-  explicit ProcFsMonitor(const std::string_view name, utils::Identifier uuid = utils::Identifier())
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<ProcFsMonitor>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~ProcFsMonitor() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "This processor can create FlowFiles with various performance data through the proc pseudo-filesystem. (Linux only)";

@@ -163,11 +163,11 @@ class MergeTestController : public TestController {
     auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(std::make_shared<minifi::ConfigureImpl>());
 
-    merge_content_processor_ = std::make_unique<minifi::processors::MergeContent>("mergecontent");
+    merge_content_processor_ = minifi::test::utils::make_processor<minifi::processors::MergeContent>("mergecontent");
     merge_content_processor_->initialize();
     utils::Identifier processoruuid = merge_content_processor_->getUUID();
     REQUIRE(processoruuid);
-    log_attribute_processor_ = std::make_unique<minifi::processors::LogAttribute>("logattribute");
+    log_attribute_processor_ = minifi::test::utils::make_processor<minifi::processors::LogAttribute>("logattribute");
     utils::Identifier logAttributeuuid = log_attribute_processor_->getUUID();
     REQUIRE(logAttributeuuid);
 
@@ -903,7 +903,7 @@ TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testM
 }
 
 TEST_CASE("Empty MergeContent yields") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<minifi::processors::MergeContent>("mergeContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<minifi::processors::MergeContent>("mergeContent")};
   controller.trigger();
 
   auto merge_content = controller.getProcessor();
@@ -911,7 +911,7 @@ TEST_CASE("Empty MergeContent yields") {
 }
 
 TEST_CASE("Empty MergeContent doesnt yield when processing readybins") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<minifi::processors::MergeContent>("mergeContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<minifi::processors::MergeContent>("mergeContent")};
   const auto merge_content = controller.getProcessor();
   REQUIRE(controller.plan->setProperty(merge_content, minifi::processors::MergeContent::MaxBinAge, "100ms"));
   REQUIRE(controller.plan->setProperty(merge_content, minifi::processors::MergeContent::MinEntries, "2"));

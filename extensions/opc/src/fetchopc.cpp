@@ -23,7 +23,6 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/Processor.h"
 #include "core/Resource.h"
 #include "opc.h"
 #include "utils/Enum.h"
@@ -67,7 +66,7 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
   logger_->log_trace("FetchOPCProcessor::onTrigger");
 
   if (!reconnect()) {
-    yield();
+    context.yield();
     return;
   }
 
@@ -92,7 +91,7 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
       my_id.identifier.string = UA_STRING_ALLOC(node_id_.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
     } else {
       logger_->log_error("Unhandled id type: '{}'. No flowfiles are generated.", magic_enum::enum_underlying(id_type_));
-      yield();
+      context.yield();
       return;
     }
     connection_->traverse(my_id, found_cb, "", max_depth_);
@@ -101,7 +100,7 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
       auto sc = connection_->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids_, namespace_idx_, path_reference_types_, logger_);
       if (sc != UA_STATUSCODE_GOOD) {
         logger_->log_error("Failed to translate {} to node id, no flow files will be generated ({})", node_id_.c_str(), UA_StatusCode_name(sc));
-        yield();
+        context.yield();
         return;
       }
     }
@@ -111,10 +110,10 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
   }
   if (nodes_found == 0) {
     logger_->log_warn("Connected to OPC server, but no variable nodes were found. Configuration might be incorrect! Yielding...");
-    yield();
+    context.yield();
   } else if (variables_found == 0) {
     logger_->log_warn("Found no variables when traversing the specified node. No flowfiles are generated. Yielding...");
-    yield();
+    context.yield();
   }
 
   state_manager_->set(state_map);

@@ -22,16 +22,14 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
+#include "minifi-cpp/core/ProcessorDescriptor.h"
 
 namespace org::apache::nifi::minifi {
 
 class ForwardingNode : public core::ProcessorImpl {
  public:
-  ForwardingNode(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger) : ProcessorImpl(name, uuid), logger_(std::move(logger)) {
-    strategy_ = core::SchedulingStrategy::EVENT_DRIVEN;
-  }
-  ForwardingNode(std::string_view name, std::shared_ptr<core::logging::Logger> logger) : ProcessorImpl(name), logger_(std::move(logger)) {}
+  using ProcessorImpl::ProcessorImpl;
 
   MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   MINIFIAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};
@@ -44,8 +42,7 @@ class ForwardingNode : public core::ProcessorImpl {
 
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
- private:
-  std::shared_ptr<core::logging::Logger> logger_;
+  ~ForwardingNode() override = default;
 };
 
 }  // namespace org::apache::nifi::minifi

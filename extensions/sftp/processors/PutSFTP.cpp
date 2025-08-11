@@ -42,13 +42,12 @@ void PutSFTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-PutSFTP::PutSFTP(std::string_view name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-  : SFTPProcessorBase(name, uuid),
+PutSFTP::PutSFTP(core::ProcessorMetadata metadata)
+  : SFTPProcessorBase(std::move(metadata)),
     create_directory_(false),
     batch_size_(0),
     reject_zero_byte_(false),
     dot_rename_(false) {
-  logger_ = core::logging::LoggerFactory<PutSFTP>::getLogger(uuid_);
 }
 
 PutSFTP::~PutSFTP() = default;

@@ -22,7 +22,7 @@
 #include <map>
 
 #include "controllers/SSLContextServiceInterface.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -34,10 +34,9 @@ namespace org::apache::nifi::minifi::extensions::grafana::loki {
 
 class PushGrafanaLoki : public core::ProcessorImpl {
  public:
-  PushGrafanaLoki(const std::string_view name, const utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
-      : ProcessorImpl(name, uuid),
-        logger_(logger),
-        log_batch_(logger_) {
+  explicit PushGrafanaLoki(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata),
+        log_batch_(metadata.logger) {
   }
   ~PushGrafanaLoki() override = default;
 
@@ -107,7 +106,6 @@ class PushGrafanaLoki : public core::ProcessorImpl {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& sessionFactory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void restore(const std::shared_ptr<core::FlowFile>& flow_file) override;
-  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
 
  protected:
   static const core::Relationship Self;
@@ -142,7 +140,6 @@ class PushGrafanaLoki : public core::ProcessorImpl {
   void setUpStateManager(core::ProcessContext& context);
   virtual void setUpStreamLabels(core::ProcessContext& context) = 0;
 
-  std::shared_ptr<core::logging::Logger> logger_;
   std::optional<uint64_t> max_batch_size_;
   std::vector<std::string> log_line_metadata_attributes_;
   bool log_line_batch_size_is_set_ = false;

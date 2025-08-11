@@ -147,9 +147,8 @@ class ListenHTTPTestsFixture {
     plan->runNextProcessor();  // UpdateAttribute
     plan->runNextProcessor();  // ListenHTTP
 
-    auto raw_ptr = dynamic_cast<org::apache::nifi::minifi::processors::ListenHTTP*>(listen_http);
-    std::string protocol = std::string("http") + (raw_ptr->isSecure() ? "s" : "");
-    std::string portstr = raw_ptr->getPort();
+    std::string protocol = std::string("http") + (listen_http.get().isSecure() ? "s" : "");
+    std::string portstr = listen_http.get().getPort();
     REQUIRE(LogTestController::getInstance().contains("Listening on port " + portstr));
 
     url = protocol + "://localhost:" + portstr + "/contentListener/" + endpoint;
@@ -203,13 +202,13 @@ class ListenHTTPTestsFixture {
     if (client_to_use) {
       REQUIRE(response_expectations.size() == 1);
     }
-    auto* proc = dynamic_cast<minifi::processors::ListenHTTP*>(&plan->getCurrentContext()->getProcessor());
+    TypedProcessorWrapper<minifi::processors::ListenHTTP> proc = &plan->getCurrentContext()->getProcessor();
     REQUIRE(proc);
 
     std::vector<std::thread> client_threads;
 
     for (auto& expect : response_expectations) {
-      size_t prev_req_count = ListenHTTPTestAccessor::call_pendingRequestCount(*proc);
+      size_t prev_req_count = ListenHTTPTestAccessor::call_pendingRequestCount(proc.get());
       auto thread_done_flag = std::make_shared<std::atomic_bool>(false);
       client_threads.emplace_back([&, thread_done_flag] {
         auto client = client_to_use ? std::move(client_to_use) : initialize_client();
@@ -217,7 +216,7 @@ class ListenHTTPTestsFixture {
         check_response(client->submit(), expect, *client);
         thread_done_flag->store(true);
       });
-      while (!thread_done_flag->load() && ListenHTTPTestAccessor::call_pendingRequestCount(*proc) != prev_req_count + 1) {
+      while (!thread_done_flag->load() && ListenHTTPTestAccessor::call_pendingRequestCount(proc.get()) != prev_req_count + 1) {
         std::this_thread::sleep_for(1ms);
       }
     }
@@ -256,7 +255,7 @@ class ListenHTTPTestsFixture {
   std::shared_ptr<TestPlan> plan;
   core::Processor* get_file = nullptr;
   core::Processor* update_attribute = nullptr;
-  core::Processor* listen_http = nullptr;
+  TypedProcessorWrapper<org::apache::nifi::minifi::processors::ListenHTTP> listen_http = nullptr;
   core::Processor* log_attribute = nullptr;
 
   std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service;
@@ -272,7 +271,7 @@ class ListenHTTPTestsFixture {
 TEST_CASE("ListenHTTP creation", "[basic]") {
   TestController testController;
   std::shared_ptr<core::Processor>
-      processor = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("processorname");
+      processor = minifi::test::utils::make_processor<org::apache::nifi::minifi::processors::ListenHTTP>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 
@@ -697,7 +696,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
 
 TEST_CASE("ListenHTTP bored yield", "[listenhttp][bored][yield]") {
   using processors::ListenHTTP;
-  SingleProcessorTestController controller{std::make_unique<ListenHTTP>("listenhttp")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<ListenHTTP>("listenhttp")};
   auto listen_http = controller.getProcessor();
   REQUIRE(listen_http->setProperty(ListenHTTP::Port.name, "0"));
 

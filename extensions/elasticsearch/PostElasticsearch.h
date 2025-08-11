@@ -24,7 +24,7 @@
 
 #include "controllers/SSLContextServiceInterface.h"
 #include "ElasticsearchCredentialsControllerService.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -38,10 +38,7 @@ class PostElasticsearch : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "An Elasticsearch/Opensearch post processor that uses the Elasticsearch/Opensearch _bulk REST API.";
 
-  explicit PostElasticsearch(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~PostElasticsearch() override = default;
 
   EXTENSIONAPI static constexpr auto Action = core::PropertyDefinitionBuilder<>::createProperty("Action")

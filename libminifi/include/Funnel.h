@@ -26,8 +26,8 @@ namespace org::apache::nifi::minifi {
 
 class Funnel final : public ForwardingNode {
  public:
-  Funnel(std::string_view name, const utils::Identifier& uuid) : ForwardingNode(name, uuid, core::logging::LoggerFactory<Funnel>::getLogger(uuid)) {}
-  explicit Funnel(std::string_view name) : ForwardingNode(name, core::logging::LoggerFactory<Funnel>::getLogger()) {}
+  Funnel(std::string_view name, const utils::Identifier& uuid)
+      : ForwardingNode(core::ProcessorMetadata{.uuid = uuid, .name = std::string{name}, .logger = core::logging::LoggerFactory<Funnel>::getLogger(uuid)}) {}
 
   MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS

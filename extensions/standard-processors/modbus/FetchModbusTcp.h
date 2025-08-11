@@ -18,7 +18,7 @@
 
 #include "controllers/RecordSetWriter.h"
 #include "controllers/SSLContextServiceInterface.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/net/AsioCoro.h"
@@ -31,10 +31,7 @@ class ReadModbusFunction;
 
 class FetchModbusTcp final : public core::ProcessorImpl {
  public:
-  explicit FetchModbusTcp(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<FetchModbusTcp>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr auto Description = "Processor able to read data from industrial PLCs using Modbus TCP/IP";
 
@@ -127,7 +124,7 @@ class FetchModbusTcp final : public core::ProcessorImpl {
   asio::awaitable<nonstd::expected<core::RecordField, std::error_code>> sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
       const ReadModbusFunction& read_modbus_function);
   std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>> getAddressMap(core::ProcessContext& context, const core::FlowFile& flow_file);
-  std::shared_ptr<core::FlowFile> getOrCreateFlowFile(core::ProcessSession& session) const;
+  static std::shared_ptr<core::FlowFile> getOrCreateFlowFile(core::ProcessContext& context, core::ProcessSession& session);
   void removeExpiredConnections();
 
   asio::io_context io_context_;

@@ -140,7 +140,7 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
 TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in HTTP headers", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
   TestHTTPServer http_server;
 
@@ -162,7 +162,7 @@ TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that wou
     "[httptest1][invokehttp][httpheader][attribute]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
   TestHTTPServer http_server;
 
@@ -184,7 +184,7 @@ TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that wou
 TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
   TestHTTPServer http_server;
 
@@ -205,7 +205,7 @@ TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]")
 TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
   TestHTTPServer http_server;
 
@@ -227,7 +227,7 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
 TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
   TestHTTPServer http_server;
 
@@ -250,7 +250,7 @@ TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[
 TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invoke_http = test_controller.getProcessor();
   TestHTTPServer http_server;
 
@@ -284,7 +284,7 @@ TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
 TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substring", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invokehttp = test_controller.getProcessor();
   TestHTTPServer http_server;
 
@@ -307,7 +307,7 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
 TEST_CASE("HTTPTestsResponseBodyinAttribute", "[InvokeHTTP]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invoke_http = test_controller.getProcessor();
 
   minifi::test::ConnectionCountingServer connection_counting_server;
@@ -332,7 +332,7 @@ TEST_CASE("HTTPTestsResponseBodyinAttribute", "[InvokeHTTP]") {
 TEST_CASE("HTTPTestsResponseBody", "[InvokeHTTP]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invoke_http = test_controller.getProcessor();
 
   minifi::test::ConnectionCountingServer connection_counting_server;
@@ -355,7 +355,7 @@ TEST_CASE("HTTPTestsResponseBody", "[InvokeHTTP]") {
 TEST_CASE("Test Keepalive", "[InvokeHTTP]") {
   using minifi::processors::InvokeHTTP;
 
-  test::SingleProcessorTestController test_controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
+  test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
   auto invoke_http = test_controller.getProcessor();
 
   minifi::test::ConnectionCountingServer connection_counting_server;
@@ -410,8 +410,8 @@ TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers
     test_attr_value_out = test_attr_value_in;
   };
 
-  SingleProcessorTestController controller{std::make_unique<InvokeHTTP>("InvokeHTTP")};
-  auto* const invoke_http = controller.getProcessor<InvokeHTTP>();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<InvokeHTTP>("InvokeHTTP")};
+  auto const invoke_http = controller.getProcessor<InvokeHTTP>();
   const TestHTTPServer http_server;
   REQUIRE(invoke_http->setProperty(InvokeHTTP::Method.name, "POST"));
   REQUIRE(invoke_http->setProperty(InvokeHTTP::URL.name, TestHTTPServer::URL));

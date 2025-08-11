@@ -25,7 +25,6 @@
 #include "opc.h"
 #include "opcbase.h"
 #include "FlowFileRecord.h"
-#include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -70,10 +69,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class FetchOPCProcessor final : public BaseOPCProcessor {
  public:
-  explicit FetchOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
-      : BaseOPCProcessor(name, uuid) {
-    logger_ = core::logging::LoggerFactory<FetchOPCProcessor>::getLogger(uuid_);
-  }
+  using BaseOPCProcessor::BaseOPCProcessor;
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches OPC-UA node";
 

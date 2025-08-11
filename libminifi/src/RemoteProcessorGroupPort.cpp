@@ -88,10 +88,10 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
   return nextProtocol;
 }
 
-void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
+void RemoteProcessorGroupPort::returnProtocol(core::ProcessContext& context, std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
   auto count = peers_.size();
-  if (max_concurrent_tasks_ > count)
-    count = max_concurrent_tasks_;
+  if (context.getProcessor().getMaxConcurrentTasks() > count)
+    count = context.getProcessor().getMaxConcurrentTasks();
   if (available_protocols_.size_approx() >= count) {
     logger_->log_debug("not enqueueing protocol {}", getUUIDStr());
     // let the memory be freed
@@ -140,8 +140,8 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
   // populate the site2site protocol for load balancing between them
   if (!peers_.empty()) {
     auto count = peers_.size();
-    if (max_concurrent_tasks_ > count)
-      count = max_concurrent_tasks_;
+    if (context.getProcessor().getMaxConcurrentTasks() > count)
+      count = context.getProcessor().getMaxConcurrentTasks();
     for (uint32_t i = 0; i < count; i++) {
       std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
       sitetosite::SiteToSiteClientConfiguration config(peers_[this->peer_index_].getPeer(), this->getInterface(), client_type_);
@@ -155,7 +155,7 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
       config.setIdleTimeout(idle_timeout_);
       nextProtocol = sitetosite::createClient(config);
       logger_->log_trace("Created client, moving into available protocols");
-      returnProtocol(std::move(nextProtocol));
+      returnProtocol(context, std::move(nextProtocol));
     }
   } else {
     // we don't have any peers
@@ -203,7 +203,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext& context, core::Pr
       context.yield();
     }
 
-    returnProtocol(std::move(protocol_));
+    returnProtocol(context, std::move(protocol_));
     return;
   } catch (const minifi::Exception &) {
     context.yield();

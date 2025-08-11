@@ -48,9 +48,7 @@ class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageFileProcesso
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit DeleteAzureDataLakeStorage(std::string_view name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureDataLakeStorage>::getLogger(uuid)) {
-  }
+  using AzureDataLakeStorageFileProcessorBase::AzureDataLakeStorageFileProcessorBase;
 
   ~DeleteAzureDataLakeStorage() override = default;
 
@@ -60,8 +58,8 @@ class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageFileProcesso
  private:
   friend class ::AzureDataLakeStorageTestsFixture<DeleteAzureDataLakeStorage>;
 
-  explicit DeleteAzureDataLakeStorage(std::string_view name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+  explicit DeleteAzureDataLakeStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+    : AzureDataLakeStorageFileProcessorBase(metadata, std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::DeleteAzureDataLakeStorageParameters> buildDeleteParameters(core::ProcessContext& context, const core::FlowFile& flow_file);

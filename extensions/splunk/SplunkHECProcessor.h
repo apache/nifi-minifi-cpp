@@ -22,7 +22,7 @@
 
 #include "controllers/SSLContextServiceInterface.h"
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "http/HTTPClient.h"
@@ -69,10 +69,7 @@ class SplunkHECProcessor : public core::ProcessorImpl {
       SSLContext
   });
 
-
-  explicit SplunkHECProcessor(std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~SplunkHECProcessor() override = default;
 
   void initialize() override;

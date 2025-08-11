@@ -152,7 +152,7 @@ class TcpTestServer {
 };
 
 TEST_CASE("GetTCP test with delimiter", "[GetTCP]") {
-  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
@@ -183,7 +183,7 @@ TEST_CASE("GetTCP test with delimiter", "[GetTCP]") {
 }
 
 TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
-  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
@@ -224,7 +224,7 @@ TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
 }
 
 TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
-  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
@@ -268,7 +268,7 @@ TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
 }
 
 TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
-  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "10"));

@@ -20,7 +20,7 @@
 #include <utility>
 
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/RelationshipDefinition.h"
@@ -38,10 +38,7 @@ class WriteToFlowFileTestProcessor : public core::ProcessorImpl {
   static constexpr const char* ON_TRIGGER_LOG_STR = "WriteToFlowFileTestProcessor::onTrigger executed";
   static constexpr const char* ON_UNSCHEDULE_LOG_STR = "WriteToFlowFileTestProcessor::onUnSchedule executed";
 
-  explicit WriteToFlowFileTestProcessor(const std::string_view name, const utils::Identifier& uuid = utils::Identifier())
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   static constexpr const char* Description = "WriteToFlowFileTestProcessor (only for testing purposes)";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};

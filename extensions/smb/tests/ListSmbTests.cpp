@@ -25,13 +25,14 @@
 #include "range/v3/algorithm/count_if.hpp"
 #include "range/v3/algorithm/find_if.hpp"
 #include "core/Resource.h"
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::smb::test {
 
 REGISTER_RESOURCE(MockSmbConnectionControllerService, ControllerService);
 
 TEST_CASE("ListSmb invalid network path") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ListSmb>("ListSmb")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<ListSmb>("ListSmb")};
   const auto list_smb = controller.getProcessor();
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
   REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Hostname, utils::OsUtils::getHostName().value_or("localhost")));
@@ -52,7 +53,7 @@ bool checkForFlowFileWithAttributes(const std::vector<std::shared_ptr<core::Flow
 }
 
 TEST_CASE("ListSmb tests") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<ListSmb>("ListSmb")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<ListSmb>("ListSmb")};
   const auto list_smb = controller.getProcessor();
 
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");

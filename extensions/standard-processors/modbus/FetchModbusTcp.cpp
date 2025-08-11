@@ -41,10 +41,10 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
   }
 
   // if the required properties are missing or empty even before evaluating the EL expression, then we can throw in onSchedule, before we waste any flow files
-  if (context.getProperty(Hostname).value_or(std::string{}).empty()) {
+  if (!context.getProperty(Hostname.name)) {
     throw Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "missing hostname"};
   }
-  if (context.getProperty(Port).value_or(std::string{}).empty()) {
+  if (!context.hasNonEmptyProperty(Port.name)) {
     throw Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "missing port"};
   }
 
@@ -73,7 +73,7 @@ void FetchModbusTcp::onSchedule(core::ProcessContext& context, core::ProcessSess
 }
 
 void FetchModbusTcp::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  const auto flow_file = getOrCreateFlowFile(session);
+  const auto flow_file = getOrCreateFlowFile(context, session);
   if (!flow_file) {
     logger_->log_error("No flowfile to work on");
     return;
@@ -117,8 +117,8 @@ void FetchModbusTcp::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-std::shared_ptr<core::FlowFile> FetchModbusTcp::getOrCreateFlowFile(core::ProcessSession& session) const {
-  if (hasIncomingConnections()) {
+std::shared_ptr<core::FlowFile> FetchModbusTcp::getOrCreateFlowFile(core::ProcessContext& context, core::ProcessSession& session) {
+  if (context.hasIncomingConnections()) {
     return session.get();
   }
   return session.create();

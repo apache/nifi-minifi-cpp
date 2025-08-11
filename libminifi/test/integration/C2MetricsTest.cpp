@@ -163,6 +163,7 @@ class MetricsHandler: public HeartbeatHandler {
 
   static bool verifyProcessorBulletins(const rapidjson::Value& runtime_metrics) {
     if (!runtime_metrics["flowInfo"].HasMember("processorBulletins")) {
+      std::cout << R"(!runtime_metrics["flowInfo"].HasMember("processorBulletins"))" << std::endl;
       return false;
     }
     auto bulletins = runtime_metrics["flowInfo"]["processorBulletins"].GetArray();
