@@ -43,7 +43,7 @@ class AzureBlobStorageClient : public BlobStorageClient {
   std::vector<Azure::Storage::Blobs::Models::BlobItem> listContainer(const ListAzureBlobStorageParameters& params) override;
 
  private:
-  static std::unique_ptr<Azure::Storage::Blobs::BlobContainerClient> createClient(const AzureStorageCredentials& credentials, const std::string &container_name);
+  static Azure::Storage::Blobs::BlobContainerClient createClient(const AzureStorageCredentials& credentials, const std::string &container_name);
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureBlobStorageClient>::getLogger()};
 };
