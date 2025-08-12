@@ -28,6 +28,7 @@ from minifi.controllers.JsonTreeReader import JsonTreeReader
 from minifi.controllers.XMLReader import XMLReader
 from minifi.controllers.XMLRecordSetWriter import XMLRecordSetWriter
 from minifi.controllers.CouchbaseClusterService import CouchbaseClusterService
+from minifi.controllers.SparkplugBReader import SparkplugBReader
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -465,6 +466,18 @@ def step_impl(context, processor_name, service_property_name, property_name, pro
 def step_impl(context):
     context.test.acquire_container(context=context, name="mqtt-broker", engine="mqtt-broker")
     context.test.start('mqtt-broker')
+
+
+@given("a SparkplugBReader controller service is set up")
+def step_impl(context):
+    sparkplug_record_set_reader = SparkplugBReader("SparkplugBReader")
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(sparkplug_record_set_reader)
+
+
+@when("a test Sparkplug payload is published to the topic \"{topic}\"")
+def step_impl(context, topic):
+    context.test.publish_test_sparkplug_payload(topic)
 
 
 # s3 setup

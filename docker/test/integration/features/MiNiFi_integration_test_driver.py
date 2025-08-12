@@ -502,3 +502,6 @@ class MiNiFi_integration_test:
 
     def publish_test_mqtt_message(self, topic, message):
         self.cluster.publish_test_mqtt_message(topic, message)
+
+    def publish_test_sparkplug_payload(self, topic):
+        self.cluster.publish_test_sparkplug_payload(topic)

@@ -459,3 +459,6 @@ class DockerTestCluster:
 
     def publish_test_mqtt_message(self, topic: str, message: str):
         self.mqtt_helper.publish_test_mqtt_message(topic, message)
+
+    def publish_test_sparkplug_payload(self, topic):
+        self.mqtt_helper.publish_test_sparkplug_payload(topic)
