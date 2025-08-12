@@ -30,9 +30,9 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::Proc
   mqtt_version_ = utils::parseEnumProperty<mqtt::MqttVersions>(context, MqttVersion);
 
   if (auto value = context.getProperty(ClientID)) {
-    clientID_ = std::move(*value);
-  } else if (mqtt_version_ == mqtt::MqttVersions::V_3_1_0) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "MQTT 3.1.0 specification does not support empty client IDs");
+    client_id_ = std::move(*value);
+  } else {
+    client_id_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
   }
 
   if (auto value = context.getProperty(Username)) {
@@ -120,7 +120,7 @@ void AbstractMQTTProcessor::initializeClient() {
     if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
       options.MQTTVersion = MQTTVERSION_5;
     }
-    if (MQTTAsync_createWithOptions(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, nullptr, &options) != MQTTASYNC_SUCCESS) {
+    if (MQTTAsync_createWithOptions(&client_, uri_.c_str(), client_id_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, nullptr, &options) != MQTTASYNC_SUCCESS) {
       throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Creating MQTT client failed");
     }
   }
