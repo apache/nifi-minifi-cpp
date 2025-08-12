@@ -21,8 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_AZURE))
     return()
 endif()
 
-include(BundledAzureSdkCpp)
-use_bundled_libazure(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+include(AzureSdkCpp)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
@@ -39,7 +38,7 @@ target_include_directories(minifi-azure BEFORE PRIVATE ${CMAKE_SOURCE_DIR}/exten
 
 target_link_libraries(minifi-azure ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-azure LibXml2::LibXml2)
-target_link_libraries(minifi-azure AZURE::azure-storage-files-datalake AZURE::azure-storage-blobs AZURE::azure-storage-common AZURE::azure-core AZURE::azure-identity)
+target_link_libraries(minifi-azure Azure::azure-storage-files-datalake Azure::azure-storage-blobs Azure::azure-storage-common Azure::azure-core Azure::azure-identity)
 
 if (WIN32)
     target_link_libraries(minifi-azure crypt32.lib bcrypt.lib)

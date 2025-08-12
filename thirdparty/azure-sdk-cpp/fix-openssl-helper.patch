@@ -1,0 +1,13 @@
+diff --git a/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp b/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp
+index a52791cea..b5e76a0f9 100644
+--- a/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp
++++ b/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp
+@@ -39,7 +39,7 @@ namespace Azure { namespace Security { namespace Attestation { namespace _detail
+   using openssl_evp_pkey = openssl_unique_ptr<EVP_PKEY>;
+   using openssl_bio = openssl_unique_ptr<BIO>;
+ 
+-#ifdef __cpp_nontype_template_parameter_auto
++#if defined(__cpp_nontype_template_parameter_auto) && !defined(_WIN32)
+   // *** Wrapper function that calls a given OpensslApi, and returns the corresponding
+   // openssl_unique_ptr<T>:
+   template <auto OpensslApi, typename... Args> auto make_openssl_unique(Args&&... args)
