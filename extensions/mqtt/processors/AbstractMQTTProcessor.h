@@ -257,7 +257,6 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
 
   std::optional<std::chrono::seconds> maximum_session_expiry_interval_;
   std::optional<std::chrono::seconds> server_keep_alive_;
-
   std::shared_ptr<core::RecordSetReader> record_set_reader_;
   std::shared_ptr<core::RecordSetWriter> record_set_writer_;
 
