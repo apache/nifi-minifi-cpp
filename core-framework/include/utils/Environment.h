@@ -35,7 +35,7 @@ class Environment {
    * Gets an environment variable using the native OS API
    * @param name the name of the environment variable
    * @return a pair consisting of a bool indicating whether the environment variable is set
-   * and an std::string containing the value of the environemnt variable
+   * and an std::string containing the value of the environment variable
    */
   static std::optional<std::string> getEnvironmentVariable(const char* name);
 

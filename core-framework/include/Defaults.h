@@ -23,3 +23,6 @@ const std::filesystem::path DEFAULT_NIFI_PROPERTIES_FILE = std::filesystem::path
 const std::filesystem::path DEFAULT_LOG_PROPERTIES_FILE = std::filesystem::path("conf") / "minifi-log.properties";
 const std::filesystem::path DEFAULT_UID_PROPERTIES_FILE = std::filesystem::path("conf") / "minifi-uid.properties";
 const std::filesystem::path DEFAULT_BOOTSTRAP_FILE = std::filesystem::path("conf") / "bootstrap.conf";
+
+constexpr std::string_view MINIFI_HOME_ENV_KEY = "MINIFI_HOME";
+constexpr std::string_view MINIFI_HOME_ENV_VALUE_FHS = "FHS";
