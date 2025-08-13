@@ -17,11 +17,14 @@
  */
 #include "PythonDependencyInstaller.h"
 
+#include <cstdio>
+
 #include "PythonScriptException.h"
 #include "PythonInterpreter.h"
 #include "PyException.h"
 #include "types/Types.h"
 #include "utils/OptionalUtils.h"
+#include "utils/ConfigurationUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -47,6 +50,44 @@ std::string encapsulateCommandInQuotesIfNeeded(const std::string& command) {
 #else
     return command;
 #endif
+}
+
+#ifdef WIN32
+#define popen _popen
+#define pclose _pclose
+#endif
+
+struct CommandResult {
+  int exit_code;
+  std::string output;
+};
+
+CommandResult executeProcess(const std::string& command) {
+  std::array<char, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
+
+  FILE* pipe = popen(encapsulateCommandInQuotesIfNeeded(command).c_str(), "r");
+  if (!pipe) {
+    return {1, fmt::format("Failed to open pipe for command: {}", command)};
+  }
+
+  std::ostringstream result;
+  while (fgets(buffer.data(), gsl::narrow<int>(buffer.size()), pipe) != nullptr) {
+    result << buffer.data();
+  }
+
+  int status = pclose(pipe);
+#ifdef WIN32
+  int exit_code = status;
+#else
+  int exit_code = -1;
+  if (WIFEXITED(status)) {
+    exit_code = WEXITSTATUS(status);
+  } else if (WIFSIGNALED(status)) {
+    exit_code = -WTERMSIG(status);
+  }
+#endif
+
+  return {exit_code, result.str()};
 }
 
 }  // namespace
@@ -93,10 +134,11 @@ void PythonDependencyInstaller::createVirtualEnvIfSpecified() const {
   }
   if (!std::filesystem::exists(virtualenv_path_) || std::filesystem::is_empty(virtualenv_path_)) {
     logger_->log_info("Creating python virtual env at: {}", virtualenv_path_.string());
-    auto venv_command = "\"" + python_binary_ + "\" -m venv \"" + virtualenv_path_.string() + "\"";
-    auto return_value = std::system(encapsulateCommandInQuotesIfNeeded(venv_command).c_str());
-    if (return_value != 0) {
-      throw PythonScriptException(fmt::format("The following command creating python virtual env failed: '{}'", venv_command));
+    auto venv_command = "\"" + python_binary_ + "\" -m venv \"" + virtualenv_path_.string() + "\" 2>&1";
+    auto result = executeProcess(venv_command);
+    if (result.exit_code != 0) {
+      logger_->log_error("The following command creating python virtual env failed: '{}'\nSetup process output:\n{}", venv_command, result.output);
+      throw PythonScriptException(fmt::format("The following command creating python virtual env failed: '{}'\nSetup process output:\n{}", venv_command, result.output));
     }
   }
 }
@@ -104,14 +146,19 @@ void PythonDependencyInstaller::createVirtualEnvIfSpecified() const {
 void PythonDependencyInstaller::runInstallCommandInVirtualenv(const std::string& install_command) const {
   std::string command_with_virtualenv;
 #if WIN32
-  command_with_virtualenv.append("\"").append((virtualenv_path_ / "Scripts" / "activate.bat").string()).append("\" && ");
+  command_with_virtualenv.append("\"").append((virtualenv_path_ / "Scripts" / "activate.bat").string()).append("\" 2>&1 && ");
 #else
-  command_with_virtualenv.append(". \"").append((virtualenv_path_ / "bin" / "activate").string()).append("\" && ");
+  command_with_virtualenv.append(". \"").append((virtualenv_path_ / "bin" / "activate").string()).append("\" 2>&1 && ");
 #endif
   command_with_virtualenv.append(install_command);
-  auto return_value = std::system(encapsulateCommandInQuotesIfNeeded(command_with_virtualenv).c_str());
-  if (return_value != 0) {
-    throw PythonScriptException(fmt::format("The following command to install python packages failed: '{}'", command_with_virtualenv));
+  command_with_virtualenv.append(" 2>&1");
+
+  auto result = executeProcess(command_with_virtualenv);
+  if (result.exit_code != 0) {
+    logger_->log_error("Failed to install python packages to virtualenv with command: {}\nInstall process output:\n{}", command_with_virtualenv, result.output);
+    throw PythonScriptException(fmt::format("Failed to install python packages to virtualenv with command: {}\nInstall process output:\n{}", command_with_virtualenv, result.output));
+  } else {
+    logger_->log_info("Python packages installed successfully with command: '{}'.\nInstall process output:\n{}", command_with_virtualenv, result.output);
   }
 }
 
