@@ -77,7 +77,7 @@
 ## Linux Installation types
 
 ### Self-contained installation (from a .tar.gz archive)
-The `MINIFI_HOME` environment variable should point to the installation directory, if `MINIFI_HOME` is not defined minifi will try to infer it from binary's location.
+The `MINIFI_HOME` environment variable should point to the installation directory, if `MINIFI_HOME` is not defined, MiNiFi will try to infer it from binary's location.
 
 ### Filesystem Hierarchy Standard installation (from .rpm package)
 The `MINIFI_HOME` environment variable should be set to `FHS`, if `MINIFI_HOME` is not defined but the binary is in the `/usr/bin` directory it will try to run as a FHS application.
@@ -667,7 +667,7 @@ As stated before each of the repositories can be configured to be volatile (stat
 ### Configuring Repository storage locations
 Persistent repositories, such as the Flow File repository, use configurable paths to store data. The application detects its installation type at runtime and uses the appropriate default locations.
 
-In a self-contained installation (from a .tar.gz archive), paths are relative to the application's root directory, which is typically configured using the ${MINIFI_HOME} environemnt variable. You may specify your own path in place of these defaults.
+In a self-contained installation (from a .tar.gz archive), paths are relative to the application's root directory, which is typically configured using the ${MINIFI_HOME} environment variable. You may specify your own path in place of these defaults.
 
     # in minifi.properties
     nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
@@ -847,8 +847,6 @@ It does require more configuration.  uid.minifi.device.segment.bits is used to s
 Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned to each MiNiFi instance.
 
 ### Asset directory
-
-## Asset Directory
 
 The location for downloaded assets is specified by the `nifi.asset.directory` agent property. The default path depends on the installation mode:
 
