@@ -19,6 +19,7 @@
 #include "core/Resource.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/file/FileReaderCallback.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::smb {
 
@@ -28,7 +29,7 @@ void FetchSmb::initialize() {
 }
 
 void FetchSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(context, FetchSmb::ConnectionControllerService);
+  smb_connection_controller_service_ = utils::parseControllerService<SmbConnectionControllerService>(context, FetchSmb::ConnectionControllerService, getUUID());
   buffer_size_ = utils::configuration::getBufferSize(*context.getConfiguration());
 }
 

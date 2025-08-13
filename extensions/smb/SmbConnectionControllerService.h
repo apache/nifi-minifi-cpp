@@ -87,8 +87,6 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   virtual std::error_code validateConnection();
   virtual std::filesystem::path getPath() const { return server_path_; }
 
-  static gsl::not_null<std::shared_ptr<SmbConnectionControllerService>> getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property);
-
  private:
   nonstd::expected<void, std::error_code> connect();
   nonstd::expected<void, std::error_code> disconnect();

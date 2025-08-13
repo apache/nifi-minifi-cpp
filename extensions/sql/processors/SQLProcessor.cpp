@@ -24,21 +24,12 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Exception.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 void SQLProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  std::string controllerService = context.getProperty(DBControllerService).value_or("");
-
-  if (auto service = context.getControllerService(controllerService, getUUID())) {
-    db_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(service);
-    if (!db_service_) {
-      throw minifi::Exception(PROCESSOR_EXCEPTION, "'" + controllerService + "' is not a DatabaseService");
-    }
-  } else {
-    throw minifi::Exception(PROCESSOR_EXCEPTION, "Could not find controller service '" + controllerService + "'");
-  }
-
+  db_service_ = utils::parseControllerService<sql::controllers::DatabaseService>(context, DBControllerService, getUUID());
   processOnSchedule(context);
 }
 

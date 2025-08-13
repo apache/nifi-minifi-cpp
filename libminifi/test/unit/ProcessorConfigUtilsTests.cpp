@@ -17,11 +17,15 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
+#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceNode.h"
+#include "core/controller/ControllerServiceProvider.h"
 #include "core/PropertyDefinition.h"
 #include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/Enum.h"
+#include "utils/Id.h"
 #include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -48,6 +52,7 @@ enum class TestEnum {
   A,
   B
 };
+}  // namespace
 
 TEST_CASE("Parse enum property") {
   static constexpr auto prop = PropertyDefinitionBuilder<magic_enum::enum_count<TestEnum>()>::createProperty("prop")
@@ -84,5 +89,99 @@ TEST_CASE("Parse enum property") {
   }
 }
 
+namespace {
+class TestControllerService : public controller::ControllerServiceImpl {
+ public:
+  using ControllerServiceImpl::ControllerServiceImpl;
+  bool supportsDynamicProperties() const override { return false;  }
+  void yield() override {}
+  bool isRunning() const override { return false; }
+  bool isWorkAvailable() override { return false; }
+};
+
+const auto test_controller_service = []() {
+  auto service = std::make_shared<TestControllerService>("test-controller-service", utils::IdGenerator::getIdGenerator()->generate());
+  service->initialize();
+  return service;
+}();
+
+class WrongTestControllerService : public TestControllerService {};
+
+class TestControllerServiceProvider : public controller::ControllerServiceProviderImpl {
+ public:
+  using ControllerServiceProviderImpl::ControllerServiceProviderImpl;
+  std::shared_ptr<controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&) override { return nullptr; }
+  void clearControllerServices() override {}
+  void enableAllControllerServices() override {}
+  void disableAllControllerServices() override {}
+
+  std::shared_ptr<controller::ControllerService> getControllerService(const std::string& name, const utils::Identifier&) const override {
+    if (name == "TestControllerService") { return test_controller_service; }
+    return nullptr;
+  }
+};
+
+TestControllerServiceProvider test_controller_service_provider("test-provider");
 }  // namespace
+
+TEST_CASE("Parse controller service property") {
+  static constexpr auto property = PropertyDefinitionBuilder<>::createProperty("Controller Service")
+      .withAllowedTypes<TestControllerService>()
+      .build();
+  auto processor = minifi::test::utils::make_processor<TestProcessor>("test-processor");
+  processor->getImpl<TestProcessor>().on_initialize_ = [&] (auto& self) {
+    self.setSupportedProperties(std::to_array<core::PropertyReference>({property}));
+  };
+  processor->initialize();
+  auto configuration = minifi::Configure::create();
+  ProcessContextImpl context(*processor, &test_controller_service_provider, nullptr, nullptr, configuration, nullptr);
+
+  SECTION("Required controller service property") {
+    SECTION("... is valid") {
+      REQUIRE(processor->setProperty(property.name, "TestControllerService"));
+      const auto value = utils::parseControllerService<TestControllerService>(context, property, processor->getUUID());
+      CHECK(value == test_controller_service);
+    }
+    SECTION("... is missing") {
+      CHECK_THROWS(utils::parseControllerService<TestControllerService>(context, property, processor->getUUID()));
+    }
+    SECTION("... is blank") {
+      REQUIRE(processor->setProperty(property.name, ""));
+      CHECK_THROWS(utils::parseControllerService<TestControllerService>(context, property, processor->getUUID()));
+    }
+    SECTION("... is invalid") {
+      REQUIRE(processor->setProperty(property.name, "NonExistentControllerService"));
+      CHECK_THROWS(utils::parseControllerService<TestControllerService>(context, property, processor->getUUID()));
+    }
+    SECTION("... is not the correct class") {
+      REQUIRE(processor->setProperty(property.name, "TestControllerService"));
+      CHECK_THROWS(utils::parseControllerService<WrongTestControllerService>(context, property, processor->getUUID()));
+    }
+  }
+
+  SECTION("Optional controller service property") {
+    SECTION("... is valid") {
+      REQUIRE(processor->setProperty(property.name, "TestControllerService"));
+      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());;
+      CHECK(value == test_controller_service);
+    }
+    SECTION("... is missing") {
+      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());;
+      CHECK(value == nullptr);
+    }
+    SECTION("... is blank") {
+      REQUIRE(processor->setProperty(property.name, ""));
+      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());;
+      CHECK(value == nullptr);
+    }
+    SECTION("... is invalid") {
+      REQUIRE(processor->setProperty(property.name, "NonExistentControllerService"));
+      CHECK_THROWS(utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID()));
+    }
+    SECTION("... is not the correct class") {
+      REQUIRE(processor->setProperty(property.name, "TestControllerService"));
+      CHECK_THROWS(utils::parseOptionalControllerService<WrongTestControllerService>(context, property, processor->getUUID()));
+    }
+  }
+}
 }  // namespace org::apache::nifi::minifi::core

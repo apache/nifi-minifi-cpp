@@ -58,17 +58,6 @@ void SmbConnectionControllerService::notifyStop() {
     logger_->log_error("Error while disconnecting from SMB: {}", disconnection_result.error().message());
 }
 
-gsl::not_null<std::shared_ptr<SmbConnectionControllerService>> SmbConnectionControllerService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
-  std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service;
-  if (auto connection_controller_name = context.getProperty(property)) {
-    smb_connection_controller_service = std::dynamic_pointer_cast<SmbConnectionControllerService>(context.getControllerService(*connection_controller_name, context.getProcessorInfo().getUUID()));
-  }
-  if (!smb_connection_controller_service) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing SMB Connection Controller Service");
-  }
-  return gsl::make_not_null(smb_connection_controller_service);
-}
-
 nonstd::expected<void, std::error_code> SmbConnectionControllerService::connect() {
   auto connection_result = WNetAddConnection2A(&net_resource_,
       credentials_ ? credentials_->password.c_str() : nullptr,

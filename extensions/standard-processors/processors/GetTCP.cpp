@@ -71,22 +71,6 @@ char GetTCP::parseDelimiter(core::ProcessContext& context) {
   return delimiter;
 }
 
-std::optional<asio::ssl::context> GetTCP::parseSSLContext(core::ProcessContext& context) const {
-  std::optional<asio::ssl::context> ssl_context;
-  if (auto context_name = context.getProperty(SSLContextService)) {
-    if (auto controller_service = context.getControllerService(*context_name, getUUID())) {
-      if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(context.getControllerService(*context_name, getUUID()))) {
-        ssl_context = utils::net::getSslContext(*ssl_context_service);
-      } else {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, *context_name + " is not an SSL Context Service");
-      }
-    } else {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service: " + *context_name);
-    }
-  }
-  return ssl_context;
-}
-
 uint64_t GetTCP::parseMaxBatchSize(core::ProcessContext& context) {
   const auto max_batch_size = utils::parseU64Property(context, MaxBatchSize);
   if (max_batch_size == 0) {
@@ -98,7 +82,12 @@ uint64_t GetTCP::parseMaxBatchSize(core::ProcessContext& context) {
 void GetTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   auto connections_to_make = parseEndpointList(context);
   auto delimiter = parseDelimiter(context);
-  auto ssl_context = parseSSLContext(context);
+  auto ssl_context = [&]() -> std::optional<asio::ssl::context> {
+    if (auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, SSLContextService, getUUID())) {
+      return {utils::net::getSslContext(*ssl_context_service)};
+    }
+    return std::nullopt;
+  }();
 
   std::optional<size_t> max_queue_size = utils::parseOptionalU64Property(context, MaxQueueSize);
   std::optional<size_t> max_message_size = utils::parseOptionalU64Property(context, MaxMessageSize);
