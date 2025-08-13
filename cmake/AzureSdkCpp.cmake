@@ -50,8 +50,4 @@ FetchContent_Declare(asdkext
     SYSTEM
 )
 
-if (WIN32)
-    add_compile_definitions(CURL_STATICLIB)
-endif()
-
 FetchContent_MakeAvailable(asdkext)
