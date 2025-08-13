@@ -1,3 +1,5 @@
+MSVC cannot deduce the OpensslApi template parameter in make_openssl_unique so we use the backward compatible version on Windows instead
+
 diff --git a/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp b/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp
 index a52791cea..b5e76a0f9 100644
 --- a/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp
