@@ -16,16 +16,16 @@
  */
 #include "FlowConfigEncryptor.h"
 
-#include "core/extension/ExtensionManager.h"
-#include "core/FlowConfiguration.h"
-#include "core/flow/AdaptiveConfiguration.h"
-#include "core/ProcessGroup.h"
-#include "core/RepositoryFactory.h"
-#include "core/repository/VolatileContentRepository.h"
 #include "Defaults.h"
 #include "Utils.h"
-#include "utils/file/FileSystem.h"
+#include "core/FlowConfiguration.h"
+#include "core/ProcessGroup.h"
+#include "core/RepositoryFactory.h"
+#include "core/extension/ExtensionManager.h"
+#include "core/flow/AdaptiveConfiguration.h"
+#include "core/repository/VolatileContentRepository.h"
 #include "utils/Id.h"
+#include "utils/file/FileSystem.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
