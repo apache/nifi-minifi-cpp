@@ -25,7 +25,7 @@ class Visitor(ast.NodeVisitor):
                         for elt in detail.value.elts:
                             # Check if the element is a string constant and add it to the dependencies list
                             if isinstance(elt, ast.Constant):
-                                self.dependencies.append(elt.s)
+                                self.dependencies.append(elt.value)
                         break
                 break
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     print("Installing dependencies for MiNiFi python processors...")
 
     # --no-cache-dir is used to be in line with NiFi's dependency install behavior
-    command = [sys.executable, "-m", "pip", "install", "--no-cache-dir"]
+    command = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "--progress-bar", "off"]
     dependencies_found = False
     for i in range(1, len(sys.argv)):
         if "requirements.txt" in sys.argv[i]:
@@ -63,4 +63,8 @@ if __name__ == '__main__':
                 command += dependencies
 
     if dependencies_found:
-        subprocess.check_call(command)
+        try:
+            subprocess.check_call(command)
+        except subprocess.CalledProcessError as e:
+            print("Error occurred while installing dependencies: {}".format(e))
+            sys.exit(1)
