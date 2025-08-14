@@ -21,5 +21,6 @@ FetchContent_Declare(
         mimalloc
         URL      https://github.com/microsoft/mimalloc/archive/refs/tags/v2.0.6.tar.gz
         URL_HASH SHA256=9f05c94cc2b017ed13698834ac2a3567b6339a8bde27640df5a1581d49d05ce5
+        SYSTEM
 )
 FetchContent_MakeAvailable(mimalloc)

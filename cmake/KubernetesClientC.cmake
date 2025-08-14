@@ -22,6 +22,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(yaml
         GIT_REPOSITORY  https://github.com/yaml/libyaml.git
         GIT_TAG         2c891fc7a770e8ba2fec34fc6b545c672beb37e6  # 0.2.5
+        SYSTEM
 )
 
 set(LWS_WITHOUT_TESTAPPS ON                           CACHE BOOL "" FORCE)
@@ -44,6 +45,7 @@ FetchContent_Declare(websockets
         URL             https://github.com/warmcat/libwebsockets/archive/refs/tags/v4.3.2.tar.gz
         URL_HASH        SHA256=6a85a1bccf25acc7e8e5383e4934c9b32a102880d1e4c37c70b27ae2a42406e1
         PATCH_COMMAND "${WEBSOCKETS_PC}"
+        SYSTEM
 )
 
 FetchContent_MakeAvailable(yaml websockets)
@@ -57,6 +59,7 @@ FetchContent_Declare(kubernetes
     URL_HASH        SHA256=dbb6e6cd29ae2ac6c15de894aefb9b1e3d48916541d443f089aa0ffad6517ec6
     PATCH_COMMAND   "${K8S_PC}"
     SOURCE_SUBDIR   kubernetes
+    SYSTEM
 )
 
 FetchContent_MakeAvailable(kubernetes)

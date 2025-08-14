@@ -61,7 +61,7 @@ template<>
 rapidjson::Value toJson(const core::RecordObject& field, rapidjson::Document::AllocatorType& alloc) {
   auto object_json = rapidjson::Value(rapidjson::kObjectType);
   for (const auto& [record_name, record_value] : field) {
-    auto json_value = (std::visit([&alloc](auto&& f)-> rapidjson::Value{ return toJson(f, alloc); }, record_value.field->value_));
+    auto json_value = (std::visit([&alloc](auto&& f)-> rapidjson::Value{ return toJson(f, alloc); }, record_value.value_));
     rapidjson::Value json_name(record_name.c_str(), gsl::narrow<rapidjson::SizeType>(record_name.length()), alloc);
     object_json.AddMember(json_name, json_value, alloc);
   }
@@ -114,9 +114,13 @@ void JsonRecordSetWriter::writeAsArray(const core::RecordSet& record_set, const 
 void JsonRecordSetWriter::write(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
   switch (output_grouping_) {
     case OutputGroupingType::ARRAY:
-      return writeAsArray(record_set, flow_file, session);
+      writeAsArray(record_set, flow_file, session);
+      break;
     case OutputGroupingType::ONE_LINE_PER_OBJECT:
-        return writePerLine(record_set, flow_file, session);
+      writePerLine(record_set, flow_file, session);
+      break;
+    default:
+      throw std::invalid_argument(fmt::format("Invalid OutputGroupingType: {}", magic_enum::enum_underlying(output_grouping_)));
   }
 }
 

@@ -285,10 +285,10 @@ jobs:
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
           echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy main" | sudo tee -a /etc/apt/sources.list
-          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | sudo tee -a /etc/apt/sources.list
-          echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" | sudo tee -a /etc/apt/sources.list
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main" | sudo tee -a /etc/apt/sources.list
+          echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main" | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install -y ccache libfl-dev clang-16 clang-tidy-16 libc++-16-dev libc++abi-16-dev libc++1-16 libc++abi1-16 libunwind-16 libsqliteodbc parallel
+          sudo apt install -y ccache libfl-dev clang-20 clang-tidy-20 libc++-20-dev libc++abi-20-dev libsqliteodbc parallel
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - id: free_disk_space
@@ -303,8 +303,8 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: build
         run: |
-          export CC=clang-16
-          export CXX=clang++-16
+          export CC=clang-20
+          export CXX=clang++-20
           export CXXFLAGS="-stdlib=libc++"
           export LDFLAGS="-stdlib=libc++"
           python3 -m venv venv && source venv/bin/activate \
@@ -344,10 +344,10 @@ jobs:
       - name: clang-tidy
         run: |
           # https://stackoverflow.com/questions/58466701/clang-tidy-cant-locate-stdlib-headers
-          sed -i -e 's/\/usr\/lib\/ccache\/clang++-16/\/lib\/llvm-16\/bin\/clang++/g' build/compile_commands.json
-          sed -i -e 's/\/usr\/lib\/ccache\/clang-16/\/lib\/llvm-16\/bin\/clang/g' build/compile_commands.json
-          sed -i -e 's/\/usr\/lib\/ccache\/c++/\/lib\/llvm-16\/bin\/clang++/g' build/compile_commands.json
-          sed -i -e 's/\/usr\/lib\/ccache\/cc/\/lib\/llvm-16\/bin\/clang/g' build/compile_commands.json
+          sed -i -e 's/\/usr\/lib\/ccache\/clang++-20/\/lib\/llvm-20\/bin\/clang++/g' build/compile_commands.json
+          sed -i -e 's/\/usr\/lib\/ccache\/clang-20/\/lib\/llvm-20\/bin\/clang/g' build/compile_commands.json
+          sed -i -e 's/\/usr\/lib\/ccache\/c++/\/lib\/llvm-20\/bin\/clang++/g' build/compile_commands.json
+          sed -i -e 's/\/usr\/lib\/ccache\/cc/\/lib\/llvm-20\/bin\/clang/g' build/compile_commands.json
 
           parallel -j$(( $(nproc) + 1 )) ./run_clang_tidy.sh ::: ${{steps.list-changed-cpp-files.outputs.files}}
       - name: check-cores

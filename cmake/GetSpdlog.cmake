@@ -16,8 +16,13 @@
 # under the License.
 
 function(get_spdlog)
-    include(GetFmt)
-    get_fmt()
+    if (WIN32)
+        include(GetFmt_11_0_2)
+        get_fmt_11_0_2()
+    else()
+        include(GetFmt)
+        get_fmt()
+    endif()
 
     if(MINIFI_SPDLOG_SOURCE STREQUAL "CONAN")
         message("Using Conan to install spdlog")

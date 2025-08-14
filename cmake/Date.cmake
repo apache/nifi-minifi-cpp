@@ -22,6 +22,7 @@ if (WIN32)
     FetchContent_Declare(tzdata
         URL         https://data.iana.org/time-zones/releases/tzdata2020e.tar.gz
         URL_HASH    SHA256=0be1ba329eae29ae1b54057c3547b3e672f73b3ae7643aa87dac85122bec037e
+        SYSTEM
     )
     FetchContent_GetProperties(tzdata)
     if (NOT tzdata_POPULATED)
@@ -48,6 +49,7 @@ endif()
 FetchContent_Declare(date_src
     URL         https://github.com/HowardHinnant/date/archive/1ead6715dec030d340a316c927c877a3c4e5a00c.tar.gz  # master as of 2024-06-28
     URL_HASH    SHA256=8b4096b7b49e06d756f4aa0949151863ab7b812679a1646039fab6e821d3c049
+    SYSTEM
 )
 FetchContent_GetProperties(date_src)
 if (NOT date_src_POPULATED)

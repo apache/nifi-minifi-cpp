@@ -18,42 +18,44 @@
 
 #pragma once
 
-constexpr unsigned long long operator "" _KiB(unsigned long long n) {  // NOLINT
+#include <cstdint>
+
+constexpr uint64_t operator""_KiB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1024 * n;
 }
 
-constexpr unsigned long long operator "" _MiB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_MiB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1024_KiB * n;
 }
 
-constexpr unsigned long long operator "" _GiB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_GiB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1024_MiB * n;
 }
 
-constexpr unsigned long long operator "" _TiB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_TiB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1024_GiB * n;
 }
 
-constexpr unsigned long long operator "" _PiB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_PiB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1024_TiB * n;
 }
 
-constexpr unsigned long long operator "" _KB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_KB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1000 * n;
 }
 
-constexpr unsigned long long operator "" _MB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_MB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1000_KB * n;
 }
 
-constexpr unsigned long long operator "" _GB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_GB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1000_MB * n;
 }
 
-constexpr unsigned long long operator "" _TB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_TB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1000_GB * n;
 }
 
-constexpr unsigned long long operator "" _PB(unsigned long long n) {  // NOLINT
+constexpr uint64_t operator""_PB(const unsigned long long n) {  // NOLINT(runtime/int)
   return 1000_TB * n;
 }

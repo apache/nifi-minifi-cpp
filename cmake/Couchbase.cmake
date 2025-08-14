@@ -32,15 +32,18 @@ set(COUCHBASE_CXX_CLIENT_INSTALL OFF CACHE BOOL "" FORCE)
 
 set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/remove-thirdparty.patch")
 set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/remove-debug-symbols.patch")
+set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/c++23_fixes.patch")
 
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
             (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
-            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\") &&\
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_3}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_3}\\\")")
 
 FetchContent_Declare(couchbase-cxx-client
-    URL      https://github.com/couchbase/couchbase-cxx-client/releases/download/1.0.2/couchbase-cxx-client-1.0.2.tar.gz
-    URL_HASH SHA256=1954e6f5e063d94675428182bc8b1b82fd8e8532c10d1787f157aeb18bb37769
+    URL      https://github.com/couchbase/couchbase-cxx-client/releases/download/1.1.0/couchbase-cxx-client-1.1.0.tar.gz
+    URL_HASH SHA256=bd3a7f1492e242b239acd965eed4472cecb0319d40d05480f97cdec705960ba0
     PATCH_COMMAND "${PC}"
+    SYSTEM
 )
 FetchContent_MakeAvailable(couchbase-cxx-client)
 

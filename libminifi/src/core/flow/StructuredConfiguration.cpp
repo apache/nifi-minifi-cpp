@@ -276,7 +276,7 @@ void StructuredConfiguration::parseParameterContextInheritance(const Node& param
     auto inherited_parameters_node = parameter_context_node[schema_.inherited_parameter_contexts];
     for (const auto& inherited_parameter_context_name : inherited_parameters_node) {
       auto name = inherited_parameter_context_name.getString().value();
-      if (parameter_contexts_.find(name) == parameter_contexts_.end()) {
+      if (!parameter_contexts_.contains(name)) {
         throw std::invalid_argument("Inherited parameter context '" + name + "' does not exist!");
       }
 
@@ -879,7 +879,7 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     ParameterContext* parameter_context) {
   auto my_prop = component.getSupportedProperty(property_name);
   const bool is_sensitive = my_prop ? my_prop->isSensitive() : false;
-  const std::optional<std::string_view> default_value = my_prop ? my_prop->getDefaultValue() : std::nullopt;
+  const std::optional<std::string> default_value = my_prop ? my_prop->getDefaultValue() : std::nullopt;
 
   const auto value_to_set = getReplacedParametersValueOrDefault(property_name, is_sensitive, default_value, property_value_node, parameter_context);
   if (!value_to_set) {
@@ -994,7 +994,7 @@ void StructuredConfiguration::parseParameterContext(const flow::Node& node, core
     return;
   }
 
-  if (parameter_contexts_.find(parameter_context_name) != parameter_contexts_.end()) {
+  if (parameter_contexts_.contains(parameter_context_name)) {
     parent.setParameterContext(parameter_contexts_.at(parameter_context_name).get());
   }
 }
