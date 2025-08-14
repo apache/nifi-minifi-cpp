@@ -770,31 +770,9 @@ endif()
 
 include(BuildDocs)
 
-
-# Create a custom build target that will run the linter.
-# Directories have their separate linter targets to be able to use better parallelization
-get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
-set(root_linted_dirs libminifi/include libminifi/src libminifi/test encrypt-config controller)
-list(TRANSFORM root_linted_dirs PREPEND ${CMAKE_SOURCE_DIR}/)
-
-set(linted_dir_counter 1)
-set(root_linter_target_names "")
-
-foreach(linted_dir ${root_linted_dirs})
-    set(linter_target_name "root-linter-${linted_dir_counter}")
-    list(APPEND root_linter_target_names ${linter_target_name})
-    add_custom_target("${linter_target_name}"
-        COMMAND python3 ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i ${linted_dir}
-    )
-    set_target_properties(${linter_target_name} PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-    math(EXPR linted_dir_counter "${linted_dir_counter}+1")
-endforeach()
-
-# Main linter target that depends on every other
-add_custom_target(linter)
-add_dependencies(linter ${root_linter_target_names} ${extensions})
+add_custom_target(linter COMMAND
+        python3 ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i ${CMAKE_SOURCE_DIR}/controller/ ${CMAKE_SOURCE_DIR}/core-framework/ ${CMAKE_SOURCE_DIR}/encrypt-config/ ${CMAKE_SOURCE_DIR}/extension-framework/ ${CMAKE_SOURCE_DIR}/extensions/ ${CMAKE_SOURCE_DIR}/libminifi/ ${CMAKE_SOURCE_DIR}/minifi-api/ ${CMAKE_SOURCE_DIR}/minifi_main/)
 set_target_properties(linter PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-
 
 if(NOT WIN32)
 add_custom_target(shellcheck

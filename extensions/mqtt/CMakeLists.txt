@@ -34,4 +34,3 @@ include(PahoMqttC)
 target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
 
 register_extension(minifi-mqtt-extensions "MQTT EXTENSIONS" MQTT-EXTENSIONS "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "${CMAKE_CURRENT_SOURCE_DIR}/tests")
-register_extension_linter(minifi-mqtt-extensions-linter)

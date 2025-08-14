@@ -45,5 +45,3 @@ if (WIN32)
 endif()
 
 register_extension(minifi-azure "AZURE EXTENSIONS" AZURE-EXTENSIONS "This enables Azure support" "extensions/azure/tests")
-
-register_extension_linter(minifi-azure-extensions-linter)

@@ -42,4 +42,3 @@ target_link_libraries(minifi-lua-script-extension PUBLIC lua sol2)
 target_compile_features(minifi-lua-script-extension PUBLIC cxx_std_14)
 
 register_extension(minifi-lua-script-extension "LUA SCRIPTING EXTENSIONS" LUA-SCRIPTING-EXTENSIONS "This enables LUA scripting" "extensions/lua/tests")
-register_extension_linter(minifi-lua-script-extension-linter)

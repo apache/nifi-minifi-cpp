@@ -31,4 +31,3 @@ target_link_libraries(minifi-pdh ${LIBMINIFI} pdh)
 
 register_extension(minifi-pdh "PDH EXTENSIONS" PDH-EXTENSIONS "This enables PDH support" "extensions/pdh/tests")
 
-register_extension_linter(minifi-pdh-extensions-linter)

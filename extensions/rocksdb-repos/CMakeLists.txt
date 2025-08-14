@@ -35,4 +35,3 @@ target_link_libraries(minifi-rocksdb-repos PUBLIC minifi-api minifi-extension-fr
 target_link_libraries(minifi-rocksdb-repos PRIVATE $<LINK_ONLY:core-minifi>)
 
 register_extension(minifi-rocksdb-repos "ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/rocksdb-repos/tests")
-register_extension_linter(minifi-rocksdb-repos-linter)

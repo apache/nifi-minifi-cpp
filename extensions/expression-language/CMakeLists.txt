@@ -146,4 +146,3 @@ if (BREW_FLEX_INCLUDE)
 endif()
 
 register_extension(minifi-expression-language-extensions "EXPRESSION LANGUAGE EXTENSIONS" EXPRESSION-LANGUAGE-EXTENSIONS "This enables NiFi expression language" "extensions/expression-language/tests")
-register_extension_linter(minifi-expression-language-extensions-linter)
