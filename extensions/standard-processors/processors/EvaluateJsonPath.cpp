@@ -96,7 +96,7 @@ void EvaluateJsonPath::onTrigger(core::ProcessContext&, core::ProcessSession& se
   }
 
   const auto flow_file_read_result = session.readBuffer(flow_file);
-  const auto json_string = std::string(reinterpret_cast<const char*>(flow_file_read_result.buffer.data()), flow_file_read_result.buffer.size());
+  const auto json_string = to_string(flow_file_read_result);
   if (json_string.empty()) {
     logger_->log_error("FlowFile content is empty, transferring to Failure relationship");
     session.transfer(flow_file, Failure);

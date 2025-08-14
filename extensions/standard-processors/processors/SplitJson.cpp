@@ -40,7 +40,7 @@ void SplitJson::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
 
 std::optional<jsoncons::json> SplitJson::queryArrayUsingJsonPath(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const {
   const auto flow_file_read_result = session.readBuffer(flow_file);
-  const auto json_string = std::string(reinterpret_cast<const char*>(flow_file_read_result.buffer.data()), flow_file_read_result.buffer.size());
+  const auto json_string = to_string(flow_file_read_result);
   if (json_string.empty()) {
     logger_->log_error("FlowFile content is empty, transferring to Failure relationship");
     return std::nullopt;
@@ -77,9 +77,10 @@ std::string SplitJson::jsonValueToString(const jsoncons::json& json_value) const
   return json_value.to_string();
 }
 
-void SplitJson::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+void SplitJson::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto flow_file = session.get();
   if (!flow_file) {
+    context.yield();
     return;
   }
 
