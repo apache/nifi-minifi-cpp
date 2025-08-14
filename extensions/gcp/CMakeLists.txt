@@ -32,4 +32,3 @@ target_include_directories(minifi-gcp SYSTEM PUBLIC ${google-cloud-cpp_INCLUDE_D
 
 register_extension(minifi-gcp "GCP EXTENSIONS" GCP-EXTENSIONS "This enables Google Cloud Platform support" "extensions/gcp/tests")
 
-register_extension_linter(minifi-gcp-extensions-linter)

@@ -34,4 +34,3 @@ enable_coroutines()
 
 register_extension(minifi-standard-processors "STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors" "extensions/standard-processors/tests/")
 
-register_extension_linter(minifi-standard-processors-linter)

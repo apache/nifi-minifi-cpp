@@ -32,4 +32,3 @@ target_link_libraries(minifi-prometheus ${LIBMINIFI} prometheus-cpp::core  prome
 target_include_directories(minifi-prometheus PUBLIC ${prometheus-cpp_INCLUDE_DIRS})
 
 register_extension(minifi-prometheus "PROMETHEUS EXTENSIONS" PROMETHEUS-EXTENSIONS "This enables Prometheus support" "extensions/prometheus/tests")
-register_extension_linter(minifi-prometheus-linter)

@@ -62,4 +62,3 @@ endif()
 
 register_extension(minifi-grafana-loki "GRAFANA LOKI EXTENSIONS" GRAFANA-LOKI-EXTENSIONS "This enables Grafana Loki support" "extensions/grafana-loki/tests")
 
-register_extension_linter(minifi-grafana-loki-extensions-linter)

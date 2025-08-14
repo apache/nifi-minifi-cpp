@@ -27,4 +27,3 @@ add_minifi_library(minifi-kubernetes-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-kubernetes-extensions ${LIBMINIFI} kubernetes)
 
 register_extension(minifi-kubernetes-extensions "KUBERNETES EXTENSIONS" KUBERNETES-EXTENSIONS "This enables Kubernetes support" "extensions/kubernetes/tests")
-register_extension_linter(minifi-kubernetes-extensions-linter)

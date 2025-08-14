@@ -35,4 +35,3 @@ target_link_libraries(minifi-llamacpp ${LIBMINIFI} llama)
 
 register_extension(minifi-llamacpp "LLAMACPP EXTENSION" LLAMACPP-EXTENSION "Provides llama.cpp support" "extensions/llamacpp/tests")
 
-register_extension_linter(minifi-llamacpp-linter)

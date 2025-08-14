@@ -31,4 +31,3 @@ target_include_directories(minifi-smb PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extens
 
 register_extension(minifi-smb "SMB EXTENSIONS" SMB-EXTENSIONS "This enables SMB support" "extensions/smb/tests")
 
-register_extension_linter(minifi-smb-extensions-linter)

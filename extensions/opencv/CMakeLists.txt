@@ -34,4 +34,3 @@ target_link_libraries(minifi-opencv ${LIBMINIFI})
 target_link_libraries(minifi-opencv OPENCV::libopencv)
 
 register_extension(minifi-opencv "OPENCV EXTENSIONS" OPENCV-EXTENSIONS "This enables OpenCV support" "extensions/opencv/tests")
-register_extension_linter(minifi-opencv-linter)
