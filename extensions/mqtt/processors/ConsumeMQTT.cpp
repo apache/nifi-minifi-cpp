@@ -69,22 +69,22 @@ void ConsumeMQTT::readProperties(core::ProcessContext& context) {
   receive_maximum_ = gsl::narrow<uint16_t>(utils::parseU64Property(context, ReceiveMaximum));
 }
 
-void ConsumeMQTT::addAttributesAsRecordFields(core::RecordSet& new_records, const std::queue<SmartMessage>& msg_queue) const {
+void ConsumeMQTT::addAttributesAsRecordFields(core::RecordSet& new_records, const SmartMessage& message) const {
   if (!add_attributes_as_fields_) {
     return;
   }
 
-  for (auto& record: new_records) {
-    record.emplace("_topic", core::RecordField(msg_queue.front().topic));
-    auto topic_segments = utils::string::split(msg_queue.front().topic, "/");
+  for (auto& record : new_records) {
+    record.emplace("_topic", core::RecordField(message.topic));
+    auto topic_segments = utils::string::split(message.topic, "/");
     core::RecordArray topic_segments_array;
     for (size_t i = 0; i < topic_segments.size(); ++i) {
       topic_segments_array.emplace_back(core::RecordField(topic_segments[i]));
     }
     record.emplace("_topicSegments", core::RecordField(std::move(topic_segments_array)));
-    record.emplace("_qos", core::RecordField(msg_queue.front().contents->qos));
-    record.emplace("_isDuplicate", core::RecordField(msg_queue.front().contents->dup > 0));
-    record.emplace("_isRetained", core::RecordField(msg_queue.front().contents->retained > 0));
+    record.emplace("_qos", core::RecordField(message.contents->qos));
+    record.emplace("_isDuplicate", core::RecordField(message.contents->dup > 0));
+    record.emplace("_isRetained", core::RecordField(message.contents->retained > 0));
   }
 }
 
@@ -102,7 +102,7 @@ void ConsumeMQTT::transferMessagesAsRecords(core::ProcessSession& session) {
       continue;
     }
     auto& new_records = new_records_result.value();
-    addAttributesAsRecordFields(new_records, msg_queue);
+    addAttributesAsRecordFields(new_records, msg_queue.front());
     record_set.reserve(record_set.size() + new_records.size());
     record_set.insert(record_set.end(), std::make_move_iterator(new_records.begin()), std::make_move_iterator(new_records.end()));
     msg_queue.pop();

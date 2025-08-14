@@ -148,7 +148,7 @@ TEST_CASE_METHOD(PublishMQTTTestFixture, "Test sending XML message records", "[p
   CHECK(string_content == R"(<?xml version="1.0"?><root><record><element2>42</element2></record></root>)");
 }
 
-TEST_CASE_METHOD(PublishMQTTTestFixture, "Test scheduling failure if non-existant recordset reader or writer is set", "[publishMQTTTest]") {
+TEST_CASE_METHOD(PublishMQTTTestFixture, "Test scheduling failure if non-existent recordset reader or writer is set", "[publishMQTTTest]") {
   test_controller_.plan->addController("XMLReader", "XMLReader");
   test_controller_.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
   REQUIRE(publish_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
