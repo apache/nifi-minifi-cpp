@@ -110,14 +110,6 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
     return controller_service;
   }
 
-  void initializeContentRepository(const std::string& home) override {
-    configure_->setHome(home);
-    content_repo_->initialize(configure_);
-    initialized_ = true;
-  }
-
-  bool isInitialized() const override { return initialized_; }
-
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";
 
   StateManager* getStateManager() override;
@@ -213,7 +205,6 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   Processor& processor_;
   gsl::not_null<std::shared_ptr<Configure>> configure_;
   std::unique_ptr<ProcessorInfo> info_;
-  bool initialized_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

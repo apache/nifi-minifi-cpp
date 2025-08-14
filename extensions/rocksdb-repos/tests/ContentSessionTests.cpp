@@ -37,7 +37,6 @@ class ContentSessionController : public TestController {
       : contentRepository(std::make_shared<ContentRepositoryClass>()) {
     auto contentRepoPath = createTempDirectory();
     auto config = std::make_shared<minifi::ConfigureImpl>();
-    config->setHome(contentRepoPath);
     config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, contentRepoPath.string());
     contentRepository->initialize(config);
   }

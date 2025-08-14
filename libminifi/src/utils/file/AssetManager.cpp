@@ -16,18 +16,27 @@
  */
 
 #include "utils/file/AssetManager.h"
-#include "utils/file/FileUtils.h"
+
+#include "core/logging/LoggerFactory.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
-#include "core/logging/LoggerFactory.h"
 #include "utils/Hash.h"
+#include "utils/Locations.h"
+#include "utils/file/FileUtils.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
 namespace org::apache::nifi::minifi::utils::file {
 
+std::filesystem::path getRootFromConfigure(const Configure& configuration) {
+  if (auto nifi_asset_directory = configuration.get(Configure::nifi_asset_directory)) {
+    return *nifi_asset_directory;
+  }
+  return utils::getMinifiDir() / "asset";
+}
+
 AssetManager::AssetManager(const Configure& configuration)
-    : root_(configuration.get(Configure::nifi_asset_directory).value_or((configuration.getHome() / "asset").string())),
+    : root_(getRootFromConfigure(configuration)),
       logger_(core::logging::LoggerFactory<AssetManager>::getLogger()) {
   refreshState();
 }

@@ -60,6 +60,9 @@ class MiNiFi_integration_test:
     def acquire_container(self, context, name, engine='minifi-cpp', command=None):
         return self.cluster.acquire_container(context=context, name=name, engine=engine, command=command)
 
+    def acquire_transient_minifi(self, context, name, engine='minifi-cpp'):
+        return self.cluster.acquire_transient_minifi(context=context, name=name, engine=engine)
+
     def start_kafka_broker(self, context):
         self.cluster.acquire_container(context=context, name='kafka-broker', engine='kafka-broker')
         self.cluster.deploy_container(name='kafka-broker')

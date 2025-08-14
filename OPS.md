@@ -37,10 +37,10 @@ it is meant to provide testing and minimal operational capabilities by example.
 The MiNiFi controller is an executable in the bin directory that can be used to control the MiNiFi C++ agent while it runs -- utilizing the [Command and Control Protocol](https://cwiki.apache.org/confluence/display/MINIFI/C2+Design). Currently the controller will let you stop subcomponents within a running instance, clear queues, get the status of queues, and update the flow for a warm re-deploy. It also provides an option to retrieve the agent manifest json.
 
 This functionality has to enabled in the minifi.properties file with the controller.socket.enable property.
-The minificontroller can track a single MiNiFi C++ agent through the use of three options. Port is required.
+The minifi-controller can track a single MiNiFi C++ agent through the use of three options. Port is required.
 The hostname is not and will default to localhost. Additionally, controller.socket.local.any.interface allows
 you to bind to any address when using localhost. Otherwise, we will bind only to the loopback adapter so only
-minificontroller on the local host can control the agent:
+minifi-controller on the local host can control the agent:
 
     $ controller.socket.enable=true
     $ controller.socket.host=localhost
@@ -50,7 +50,7 @@ minificontroller on the local host can control the agent:
 These are defined by default to the above values. If the port option is left undefined, the MiNiFi controller
 will be disabled in your deployment.
 
-The executable is stored in the bin directory and is titled minificontroller. Available commands are listed below.
+The executable is stored in the bin directory and is titled minifi-controller. Available commands are listed below.
 
 ### SSL
 
@@ -71,41 +71,41 @@ Otherwise if you prefer to retrieve the SSL configuration properties from the mi
 ### Commands
 
 #### Specifying connecting information
-    ./minificontroller --host "host name" --port "port"
+    ./minifi-controller --host "host name" --port "port"
 
 By default these options use those defined in minifi.properties and are not required
 
 #### Start Command
-    ./minificontroller --start "component name"
+    ./minifi-controller --start "component name"
 
 #### Stop command
-    ./minificontroller --stop "component name"
+    ./minifi-controller --stop "component name"
 
 #### List connections command
-    ./minificontroller --list connections
+    ./minifi-controller --list connections
 
 #### List components command
-    ./minificontroller --list components
+    ./minifi-controller --list components
 
 #### Clear connection command
-    ./minificontroller --clear "connection name"
+    ./minifi-controller --clear "connection name"
 
 #### GetSize command
-    ./minificontroller --getsize "connection name"
+    ./minifi-controller --getsize "connection name"
 
 Returns the size of the connection. The current size along with the max will be reported
 
 #### Update flow
-    ./minificontroller --updateflow "config yml"
+    ./minifi-controller --updateflow "config yml"
 
 Updates the flow file reference and performs a warm re-deploy.
 
 #### Get full connection command
-    ./minificontroller --getfull
+    ./minifi-controller --getfull
 
 Provides a list of full connections, if any.
 
 #### Get manifest command
-    ./minificontroller --manifest
+    ./minifi-controller --manifest
 
 Writes the agent manifest json to standard output

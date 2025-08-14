@@ -86,6 +86,10 @@ class VerifyC2AssetUpdate : public VerifyC2Base {
     verify_ = std::move(verify);
   }
 
+  void setAssetDir(const std::filesystem::path& asset_dir) {
+    configuration->set(Configure::nifi_asset_directory, asset_dir.string());
+  }
+
  private:
   std::function<bool()> verify_;
 };
@@ -117,6 +121,7 @@ TEST_CASE("Test update asset C2 command", "[c2test]") {
   C2HeartbeatHandler hb_handler{std::make_shared<minifi::ConfigureImpl>()};
 
   VerifyC2AssetUpdate harness;
+  harness.setAssetDir(asset_dir);
   harness.setUrl("http://localhost:0/api/file/A.txt", &file_A_provider);
   harness.setUrl("http://localhost:0/api/file/B.txt", &file_B_provider);
 

@@ -14,23 +14,23 @@
 # limitations under the License.
 
 # Core Properties #
-nifi.flow.configuration.file=./conf/config.yml
+nifi.flow.configuration.file=@MINIFI_PATH_FLOW_CONFIG@
 nifi.administrative.yield.duration=30 sec
 # If a component has no work to do (is "bored"), how long should we wait before checking again for work?
 nifi.bored.yield.duration=100 millis
 #nifi.flow.engine.threads=5
 
 # Comma separated path for the extension libraries. Relative path is relative to the minifi executable.
-nifi.extension.path=../extensions/*
+nifi.extension.path=@MINIFI_PATH_EXTENSIONS@
 
 # Provenance Repository #
-nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
+nifi.provenance.repository.directory.default=@MINIFI_PATH_PROVENANCE_REPO@
 nifi.provenance.repository.max.storage.time=1 MIN
 nifi.provenance.repository.max.storage.size=1 MB
-nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
+nifi.flowfile.repository.directory.default=@MINIFI_PATH_FLOWFILE_REPO@
 # nifi.flowfile.repository.rocksdb.compression=auto
 # nifi.flowfile.repository.check.health=true
-nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
+nifi.database.content.repository.directory.default=@MINIFI_PATH_CONTENT_REPO@
 nifi.provenance.repository.class.name=NoOpRepository
 nifi.content.repository.class.name=DatabaseContentRepository
 # nifi.content.repository.rocksdb.compression=auto
@@ -132,7 +132,7 @@ nifi.c2.full.heartbeat=false
 #controller.ssl.context.service=SSLContextService
 
 ## specify the destination of c2 directed assets
-#nifi.asset.directory=${MINIFI_HOME}/asset
+nifi.asset.directory=@MINIFI_PATH_ASSET_DIR@
 
 ## You probably don't need to touch this, but you can if you want to
 # nifi.default.internal.buffer.size=4096
@@ -144,8 +144,8 @@ nifi.c2.full.heartbeat=false
 # nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation
 
 # Python processor properties
-nifi.python.processor.dir=${MINIFI_HOME}/minifi-python/
-nifi.python.virtualenv.directory=${MINIFI_HOME}/minifi-python-env
+nifi.python.processor.dir=@MINIFI_PATH_PYTHON_PROCESSORS@
+nifi.python.virtualenv.directory=@MINIFI_PATH_PYTHON_VENV@
 nifi.python.install.packages.automatically=true
 # nifi.python.env.setup.binary=python3
 
