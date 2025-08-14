@@ -479,7 +479,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Converts records from one data format to another using configured Record Reader and Record Write Controller Services.
+Converts records from one data format to another using configured Record Reader and Record Writer Controller Services.
 
 ### Properties
 
