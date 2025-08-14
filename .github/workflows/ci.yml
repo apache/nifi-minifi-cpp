@@ -535,32 +535,18 @@ jobs:
         with:
           name: behavex_output
           path: build/behavex_output
-  cpplint:
-    name: "cpplint"
+  linters:
+    name: "C++ lint + Shellcheck + Flake8"
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 15
     steps:
     - id: checkout
       uses: actions/checkout@v4
+    - id: install_deps
+      run: sudo apt update && sudo apt install -y flake8
     - name: linter
-      run: python3 thirdparty/google-styleguide/run_linter.py -q -i libminifi/ extensions/ controller/ encrypt-config/ minifi_main/ minifi-api/ utils/
-  shellcheck:
-    name: "Shellcheck"
-    runs-on: ubuntu-22.04-arm
-    timeout-minutes: 10
-    steps:
-      - id: checkout
-        uses: actions/checkout@v4
-      - name: shellcheck
-        run: ./run_shellcheck.sh .
-  Flake8:
-    name: "Flake8"
-    runs-on: ubuntu-22.04-arm
-    timeout-minutes: 10
-    steps:
-      - id: checkout
-        uses: actions/checkout@v4
-      - id: install_deps
-        run: sudo apt update && sudo apt install -y flake8
-      - id: flake8_check
-        run: ./run_flake8.sh .
+      run: python3 thirdparty/google-styleguide/run_linter.py -q -i controller/ core-framework/ encrypt-config/ extension-framework/ extensions/ libminifi/ minifi-api/ minifi_main/
+    - name: shellcheck
+      run: ./run_shellcheck.sh .
+    - id: flake8_check
+      run: ./run_flake8.sh .

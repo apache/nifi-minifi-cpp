@@ -126,8 +126,5 @@ register_extension(minifi-kubernetes-extensions "KUBERNETES EXTENSIONS" KUBERNET
 # the first argument should be the extension target
 # the next three arguments are used for documentation purposes
 # the fifth optional argument designates the directory of the extension's tests
-
-# we could optionally enforce a coding style by registering a linter target
-register_extension_linter(minifi-kubernetes-extensions-linter)
 ```
 

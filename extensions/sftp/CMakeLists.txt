@@ -36,4 +36,3 @@ target_link_libraries(minifi-sftp ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-sftp libssh2 RapidJSON)
 
 register_extension(minifi-sftp "SFTP EXTENSIONS" SFTP "This enables SFTP support" "extensions/sftp/tests")
-register_extension_linter(minifi-sftp-linter)

@@ -28,4 +28,3 @@ add_minifi_library(minifi-systemd SHARED "ConsumeJournald.cpp" "libwrapper/LibWr
 target_link_libraries(minifi-systemd ${LIBMINIFI} Threads::Threads)
 
 register_extension(minifi-systemd "SYSTEMD EXTENSIONS" SYSTEMD-EXTENSIONS "Enabled log collection from journald" "extensions/systemd/tests")
-register_extension_linter(minifi-systemd-extension-linter)

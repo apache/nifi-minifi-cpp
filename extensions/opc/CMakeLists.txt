@@ -41,4 +41,3 @@ target_link_libraries(minifi-opc-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-opc-extensions ${CMAKE_DL_LIBS} spdlog::spdlog open62541::open62541)
 
 register_extension(minifi-opc-extensions "OPC EXTENSIONS" OPC-EXTENSIONS "This enables OPC-UA support" "extensions/opc/tests")
-register_extension_linter(minifi-opc-extensions-linter)

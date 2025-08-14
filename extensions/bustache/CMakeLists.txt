@@ -33,4 +33,3 @@ target_link_libraries(minifi-bustache-extensions ${LIBMINIFI})
 target_link_libraries(minifi-bustache-extensions bustache)
 
 register_extension(minifi-bustache-extensions "BUSTACHE EXTENSIONS" BUSTACHE-EXTENSIONS "This enables bustache functionality including ApplyTemplate." "extensions/bustache/tests")
-register_extension_linter(minifi-bustache-extensions-linter)

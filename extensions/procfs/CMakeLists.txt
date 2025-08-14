@@ -30,4 +30,3 @@ target_link_libraries(minifi-procfs ${LIBMINIFI})
 
 register_extension(minifi-procfs "PROCFS EXTENSIONS" PROCFS-EXTENSIONS "Enabled metrics collection from procfs" "extensions/procfs/tests")
 
-register_extension_linter(minifi-procfs-extensions-linter)
