@@ -42,19 +42,29 @@ void verifyXmlJsonResult(const std::string& json_content, size_t expected_record
 
     if (add_attributes_as_fields) {
       string_result = current_record["_topic"].GetString();
-      CHECK(string_result == "mytopic/segment");
+      CHECK(string_result == "mytopic/segment/" + std::to_string(i));
       auto array = current_record["_topicSegments"].GetArray();
-      CHECK(array.Size() == 2);
+      CHECK(array.Size() == 3);
       string_result = array[0].GetString();
       CHECK(string_result == "mytopic");
       string_result = array[1].GetString();
       CHECK(string_result == "segment");
+      string_result = array[2].GetString();
+      CHECK(string_result == std::to_string(i));
       int_result = current_record["_qos"].GetInt64();
-      CHECK(int_result == 1);
+      CHECK(int_result == i);
       bool bool_result = current_record["_isDuplicate"].GetBool();
-      CHECK_FALSE(bool_result);
+      if (i == 0) {
+        CHECK_FALSE(bool_result);
+      } else {
+        CHECK(bool_result);
+      }
       bool_result = current_record["_isRetained"].GetBool();
-      CHECK_FALSE(bool_result);
+      if (i == 0) {
+        CHECK_FALSE(bool_result);
+      } else {
+        CHECK(bool_result);
+      }
     } else {
       CHECK_FALSE(current_record.HasMember("_topic"));
       CHECK_FALSE(current_record.HasMember("_qos"));
@@ -268,9 +278,10 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read XML messages and write them to js
   const std::string payload = R"(<root><int_value>42</int_value><string_value>test</string_value></root>)";
   for (size_t i = 0; i < expected_record_count; ++i) {
     TestConsumeMQTTProcessor::SmartMessage message{std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(
-        new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = 1, .payloadlen = gsl::narrow<int>(payload.size()),
-                              .payload = const_cast<char*>(payload.data()), .qos = 1, .retained = 0, .dup = 0, .msgid = 42, .properties = {}}),
-      std::string{"mytopic/segment"}};
+        new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = gsl::narrow<int>(i), .payloadlen = gsl::narrow<int>(payload.size()),
+                              .payload = const_cast<char*>(payload.data()), .qos = gsl::narrow<int>(i), .retained = gsl::narrow<int>(i), .dup = gsl::narrow<int>(i),
+                              .msgid = gsl::narrow<int>(i + 1), .properties = {}}),
+      std::string{"mytopic/segment/" + std::to_string(i)}};
     consume_mqtt_processor_->enqueueReceivedMQTTMsg(std::move(message));
   }
   const auto trigger_results = test_controller_.trigger();
@@ -359,7 +370,7 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read MQTT message and write it to a fl
   }
 }
 
-TEST_CASE_METHOD(ConsumeMqttTestFixture, "Test scheduling failure if non-existant recordset reader or writer is set", "[consumeMQTTTest]") {
+TEST_CASE_METHOD(ConsumeMqttTestFixture, "Test scheduling failure if non-existent recordset reader or writer is set", "[consumeMQTTTest]") {
   test_controller_.plan->addController("XMLReader", "XMLReader");
   test_controller_.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
   REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
