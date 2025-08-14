@@ -41,8 +41,8 @@ class SplitJsonTestFixture {
     REQUIRE(result.at(processors::SplitJson::Original).size() == 1);
     auto original_flow_file = result.at(processors::SplitJson::Original).at(0);
     CHECK(controller_.plan->getContent(original_flow_file) == input_json_content);
-    auto fragment_id = original_flow_file->getAttribute(processors::SplitJson::FragmentIdentifier.name);
-    CHECK_FALSE(fragment_id->empty());
+    auto original_fragment_id = original_flow_file->getAttribute(processors::SplitJson::FragmentIdentifier.name);
+    CHECK_FALSE(original_fragment_id->empty());
     auto fragment_count = original_flow_file->getAttribute(processors::SplitJson::FragmentCount.name);
     CHECK(fragment_count.value() == std::to_string(expected_split_contents.size()));
 
@@ -51,7 +51,7 @@ class SplitJsonTestFixture {
       auto flow_file = result.at(processors::SplitJson::Split).at(i);
       CHECK(controller_.plan->getContent(flow_file) == expected_split_contents[i]);
       auto fragment_id = flow_file->getAttribute(processors::SplitJson::FragmentIdentifier.name);
-      CHECK(fragment_id.value() == fragment_id.value());
+      CHECK(fragment_id.value() == original_fragment_id.value());
       CHECK(flow_file->getAttribute(processors::SplitJson::FragmentCount.name).value() == std::to_string(expected_split_contents.size()));
       CHECK(flow_file->getAttribute(processors::SplitJson::FragmentIndex.name).value() == std::to_string(i));
       CHECK(flow_file->getAttribute(processors::SplitJson::SegmentOriginalFilename.name).value() == "unique_file_name");
