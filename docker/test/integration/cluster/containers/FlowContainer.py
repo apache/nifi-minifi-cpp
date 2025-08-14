@@ -47,6 +47,12 @@ class FlowContainer(Container):
     def add_controller(self, controller):
         self.controllers.append(controller)
 
+    def get_controller(self, name):
+        for controller in self.controllers:
+            if controller.name == name:
+                return controller
+        raise ValueError(f"Controller with name '{name}' not found")
+
     def add_parameter_to_flow_config(self, parameter_context_name, parameter_name, parameter_value):
         if parameter_context_name in self.parameter_contexts:
             self.parameter_contexts[parameter_context_name].append(Parameter(parameter_name, parameter_value))
