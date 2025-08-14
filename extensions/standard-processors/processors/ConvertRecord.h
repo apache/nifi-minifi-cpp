@@ -34,7 +34,7 @@ class ConvertRecord : public core::AbstractProcessor<ConvertRecord> {
  public:
   using core::AbstractProcessor<ConvertRecord>::AbstractProcessor;
 
-  EXTENSIONAPI static constexpr const char* Description = "Converts records from one data format to another using configured Record Reader and Record Write Controller Services.";
+  EXTENSIONAPI static constexpr const char* Description = "Converts records from one data format to another using configured Record Reader and Record Writer Controller Services.";
 
   EXTENSIONAPI static constexpr auto RecordReader = core::PropertyDefinitionBuilder<>::createProperty("Record Reader")
       .withDescription("Specifies the Controller Service to use for reading incoming data")
