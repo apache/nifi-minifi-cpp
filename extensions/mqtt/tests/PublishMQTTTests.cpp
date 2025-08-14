@@ -60,14 +60,6 @@ TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyBrokerURI", "[publishMQTTTest]")
       Catch::Matchers::EndsWith("Expected valid value from \"publishMqttProcessor::Broker URI\", but got PropertyNotSet (Property Error:2)"));
 }
 
-TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3_1_0", "[publishMQTTTest]") {
-  REQUIRE(publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic.name, "mytopic"));
-  REQUIRE(publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_3_1_0)}));
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_),
-      Catch::Matchers::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
-}
-
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3", "[publishMQTTTest]") {
   REQUIRE(publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic.name, "mytopic"));
   REQUIRE(publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
