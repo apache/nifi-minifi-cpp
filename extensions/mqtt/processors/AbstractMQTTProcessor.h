@@ -98,6 +98,7 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto ClientID = core::PropertyDefinitionBuilder<>::createProperty("Client ID")
       .withDescription("MQTT client ID to use. If not set, a UUID will be generated.")
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto QoS = core::PropertyDefinitionBuilder<magic_enum::enum_count<mqtt::MqttQoS>()>::createProperty("Quality of Service")
       .withDescription("The Quality of Service (QoS) of messages.")

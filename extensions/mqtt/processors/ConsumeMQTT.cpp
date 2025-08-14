@@ -231,16 +231,6 @@ void ConsumeMQTT::checkProperties(core::ProcessContext& context) {
     logger_->log_warn("MQTT 5.0 specification does not support Clean Session. Property is not used.");
   }
 
-  if (client_id_.empty()) {
-    if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
-      if (session_expiry_interval_ > std::chrono::seconds(0)) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Processor must have a Client ID for durable (Session Expiry Interval > 0) sessions");
-      }
-    } else if (!clean_session_) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Processor must have a Client ID for durable (non-clean) sessions");
-    }
-  }
-
   if (qos_ == mqtt::MqttQoS::LEVEL_0) {
     if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
       if (session_expiry_interval_ > std::chrono::seconds(0)) {
