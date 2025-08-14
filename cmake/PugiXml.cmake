@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,20 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
+include(FetchContent)
 
-if (NOT (WIN32 AND (ENABLE_ALL OR ENABLE_WEL)))
-    return()
-endif()
+set(PUGIXML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-file(GLOB SOURCES  "*.cpp" "wel/*.cpp")
-
-add_minifi_library(minifi-wel SHARED ${SOURCES})
-
-target_link_libraries(minifi-wel ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-wel pugixml ZLIB::ZLIB Wevtapi.lib)
-
-register_extension(minifi-wel "WEL EXTENSIONS" WEL-EXTENSION "Enables the suite of Windows Event Log extensions." "extensions/windows-event-log/tests")
-register_extension_linter(minifi-wel-extension-linter)
+FetchContent_Declare(
+    pugixml
+    URL      https://github.com/zeux/pugixml/archive/refs/tags/v1.15.tar.gz
+    URL_HASH SHA256=b39647064d9e28297a34278bfb897092bf33b7c487906ddfc094c9e8868bddcb
+)
+FetchContent_MakeAvailable(pugixml)
