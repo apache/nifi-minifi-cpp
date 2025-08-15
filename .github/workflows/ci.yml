@@ -540,13 +540,29 @@ jobs:
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 15
     steps:
-    - id: checkout
-      uses: actions/checkout@v4
-    - id: install_deps
-      run: sudo apt update && sudo apt install -y flake8
-    - name: linter
-      run: python3 thirdparty/google-styleguide/run_linter.py -q -i controller/ core-framework/ encrypt-config/ extension-framework/ extensions/ libminifi/ minifi-api/ minifi_main/
-    - name: shellcheck
-      run: ./run_shellcheck.sh .
-    - id: flake8_check
-      run: ./run_flake8.sh .
+      - id: checkout
+        uses: actions/checkout@v4
+
+      - id: install_deps
+        run: sudo apt update && sudo apt install -y flake8
+
+      - id: cpp_lint
+        name: C++ linter
+        continue-on-error: true
+        run: python3 thirdparty/google-styleguide/run_linter.py -q -i controller/ core-framework/ encrypt-config/ extension-framework/ extensions/ libminifi/ minifi-api/ minifi_main/
+
+      - id: shellcheck
+        name: Shellcheck
+        continue-on-error: true
+        run: ./run_shellcheck.sh .
+
+      - id: flake8_check
+        name: Flake8 check
+        continue-on-error: true
+        run: ./run_flake8.sh .
+
+      - name: Check Linter Statuses
+        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.flake8_check.outcome == 'failure'
+        run: |
+          echo "One or more linters failed. Failing the workflow."
+          exit 1
