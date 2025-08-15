@@ -31,4 +31,3 @@ target_link_libraries(minifi-elasticsearch ${LIBMINIFI})
 
 register_extension(minifi-elasticsearch "ELASTICSEARCH EXTENSIONS" ELASTICSEARCH-EXTENSIONS "This enables elasticsearch support" "extensions/elasticsearch/tests")
 
-register_extension_linter(minifi-elasticsearch-extensions-linter)

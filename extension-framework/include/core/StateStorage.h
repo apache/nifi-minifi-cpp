@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "core/Core.h"
-#include "StateManager.h"
-
 #include <memory>
 #include <string>
 #include <unordered_map>
+
+#include "core/Core.h"
+#include "StateManager.h"
 #include "minifi-cpp/core/StateStorage.h"
 
 namespace org::apache::nifi::minifi::core {

@@ -33,4 +33,3 @@ target_link_libraries(minifi-couchbase ${LIBMINIFI} couchbase_cxx_client_static 
 
 register_extension(minifi-couchbase "COUCHBASE EXTENSIONS" COUCHBASE-EXTENSIONS "This enables Couchbase support" "extensions/couchbase/tests")
 
-register_extension_linter(minifi-couchbase-extensions-linter)

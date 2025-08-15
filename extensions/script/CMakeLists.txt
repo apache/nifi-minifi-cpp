@@ -31,4 +31,3 @@ target_link_libraries(minifi-script-extension PRIVATE ${LIBMINIFI} Threads::Thre
 target_include_directories(minifi-script-extension PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/python")
 
 register_extension(minifi-script-extension "SCRIPTING EXTENSIONS" SCRIPTING-EXTENSIONS "This enables scripting" "extensions/script/tests")
-register_extension_linter(minifi-script-extension-linter)

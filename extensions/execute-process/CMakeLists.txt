@@ -35,4 +35,3 @@ target_link_libraries(minifi-execute-process ${LIBMINIFI})
 
 register_extension(minifi-execute-process "EXECUTE PROCESS EXTENSION" EXECUTE-PROCESS-EXTENSION "This enables execute process support" "extensions/execute-process/test")
 
-register_extension_linter(minifi-execute-process-extensions-linter)

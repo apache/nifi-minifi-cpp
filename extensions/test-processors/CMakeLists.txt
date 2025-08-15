@@ -31,4 +31,3 @@ target_link_libraries(minifi-test-processors ${LIBMINIFI})
 
 register_extension(minifi-test-processors "TEST-PROCESSORS EXTENSION" TEST-PROCESSORS-EXTENSION "This enables processors purely for testing purposes" "" "CI_ONLY_INSTALL")
 
-register_extension_linter(minifi-test-processors-extensions-linter)

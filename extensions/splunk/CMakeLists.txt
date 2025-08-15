@@ -31,4 +31,3 @@ target_link_libraries(minifi-splunk ${LIBMINIFI})
 
 register_extension(minifi-splunk "SPLUNK EXTENSIONS" SPLUNK-EXTENSIONS "This enables Splunk support" "extensions/splunk/tests")
 
-register_extension_linter(minifi-splunk-extensions-linter)

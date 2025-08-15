@@ -34,4 +34,3 @@ target_link_libraries(minifi-wel ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-wel PUGI::libpugixml ZLIB::ZLIB Wevtapi.lib)
 
 register_extension(minifi-wel "WEL EXTENSIONS" WEL-EXTENSION "Enables the suite of Windows Event Log extensions." "extensions/windows-event-log/tests")
-register_extension_linter(minifi-wel-extension-linter)

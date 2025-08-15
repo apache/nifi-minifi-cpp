@@ -35,4 +35,3 @@ target_include_directories(minifi-civet-extensions BEFORE PUBLIC
 target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads civetweb::civetweb-cpp)
 
 register_extension(minifi-civet-extensions CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb/tests")
-register_extension_linter(minifi-civet-extensions-linter)
