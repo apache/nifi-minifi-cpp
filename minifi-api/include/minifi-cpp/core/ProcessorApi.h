@@ -21,7 +21,7 @@
 
 #include "ConfigurableComponent.h"
 #include "Property.h"
-#include "DynamicProperty.h"
+#include "minifi-cpp/core/DynamicProperty.h"
 #include "Core.h"
 #include "minifi-cpp/core/Annotation.h"
 #include "Scheduling.h"

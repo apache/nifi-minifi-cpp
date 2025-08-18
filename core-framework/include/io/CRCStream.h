@@ -32,8 +32,8 @@
 #include <arpa/inet.h>
 
 #endif
-#include "InputStream.h"
-#include "OutputStream.h"
+#include "io/InputStream.h"
+#include "io/OutputStream.h"
 #include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::io {
