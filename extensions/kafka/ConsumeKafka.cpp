@@ -76,7 +76,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext& context, core::ProcessSessio
   configureNewConnection(context);
   if (commit_policy_ == consume_kafka::CommitPolicyEnum::CommitFromIncomingFlowFiles) {
     setTriggerWhenEmpty(true);
-  } else if (hasIncomingConnections()) {
+  } else if (context.hasIncomingConnections()) {
     logger_->log_error("Incoming connections are not allowed with {}", magic_enum::enum_name(commit_policy_));
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Incoming connections are not allowed with {}", magic_enum::enum_name(commit_policy_)));
   }

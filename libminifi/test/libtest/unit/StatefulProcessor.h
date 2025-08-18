@@ -20,7 +20,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/StateManager.h"
 
 namespace org::apache::nifi::minifi::processors {

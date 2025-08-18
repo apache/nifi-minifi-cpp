@@ -25,17 +25,17 @@
 #include <utility>
 #include <vector>
 
+#include "io/InputStream.h"
+#include "core/ProcessorImpl.h"
+#include "utils/Export.h"
 #include "asio/io_context.hpp"
 #include "asio/ssl/context.hpp"
 #include "controllers/SSLContextServiceInterface.h"
 #include "core/Core.h"
-#include "core/Processor.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
-#include "io/InputStream.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "utils/Export.h"
 #include "utils/StringUtils.h"  // for string <=> on libc++
 #include "utils/net/AsioSocketUtils.h"
 #include "utils/net/ConnectionHandler.h"
@@ -127,7 +127,7 @@ class PutTCP final : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutTCP(const std::string_view name, const utils::Identifier& uuid = {});
+  using ProcessorImpl::ProcessorImpl;
   PutTCP(const PutTCP&) = delete;
   PutTCP(PutTCP&&) = delete;
   PutTCP& operator=(const PutTCP&) = delete;

@@ -32,15 +32,11 @@
 #include "utils/file/FileUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/PropertyErrors.h"
+#include "minifi-cpp/core/ProcessorDescriptor.h"
 
 namespace org::apache::nifi::minifi::extensions::python::processors {
 
-void ExecutePythonProcessor::initialize() {
-  if (getSupportedProperties().empty()) {
-    setSupportedProperties(Properties);
-    setSupportedRelationships(Relationships);
-  }
-
+void ExecutePythonProcessor::initializeScript() {
   if (processor_initialized_) {
     logger_->log_debug("Processor has already been initialized, returning...");
     return;
@@ -56,6 +52,15 @@ void ExecutePythonProcessor::initialize() {
   // so that we can provide manifest of processor identity on C2
   python_script_engine_ = createScriptEngine();
   initalizeThroughScriptEngine();
+}
+
+void ExecutePythonProcessor::initialize() {
+  initializeScript();
+  std::vector<core::PropertyReference> all_properties{Properties.begin(), Properties.end()};
+  ranges::transform(python_properties_, std::back_inserter(all_properties), &core::Property::getReference);
+  setSupportedProperties(all_properties);
+  setSupportedRelationships(Relationships);
+  logger_->log_debug("Processor has been initialized.");
 }
 
 void ExecutePythonProcessor::initalizeThroughScriptEngine() {
@@ -80,8 +85,11 @@ void ExecutePythonProcessor::initalizeThroughScriptEngine() {
 }
 
 void ExecutePythonProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*sessionFactory*/) {
-  addAutoTerminatedRelationship(Original);
+  context.addAutoTerminatedRelationship(Original);
   if (!processor_initialized_) {
+    script_file_path_ = context.getProperty(ScriptFile.name).value_or("");
+    script_to_exec_ = context.getProperty(ScriptBody.name).value_or("");
+    module_directory_ = context.getProperty(ModuleDirectory.name).value_or("");
     loadScript();
     python_script_engine_ = createScriptEngine();
     initalizeThroughScriptEngine();
@@ -109,9 +117,8 @@ void ExecutePythonProcessor::onTrigger(core::ProcessContext& context, core::Proc
 }
 
 void ExecutePythonProcessor::appendPathForImportModules() const {
-  std::string module_directory = getProperty(ModuleDirectory.name).value_or("");
-  if (!module_directory.empty()) {
-    python_script_engine_->appendModulePaths(utils::string::splitAndTrimRemovingEmpty(module_directory, ",") | ranges::to<std::vector<std::filesystem::path>>());
+  if (!module_directory_.empty()) {
+    python_script_engine_->appendModulePaths(utils::string::splitAndTrimRemovingEmpty(module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 }
 
@@ -125,22 +132,17 @@ void ExecutePythonProcessor::loadScriptFromFile() {
 }
 
 void ExecutePythonProcessor::loadScript() {
-  std::string script_file = getProperty(ScriptFile.name).value_or("");
-  std::string script_body = getProperty(ScriptBody.name).value_or("");
-  if (script_file.empty() && script_body.empty()) {
+  if (script_file_path_.empty() && script_to_exec_.empty()) {
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
 
-  if (!script_file.empty()) {
-    if (!script_body.empty()) {
+  if (!script_file_path_.empty()) {
+    if (!script_to_exec_.empty()) {
       throw std::runtime_error("Only one of Script File or Script Body may be used");
     }
-    script_file_path_ = script_file;
     loadScriptFromFile();
     last_script_write_time_ = utils::file::last_write_time(script_file_path_);
-    return;
   }
-  script_to_exec_ = script_body;
 }
 
 void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
@@ -217,63 +219,8 @@ void ExecutePythonProcessor::addProperty(const std::string &name, const std::str
   python_properties_.emplace_back(property);
 }
 
-nonstd::expected<std::string, std::error_code> ExecutePythonProcessor::getProperty(std::string_view name) const {
-  if (auto non_python_property = ConfigurableComponentImpl::getProperty(name)) {
-    return *non_python_property;
-  }
-  std::lock_guard<std::mutex> lock(python_properties_mutex_);
-  auto it = ranges::find_if(python_properties_, [&name](const auto& item){
-    return item.getName() == name;
-  });
-  if (it != python_properties_.end()) {
-    return it->getValue() | utils::transform([](const std::string_view value_view) -> std::string { return std::string{value_view}; });
-  }
-  return nonstd::make_unexpected(core::PropertyErrorCode::NotSupportedProperty);
-}
-
-nonstd::expected<void, std::error_code> ExecutePythonProcessor::setProperty(std::string_view name, std::string value) {
-  auto set_non_python_property = ConfigurableComponentImpl::setProperty(name, value);
-  if (set_non_python_property || set_non_python_property.error() != core::PropertyErrorCode::NotSupportedProperty) {
-    return set_non_python_property;
-  }
-  std::lock_guard<std::mutex> lock(python_properties_mutex_);
-  auto it = ranges::find_if(python_properties_, [&name](const auto& item){
-    return item.getName() == name;
-  });
-  if (it != python_properties_.end()) {
-    return it->setValue(std::move(value));
-  }
-  return nonstd::make_unexpected(core::PropertyErrorCode::NotSupportedProperty);
-}
-
-nonstd::expected<core::Property, std::error_code> ExecutePythonProcessor::getSupportedProperty(std::string_view name) const {
-  if (const auto non_python_property = ConfigurableComponentImpl::getSupportedProperty(name)) {
-    return *non_python_property;
-  }
-  std::lock_guard<std::mutex> lock(python_properties_mutex_);
-  auto it = ranges::find_if(python_properties_, [&name](const auto& item){
-    return item.getName() == name;
-  });
-  if (it != python_properties_.end()) {
-    return *it;
-  }
-  return nonstd::make_unexpected(core::PropertyErrorCode::NotSupportedProperty);
-}
-
-std::map<std::string, core::Property, std::less<>> ExecutePythonProcessor::getSupportedProperties() const {
-  auto result = ConfigurableComponentImpl::getSupportedProperties();
-
-  std::lock_guard<std::mutex> lock(python_properties_mutex_);
-
-  for (const auto &property : python_properties_) {
-    result.insert({ property.getName(), property });
-  }
-
-  return result;
-}
-
 std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships() const {
-  auto relationships = getSupportedRelationships();
+  std::vector<core::Relationship> relationships{Relationships.begin(), Relationships.end()};
   auto custom_relationships = python_script_engine_->getCustomPythonRelationships();
   relationships.reserve(relationships.size() + std::distance(custom_relationships.begin(), custom_relationships.end()));
   relationships.insert(relationships.end(), custom_relationships.begin(), custom_relationships.end());

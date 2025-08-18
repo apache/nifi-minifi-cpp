@@ -37,13 +37,13 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
 
   TestController test_controller;
   auto plan = test_controller.createPlan();
-  auto write_to_flow_file = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  auto update_attribute = dynamic_cast<UpdateAttribute*>(plan->addProcessor("UpdateAttribute", "update_attribute"));
-  auto query_splunk_indexing_status = dynamic_cast<QuerySplunkIndexingStatus*>(plan->addProcessor("QuerySplunkIndexingStatus", "query_splunk_indexing_status"));
-  auto read_from_acknowledged = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_acknowledged"));
-  auto read_from_undetermined = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_undetermined"));
-  auto read_from_unacknowledged = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_unacknowledged"));
-  auto read_from_failure = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure"));
+  auto write_to_flow_file = plan->addProcessor<WriteToFlowFileTestProcessor>("write_to_flow_file");
+  auto update_attribute = plan->addProcessor("UpdateAttribute", "update_attribute");
+  auto query_splunk_indexing_status = plan->addProcessor("QuerySplunkIndexingStatus", "query_splunk_indexing_status");
+  auto read_from_acknowledged = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_acknowledged");
+  auto read_from_undetermined = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_undetermined");
+  auto read_from_unacknowledged = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_unacknowledged");
+  auto read_from_failure = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_failure");
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_attribute);
   plan->addConnection(update_attribute, UpdateAttribute ::Success, query_splunk_indexing_status);
@@ -65,35 +65,35 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   auto response_timestamp = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
   plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp);
 
-  write_to_flow_file->setContent("foobar");
+  write_to_flow_file.get().setContent("foobar");
 
   SECTION("Querying indexed id") {
     plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, std::to_string(MockSplunkHEC::indexed_events[0]));
     test_controller.runSession(plan);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_undetermined->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_unacknowledged->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_acknowledged->numberOfFlowFilesRead() == 1);
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_undetermined.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_unacknowledged.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_acknowledged.get().numberOfFlowFilesRead() == 1);
   }
 
   SECTION("Querying not indexed id") {
     plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "100");
     query_splunk_indexing_status->setPenalizationPeriod(50ms);
     test_controller.runSession(plan);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_undetermined->numberOfFlowFilesRead() == 0);  // result penalized
-    CHECK(read_from_unacknowledged->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_acknowledged->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_undetermined.get().numberOfFlowFilesRead() == 0);  // result penalized
+    CHECK(read_from_unacknowledged.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_acknowledged.get().numberOfFlowFilesRead() == 0);
 
-    write_to_flow_file->setContent("");
+    write_to_flow_file.get().setContent("");
     plan->reset();
     std::this_thread::sleep_for(100ms);
     test_controller.runSession(plan);
 
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_undetermined->numberOfFlowFilesRead() == 1);
-    CHECK(read_from_unacknowledged->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_acknowledged->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_undetermined.get().numberOfFlowFilesRead() == 1);
+    CHECK(read_from_unacknowledged.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_acknowledged.get().numberOfFlowFilesRead() == 0);
   }
 
   SECTION("Querying not indexed old id") {
@@ -102,10 +102,10 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
 
     plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp);
     test_controller.runSession(plan);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_undetermined->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_unacknowledged->numberOfFlowFilesRead() == 1);
-    CHECK(read_from_acknowledged->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_undetermined.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_unacknowledged.get().numberOfFlowFilesRead() == 1);
+    CHECK(read_from_acknowledged.get().numberOfFlowFilesRead() == 0);
   }
 
   SECTION("Multiple inputs with same id") {
@@ -120,10 +120,10 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
     plan->runProcessor(read_from_undetermined);
     plan->runProcessor(read_from_unacknowledged);
     plan->runProcessor(read_from_acknowledged);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 4);
-    CHECK(read_from_undetermined->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_unacknowledged->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_acknowledged->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 4);
+    CHECK(read_from_undetermined.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_unacknowledged.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_acknowledged.get().numberOfFlowFilesRead() == 0);
   }
 
   SECTION("MaxQuerySize can limit the number of queries") {
@@ -138,10 +138,10 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
 
   SECTION("Input flow file has no attributes") {
     test_controller.runSession(plan);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 1);
-    CHECK(read_from_undetermined->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_unacknowledged->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_acknowledged->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 1);
+    CHECK(read_from_undetermined.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_unacknowledged.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_acknowledged.get().numberOfFlowFilesRead() == 0);
   }
 
   SECTION("Invalid index") {

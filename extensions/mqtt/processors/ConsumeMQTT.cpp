@@ -204,9 +204,9 @@ void ConsumeMQTT::resolveTopicFromAlias(SmartMessage& smart_message) {
 }
 
 
-void ConsumeMQTT::checkProperties() {
-  auto is_property_explicitly_set = [this](const std::string_view property_name) -> bool {
-    const auto property_values = getAllPropertyValues(property_name) | utils::orThrow("It should only be called on valid property");
+void ConsumeMQTT::checkProperties(core::ProcessContext& context) {
+  auto is_property_explicitly_set = [&context](const std::string_view property_name) -> bool {
+    const auto property_values = context.getAllPropertyValues(property_name) | utils::orThrow("It should only be called on valid property");
     return !property_values.empty();
   };
   if (mqtt_version_ == mqtt::MqttVersions::V_3_1_0 || mqtt_version_ == mqtt::MqttVersions::V_3_1_1 || mqtt_version_ == mqtt::MqttVersions::V_3X_AUTO) {

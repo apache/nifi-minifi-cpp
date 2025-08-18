@@ -27,7 +27,7 @@
 #include "utils/Literals.h"
 
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -46,10 +46,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class GetTCP : public core::ProcessorImpl {
  public:
-  explicit GetTCP(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<GetTCP>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   ~GetTCP() override {
     if (client_) {

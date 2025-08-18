@@ -20,7 +20,7 @@
 #include <string>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -31,10 +31,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class NetworkListenerProcessor : public core::ProcessorImpl {
  public:
-  NetworkListenerProcessor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-    : core::ProcessorImpl(name, uuid),
-      logger_(std::move(logger)) {
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~NetworkListenerProcessor() override;
 
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
@@ -63,9 +60,6 @@ class NetworkListenerProcessor : public core::ProcessorImpl {
       bool consume_delimiter,
       std::string delimiter);
   void startUdpServer(const core::ProcessContext& context);
-
- protected:
-  std::shared_ptr<core::logging::Logger> logger_;
 
  private:
   struct ServerOptions {

@@ -68,11 +68,6 @@ void ListSFTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-ListSFTP::ListSFTP(std::string_view name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(name, uuid) {
-  logger_ = core::logging::LoggerFactory<ListSFTP>::getLogger(uuid_);
-}
-
 ListSFTP::~ListSFTP() = default;
 
 void ListSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {

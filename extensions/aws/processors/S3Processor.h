@@ -30,7 +30,6 @@
 #include "AwsProcessor.h"
 #include "S3Wrapper.h"
 #include "aws/core/auth/AWSCredentialsProvider.h"
-#include "core/Processor.h"
 #include "core/Property.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -51,12 +50,14 @@ class S3Processor : public AwsProcessor {
 
   EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(AwsProcessor::Properties, std::to_array<core::PropertyReference>({Bucket}));
 
+  using AwsProcessor::AwsProcessor;
+  ~S3Processor() override = default;
 
-  explicit S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger);
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
-  explicit S3Processor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
+  explicit S3Processor(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
+
   aws::s3::S3Wrapper s3_wrapper_;
 };
 

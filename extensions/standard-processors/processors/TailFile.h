@@ -29,7 +29,7 @@
 
 #include "controllers/AttributeProviderService.h"
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -121,10 +121,7 @@ enum class Mode {
 
 class TailFile : public core::ProcessorImpl {
  public:
-  explicit TailFile(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<TailFile>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."
       " Data is ingested only when a new line is encountered (carriage return or new-line character or combination). If the file to tail is periodically \"rolled over\","

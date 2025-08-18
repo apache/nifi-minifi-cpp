@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
@@ -49,9 +49,9 @@ class PerformanceDataMonitor final : public core::ProcessorImpl {
   static constexpr const char* PRETTY_FORMAT_STR = "Pretty";
   static constexpr const char* COMPACT_FORMAT_STR = "Compact";
 
-  explicit PerformanceDataMonitor(const std::string_view name, utils::Identifier uuid = utils::Identifier())
-      : ProcessorImpl(name, uuid), output_format_(OutputFormat::JSON), pretty_output_(false),
-        decimal_places_(std::nullopt), logger_(core::logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
+  explicit PerformanceDataMonitor(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata), output_format_(OutputFormat::JSON), pretty_output_(false),
+        decimal_places_(std::nullopt),
         pdh_query_(nullptr), resource_consumption_counters_() {}
 
   ~PerformanceDataMonitor() override;
@@ -124,7 +124,6 @@ class PerformanceDataMonitor final : public core::ProcessorImpl {
   bool pretty_output_;
 
   std::optional<uint8_t> decimal_places_;
-  std::shared_ptr<core::logging::Logger> logger_;
   PDH_HQUERY pdh_query_;
   std::vector<std::unique_ptr<PerformanceDataCounter>> resource_consumption_counters_;
 };

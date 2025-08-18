@@ -65,21 +65,21 @@ void PerformanceDataMonitor::onSchedule(core::ProcessContext& context, core::Pro
 void PerformanceDataMonitor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   if (resource_consumption_counters_.empty()) {
     logger_->log_error("No valid counters for PerformanceDataMonitor");
-    yield();
+    context.yield();
     return;
   }
 
   std::shared_ptr<core::FlowFile> flowFile = session.create();
   if (!flowFile) {
     logger_->log_error("Failed to create flowfile!");
-    yield();
+    context.yield();
     return;
   }
 
   PDH_STATUS collect_query_data_result = PdhCollectQueryData(pdh_query_);
   if (ERROR_SUCCESS != collect_query_data_result) {
     logger_->log_error("Error during PdhCollectQueryData, error code: {:#x}", collect_query_data_result);
-    yield();
+    context.yield();
     return;
   }
 

@@ -32,7 +32,7 @@
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -94,7 +94,7 @@ struct CommonProperties {
   std::string endpoint_override_url;
 };
 
-class AwsProcessor : public core::ProcessorImpl {
+class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr auto AccessKey = core::PropertyDefinitionBuilder<>::createProperty("Access Key")
       .withDescription("AWS account access key")
@@ -169,8 +169,8 @@ class AwsProcessor : public core::ProcessorImpl {
       UseDefaultCredentials
   });
 
-
-  explicit AwsProcessor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger);
+  using ProcessorImpl::ProcessorImpl;
+  ~AwsProcessor() override = default;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
@@ -180,7 +180,6 @@ class AwsProcessor : public core::ProcessorImpl {
   aws::ProxyOptions getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file);
   std::optional<CommonProperties> getCommonELSupportedProperties(core::ProcessContext& context, const core::FlowFile* flow_file);
 
-  std::shared_ptr<core::logging::Logger> logger_;
   std::optional<Aws::Client::ClientConfiguration> client_config_;
 };
 

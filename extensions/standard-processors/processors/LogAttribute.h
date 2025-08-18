@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -39,11 +39,11 @@ namespace org::apache::nifi::minifi::processors {
 
 class LogAttribute : public core::ProcessorImpl {
  public:
-  explicit LogAttribute(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<LogAttribute>::getLogger(uuid_);
+  explicit LogAttribute(core::ProcessorMetadata metadata)
+      : ProcessorImpl(metadata) {
     logger_->set_max_log_size(-1);
   }
+
   ~LogAttribute() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Logs attributes of flow files in the MiNiFi application log.";

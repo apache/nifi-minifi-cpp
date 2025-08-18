@@ -26,6 +26,7 @@
 
 #include "Core.h"
 #include "ObjectFactory.h"
+#include "ProcessorFactory.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -50,6 +51,8 @@ class ClassLoader {
  public:
   static ClassLoader &getDefaultClassLoader();
 
+  virtual ~ClassLoader() = default;
+
   /**
    * Retrieves a class loader
    * @param name name of class loader
@@ -62,24 +65,20 @@ class ClassLoader {
    */
   virtual void registerClass(const std::string &clazz, std::unique_ptr<ObjectFactory> factory) = 0;
 
+  virtual void registerClass(const std::string &clazz, std::unique_ptr<ProcessorFactory> factory) = 0;
+
   virtual void unregisterClass(const std::string& clazz) = 0;
 
-  virtual std::optional<std::string> getGroupForClass(const std::string &class_name) const = 0;
+  [[nodiscard]] virtual std::optional<std::string> getGroupForClass(const std::string &class_name) const = 0;
 
-  virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
+  [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
 
-  virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
+  [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
 
-  virtual CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
+  [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(
+      const std::string &class_name, const std::string &name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
 
-  /**
-   * Instantiate object based on class_name
-   * @param class_name class to create
-   * @param uuid uuid of object
-   * @return nullptr or object created from class_name definition.
-   */
-  template<class T = CoreComponent>
-  std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name);
+  [[nodiscard]] virtual CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
 
   /**
    * Instantiate object based on class_name
@@ -88,7 +87,7 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  std::unique_ptr<T> instantiate(const std::string &class_name, const utils::Identifier &uuid);
+  [[nodiscard]] std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name);
 
   /**
    * Instantiate object based on class_name
@@ -97,7 +96,19 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  T *instantiateRaw(const std::string &class_name, const std::string &name);
+  [[nodiscard]] std::unique_ptr<T> instantiate(const std::string &class_name, const utils::Identifier &uuid);
+
+  /**
+   * Instantiate object based on class_name
+   * @param class_name class to create
+   * @param uuid uuid of object
+   * @return nullptr or object created from class_name definition.
+   */
+  template<class T = CoreComponent>
+  [[nodiscard]] T *instantiateRaw(const std::string &class_name, const std::string &name);
+
+  template<class T = CoreComponent>
+  [[nodiscard]] std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name, const utils::Identifier &uuid);
 };
 
 }  // namespace org::apache::nifi::minifi::core

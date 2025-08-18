@@ -30,7 +30,7 @@
 namespace org::apache::nifi::minifi::extensions::grafana::loki::test {
 
 TEST_CASE("Url property is required", "[PushGrafanaLokiREST]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<PushGrafanaLokiREST>("PushGrafanaLokiREST"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<PushGrafanaLokiREST>("PushGrafanaLokiREST"));
   auto push_grafana_loki_rest = test_controller.getProcessor();
 
   test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiREST::Url, "");
@@ -40,7 +40,7 @@ TEST_CASE("Url property is required", "[PushGrafanaLokiREST]") {
 }
 
 TEST_CASE("Valid stream labels need to be set", "[PushGrafanaLokiREST]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<PushGrafanaLokiREST>("PushGrafanaLokiREST"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<PushGrafanaLokiREST>("PushGrafanaLokiREST"));
   auto push_grafana_loki_rest = test_controller.getProcessor();
   test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiREST::Url, "localhost:10990");
   test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiREST::LogLineBatchSize, "1");
@@ -54,7 +54,7 @@ TEST_CASE("Valid stream labels need to be set", "[PushGrafanaLokiREST]") {
 }
 
 TEST_CASE("Log Line Batch Size cannot be 0", "[PushGrafanaLokiREST]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<PushGrafanaLokiREST>("PushGrafanaLokiREST"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<PushGrafanaLokiREST>("PushGrafanaLokiREST"));
   auto push_grafana_loki_rest = test_controller.getProcessor();
   test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiREST::Url, "localhost:10990");
   test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiREST::StreamLabels, "job=minifi,directory=/opt/minifi/logs/");
@@ -66,8 +66,8 @@ class PushGrafanaLokiRESTTestFixture {
  public:
   PushGrafanaLokiRESTTestFixture()
       : mock_loki_("10990"),
-        test_controller_(std::make_unique<PushGrafanaLokiREST>("PushGrafanaLokiREST")),
-        push_grafana_loki_rest_(test_controller_.getProcessor<PushGrafanaLokiREST>()) {
+        test_controller_(minifi::test::utils::make_processor<PushGrafanaLokiREST>("PushGrafanaLokiREST")),
+        push_grafana_loki_rest_(test_controller_.getProcessor()) {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
@@ -161,7 +161,7 @@ class PushGrafanaLokiRESTTestFixture {
  protected:
   MockGrafanaLokiREST mock_loki_;
   minifi::test::SingleProcessorTestController test_controller_;
-  PushGrafanaLokiREST* push_grafana_loki_rest_;
+  TypedProcessorWrapper<PushGrafanaLokiREST> push_grafana_loki_rest_;
 };
 
 TEST_CASE_METHOD(PushGrafanaLokiRESTTestFixture, "PushGrafanaLokiREST should send 1 log line to Grafana Loki in a trigger", "[PushGrafanaLokiREST]") {
@@ -273,7 +273,7 @@ TEST_CASE_METHOD(PushGrafanaLokiRESTTestFixture, "PushGrafanaLokiREST should wai
 }
 
 TEST_CASE("If username is set, password is also required to be set", "[PushGrafanaLokiREST]") {
-  minifi::test::SingleProcessorTestController test_controller(std::make_unique<PushGrafanaLokiREST>("PushGrafanaLokiREST"));
+  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<PushGrafanaLokiREST>("PushGrafanaLokiREST"));
   auto push_grafana_loki_rest = test_controller.getProcessor();
   test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiREST::Url, "localhost:10990");
   test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiREST::StreamLabels, "job=minifi,directory=/opt/minifi/logs/");

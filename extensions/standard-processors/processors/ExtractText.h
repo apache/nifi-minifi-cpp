@@ -25,7 +25,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessContext.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -38,10 +38,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class ExtractText : public core::ProcessorImpl {
  public:
-  explicit ExtractText(const std::string_view name,  const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<ExtractText>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   // Default maximum bytes to read into an attribute
   static constexpr std::string_view DEFAULT_SIZE_LIMIT_STR = "2097152";  // 2 * 1024 * 1024

@@ -20,13 +20,14 @@
 #include "OpcUaTestServer.h"
 #include "unit/SingleProcessorTestController.h"
 #include "include/fetchopc.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("Test fetching using path node id", "[fetchopcprocessor]") {
   OpcUaTestServer server(4841);
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto fetch_opc_processor = controller.getProcessor();
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
@@ -62,7 +63,7 @@ TEST_CASE("Test fetching using path node id", "[fetchopcprocessor]") {
 TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocessor]") {
   OpcUaTestServer server(4841);
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto fetch_opc_processor = controller.getProcessor();
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
@@ -94,7 +95,7 @@ TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocess
 }
 
 TEST_CASE("Test missing path reference types", "[fetchopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto fetch_opc_processor = controller.getProcessor();
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
@@ -104,7 +105,7 @@ TEST_CASE("Test missing path reference types", "[fetchopcprocessor]") {
 }
 
 TEST_CASE("Test username and password should both be provided", "[fetchopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
   REQUIRE(put_opc_processor->setProperty(processors::FetchOPCProcessor::Username.name, "user"));
@@ -114,7 +115,7 @@ TEST_CASE("Test username and password should both be provided", "[fetchopcproces
 }
 
 TEST_CASE("Test certificate path and key path should both be provided", "[fetchopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
   REQUIRE(put_opc_processor->setProperty(processors::FetchOPCProcessor::CertificatePath.name, "cert"));
@@ -124,7 +125,7 @@ TEST_CASE("Test certificate path and key path should both be provided", "[fetcho
 }
 
 TEST_CASE("Test application uri should be provided if certificate is provided", "[fetchopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
   REQUIRE(put_opc_processor->setProperty(processors::FetchOPCProcessor::CertificatePath.name, "cert"));
@@ -134,7 +135,7 @@ TEST_CASE("Test application uri should be provided if certificate is provided", 
 }
 
 TEST_CASE("Test certificate path must be valid", "[fetchopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   REQUIRE(put_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
   REQUIRE(put_opc_processor->setProperty(processors::FetchOPCProcessor::CertificatePath.name, "/invalid/cert/path"));
@@ -145,7 +146,7 @@ TEST_CASE("Test certificate path must be valid", "[fetchopcprocessor]") {
 }
 
 TEST_CASE("Test key path must be valid", "[fetchopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   auto test_cert_path = controller.createTempDirectory() /  "test_cert.pem";
   {
@@ -162,7 +163,7 @@ TEST_CASE("Test key path must be valid", "[fetchopcprocessor]") {
 }
 
 TEST_CASE("Test trusted certs path must be valid", "[fetchopcprocessor]") {
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto put_opc_processor = controller.getProcessor();
   auto test_cert_path = controller.createTempDirectory() /  "test_cert.pem";
   {
@@ -182,7 +183,7 @@ TEST_CASE("Test trusted certs path must be valid", "[fetchopcprocessor]") {
 TEST_CASE("Test no fetch result using lazy mode when no timestamps are changed", "[fetchopcprocessor]") {
   OpcUaTestServer server(4841);
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   LogTestController::getInstance().setDebug<processors::FetchOPCProcessor>();
   auto fetch_opc_processor = controller.getProcessor();
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
@@ -204,7 +205,7 @@ TEST_CASE("Test no fetch result using lazy mode when no timestamps are changed",
 TEST_CASE("Test fetch for nodes with changed timestamps with lazy mode", "[fetchopcprocessor]") {
   OpcUaTestServer server(4841);
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   LogTestController::getInstance().setDebug<processors::FetchOPCProcessor>();
   auto fetch_opc_processor = controller.getProcessor();
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
@@ -228,7 +229,7 @@ TEST_CASE("Test fetch for nodes with changed timestamps with lazy mode", "[fetch
 TEST_CASE("Test no fetch result using lazy new value mode when no values are changed", "[fetchopcprocessor]") {
   OpcUaTestServer server(4841);
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   LogTestController::getInstance().setDebug<processors::FetchOPCProcessor>();
   auto fetch_opc_processor = controller.getProcessor();
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
@@ -251,7 +252,7 @@ TEST_CASE("Test no fetch result using lazy new value mode when no values are cha
 TEST_CASE("Test fetching new values using lazy new value mode", "[fetchopcprocessor]") {
   OpcUaTestServer server(4841);
   server.start();
-  SingleProcessorTestController controller{std::make_unique<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   LogTestController::getInstance().setDebug<processors::FetchOPCProcessor>();
   auto fetch_opc_processor = controller.getProcessor();
   REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));

@@ -21,12 +21,13 @@
 #include "unit/SingleProcessorTestController.h"
 #include "unit/Catch.h"
 #include "core/FlowFile.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch::test {
 
 TEST_CASE("PostElasticsearch", "[elastic]") {
   MockElastic mock_elastic("10433");
-  minifi::test::SingleProcessorTestController test_controller{std::make_unique<PostElasticsearch>("PostElasticsearch")};
+  minifi::test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<PostElasticsearch>("PostElasticsearch")};
   auto post_elasticsearch_json = test_controller.getProcessor();
   auto elasticsearch_credentials_controller_service = test_controller.plan->addController("ElasticsearchCredentialsControllerService", "elasticsearch_credentials_controller_service");
   CHECK(test_controller.plan->setProperty(post_elasticsearch_json,

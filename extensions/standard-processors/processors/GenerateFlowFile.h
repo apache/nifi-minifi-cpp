@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessContext.h"
 #include "core/PropertyDefinition.h"
@@ -39,10 +39,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class GenerateFlowFile : public core::ProcessorImpl {
  public:
-  explicit GenerateFlowFile(const std::string_view name, const utils::Identifier& uuid = {}) // NOLINT
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<GenerateFlowFile>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
   ~GenerateFlowFile() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "This processor creates FlowFiles with random data or custom content. "

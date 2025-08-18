@@ -69,9 +69,7 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutAzureDataLakeStorage(std::string_view name, const minifi::utils::Identifier &uuid = minifi::utils::Identifier())
-      : PutAzureDataLakeStorage(name, uuid, nullptr) {
-  }
+  using AzureDataLakeStorageFileProcessorBase::AzureDataLakeStorageFileProcessorBase;
 
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
@@ -97,8 +95,8 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
     std::shared_ptr<core::logging::Logger> logger_;
   };
 
-  explicit PutAzureDataLakeStorage(std::string_view name, const minifi::utils::Identifier &uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-      : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+  explicit PutAzureDataLakeStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+      : AzureDataLakeStorageFileProcessorBase(metadata, std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext &context, const core::FlowFile& flow_file);

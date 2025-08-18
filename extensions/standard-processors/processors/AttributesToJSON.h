@@ -30,7 +30,7 @@
 #include "rapidjson/document.h"
 #include "core/FlowFile.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -118,10 +118,7 @@ class AttributesToJSON : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit AttributesToJSON(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<AttributesToJSON>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;

@@ -39,6 +39,9 @@
 #include "asio/ssl.hpp"
 #include "utils/net/Ssl.h"
 #include "range/v3/algorithm/any_of.hpp"
+#include "core/Processor.h"
+#include "core/logging/LoggerFactory.h"
+#include "./ProcessorUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -210,18 +213,18 @@ inline std::error_code hide_file(const std::filesystem::path& file_name) {
 #endif /* WIN32 */
 
 template<typename T>
-concept NetworkingProcessor = std::derived_from<T, minifi::core::Processor>
+concept NetworkingProcessor = std::derived_from<T, minifi::core::ProcessorApi>
     && requires(T x) {
-      {T::Port} -> std::convertible_to<core::PropertyReference>;
-      {x.getPort()} -> std::convertible_to<uint16_t>;
+  {T::Port} -> std::convertible_to<core::PropertyReference>;
+  {x.getPort()} -> std::convertible_to<uint16_t>;
     };  // NOLINT(readability/braces)
 
 template<NetworkingProcessor T>
-uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_plan, T& processor) {
-  REQUIRE(processor.setProperty(T::Port.name, "0"));
-  test_plan->scheduleProcessor(&processor);
-  REQUIRE(verifyEventHappenedInPollTime(250ms, [&processor] { return processor.getPort() != 0; }, 20ms));
-  return processor.getPort();
+uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_plan, const TypedProcessorWrapper<T>& processor) {
+  REQUIRE(processor->setProperty(T::Port.name, "0"));
+  test_plan->scheduleProcessor(processor);
+  REQUIRE(verifyEventHappenedInPollTime(250ms, [&processor] { return processor.get().getPort() != 0; }, 20ms));
+  return processor.get().getPort();
 }
 
 inline bool runningAsUnixRoot() {
@@ -231,6 +234,7 @@ inline bool runningAsUnixRoot() {
   return geteuid() == 0;
 #endif
 }
+
 }  // namespace org::apache::nifi::minifi::test::utils
 
 namespace Catch {

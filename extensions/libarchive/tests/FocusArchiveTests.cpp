@@ -36,6 +36,7 @@
 #include "unit/Catch.h"
 #include "repository/VolatileContentRepository.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::processors::test {
 
@@ -49,13 +50,13 @@ const char* FOCUSED_CONTENT = FILE_CONTENT[0];
 
 TEST_CASE("Test Creation of FocusArchiveEntry", "[getfileCreate]") {
   TestController testController;
-  auto processor = std::make_shared<FocusArchiveEntry>("processorname");
+  auto processor = minifi::test::utils::make_processor<FocusArchiveEntry>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 
 TEST_CASE("Test Creation of UnfocusArchiveEntry", "[getfileCreate]") {
   TestController testController;
-  auto processor = std::make_shared<UnfocusArchiveEntry>("processorname");
+  auto processor = minifi::test::utils::make_processor<UnfocusArchiveEntry>("processorname");
   REQUIRE(processor->getName() == "processorname");
   REQUIRE(processor->getUUID());
 }

@@ -38,8 +38,42 @@
 #include "range/v3/view/filter.hpp"
 #include "PythonDependencyInstaller.h"
 #include "utils/file/PathUtils.h"
+#include "minifi-cpp/core/ProcessorDescriptor.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
+
+class DummyProcessorDescriptor : public core::ProcessorDescriptor {
+ public:
+  ~DummyProcessorDescriptor() override = default;
+
+  void setSupportedRelationships(std::span<const core::RelationshipDefinition> /*relationships*/) override {}
+  void setSupportedProperties(std::span<const core::PropertyReference> /*properties*/) override {}
+};
+
+class DummyLogger : public core::logging::Logger {
+ public:
+  void set_max_log_size(int /*size*/) override {}
+  std::optional<std::string> get_id() override {
+    return std::nullopt;
+  }
+  void log_string(core::logging::LOG_LEVEL /*level*/, std::string /*str*/) override {}
+  bool should_log(core::logging::LOG_LEVEL /*level*/) override {
+    return false;
+  }
+  [[nodiscard]] core::logging::LOG_LEVEL level() const override {
+    return core::logging::LOG_LEVEL::off;
+  }
+
+  int getMaxLogSize() override {
+    return 0;
+  }
+
+  void setLogCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string&)>& /*callback*/) override {
+    // pass
+  }
+
+  ~DummyLogger() override = default;
+};
 
 /**
  * Can be used to load the python processors from NiFi properties.
@@ -51,9 +85,10 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
   }
 
   ~PythonCreator() override {
-    for (const auto& clazz : registered_classes_) {
+    for (const auto& [clazz, factory] : registered_classes_) {
       core::getClassLoader().unregisterClass(clazz);
     }
+    registered_classes_.clear();
   }
 
   void configure(const std::shared_ptr<Configure> &configuration) override {
@@ -79,20 +114,25 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
 
       const std::string qualified_module_name_prefix = "org.apache.nifi.minifi.processors.";
       std::string qualified_module_name = full_name.substr(qualified_module_name_prefix.length());
+      std::unique_ptr<PythonObjectFactory> factory;
       if (path.string().find("nifi_python_processors") != std::string::npos) {
         auto utils_path = (std::filesystem::path("nifi_python_processors") / "utils").string();
         if (path.string().find(utils_path) != std::string::npos) {
           continue;
         }
         logger_->log_info("Registering NiFi python processor: {}", class_name);
-        core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
-          PythonProcessorType::NIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}, path.parent_path()}, qualified_module_name));
+        factory = std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
+          PythonProcessorType::NIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}, path.parent_path()}, qualified_module_name);
       } else {
         logger_->log_info("Registering MiNiFi python processor: {}", class_name);
-        core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
-          PythonProcessorType::MINIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}}, qualified_module_name));
+        factory = std::make_unique<PythonObjectFactory>(path.string(), script_name.string(),
+          PythonProcessorType::MINIFI_TYPE, std::vector<std::filesystem::path>{python_lib_path, std::filesystem::path{pathListings.value()}}, qualified_module_name);
       }
-      registered_classes_.push_back(class_name);
+      if (registered_classes_.emplace(class_name, factory.get()).second) {
+        core::getClassLoader().registerClass(class_name, std::move(factory));
+      } else {
+        logger_->log_warn("Ignoring duplicate python processor at '{}' with class '{}'", path.string(), class_name);
+      }
       try {
         registerScriptDescription(class_name, full_name, path, script_name.string());
       } catch (const PythonScriptWarning &warning) {
@@ -105,12 +145,21 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
 
  private:
   void registerScriptDescription(const std::string& class_name, const std::string& full_name, const std::filesystem::path& path, const std::string& script_name) {
-    auto processor = core::ClassLoader::getDefaultClassLoader().instantiate<python::processors::ExecutePythonProcessor>(class_name, utils::IdGenerator::getIdGenerator()->generate());
+    std::unique_ptr<python::processors::ExecutePythonProcessor> processor;
+    auto factory_it = registered_classes_.find(class_name);
+    if (factory_it != registered_classes_.end()) {
+      processor = utils::dynamic_unique_cast<python::processors::ExecutePythonProcessor>(factory_it->second->create(core::ProcessorMetadata{
+        .uuid = utils::IdGenerator::getIdGenerator()->generate(),
+        .name = class_name,
+        .logger = std::make_shared<DummyLogger>()
+      }));
+    }
     if (!processor) {
       logger_->log_error("Couldn't instantiate '{}' python processor", class_name);
       return;
     }
-    processor->initialize();
+    DummyProcessorDescriptor descriptor;
+    processor->core::ProcessorImpl::initialize(descriptor);
     minifi::BundleDetails details;
     details.artifact = path.filename().string();
     details.version = processor->getVersion() && !processor->getVersion()->empty() ? *processor->getVersion() : minifi::AgentBuild::VERSION;
@@ -185,7 +234,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
     return python_lib_path;
   }
 
-  std::vector<std::string> registered_classes_;
+  std::unordered_map<std::string, PythonObjectFactory*> registered_classes_;
   std::vector<std::filesystem::path> classpaths_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PythonCreator>::getLogger();

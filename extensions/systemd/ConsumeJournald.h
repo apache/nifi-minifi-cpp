@@ -30,12 +30,11 @@
 #include <vector>
 
 #include "core/StateManager.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/RelationshipDefinition.h"
-#include "core/logging/LoggerFactory.h"
 #include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
@@ -114,7 +113,7 @@ class ConsumeJournald final : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ConsumeJournald(std::string_view name, const utils::Identifier& id = {}, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
+  explicit ConsumeJournald(core::ProcessorMetadata metadata, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
   ConsumeJournald(const ConsumeJournald&) = delete;
   ConsumeJournald(ConsumeJournald&&) = delete;
   ConsumeJournald& operator=(const ConsumeJournald&) = delete;

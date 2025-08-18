@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-class PutKinesisStream : public AwsProcessor {
+class PutKinesisStream : public AwsProcessor {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr const char* Description = "Sends the contents to a specified Amazon Kinesis. In order to send data to Kinesis, the stream name has to be specified.";
 
@@ -87,13 +87,7 @@ class PutKinesisStream : public AwsProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutKinesisStream(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AwsProcessor(name, uuid, core::logging::LoggerFactory<PutKinesisStream>::getLogger(uuid)) {
-  }
-  PutKinesisStream(const PutKinesisStream&) = delete;
-  PutKinesisStream(PutKinesisStream&&) = delete;
-  PutKinesisStream& operator=(const PutKinesisStream&) = delete;
-  PutKinesisStream& operator=(PutKinesisStream&&) = delete;
+  using AwsProcessor::AwsProcessor;
   ~PutKinesisStream() override = default;
 
   void initialize() override;

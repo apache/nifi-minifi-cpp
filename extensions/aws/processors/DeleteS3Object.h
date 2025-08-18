@@ -35,7 +35,7 @@ class FlowProcessorS3TestsFixture;
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-class DeleteS3Object : public S3Processor {
+class DeleteS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr const char* Description = "Deletes FlowFiles on an Amazon S3 Bucket. If attempting to delete a file that does not exist, FlowFile is routed to success.";
 
@@ -64,9 +64,7 @@ class DeleteS3Object : public S3Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit DeleteS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : S3Processor(name, uuid, core::logging::LoggerFactory<DeleteS3Object>::getLogger(uuid)) {
-  }
+  using S3Processor::S3Processor;
 
   ~DeleteS3Object() override = default;
 
@@ -76,8 +74,8 @@ class DeleteS3Object : public S3Processor {
  private:
   friend class ::FlowProcessorS3TestsFixture<DeleteS3Object>;
 
-  explicit DeleteS3Object(std::string_view name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(name, uuid, core::logging::LoggerFactory<DeleteS3Object>::getLogger(uuid), std::move(s3_request_sender)) {
+  explicit DeleteS3Object(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+    : S3Processor(metadata, std::move(s3_request_sender)) {
   }
 
   std::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(

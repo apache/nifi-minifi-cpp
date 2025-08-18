@@ -33,9 +33,7 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class DeleteGCSObject : public GCSProcessor {
  public:
-  explicit DeleteGCSObject(std::string_view name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<DeleteGCSObject>::getLogger(uuid)) {
-  }
+  using GCSProcessor::GCSProcessor;
   ~DeleteGCSObject() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Deletes an object from a Google Cloud Bucket.";

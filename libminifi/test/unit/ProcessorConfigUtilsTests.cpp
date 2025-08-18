@@ -18,10 +18,11 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "core/PropertyDefinition.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/Enum.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace {
@@ -30,11 +31,17 @@ class TestProcessor : public ProcessorImpl {
  public:
   using ProcessorImpl::ProcessorImpl;
 
+  void initialize() override {
+    on_initialize_(*this);
+  }
+
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  std::function<void(ProcessorImpl&)> on_initialize_;
 };
 
 enum class TestEnum {
@@ -46,8 +53,11 @@ TEST_CASE("Parse enum property") {
   static constexpr auto prop = PropertyDefinitionBuilder<magic_enum::enum_count<TestEnum>()>::createProperty("prop")
       .withAllowedValues(magic_enum::enum_names<TestEnum>())
       .build();
-  auto proc = std::make_shared<TestProcessor>("test-proc");
-  proc->setSupportedProperties(std::to_array<core::PropertyReference>({prop}));
+  auto proc = minifi::test::utils::make_processor<TestProcessor>("test-proc");
+  proc->getImpl<TestProcessor>().on_initialize_ = [&] (auto& self) {
+    self.setSupportedProperties(std::to_array<core::PropertyReference>({prop}));
+  };
+  proc->initialize();
   ProcessContextImpl context(*proc, nullptr, nullptr, nullptr, nullptr, nullptr);
   SECTION("Valid") {
     REQUIRE(proc->setProperty(prop.name, "B"));

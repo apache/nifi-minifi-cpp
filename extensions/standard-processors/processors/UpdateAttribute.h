@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/RelationshipDefinition.h"
@@ -35,10 +35,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class UpdateAttribute : public core::ProcessorImpl {
  public:
-  explicit UpdateAttribute(const std::string_view name,  const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<UpdateAttribute>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "This processor updates the attributes of a FlowFile using properties that are added by the user. "
       "This allows you to set default attribute changes that affect every FlowFile going through the processor, equivalent to the \"basic\" usage in Apache NiFi.";

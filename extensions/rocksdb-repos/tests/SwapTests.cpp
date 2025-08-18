@@ -22,7 +22,7 @@
 #include "unit/TestBase.h"
 #include "io/StreamPipe.h"
 #include "unit/TestUtils.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/RelationshipDefinition.h"
@@ -99,7 +99,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
   ff_repo->loadComponent(content_repo);
   ff_repo->start();
 
-  auto processor = std::make_shared<OutputProcessor>("proc");
+  auto processor = minifi::test::utils::make_processor<OutputProcessor>("proc");
 
   auto connection = std::make_shared<minifi::ConnectionImpl>(ff_repo, content_repo, swap_manager, "conn", minifi::utils::IdGenerator::getIdGenerator()->generate());
   connection->setSwapThreshold(50);
@@ -114,7 +114,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
     processor->triggerAndCommit(context, session_factory);
   }
 
-  REQUIRE(connection->getQueueSize() == processor->flow_files_.size());
+  REQUIRE(connection->getQueueSize() == processor->getImpl<OutputProcessor>().flow_files_.size());
   minifi::utils::FlowFileQueue& queue = utils::ConnectionTestAccessor::get_queue_(*connection);
   // below max threshold live flow files
   REQUIRE(utils::FlowFileQueueTestAccessor::get_queue_(queue).size() <= 75);
@@ -129,7 +129,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
     });
     REQUIRE(got_non_null_flow_file);
     REQUIRE(ff->getAttribute("index") == std::to_string(i));
-    REQUIRE(ff->getResourceClaim()->getContentFullPath() == processor->flow_files_[i]->getResourceClaim()->getContentFullPath());
+    REQUIRE(ff->getResourceClaim()->getContentFullPath() == processor->getImpl<OutputProcessor>().flow_files_[i]->getResourceClaim()->getContentFullPath());
   }
 
   REQUIRE(queue.empty());

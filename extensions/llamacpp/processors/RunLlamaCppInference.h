@@ -20,7 +20,7 @@
 #include <mutex>
 #include <atomic>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "LlamaContext.h"
@@ -33,7 +33,7 @@ using LlamaContextProvider =
 
 class RunLlamaCppInferenceMetrics : public core::ProcessorMetricsImpl {
  public:
-  explicit RunLlamaCppInferenceMetrics(const core::Processor& source_processor)
+  explicit RunLlamaCppInferenceMetrics(const core::ProcessorImpl& source_processor)
   : core::ProcessorMetricsImpl(source_processor) {
   }
 
@@ -63,8 +63,8 @@ class RunLlamaCppInferenceMetrics : public core::ProcessorMetricsImpl {
 
 class RunLlamaCppInference : public core::ProcessorImpl {
  public:
-  explicit RunLlamaCppInference(std::string_view name, const utils::Identifier& uuid = {}, LlamaContextProvider llama_context_provider = {})
-      : core::ProcessorImpl(name, uuid),
+  explicit RunLlamaCppInference(core::ProcessorMetadata metadata, LlamaContextProvider llama_context_provider = {})
+      : core::ProcessorImpl(metadata),
         llama_context_provider_(std::move(llama_context_provider)) {
     metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>(*this));
   }
@@ -186,7 +186,6 @@ class RunLlamaCppInference : public core::ProcessorImpl {
  private:
   void increaseTokensIn(uint64_t token_count);
   void increaseTokensOut(uint64_t token_count);
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RunLlamaCppInference>::getLogger(uuid_);
 
   std::string model_path_;
   std::string system_prompt_;

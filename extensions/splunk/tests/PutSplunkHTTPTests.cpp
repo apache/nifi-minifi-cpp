@@ -36,10 +36,10 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
 
   TestController test_controller;
   auto plan = test_controller.createPlan();
-  auto write_to_flow_file = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  auto put_splunk_http = dynamic_cast<PutSplunkHTTP*>(plan->addProcessor("PutSplunkHTTP", "put_splunk_http"));
-  auto read_from_success = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success"));
-  auto read_from_failure = dynamic_cast<ReadFromFlowFileTestProcessor*>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure"));
+  auto write_to_flow_file = plan->addProcessor<WriteToFlowFileTestProcessor>("write_to_flow_file");
+  auto put_splunk_http = plan->addProcessor("PutSplunkHTTP", "put_splunk_http");
+  auto read_from_success = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_success");
+  auto read_from_failure = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_failure");
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, put_splunk_http);
   plan->addConnection(put_splunk_http, PutSplunkHTTP::Success, read_from_success);
@@ -53,20 +53,20 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
   plan->setProperty(put_splunk_http, PutSplunkHTTP::Token, MockSplunkHEC::TOKEN);
   plan->setProperty(put_splunk_http, PutSplunkHTTP::SplunkRequestChannel, "a12254b4-f481-435d-896d-3b6033eabe58");
 
-  write_to_flow_file->setContent("foobar");
+  write_to_flow_file.get().setContent("foobar");
 
   SECTION("Happy path") {
     mock_splunk_hec.setAssertions([](const struct mg_request_info *request_info) {
       CHECK(request_info->query_string == nullptr);
     });
     test_controller.runSession(plan);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_success->numberOfFlowFilesRead() == 1);
-    CHECK(read_from_success->readFlowFileWithContent("foobar"));
-    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_STATUS_CODE, "200"));
-    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_CODE, "0"));
-    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME));
-    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID));
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success.get().numberOfFlowFilesRead() == 1);
+    CHECK(read_from_success.get().readFlowFileWithContent("foobar"));
+    CHECK(read_from_success.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_STATUS_CODE, "200"));
+    CHECK(read_from_success.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_CODE, "0"));
+    CHECK(read_from_success.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME));
+    CHECK(read_from_success.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID));
   }
 
   SECTION("Happy path with query arguments") {
@@ -83,26 +83,26 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
       CHECK(query_string.find("index=qux") != std::string::npos);
     });
     test_controller.runSession(plan);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_success->numberOfFlowFilesRead() == 1);
-    CHECK(read_from_success->readFlowFileWithContent("foobar"));
-    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_STATUS_CODE, "200"));
-    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_CODE, "0"));
-    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME));
-    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID));
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success.get().numberOfFlowFilesRead() == 1);
+    CHECK(read_from_success.get().readFlowFileWithContent("foobar"));
+    CHECK(read_from_success.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_STATUS_CODE, "200"));
+    CHECK(read_from_success.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_CODE, "0"));
+    CHECK(read_from_success.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME));
+    CHECK(read_from_success.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID));
   }
 
   SECTION("Invalid Token") {
     constexpr const char* invalid_token = "Splunk 00000000-0000-0000-0000-000000000000";
     plan->setProperty(put_splunk_http, PutSplunkHTTP::Token, invalid_token);
     test_controller.runSession(plan);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 1);
-    CHECK(read_from_success->numberOfFlowFilesRead() == 0);
-    CHECK(read_from_failure->readFlowFileWithContent("foobar"));
-    CHECK(read_from_failure->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_STATUS_CODE, "403"));
-    CHECK(read_from_failure->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_CODE, "4"));
-    CHECK(read_from_failure->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME));
-    CHECK_FALSE(read_from_failure->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID));
+    CHECK(read_from_failure.get().numberOfFlowFilesRead() == 1);
+    CHECK(read_from_success.get().numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure.get().readFlowFileWithContent("foobar"));
+    CHECK(read_from_failure.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_STATUS_CODE, "403"));
+    CHECK(read_from_failure.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_CODE, "4"));
+    CHECK(read_from_failure.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME));
+    CHECK_FALSE(read_from_failure.get().readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID));
   }
 }
 
@@ -128,9 +128,9 @@ TEST_CASE("PutSplunkHTTP content type tests", "[putsplunkhttpcontenttype]") {
 
   TestController test_controller;
   auto plan = test_controller.createPlan();
-  auto write_to_flow_file = dynamic_cast<WriteToFlowFileTestProcessor*>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  auto update_attribute = dynamic_cast<UpdateAttribute*>(plan->addProcessor("UpdateAttribute", "update_attribute"));
-  auto put_splunk_http = dynamic_cast<PutSplunkHTTP*>(plan->addProcessor("PutSplunkHTTP", "put_splunk_http"));
+  auto write_to_flow_file = plan->addProcessor<WriteToFlowFileTestProcessor>("write_to_flow_file");
+  auto update_attribute = plan->addProcessor("UpdateAttribute", "update_attribute");
+  auto put_splunk_http = plan->addProcessor("PutSplunkHTTP", "put_splunk_http");
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_attribute);
   plan->addConnection(update_attribute, UpdateAttribute::Success, put_splunk_http);
@@ -141,7 +141,7 @@ TEST_CASE("PutSplunkHTTP content type tests", "[putsplunkhttpcontenttype]") {
   plan->setProperty(put_splunk_http, PutSplunkHTTP::Token, MockSplunkHEC::TOKEN);
   plan->setProperty(put_splunk_http, PutSplunkHTTP::SplunkRequestChannel, "a12254b4-f481-435d-896d-3b6033eabe58");
 
-  write_to_flow_file->setContent("foobar");
+  write_to_flow_file.get().setContent("foobar");
 
   SECTION("Content Type without Property or Attribute") {
     mock_splunk_hec.setAssertions(ContentTypeValidator("application/x-www-form-urlencoded"));

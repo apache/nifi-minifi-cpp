@@ -43,9 +43,7 @@ inline constexpr auto FILENAME_OUTPUT_ATTRIBUTE_DESCRIPTION = utils::array_to_st
 
 class ListGCSBucket : public GCSProcessor {
  public:
-  explicit ListGCSBucket(std::string_view name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<ListGCSBucket>::getLogger(uuid)) {
-  }
+  using GCSProcessor::GCSProcessor;
   ~ListGCSBucket() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of objects from an GCS bucket. "

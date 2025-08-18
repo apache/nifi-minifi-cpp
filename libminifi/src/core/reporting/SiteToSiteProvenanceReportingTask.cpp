@@ -189,7 +189,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
 
   // we transfer the record, purge the record from DB
   repo->Delete(records);
-  returnProtocol(std::move(protocol_));
+  returnProtocol(context, std::move(protocol_));
 }
 
 }  // namespace org::apache::nifi::minifi::core::reporting

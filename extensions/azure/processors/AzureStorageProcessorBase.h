@@ -29,7 +29,7 @@
 #include "core/PropertyDefinition.h"
 #include "core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/logging/Logger.h"
 #include "storage/AzureStorageCredentials.h"
 
@@ -42,10 +42,7 @@ class AzureStorageProcessorBase : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({AzureStorageCredentialsService});
 
-  AzureStorageProcessorBase(std::string_view name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
-    : core::ProcessorImpl(name, uuid),
-      logger_(logger) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
  protected:
   enum class GetCredentialsFromControllerResult {
@@ -55,8 +52,6 @@ class AzureStorageProcessorBase : public core::ProcessorImpl {
   };
 
   std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(core::ProcessContext &context) const;
-
-  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

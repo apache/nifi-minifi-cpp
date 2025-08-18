@@ -39,9 +39,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-RouteText::RouteText(std::string_view name, const utils::Identifier& uuid)
-    : core::ProcessorImpl(name, uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger(uuid)) {}
-
 void RouteText::initialize() {
   setSupportedProperties(Properties);
   setSupportedRelationships(Relationships);
@@ -57,18 +54,10 @@ void RouteText::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   group_fallback_ = context.getProperty(GroupingFallbackValue).value_or("");
 
 
-  {
-    const auto static_relationships = RouteText::Relationships;
-    std::vector<core::RelationshipDefinition> relationships(static_relationships.begin(), static_relationships.end());
-
-    for (const auto& property_name : getDynamicPropertyKeys()) {
-      core::RelationshipDefinition rel{property_name, "Dynamic Route"};
-      dynamic_relationships_[property_name] = rel;
-      relationships.push_back(rel);
-      logger_->log_info("RouteText registered dynamic route '{}'", property_name);
-    }
-
-    setSupportedRelationships(relationships);
+  for (const auto& property_name : context.getDynamicPropertyKeys()) {
+    core::RelationshipDefinition rel{property_name, "Dynamic Route"};
+    dynamic_relationships_[property_name] = rel;
+    logger_->log_info("RouteText registered dynamic route '{}'", property_name);
   }
 }
 
@@ -249,7 +238,7 @@ void RouteText::onTrigger(core::ProcessContext& context, core::ProcessSession& s
 
     // group extraction always uses the preprocessed
     auto group = getGroup(preprocessed_value);
-    auto dynamic_property_keys = getDynamicPropertyKeys();
+    auto dynamic_property_keys = context.getDynamicPropertyKeys();
     switch (routing_) {
       case route_text::Routing::ALL: {
         if (ranges::all_of(dynamic_property_keys, [&] (const auto& property_name) {

@@ -24,7 +24,7 @@
 #include <string>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/RelationshipDefinition.h"
@@ -35,10 +35,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class RouteOnAttribute : public core::ProcessorImpl {
  public:
-  explicit RouteOnAttribute(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<RouteOnAttribute>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Routes FlowFiles based on their Attributes using the Attribute Expression Language.\n\n"
       "Any number of user-defined dynamic properties can be added, which all support the Attribute Expression Language. Relationships matching the name of the properties will be added.\n"

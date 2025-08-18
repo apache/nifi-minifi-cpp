@@ -26,6 +26,7 @@
 #include "unit/SingleProcessorTestController.h"
 #include "unit/TestBase.h"
 #include "range/v3/algorithm/generate.hpp"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::processors::test {
 
@@ -56,7 +57,7 @@ std::vector<std::byte> createByteVector(Bytes... bytes) {
 }
 
 TEST_CASE("Invalid segmentSize tests") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<SegmentContent>("SegmentContent")};
   const auto segment_content = controller.getProcessor();
 
   SECTION("foo") {
@@ -78,7 +79,7 @@ TEST_CASE("Invalid segmentSize tests") {
 }
 
 TEST_CASE("EmptyFlowFile") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<SegmentContent>("SegmentContent")};
   const auto segment_content = controller.getProcessor();
 
   REQUIRE(segment_content->setProperty(SegmentContent::SegmentSize.name, "10 B"));
@@ -94,7 +95,7 @@ TEST_CASE("EmptyFlowFile") {
 }
 
 TEST_CASE("SegmentContent with different sized text input") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<SegmentContent>("SegmentContent")};
   const auto segment_content = controller.getProcessor();
 
   auto [original_size, segment_size] = GENERATE(
@@ -131,7 +132,7 @@ TEST_CASE("SegmentContent with different sized text input") {
 }
 
 TEST_CASE("SegmentContent with different sized byte input") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<SegmentContent>("SegmentContent")};
   const auto segment_content = controller.getProcessor();
 
   auto [original_size, segment_size] = GENERATE(
@@ -169,7 +170,7 @@ TEST_CASE("SegmentContent with different sized byte input") {
 }
 
 TEST_CASE("SimpleTest", "[NiFi]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<SegmentContent>("SegmentContent")};
   const auto segment_content = controller.getProcessor();
 
   REQUIRE(segment_content->setProperty(SegmentContent::SegmentSize.name, "4 B"));
@@ -214,7 +215,7 @@ TEST_CASE("SimpleTest", "[NiFi]") {
 }
 
 TEST_CASE("TransferSmall", "[NiFi]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<SegmentContent>("SegmentContent")};
   const auto segment_content = controller.getProcessor();
 
   REQUIRE(segment_content->setProperty(SegmentContent::SegmentSize.name, "4 KB"));
@@ -235,7 +236,7 @@ TEST_CASE("TransferSmall", "[NiFi]") {
 }
 
 TEST_CASE("ExpressionLanguageSupport", "[NiFi]") {
-  minifi::test::SingleProcessorTestController controller{std::make_unique<SegmentContent>("SegmentContent")};
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<SegmentContent>("SegmentContent")};
   const auto segment_content = controller.getProcessor();
 
   REQUIRE(segment_content->setProperty(SegmentContent::SegmentSize.name, "${segmentSize}"));

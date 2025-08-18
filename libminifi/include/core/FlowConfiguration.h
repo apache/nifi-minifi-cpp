@@ -84,8 +84,7 @@ class FlowConfiguration : public CoreComponentImpl {
   ~FlowConfiguration() override;
 
   // Create Processor (Node/Input/Output Port) based on the name
-  std::unique_ptr<core::Processor> createProcessor(const std::string &name, const utils::Identifier &uuid);
-  std::unique_ptr<core::Processor> createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid);
+  std::unique_ptr<core::Processor> createProcessor(const std::string &class_short, const std::string &fullclass, const std::string &object_name, const utils::Identifier &uuid);
   // Create Root Processor Group
 
   static std::unique_ptr<core::ProcessGroup> createRootProcessGroup(const std::string &name, const utils::Identifier &uuid, int version);
@@ -97,7 +96,7 @@ class FlowConfiguration : public CoreComponentImpl {
   // Create Connection
   [[nodiscard]] std::unique_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
   // Create Provenance Report Task
-  std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> createProvenanceReportTask();
+  std::unique_ptr<core::Processor> createProvenanceReportTask();
 
   static std::unique_ptr<core::ParameterProvider> createParameterProvider(const std::string &class_name, const std::string &full_class_name, const utils::Identifier& uuid);
 

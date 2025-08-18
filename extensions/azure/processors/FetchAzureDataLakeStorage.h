@@ -69,9 +69,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessor
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit FetchAzureDataLakeStorage(std::string_view name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(uuid)) {
-  }
+  using AzureDataLakeStorageFileProcessorBase::AzureDataLakeStorageFileProcessorBase;
 
   ~FetchAzureDataLakeStorage() override = default;
 
@@ -81,8 +79,8 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessor
  private:
   friend class ::AzureDataLakeStorageTestsFixture<FetchAzureDataLakeStorage>;
 
-  explicit FetchAzureDataLakeStorage(std::string_view name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+  explicit FetchAzureDataLakeStorage(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+    : AzureDataLakeStorageFileProcessorBase(metadata, std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::FetchAzureDataLakeStorageParameters> buildFetchParameters(core::ProcessContext& context, const core::FlowFile& flow_file);

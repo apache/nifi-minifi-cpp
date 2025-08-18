@@ -23,6 +23,7 @@
 #include "unit/SingleProcessorTestController.h"
 #include "unit/Catch.h"
 #include "GenerateFlowFile.h"
+#include "unit/TestUtils.h"
 
 using minifi::processors::GenerateFlowFile;
 
@@ -38,7 +39,7 @@ TEST_CASE("GenerateFlowFileWithBinaryData") {
   }
 
 
-  minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
+  minifi::test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
   LogTestController::getInstance().setWarn<GenerateFlowFile>();
 
@@ -67,7 +68,7 @@ TEST_CASE("GenerateFlowFileWithBinaryData") {
 }
 
 TEST_CASE("GenerateFlowFileTestEmpty") {
-  minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
+  minifi::test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
 
   CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::FileSize, "0"));
@@ -81,7 +82,7 @@ TEST_CASE("GenerateFlowFileTestEmpty") {
 }
 
 TEST_CASE("GenerateFlowFileCustomTextTest") {
-  minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
+  minifi::test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
 
   constexpr auto uuid_string_length = 36;
@@ -97,7 +98,7 @@ TEST_CASE("GenerateFlowFileCustomTextTest") {
 }
 
 TEST_CASE("GenerateFlowFileCustomTextEmptyTest") {
-  minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
+  minifi::test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
 
   constexpr int32_t file_size = 10;
@@ -119,7 +120,7 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest") {
 }
 
 TEST_CASE("GenerateFlowFile reevaluating CustomText") {
-  minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
+  minifi::test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
   CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text"));
   CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false"));
@@ -136,7 +137,7 @@ TEST_CASE("GenerateFlowFile reevaluating CustomText") {
 }
 
 TEST_CASE("GenerateFlowFile CustomText evaluates to empty string") {
-  minifi::test::SingleProcessorTestController test_controller{std::make_unique<GenerateFlowFile>("GenerateFlowFile")};
+  minifi::test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
   CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text"));
   CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false"));

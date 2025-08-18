@@ -476,7 +476,7 @@ std::vector<minifi::core::Processor*>::iterator TestPlan::getProcessorItByUuid(c
 
 std::shared_ptr<minifi::core::ProcessContext> TestPlan::getProcessContextForProcessor(minifi::core::Processor* processor) {
   const auto contextMatchesProcessor = [&processor] (const std::shared_ptr<minifi::core::ProcessContext>& context) {
-    return context->getProcessor().getUUIDStr() ==  processor->getUUIDStr();
+    return context->getProcessorInfo().getUUID().to_string() ==  processor->getUUIDStr();
   };
   const auto context_found_at = std::find_if(processor_contexts_.begin(), processor_contexts_.end(), contextMatchesProcessor);
   if (context_found_at == processor_contexts_.end()) {

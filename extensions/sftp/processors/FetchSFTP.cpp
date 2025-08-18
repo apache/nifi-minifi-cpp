@@ -41,11 +41,6 @@ void FetchSFTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-FetchSFTP::FetchSFTP(std::string_view name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(name, uuid) {
-  logger_ = core::logging::LoggerFactory<FetchSFTP>::getLogger(uuid_);
-}
-
 FetchSFTP::~FetchSFTP() = default;
 
 void FetchSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {

@@ -120,7 +120,7 @@ void PutSplunkHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessi
     return client;
   };
 
-  client_queue_ = utils::ResourceQueue<http::HTTPClient>::create(create_client, getMaxConcurrentTasks(), std::nullopt, logger_);
+  client_queue_ = utils::ResourceQueue<http::HTTPClient>::create(create_client, context.getMaxConcurrentTasks(), std::nullopt, logger_);
   source_type_ = utils::parseOptionalProperty(context, PutSplunkHTTP::SourceType);
   source_ = utils::parseOptionalProperty(context, PutSplunkHTTP::Source);
   host_ = utils::parseOptionalProperty(context, PutSplunkHTTP::Host);

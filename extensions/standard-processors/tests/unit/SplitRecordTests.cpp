@@ -22,6 +22,7 @@
 #include "unit/SingleProcessorTestController.h"
 #include "utils/StringUtils.h"
 #include "rapidjson/document.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -56,7 +57,7 @@ class SplitRecordTestController : public TestController {
   }
 
  protected:
-  SingleProcessorTestController controller_{std::make_unique<processors::SplitRecord>("SplitRecord")};
+  SingleProcessorTestController controller_{minifi::test::utils::make_processor<processors::SplitRecord>("SplitRecord")};
 };
 
 TEST_CASE_METHOD(SplitRecordTestController, "Invalid Records Per Split property", "[splitrecord]") {

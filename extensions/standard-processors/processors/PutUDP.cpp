@@ -32,10 +32,6 @@ using asio::ip::udp;
 
 namespace org::apache::nifi::minifi::processors {
 
-PutUDP::PutUDP(std::string_view name, const utils::Identifier& uuid)
-    : ProcessorImpl(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger(uuid)}
-{ }
-
 PutUDP::~PutUDP() = default;
 
 void PutUDP::initialize() {
@@ -47,10 +43,10 @@ void PutUDP::notifyStop() {}
 
 void PutUDP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   // if the required properties are missing or empty even before evaluating the EL expression, then we can throw in onSchedule, before we waste any flow files
-  if (!context.getProperty(Hostname)) {
+  if (!context.hasNonEmptyProperty(Hostname.name)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing hostname"};
   }
-  if (!context.getProperty(Port)) {
+  if (!context.hasNonEmptyProperty(Port.name)) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing port"};
   }
 }
@@ -58,7 +54,7 @@ void PutUDP::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
 void PutUDP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const auto flow_file = session.get();
   if (!flow_file) {
-    yield();
+    context.yield();
     return;
   }
 

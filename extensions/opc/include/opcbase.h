@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "opc.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -73,10 +73,7 @@ class BaseOPCProcessor : public core::ProcessorImpl {
       PathReferenceTypes
   });
 
-
-  explicit BaseOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
-  : ProcessorImpl(name, uuid) {
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
 
@@ -84,8 +81,6 @@ class BaseOPCProcessor : public core::ProcessorImpl {
   virtual bool reconnect();
   void readPathReferenceTypes(core::ProcessContext& context, const std::string& node_id);
   void parseIdType(core::ProcessContext& context, const core::PropertyReference& prop);
-
-  std::shared_ptr<core::logging::Logger> logger_;
 
   std::string node_id_;
   int32_t namespace_idx_ = 0;

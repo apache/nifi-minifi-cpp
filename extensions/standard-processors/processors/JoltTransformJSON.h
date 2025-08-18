@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -38,11 +38,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class JoltTransformJSON : public core::ProcessorImpl {
  public:
-  explicit JoltTransformJSON(const std::string_view name, const utils::Identifier& uuid = {})
-      : ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<JoltTransformJSON>::getLogger(uuid_);
-  }
-
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Applies a list of Jolt specifications to the flowfile JSON payload. A new FlowFile is created "
       "with transformed content and is routed to the 'success' relationship. If the JSON transform "

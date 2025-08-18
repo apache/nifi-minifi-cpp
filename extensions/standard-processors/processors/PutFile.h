@@ -20,7 +20,7 @@
 #include <string>
 #include <utility>
 
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -37,10 +37,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class PutFile : public core::ProcessorImpl {
  public:
-  explicit PutFile(const std::string_view name,  const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<PutFile>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   ~PutFile() override = default;
 

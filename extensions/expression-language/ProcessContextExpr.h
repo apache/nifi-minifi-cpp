@@ -34,20 +34,7 @@ namespace org::apache::nifi::minifi::core {
  */
 class ProcessContextExpr final : public core::ProcessContextImpl {
  public:
-  ProcessContextExpr(Processor& processor, controller::ControllerServiceProvider* controller_service_provider,
-                     const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo,
-                     const std::shared_ptr<core::ContentRepository> &content_repo = core::repository::createFileSystemRepository())
-      : core::ProcessContextImpl(processor, controller_service_provider, repo, flow_repo, content_repo),
-        logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
-  }
-
-  ProcessContextExpr(Processor& processor, controller::ControllerServiceProvider* controller_service_provider,
-                     const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration,
-                     const std::shared_ptr<core::ContentRepository> &content_repo = core::repository::createFileSystemRepository())
-      : core::ProcessContextImpl(processor, controller_service_provider, repo, flow_repo, configuration, content_repo),
-        logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
-  }
-
+  using ProcessContextImpl::ProcessContextImpl;
   ~ProcessContextExpr() override = default;
 
   nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
@@ -61,8 +48,6 @@ class ProcessContextExpr final : public core::ProcessContextImpl {
  private:
   mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_expressions_;
   mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_dynamic_expressions_;
-
-  std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

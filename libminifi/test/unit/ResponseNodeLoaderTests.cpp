@@ -25,6 +25,7 @@
 #include "core/repository/VolatileContentRepository.h"
 #include "utils/Id.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -48,9 +49,9 @@ class ResponseNodeLoaderTestFixture {
   }
 
  protected:
-  template<typename T, typename = typename std::enable_if_t<std::is_base_of_v<minifi::core::Processor, T>>>
+  template<typename T, typename = typename std::enable_if_t<std::is_base_of_v<minifi::core::ProcessorImpl, T>>>
   minifi::utils::Identifier addProcessor(const std::string& name) {
-    auto processor = std::make_unique<T>(name);
+    auto processor = minifi::test::utils::make_processor<T>(name);
     auto uuid = processor->getUUID();
     root_->addProcessor(std::move(processor));
     return uuid;

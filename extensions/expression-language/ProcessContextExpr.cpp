@@ -26,7 +26,7 @@
 namespace org::apache::nifi::minifi::core {
 
 nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(const std::string_view name, const FlowFile* flow_file) const {
-  const auto property = getProcessor().getSupportedProperty(name);
+  const auto property = getProcessorInfo().getSupportedProperty(name);
   if (!property) {
     return nonstd::make_unexpected(PropertyErrorCode::NotSupportedProperty);
   }
@@ -48,7 +48,6 @@ nonstd::expected<std::string, std::error_code> ProcessContextExpr::getProperty(c
 }
 
 nonstd::expected<std::string, std::error_code> ProcessContextExpr::getDynamicProperty(const std::string_view name, const FlowFile* flow_file) const {
-  // all dynamic properties support EL
   if (!cached_dynamic_expressions_.contains(name)) {
     auto expression_str = ProcessContextImpl::getDynamicProperty(name, flow_file);
     if (!expression_str) { return expression_str; }

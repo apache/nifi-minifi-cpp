@@ -51,7 +51,7 @@ void UpdateAttribute::onTrigger(core::ProcessContext& context, core::ProcessSess
   } catch (const std::exception &e) {
     logger_->log_error("Caught exception while updating attributes: {}", e.what());
     session.transfer(flow_file, Failure);
-    yield();
+    context.yield();
   }
 }
 

@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "core/OutputAttributeDefinition.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
@@ -39,10 +39,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListFile : public core::ProcessorImpl {
  public:
-  explicit ListFile(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<ListFile>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from the local filesystem. For each file that is listed, "
       "creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchFile.";

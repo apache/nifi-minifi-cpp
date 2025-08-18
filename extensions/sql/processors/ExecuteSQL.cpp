@@ -32,10 +32,6 @@ namespace org::apache::nifi::minifi::processors {
 const std::string ExecuteSQL::RESULT_ROW_COUNT = "executesql.row.count";
 const std::string ExecuteSQL::INPUT_FLOW_FILE_UUID = "input.flowfile.uuid";
 
-ExecuteSQL::ExecuteSQL(std::string_view name, const utils::Identifier& uuid)
-  : SQLProcessor(name, uuid, core::logging::LoggerFactory<ExecuteSQL>::getLogger(uuid)) {
-}
-
 void ExecuteSQL::initialize() {
   setSupportedProperties(Properties);
   setSupportedRelationships(Relationships);

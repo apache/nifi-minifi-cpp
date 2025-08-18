@@ -157,19 +157,19 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   CHECK(proc->getProperty("Batch Size") == "12");
 
   // verify funnel
-  auto* funnel = dynamic_cast<minifi::Funnel*>(flow->findProcessorByName("CoolFunnel"));
+  TypedProcessorWrapper<minifi::Funnel> funnel = flow->findProcessorByName("CoolFunnel");
   REQUIRE(funnel);
   CHECK(funnel->getUUIDStr() == "00000000-0000-0000-0000-000000000010");
 
   // verify RPG input port
-  auto* port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(flow->findProcessorByName("AmazingInputPort"));
+  TypedProcessorWrapper<minifi::RemoteProcessorGroupPort> port = flow->findProcessorByName("AmazingInputPort");
   REQUIRE(port);
   CHECK(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
   CHECK(port->getMaxConcurrentTasks() == 7);
-  CHECK(port->getInstances().size() == 1);
-  CHECK(port->getInstances().front().host_ == "localhost");
-  CHECK(port->getInstances().front().port_ == 8090);
-  CHECK(port->getInstances().front().protocol_ == "https://");
+  CHECK(port.get().getInstances().size() == 1);
+  CHECK(port.get().getInstances().front().host_ == "localhost");
+  CHECK(port.get().getInstances().front().port_ == 8090);
+  CHECK(port.get().getInstances().front().protocol_ == "https://");
   CHECK(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 
   // verify connection
@@ -753,7 +753,7 @@ TEST_CASE("Property value sequences can use parameters") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
+  auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllPropertyValues("Simple Property");
   REQUIRE(values);
@@ -814,7 +814,7 @@ TEST_CASE("Dynamic properties can use parameters") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
+  auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
   REQUIRE(values);
@@ -930,7 +930,7 @@ TEST_CASE("Test sensitive parameters in sensitive property value sequence") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
+  auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
   core::Property property("Sensitive Property", "");
   auto values = proc->getAllPropertyValues("Sensitive Property");
@@ -1031,17 +1031,17 @@ TEST_CASE("NiFi flow json can use alternative targetUris field") {
   REQUIRE(flow);
 
   // verify RPG input port
-  auto* port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(flow->findProcessorByName("AmazingInputPort"));
+  TypedProcessorWrapper<minifi::RemoteProcessorGroupPort> port = flow->findProcessorByName("AmazingInputPort");
   REQUIRE(port);
-  CHECK(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
+  CHECK(port.get().getUUIDStr() == "00000000-0000-0000-0000-000000000003");
   CHECK(port->getMaxConcurrentTasks() == 7);
   if (target_uri_valid) {
-    CHECK(port->getInstances().size() == 1);
-    CHECK(port->getInstances().front().host_ == "localhost");
-    CHECK(port->getInstances().front().port_ == 8090);
-    CHECK(port->getInstances().front().protocol_ == "https://");
+    CHECK(port.get().getInstances().size() == 1);
+    CHECK(port.get().getInstances().front().host_ == "localhost");
+    CHECK(port.get().getInstances().front().port_ == 8090);
+    CHECK(port.get().getInstances().front().protocol_ == "https://");
   } else {
-    CHECK(port->getInstances().empty());
+    CHECK(port.get().getInstances().empty());
   }
   CHECK(port->getProperty("Port UUID") == "00000000-0000-0000-0000-000000000005");
 }
@@ -1532,7 +1532,7 @@ TEST_CASE("Parameter providers can be used for parameter values") {
   std::unique_ptr<core::ProcessGroup> flow = config.getRootFromPayload(CONFIG_JSON);
   REQUIRE(flow);
 
-  auto* proc = dynamic_cast<core::ProcessorImpl*>(flow->findProcessorByName("MyProcessor"));
+  auto* proc = flow->findProcessorByName("MyProcessor");
   REQUIRE(proc);
   auto values = proc->getAllDynamicPropertyValues("My Dynamic Property Sequence");
   CHECK((*values)[0] == "value2");

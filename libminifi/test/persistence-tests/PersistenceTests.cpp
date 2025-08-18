@@ -36,6 +36,7 @@
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "unit/TestUtils.h"
 #include "core/repository/FileSystemRepository.h"
+#include "core/ProcessorImpl.h"
 
 using ConnectionImpl = minifi::ConnectionImpl;
 using Connection = minifi::Connection;
@@ -69,7 +70,7 @@ struct TestFlow{
 
     // setup INPUT processor
     {
-      inputProcessor = std::make_shared<TestProcessor>("source", inputProcUUID());
+      inputProcessor = minifi::test::utils::make_processor<TestProcessor>("source", inputProcUUID());
       inputContext = std::make_shared<core::ProcessContextImpl>(*inputProcessor, nullptr, prov_repo,
                                                             ff_repository, content_repo);
     }
@@ -144,8 +145,8 @@ struct TestFlow{
   std::unique_ptr<core::ProcessSessionFactory> process_session_factory_;
 };
 
-std::unique_ptr<MergeContent> setupMergeProcessor(const utils::Identifier& id) {
-  auto processor = std::make_unique<MergeContent>("MergeContent", id);
+std::unique_ptr<core::Processor> setupMergeProcessor(const utils::Identifier& id) {
+  auto processor = minifi::test::utils::make_processor<MergeContent>("MergeContent", id);
   processor->initialize();
   processor->setAutoTerminatedRelationships(std::array{core::Relationship{"original", "d"}});
 
@@ -252,7 +253,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
 class ContentUpdaterProcessor : public core::ProcessorImpl {
  public:
-  ContentUpdaterProcessor(std::string_view name, const utils::Identifier& id) : ProcessorImpl(name, id) {}
+  using ProcessorImpl::ProcessorImpl;
 
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
@@ -270,7 +271,7 @@ class ContentUpdaterProcessor : public core::ProcessorImpl {
 };
 
 std::unique_ptr<core::Processor> setupContentUpdaterProcessor(const utils::Identifier& id) {
-  return std::make_unique<ContentUpdaterProcessor>("Updater", id);
+  return minifi::test::utils::make_processor<ContentUpdaterProcessor>("Updater", id);
 }
 
 TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {

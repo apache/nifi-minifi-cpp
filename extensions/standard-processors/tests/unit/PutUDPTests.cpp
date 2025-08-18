@@ -27,6 +27,7 @@
 #include "utils/net/UdpServer.h"
 #include "utils/expected.h"
 #include "utils/StringUtils.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -46,7 +47,7 @@ std::optional<utils::net::Message> tryDequeueWithTimeout(utils::net::UdpServer& 
 }  // namespace
 
 TEST_CASE("PutUDP", "[putudp]") {
-  test::SingleProcessorTestController controller{std::make_unique<PutUDP>("PutUDP")};
+  test::SingleProcessorTestController controller{minifi::test::utils::make_processor<PutUDP>("PutUDP")};
   const auto put_udp = controller.getProcessor();
 
   LogTestController::getInstance().setTrace<PutUDP>();

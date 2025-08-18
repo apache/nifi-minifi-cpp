@@ -28,7 +28,7 @@
 #include <regex>
 
 #include "core/Core.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "FlowFileRecord.h"
 #include "utils/OsUtils.h"
