@@ -22,7 +22,7 @@
 #include <string_view>
 #include <utility>
 
-#include "PropertyValidator.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {

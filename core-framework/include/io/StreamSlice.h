@@ -21,7 +21,7 @@
 #include <memory>
 
 #include "minifi-cpp/io/StreamCallback.h"
-#include "InputStream.h"
+#include "io/InputStream.h"
 
 namespace org::apache::nifi::minifi::io {
 

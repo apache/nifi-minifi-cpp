@@ -1,4 +1,6 @@
 /**
+ * @file UnicodeConversion.h
+ * Unicode conversion functions
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,26 +18,23 @@
  * limitations under the License.
  */
 
-#pragma once
+ #pragma once
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include <cstdint>
-#include "core/expect.h"
-#include "io/InputStream.h"
-#include "io/OutputStream.h"
-
-namespace org::apache::nifi::minifi::io {
-
-/**
- * Base Stream is the base of a composable stream architecture.
- * Intended to be the base of layered streams ala DatInputStreams in Java.
- *
- * ** Not intended to be thread safe as it is not intended to be shared**
- *
- * Extensions may be thread safe and thus shareable, but that is up to the implementation.
- */
-class BaseStream : public virtual InputStream, public virtual OutputStream {};
-
-}  // namespace org::apache::nifi::minifi::io
+ #include <atlbase.h>
+ #include <atlconv.h>
+ #include <string>
+ 
+ namespace org::apache::nifi::minifi::utils {
+ 
+ inline std::string to_string(const std::wstring& utf16_string) {
+   ATL::CW2A utf8_string(utf16_string.c_str(), CP_UTF8);
+   return {LPSTR{utf8_string}};
+ }
+ 
+ inline std::wstring to_wstring(const std::string& utf8_string) {
+   ATL::CA2W utf16_string(utf8_string.c_str(), CP_UTF8);
+   return {LPWSTR{utf16_string}};
+ }
+ 
+ }  // namespace org::apache::nifi::minifi::utils
+ 

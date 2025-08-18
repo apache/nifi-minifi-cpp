@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-#include "PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "PropertyValidator.h"
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/transform.hpp"

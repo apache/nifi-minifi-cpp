@@ -16,26 +16,7 @@
  * limitations under the License.
  */
 
-#pragma once
+ #pragma once
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include <cstdint>
-#include "core/expect.h"
-#include "io/InputStream.h"
-#include "io/OutputStream.h"
-
-namespace org::apache::nifi::minifi::io {
-
-/**
- * Base Stream is the base of a composable stream architecture.
- * Intended to be the base of layered streams ala DatInputStreams in Java.
- *
- * ** Not intended to be thread safe as it is not intended to be shared**
- *
- * Extensions may be thread safe and thus shareable, but that is up to the implementation.
- */
-class BaseStream : public virtual InputStream, public virtual OutputStream {};
-
-}  // namespace org::apache::nifi::minifi::io
+ #include "minifi-cpp/utils/gsl.h"
+ 

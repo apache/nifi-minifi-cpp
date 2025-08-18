@@ -33,7 +33,6 @@
 #include <memory>
 
 #include "StringUtils.h"
-#include "minifi-cpp/utils/TimeUtil.h"
 
 // libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION)

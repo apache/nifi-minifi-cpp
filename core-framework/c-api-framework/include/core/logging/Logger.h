@@ -34,6 +34,7 @@
 #include "utils/Enum.h"
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
+#include "utils/SmallString.h"
 
 namespace org::apache::nifi::minifi::core::logging {
 

@@ -23,13 +23,19 @@ namespace org::apache::nifi::minifi::core {
 
 namespace {
 
-class MinifiOutputStreamWrapper : public io::OutputStream {
+class MinifiOutputStreamWrapper : public io::OutputStreamImpl {
  public:
   explicit MinifiOutputStreamWrapper(MinifiOutputStream impl): impl_(impl) {}
 
   size_t write(const uint8_t *value, size_t len) override {
     return MinifiOutputStreamWrite(impl_, reinterpret_cast<const char*>(value), len);
   }
+
+  void close() override {gsl_FailFast();}
+  void seek(size_t /*offset*/) override {gsl_FailFast();}
+  [[nodiscard]] size_t tell() const override {gsl_FailFast();}
+  int initialize() override {gsl_FailFast();}
+  [[nodiscard]] virtual std::span<const std::byte> getBuffer() const override {gsl_FailFast();}
 
  private:
   MinifiOutputStream impl_;

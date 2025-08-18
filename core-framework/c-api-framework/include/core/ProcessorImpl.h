@@ -31,11 +31,11 @@
 #include <vector>
 
 #include "core/Annotation.h"
-#include "core/DynamicProperty.h"
+#include "minifi-cpp/core/DynamicProperty.h"
 // #include "minifi-cpp/core/ProcessorMetrics.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
-#include "core/OutputAttributeDefinition.h"
+#include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "core/ProcessorMetadata.h"
 #include "core/ProcessorDescriptor.h"
 #include "core/FlowFile.h"

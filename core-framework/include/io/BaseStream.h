@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include "InputStream.h"
-#include "OutputStream.h"
+#include "io/InputStream.h"
+#include "io/OutputStream.h"
 #include "minifi-cpp/io/BaseStream.h"
 
 namespace org::apache::nifi::minifi::io {
