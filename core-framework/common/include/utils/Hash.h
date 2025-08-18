@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,23 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include "minifi-c.h"
-#include "core/RelationshipDefinition.h"
-#include "core/PropertyDefinition.h"
-#include <span>
+ #pragma once
 
-namespace org::apache::nifi::minifi::core {
-
-class ProcessorDescriptor {
- public:
-  explicit ProcessorDescriptor(MinifiProcessorDescriptor impl): impl_(impl) {}
-  void setSupportedRelationships(std::span<const RelationshipDefinition> relationships);
-  void setSupportedProperties(std::span<const PropertyReference> properties);
-
- private:
-  MinifiProcessorDescriptor impl_;
-};
-
-}  // namespace org::apache::nifi::minifi::core
+ #include <cstddef>
+ 
+ namespace org::apache::nifi::minifi::utils {
+ 
+ // from the boost hash_combine docs
+ inline size_t hash_combine(size_t seed, size_t new_hash) noexcept {
+   return seed ^ (new_hash + 0x9e3779b9 + (seed << 6U) + (seed >> 2U));
+ }
+ 
+ }  // namespace org::apache::nifi::minifi::utils
+ 

@@ -33,7 +33,7 @@ class uuid;
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/properties/Properties.h"
 #include "utils/SmallString.h"
-#include "Hash.h"
+#include "utils/Hash.h"
 
 #define UUID_TIME_IMPL 0
 #define UUID_RANDOM_IMPL 1

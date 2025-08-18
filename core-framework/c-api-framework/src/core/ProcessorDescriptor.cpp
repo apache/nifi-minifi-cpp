@@ -17,6 +17,7 @@
 
 #include "core/ProcessorDescriptor.h"
 #include "utils/minifi-c-utils.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
