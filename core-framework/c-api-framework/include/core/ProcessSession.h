@@ -19,9 +19,9 @@
 
 #include "minifi-c.h"
 #include "FlowFile.h"
-#include "core/Relationship.h"
+#include "minifi-cpp/core/Relationship.h"
 #include <span>
-#include "io/StreamCallback.h"
+#include "minifi-cpp/io/StreamCallback.h"
 
 namespace org::apache::nifi::minifi::core {
 
