@@ -1,0 +1,15 @@
+Azure SDK C++ commit fixes this in commit b33fb227ce56f2e93625521d34be2f8970869199, should be available in the next release
+
+diff --git a/sdk/identity/azure-identity/src/managed_identity_source.cpp b/sdk/identity/azure-identity/src/managed_identity_source.cpp
+index 93a5969bf..c3d203a58 100644
+--- a/sdk/identity/azure-identity/src/managed_identity_source.cpp
++++ b/sdk/identity/azure-identity/src/managed_identity_source.cpp
+@@ -527,7 +527,7 @@ std::unique_ptr<ManagedIdentitySource> ImdsManagedIdentitySource::Create(
+ 
+     imdsUrl = Core::Url{imdsEndpointEnvVarValue};
+   }
+-  imdsUrl.SetPath("/metadata/identity/oauth2/token");
++  imdsUrl.SetPath("metadata/identity/oauth2/token");
+ 
+   return std::unique_ptr<ManagedIdentitySource>(
+       new ImdsManagedIdentitySource(clientId, objectId, resourceId, imdsUrl, options));
