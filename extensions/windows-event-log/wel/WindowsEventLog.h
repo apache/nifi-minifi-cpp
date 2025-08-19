@@ -72,9 +72,7 @@ class EventDataCache {
     EVT_FORMAT_MESSAGE_FLAGS field;
     std::string key;
 
-    [[nodiscard]] bool operator==(const CacheKey& other) const noexcept {
-      return field == other.field && key == other.key;
-    }
+    [[nodiscard]] bool operator==(const CacheKey&) const noexcept = default;
   };
   struct CacheKeyHash {
     [[nodiscard]] size_t operator()(const CacheKey& cache_key) const noexcept {
