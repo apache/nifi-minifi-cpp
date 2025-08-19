@@ -1,0 +1,24 @@
+From e359881035c25309813a79319c14a32dc230d131 Mon Sep 17 00:00:00 2001
+From: Martin Zink <martin.zink@apache.org>
+Date: Tue, 19 Aug 2025 15:28:50 +0200
+Subject: [PATCH 1/1] include cinttypes for uint8_t (gcc15 fix)
+
+---
+ .../azure-security-attestation/src/private/crypto/inc/crypto.hpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sdk/attestation/azure-security-attestation/src/private/crypto/inc/crypto.hpp b/sdk/attestation/azure-security-attestation/src/private/crypto/inc/crypto.hpp
+index 9a98f204e..95260d243 100644
+--- a/sdk/attestation/azure-security-attestation/src/private/crypto/inc/crypto.hpp
++++ b/sdk/attestation/azure-security-attestation/src/private/crypto/inc/crypto.hpp
+@@ -6,6 +6,7 @@
+ #include <memory>
+ #include <string>
+ #include <vector>
++#include <cinttypes>
+ 
+ namespace Azure { namespace Security { namespace Attestation { namespace _detail {
+   /**
+-- 
+2.50.1
+
