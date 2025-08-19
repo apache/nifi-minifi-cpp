@@ -24,6 +24,7 @@
 #include "PyException.h"
 #include "types/Types.h"
 #include "utils/OptionalUtils.h"
+#include "utils/ConfigurationUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -56,17 +57,22 @@ std::string encapsulateCommandInQuotesIfNeeded(const std::string& command) {
 #define pclose _pclose
 #endif
 
-std::pair<int, std::string> executeProcess(const std::string& command) {
-  std::array<char, 256> buffer{};
+struct CommandResult {
+  int exit_code;
+  std::string output;
+};
+
+CommandResult executeProcess(const std::string& command) {
+  std::array<char, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
 
   FILE* pipe = popen(encapsulateCommandInQuotesIfNeeded(command).c_str(), "r");
   if (!pipe) {
     return {1, fmt::format("Failed to open pipe for command: {}", command)};
   }
 
-  std::string result;
+  std::ostringstream result;
   while (fgets(buffer.data(), gsl::narrow<int>(buffer.size()), pipe) != nullptr) {
-    result += buffer.data();
+    result << buffer.data();
   }
 
   int status = pclose(pipe);
@@ -81,7 +87,7 @@ std::pair<int, std::string> executeProcess(const std::string& command) {
   }
 #endif
 
-  return {exit_code, result};
+  return {exit_code, result.str()};
 }
 
 }  // namespace
@@ -130,9 +136,9 @@ void PythonDependencyInstaller::createVirtualEnvIfSpecified() const {
     logger_->log_info("Creating python virtual env at: {}", virtualenv_path_.string());
     auto venv_command = "\"" + python_binary_ + "\" -m venv \"" + virtualenv_path_.string() + "\" 2>&1";
     auto result = executeProcess(venv_command);
-    if (result.first != 0) {
-      logger_->log_error("The following command creating python virtual env failed: '{}'\nSetup process output:\n{}", venv_command, result.second);
-      throw PythonScriptException(fmt::format("The following command creating python virtual env failed: '{}'\nSetup process output:\n{}", venv_command, result.second));
+    if (result.exit_code != 0) {
+      logger_->log_error("The following command creating python virtual env failed: '{}'\nSetup process output:\n{}", venv_command, result.output);
+      throw PythonScriptException(fmt::format("The following command creating python virtual env failed: '{}'\nSetup process output:\n{}", venv_command, result.output));
     }
   }
 }
@@ -147,11 +153,11 @@ void PythonDependencyInstaller::runInstallCommandInVirtualenv(const std::string&
   command_with_virtualenv.append(install_command);
 
   auto result = executeProcess(command_with_virtualenv + " 2>&1");
-  if (result.first != 0) {
-    logger_->log_error("Failed to install python packages to virtualenv. Install process output:\n{}", result.second);
-    throw PythonScriptException(fmt::format("Failed to install python packages to virtualenv. Install process output:\n{}", result.second));
+  if (result.exit_code != 0) {
+    logger_->log_error("Failed to install python packages to virtualenv. Install process output:\n{}", result.output);
+    throw PythonScriptException(fmt::format("Failed to install python packages to virtualenv. Install process output:\n{}", result.output));
   } else {
-    logger_->log_info("Python packages installed successfully with command: '{}'.\nInstall process output:\n{}", command_with_virtualenv, result.second);
+    logger_->log_info("Python packages installed successfully with command: '{}'.\nInstall process output:\n{}", command_with_virtualenv, result.output);
   }
 }
 
