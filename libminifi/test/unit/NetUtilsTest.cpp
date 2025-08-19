@@ -113,21 +113,29 @@ TEST_CASE("utils::net::getSslContext passphrase problems") {
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::ClientCertificate.name, (cert_dir / "alice_by_A.pem").string()));
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::PrivateKey.name, (cert_dir / "alice_encrypted.key").string()));
 
+  using minifi::test::utils::ExceptionSubStringMatcher;
+
   SECTION("Missing passphrase") {
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+        std::runtime_error,
+        ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
 
   SECTION("Invalid passphrase") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::Passphrase.name, "not_the_correct_passphrase"));
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+        std::runtime_error,
+        ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
 
   SECTION("Invalid passphrase file") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::Passphrase.name, (cert_dir / "alice_by_B.pem").string()));
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+        std::runtime_error,
+        ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
 }
 
