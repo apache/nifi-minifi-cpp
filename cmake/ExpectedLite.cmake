@@ -24,5 +24,5 @@ FetchContent_Declare(expected-lite
 )
 
 # Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119714
-add_compile_definitions(nsel_CONFIG_SELECT_EXPECTED=nsel_EXPECTED_NONSTD)
 FetchContent_MakeAvailable(expected-lite)
+target_compile_definitions(expected-lite INTERFACE nsel_CONFIG_SELECT_EXPECTED=nsel_EXPECTED_NONSTD)
