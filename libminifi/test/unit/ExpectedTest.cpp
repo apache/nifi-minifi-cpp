@@ -476,7 +476,9 @@ TEST_CASE("expected valueOrElse", "[expected][valueOrElse]") {
   REQUIRE(gsl::narrow<int>("hello"sv.size()) == (ex | utils::valueOrElse([](const std::string& err) { return gsl::narrow<int>(err.size()); })));
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw std::exception(); }), std::exception);  // NOLINT(performance-unnecessary-value-param)
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](const std::string&) -> int { throw std::exception(); }), std::exception);
-  REQUIRE_THROWS_MATCHES(std::move(ex) | utils::valueOrElse([](std::string&& error) -> int { throw std::runtime_error(error); }), std::runtime_error, ExceptionSubStringMatcher<std::runtime_error>({"hello"}));
+  REQUIRE_THROWS_MATCHES(std::move(ex) | utils::valueOrElse([](std::string&& error) -> int { throw std::runtime_error(error); }),
+      std::runtime_error,
+      ExceptionSubStringMatcher<std::runtime_error>({"hello"}));
 }
 
 TEST_CASE("expected transformError", "[expected][transformError]") {
@@ -562,7 +564,9 @@ TEST_CASE("expected orThrow") {
   nonstd::expected<int, std::string> expected{5};
 
 
-  REQUIRE_THROWS_MATCHES(std::move(unexpected) | utils::orThrow("should throw"), std::runtime_error, ExceptionSubStringMatcher<std::runtime_error>({"should throw, but got hello"}));
+  REQUIRE_THROWS_MATCHES(std::move(unexpected) | utils::orThrow("should throw"),
+      std::runtime_error,
+      ExceptionSubStringMatcher<std::runtime_error>({"should throw, but got hello"}));
   CHECK((expected | utils::orThrow("should be 5")) == 5);
 }
 
