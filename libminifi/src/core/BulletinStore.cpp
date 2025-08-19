@@ -17,6 +17,7 @@
  */
 #include "core/BulletinStore.h"
 
+#include <ranges>
 #include "core/logging/LoggerBase.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -75,13 +76,9 @@ std::deque<Bulletin> BulletinStore::getBulletins(std::optional<std::chrono::syst
 
 std::vector<Bulletin> BulletinStore::getBulletinsForProcessor(const std::string& processor_uuid) const {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<Bulletin> bulletins;
-  for (const auto& bulletin : bulletins_) {
-    if (bulletin.source_id == processor_uuid) {
-      bulletins.push_back(bulletin);
-    }
-  }
-  return bulletins;
+  return bulletins_
+      | std::ranges::views::filter([&](const auto& elem) { return elem.source_id == processor_uuid; })
+      | ranges::to<std::vector>();
 }
 
 size_t BulletinStore::getMaxBulletinCount() const {
