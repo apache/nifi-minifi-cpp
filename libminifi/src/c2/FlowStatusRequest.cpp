@@ -23,14 +23,14 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-FlowStatusRequest::FlowStatusRequest(const std::string& query_string) {
+FlowStatusRequest::FlowStatusRequest(std::string_view query_string) {
   auto query_parameters = minifi::utils::string::splitAndTrim(query_string, ":");
   if (query_parameters.size() < 2) {
-    throw std::invalid_argument("Invalid query string: " + query_string);
+    throw std::invalid_argument(fmt::format("Invalid query string: {}", query_string));
   }
   auto query_type_result = magic_enum::enum_cast<FlowStatusQueryType>(query_parameters[0]);
   if (!query_type_result) {
-    throw std::invalid_argument("Invalid query type: " + query_parameters[0]);
+    throw std::invalid_argument(fmt::format("Invalid query type: {}", query_parameters[0]));
   }
   query_type = *query_type_result;
   std::vector<std::string> option_vector_strings;
