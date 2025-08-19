@@ -33,7 +33,7 @@
 namespace org::apache::nifi::minifi::controller {
 
 bool sendSingleCommand(const utils::net::SocketData& socket_data, uint8_t op, const std::string& value) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }
@@ -56,7 +56,7 @@ bool clearConnection(const utils::net::SocketData& socket_data, const std::strin
 }
 
 bool updateFlow(const utils::net::SocketData& socket_data, std::ostream &out, const std::string& file) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }
@@ -85,7 +85,7 @@ bool updateFlow(const utils::net::SocketData& socket_data, std::ostream &out, co
 }
 
 bool getFullConnections(const utils::net::SocketData& socket_data, std::ostream &out) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }
@@ -113,7 +113,7 @@ bool getFullConnections(const utils::net::SocketData& socket_data, std::ostream 
 }
 
 bool getConnectionSize(const utils::net::SocketData& socket_data, std::ostream &out, const std::string& connection) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }
@@ -137,7 +137,7 @@ bool getConnectionSize(const utils::net::SocketData& socket_data, std::ostream &
 }
 
 bool listComponents(const utils::net::SocketData& socket_data, std::ostream &out, bool show_header) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }
@@ -165,7 +165,7 @@ bool listComponents(const utils::net::SocketData& socket_data, std::ostream &out
 }
 
 bool listConnections(const utils::net::SocketData& socket_data, std::ostream &out, bool show_header) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }
@@ -191,7 +191,7 @@ bool listConnections(const utils::net::SocketData& socket_data, std::ostream &ou
 }
 
 bool printManifest(const utils::net::SocketData& socket_data, std::ostream &out) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }
@@ -210,7 +210,7 @@ bool printManifest(const utils::net::SocketData& socket_data, std::ostream &out)
 }
 
 bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }
@@ -229,7 +229,7 @@ bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out) {
 }
 
 nonstd::expected<void, std::string> getDebugBundle(const utils::net::SocketData& socket_data, const std::filesystem::path& target_dir) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return nonstd::make_unexpected("Could not connect to remote host " + socket_data.host + ":" + std::to_string(socket_data.port));
   }
@@ -268,7 +268,7 @@ nonstd::expected<void, std::string> getDebugBundle(const utils::net::SocketData&
 }
 
 bool getFlowStatus(const utils::net::SocketData& socket_data, const std::string& status_query, std::ostream &out) {
-  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
     return false;
   }

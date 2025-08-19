@@ -42,6 +42,8 @@ struct FlowStatusRequest {
   std::string identifier;
   std::unordered_set<FlowStatusQueryOption> options;
 
+  // The format of the request is in the "<type>:<component>:<options>" format where the component is optional depending on the request type
+  // The options are listed in a comma-separated format. For example a request for a processor status would look like: processor:GenerateFlowFile:health,stats
   explicit FlowStatusRequest(const std::string& query_string);
 };
 
