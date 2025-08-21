@@ -151,11 +151,12 @@ void PythonDependencyInstaller::runInstallCommandInVirtualenv(const std::string&
   command_with_virtualenv.append(". \"").append((virtualenv_path_ / "bin" / "activate").string()).append("\" 2>&1 && ");
 #endif
   command_with_virtualenv.append(install_command);
+  command_with_virtualenv.append(" 2>&1");
 
-  auto result = executeProcess(command_with_virtualenv + " 2>&1");
+  auto result = executeProcess(command_with_virtualenv);
   if (result.exit_code != 0) {
-    logger_->log_error("Failed to install python packages to virtualenv. Install process output:\n{}", result.output);
-    throw PythonScriptException(fmt::format("Failed to install python packages to virtualenv. Install process output:\n{}", result.output));
+    logger_->log_error("Failed to install python packages to virtualenv with command: {}\nInstall process output:\n{}", command_with_virtualenv, result.output);
+    throw PythonScriptException(fmt::format("Failed to install python packages to virtualenv with command: {}\nInstall process output:\n{}", command_with_virtualenv, result.output));
   } else {
     logger_->log_info("Python packages installed successfully with command: '{}'.\nInstall process output:\n{}", command_with_virtualenv, result.output);
   }
