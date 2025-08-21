@@ -32,6 +32,7 @@
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "io/NetworkPrioritizer.h"
 #include "minifi-cpp/utils/Export.h"
+#include "minifi-cpp/utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::controllers {
 

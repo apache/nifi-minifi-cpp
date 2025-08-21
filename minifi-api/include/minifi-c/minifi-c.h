@@ -146,7 +146,7 @@ typedef struct MinifiSerializedResponseNode {
   MinifiBool collapsible;
   MinifiBool keep_empty;
   uint32_t children_count;
-  const MinifiSerializedResponseNode* children_ptr;
+  const struct MinifiSerializedResponseNode* children_ptr;
 } MinifiSerializedResponseNode;
 
 typedef struct MinifiPublishedMetric {
