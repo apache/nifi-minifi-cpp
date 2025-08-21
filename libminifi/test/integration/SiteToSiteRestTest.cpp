@@ -27,13 +27,7 @@
 #include "integration/HTTPIntegrationBase.h"
 #include "processors/InvokeHTTP.h"
 #include "unit/TestBase.h"
-#include "core/logging/Logger.h"
-#include "FlowController.h"
-#include "CivetServer.h"
 #include "RemoteProcessGroupPort.h"
-#include "core/ConfigurableComponentImpl.h"
-#include "controllers/SSLContextService.h"
-#include "integration/HTTPIntegrationBase.h"
 #include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {

@@ -485,7 +485,7 @@ NiFi Properties Overrides: {}
     REQUIRE(0s == it.second->getFlowExpirationDuration());
   }
 
-  TypedProcessorWrapper<minifi::RemoteProcessGroupPort> port =rootFlowConfig->findProcessorByName("AmazingInputPort");
+  TypedProcessorWrapper<minifi::RemoteProcessGroupPort> port = rootFlowConfig->findProcessorByName("AmazingInputPort");
   REQUIRE(port);
   CHECK(port->getUUIDStr() == "ac0e798c-0158-1000-0588-cda9b944e011");
   CHECK(port.get().getUseCompression() == true);
@@ -2458,7 +2458,7 @@ NiFi Properties Overrides: {}
       )";
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(TEST_CONFIG_YAML);
 
-  TypedProcessorWrapper<minifi::RemoteProcessGroupPort> port =rootFlowConfig->findProcessorByName("AmazingOutputPort");
+  TypedProcessorWrapper<minifi::RemoteProcessGroupPort> port = rootFlowConfig->findProcessorByName("AmazingOutputPort");
   REQUIRE(port);
   CHECK(port->getUUIDStr() == "ac0e798c-0158-1000-0588-cda9b944e011");
   CHECK(port.get().getUseCompression() == true);
