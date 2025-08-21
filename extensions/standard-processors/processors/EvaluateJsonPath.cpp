@@ -43,11 +43,12 @@ void EvaluateJsonPath::initialize() {
 }
 
 void EvaluateJsonPath::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (getDynamicProperties().empty()) {
+  const auto dynamic_properties = context.getDynamicPropertyKeys();
+  if (dynamic_properties.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "At least one dynamic property must be specified with a valid JSON path expression");
   }
   destination_ = utils::parseEnumProperty<evaluate_json_path::DestinationType>(context, EvaluateJsonPath::Destination);
-  if (destination_ == evaluate_json_path::DestinationType::FlowFileContent && getDynamicProperties().size() > 1) {
+  if (destination_ == evaluate_json_path::DestinationType::FlowFileContent && dynamic_properties.size() > 1) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Only one dynamic property is allowed for JSON path when destination is set to flowfile-content");
   }
   null_value_representation_ = utils::parseEnumProperty<evaluate_json_path::NullValueRepresentationOption>(context, EvaluateJsonPath::NullValueRepresentation);
@@ -117,7 +118,14 @@ void EvaluateJsonPath::onTrigger(core::ProcessContext& context, core::ProcessSes
   }
 
   std::unordered_map<std::string, std::string> attributes_to_set;
-  for (const auto& [property_name, json_path] : getDynamicProperties()) {
+  for (const auto& property_name : context.getDynamicPropertyKeys()) {
+    const auto result = context.getRawDynamicProperty(property_name);
+    if (!result) {
+      logger_->log_error("Failed to retrieve dynamic property '{}' for FlowFile with UUID '{}', transferring to Failure relationship", property_name, flow_file->getUUIDStr());
+      session.transfer(flow_file, Failure);
+      return;
+    }
+    const auto json_path = *result;
     jsoncons::json query_result;
     try {
       query_result = jsoncons::jsonpath::json_query(json_object, json_path);

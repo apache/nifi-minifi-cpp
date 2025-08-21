@@ -19,21 +19,22 @@
 #include "unit/SingleProcessorTestController.h"
 #include "processors/EvaluateJsonPath.h"
 #include "unit/TestUtils.h"
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
 class EvaluateJsonPathTestFixture {
  public:
   EvaluateJsonPathTestFixture() :
-      controller_(std::make_unique<processors::EvaluateJsonPath>("EvaluateJsonPath")),
-      evaluate_json_path_processor_(dynamic_cast<processors::EvaluateJsonPath*>(controller_.getProcessor())) {
+      controller_(utils::make_processor<processors::EvaluateJsonPath>("EvaluateJsonPath")),
+      evaluate_json_path_processor_(controller_.getProcessor()) {
     REQUIRE(evaluate_json_path_processor_);
     LogTestController::getInstance().setTrace<processors::EvaluateJsonPath>();
   }
 
  protected:
   SingleProcessorTestController controller_;
-  processors::EvaluateJsonPath* evaluate_json_path_processor_;
+  core::Processor* evaluate_json_path_processor_;
 };
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "At least one dynamic property must be specified", "[EvaluateJsonPathTests]") {
@@ -41,16 +42,16 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "At least one dynamic property mus
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "When destination is set to flowfile content only one dynamic property is allowed", "[EvaluateJsonPathTests]") {
-  controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute1", "value1");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute2", "value2");
+  REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute1", "value1"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute2", "value2"));
   REQUIRE_THROWS_WITH(controller_.trigger({{.content = "foo"}}), "Process Schedule Operation: Only one dynamic property is allowed for JSON path when destination is set to flowfile-content");
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Input flowfile has invalid JSON as content", "[EvaluateJsonPathTests]") {
   ProcessorTriggerResult result;
   std::string error_log;
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute1", "value1");
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute1", "value1"));
   SECTION("Flow file content is empty") {
     result = controller_.trigger({{.content = ""}});
     error_log = "FlowFile content is empty, transferring to Failure relationship";
@@ -68,7 +69,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Input flowfile has invalid JSON a
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Dynamic property contains invalid JSON path expression", "[EvaluateJsonPathTests]") {
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute", "1234");
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute", "1234"));
 
   auto result = controller_.trigger({{.content = "{}"}});
 
@@ -83,8 +84,8 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Dynamic property contains invalid
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON paths are not found in content when destination is set to attribute", "[EvaluateJsonPathTests]") {
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute1", "$.firstName");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute2", "$.lastName");
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute1", "$.firstName"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute2", "$.lastName"));
 
   std::map<std::string, std::string> expected_attributes = {
     {"attribute1", ""},
@@ -95,16 +96,16 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON paths are not found in conte
   bool expect_attributes = false;
 
   SECTION("Ignore path not found behavior") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "ignore");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "ignore"));
     expect_attributes = true;
   }
 
   SECTION("Skip path not found behavior") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "skip");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "skip"));
   }
 
   SECTION("Warn path not found behavior") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "warn");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "warn"));
     warn_path_not_found_behavior = true;
     expect_attributes = true;
   }
@@ -134,20 +135,20 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON paths are not found in conte
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON paths are not found in content when destination is set in content", "[EvaluateJsonPathTests]") {
-  controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute", "$.firstName");
+  REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute", "$.firstName"));
 
   bool warn_path_not_found_behavior = false;
   SECTION("Ignore path not found behavior") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "ignore");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "ignore"));
   }
 
   SECTION("Skip path not found behavior") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "skip");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "skip"));
   }
 
   SECTION("Warn path not found behavior") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "warn");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::PathNotFoundBehavior, "warn"));
     warn_path_not_found_behavior = true;
   }
 
@@ -168,15 +169,15 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON paths are not found in conte
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON path query result does not match the required return type", "[EvaluateJsonPathTests]") {
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute", "$.name");
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "attribute", "$.name"));
 
   SECTION("Return type is set to scalar automatically when destination is set to flowfile-attribute") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-attribute");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-attribute"));
   }
 
   SECTION("Return type is set to scalar with flowfile-content destination") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::ReturnType, "scalar");
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::ReturnType, "scalar"));
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content"));
   }
 
   std::string json_content = R"({"name": {"firstName": "John", "lastName": "Doe"}})";
@@ -194,8 +195,8 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "JSON path query result does not m
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query JSON object and write it to flow file", "[EvaluateJsonPathTests]") {
-  controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "jsonPath", "$.name");
+  REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "jsonPath", "$.name"));
 
   std::string json_content = R"({"name": {"firstName": "John", "lastName": "Doe"}})";
   auto result = controller_.trigger({{.content = json_content}});
@@ -211,10 +212,10 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query JSON object and write it to
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query multiple scalars and write them to attributes", "[EvaluateJsonPathTests]") {
-  controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-attribute");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "firstName", "$.name.firstName");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "lastName", "$.name.lastName");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "id", "$.id");
+  REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-attribute"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "firstName", "$.name.firstName"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "lastName", "$.name.lastName"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "id", "$.id"));
 
   std::string json_content = R"({"id": 1234, "name": {"firstName": "John", "lastName": "Doe"}})";
   auto result = controller_.trigger({{.content = json_content}});
@@ -232,8 +233,8 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query multiple scalars and write 
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query a single scalar and write it to flow file", "[EvaluateJsonPathTests]") {
-  controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "firstName", "$.name.firstName");
+  REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "firstName", "$.name.firstName"));
 
   std::string json_content = R"({"id": 1234, "name": {"firstName": "John", "lastName": "Doe"}})";
   auto result = controller_.trigger({{.content = json_content}});
@@ -249,8 +250,8 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query a single scalar and write i
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query has multiple results", "[EvaluateJsonPathTests]") {
-  controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "firstName", "$.users[*].name.firstName");
+  REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "firstName", "$.users[*].name.firstName"));
 
   std::string json_content = R"({"users": [{"id": 1234, "name": {"firstName": "John", "lastName": "Doe"}}, {"id": 2345, "name": {"firstName": "Jane", "lastName": "Smith"}}]})";
   auto result = controller_.trigger({{.content = json_content}});
@@ -266,8 +267,8 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query has multiple results", "[Ev
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flow file content", "[EvaluateJsonPathTests]") {
-  controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "email", "$.name.email");
+  REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-content"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "email", "$.name.email"));
 
   std::string expected_content;
   SECTION("Null value representation is set to empty string") {
@@ -275,7 +276,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flo
   }
 
   SECTION("Null value representation is null string") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::NullValueRepresentation, "the string 'null'");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::NullValueRepresentation, "the string 'null'"));
     expected_content = "null";
   }
 
@@ -293,9 +294,9 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flo
 }
 
 TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flow file attribute", "[EvaluateJsonPathTests]") {
-  controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-attribute");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "firstName", "$.user.firstName");
-  controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "email", "$.user.email");
+  REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::Destination, "flowfile-attribute"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "firstName", "$.user.firstName"));
+  REQUIRE(controller_.plan->setDynamicProperty(evaluate_json_path_processor_, "email", "$.user.email"));
 
   std::string expected_null_value;
   SECTION("Null value representation is set to empty string") {
@@ -303,7 +304,7 @@ TEST_CASE_METHOD(EvaluateJsonPathTestFixture, "Query result is null value in flo
   }
 
   SECTION("Null value representation is null string") {
-    controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::NullValueRepresentation, "the string 'null'");
+    REQUIRE(controller_.plan->setProperty(evaluate_json_path_processor_, processors::EvaluateJsonPath::NullValueRepresentation, "the string 'null'"));
     expected_null_value = "null";
   }
 
