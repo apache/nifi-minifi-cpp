@@ -23,8 +23,8 @@
 #include <iostream>
 #include <cstdint>
 #include "core/expect.h"
-#include "InputStream.h"
-#include "OutputStream.h"
+#include "io/InputStream.h"
+#include "io/OutputStream.h"
 
 namespace org::apache::nifi::minifi::io {
 
