@@ -32,6 +32,7 @@
 #include "utils/RegexUtils.h"
 #include "properties/Configure.h"
 #include "spdlog/sinks/base_sink.h"
+#include "minifi-cpp/utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::controllers {
 class SSLContextServiceInterface;

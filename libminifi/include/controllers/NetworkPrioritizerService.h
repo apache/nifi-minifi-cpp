@@ -33,6 +33,7 @@
 #include "ThreadManagementService.h"
 #include "io/NetworkPrioritizer.h"
 #include "utils/Export.h"
+#include "minifi-cpp/utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::controllers {
 

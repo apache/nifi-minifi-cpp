@@ -16,6 +16,7 @@
  */
 
 #include "utils/TimeUtil.h"
+#include "minifi-cpp/utils/TimeUtil.h"
 
 #ifdef WIN32
 #include "date/tz.h"
