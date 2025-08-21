@@ -125,7 +125,7 @@ void EvaluateJsonPath::onTrigger(core::ProcessContext& context, core::ProcessSes
       session.transfer(flow_file, Failure);
       return;
     }
-    const auto json_path = *result;
+    const auto& json_path = *result;
     jsoncons::json query_result;
     try {
       query_result = jsoncons::jsonpath::json_query(json_object, json_path);
