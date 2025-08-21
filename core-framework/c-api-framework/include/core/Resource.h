@@ -125,8 +125,8 @@ class StaticClassType {
         .isWorkAvailable = [] (void* self) -> MinifiBool {
           return static_cast<Class*>(self)->isWorkAvailable() ? MINIFI_TRUE : MINIFI_FALSE;
         },
-        .restore = [] (void* self, MinifiFlowFile ff) -> void {
-          static_cast<Class*>(self)->restore(std::make_shared<FlowFile>(MinifiCopyFlowFile(ff)));
+        .restore = [] (void* self, OWNED MinifiFlowFile ff) -> void {
+          static_cast<Class*>(self)->restore(std::make_shared<FlowFile>(ff));
         },
         .supportsDynamicProperties = [] (void* self) -> MinifiBool {
           return static_cast<Class*>(self)->supportsDynamicProperties() ? MINIFI_TRUE : MINIFI_FALSE;
@@ -141,29 +141,31 @@ class StaticClassType {
         .isSingleThreaded = [] (void* self) -> MinifiBool {
           return static_cast<Class*>(self)->isSingleThreaded() ? MINIFI_TRUE : MINIFI_FALSE;
         },
-        .getProcessorType = [] (void* self, MinifiString result) -> void {
+        .getProcessorType = [] (void* self) -> OWNED MinifiString {
           auto type = static_cast<Class*>(self)->getProcessorType();
-          MinifiStringAssign(result, utils::toStringView(type));
+          return MinifiCreateString(utils::toStringView(type));
         },
         .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
           return static_cast<Class*>(self)->getTriggerWhenEmpty() ? MINIFI_TRUE : MINIFI_FALSE;
         },
-        .onTrigger = [] (void* self, MinifiProcessContext context, MinifiProcessSession session, MinifiString error) -> void {
+        .onTrigger = [] (void* self, MinifiProcessContext context, MinifiProcessSession session) -> MinifiStatus {
           ProcessContext context_wrapper(context);
           ProcessSession session_wrapper(session);
           try {
             static_cast<Class*>(self)->onTrigger(context_wrapper, session_wrapper);
+            return MINIFI_SUCCESS;
           } catch (std::exception& ex) {
-            MinifiStringAssign(error, utils::toStringView(ex.what()));
+            return MINIFI_UNKNOWN_ERROR;
           }
         },
-        .onSchedule = [] (void* self, MinifiProcessContext context, MinifiProcessSessionFactory session_factory, MinifiString error) -> void {
+        .onSchedule = [] (void* self, MinifiProcessContext context, MinifiProcessSessionFactory session_factory) -> MinifiStatus {
           ProcessContext context_wrapper(context);
           ProcessSessionFactory session_factory_wrapper(session_factory);
           try {
             static_cast<Class*>(self)->onSchedule(context_wrapper, session_factory_wrapper);
+            return MINIFI_SUCCESS;
           } catch (std::exception& ex) {
-            MinifiStringAssign(error, utils::toStringView(ex.what()));
+            return MINIFI_UNKNOWN_ERROR;
           }
         },
         .onUnSchedule = [] (void* self) -> void {
