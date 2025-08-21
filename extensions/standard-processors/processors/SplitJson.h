@@ -22,7 +22,7 @@
 #include <optional>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/Processor.h"
+#include "core/ProcessorImpl.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -108,10 +108,7 @@ class SplitJson final : public core::ProcessorImpl {
     SegmentOriginalFilename
   });
 
-  explicit SplitJson(const std::string_view name, const utils::Identifier& uuid = {})
-      : core::ProcessorImpl(name, uuid) {
-    logger_ = core::logging::LoggerFactory<SplitJson>::getLogger(uuid_);
-  }
+  using ProcessorImpl::ProcessorImpl;
 
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;

@@ -19,14 +19,15 @@
 #include "unit/SingleProcessorTestController.h"
 #include "processors/SplitJson.h"
 #include "unit/TestUtils.h"
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
 class SplitJsonTestFixture {
  public:
   SplitJsonTestFixture() :
-      controller_(std::make_unique<processors::SplitJson>("SplitJson")),
-      split_json_processor_(dynamic_cast<processors::SplitJson*>(controller_.getProcessor())) {
+      controller_(utils::make_processor<processors::SplitJson>("SplitJson")),
+      split_json_processor_(controller_.getProcessor()) {
     REQUIRE(split_json_processor_);
     LogTestController::getInstance().setTrace<processors::SplitJson>();
   }
@@ -60,7 +61,7 @@ class SplitJsonTestFixture {
   }
 
   SingleProcessorTestController controller_;
-  processors::SplitJson* split_json_processor_;
+  core::Processor* split_json_processor_;
 };
 
 TEST_CASE_METHOD(SplitJsonTestFixture, "Query fails with parsing issues", "[SplitJsonTests]") {
