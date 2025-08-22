@@ -35,10 +35,10 @@ void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, co
     return;
   }
 
-  use_managed_identity_credentials_ = minifi::utils::parseBoolProperty(context, UseManagedIdentityCredentials);
+  credential_configuration_strategy_ = minifi::utils::parseEnumProperty<CredentialConfigurationStrategyOption>(context, CredentialConfigurationStrategy);
 
-  if (use_managed_identity_credentials_) {
-    logger_->log_info("Using Managed Identity for authentication");
+  if (credential_configuration_strategy_ != CredentialConfigurationStrategyOption::fromProperties) {
+    logger_->log_info("Using {} for authentication", magic_enum::enum_name(credential_configuration_strategy_));
     return;
   }
 
@@ -66,6 +66,7 @@ void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, co
 storage::AzureStorageCredentials AzureBlobStorageProcessorBase::getAzureCredentialsFromProperties(
     core::ProcessContext &context, const core::FlowFile* const flow_file) const {
   storage::AzureStorageCredentials credentials;
+  credentials.setCredentialConfigurationStrategy(credential_configuration_strategy_);
   if (const auto value = context.getProperty(StorageAccountName, flow_file)) {
     credentials.setStorageAccountName(*value);
   }
@@ -76,12 +77,14 @@ storage::AzureStorageCredentials AzureBlobStorageProcessorBase::getAzureCredenti
     credentials.setSasToken(*value);
   }
   if (const auto value = context.getProperty(CommonStorageAccountEndpointSuffix, flow_file)) {
-    credentials.setEndpontSuffix(*value);
+    credentials.setEndpointSuffix(*value);
   }
   if (const auto value = context.getProperty(ConnectionString, flow_file)) {
     credentials.setConnectionString(*value);
   }
-  credentials.setUseManagedIdentityCredentials(use_managed_identity_credentials_);
+  if (const auto value = context.getProperty(ManagedIdentityClientId, flow_file)) {
+    credentials.setManagedIdentityClientId(*value);
+  }
   return credentials;
 }
 
