@@ -28,8 +28,6 @@ echo "--- Analyzing RPM package: $RPM_FILE ---"
 rpm -qlp "$RPM_FILE" | sort > "$ACTUAL_SORTED"
 sort "$EXPECTED_LIST_FILE" > "$EXPECTED_SORTED"
 
-DIFFERENCES=$(diff "$ACTUAL_SORTED" "$EXPECTED_SORTED")
-
 if ! DIFFERENCES=$(diff "$ACTUAL_SORTED" "$EXPECTED_SORTED"); then
     echo "FAILURE: The RPM contents do not match the expected list."
     echo ""

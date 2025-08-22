@@ -28,12 +28,14 @@
 
 namespace org::apache::nifi::minifi::utils::file {
 
+namespace {
 std::filesystem::path getRootFromConfigure(const Configure& configuration) {
   if (auto nifi_asset_directory = configuration.get(Configure::nifi_asset_directory)) {
     return *nifi_asset_directory;
   }
   return utils::getMinifiDir() / "asset";
 }
+}  // namespace
 
 AssetManager::AssetManager(const Configure& configuration)
     : root_(getRootFromConfigure(configuration)),

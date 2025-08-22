@@ -91,7 +91,7 @@ std::shared_ptr<minifi::controllers::SSLContextServiceInterface> getSSLContextSe
 int main(int argc, char **argv) {
   const auto logger = minifi::core::logging::LoggerConfiguration::getConfiguration().getLogger("controller");
 
-  const auto locations = determineLocations(logger);
+  const auto locations = minifi::determineLocations(logger);
   if (!locations) {
     // determineLocations already logged everything we need
     return -1;
