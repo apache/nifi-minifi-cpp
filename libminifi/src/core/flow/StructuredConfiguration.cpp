@@ -922,7 +922,11 @@ void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, c
   for (const auto& property_node : properties_node) {
     const auto propertyName = property_node.first.getString().value();
     const Node propertyValueNode = property_node.second;
-    parsePropertyNodeElement(propertyName, propertyValueNode, component, parameter_context);
+    const bool is_controller_service_node = dynamic_cast<core::controller::ControllerServiceNode*>(&component) != nullptr;
+    const bool is_linked_services = propertyName == "Linked Services";
+    if (is_controller_service_node == is_linked_services) {
+      parsePropertyNodeElement(propertyName, propertyValueNode, component, parameter_context);
+    }
   }
 
   validateComponentProperties(component, component_name, properties_node.getPath());
