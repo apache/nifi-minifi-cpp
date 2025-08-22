@@ -34,7 +34,7 @@ void AzureStorageCredentials::setSasToken(const std::string& sas_token) {
   sas_token_ = sas_token;
 }
 
-void AzureStorageCredentials::setEndpontSuffix(const std::string& endpoint_suffix) {
+void AzureStorageCredentials::setEndpointSuffix(const std::string& endpoint_suffix) {
   endpoint_suffix_ = endpoint_suffix;
 }
 
@@ -42,8 +42,12 @@ void AzureStorageCredentials::setConnectionString(const std::string& connection_
   connection_string_ = connection_string;
 }
 
-void AzureStorageCredentials::setUseManagedIdentityCredentials(bool use_managed_identity_credentials) {
-  use_managed_identity_credentials_ = use_managed_identity_credentials;
+void AzureStorageCredentials::setCredentialConfigurationStrategy(CredentialConfigurationStrategyOption credential_configuration_strategy) {
+  credential_configuration_strategy_ = credential_configuration_strategy;
+}
+
+void AzureStorageCredentials::setManagedIdentityClientId(const std::string& managed_identity_client_id) {
+  managed_identity_client_id_ = managed_identity_client_id;
 }
 
 std::string AzureStorageCredentials::getStorageAccountName() const {
@@ -54,17 +58,25 @@ std::string AzureStorageCredentials::getEndpointSuffix() const {
   return endpoint_suffix_.empty() ? "core.windows.net" : endpoint_suffix_;
 }
 
-bool AzureStorageCredentials::getUseManagedIdentityCredentials() const {
-  return use_managed_identity_credentials_;
+CredentialConfigurationStrategyOption AzureStorageCredentials::getCredentialConfigurationStrategy() const {
+  return credential_configuration_strategy_;
+}
+
+std::string AzureStorageCredentials::getManagedIdentityClientId() const {
+  return managed_identity_client_id_;
 }
 
 std::string AzureStorageCredentials::buildConnectionString() const {
-  if (use_managed_identity_credentials_) {
+  if (credential_configuration_strategy_ != CredentialConfigurationStrategyOption::fromProperties) {
     return "";
   }
 
   if (!connection_string_.empty()) {
     return connection_string_;
+  }
+
+  if (!storage_account_key_.empty() && !sas_token_.empty()) {
+    return "";
   }
 
   if (storage_account_name_.empty() || (storage_account_key_.empty() && sas_token_.empty())) {
@@ -90,16 +102,37 @@ std::string AzureStorageCredentials::buildConnectionString() const {
 }
 
 bool AzureStorageCredentials::isValid() const {
-  return (getUseManagedIdentityCredentials() && !getStorageAccountName().empty()) ||
-         (!getUseManagedIdentityCredentials() && !buildConnectionString().empty());
+  return (credential_configuration_strategy_ != CredentialConfigurationStrategyOption::fromProperties && !getStorageAccountName().empty()) ||
+         (credential_configuration_strategy_ == CredentialConfigurationStrategyOption::fromProperties && !buildConnectionString().empty());
+}
+
+std::shared_ptr<Azure::Core::Credentials::TokenCredential> AzureStorageCredentials::createAzureTokenCredential() const {
+  std::shared_ptr<Azure::Core::Credentials::TokenCredential> credential;
+  if (credential_configuration_strategy_ == CredentialConfigurationStrategyOption::managedIdentity) {
+    if (managed_identity_client_id_.empty()) {
+      Azure::Identity::ManagedIdentityCredentialOptions options;
+      options.IdentityId = Azure::Identity::ManagedIdentityId::SystemAssigned();
+      credential = std::make_shared<Azure::Identity::ManagedIdentityCredential>(options);
+    } else {
+      Azure::Identity::ManagedIdentityCredentialOptions options;
+      options.IdentityId = Azure::Identity::ManagedIdentityId::FromUserAssignedClientId(managed_identity_client_id_);
+      credential = std::make_shared<Azure::Identity::ManagedIdentityCredential>(options);
+    }
+  } else if (credential_configuration_strategy_ == CredentialConfigurationStrategyOption::defaultCredential) {
+    credential = std::make_shared<Azure::Identity::DefaultAzureCredential>();
+  } else if (credential_configuration_strategy_ == CredentialConfigurationStrategyOption::workloadIdentity) {
+    credential = std::make_shared<Azure::Identity::WorkloadIdentityCredential>();
+  }
+
+  return credential;
 }
 
 bool AzureStorageCredentials::operator==(const AzureStorageCredentials& other) const {
-  if (other.use_managed_identity_credentials_ != use_managed_identity_credentials_) {
+  if (other.credential_configuration_strategy_ != credential_configuration_strategy_) {
     return false;
   }
 
-  if (use_managed_identity_credentials_) {
+  if (credential_configuration_strategy_ != CredentialConfigurationStrategyOption::fromProperties) {
     return storage_account_name_ == other.storage_account_name_ && endpoint_suffix_ == other.endpoint_suffix_;
   } else {
     return buildConnectionString() == other.buildConnectionString();

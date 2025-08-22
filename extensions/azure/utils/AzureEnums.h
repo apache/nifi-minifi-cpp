@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include "magic_enum.hpp"
+
 namespace org::apache::nifi::minifi::azure {
 
 enum class EntityTracking {
@@ -26,4 +28,30 @@ enum class EntityTracking {
   timestamps
 };
 
+enum class CredentialConfigurationStrategyOption {
+  fromProperties,
+  defaultCredential,
+  managedIdentity,
+  workloadIdentity
+};
+
 }  // namespace org::apache::nifi::minifi::azure
+
+namespace magic_enum::customize {
+using CredentialConfigurationStrategyOption = org::apache::nifi::minifi::azure::CredentialConfigurationStrategyOption;
+
+template <>
+constexpr customize_t enum_name<CredentialConfigurationStrategyOption>(CredentialConfigurationStrategyOption value) noexcept {
+  switch (value) {
+    case CredentialConfigurationStrategyOption::fromProperties:
+      return "From Properties";
+    case CredentialConfigurationStrategyOption::defaultCredential:
+      return "Default Credential";
+    case CredentialConfigurationStrategyOption::managedIdentity:
+      return "Managed Identity";
+    case CredentialConfigurationStrategyOption::workloadIdentity:
+      return "Workload Identity";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize

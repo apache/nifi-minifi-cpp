@@ -54,17 +54,45 @@ TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Test Azure credentials 
   CHECK(getFailedFlowFileContents().empty());
 }
 
-TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Test Azure credentials with managed identity use", "[azureDataLakeStorageParameters]") {
+TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Test Azure credentials with Azure default identity sources", "[azureDataLakeStorageParameters]") {
   setDefaultProperties();
+  minifi::azure::CredentialConfigurationStrategyOption expected_configuration_strategy_option{};
+  std::string credential_configuration_strategy_string;
+  std::string managed_identity_client_id;
+  SECTION("Managed Identity") {
+    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::managedIdentity;
+    credential_configuration_strategy_string = "Managed Identity";
+    managed_identity_client_id = "test-managed-identity-client-id";
+  }
+  SECTION("Default Credential") {
+    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::defaultCredential;
+    credential_configuration_strategy_string = "Default Credential";
+  }
+  SECTION("Workload Identity") {
+    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::workloadIdentity;
+    credential_configuration_strategy_string = "Workload Identity";
+  }
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString, "test");
-  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::UseManagedIdentityCredentials, "true");
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::CredentialConfigurationStrategy, credential_configuration_strategy_string);
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::StorageAccountName, "TEST_ACCOUNT");
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ManagedIdentityClientId, managed_identity_client_id);
   test_controller_.runSession(plan_, true);
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedFetchParams();
   CHECK(passed_params.credentials.buildConnectionString().empty());
   CHECK(passed_params.credentials.getStorageAccountName() == "TEST_ACCOUNT");
   CHECK(passed_params.credentials.getEndpointSuffix() == "core.windows.net");
+  CHECK(passed_params.credentials.getCredentialConfigurationStrategy() == expected_configuration_strategy_option);
+  CHECK(passed_params.credentials.getManagedIdentityClientId() == managed_identity_client_id);
   CHECK(getFailedFlowFileContents().empty());
+}
+
+TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Both SAS Token and Storage Account Key cannot be set in credentials service") {
+  setDefaultProperties();
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString, "");
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::SASToken, "token");
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::StorageAccountName, "TEST_ACCOUNT");
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::StorageAccountKey, "TEST_KEY");
+  REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
 }
 
 TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Filesystem name is not set", "[azureDataLakeStorageParameters]") {
