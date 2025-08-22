@@ -924,6 +924,9 @@ void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, c
     const Node propertyValueNode = property_node.second;
     const bool is_controller_service_node = dynamic_cast<core::controller::ControllerServiceNode*>(&component) != nullptr;
     const bool is_linked_services = propertyName == "Linked Services";
+    // We currently propagate properties to the ControllerServiceNode wrapper and to the actual ControllerService.
+    // This could cause false positive warnings because the Node should only handle the linked services while implementation should contain everything else
+    // We should probably remove the nodes and handle the linked services concept inside the impls
     if (is_controller_service_node == is_linked_services) {
       parsePropertyNodeElement(propertyName, propertyValueNode, component, parameter_context);
     }
