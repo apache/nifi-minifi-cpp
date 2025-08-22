@@ -89,7 +89,7 @@ jobs:
 
       - name: Test Reporter
         if: always()
-        uses: phoenix-actions/test-reporting@v15
+        uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
         with:
           name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
           path: build/behavex_output/behave/*.xml
