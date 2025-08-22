@@ -42,6 +42,18 @@ std::string getEventTimestampStr(uint64_t event_timestamp) {
 }
 }  // namespace
 
+std::optional<std::string> EventDataCache::get(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key) const {
+    std::lock_guard<std::mutex> lock{mutex_};
+    const auto it = cache_.find(CacheKey{field, key});
+    if (it != cache_.end() && it->second.expiry > std::chrono::system_clock::now()) { return it->second.value; }
+    return std::nullopt;
+}
+
+void EventDataCache::set(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key, std::string value) {
+  std::lock_guard<std::mutex> lock{mutex_};
+  cache_.insert_or_assign(CacheKey{field, key}, CacheItem{std::move(value), std::chrono::system_clock::now() + lifetime_});
+}
+
 void WindowsEventLogMetadataImpl::renderMetadata() {
   DWORD status = ERROR_SUCCESS;
   EVT_VARIANT stackBuffer[4096];
@@ -108,38 +120,48 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
   }
 }
 
-std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const {
+std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key) const {
+  return metadata_ptr_.getEventData(field, key, event_ptr_);
+}
+
+std::string WindowsEventLogHandler::getEventData(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key, EVT_HANDLE event_ptr) const {
+  auto cached_value = event_data_cache_.get(field, key);
+  if (cached_value) { return *cached_value; }
+  auto new_value = getEventDataImpl(field, event_ptr);
+  event_data_cache_.set(field, key, new_value);
+  return new_value;
+}
+
+std::string WindowsEventLogHandler::getEventDataImpl(EVT_FORMAT_MESSAGE_FLAGS field, EVT_HANDLE event_ptr) const {
   WCHAR stack_buffer[4096];
   DWORD num_chars_in_buffer = sizeof(stack_buffer) / sizeof(stack_buffer[0]);
   using Deleter = utils::StackAwareDeleter<WCHAR, utils::FreeDeleter>;
   std::unique_ptr<WCHAR, Deleter> buffer{stack_buffer, Deleter{stack_buffer}};
   DWORD num_chars_used = 0;
 
-  std::string event_data;
-
-  if (!metadata_ptr_ || !event_ptr_) {
-    return event_data;
+  if (!metadata_provider_ || !event_ptr) {
+    return {};
   }
 
-  if (!EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, nullptr, flags, num_chars_in_buffer, buffer.get(), &num_chars_used)) {
+  if (!EvtFormatMessage(metadata_provider_.get(), event_ptr, 0, 0, nullptr, field, num_chars_in_buffer, buffer.get(), &num_chars_used)) {
     auto last_error = GetLastError();
     if (ERROR_INSUFFICIENT_BUFFER == last_error) {
       num_chars_in_buffer = num_chars_used;
 
       buffer.reset((LPWSTR) malloc(num_chars_in_buffer * sizeof(WCHAR)));
       if (!buffer) {
-        return event_data;
+        return {};
       }
 
-      EvtFormatMessage(metadata_ptr_, event_ptr_, 0, 0, nullptr, flags, num_chars_in_buffer, buffer.get(), &num_chars_used);
+      EvtFormatMessage(metadata_provider_.get(), event_ptr, 0, 0, nullptr, field, num_chars_in_buffer, buffer.get(), &num_chars_used);
     }
   }
 
   if (num_chars_used == 0) {
-    return event_data;
+    return {};
   }
 
-  if (EvtFormatMessageKeyword == flags) {
+  if (EvtFormatMessageKeyword == field) {
     buffer.get()[num_chars_used - 1] = L'\0';
   }
   return utils::to_string(std::wstring{buffer.get()});
@@ -201,10 +223,6 @@ std::string WindowsEventLogHeader::createDefaultDelimiter(size_t length) const {
   } else {
     return ": ";
   }
-}
-
-EVT_HANDLE WindowsEventLogHandler::getMetadata() const {
-  return metadata_provider_.get();
 }
 
 }  // namespace org::apache::nifi::minifi::wel

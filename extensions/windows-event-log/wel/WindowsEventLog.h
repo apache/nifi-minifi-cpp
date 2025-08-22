@@ -58,11 +58,36 @@ enum METADATA {
   COMPUTER,
   UNKNOWN
 };
-
-
-// this is a continuous enum, so we can rely on the array
-
 using METADATA_NAMES = std::vector<std::pair<METADATA, std::string>>;
+
+class EventDataCache {
+ public:
+  explicit EventDataCache(std::chrono::milliseconds lifetime = std::chrono::hours{24})
+      : lifetime_(lifetime) {}
+  [[nodiscard]] std::optional<std::string> get(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key) const;
+  void set(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key, std::string value);
+
+ private:
+  struct CacheKey {
+    EVT_FORMAT_MESSAGE_FLAGS field;
+    std::string key;
+
+    [[nodiscard]] bool operator==(const CacheKey&) const noexcept = default;
+  };
+  struct CacheKeyHash {
+    [[nodiscard]] size_t operator()(const CacheKey& cache_key) const noexcept {
+      return utils::hash_combine(std::hash<EVT_FORMAT_MESSAGE_FLAGS>{}(cache_key.field), std::hash<std::string>{}(cache_key.key));
+    }
+  };
+  struct CacheItem {
+    std::string value;
+    std::chrono::system_clock::time_point expiry;
+  };
+
+  mutable std::mutex mutex_;
+  std::chrono::milliseconds lifetime_;
+  std::unordered_map<CacheKey, CacheItem, CacheKeyHash> cache_;
+};
 
 class WindowsEventLogHandler {
  public:
@@ -74,16 +99,19 @@ class WindowsEventLogHandler {
 
   nonstd::expected<std::string, std::error_code> getEventMessage(EVT_HANDLE eventHandle) const;
 
-  [[nodiscard]] EVT_HANDLE getMetadata() const;
+  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key, EVT_HANDLE event_ptr) const;
 
  private:
+  [[nodiscard]] std::string getEventDataImpl(EVT_FORMAT_MESSAGE_FLAGS field, EVT_HANDLE event_ptr) const;
+
   unique_evt_handle metadata_provider_;
+  mutable EventDataCache event_data_cache_;
 };
 
 class WindowsEventLogMetadata {
  public:
   virtual ~WindowsEventLogMetadata() = default;
-  [[nodiscard]] virtual std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const = 0;
+  [[nodiscard]] virtual std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key) const = 0;
   [[nodiscard]] virtual std::string getEventTimestamp() const = 0;
   virtual short getEventTypeIndex() const = 0;  // NOLINT short comes from WINDOWS API
 
@@ -147,11 +175,11 @@ class WindowsEventLogMetadata {
 
 class WindowsEventLogMetadataImpl : public WindowsEventLogMetadata {
  public:
-  WindowsEventLogMetadataImpl(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr) : metadata_ptr_(metadataProvider), event_ptr_(event_ptr) {
+  WindowsEventLogMetadataImpl(const WindowsEventLogHandler& metadataProvider, EVT_HANDLE event_ptr) : metadata_ptr_(metadataProvider), event_ptr_(event_ptr) {
     renderMetadata();
   }
 
-  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const override;
+  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key) const override;
 
   [[nodiscard]] std::string getEventTimestamp() const override { return event_timestamp_str_; }
 
@@ -164,7 +192,7 @@ class WindowsEventLogMetadataImpl : public WindowsEventLogMetadata {
   short event_type_index_ = 0;  // NOLINT short comes from WINDOWS API
   std::string event_timestamp_str_;
   EVT_HANDLE event_ptr_;
-  EVT_HANDLE metadata_ptr_;
+  const WindowsEventLogHandler& metadata_ptr_;
 };
 
 class WindowsEventLogHeader {
