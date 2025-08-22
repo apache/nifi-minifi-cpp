@@ -46,6 +46,7 @@ extern "C" {
 #endif
 #endif
 
+namespace org::apache::nifi::minifi {
 struct Locations {
   std::filesystem::path working_dir_;
   std::filesystem::path lock_path_;
@@ -66,34 +67,26 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<org::apache::nif
 
 std::optional<Locations> determineLocations(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
 
-template <>
-struct fmt::formatter<Locations> {
-  constexpr auto parse(format_parse_context& ctx) -> format_parse_context::iterator {
-    return ctx.begin();
-  }
+inline auto format_as(const Locations& loc) {
+  static constexpr std::string_view fmt_str =
+      "\n"
+      "{:<24} {}\n"
+      "{:<24} {}\n"
+      "{:<24} {}\n"
+      "{:<24} {}\n"
+      "{:<24} {}\n"
+      "{:<24} {}\n"
+      "{:<24} {}\n"
+      "{:<24} {}";
 
-  // Format the Locations object
-  template <typename Context>
-  auto format(const Locations& loc, Context& ctx) const -> decltype(ctx.out()) {
-    constexpr std::string_view fmt_str =
-        "\n"
-        "{:<24} {}\n"
-        "{:<24} {}\n"
-        "{:<24} {}\n"
-        "{:<24} {}\n"
-        "{:<24} {}\n"
-        "{:<24} {}\n"
-        "{:<24} {}\n"
-        "{:<24} {}";
-
-    return fmt::format_to(ctx.out(), fmt_str,
-                          "Working dir:",         loc.working_dir_,
-                          "Lock path:",           loc.lock_path_,
-                          "Log properties path:", loc.log_properties_path_,
-                          "UID properties path:", loc.uid_properties_path_,
-                          "Properties path:",     loc.properties_path_,
-                          "Logs dir:",            loc.logs_dir_,
-                          "Fips binary path:",    loc.fips_bin_path_,
-                          "Fips conf path:",      loc.fips_conf_path_);
-  }
-};
+  return fmt::format(fmt_str,
+      "Working dir:",         loc.working_dir_,
+      "Lock path:",           loc.lock_path_,
+      "Log properties path:", loc.log_properties_path_,
+      "UID properties path:", loc.uid_properties_path_,
+      "Properties path:",     loc.properties_path_,
+      "Logs dir:",            loc.logs_dir_,
+      "Fips binary path:",    loc.fips_bin_path_,
+      "Fips conf path:",      loc.fips_conf_path_);
+}
+}  // namespace org::apache::nifi::minifi

@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
 #endif
 
   if (utils::Environment::isRunningAsService()) {
-    setSyslogLogger();
+    minifi::setSyslogLogger();
   }
   auto& logger_configuration = core::logging::LoggerConfiguration::getConfiguration();
   const auto logger = logger_configuration.getLogger("main");
@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 #endif
-  const auto locations = determineLocations(logger);
+  const auto locations = minifi::determineLocations(logger);
   if (!locations) {
     // determineLocations already logged everything we need
     return -1;

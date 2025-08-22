@@ -17,11 +17,14 @@
  */
 
 #include "core/repository/FileSystemRepository.h"
-#include <string>
+
 #include <filesystem>
-#include "io/FileStream.h"
-#include "utils/file/FileUtils.h"
+#include <string>
+
 #include "core/ForwardingContentSession.h"
+#include "io/FileStream.h"
+#include "utils/Locations.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -29,7 +32,7 @@ bool FileSystemRepository::initialize(const std::shared_ptr<Configure>& configur
   if (std::string directory_str; configuration->get(Configure::nifi_dbcontent_repository_directory_default, directory_str) && !directory_str.empty()) {
     directory_ = directory_str;
   } else {
-    directory_ = std::filesystem::current_path().string();
+    directory_ = utils::getMinifiDir();
   }
   utils::file::create_dir(directory_);
   return true;
