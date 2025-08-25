@@ -138,7 +138,6 @@ bool SiteToSiteClient::transferFlowFiles(core::ProcessContext& context, core::Pr
   try {
     while (true) {
       auto start_time = std::chrono::steady_clock::now();
-      std::string payload;
 
       if (!sendFlowFile(transaction, *flow, session)) {
         throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
@@ -512,7 +511,7 @@ bool SiteToSiteClient::sendPacket(const DataPacket& packet) {
   }
 
   uint64_t len = 0;
-  if (packet.payload.length() > 0) {
+  if (!packet.payload.empty()) {
     len = packet.payload.length();
     if (const auto ret = transaction->getStream().write(len); ret != 8) {
       logger_->log_debug("Failed to write payload size!");

@@ -330,7 +330,7 @@ TEST_CASE("Test receiving flow file through site to site", "[S2S]") {
   auto attributes = flow_file->getAttributes();
   REQUIRE(attributes.size() == 3);
   CHECK(attributes["attribute_key"] == "attribute_value");
-  CHECK(attributes.find("filename") != attributes.end());
+  CHECK(attributes.contains("filename"));
   CHECK(attributes["flow.id"] == "test");
   CHECK(test_plan->getContent(flow_file) == "data");
 }

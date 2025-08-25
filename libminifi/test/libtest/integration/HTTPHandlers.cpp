@@ -427,10 +427,10 @@ void HeartbeatHandler::verifyProperties(const rapidjson::Value& operation_node, 
     case minifi::c2::Operation::start:
     case minifi::c2::Operation::stop: {
       auto operands = getOperandsOfProperties(operation_node);
-      REQUIRE(operands.find("c2") != operands.end());
+      REQUIRE(operands.contains("c2"));
       // FlowController is also present, but this handler has no way of knowing its UUID to test it
       for (const auto& component : verify_components) {
-        REQUIRE(operands.find(component) != operands.end());
+        REQUIRE(operands.contains(component));
       }
       break;
     }
