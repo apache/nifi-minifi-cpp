@@ -48,7 +48,7 @@ void SplitRecord::onSchedule(core::ProcessContext& context, core::ProcessSession
 
 nonstd::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file) {
   return context.getProperty(RecordsPerSplit, &original_flow_file)
-      | utils::andThen([](const auto records_per_split_str) {
+      | utils::andThen([](const auto& records_per_split_str) {
             return parsing::parseIntegralMinMax<std::size_t>(records_per_split_str, 1, std::numeric_limits<std::size_t>::max());
           })
       | utils::transformError([](std::error_code) -> std::string { return std::string{"Records Per Split should be set to a number larger than 0"}; });
@@ -68,7 +68,11 @@ void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession&
     return;
   }
 
-  auto record_set = record_set_reader_->read(original_flow_file, session);
+  nonstd::expected<core::RecordSet, std::error_code> record_set;
+  session.read(original_flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) {
+    record_set = record_set_reader_->read(*input_stream);
+    return gsl::narrow<int64_t>(input_stream->size());
+  });
   if (!record_set) {
     logger_->log_error("Failed to read record set from flow file: {}", record_set.error().message());
     session.transfer(original_flow_file, Failure);
