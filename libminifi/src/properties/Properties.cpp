@@ -166,14 +166,14 @@ void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuratio
     return;
   }
 
-  if (!utils::file::exists(getHome() / configuration_file)) {
-    if (utils::file::create_dir((getHome() / configuration_file).parent_path()) == 0) {
-      std::ofstream file{getHome() / configuration_file};
+  if (!utils::file::exists(configuration_file)) {
+    if (utils::file::create_dir(configuration_file.parent_path()) == 0) {
+      std::ofstream file{configuration_file};
     }
   }
 
   std::error_code ec;
-  properties_file_ = std::filesystem::canonical(getHome() / configuration_file, ec);
+  properties_file_ = std::filesystem::canonical(configuration_file, ec);
 
   if (ec.value() != 0) {
     logger_->log_warn("Configuration file '{}' does not exist, and it could not be created", configuration_file);

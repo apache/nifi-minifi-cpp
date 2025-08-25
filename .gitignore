@@ -63,7 +63,7 @@ __pycache__/
 /content_repository
 /provenance_repository
 /logs
-msi/WixWin.wsi
+packaging/msi/WixWin.wsi
 docker/behavex_output
 
 .vs/**

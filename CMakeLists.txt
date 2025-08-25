@@ -41,6 +41,7 @@ include(CMakeDependentOption)
 include(CheckIncludeFile)
 include(FeatureSummary)
 include(ExternalProject)
+include(GNUInstallDirs)
 
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -262,6 +263,10 @@ include(BundledLibSodium)
 use_bundled_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
 
 list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS SODIUM_STATIC=1)
+list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS "RPM_CONFIG_DIR=\"/${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}\"")
+list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS "RPM_LOG_DIR=\"/${CMAKE_INSTALL_LOCALSTATEDIR}/log/${PROJECT_NAME}\"")
+list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS "RPM_WORK_DIR=\"/${CMAKE_INSTALL_LOCALSTATEDIR}/lib/${PROJECT_NAME}\"")
+list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS "RPM_LIB_DIR=\"/usr/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}\"")
 
 # zlib
 include(GetZLIB)
@@ -446,10 +451,9 @@ if(WIN32)
     set(CPACK_COMPONENT_HEADERS_INSTALL_TYPES Developer Full)
     set(CPACK_COMPONENT_APPLICATIONS_INSTALL_TYPES Full)
     set(CPACK_WIX_EXTENSIONS WixUtilExtension)
-    set(CPACK_WIX_UI_BANNER "${CMAKE_CURRENT_SOURCE_DIR}/msi/minifi-logo-png-banner.png")
-    set(CPACK_WIX_UI_DIALOG "${CMAKE_CURRENT_SOURCE_DIR}/msi/bgr.png")
+    set(CPACK_WIX_UI_BANNER "${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/minifi-logo-png-banner.png")
+    set(CPACK_WIX_UI_DIALOG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/bgr.png")
 
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conf/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/conf/")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/fips/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/fips/")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/NOTICE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
@@ -522,15 +526,15 @@ if(WIN32)
 
         if (BUILD_PLATFORM STREQUAL "x64")
             message("Using ${VCRUNTIME_X64_MERGEMODULE_PATH} VC Redistributable Merge Module")
-            configure_file("msi/x64.wsi" "msi/x64.wsi" @ONLY)
-            list(APPEND CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/msi/x64.wsi")
+            configure_file("packaging/msi/x64.wsi" "packaging/msi/x64.wsi" @ONLY)
+            list(APPEND CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/packaging/msi/x64.wsi")
         else()
             message("Using ${VCRUNTIME_X86_MERGEMODULE_PATH} VC Redistributable Merge Module")
-            configure_file("msi/x86.wsi" "msi/x86.wsi" @ONLY)
-            list(APPEND CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/msi/x86.wsi")
+            configure_file("packaging/msi/x86.wsi" "packaging/msi/x86.wsi" @ONLY)
+            list(APPEND CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/packaging/msi/x86.wsi")
         endif()
 
-        file(READ "${CMAKE_CURRENT_SOURCE_DIR}/msi/MergeModulesFeature.xml" WIX_EXTRA_FEATURES)
+        file(READ "${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/MergeModulesFeature.xml" WIX_EXTRA_FEATURES)
     elseif(MINIFI_INCLUDE_VC_REDIST_DLLS)
         message("Creating installer with Visual C++ Redistributable DLLs")
         file(GLOB VC_RUNTIME_X86_REDIST_CRT_DIR_LIST LIST_DIRECTORIES true "${VCRUNTIME_REDIST_DIR}/x86/Microsoft.VC*.CRT")
@@ -553,13 +557,13 @@ if(WIN32)
         else()
             message(FATAL_ERROR "Could not determine architecture, CMAKE_SIZEOF_VOID_P is unexpected: ${CMAKE_SIZEOF_VOID_P}")
         endif()
-        file(READ "${CMAKE_CURRENT_SOURCE_DIR}/msi/VSRedistributablesComponent.xml" WIX_EXTRA_COMPONENTS)
-        file(READ "${CMAKE_CURRENT_SOURCE_DIR}/msi/VSRedistributablesFeature.xml" WIX_EXTRA_FEATURES)
+        file(READ "${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/VSRedistributablesComponent.xml" WIX_EXTRA_COMPONENTS)
+        file(READ "${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/VSRedistributablesFeature.xml" WIX_EXTRA_FEATURES)
     else()
         message("Creating installer without UCRT or VC Redistributable")
     endif()
-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWin.wsi.in" "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWin.wsi")
-    set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWin.wsi")
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/WixWin.wsi.in" "${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/WixWin.wsi")
+    set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/WixWin.wsi")
 else()
     set(CPACK_SOURCE_GENERATOR "TGZ")
 endif(WIN32)
@@ -607,57 +611,90 @@ set(CPACK_SOURCE_IGNORE_FILES
     "\\\\.ropeproject"
 )
 
-# Generate binary assembly. Exclude conf for windows since we'll be doing the work in the WiX template
+add_subdirectory(conf)
+add_subdirectory(bin)
 if (NOT WIN32)
-    install(FILES conf/minifi.properties conf/minifi-log.properties conf/minifi-uid.properties conf/config.yml
-        DESTINATION conf
-        COMPONENT bin)
-
-    install(FILES fips/openssl.cnf fips/README.md
-        DESTINATION fips
-        COMPONENT bin)
-
-    install(DIRECTORY extensions/python/pythonprocessors/
-        DESTINATION minifi-python
-        COMPONENT bin)
-
-    install(DIRECTORY extensions/python/pythonprocessor-examples/
-        DESTINATION minifi-python-examples
-        COMPONENT bin)
-
-    install(PROGRAMS bin/minifi.sh
-            DESTINATION bin
-            COMPONENT bin)
-
-    if (APPLE)
-        install(FILES bin/minifi.plist
-            DESTINATION bin
-            COMPONENT bin)
-    else()
-        install(FILES bin/minifi.service
-                DESTINATION bin
+    if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        message(STATUS "Configuring for FHS/RPM package installation.")
+        install(FILES fips/openssl.cnf
+                DESTINATION /${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}/fips
                 COMPONENT bin)
+        install(DIRECTORY DESTINATION /${CMAKE_INSTALL_LOCALSTATEDIR}/lib/${PROJECT_NAME} COMPONENT bin)
+        install(DIRECTORY DESTINATION /${CMAKE_INSTALL_LOCALSTATEDIR}/log/${PROJECT_NAME} COMPONENT bin)
+        install(DIRECTORY extensions/python/pythonprocessors/
+                DESTINATION /${CMAKE_INSTALL_LOCALSTATEDIR}/lib/${PROJECT_NAME}/minifi-python
+                COMPONENT bin)
+        install(DIRECTORY extensions/python/pythonprocessor-examples/
+                DESTINATION ${CMAKE_INSTALL_DOCDIR}/pythonprocessor-examples
+                COMPONENT bin)
+    elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+        message(STATUS "Configuring for self-contained TGZ package installation.")
+        install(FILES fips/openssl.cnf fips/README.md
+                DESTINATION fips
+                COMPONENT bin)
+        install(DIRECTORY extensions/python/pythonprocessors/
+                DESTINATION minifi-python
+                COMPONENT bin)
+        install(DIRECTORY extensions/python/pythonprocessor-examples/
+                DESTINATION minifi-python-examples
+                COMPONENT bin)
+    else()
+        message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
     endif()
 endif()
 
-install(FILES LICENSE NOTICE
-    DESTINATION .
-    COMPONENT bin)
 file(GLOB markdown_docs "*.md")
-install(FILES ${markdown_docs}
-    DESTINATION .
-    COMPONENT bin)
+if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+    install(FILES LICENSE NOTICE ${markdown_docs}
+            DESTINATION ${CMAKE_INSTALL_DOCDIR}
+            COMPONENT bin)
+    install(FILES fips/README.md
+            DESTINATION ${CMAKE_INSTALL_DOCDIR}
+            RENAME FIPS.md
+            COMPONENT bin)
+elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+    install(FILES LICENSE NOTICE ${markdown_docs}
+            DESTINATION .
+            COMPONENT bin)
+else()
+    message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
+endif()
+
 
 include(CPackComponent)
 
 if (WIN32)
     set(CPACK_GENERATOR "WIX")
     set(CPACK_WIX_UPGRADE_GUID "FE29F801-3486-4E9E-AFF9-838C1A5C8D59")
-    set(CPACK_WIX_PRODUCT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/msi/minifi-logo-ico.ico")
-else()
+    set(CPACK_WIX_PRODUCT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/packaging/msi/minifi-logo-ico.ico")
+elseif(APPLE)
     set(CPACK_GENERATOR "TGZ")
+else()
+    if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        set(CPACK_GENERATOR "RPM")
+        set(CPACK_BINARY_RPM, "ON")
+        set(CPACK_RPM_PACKAGE_NAME "nifi-minifi-cpp")
+        set(CPACK_RPM_PACKAGE_AUTOREQ OFF)
+        set(CPACK_RPM_PACKAGE_REQUIRES "")
+        set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 0)
+        set(CPACK_RPM_SPEC_MORE_DEFINE "%define _build_id_links none")
+        set(CPACK_RPM_COMPONENT_INSTALL ON)
+        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}")
+        set(CPACK_RPM_DEFAULT_USER "minificpp")
+        set(CPACK_RPM_DEFAULT_GROUP "minificpp")
+        set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/packaging/rpm/pre_install.sh")
+        list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/var")
+        list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/var/lib")
+        list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/var/log")
+        list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/usr/lib64/systemd")
+        list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/usr/lib64/systemd/system")
+    elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+        set(CPACK_GENERATOR "TGZ")
+        set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 1)
+    else()
+        message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
+    endif()
 endif()
-set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 1)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Apache NiFi MiNiFi C++ version ${VERSION}")
 set(CPACK_PACKAGE_VENDOR "Apache NiFi")
 # set version information
@@ -669,8 +706,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "${CMAKE_CURRENT_BINARY_DIR
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
 if(NOT WIN32)
     set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
-    set(CPACK_GENERATOR "TGZ")
-    set(CPACK_BINARY_TGZ, "ON")
 else()
     set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}")
 endif()
@@ -731,6 +766,7 @@ if ("python_script_extension" IN_LIST CPACK_COMPONENTS_ALL)
                 FILES "${CMAKE_BINARY_DIR}/bin/minifi_native.so"
                 GROUP extensions
                 DEPENDS bin)
+        set(RPM_EXPECTED_EXTENSION_LIST ${RPM_EXPECTED_EXTENSION_LIST} /usr/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/extensions/minifi_native.so)
     endif()
 endif()
 
@@ -795,3 +831,5 @@ if (MINIFI_ADVANCED_CODE_COVERAGE)
             "controller/MiNiFiController.cpp"
     )
 endif()
+
+add_subdirectory(packaging)
