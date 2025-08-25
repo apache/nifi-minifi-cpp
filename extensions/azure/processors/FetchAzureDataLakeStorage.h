@@ -47,7 +47,6 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessor
       .build();
   EXTENSIONAPI static constexpr auto NumberOfRetries = core::PropertyDefinitionBuilder<>::createProperty("Number of Retries")
       .withDescription("The number of automatic retries to perform if the download fails.")
-      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .supportsExpressionLanguage(true)
       .build();

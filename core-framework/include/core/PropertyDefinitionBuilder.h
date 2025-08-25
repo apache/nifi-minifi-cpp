@@ -99,6 +99,17 @@ struct PropertyDefinitionBuilder {
   }
 
   constexpr PropertyDefinition<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties> build() {
+    if (property.name.size() == 0) {
+      throw std::logic_error("A Property must have a name");
+    }
+    if (property.supports_expression_language) {
+      if (property.allowed_values.size() > 0) {
+        throw std::logic_error("Either supports EL or has allowed values");
+      }
+      if (property.validator != &StandardPropertyValidators::NON_BLANK_VALIDATOR && property.validator != &StandardPropertyValidators::ALWAYS_VALID_VALIDATOR) {
+        throw std::logic_error("Only ALWAYS_VALID_VALIDATOR and NON_BLANK_VALIDATOR has EL support");
+      }
+    }
     return property;
   }
 
