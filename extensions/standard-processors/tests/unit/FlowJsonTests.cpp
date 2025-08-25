@@ -821,7 +821,6 @@ TEST_CASE("Dynamic properties can use parameters") {
   REQUIRE(values->size() == 2);
   CHECK((*values)[0] == "value1");
   CHECK((*values)[1] == "value2");
-  std::string value;
   REQUIRE("value1" == proc->getDynamicProperty("My Dynamic Property"));
 }
 

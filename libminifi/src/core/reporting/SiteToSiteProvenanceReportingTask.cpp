@@ -166,7 +166,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
   logger_->log_debug("Captured {} records", deserialized);
   std::string jsonStr;
   this->getJsonReport(context, session, records, jsonStr);
-  if (jsonStr.length() <= 0) {
+  if (jsonStr.empty()) {
     return;
   }
 

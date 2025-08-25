@@ -108,9 +108,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::getNextPro
 }
 
 void RemoteProcessGroupPort::returnProtocol(core::ProcessContext& context, std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
-  auto count = peers_.size();
-  if (context.getProcessor().getMaxConcurrentTasks() > count)
-    count = context.getProcessor().getMaxConcurrentTasks();
+  auto count = std::max<size_t>(context.getProcessor().getMaxConcurrentTasks(), peers_.size());
   if (available_protocols_.size_approx() >= count) {
     logger_->log_debug("not enqueueing protocol {}", getUUIDStr());
     // let the memory be freed
@@ -158,9 +156,7 @@ void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::Pro
   }
   // populate the site2site protocol for load balancing between them
   if (!peers_.empty()) {
-    auto count = peers_.size();
-    if (context.getProcessor().getMaxConcurrentTasks() > count)
-      count = context.getProcessor().getMaxConcurrentTasks();
+    auto count = std::max<size_t>(context.getProcessor().getMaxConcurrentTasks(), peers_.size());
     for (uint32_t i = 0; i < count; i++) {
       auto peer_status = peers_[peer_index_];
       sitetosite::SiteToSiteClientConfiguration config(peer_status.getPortId(), peer_status.getHost(), peer_status.getPort(), local_network_interface_, client_type_);
@@ -309,7 +305,7 @@ std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::tryRefre
     client->setHTTPProxy(proxy_);
   }
   if (token) {
-    client->setRequestHeader("Authorization", *token);
+    client->setRequestHeader("Authorization", token);
   }
 
   client->setVerbose(false);
@@ -338,7 +334,7 @@ std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::refreshR
   for (const auto& nifi : nifi_instances_) {
     auto result = tryRefreshSiteToSiteInstance(nifi);
     if (result) {
-      return *result;
+      return result;
     }
   }
   return std::nullopt;

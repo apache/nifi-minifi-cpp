@@ -381,7 +381,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(TransferDire
 }
 
 bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, const std::string &payload, const std::map<std::string, std::string>& attributes) {
-  if (payload.length() <= 0) {
+  if (payload.empty()) {
     return false;
   }
 

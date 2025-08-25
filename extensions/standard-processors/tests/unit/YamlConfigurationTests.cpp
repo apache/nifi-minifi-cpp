@@ -2116,7 +2116,6 @@ Parameter Context Name: c-context
   REQUIRE(flow);
   auto* proc = flow->findProcessorByName("DummyProcessor");
   REQUIRE(proc);
-  std::string value;
   REQUIRE("1" == proc->getDynamicProperty("My A Property"));
   REQUIRE("3" == proc->getDynamicProperty("My B Property"));
   REQUIRE("5" == proc->getDynamicProperty("My C Property"));
