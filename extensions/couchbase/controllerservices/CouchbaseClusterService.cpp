@@ -157,9 +157,11 @@ nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(co
       logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' due to timeout", document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
       return nonstd::make_unexpected(CouchbaseErrorType::TEMPORARY);
     }
-    std::string cause = get_err.cause() ? get_err.cause()->message() : "";
     logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' with error code: '{}', message: '{}'", document_id, collection.bucket_name, collection.scope_name,
         collection.collection_name, get_err.ec(), get_err.message());
+    if (get_err.cause()) {
+      logger_->log_error("... root cause error code: '{}', message: '{}'", get_err.cause()->ec(), get_err.cause()->message());
+    }
     return nonstd::make_unexpected(CouchbaseErrorType::FATAL);
   } else {
     try {

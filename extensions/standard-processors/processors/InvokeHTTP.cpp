@@ -159,7 +159,6 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
 
   proxy_.host = context.getProperty(InvokeHTTP::ProxyHost).value_or("");
   proxy_.port = (context.getProperty(InvokeHTTP::ProxyPort) | utils::andThen(parsing::parseIntegral<int>)).value_or(0);
-  std::string port_str;
   proxy_.username = context.getProperty(InvokeHTTP::ProxyUsername).value_or("");
   proxy_.password = context.getProperty(InvokeHTTP::ProxyPassword).value_or("");
 

@@ -46,7 +46,7 @@ std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentials(
   auto service_cred = getAWSCredentialsFromControllerService(context);
   if (service_cred) {
     logger_->log_info("AWS Credentials successfully set from controller service");
-    return service_cred.value();
+    return service_cred;
   }
 
   aws::AWSCredentialsProvider aws_credentials_provider;

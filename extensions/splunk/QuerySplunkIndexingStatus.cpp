@@ -146,8 +146,6 @@ void QuerySplunkIndexingStatus::onSchedule(core::ProcessContext& context, core::
 }
 
 void QuerySplunkIndexingStatus::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
-  std::string ack_request;
-
   auto undetermined_flow_files = getUndeterminedFlowFiles(session, batch_size_);
   if (undetermined_flow_files.empty())
     return;

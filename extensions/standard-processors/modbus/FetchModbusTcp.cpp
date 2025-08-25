@@ -203,7 +203,6 @@ auto FetchModbusTcp::sendRequestsAndReadResponses(utils::net::ConnectionHandlerB
 
 auto FetchModbusTcp::sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
     const ReadModbusFunction& read_modbus_function) -> asio::awaitable<nonstd::expected<core::RecordField, std::error_code>> {
-  std::string result;
   if (auto connection_error = co_await connection_handler.setupUsableSocket(io_context_)) {  // NOLINT (clang tidy doesnt like coroutines)
     co_return nonstd::make_unexpected(connection_error);
   }

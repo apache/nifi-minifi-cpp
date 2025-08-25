@@ -142,7 +142,7 @@ void PushGrafanaLoki::onSchedule(core::ProcessContext& context, core::ProcessSes
   }
 
   if (log_line_batch_wait) {
-    log_batch_.setLogLineBatchWait(*log_line_batch_wait);
+    log_batch_.setLogLineBatchWait(log_line_batch_wait);
     logger_->log_debug("PushGrafanaLoki Log Line Batch Wait is set to {} milliseconds", *log_line_batch_wait);
   }
 }

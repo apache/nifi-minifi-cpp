@@ -44,10 +44,10 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const char *TailFile::CURRENT_STR = "CURRENT.";
-const char *TailFile::POSITION_STR = "POSITION.";
-
 namespace {
+inline constexpr std::string_view CURRENT_STR = "CURRENT.";
+inline constexpr std::string_view POSITION_STR = "POSITION.";
+
 template<typename Container, typename Key>
 bool containsKey(const Container &container, const Key &key) {
   return container.find(key) != container.end();
@@ -364,8 +364,8 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
     logger_->log_debug("Received position {}", position);
     state.begin()->second.position_ = gsl::narrow<uint64_t>(position);
   }
-  if (key.find(CURRENT_STR) == 0) {
-    const auto file = key.substr(strlen(CURRENT_STR));
+  if (key.starts_with(CURRENT_STR)) {
+    const auto file = key.substr(CURRENT_STR.size());
     std::filesystem::path file_path = value;
     if (file_path.has_filename() && file_path.has_parent_path()) {
       state[file].path_ = file_path.parent_path();
@@ -375,8 +375,8 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
     }
   }
 
-  if (key.find(POSITION_STR) == 0) {
-    const auto file = key.substr(strlen(POSITION_STR));
+  if (key.starts_with(POSITION_STR)) {
+    const auto file = key.substr(POSITION_STR.size());
     state[file].position_ = std::stoull(value);
   }
 }

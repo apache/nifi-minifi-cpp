@@ -29,7 +29,7 @@ void SplitRecord::onSchedule(core::ProcessContext& context, core::ProcessSession
 
 nonstd::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file) {
   return context.getProperty(RecordsPerSplit, &original_flow_file)
-      | utils::andThen([](const auto records_per_split_str) {
+      | utils::andThen([](const auto& records_per_split_str) {
             return parsing::parseIntegralMinMax<std::size_t>(records_per_split_str, 1, std::numeric_limits<std::size_t>::max());
           })
       | utils::transformError([](std::error_code) -> std::string { return std::string{"Records Per Split should be set to a number larger than 0"}; });

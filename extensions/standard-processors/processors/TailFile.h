@@ -283,8 +283,6 @@ class TailFile : public core::ProcessorImpl {
   static void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum);
   bool isOldFileInitiallyRead(const TailState &state) const;
 
-  static const char *CURRENT_STR;
-  static const char *POSITION_STR;
   static constexpr int BUFFER_SIZE = 512;
 
   std::optional<char> delimiter_;  // Delimiter for the data incoming from the tailed file.
