@@ -38,6 +38,10 @@ class Relationship {
       : Relationship{std::string{relationship_definition.name}, std::string{relationship_definition.description}} {
   }
 
+  [[nodiscard]] RelationshipDefinition getDefinition() const {
+    return RelationshipDefinition{name_, description_};
+  }
+
   [[nodiscard]] std::string getName() const {
     return name_;
   }
