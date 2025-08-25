@@ -36,7 +36,7 @@ class BulletinStoreTestAccessor {
 };
 
 std::unique_ptr<core::Processor> createDummyProcessor(const std::string& processor_uuid = "4d7fa7e6-2459-46dd-b2ba-61517239edf5") {
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse(processor_uuid).value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse(processor_uuid));
   processor->setProcessGroupUUIDStr("68fa9ae4-b9fc-4873-b0d9-edab59fdb0c2");
   processor->setProcessGroupName("sub_group");
   processor->setProcessGroupPath("root / sub_group");

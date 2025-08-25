@@ -66,7 +66,7 @@ TEST_CASE("Build empty flow status", "[flowstatusbuilder]") {
 TEST_CASE("Build health status for single processor", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5"));
   process_group.addProcessor(std::move(processor));
   flow_status_builder.setRoot(&process_group);
   auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor:4d7fa7e6-2459-46dd-b2ba-61517239edf5:health"}});
@@ -83,7 +83,7 @@ TEST_CASE("Build health status for single processor", "[flowstatusbuilder]") {
 TEST_CASE("Build stats for single processor", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5"));
   processor->getMetrics()->invocations() = 1;
   processor->getMetrics()->incomingFlowFiles() = 2;
   processor->getMetrics()->bytesRead() = 3;
@@ -114,7 +114,7 @@ TEST_CASE("Build stats for single processor", "[flowstatusbuilder]") {
 TEST_CASE("Build bulletins for single processor", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5"));
   auto processor_ptr = processor.get();
   process_group.addProcessor(std::move(processor));
   flow_status_builder.setRoot(&process_group);
@@ -143,8 +143,8 @@ TEST_CASE("Build bulletins for single processor", "[flowstatusbuilder]") {
 TEST_CASE("Build health status for all processors", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor1 = test::utils::make_processor<DummyProcessor>("DummyProcessor1", minifi::utils::Identifier::parse("123fa7e6-2459-46dd-b2ba-61517239edf5").value());
-  auto processor2 = test::utils::make_processor<DummyProcessor>("DummyProcessor2", minifi::utils::Identifier::parse("456fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor1 = test::utils::make_processor<DummyProcessor>("DummyProcessor1", minifi::utils::Identifier::parse("123fa7e6-2459-46dd-b2ba-61517239edf5"));
+  auto processor2 = test::utils::make_processor<DummyProcessor>("DummyProcessor2", minifi::utils::Identifier::parse("456fa7e6-2459-46dd-b2ba-61517239edf5"));
   process_group.addProcessor(std::move(processor1));
   process_group.addProcessor(std::move(processor2));
   flow_status_builder.setRoot(&process_group);
@@ -166,7 +166,7 @@ TEST_CASE("Build health status for all processors", "[flowstatusbuilder]") {
 TEST_CASE("Non-existent processor generates an error", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5"));
   process_group.addProcessor(std::move(processor));
   flow_status_builder.setRoot(&process_group);
   auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor:InvalidProcessor:health"}});
@@ -183,7 +183,7 @@ TEST_CASE("Non-existent processor generates an error", "[flowstatusbuilder]") {
 TEST_CASE("Build processor status with only non-existent options", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5"));
   process_group.addProcessor(std::move(processor));
   flow_status_builder.setRoot(&process_group);
   REQUIRE_THROWS_WITH(flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor:DummyProcessor:invalid1,invalid2"}}), "Invalid query option: invalid1");
@@ -207,7 +207,7 @@ TEST_CASE("Build processor status with invalid option", "[flowstatusbuilder]") {
 TEST_CASE("Building processor status fails with incomplete query", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5"));
   process_group.addProcessor(std::move(processor));
   flow_status_builder.setRoot(&process_group);
   auto status = flow_status_builder.buildFlowStatus({c2::FlowStatusRequest{"processor::"}});
@@ -355,7 +355,7 @@ TEST_CASE("Test invalid instance status options", "[flowstatusbuilder]") {
 TEST_CASE("Build instance health and bulletin list", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor = test::utils::make_processor<DummyProcessor>("DummyProcessor", minifi::utils::Identifier::parse("4d7fa7e6-2459-46dd-b2ba-61517239edf5"));
   auto processor_ptr = processor.get();
   process_group.addProcessor(std::move(processor));
   auto conf = std::make_shared<minifi::ConfigureImpl>();
@@ -394,8 +394,8 @@ TEST_CASE("Build instance health and bulletin list", "[flowstatusbuilder]") {
 TEST_CASE("Build instance stats", "[flowstatusbuilder]") {
   c2::FlowStatusBuilder flow_status_builder;
   core::ProcessGroup process_group(core::ROOT_PROCESS_GROUP, "root");
-  auto processor1 = test::utils::make_processor<DummyProcessor>("DummyProcessor1", minifi::utils::Identifier::parse("123fa7e6-2459-46dd-b2ba-61517239edf5").value());
-  auto processor2 = test::utils::make_processor<DummyProcessor>("DummyProcessor2", minifi::utils::Identifier::parse("456fa7e6-2459-46dd-b2ba-61517239edf5").value());
+  auto processor1 = test::utils::make_processor<DummyProcessor>("DummyProcessor1", minifi::utils::Identifier::parse("123fa7e6-2459-46dd-b2ba-61517239edf5"));
+  auto processor2 = test::utils::make_processor<DummyProcessor>("DummyProcessor2", minifi::utils::Identifier::parse("456fa7e6-2459-46dd-b2ba-61517239edf5"));
   processor1->getMetrics()->bytesRead() = 1;
   processor1->getMetrics()->bytesWritten() = 2;
   processor1->getMetrics()->transferredFlowFiles() = 3;
