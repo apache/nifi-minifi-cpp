@@ -21,7 +21,6 @@
 #include <utility>
 
 #include "core/AbstractProcessor.h"
-#include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
