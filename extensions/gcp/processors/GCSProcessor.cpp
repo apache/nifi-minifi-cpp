@@ -28,11 +28,8 @@ namespace gcs = ::google::cloud::storage;
 namespace org::apache::nifi::minifi::extensions::gcp {
 
 std::shared_ptr<google::cloud::storage::oauth2::Credentials> GCSProcessor::getCredentials(core::ProcessContext& context) const {
-  const std::string service_name = utils::parseProperty(context, GCSProcessor::GCPCredentials);
-  if (!IsNullOrEmpty(service_name)) {
-    auto gcp_credentials_controller_service = std::dynamic_pointer_cast<const GCPCredentialsControllerService>(context.getControllerService(service_name, getUUID()));
-    if (!gcp_credentials_controller_service)
-      return nullptr;
+  auto gcp_credentials_controller_service = utils::parseOptionalControllerService<GCPCredentialsControllerService>(context, GCSProcessor::GCPCredentials, getUUID());
+  if (gcp_credentials_controller_service) {
     return gcp_credentials_controller_service->getCredentials();
   }
   return nullptr;

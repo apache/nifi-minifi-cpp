@@ -17,6 +17,7 @@
  */
 
 #include "PutCouchbaseKey.h"
+#include "CouchbaseClusterService.h"
 #include "utils/gsl.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -24,7 +25,7 @@
 namespace org::apache::nifi::minifi::couchbase::processors {
 
 void PutCouchbaseKey::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  couchbase_cluster_service_ = controllers::CouchbaseClusterService::getFromProperty(context, PutCouchbaseKey::CouchbaseClusterControllerService);
+  couchbase_cluster_service_ = utils::parseControllerService<controllers::CouchbaseClusterService>(context, PutCouchbaseKey::CouchbaseClusterControllerService, context.getProcessorInfo().getUUID());
   document_type_ = utils::parseEnumProperty<CouchbaseValueType>(context, PutCouchbaseKey::DocumentType);
   persist_to_ = utils::parseEnumProperty<::couchbase::persist_to>(context, PutCouchbaseKey::PersistTo);
   replicate_to_ = utils::parseEnumProperty<::couchbase::replicate_to>(context, PutCouchbaseKey::ReplicateTo);

@@ -256,7 +256,6 @@ class TailFile : public core::ProcessorImpl {
     TimePoint mtime_;
   };
 
-  void parseAttributeProviderServiceProperty(const core::ProcessContext& context);
   void parseStateFileLine(char *buf, std::map<std::filesystem::path, TailState> &state) const;
   void processAllRotatedFiles(core::ProcessSession& session, TailState &state);
   void processRotatedFiles(core::ProcessSession& session, TailState &state, std::vector<TailState> &rotated_file_states);
@@ -284,8 +283,6 @@ class TailFile : public core::ProcessorImpl {
   static void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum);
   bool isOldFileInitiallyRead(const TailState &state) const;
 
-  static const char *CURRENT_STR;
-  static const char *POSITION_STR;
   static constexpr int BUFFER_SIZE = 512;
 
   std::optional<char> delimiter_;  // Delimiter for the data incoming from the tailed file.

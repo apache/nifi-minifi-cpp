@@ -37,18 +37,6 @@ void PostElasticsearch::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-auto PostElasticsearch::getSSLContextService(core::ProcessContext& context) const {
-  if (auto ssl_context = context.getProperty(PostElasticsearch::SSLContext))
-    return std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(context.getControllerService(*ssl_context, getUUID()));
-  return std::shared_ptr<minifi::controllers::SSLContextServiceInterface>{};
-}
-
-auto PostElasticsearch::getCredentialsService(core::ProcessContext& context) const {
-  if (auto credentials = context.getProperty(PostElasticsearch::ElasticCredentials))
-    return std::dynamic_pointer_cast<ElasticsearchCredentialsControllerService>(context.getControllerService(*credentials, getUUID()));
-  return std::shared_ptr<ElasticsearchCredentialsControllerService>{};
-}
-
 void PostElasticsearch::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   max_batch_size_ = utils::parseU64Property(context, MaxBatchSize);
   if (max_batch_size_ < 1)
@@ -63,11 +51,12 @@ void PostElasticsearch::onSchedule(core::ProcessContext& context, core::ProcessS
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid hosts");
   }
 
-  credentials_service_ = getCredentialsService(context);
+  credentials_service_ = utils::parseOptionalControllerService<ElasticsearchCredentialsControllerService>(context, PostElasticsearch::ElasticCredentials, getUUID());
   if (!credentials_service_)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing Elasticsearch credentials service");
 
-  client_.initialize(http::HttpRequestMethod::POST, host_url_ + "/_bulk", getSSLContextService(context));
+  auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, PostElasticsearch::SSLContext, getUUID());
+  client_.initialize(http::HttpRequestMethod::POST, host_url_ + "/_bulk", ssl_context_service);
   client_.setContentType("application/json");
   credentials_service_->authenticateClient(client_);
 }

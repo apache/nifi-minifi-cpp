@@ -33,11 +33,10 @@
 namespace org::apache::nifi::minifi::aws::processors {
 
 std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentialsFromControllerService(core::ProcessContext& context) const {
-  if (const auto aws_credentials_service = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID())) {
-    return (*aws_credentials_service)->getAWSCredentials();
+  if (auto service = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID())) {
+    return service->getAWSCredentials();
   }
   logger_->log_error("AWS credentials service could not be found");
-
   return std::nullopt;
 }
 
@@ -47,7 +46,7 @@ std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentials(
   auto service_cred = getAWSCredentialsFromControllerService(context);
   if (service_cred) {
     logger_->log_info("AWS Credentials successfully set from controller service");
-    return service_cred.value();
+    return service_cred;
   }
 
   aws::AWSCredentialsProvider aws_credentials_provider;
@@ -98,6 +97,9 @@ void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
   if (default_ca_file) {
     client_config_->caFile = *default_ca_file;
   }
+
+  // throw here if the credentials provider service is set to an invalid value
+  std::ignore = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID());
 }
 
 std::optional<CommonProperties> AwsProcessor::getCommonELSupportedProperties(
