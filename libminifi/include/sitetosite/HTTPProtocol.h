@@ -125,7 +125,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   static std::optional<utils::Identifier> parseTransactionId(const std::string &uri);
 
-  std::unique_ptr<minifi::http::HTTPClient> create_http_client(const std::string &uri, http::HttpRequestMethod method = http::HttpRequestMethod::POST, bool setPropertyHeaders = false) {
+  std::unique_ptr<minifi::http::HTTPClient> create_http_client(const std::string &uri, http::HttpRequestMethod method = http::HttpRequestMethod::Post, bool setPropertyHeaders = false) {
     std::unique_ptr<minifi::http::HTTPClient> http_client_ = std::make_unique<minifi::http::HTTPClient>(uri, ssl_context_service_);
     http_client_->initialize(method, uri, ssl_context_service_);
     if (setPropertyHeaders) {
