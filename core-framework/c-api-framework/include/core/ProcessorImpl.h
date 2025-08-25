@@ -37,23 +37,8 @@
 #include "utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "core/ProcessorMetadata.h"
-#include "core/ProcessorDescriptor.h"
 #include "core/FlowFile.h"
 #include "utils/StringUtils.h"
-
-#define ADD_GET_PROCESSOR_NAME \
-  std::string getProcessorType() const override { \
-    auto class_name = org::apache::nifi::minifi::core::className<decltype(*this)>(); \
-    auto splitted = org::apache::nifi::minifi::utils::string::split(class_name, "::"); \
-    return splitted[splitted.size() - 1]; \
-  }
-
-#define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS \
-  bool supportsDynamicProperties() const override { return SupportsDynamicProperties; } \
-  bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; } \
-  minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; } \
-  bool isSingleThreaded() const override { return IsSingleThreaded; } \
-  ADD_GET_PROCESSOR_NAME
 
 namespace org::apache::nifi::minifi {
 
@@ -76,16 +61,6 @@ class ProcessorImpl {
 
   virtual ~ProcessorImpl();
 
-  virtual bool isSingleThreaded() const = 0;
-
-  [[nodiscard]]
-  virtual bool supportsDynamicProperties() const = 0;
-
-  [[nodiscard]]
-  virtual bool supportsDynamicRelationships() const = 0;
-
-  virtual std::string getProcessorType() const = 0;
-
   void setTriggerWhenEmpty(bool trigger_when_empty) {
     trigger_when_empty_ = trigger_when_empty;
   }
@@ -94,31 +69,13 @@ class ProcessorImpl {
     return trigger_when_empty_;
   }
 
-  void initialize(ProcessorDescriptor& self);
-
-  void setSupportedRelationships(std::span<const RelationshipDefinition> relationships);
-
-  void setSupportedProperties(std::span<const PropertyReference> properties);
-
-  virtual void initialize() {}
-
   virtual void onTrigger(ProcessContext&, ProcessSession&) {}
 
   virtual void onSchedule(ProcessContext&, ProcessSessionFactory&) {}
 
-  // Hook executed when onSchedule fails (throws). Configuration should be reset in this
-  virtual void onUnSchedule() {
-    notifyStop();
-  }
+  virtual void onUnSchedule() {}
 
-  // Check all incoming connections for work
   virtual bool isWorkAvailable();
-
-  virtual annotation::Input getInputRequirement() const = 0;
-
-  // virtual gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const {
-  //   return metrics_;
-  // }
 
   static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
 
@@ -126,27 +83,19 @@ class ProcessorImpl {
 
   virtual void restore(const std::shared_ptr<FlowFile>& file);
 
-  virtual void forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback);
-
   std::string getName() const;
   utils::Identifier getUUID() const;
   utils::SmallString<36> getUUIDStr() const;
-
-  virtual void notifyStop() {}
 
  protected:
   ProcessorMetadata metadata_;
 
   std::atomic<bool> trigger_when_empty_;
 
-  // gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
-
   std::shared_ptr<logging::Logger> logger_;
 
  private:
   mutable std::mutex mutex_;
-
-  ProcessorDescriptor* descriptor_{nullptr};
 };
 
 }  // namespace core
