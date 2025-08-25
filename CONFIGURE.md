@@ -80,7 +80,7 @@
 The `MINIFI_HOME` environment variable should point to the installation directory, if `MINIFI_HOME` is not defined, MiNiFi will try to infer it from binary's location.
 
 ### Filesystem Hierarchy Standard installation (from .rpm package)
-The `MINIFI_HOME` environment variable should be set to `FHS`, if `MINIFI_HOME` is not defined but the binary is in the `/usr/bin` directory it will try to run as a FHS application.
+The `MINIFI_HOME` environment variable should be set to `FHS`. If `MINIFI_HOME` is not defined but the binary is in the `/usr/bin` directory it will try to run as an FHS application.
 
 
 ## Configuring
@@ -851,7 +851,7 @@ Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned 
 The location for downloaded assets is specified by the `nifi.asset.directory` agent property. The default path depends on the installation mode:
 
 * In a **self-contained (TGZ)** installation, this defaults to **`${MINIFI_HOME}/asset`**.
-* In a **system-wide FHS** installation, the default is **/var/lib/nifi-minifi-cpp/asset**.
+* In a **system-wide FHS** installation, the default is **`/var/lib/nifi-minifi-cpp/asset`**.
 
 The files referenced in the `.state` file in this directory are managed by the agent. They are deleted, updated, downloaded 
 using the asset sync c2 command. For the asset sync command to work, the c2 server must be made aware of the current state of the
