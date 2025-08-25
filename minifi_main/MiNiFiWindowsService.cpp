@@ -69,7 +69,7 @@ void RunAsServiceIfNeeded() {
     {
       serviceNameMutable,
       [](DWORD argc, LPTSTR *argv) {
-        setSyslogLogger();
+        minifi::setSyslogLogger();
 
         Log()->log_trace("ServiceCtrlDispatcher");
 
