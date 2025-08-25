@@ -30,6 +30,7 @@ namespace org::apache::nifi::minifi::core {
 class Record final {
  public:
   Record() = default;
+  Record(core::RecordObject&& record_object) : fields_(std::move(record_object)) {}
   Record(Record&& rhs) noexcept = default;
   Record& operator=(Record&& rhs) noexcept = default;
 
