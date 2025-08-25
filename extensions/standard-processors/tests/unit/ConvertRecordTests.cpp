@@ -23,12 +23,13 @@
 #include "unit/SingleProcessorTestController.h"
 #include "../processors/ConvertRecord.h"
 #include "utils/StringUtils.h"
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("ConvertRecord scheduling fails with invalid reader and writer", "[ConvertRecord]") {
   LogTestController::getInstance().setTrace<processors::ConvertRecord>();
-  SingleProcessorTestController controller(std::make_unique<processors::ConvertRecord>("ConvertRecord"));
+  SingleProcessorTestController controller(utils::make_processor<processors::ConvertRecord>("ConvertRecord"));
   controller.plan->addController("XMLReader", "XMLReader");
 
   REQUIRE_THROWS_WITH(controller.trigger(minifi::test::InputFlowFileData{""}), "Process Schedule Operation: Record Reader property is missing or invalid");
@@ -39,7 +40,7 @@ TEST_CASE("ConvertRecord scheduling fails with invalid reader and writer", "[Con
 
 TEST_CASE("Record conversion fails with read failure", "[ConvertRecord]") {
   LogTestController::getInstance().setTrace<processors::ConvertRecord>();
-  SingleProcessorTestController controller(std::make_unique<processors::ConvertRecord>("ConvertRecord"));
+  SingleProcessorTestController controller(utils::make_processor<processors::ConvertRecord>("ConvertRecord"));
   controller.plan->addController("XMLReader", "XMLReader");
   controller.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
   REQUIRE(controller.getProcessor()->setProperty(processors::ConvertRecord::RecordReader.name, "XMLReader"));
@@ -55,7 +56,7 @@ TEST_CASE("Record conversion fails with read failure", "[ConvertRecord]") {
 }
 
 TEST_CASE("Record conversion succeeds with a single record", "[ConvertRecord]") {
-  SingleProcessorTestController controller(std::make_unique<processors::ConvertRecord>("ConvertRecord"));
+  SingleProcessorTestController controller(utils::make_processor<processors::ConvertRecord>("ConvertRecord"));
   controller.plan->addController("XMLReader", "XMLReader");
   controller.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
   REQUIRE(controller.getProcessor()->setProperty(processors::ConvertRecord::RecordReader.name, "XMLReader"));
@@ -69,7 +70,7 @@ TEST_CASE("Record conversion succeeds with a single record", "[ConvertRecord]") 
 }
 
 TEST_CASE("Empty flow files are not transferred when Include Zero Record Flow Files is false", "[ConvertRecord]") {
-  SingleProcessorTestController controller(std::make_unique<processors::ConvertRecord>("ConvertRecord"));
+  SingleProcessorTestController controller(utils::make_processor<processors::ConvertRecord>("ConvertRecord"));
   controller.plan->addController("XMLReader", "XMLReader");
   controller.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
   REQUIRE(controller.getProcessor()->setProperty(processors::ConvertRecord::RecordReader.name, "XMLReader"));
@@ -82,7 +83,7 @@ TEST_CASE("Empty flow files are not transferred when Include Zero Record Flow Fi
 }
 
 TEST_CASE("Empty flow files are transferred when Include Zero Record Flow Files is true", "[ConvertRecord]") {
-  SingleProcessorTestController controller(std::make_unique<processors::ConvertRecord>("ConvertRecord"));
+  SingleProcessorTestController controller(utils::make_processor<processors::ConvertRecord>("ConvertRecord"));
   controller.plan->addController("XMLReader", "XMLReader");
   controller.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
   REQUIRE(controller.getProcessor()->setProperty(processors::ConvertRecord::RecordReader.name, "XMLReader"));
