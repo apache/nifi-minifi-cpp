@@ -73,7 +73,7 @@ class NifiContainer(FlowContainer):
         super().__init__(feature_context, config_dir, name, 'nifi', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
-        return "Starting Flow Controller"
+        return "Started Application in"
 
     def __create_config(self):
         serializer = Nifi_flow_json_serializer()
