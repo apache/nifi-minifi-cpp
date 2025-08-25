@@ -48,10 +48,10 @@ void ConvertRecord::onSchedule(core::ProcessContext& context, core::ProcessSessi
   include_zero_record_flow_files_ = utils::parseBoolProperty(context, IncludeZeroRecordFlowFiles);
 }
 
-void ConvertRecord::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+void ConvertRecord::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const auto flow_file = session.get();
   if (!flow_file) {
-    yield();
+    context.yield();
     return;
   }
 
