@@ -23,6 +23,7 @@
 #include "core/Resource.h"
 #include "unit/SingleProcessorTestController.h"
 #include "rapidjson/document.h"
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 void verifyXmlJsonResult(const std::string& json_content, size_t expected_record_count, bool add_attributes_as_fields) {
@@ -78,8 +79,8 @@ class TestConsumeMQTTProcessor : public minifi::processors::ConsumeMQTT {
  public:
   using SmartMessage = processors::AbstractMQTTProcessor::SmartMessage;
   using MQTTMessageDeleter = processors::AbstractMQTTProcessor::MQTTMessageDeleter;
-  explicit TestConsumeMQTTProcessor(std::string_view name, const minifi::utils::Identifier& uuid = {})
-      : minifi::processors::ConsumeMQTT(name, uuid) {}
+  explicit TestConsumeMQTTProcessor(minifi::core::ProcessorMetadata metadata)
+      : minifi::processors::ConsumeMQTT(std::move(metadata)) {}
 
   void initializeClient() override {
   }
@@ -97,10 +98,10 @@ REGISTER_RESOURCE(TestConsumeMQTTProcessor, Processor);
 
 struct ConsumeMqttTestFixture {
   ConsumeMqttTestFixture()
-      : test_controller_(std::make_unique<TestConsumeMQTTProcessor>("TestConsumeMQTTProcessor")),
-        consume_mqtt_processor_(dynamic_cast<TestConsumeMQTTProcessor*>(test_controller_.getProcessor())) {
+      : test_controller_(utils::make_processor<TestConsumeMQTTProcessor>("TestConsumeMQTTProcessor")),
+        consume_mqtt_processor_(test_controller_.getProcessor()) {
     REQUIRE(consume_mqtt_processor_ != nullptr);
-    LogTestController::getInstance().setDebug<minifi::processors::ConsumeMQTT>();
+    LogTestController::getInstance().setDebug<TestConsumeMQTTProcessor>();
   }
 
   ConsumeMqttTestFixture(ConsumeMqttTestFixture&&) = delete;
@@ -113,50 +114,50 @@ struct ConsumeMqttTestFixture {
   }
 
   SingleProcessorTestController test_controller_;
-  TestConsumeMQTTProcessor* consume_mqtt_processor_ = nullptr;
+  core::Processor* consume_mqtt_processor_ = nullptr;
 };
 
 using namespace std::literals::chrono_literals;
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_EmptyTopic", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
   REQUIRE_THROWS_WITH(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_),
       Catch::Matchers::EndsWith("Expected valid value from \"TestConsumeMQTTProcessor::Topic\", but got PropertyNotSet (Property Error:2)"));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_EmptyBrokerURI", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
   REQUIRE_THROWS_WITH(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_),
       Catch::Matchers::EndsWith("Expected valid value from \"TestConsumeMQTTProcessor::Broker URI\", but got PropertyNotSet (Property Error:2)"));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithoutID", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession.name, "false"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::CleanSession.name, "false"));
 
   REQUIRE_THROWS_WITH(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_),
     Catch::Matchers::EndsWith("Processor must have a Client ID for durable (non-clean) sessions"));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithoutID_V_5", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
 
   REQUIRE_THROWS_WITH(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_),
                       Catch::Matchers::EndsWith("Processor must have a Client ID for durable (Session Expiry Interval > 0) sessions"));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithID", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession.name, "false"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::CleanSession.name, "false"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
   REQUIRE_FALSE(LogTestController::getInstance().contains("[warning] Messages are not preserved during client disconnection "
@@ -164,11 +165,11 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithID",
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithQoS0", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS.name, "0"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession.name, "false"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "0"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::CleanSession.name, "false"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
 
@@ -177,12 +178,12 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithQoS0
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithID_V_5", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
   REQUIRE_FALSE(LogTestController::getInstance().contains("[warning] Messages are not preserved during client disconnection "
@@ -190,12 +191,12 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithID_V
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithQoS0_V_5", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS.name, "0"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "0"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
 
@@ -204,54 +205,54 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithQoS0
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_EmptyClientID_V_3_1_0", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_3_1_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_3_1_0)}));
   REQUIRE_THROWS_WITH(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_), Catch::Matchers::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_CleanStart_V_3", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::CleanStart.name, "true"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::CleanStart.name, "true"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
   REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Clean Start. Property is not used.", 1s));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_SessionExpiryInterval_V_3", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
   REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Session Expiry Intervals. Property is not used.", 1s));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_CleanSession_V_5", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "0 s"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession.name, "true"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "0 s"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::CleanSession.name, "true"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
   REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 5.0 specification does not support Clean Session. Property is not used.", 1s));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_TopicAliasMaximum_V_3", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::TopicAliasMaximum.name, "1"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::TopicAliasMaximum.name, "1"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
   REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Topic Alias Maximum. Property is not used.", 1s));
 }
 
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_ReceiveMaximum_V_3", "[consumeMQTTTest]") {
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::ReceiveMaximum.name, "1"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::ReceiveMaximum.name, "1"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
   REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Receive Maximum. Property is not used.", 1s));
@@ -260,10 +261,10 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_ReceiveMaximum_V_3", "
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read XML messages and write them to json records", "[consumeMQTTTest]") {
   test_controller_.plan->addController("XMLReader", "XMLReader");
   test_controller_.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::RecordReader.name, "XMLReader"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::RecordWriter.name, "JsonRecordSetWriter"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordReader.name, "XMLReader"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordWriter.name, "JsonRecordSetWriter"));
 
   bool add_attributes_as_fields = true;
   SECTION("Add attributes as fields by default") {
@@ -271,7 +272,7 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read XML messages and write them to js
 
   SECTION("Do not add attributes as fields") {
     add_attributes_as_fields = false;
-    REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::AddAttributesAsFields.name, "false"));
+    REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::AddAttributesAsFields.name, "false"));
   }
 
   const size_t expected_record_count = 2;
@@ -282,7 +283,9 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read XML messages and write them to js
                               .payload = const_cast<char*>(payload.data()), .qos = gsl::narrow<int>(i), .retained = gsl::narrow<int>(i), .dup = gsl::narrow<int>(i),
                               .msgid = gsl::narrow<int>(i + 1), .properties = {}}),
       std::string{"mytopic/segment/" + std::to_string(i)}};
-    consume_mqtt_processor_->enqueueReceivedMQTTMsg(std::move(message));
+
+    auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
+    test_processor.enqueueReceivedMQTTMsg(std::move(message));
   }
   const auto trigger_results = test_controller_.trigger();
   CHECK(trigger_results.at(TestConsumeMQTTProcessor::Success).size() == 1);
@@ -298,10 +301,10 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read XML messages and write them to js
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "Invalid XML payload does not result in new flow files", "[consumeMQTTTest]") {
   test_controller_.plan->addController("XMLReader", "XMLReader");
   test_controller_.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::RecordReader.name, "XMLReader"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::RecordWriter.name, "JsonRecordSetWriter"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordReader.name, "XMLReader"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordWriter.name, "JsonRecordSetWriter"));
 
   const std::string payload = "invalid xml payload";
   TestConsumeMQTTProcessor::SmartMessage message{
@@ -309,7 +312,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Invalid XML payload does not result in
       new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = 1, .payloadlen = gsl::narrow<int>(payload.size()),
                             .payload = const_cast<char*>(payload.data()), .qos = 1, .retained = 0, .dup = 0, .msgid = 42, .properties = {}}),
     std::string{"mytopic"}};
-  consume_mqtt_processor_->enqueueReceivedMQTTMsg(std::move(message));
+  auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
+  test_processor.enqueueReceivedMQTTMsg(std::move(message));
 
   const auto trigger_results = test_controller_.trigger();
   CHECK(trigger_results.at(TestConsumeMQTTProcessor::Success).empty());
@@ -340,8 +344,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read MQTT message and write it to a fl
     topic = "mytopic/";
   }
 
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
 
   const size_t expected_flow_file_count = 2;
   const std::string payload = "test MQTT payload";
@@ -350,7 +354,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read MQTT message and write it to a fl
         new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = 1, .payloadlen = gsl::narrow<int>(payload.size()),
                               .payload = const_cast<char*>(payload.data()), .qos = 1, .retained = 0, .dup = 0, .msgid = 42, .properties = {}}),
       std::string{topic}};
-    consume_mqtt_processor_->enqueueReceivedMQTTMsg(std::move(message));
+    auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
+    test_processor.enqueueReceivedMQTTMsg(std::move(message));
   }
   const auto trigger_results = test_controller_.trigger();
   CHECK(trigger_results.at(TestConsumeMQTTProcessor::Success).size() == expected_flow_file_count);
@@ -373,17 +378,17 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read MQTT message and write it to a fl
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "Test scheduling failure if non-existent recordset reader or writer is set", "[consumeMQTTTest]") {
   test_controller_.plan->addController("XMLReader", "XMLReader");
   test_controller_.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
   SECTION("RecordReader is set to invalid controller service") {
-    REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::RecordReader.name, "invalid_reader"));
-    REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::RecordWriter.name, "JsonRecordSetWriter"));
+    REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordReader.name, "invalid_reader"));
+    REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordWriter.name, "JsonRecordSetWriter"));
     REQUIRE_THROWS_WITH(test_controller_.trigger(), Catch::Matchers::EndsWith("'Record Reader' property is set to invalid controller service 'invalid_reader'"));
   }
 
   SECTION("RecordWriter is set to invalid controller service") {
-    REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::RecordReader.name, "XMLReader"));
-    REQUIRE(consume_mqtt_processor_->setProperty(minifi::processors::ConsumeMQTT::RecordWriter.name, "invalid_writer"));
+    REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordReader.name, "XMLReader"));
+    REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordWriter.name, "invalid_writer"));
     REQUIRE_THROWS_WITH(test_controller_.trigger(), Catch::Matchers::EndsWith("'Record Writer' property is set to invalid controller service 'invalid_writer'"));
   }
 }
