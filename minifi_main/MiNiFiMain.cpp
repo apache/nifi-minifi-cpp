@@ -305,7 +305,6 @@ int main(int argc, char **argv) {
   do {
     flow_controller_running.test_and_set();
 
-    std::string graceful_shutdown_seconds;
     std::string prov_repo_class = "provenancerepository";
     std::string flow_repo_class = "flowfilerepository";
     std::string nifi_configuration_class_name = "adaptiveconfiguration";

@@ -26,16 +26,16 @@ namespace org::apache::nifi::minifi::utils {
 inline std::string getDefaultExtensionsPattern() {
   constexpr std::string_view DEFAULT_EXTENSION_PATH = "../extensions/*";
   constexpr std::string_view DEFAULT_EXTENSION_PATH_RPM = RPM_LIB_DIR "/extensions/*";
-  if (Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY.data()) == MINIFI_HOME_ENV_VALUE_FHS || file::get_executable_path().parent_path() == "/usr/bin") {
+  if (Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str()) == MINIFI_HOME_ENV_VALUE_FHS || file::get_executable_path().parent_path() == "/usr/bin") {
     return std::string(DEFAULT_EXTENSION_PATH_RPM);
   }
   return std::string(DEFAULT_EXTENSION_PATH);
 }
 
 inline std::filesystem::path getMinifiDir() {
-  if (Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY.data()) == MINIFI_HOME_ENV_VALUE_FHS || file::get_executable_path().parent_path() == "/usr/bin") {
+  if (Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str()) == MINIFI_HOME_ENV_VALUE_FHS || file::get_executable_path().parent_path() == "/usr/bin") {
     return RPM_WORK_DIR;
   }
-  return Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY.data()).value_or("");
+  return Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str()).value_or("");
 }
 }  // namespace org::apache::nifi::minifi::utils

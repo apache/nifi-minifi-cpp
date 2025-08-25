@@ -102,10 +102,10 @@ bool LogTestController::contains(const std::string& ending, std::chrono::millise
 }
 
 bool LogTestController::contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) {
-  if (ending.length() == 0) {
+  if (ending.empty()) {
     return false;
   }
-  auto start = std::chrono::steady_clock::now();
+  const auto start = std::chrono::steady_clock::now();
   bool found = false;
   bool timed_out = false;
   do {
@@ -122,7 +122,7 @@ bool LogTestController::contains(const std::function<std::string()>& log_string_
 }
 
 std::optional<std::smatch> LogTestController::matchesRegex(const std::string& regex_str, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
-  if (regex_str.length() == 0) {
+  if (regex_str.empty()) {
     return std::nullopt;
   }
   auto start = std::chrono::steady_clock::now();
@@ -548,7 +548,7 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
     verify(context, current_session);
     current_session->commit();
   } else {
-    auto session_factory = std::make_shared<TestSessionFactory>(context, [&] (auto current_session) {
+    const auto session_factory = std::make_shared<TestSessionFactory>(context, [&] (const auto& current_session) {
       current_session->setMetrics(processor->getMetrics());
       process_sessions_.push_back(current_session);
     });
