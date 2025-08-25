@@ -75,7 +75,7 @@ bool updateFlow(const utils::net::SocketData& socket_data, std::ostream &out, co
     uint16_t connections = 0;
     connection_stream->read(connections);
     out << connections << " are full" << std::endl;
-    for (int i = 0; i < connections; i++) {
+    for (uint16_t i = 0; i < connections; i++) {
       std::string fullcomponent;
       connection_stream->read(fullcomponent);
       out << fullcomponent << " is full" << std::endl;
@@ -103,7 +103,7 @@ bool getFullConnections(const utils::net::SocketData& socket_data, std::ostream 
     uint16_t connections = 0;
     connection_stream->read(connections);
     out << connections << " are full" << std::endl;
-    for (int i = 0; i < connections; i++) {
+    for (uint16_t i = 0; i < connections; i++) {
       std::string fullcomponent;
       connection_stream->read(fullcomponent);
       out << fullcomponent << " is full" << std::endl;
@@ -154,7 +154,7 @@ bool listComponents(const utils::net::SocketData& socket_data, std::ostream &out
   if (show_header)
     out << "Components:" << std::endl;
 
-  for (int i = 0; i < responses; i++) {
+  for (uint16_t i = 0; i < responses; i++) {
     std::string name;
     connection_stream->read(name, false);
     std::string status;
@@ -182,7 +182,7 @@ bool listConnections(const utils::net::SocketData& socket_data, std::ostream &ou
   if (show_header)
     out << "Connection Names:" << std::endl;
 
-  for (int i = 0; i < responses; i++) {
+  for (uint16_t i = 0; i < responses; i++) {
     std::string name;
     connection_stream->read(name, false);
     out << name << std::endl;
