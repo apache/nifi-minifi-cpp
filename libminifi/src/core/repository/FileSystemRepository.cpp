@@ -32,7 +32,7 @@ bool FileSystemRepository::initialize(const std::shared_ptr<Configure>& configur
   if (std::string directory_str; configuration->get(Configure::nifi_dbcontent_repository_directory_default, directory_str) && !directory_str.empty()) {
     directory_ = directory_str;
   } else {
-    directory_ = utils::getMinifiDir();
+    directory_ = utils::getMinifiDir().string();
   }
   utils::file::create_dir(directory_);
   return true;
