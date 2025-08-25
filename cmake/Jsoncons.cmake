@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,23 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
+include(FetchContent)
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+set(JSONCONS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
-file(GLOB SOURCES "processors/*.cpp" "controllers/*.cpp" "utils/*.cpp" "modbus/*.cpp")
+FetchContent_Declare(jsoncons
+        URL      https://github.com/danielaparker/jsoncons/archive/refs/tags/v1.3.2.tar.gz
+        URL_HASH SHA256=f22fb163df1a12c2f9ee5f95cad9fc37c6cfbefe0ae6f30aba7440832ef70fbe
+        )
 
-add_minifi_library(minifi-standard-processors SHARED ${SOURCES})
-target_include_directories(minifi-standard-processors PUBLIC "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
-
-include(RangeV3)
-include(Asio)
-include(Jsoncons)
-target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3 asio jsoncons)
-
-include(Coroutines)
-enable_coroutines()
-
-register_extension(minifi-standard-processors "STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors" "extensions/standard-processors/tests/")
-
+FetchContent_MakeAvailable(jsoncons)
