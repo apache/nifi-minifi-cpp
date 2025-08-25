@@ -32,6 +32,7 @@
 #include "core/state/MetricsPublisherStore.h"
 #include "utils/gsl.h"
 #include "core/logging/Logger.h"
+#include "c2/ControllerSocketProtocol.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -77,6 +78,10 @@ class RootProcessGroupWrapper {
   std::optional<std::vector<state::StateController*>> getAllProcessorControllers(
           const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory);
 
+  void setControllerSocketProtocol(c2::ControllerSocketProtocol* controller_socket_protocol) {
+    controller_socket_protocol_ = controller_socket_protocol;
+  }
+
  private:
   std::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
@@ -86,6 +91,7 @@ class RootProcessGroupWrapper {
   state::MetricsPublisherStore* metrics_publisher_store_{};
   std::unordered_map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
   std::chrono::milliseconds shutdown_check_interval_{1000};
+  c2::ControllerSocketProtocol* controller_socket_protocol_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RootProcessGroupWrapper>::getLogger();
 };
 

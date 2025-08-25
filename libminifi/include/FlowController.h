@@ -61,6 +61,7 @@
 #include "core/state/MetricsPublisherStore.h"
 #include "RootProcessGroupWrapper.h"
 #include "c2/ControllerSocketProtocol.h"
+#include "core/BulletinStore.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -74,7 +75,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
                  std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
                  std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store = nullptr,
                  std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(), std::function<void()> request_restart = []{},
-                 utils::file::AssetManager* asset_manager = {});
+                 utils::file::AssetManager* asset_manager = {}, core::BulletinStore* bulletin_store = {});
 
   ~FlowController() override;
 
