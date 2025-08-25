@@ -29,7 +29,6 @@
 #include <string_view>
 #include "core/ClassName.h"
 #include "utils/minifi-c-utils.h"
-#include "core/ProcessorDescriptor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
@@ -54,7 +53,6 @@ class StaticClassType {
     std::vector<std::vector<MinifiStringView>> string_vector_cache;
 
     const auto full_name = utils::classNameWithDots<Class>();
-    const auto internal_name = core::className<Class>();
 
     std::vector<MinifiProperty> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
     std::vector<MinifiDynamicProperty> dynamic_properties;
@@ -94,9 +92,7 @@ class StaticClassType {
 
     MinifiProcessorClassDescription proc_description{
       .module_name = utils::toStringView(module_name),
-      .short_name = utils::toStringView(class_name),
       .full_name = utils::toStringView(full_name),
-      .internal_name = utils::toStringView(internal_name),
       .description = utils::toStringView(Class::Description),
       .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
       .class_properties_ptr = class_properties.data(),
@@ -128,23 +124,6 @@ class StaticClassType {
         .restore = [] (void* self, OWNED MinifiFlowFile ff) -> void {
           static_cast<Class*>(self)->restore(std::make_shared<FlowFile>(ff));
         },
-        .supportsDynamicProperties = [] (void* self) -> MinifiBool {
-          return static_cast<Class*>(self)->supportsDynamicProperties() ? MINIFI_TRUE : MINIFI_FALSE;
-        },
-        .supportsDynamicRelationships = [] (void* self) -> MinifiBool {
-          return static_cast<Class*>(self)->supportsDynamicRelationships() ? MINIFI_TRUE : MINIFI_FALSE;
-        },
-        .initialize = [] (void* self, MinifiProcessorDescriptor descriptor) -> void {
-          ProcessorDescriptor wrapper(descriptor);
-          static_cast<Class*>(self)->initialize(wrapper);
-        },
-        .isSingleThreaded = [] (void* self) -> MinifiBool {
-          return static_cast<Class*>(self)->isSingleThreaded() ? MINIFI_TRUE : MINIFI_FALSE;
-        },
-        .getProcessorType = [] (void* self) -> OWNED MinifiString {
-          auto type = static_cast<Class*>(self)->getProcessorType();
-          return MinifiCreateString(utils::toStringView(type));
-        },
         .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
           return static_cast<Class*>(self)->getTriggerWhenEmpty() ? MINIFI_TRUE : MINIFI_FALSE;
         },
@@ -170,23 +149,6 @@ class StaticClassType {
         },
         .onUnSchedule = [] (void* self) -> void {
           static_cast<Class*>(self)->onUnSchedule();
-        },
-        .notifyStop = [] (void* self) -> void {
-          static_cast<Class*>(self)->notifyStop();
-        },
-        .getInputRequirement = [] (void* self) -> MinifiInputRequirement {
-          return utils::toInputRequirement(static_cast<Class*>(self)->getInputRequirement());
-        },
-        .serializeMetrics = [] (void* /*self*/, MinifiSerializedResponseNodeVec) -> void {
-          // pass
-        },
-        .calculateMetrics = [] (void* /*self*/, MinifiPublishedMetricVec) -> void {
-
-        },
-        .forEachLogger = [] (void* self, MinifiLoggerCallback cb) -> void {
-          static_cast<Class*>(self)->forEachLogger([&] (std::shared_ptr<logging::Logger> logger) {
-            MinifiMinifiLoggerCallbackCall(cb, logger->getImpl());
-          });
         }
       }
     };

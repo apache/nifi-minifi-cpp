@@ -65,25 +65,4 @@ utils::SmallString<36> ProcessorImpl::getUUIDStr() const {
   return getUUID().to_string();
 }
 
-void ProcessorImpl::initialize(ProcessorDescriptor& self) {
-  gsl_Expects(!descriptor_);
-  descriptor_ = &self;
-  auto guard = gsl::finally([&] {descriptor_ = nullptr;});
-  initialize();
-}
-
-void ProcessorImpl::setSupportedRelationships(std::span<const RelationshipDefinition> relationships) {
-  gsl_Expects(descriptor_);
-  descriptor_->setSupportedRelationships(relationships);
-}
-
-void ProcessorImpl::setSupportedProperties(std::span<const PropertyReference> properties) {
-  gsl_Expects(descriptor_);
-  descriptor_->setSupportedProperties(properties);
-}
-
-void ProcessorImpl::forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) {
-  callback(logger_);
-}
-
 }  // namespace org::apache::nifi::minifi::core
