@@ -306,7 +306,7 @@ TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
 }
 
 TEST_CASE("GetTCP EL supported validated properties tests", "[GetTCP, Property]") {
-  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "10"));
