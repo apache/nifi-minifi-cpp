@@ -40,7 +40,7 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<core::logging::L
   /* Try to determine MINIFI_HOME */
   std::filesystem::path minifi_home = [&logger]() -> std::filesystem::path {
     /* If MINIFI_HOME is set as an environment variable, we will use that */
-    auto minifi_home_env_value = utils::Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY.data());
+    auto minifi_home_env_value = utils::Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str());
     if (minifi_home_env_value) {
       logger->log_info("Found {}={} in environment", MINIFI_HOME_ENV_KEY, *minifi_home_env_value);
       return *minifi_home_env_value;
@@ -106,7 +106,7 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<core::logging::L
 
   /* Set the valid MINIFI_HOME in our environment */
   logger->log_info("Using {}={}", MINIFI_HOME_ENV_KEY, minifi_home);
-  utils::Environment::setEnvironmentVariable(MINIFI_HOME_ENV_KEY.data(), minifi_home.string().c_str());
+  utils::Environment::setEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str(), minifi_home.string().c_str());
 
   return minifi_home;
 }
@@ -138,7 +138,7 @@ Locations getFromFHS() {
 }
 
 std::optional<Locations> determineLocations(const std::shared_ptr<core::logging::Logger>& logger) {
-  if (const auto minifi_home_env = utils::Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY.data())) {
+  if (const auto minifi_home_env = utils::Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str())) {
     if (minifi_home_env == MINIFI_HOME_ENV_VALUE_FHS) {
       return getFromFHS();
     }
