@@ -287,7 +287,7 @@ ${WIX_EXTRA_FEATURES}
     </InstallExecuteSequence>
 
     <InstallExecuteSequence>
-      <Custom Action="RemoveSymbolicLink" After="InstallInitialize">Installed AND NOT REINSTALL</Custom>
+      <Custom Action="RemoveSymbolicLink" After="ProcessComponents">REMOVE="ALL"</Custom>
     </InstallExecuteSequence>
   </Product>
 
