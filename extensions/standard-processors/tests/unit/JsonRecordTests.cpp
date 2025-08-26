@@ -80,9 +80,9 @@ constexpr std::string_view array_pretty_str = R"([
 
 bool testJsonEquality(const std::string_view expected_str, const std::string_view actual_str) {
   rapidjson::Document expected;
-  expected.Parse(expected_str.data());
+  expected.Parse(expected_str.data(), expected_str.size());
   rapidjson::Document actual;
-  actual.Parse(actual_str.data());
+  actual.Parse(actual_str.data(), actual_str.size());
   return actual == expected;
 }
 
@@ -100,7 +100,7 @@ TEST_CASE("JsonRecordSetWriter tests") {
   CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::OutputGrouping.name, output_grouping));
   CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::PrettyPrint.name, prety_print));
   json_record_set_writer.onEnable();
-  CHECK(core::test::testRecordWriter(json_record_set_writer, record_set, [expected = output_str](auto serialized_record_set) -> bool {
+  CHECK(core::test::testRecordWriter(json_record_set_writer, record_set, [expected = output_str](const auto& serialized_record_set) -> bool {
     return testJsonEquality(expected, serialized_record_set);
   }));
 }
