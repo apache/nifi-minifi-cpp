@@ -17,7 +17,8 @@
  */
 #pragma once
 
-#include <vector>
+#include <array>
+#include <string_view>
 #include "minifi-c.h"
 
 namespace org::apache::nifi::minifi::core {
