@@ -102,6 +102,7 @@ class ProcessorImpl : public virtual ProcessorApi {
   void setSupportedRelationships(std::span<const RelationshipDefinition> relationships);
 
   void setSupportedProperties(std::span<const PropertyReference> properties);
+  void setSupportedProperties(std::span<const Property> properties);
 
   virtual void initialize() {}
 

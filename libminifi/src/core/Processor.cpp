@@ -374,6 +374,10 @@ class ProcessorDescriptorImpl : public ProcessorDescriptor {
     impl_->setSupportedProperties(properties);
   }
 
+  void setSupportedProperties(std::span<const Property> properties) override {
+    impl_->setSupportedProperties(properties);
+  }
+
  private:
   Processor* impl_;
 };

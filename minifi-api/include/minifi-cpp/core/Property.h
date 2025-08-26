@@ -73,9 +73,6 @@ class Property final {
   std::vector<std::string> getDependentProperties() const;
   std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
   std::vector<std::string> getValues();
-  PropertyReference getReference() const {
-    return PropertyReference(name_, display_name_, description_, is_required_, is_sensitive_, {}, {}, {}, {}, default_value_, validator_, supports_el_);
-  }
 
   void setSupportsExpressionLanguage(bool supportEl);
 

@@ -56,9 +56,15 @@ void ExecutePythonProcessor::initializeScript() {
 
 void ExecutePythonProcessor::initialize() {
   initializeScript();
-  std::vector<core::PropertyReference> all_properties{Properties.begin(), Properties.end()};
-  ranges::transform(python_properties_, std::back_inserter(all_properties), &core::Property::getReference);
-  setSupportedProperties(all_properties);
+  std::vector<core::Property> properties;
+  for (auto& property : Properties) {
+    properties.emplace_back(property);
+  }
+  for (auto& python_relationship : python_properties_) {
+    properties.emplace_back(python_relationship);
+  }
+
+  setSupportedProperties(gsl::make_span(properties));
   setSupportedRelationships(Relationships);
   logger_->log_debug("Processor has been initialized.");
 }
