@@ -145,7 +145,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithoutI
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
-  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name,
+    std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
 
   REQUIRE_THROWS_WITH(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_),
@@ -182,7 +183,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithID_V
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
-  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name,
+    std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
@@ -195,7 +197,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithQoS0
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::QoS.name, "0"));
-  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name,
+    std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
 
   REQUIRE_NOTHROW(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_));
@@ -207,7 +210,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_DurableSessionWithQoS0
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_EmptyClientID_V_3_1_0", "[consumeMQTTTest]") {
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_3_1_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name,
+    std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_3_1_0)}));
   REQUIRE_THROWS_WITH(test_controller_.plan->scheduleProcessor(consume_mqtt_processor_), Catch::Matchers::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
 }
 
@@ -232,7 +236,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_SessionExpiryInterval_
 TEST_CASE_METHOD(ConsumeMqttTestFixture, "ConsumeMQTTTest_CleanSession_V_5", "[consumeMQTTTest]") {
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
+  REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::AbstractMQTTProcessor::MqttVersion.name,
+    std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "0 s"));
   REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::CleanSession.name, "true"));
 
@@ -282,7 +287,7 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read XML messages and write them to js
         new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = gsl::narrow<int>(i), .payloadlen = gsl::narrow<int>(payload.size()),
                               .payload = const_cast<char*>(payload.data()), .qos = gsl::narrow<int>(i), .retained = gsl::narrow<int>(i), .dup = gsl::narrow<int>(i),
                               .msgid = gsl::narrow<int>(i + 1), .properties = {}}),
-      std::string{"mytopic/segment/" + std::to_string(i)}};
+      std::string{"mytopic/segment/" + std::to_string(i)}};  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 
     auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
     test_processor.enqueueReceivedMQTTMsg(std::move(message));
@@ -311,7 +316,7 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Invalid XML payload does not result in
     std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(
       new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = 1, .payloadlen = gsl::narrow<int>(payload.size()),
                             .payload = const_cast<char*>(payload.data()), .qos = 1, .retained = 0, .dup = 0, .msgid = 42, .properties = {}}),
-    std::string{"mytopic"}};
+    std::string{"mytopic"}};  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
   auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
   test_processor.enqueueReceivedMQTTMsg(std::move(message));
 
@@ -353,7 +358,7 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read MQTT message and write it to a fl
     TestConsumeMQTTProcessor::SmartMessage message{std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(
         new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = 1, .payloadlen = gsl::narrow<int>(payload.size()),
                               .payload = const_cast<char*>(payload.data()), .qos = 1, .retained = 0, .dup = 0, .msgid = 42, .properties = {}}),
-      std::string{topic}};
+      std::string{topic}};  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
     auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
     test_processor.enqueueReceivedMQTTMsg(std::move(message));
   }
