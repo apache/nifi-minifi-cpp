@@ -293,7 +293,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And an input port using compression with name "to_nifi" is created on the RemoteProcessGroup named "RemoteProcessGroup"
     And the "success" relationship of the GetFile processor is connected to the to_nifi
 
-    And a NiFi flow is receiving data in an input port named "from-minifi" with the id of the port named "to_nifi" from the RemoteProcessGroup named "RemoteProcessGroup"
+    And a NiFi flow is receiving data from the RemoteProcessGroup named "RemoteProcessGroup" in an input port named "from-minifi" which has the same id as the port named "to_nifi"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
@@ -309,7 +309,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And an input port using compression with name "to_nifi" is created on the RemoteProcessGroup named "RemoteProcessGroup"
     And the "success" relationship of the GetFile processor is connected to the to_nifi
 
-    And a NiFi flow is receiving data in an input port named "from-minifi" with the id of the port named "to_nifi" from the RemoteProcessGroup named "RemoteProcessGroup"
+    And a NiFi flow is receiving data from the RemoteProcessGroup named "RemoteProcessGroup" in an input port named "from-minifi" which has the same id as the port named "to_nifi"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
     And the "success" relationship of the from-minifi is connected to the PutFile
 
