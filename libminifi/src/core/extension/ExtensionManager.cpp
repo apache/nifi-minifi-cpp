@@ -81,11 +81,15 @@ bool ExtensionManagerImpl::initialize(const std::shared_ptr<Configure>& config) 
       if (!library) {
         continue;
       }
-      if (!library->verify(logger_)) {
-        logger_->log_warn("Skipping library '{}' at '{}': failed verification",
+      const auto library_type = library->verify(logger_);
+      if (library_type == internal::Invalid) {
+        logger_->log_warn("Skipping library '{}' at '{}': failed verification, different build?",
             library->name, library->getFullPath());
         continue;
       }
+
+      logger_->log_trace("Verified library {} at {} as {} extension", library->name, library->getFullPath(), magic_enum::enum_name(library_type));
+
       auto module = std::make_unique<DynamicLibrary>(library->name, library->getFullPath());
       active_module_ = module.get();
       if (!module->load()) {
@@ -103,6 +107,7 @@ bool ExtensionManagerImpl::initialize(const std::shared_ptr<Configure>& config) 
       if (!module->initialize(config)) {
         logger_->log_error("Failed to initialize module '{}' at '{}'", library->name, library->getFullPath());
       } else {
+        logger_->log_trace("Successfully initialized extension '{}' at '{}'", library->name, library->getFullPath());
         modules_.push_back(std::move(module));
       }
     }
