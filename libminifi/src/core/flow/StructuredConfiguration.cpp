@@ -927,7 +927,8 @@ void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, c
     // We currently propagate properties to the ControllerServiceNode wrapper and to the actual ControllerService.
     // This could cause false positive warnings because the Node should only handle the linked services while implementation should contain everything else
     // We should probably remove the nodes and handle the linked services concept inside the impls
-    if (is_controller_service_node == is_linked_services) {
+    // Only parse the property if both are true or both are false (i.e., not mixing controller service node and linked services)
+    if ((is_controller_service_node && is_linked_services) || (!is_controller_service_node && !is_linked_services)) {
       parsePropertyNodeElement(propertyName, propertyValueNode, component, parameter_context);
     }
   }
