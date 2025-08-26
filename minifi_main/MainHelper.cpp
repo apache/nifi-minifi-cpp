@@ -142,7 +142,14 @@ std::optional<Locations> determineLocations(const std::shared_ptr<core::logging:
     if (minifi_home_env == MINIFI_HOME_ENV_VALUE_FHS) {
       return getFromFHS();
     }
+    const auto minifi_home = determineMinifiHome(logger);
+    if (minifi_home.empty()) {
+      return std::nullopt;
+    }
+    return getFromMinifiHome(minifi_home);
   }
+
+
   if (const auto executable_path = utils::file::get_executable_path(); executable_path.parent_path() == "/usr/bin") {
     return getFromFHS();
   }
