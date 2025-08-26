@@ -53,7 +53,15 @@ TEST_CASE_METHOD(Fixture, "Could load extension with matching build id") {
 
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
-  REQUIRE(lib->verify(logger));
+  CHECK(lib->verify(logger) == core::extension::internal::Cpp);
+}
+
+TEST_CASE_METHOD(Fixture, "Could load extension with matching C api") {
+  std::ofstream{extension_} << MINIFI_API_VERSION_TAG;
+
+  auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
+  REQUIRE(lib);
+  CHECK(lib->verify(logger) == core::extension::internal::CApi);
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the build id begin marker is missing") {
@@ -62,7 +70,7 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the build id begin marker is 
 
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
-  REQUIRE_FALSE(lib->verify(logger));
+  CHECK(lib->verify(logger) == core::extension::internal::Invalid);
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the build id end marker is missing") {
@@ -71,7 +79,7 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the build id end marker is mi
 
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
-  REQUIRE_FALSE(lib->verify(logger));
+  CHECK(lib->verify(logger) == core::extension::internal::Invalid);
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the build id does not match") {
@@ -80,7 +88,7 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the build id does not match")
 
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
-  REQUIRE_FALSE(lib->verify(logger));
+  CHECK(lib->verify(logger) == core::extension::internal::Invalid);
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the file does not exist") {
@@ -94,5 +102,5 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the file has zero length") {
 
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
-  REQUIRE_FALSE(lib->verify(logger));
+  CHECK(lib->verify(logger) == core::extension::internal::Invalid);
 }
