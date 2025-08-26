@@ -80,7 +80,7 @@ std::shared_ptr<sitetosite::Transaction> HttpSiteToSiteClient::createTransaction
         }
 
         transaction_client->setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
-        peer_->setStream(std::unique_ptr<io::BaseStream>(new http::HttpStream(transaction_client)));
+        peer_->setStream(std::make_unique<http::HttpStream>(transaction_client));
         logger_->log_debug("Created transaction id -{}-", transaction->getUUID().to_string());
         known_transactions_[transaction->getUUID()] = transaction;
         return transaction;
@@ -235,9 +235,7 @@ void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transaction
     return;
   }
 
-  std::string append_str;
   logger_->log_trace("Site to Site closing transaction {}", transaction->getUUIDStr());
-
 
   bool data_received = transaction->getDirection() == sitetosite::RECEIVE && (current_code == sitetosite::CONFIRM_TRANSACTION || current_code == sitetosite::TRANSACTION_FINISHED);
 

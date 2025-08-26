@@ -110,7 +110,7 @@ URL::URL(const std::string& url_input) {
     std::string::const_iterator end_of_port = std::find_first_of(current_pos, url_input.end(), std::begin(PORT_TERMINATORS), std::end(PORT_TERMINATORS));
     const auto port_number = parsePortNumber(std::string{current_pos, end_of_port});
     if (port_number) {
-      port_ = *port_number;
+      port_ = port_number;
     } else {
       logger_->log_error("Could not parse the port number in URL '{}'", url_input);
       return;
@@ -226,8 +226,7 @@ size_t HTTPUploadByteArrayInputCallback::getDataChunk(char *data, size_t size) {
     if (ptr == nullptr) {
       return 0;
     }
-    if (len > size)
-      len = size;
+    len = std::min(len, size);
     memcpy(data, ptr, len);
     pos += len;
     seek(pos);
