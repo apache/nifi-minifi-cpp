@@ -82,7 +82,7 @@ std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &t
   std::vector<std::string> appenders;
   const std::string prefix = type + ".";
   for (auto const & entry : getProperties()) {
-    if (entry.first.rfind(prefix, 0) == 0 && entry.first.find(".", prefix.length() + 1) == std::string::npos) {
+    if (entry.first.starts_with(prefix) && entry.first.find(".", prefix.length() + 1) == std::string::npos) {
       appenders.push_back(entry.first);
     }
   }
@@ -145,7 +145,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   }
 
   formatter_ = std::make_shared<spdlog::pattern_formatter>(spdlog_pattern);
-  spdlog::apply_all([&](auto spd_logger) {
+  spdlog::apply_all([&](const auto& spd_logger) {
     setupSpdLogger(lock, spd_logger, root_namespace_, spd_logger->name(), formatter_);
   });
   logger_->log_debug("Set following pattern on loggers: {}", spdlog_pattern);
