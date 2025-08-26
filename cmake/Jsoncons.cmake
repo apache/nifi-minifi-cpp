@@ -19,9 +19,15 @@ include(FetchContent)
 
 set(JSONCONS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
+set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/jsoncons/disable-clang-tidy.patch")
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+
 FetchContent_Declare(jsoncons
-        URL      https://github.com/danielaparker/jsoncons/archive/refs/tags/v1.3.2.tar.gz
-        URL_HASH SHA256=f22fb163df1a12c2f9ee5f95cad9fc37c6cfbefe0ae6f30aba7440832ef70fbe
-        )
+    URL      https://github.com/danielaparker/jsoncons/archive/refs/tags/v1.3.2.tar.gz
+    URL_HASH SHA256=f22fb163df1a12c2f9ee5f95cad9fc37c6cfbefe0ae6f30aba7440832ef70fbe
+    PATCH_COMMAND "${PC}"
+    SYSTEM
+)
 
 FetchContent_MakeAvailable(jsoncons)

@@ -1,0 +1,13 @@
+diff --git a/include/jsoncons_ext/jsonpath/token_evaluator.hpp b/include/jsoncons_ext/jsonpath/token_evaluator.hpp
+index 1d848b2e7..5fe04084e 100644
+--- a/include/jsoncons_ext/jsonpath/token_evaluator.hpp
++++ b/include/jsoncons_ext/jsonpath/token_evaluator.hpp
+@@ -177,7 +177,7 @@ namespace jsonpath {
+ 
+     inline result_options operator|(result_options a, result_options b)
+     {
+-        return static_cast<result_options>(static_cast<unsigned int>(a) | static_cast<unsigned int>(b));
++        return static_cast<result_options>(static_cast<unsigned int>(a) | static_cast<unsigned int>(b));  // NOLINT(clang-analyzer-optin.core.EnumCastOutOfRange)
+     }
+ 
+     inline result_options operator&=(result_options& a, result_options b)
