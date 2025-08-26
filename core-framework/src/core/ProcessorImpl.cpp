@@ -90,6 +90,11 @@ void ProcessorImpl::setSupportedProperties(std::span<const PropertyReference> pr
   descriptor_->setSupportedProperties(properties);
 }
 
+void ProcessorImpl::setSupportedProperties(std::span<const Property> properties) {
+  gsl_Expects(descriptor_);
+  descriptor_->setSupportedProperties(properties);
+}
+
 void ProcessorImpl::forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) {
   callback(logger_);
 }

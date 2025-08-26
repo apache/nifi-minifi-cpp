@@ -188,9 +188,7 @@ class CProcessor : public minifi::core::ProcessorApi {
   }
 
   void initialize(minifi::core::ProcessorDescriptor& descriptor) override {
-    std::vector<minifi::core::PropertyReference> properties;
-    for (auto& prop : class_description_.class_properties) {properties.push_back(prop.getReference());}
-    descriptor.setSupportedProperties(std::span(properties));
+    descriptor.setSupportedProperties(std::span(class_description_.class_properties));
 
     std::vector<minifi::core::RelationshipDefinition> relationships;
     for (auto& rel : class_description_.class_relationships) {relationships.push_back(rel.getDefinition());}
@@ -241,7 +239,7 @@ class CProcessor : public minifi::core::ProcessorApi {
     return metrics_;
   }
 
-  void forEachLogger(const std::function<void(std::shared_ptr<minifi::core::logging::Logger>)>& callback) override {
+  void forEachLogger(const std::function<void(std::shared_ptr<minifi::core::logging::Logger>)>&) override {
     // pass
   }
 
