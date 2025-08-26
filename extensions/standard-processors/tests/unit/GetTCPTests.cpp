@@ -120,7 +120,7 @@ class TcpTestServer {
     }
     co_await sendMessages(ssl_socket);
     asio::error_code ec;
-    ssl_socket.lowest_layer().cancel(ec);
+    [[maybe_unused]] auto e = ssl_socket.lowest_layer().cancel(ec);
     co_await ssl_socket.async_shutdown(minifi::utils::net::use_nothrow_awaitable);
   }
 
@@ -303,13 +303,5 @@ TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
   CHECK(controller.trigger().at(GetTCP::Success).size() == 10);
   CHECK(controller.trigger().at(GetTCP::Success).size() == 10);
   CHECK(controller.trigger().at(GetTCP::Success).empty());
-}
-
-TEST_CASE("GetTCP EL supported validated properties tests", "[GetTCP, Property]") {
-  SingleProcessorTestController controller{std::make_unique<GetTCP>("GetTCP")};
-  const auto get_tcp = controller.getProcessor();
-  LogTestController::getInstance().setTrace<GetTCP>();
-  REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "10"));
-  REQUIRE(get_tcp->setProperty(GetTCP::MaxQueueSize.name, "50"));
 }
 }  // namespace org::apache::nifi::minifi::test

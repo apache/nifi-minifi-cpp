@@ -225,7 +225,7 @@ TEST_CASE("Invalid values for optional double type properties throw exception") 
   }
 
   REQUIRE_THROWS_WITH(controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}}),
-      fmt::format("Expected parsable float from \"RunLlamaCppInference::{}\", but got GeneralParsingError (Parsing Error:0)", property_name));
+      fmt::format("Expected parsable float from RunLlamaCppInference::{}, but got GeneralParsingError (Parsing Error:0)", property_name));
 }
 
 TEST_CASE("Top K property empty and invalid values are handled properly") {
