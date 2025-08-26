@@ -1,5 +1,6 @@
 Checks: >
   -clang-analyzer-optin.cplusplus.VirtualCall,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
   boost-use-to-string,
   portability-restrict-system-includes,
   portability-simd-intrinsics,
@@ -246,7 +247,6 @@ Checks: >
   performance-noexcept-destructor,
   performance-noexcept-swap,
   portability-avoid-pragma-once,
-  portability-template-virtual-member-function,
   readability-ambiguous-smartptr-reset-call,
   readability-avoid-nested-conditional-operator,
   readability-avoid-return-with-void-value,
