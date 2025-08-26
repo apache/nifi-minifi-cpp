@@ -246,7 +246,6 @@ Checks: >
   modernize-use-std-print,
   performance-noexcept-destructor,
   performance-noexcept-swap,
-  portability-avoid-pragma-once,
   readability-ambiguous-smartptr-reset-call,
   readability-avoid-nested-conditional-operator,
   readability-avoid-return-with-void-value,
