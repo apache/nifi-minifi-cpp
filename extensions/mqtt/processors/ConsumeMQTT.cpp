@@ -78,8 +78,8 @@ void ConsumeMQTT::addAttributesAsRecordFields(core::RecordSet& new_records, cons
     record.emplace("_topic", core::RecordField(message.topic));
     auto topic_segments = utils::string::split(message.topic, "/");
     core::RecordArray topic_segments_array;
-    for (size_t i = 0; i < topic_segments.size(); ++i) {
-      topic_segments_array.emplace_back(core::RecordField(topic_segments[i]));
+    for (const auto& topic_segment : topic_segments) {
+      topic_segments_array.emplace_back(core::RecordField(topic_segment));
     }
     record.emplace("_topicSegments", core::RecordField(std::move(topic_segments_array)));
     record.emplace("_qos", core::RecordField(message.contents->qos));
