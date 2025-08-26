@@ -179,7 +179,7 @@ TEST_CASE_METHOD(XMLRecordSetWriterTestFixture, "Test single record with primiti
   core::RecordObject record_object;
   record_object.emplace("string_field", core::RecordField(std::string("value1")));
   record_object.emplace("uint_field", core::RecordField(static_cast<uint64_t>(42)));
-  record_object.emplace("double_field", core::RecordField(static_cast<double>(2.3)));
+  record_object.emplace("double_field", core::RecordField(2.3));
   record_object.emplace("bool_field", core::RecordField(true));
   record_object.emplace("time_point_field", core::RecordField(std::chrono::system_clock::time_point(std::chrono::sys_days(std::chrono::year(2025)/1/1))));
   record_set.emplace_back(std::move(record_object));
