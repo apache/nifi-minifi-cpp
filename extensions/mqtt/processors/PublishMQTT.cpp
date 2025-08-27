@@ -46,8 +46,8 @@ void PublishMQTT::initialize() {
 
 void PublishMQTT::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) {
   AbstractMQTTProcessor::onSchedule(context, factory);
-  record_set_reader_ = utils::getRecordSetIO<core::RecordSetReader>(context, RecordReader, getUUID());
-  record_set_writer_ = utils::getRecordSetIO<core::RecordSetWriter>(context, RecordWriter, getUUID());
+  record_set_reader_ = utils::parseOptionalControllerService<core::RecordSetReader>(context, RecordReader, getUUID());
+  record_set_writer_ = utils::parseOptionalControllerService<core::RecordSetWriter>(context, RecordWriter, getUUID());
 
   if ((record_set_reader_ == nullptr) != (record_set_writer_ == nullptr)) {
     throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "PublishMQTT requires both or neither Record Reader and Record Writer to be set");

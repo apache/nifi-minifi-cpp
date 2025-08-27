@@ -388,13 +388,13 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Test scheduling failure if non-existen
   SECTION("RecordReader is set to invalid controller service") {
     REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordReader.name, "invalid_reader"));
     REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordWriter.name, "JsonRecordSetWriter"));
-    REQUIRE_THROWS_WITH(test_controller_.trigger(), Catch::Matchers::EndsWith("'Record Reader' property is set to invalid controller service 'invalid_reader'"));
+    REQUIRE_THROWS_WITH(test_controller_.trigger(), Catch::Matchers::EndsWith("Controller service 'Record Reader' = 'invalid_reader' not found"));
   }
 
   SECTION("RecordWriter is set to invalid controller service") {
     REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordReader.name, "XMLReader"));
     REQUIRE(test_controller_.plan->setProperty(consume_mqtt_processor_, minifi::processors::ConsumeMQTT::RecordWriter.name, "invalid_writer"));
-    REQUIRE_THROWS_WITH(test_controller_.trigger(), Catch::Matchers::EndsWith("'Record Writer' property is set to invalid controller service 'invalid_writer'"));
+    REQUIRE_THROWS_WITH(test_controller_.trigger(), Catch::Matchers::EndsWith("Controller service 'Record Writer' = 'invalid_writer' not found"));
   }
 }
 
