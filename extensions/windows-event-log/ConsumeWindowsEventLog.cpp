@@ -22,13 +22,13 @@
 #include <tuple>
 #include <utility>
 #include <map>
-#include <sstream>
 #include <string>
 #include <memory>
 
 #include "wel/Bookmark.h"
 #include "wel/LookupCacher.h"
 #include "wel/MetadataWalker.h"
+#include "wel/StringSplitter.h"
 #include "wel/XMLString.h"
 #include "wel/JSONUtils.h"
 #include "wel/WindowsError.h"
@@ -100,31 +100,13 @@ wel::HeaderNames ConsumeWindowsEventLog::createHeaderNames(const std::optional<s
   if (!event_header_property) { return {}; }
 
   wel::HeaderNames header_names;
-
-  const auto insert_header_name = [&header_names](const std::string& key, const std::string& value) {
-    if (auto metadata = magic_enum::enum_cast<wel::Metadata>(key); metadata) {
+  wel::splitCommaSeparatedKeyValuePairs(*event_header_property, [this, &header_names](std::string_view key, std::string_view value) {
+    if (auto metadata = magic_enum::enum_cast<wel::Metadata>(key)) {
       header_names.emplace_back(*metadata, value);
-      return true;
+    } else {
+      logger_->log_error("{} is an invalid key for the header map", key);
     }
-    return false;
-  };
-
-  auto key_value_pairs = utils::string::split(*event_header_property, ",");
-  for (const auto& key_value_pair : key_value_pairs) {
-    auto key_value = utils::string::split(key_value_pair, "=");
-    if (key_value.size() == 2) {
-      auto key = utils::string::trim(key_value.at(0));
-      auto value = utils::string::trim(key_value.at(1));
-      if (!insert_header_name(key, value)) {
-        logger_->log_error("{} is an invalid key for the header map", key);
-      }
-    } else if (key_value.size() == 1) {
-      auto key = utils::string::trim(key_value.at(0));
-      if (!insert_header_name(key, "")) {
-        logger_->log_error("{} is an invalid key for the header map", key);
-      }
-    }
-  }
+  });
   return header_names;
 }
 
