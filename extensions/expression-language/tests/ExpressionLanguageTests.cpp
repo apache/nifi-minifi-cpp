@@ -938,7 +938,7 @@ TEST_CASE("GT4 Value parsing errors", "[expressionGT4][outofrange]") {
   auto flow_file = std::make_shared<core::FlowFileImpl>();
   flow_file->addAttribute("attr1", test_str);
   try {
-    const auto result = expr(expression::Parameters{flow_file.get()}).asString();
+    [[maybe_unused]] const auto result = expr(expression::Parameters{flow_file.get()}).asString();
     REQUIRE(false);
   } catch (const std::exception& ex) {
     const std::string message = ex.what();
