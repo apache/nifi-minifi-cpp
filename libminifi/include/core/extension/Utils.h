@@ -68,10 +68,14 @@ struct LibraryDescriptor {
     const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
     const std::string_view end_marker = "__EXTENSION_BUILD_IDENTIFIER_END__";
     const std::string magic_constant = utils::string::join_pack(begin_marker, AgentBuild::BUILD_IDENTIFIER, end_marker);
-    if (utils::file::contains(path, magic_constant)) {
-      return true;
-    }
+    return utils::file::contains(path, magic_constant);
+  }
 
+  [[nodiscard]] bool verify_as_c_extension(const std::shared_ptr<logging::Logger>& logger) const {
+    const auto path = getFullPath();
+    if (!std::filesystem::exists(path)) {
+      throw std::runtime_error{"File not found: " + path.string()};
+    }
     const std::string_view api_tag_prefix = "MINIFI_API_VERSION=[";
     if (auto version = utils::file::find(path, api_tag_prefix, api_tag_prefix.size() + 20)) {
       utils::SVMatch match;
@@ -96,15 +100,6 @@ struct LibraryDescriptor {
     return false;
   }
 
-  [[nodiscard]] bool verify_as_c_extension() const {
-    const auto path = getFullPath();
-    if (!std::filesystem::exists(path)) {
-      throw std::runtime_error{"File not found: " + path.string()};
-    }
-
-    return utils::file::contains(path, MINIFI_API_VERSION_TAG);
-  }
-
   [[nodiscard]]
   LibraryType verify(const std::shared_ptr<logging::Logger>& logger) const {
     const auto path = getFullPath();
@@ -114,7 +109,7 @@ struct LibraryDescriptor {
     if (verify_as_cpp_extension()) {
       return Cpp;
     }
-    if (verify_as_c_extension()) {
+    if (verify_as_c_extension(logger)) {
       return CApi;
     }
     return Invalid;
