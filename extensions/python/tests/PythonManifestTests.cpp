@@ -32,9 +32,11 @@ using minifi::state::response::SerializedResponseNode;
 using minifi::state::response::ValueNode;
 
 template<typename F>
-const SerializedResponseNode* findNode(const std::vector<SerializedResponseNode>& nodes, F&& filter) {
+const SerializedResponseNode* findNode(const std::vector<SerializedResponseNode>& nodes, F filter) {
   for (auto& node : nodes) {
-    if (filter(node)) return &node;
+    if (filter(node)) {
+      return &node;
+    }
   }
   return nullptr;
 }
