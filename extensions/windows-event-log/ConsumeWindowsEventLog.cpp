@@ -51,12 +51,11 @@
 using namespace std::literals::chrono_literals;
 
 namespace {
-struct TimeDiff {
-  auto operator()() const {
-    return std::chrono::steady_clock::now() - time_;
-  }
-  const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
-};
+auto createTimer() {
+  return [start_time = std::chrono::steady_clock::now()] {
+    return std::chrono::steady_clock::now() - start_time;
+  };
+}
 }  // namespace
 
 namespace org::apache::nifi::minifi::processors {
@@ -210,7 +209,7 @@ std::function<bool(std::string_view)> cwel::parseSidMatcher(const std::optional<
 
 bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmark_xml, core::ProcessContext& context, core::ProcessSession& session) {
   {
-    const TimeDiff time_diff;
+    const auto time_diff = createTimer();
     session.commit();
     context.getStateManager()->beginTransaction();
     logger_->log_debug("ConsumeWindowsEventLog: commit took {}", time_diff());
@@ -282,7 +281,7 @@ void ConsumeWindowsEventLog::onTrigger(core::ProcessContext& context, core::Proc
   logger_->log_trace("CWEL onTrigger");
 
   size_t processed_event_count = 0;
-  const TimeDiff time_diff;
+  const auto time_diff = createTimer();
   const auto timeGuard = gsl::finally([&]() {
     logger_->log_debug("processed {} Events in {}", processed_event_count, time_diff());
   });
