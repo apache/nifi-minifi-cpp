@@ -32,6 +32,7 @@ limitations under the License.
 - [SSLContextService](#SSLContextService)
 - [UpdatePolicyControllerService](#UpdatePolicyControllerService)
 - [VolatileMapStateStorage](#VolatileMapStateStorage)
+- [XMLReader](#XMLReader)
 
 
 ## AWSCredentialsService
@@ -332,3 +333,21 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name            | Default Value | Allowable Values | Description                    |
 |-----------------|---------------|------------------|--------------------------------|
 | Linked Services |               |                  | Referenced Controller Services |
+
+
+## XMLReader
+
+### Description
+
+Reads XML content and creates Record objects. Records are expected in the second level of XML data, embedded in an enclosing root tag. Types for records are inferred automatically based on the content of the XML tags. For timestamps, the format is expected to be ISO 8601 compliant.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                        | Default Value | Allowable Values | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|-----------------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Field Name for Content      |               |                  | If tags with content (e. g. <field>content</field>) are defined as nested records in the schema, the name of the tag will be used as name for the record and the value of this property will be used as name for the field. If the tag contains subnodes besides the content (e.g. <field>content<subfield>subcontent</subfield></field>), or a node attribute is present, we need to define a name for the text content, so that it can be distinguished from the subnodes. If this property is not set, the default name 'value' will be used for the text content of the tag in this case. |
+| **Parse XML Attributes**    | false         | true<br/>false   | When 'Schema Access Strategy' is 'Infer Schema' and this property is 'true' then XML attributes are parsed and added to the record as new fields. When the schema is inferred but this property is 'false', XML attributes and their values are ignored.                                                                                                                                                                                                                                                                                                                                      |
+| Attribute Prefix            |               |                  | If this property is set, the name of attributes will be prepended with a prefix when they are added to a record.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Expect Records as Array** | false         | true<br/>false   | This property defines whether the reader expects a FlowFile to consist of a single Record or a series of Records with a "wrapper element". Because XML does not provide for a way to read a series of XML documents from a stream directly, it is common to combine many XML documents by concatenating them and then wrapping the entire XML blob with a "wrapper element". This property dictates whether the reader expects a FlowFile to consist of a single Record or a series of Records with a "wrapper element" that will be ignored.                                                 |
