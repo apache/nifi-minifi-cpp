@@ -32,10 +32,12 @@ TEST_CASE("ConvertRecord scheduling fails with invalid reader and writer", "[Con
   SingleProcessorTestController controller(utils::make_processor<processors::ConvertRecord>("ConvertRecord"));
   controller.plan->addController("XMLReader", "XMLReader");
 
-  REQUIRE_THROWS_WITH(controller.trigger(minifi::test::InputFlowFileData{""}), "Process Schedule Operation: Record Reader property is missing or invalid");
+  REQUIRE_THROWS_WITH(controller.trigger(minifi::test::InputFlowFileData{""}), "Process Schedule Operation: Required controller service property 'Record Reader' is missing");
 
   REQUIRE(controller.getProcessor()->setProperty(processors::ConvertRecord::RecordReader.name, "XMLReader"));
-  REQUIRE_THROWS_WITH(controller.trigger(minifi::test::InputFlowFileData{""}), "Process Schedule Operation: Record Writer property is missing or invalid");
+  REQUIRE_THROWS_WITH(controller.trigger(minifi::test::InputFlowFileData{""}), "Process Schedule Operation: Required controller service property 'Record Writer' is missing");
+  REQUIRE(controller.getProcessor()->setProperty(processors::ConvertRecord::RecordWriter.name, "XMLWriter"));
+  REQUIRE_THROWS_WITH(controller.trigger(minifi::test::InputFlowFileData{""}), "Process Schedule Operation: Controller service 'Record Writer' = 'XMLWriter' not found");
 }
 
 TEST_CASE("Record conversion fails with read failure", "[ConvertRecord]") {
