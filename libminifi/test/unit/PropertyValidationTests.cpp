@@ -173,7 +173,6 @@ TEST_CASE("Valid Optional Without Default") {
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
   CHECK(component.setProperty(property.getName(), "some data"));
-  std::string value;
   CHECK(component.getProperty(property.getName()) == "some data");
 }
 
