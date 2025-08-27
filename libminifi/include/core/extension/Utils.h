@@ -30,6 +30,8 @@
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
+#include "utils/RegexUtils.h"
+#include "minifi-c/minifi-c.h"
 
 namespace org::apache::nifi::minifi::core::extension::internal {
 
@@ -62,7 +64,32 @@ struct LibraryDescriptor {
     const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
     const std::string_view end_marker = "__EXTENSION_BUILD_IDENTIFIER_END__";
     const std::string magic_constant = utils::string::join_pack(begin_marker, AgentBuild::BUILD_IDENTIFIER, end_marker);
-    return utils::file::contains(path, magic_constant);
+    if (utils::file::contains(path, magic_constant)) {
+      return true;
+    }
+
+    const std::string_view api_tag_prefix = "MINIFI_API_VERSION=[";
+    if (auto version = utils::file::find(path, api_tag_prefix, api_tag_prefix.size() + 20)) {
+      utils::SVMatch match;
+      if (!utils::regexSearch(version.value(), match, utils::Regex{"MINIFI_API_VERSION=\\[([0-9]+)\\.([0-9]+)\\.([0-9]+)\\]"})) {
+        logger->log_error("Found api version in invalid format: '{}'", version.value());
+        return false;
+      }
+      gsl_Assert(match.size() == 4);
+      const int major = std::stoi(match[1]);
+      const int minor = std::stoi(match[2]);
+      const int patch = std::stoi(match[3]);
+      if (major != MINIFI_API_MAJOR_VERSION) {
+        logger->log_error("API major version mismatch, application is '{}' while extension is '{}.{}.{}'", MINIFI_API_VERSION, major, minor, patch);
+        return false;
+      }
+      if (minor > MINIFI_API_MINOR_VERSION) {
+        logger->log_error("Extension is built for a newer version, application is '{}' while extension is '{}.{}.{}'", MINIFI_API_VERSION, major, minor, patch);
+        return false;
+      }
+      return true;
+    }
+    return false;
   }
 
   [[nodiscard]]
