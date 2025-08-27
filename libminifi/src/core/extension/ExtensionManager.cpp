@@ -82,7 +82,7 @@ bool ExtensionManagerImpl::initialize(const std::shared_ptr<Configure>& config) 
         continue;
       }
       if (!library->verify(logger_)) {
-        logger_->log_warn("Skipping library '{}' at '{}': failed verification, different build?",
+        logger_->log_warn("Skipping library '{}' at '{}': failed verification",
             library->name, library->getFullPath());
         continue;
       }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "minifi-cpp/core/logging/Logger.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::core::logging {
 
