@@ -80,9 +80,9 @@ void LoggerNamespace::forEachSink(const std::function<void(const std::shared_ptr
 std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) const {
   std::vector<std::string> appenders;
   const std::string prefix = type + ".";
-  for (auto const & entry : getProperties()) {
-    if (entry.first.rfind(prefix, 0) == 0 && entry.first.find(".", prefix.length() + 1) == std::string::npos) {
-      appenders.push_back(entry.first);
+  for (const auto & [property_name, _property_value] : getProperties()) {
+    if (property_name.starts_with(prefix) && property_name.find(".", prefix.length() + 1) == std::string::npos) {
+      appenders.push_back(property_name);
     }
   }
   return appenders;
@@ -144,7 +144,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   }
 
   formatter_ = std::make_shared<spdlog::pattern_formatter>(spdlog_pattern);
-  spdlog::apply_all([&](auto spd_logger) {
+  spdlog::apply_all([&](const auto& spd_logger) {
     setupSpdLogger(lock, spd_logger, root_namespace_, spd_logger->name(), formatter_);
   });
   logger_->log_debug("Set following pattern on loggers: {}", spdlog_pattern);

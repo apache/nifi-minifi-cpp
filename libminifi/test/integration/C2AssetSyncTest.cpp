@@ -52,12 +52,6 @@ class C2HeartbeatHandler : public HeartbeatHandler {
   using AssetDescription = org::apache::nifi::minifi::utils::file::AssetDescription;
 
   void handleHeartbeat(const rapidjson::Document& root, struct mg_connection* conn) override {
-    std::string hb_str = [&] {
-      rapidjson::StringBuffer buffer;
-      rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-      root.Accept(writer);
-      return std::string{buffer.GetString(), buffer.GetSize()};
-    }();
     auto& asset_info_node = root["resourceInfo"];
     auto& asset_hash_node = asset_info_node["hash"];
     std::string asset_hash{asset_hash_node.GetString(), asset_hash_node.GetStringLength()};
@@ -211,8 +205,6 @@ TEST_CASE("C2AssetSync", "[c2test]") {
   harness.setUrl("http://localhost:0/api/file/Av2.txt", &file_Av2_provider);
   harness.setUrl("http://localhost:0/api/file/B.txt", &file_B_provider);
   harness.setUrl("http://localhost:0/api/file/C.txt", &file_C_provider);
-
-  std::string absolute_file_A_url = "http://localhost:" + harness.getWebPort() + "/api/file/A.txt";
 
   hb_handler.addAsset("Av1", "A.txt", "/api/file/A.txt");
   hb_handler.addAsset("Bv1", "nested/dir/B.txt", "/api/file/B.txt");

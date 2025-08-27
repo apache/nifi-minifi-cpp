@@ -115,7 +115,7 @@ nonstd::expected<void, std::error_code> ProcessContextImpl::setDynamicProperty(s
 }
 
 void ProcessContextImpl::addAutoTerminatedRelationship(const core::Relationship& relationship) {
-  return getProcessor().addAutoTerminatedRelationship(relationship);
+  getProcessor().addAutoTerminatedRelationship(relationship);
 }
 
 bool ProcessContextImpl::isRunning() const {

@@ -146,7 +146,7 @@ class ListSFTPTestsFixture {
   }
 
   void createFileWithModificationTimeDiff(const std::filesystem::path& relative_path, const std::string& content, std::chrono::seconds modification_timediff = -5min) const {
-    return createFile(relative_path, content, std::chrono::file_clock::now() + modification_timediff);
+    createFile(relative_path, content, std::chrono::file_clock::now() + modification_timediff);
   }
 
  protected:

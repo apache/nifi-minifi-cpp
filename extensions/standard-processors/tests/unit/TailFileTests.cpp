@@ -285,7 +285,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
       REQUIRE(it != state.end());
       REQUIRE(it->second == key_value_pair.second);
     }
-    REQUIRE(state.find("file.0.last_read_time") != state.end());
+    REQUIRE(state.contains("file.0.last_read_time"));
   }
 
   SECTION("multiple") {
@@ -335,8 +335,8 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
       REQUIRE(it != state.end());
       REQUIRE(it->second == key_value_pair.second);
     }
-    REQUIRE(state.find("file.0.last_read_time") != state.end());
-    REQUIRE(state.find("file.1.last_read_time") != state.end());
+    REQUIRE(state.contains("file.0.last_read_time"));
+    REQUIRE(state.contains("file.1.last_read_time"));
   }
 }
 
@@ -552,7 +552,7 @@ TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
   std::generate_n(line2.begin(), line2.size() - 1, [&] {
     // Make sure to only generate from characters that don't intersect with line1 and 3-4
     // Starting generation from 64 ensures that no numeric digit characters are added
-    return gsl::narrow<char>(64 + gen() % (127 - 64));
+    return gsl::narrow<char>(64 + (gen() % (127 - 64)));
   });
   line2.back() = '\n';
   std::string line3("345\n");
@@ -627,7 +627,7 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
   std::generate_n(line1.begin(), 4095, [&] {
     // Make sure to only generate from characters that don't intersect with line2-4
     // Starting generation from 64 ensures that no numeric digit characters are added
-    return gsl::narrow<char>(64 + gen() % (127 - 64));
+    return gsl::narrow<char>(64 + (gen() % (127 - 64)));
   });
   std::string line2("012\n");
   std::string line3("345\n");
@@ -1044,7 +1044,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   auto log_dir = testController.createTempDirectory();
 
   const auto file_modi_time_t0 = std::chrono::file_clock::now();
-  auto test_file_1 = createTempFile(log_dir, "test.1", "line one\nline two\nline three\n");  // old rotated file
+  [[maybe_unused]] auto test_file_1 = createTempFile(log_dir, "test.1", "line one\nline two\nline three\n");  // old rotated file
   std::filesystem::last_write_time(log_dir/"test.1", file_modi_time_t0 - 1100ms);
   auto test_file = createTempFile(log_dir, "test.log", "line four\nline five\nline six\n");  // current log file
   std::filesystem::last_write_time(log_dir/"test.log", file_modi_time_t0 - 100ms);

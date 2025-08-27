@@ -448,7 +448,6 @@ TEST_CASE("FlowFileRepository triggers content repo orphan clear") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  auto home_dir = testController.createTempDirectory();
   auto ff_dir = testController.createTempDirectory();
   auto content_dir = testController.createTempDirectory();
 
@@ -482,7 +481,6 @@ TEST_CASE("FlowFileRepository synchronously pushes existing flow files") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  const auto home_dir = testController.createTempDirectory();
   const auto ff_dir = testController.createTempDirectory();
   const auto content_dir = testController.createTempDirectory();
 
@@ -611,7 +609,6 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
 
 TEST_CASE("Test getting noop repository size properties", "[TestGettingRepositorySize]") {
   TestController testController;
-  const auto dir = testController.createTempDirectory();
 
   const auto repository = minifi::core::createRepository("NoOpRepository", "ff");
 
@@ -750,7 +747,6 @@ TEST_CASE("Content repositories are always running", "[TestRepoIsRunning]") {
   LogTestController::getInstance().setDebug<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setDebug<core::repository::DatabaseContentRepository>();
   TestController testController;
-  const auto dir = testController.createTempDirectory();
 
   std::shared_ptr<core::ContentRepository> content_repo;
   SECTION("FileSystemRepository") {
@@ -792,7 +788,6 @@ TEST_CASE("FlowFileRepository can filter out too small contents") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  const auto minifi_home = testController.createTempDirectory();
   const auto ff_dir = testController.createTempDirectory();
   const auto content_dir = testController.createTempDirectory();
 
