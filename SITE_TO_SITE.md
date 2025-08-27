@@ -72,7 +72,7 @@ Remote Process Groups:
       - id: de7cc09a-0196-1000-2c63-ee6b4319ffb6  # this is the instance id of the input port created in NiFi
         name: nifi-inputport
         max concurrent tasks: 1
-        use compression: false  # currently not supported and ignored in MiNiFi C++
+        use compression: true
         batch size:
           size: 10 MB
           count: 10
@@ -112,6 +112,11 @@ Remote Processing Groups:
     id: 22d38f35-4d25-4e68-878c-f46f46d5781c
     max concurrent tasks: 1
     name: from_nifi
+    use compression: true
+    batch size:
+      size: 10 MB
+      count: 10
+      duration: 30 sec
   id: 20ed42b0-d41e-4add-9e6d-8777223370b8
   name: RemoteProcessGroup
   timeout: 30 sec
@@ -123,7 +128,6 @@ Notes on the configuration:
 
 - In the MiNiFi C++ configuration, in yaml configuration the remote input and output ports' `id` field, and in json configuration the ports' `identifier`, `instanceIdentifier`, and `targetId` fields should be set to the instance id of the input and output ports created in NiFi (`de7cc09a-0196-1000-2c63-ee6b4319ffb6` in the examples).
 - Connections from the remote output port to the processor should use the `undefined` relationship
-- `useCompression` can be set, but it is currently not supported in MiNiFi C++ so it will be set to false in the site-to-site messages
 - the `url` field (`targetUri` or `targetUris` in JSON) field in the remote process group should be set to the NiFi instance's URL, this can also use comma separated list of URLs if the remote process group is configured to use multiple NiFi nodes
 
 ## Additional examples

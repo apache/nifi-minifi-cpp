@@ -137,7 +137,7 @@ class SiteToSiteClient {
   virtual bool writeResponse(const std::shared_ptr<Transaction> &transaction, const SiteToSiteResponse& response);
 
   bool initializeSend(const std::shared_ptr<Transaction>& transaction);
-  bool writeAttributesInSendTransaction(const std::shared_ptr<Transaction>& transaction, const std::map<std::string, std::string>& attributes);
+  bool writeAttributesInSendTransaction(io::OutputStream& stream, const std::string& transaction_id_str, const std::map<std::string, std::string>& attributes);
   void finalizeSendTransaction(const std::shared_ptr<Transaction>& transaction, uint64_t sent_bytes);
   bool sendPacket(const DataPacket& packet);
   bool sendFlowFile(const std::shared_ptr<Transaction>& transaction, core::FlowFile& flow_file, core::ProcessSession& session);
@@ -187,8 +187,8 @@ class SiteToSiteClient {
   bool completeReceive(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id);
   bool completeSend(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id, core::ProcessContext& context);
 
-  bool readFlowFileHeaderData(const std::shared_ptr<Transaction>& transaction, SiteToSiteClient::ReceiveFlowFileHeaderResult& result);
-  std::optional<ReceiveFlowFileHeaderResult> receiveFlowFileHeader(const std::shared_ptr<Transaction>& transaction);
+  bool readFlowFileHeaderData(io::InputStream& stream, const std::string& transaction_id, SiteToSiteClient::ReceiveFlowFileHeaderResult& result);
+  std::optional<ReceiveFlowFileHeaderResult> receiveFlowFileHeader(io::InputStream& stream, const std::shared_ptr<Transaction>& transaction);
   std::pair<uint64_t, uint64_t> readFlowFiles(const std::shared_ptr<Transaction>& transaction, core::ProcessSession& session);
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<SiteToSiteClient>::getLogger()};
