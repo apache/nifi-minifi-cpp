@@ -81,7 +81,7 @@ std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &t
   std::vector<std::string> appenders;
   const std::string prefix = type + ".";
   for (const auto & [property_name, _property_value] : getProperties()) {
-    if (property_name.starts_with(prefix) && property_name.find(".", prefix.length() + 1) == std::string::npos) {
+    if (property_name.starts_with(prefix) && property_name.find('.', prefix.length() + 1) == std::string::npos) {
       appenders.push_back(property_name);
     }
   }
