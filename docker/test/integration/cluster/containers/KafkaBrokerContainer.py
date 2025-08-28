@@ -82,7 +82,7 @@ Client {
 
         logging.info('Creating and running kafka broker docker container...')
         self.client.containers.run(
-            image="bitnami/kafka:3.9.0",
+            image="bitnamilegacy/kafka:3.9.0",
             detach=True,
             name=self.name,
             network=self.network.name,
