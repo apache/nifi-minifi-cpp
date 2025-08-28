@@ -18,6 +18,8 @@
 #include "utils/gsl.h"
 #include "core/Resource.h"
 #include "c2/C2Agent.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -85,6 +87,23 @@ void ControllerSocketMetricsPublisher::loadMetricNodes() {
   if (!nodes.empty()) {
     queue_metrics_node_ = nodes[0];
   }
+}
+
+void ControllerSocketMetricsPublisher::setRoot(core::ProcessGroup* root) {
+  flow_status_builder_.setRoot(root);
+}
+
+void ControllerSocketMetricsPublisher::setFlowStatusDependencies(core::BulletinStore* bulletin_store, const std::filesystem::path& flowfile_repo_dir, const std::filesystem::path& content_repo_dir) {
+  flow_status_builder_.setBulletinStore(bulletin_store);
+  flow_status_builder_.setRepositoryPaths(flowfile_repo_dir, content_repo_dir);
+}
+
+std::string ControllerSocketMetricsPublisher::getFlowStatus(const std::vector<FlowStatusRequest>& requests) {
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  auto status = flow_status_builder_.buildFlowStatus(requests);
+  status.Accept(writer);
+  return buffer.GetString();
 }
 
 REGISTER_RESOURCE(ControllerSocketMetricsPublisher, DescriptionOnly);

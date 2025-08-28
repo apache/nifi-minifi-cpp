@@ -303,7 +303,6 @@ int main(int argc, char **argv) {
   do {
     flow_controller_running.test_and_set();
 
-    std::string graceful_shutdown_seconds;
     std::string prov_repo_class = "provenancerepository";
     std::string flow_repo_class = "flowfilerepository";
     std::string nifi_configuration_class_name = "adaptiveconfiguration";
@@ -413,7 +412,7 @@ int main(int argc, char **argv) {
     auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration, asset_manager.get(), bulletin_store.get());
     const auto controller = std::make_unique<minifi::FlowController>(
         prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo,
-        std::move(metrics_publisher_store), filesystem, request_restart, asset_manager.get());
+        std::move(metrics_publisher_store), filesystem, request_restart, asset_manager.get(), bulletin_store.get());
 
     const bool disk_space_watchdog_enable = configure->get(minifi::Configure::minifi_disk_space_watchdog_enable)
         | utils::andThen(utils::string::toBool)
