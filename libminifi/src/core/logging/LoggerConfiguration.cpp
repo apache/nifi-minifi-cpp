@@ -38,6 +38,7 @@
 #include "utils/Literals.h"
 #include "core/TypedValues.h"
 #include "core/logging/Utils.h"
+#include "controllers/SSLContextService.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -81,7 +82,7 @@ std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &t
   std::vector<std::string> appenders;
   const std::string prefix = type + ".";
   for (auto const & entry : getProperties()) {
-    if (entry.first.rfind(prefix, 0) == 0 && entry.first.find(".", prefix.length() + 1) == std::string::npos) {
+    if (entry.first.starts_with(prefix) && entry.first.find(".", prefix.length() + 1) == std::string::npos) {
       appenders.push_back(entry.first);
     }
   }
@@ -144,7 +145,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   }
 
   formatter_ = std::make_shared<spdlog::pattern_formatter>(spdlog_pattern);
-  spdlog::apply_all([&](auto spd_logger) {
+  spdlog::apply_all([&](const auto& spd_logger) {
     setupSpdLogger(lock, spd_logger, root_namespace_, spd_logger->name(), formatter_);
   });
   logger_->log_debug("Set following pattern on loggers: {}", spdlog_pattern);
@@ -346,10 +347,15 @@ void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex
   }
 }
 
-void LoggerConfiguration::initializeAlertSinks(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<AgentIdentificationProvider>& agent_id) {
+void LoggerConfiguration::initializeAlertSinks(const std::shared_ptr<Configure>& config) {
+  auto ssl_service = std::make_shared<controllers::SSLContextService>("AlertSinkSSLContextService", config);
+  ssl_service->onEnable();
+  if (ssl_service->getCertificateFile().empty()) {
+    ssl_service.reset();
+  }
   std::lock_guard guard(mutex_);
   for (auto& sink : alert_sinks_) {
-    sink->initialize(controller, agent_id);
+    sink->initialize(config, ssl_service);
   }
 }
 

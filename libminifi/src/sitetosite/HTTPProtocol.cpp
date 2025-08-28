@@ -31,8 +31,6 @@
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 
-#undef DELETE  // macro on windows
-
 namespace org::apache::nifi::minifi::sitetosite {
 
 std::shared_ptr<utils::IdGenerator> HttpSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
@@ -45,7 +43,7 @@ std::shared_ptr<sitetosite::Transaction> HttpSiteToSiteClient::createTransaction
   std::string dir_str = direction == sitetosite::SEND ? "input-ports" : "output-ports";
   std::stringstream uri;
   uri << getBaseURI() << "data-transfer/" << dir_str << "/" << getPortId().to_string() << "/transactions";
-  auto client = create_http_client(uri.str(), http::HttpRequestMethod::POST);
+  auto client = create_http_client(uri.str(), http::HttpRequestMethod::Post);
   client->setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
   client->setConnectionTimeout(std::chrono::milliseconds(5000));
   client->setContentType("application/json");
@@ -82,7 +80,7 @@ std::shared_ptr<sitetosite::Transaction> HttpSiteToSiteClient::createTransaction
         }
 
         transaction_client->setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
-        peer_->setStream(std::unique_ptr<io::BaseStream>(new http::HttpStream(transaction_client)));
+        peer_->setStream(std::make_unique<http::HttpStream>(transaction_client));
         logger_->log_debug("Created transaction id -{}-", transaction->getUUID().to_string());
         known_transactions_[transaction->getUUID()] = transaction;
         return transaction;
@@ -177,7 +175,7 @@ bool HttpSiteToSiteClient::getPeerList(std::vector<sitetosite::PeerStatus> &peer
   std::stringstream uri;
   uri << getBaseURI() << "site-to-site/peers";
 
-  auto client = create_http_client(uri.str(), http::HttpRequestMethod::GET);
+  auto client = create_http_client(uri.str(), http::HttpRequestMethod::Get);
 
   client->setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
 
@@ -194,7 +192,7 @@ bool HttpSiteToSiteClient::getPeerList(std::vector<sitetosite::PeerStatus> &peer
 std::shared_ptr<minifi::http::HTTPClient> HttpSiteToSiteClient::openConnectionForSending(const std::shared_ptr<HttpTransaction> &transaction) {
   std::stringstream uri;
   uri << transaction->getTransactionUrl() << "/flow-files";
-  std::shared_ptr<minifi::http::HTTPClient> client = create_http_client(uri.str(), http::HttpRequestMethod::POST);
+  std::shared_ptr<minifi::http::HTTPClient> client = create_http_client(uri.str(), http::HttpRequestMethod::Post);
   client->setContentType("application/octet-stream");
   client->setRequestHeader("Accept", "text/plain");
   client->setRequestHeader("Transfer-Encoding", "chunked");
@@ -204,7 +202,7 @@ std::shared_ptr<minifi::http::HTTPClient> HttpSiteToSiteClient::openConnectionFo
 std::shared_ptr<minifi::http::HTTPClient> HttpSiteToSiteClient::openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction) {
   std::stringstream uri;
   uri << transaction->getTransactionUrl() << "/flow-files";
-  std::shared_ptr<minifi::http::HTTPClient> client = create_http_client(uri.str(), http::HttpRequestMethod::GET);
+  std::shared_ptr<minifi::http::HTTPClient> client = create_http_client(uri.str(), http::HttpRequestMethod::Get);
   return client;
 }
 
@@ -237,9 +235,7 @@ void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transaction
     return;
   }
 
-  std::string append_str;
   logger_->log_trace("Site to Site closing transaction {}", transaction->getUUIDStr());
-
 
   bool data_received = transaction->getDirection() == sitetosite::RECEIVE && (current_code == sitetosite::CONFIRM_TRANSACTION || current_code == sitetosite::TRANSACTION_FINISHED);
 
@@ -267,7 +263,7 @@ void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transaction
     uri << "&checksum=" << transaction->getCRC();
   }
 
-  auto client = create_http_client(uri.str(), http::HttpRequestMethod::DELETE);
+  auto client = create_http_client(uri.str(), http::HttpRequestMethod::Delete);
 
   client->setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
 
