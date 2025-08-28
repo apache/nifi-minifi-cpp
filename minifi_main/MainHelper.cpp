@@ -138,21 +138,13 @@ Locations getFromFHS() {
 }
 
 std::optional<Locations> determineLocations(const std::shared_ptr<core::logging::Logger>& logger) {
-  if (const auto minifi_home_env = utils::Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str())) {
-    if (minifi_home_env == MINIFI_HOME_ENV_VALUE_FHS) {
-      return getFromFHS();
-    }
-    const auto minifi_home = determineMinifiHome(logger);
-    if (minifi_home.empty()) {
-      return std::nullopt;
-    }
-    return getFromMinifiHome(minifi_home);
-  }
+  const auto minifi_home_env = utils::Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str());
+  const auto executable_path = utils::file::get_executable_path();
 
-
-  if (const auto executable_path = utils::file::get_executable_path(); executable_path.parent_path() == "/usr/bin") {
+  if (minifi_home_env == MINIFI_HOME_ENV_VALUE_FHS || (!minifi_home_env && executable_path.parent_path() == "/usr/bin")) {
     return getFromFHS();
   }
+
   const auto minifi_home = determineMinifiHome(logger);
   if (minifi_home.empty()) {
     return std::nullopt;
