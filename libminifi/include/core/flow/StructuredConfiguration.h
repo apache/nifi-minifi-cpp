@@ -88,7 +88,7 @@ class StructuredConfiguration : public FlowConfiguration {
   /**
    * Parses a port from its corresponding config node and adds
    * it to a parent ProcessGroup. The port_node argument must point
-   * to a Node containing the port configuration. A RemoteProcessorGroupPort
+   * to a Node containing the port configuration. A RemoteProcessGroupPort
    * object will be created a added to the parent ProcessGroup specified
    * by the parent argument.
    *
