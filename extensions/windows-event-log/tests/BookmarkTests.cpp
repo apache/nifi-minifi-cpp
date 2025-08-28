@@ -25,7 +25,7 @@
 #include "wel/UniqueEvtHandle.h"
 #include "CWELTestUtils.h"
 
-using Bookmark = org::apache::nifi::minifi::processors::Bookmark;
+using Bookmark = org::apache::nifi::minifi::wel::Bookmark;
 using unique_evt_handle = org::apache::nifi::minifi::wel::unique_evt_handle;
 using IdGenerator = org::apache::nifi::minifi::utils::IdGenerator;
 

@@ -31,7 +31,7 @@
 #include "EventPath.h"
 #include "UniqueEvtHandle.h"
 
-namespace org::apache::nifi::minifi::processors {
+namespace org::apache::nifi::minifi::wel {
 
 class Bookmark {
  public:
@@ -62,4 +62,4 @@ class Bookmark {
   std::wstring bookmarkXml_;
 };
 
-}  // namespace org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::wel

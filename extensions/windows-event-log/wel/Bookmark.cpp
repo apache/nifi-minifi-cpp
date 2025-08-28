@@ -28,7 +28,7 @@
 #include "utils/UnicodeConversion.h"
 #include "WindowsError.h"
 
-namespace org::apache::nifi::minifi::processors {
+namespace org::apache::nifi::minifi::wel {
 static const std::string BOOKMARK_KEY = "bookmark";
 
 Bookmark::Bookmark(const wel::EventPath& path,
@@ -204,4 +204,4 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
   return true;
 }
 
-}  // namespace org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::wel

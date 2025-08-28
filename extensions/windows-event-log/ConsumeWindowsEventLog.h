@@ -49,9 +49,7 @@
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
 
-namespace org::apache::nifi::minifi::processors {
-
-namespace cwel {
+namespace org::apache::nifi::minifi::wel {
 struct ProcessedEvent {
   std::map<std::string, std::string> matched_fields;
   std::string xml;
@@ -73,9 +71,11 @@ enum class JsonFormat {
 };
 
 std::function<bool(std::string_view)> parseSidMatcher(const std::optional<std::string>& sid_matcher);
-}  // namespace cwel
 
 class Bookmark;
+}  // namespace org::apache::nifi::minifi::wel
+
+namespace org::apache::nifi::minifi::processors {
 
 class ConsumeWindowsEventLog : public core::ProcessorImpl {
  public:
@@ -142,16 +142,16 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
       .withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,"
           "EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")
       .build();
-  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::OutputFormat>()>::createProperty("Output Format")
+  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<wel::OutputFormat>()>::createProperty("Output Format")
       .isRequired(true)
-      .withDefaultValue(magic_enum::enum_name(cwel::OutputFormat::XML))
-      .withAllowedValues(magic_enum::enum_names<cwel::OutputFormat>())
+      .withDefaultValue(magic_enum::enum_name(wel::OutputFormat::XML))
+      .withAllowedValues(magic_enum::enum_names<wel::OutputFormat>())
       .withDescription("The format of the output flow files.")
       .build();
-  EXTENSIONAPI static constexpr auto JsonFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::JsonFormat>()>::createProperty("JSON Format")
+  EXTENSIONAPI static constexpr auto JsonFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<wel::JsonFormat>()>::createProperty("JSON Format")
       .isRequired(true)
-      .withDefaultValue(magic_enum::enum_name(cwel::JsonFormat::Simple))
-      .withAllowedValues(magic_enum::enum_names<cwel::JsonFormat>())
+      .withDefaultValue(magic_enum::enum_name(wel::JsonFormat::Simple))
+      .withAllowedValues(magic_enum::enum_names<wel::JsonFormat>())
       .withDescription("Set the json format type. Only applicable if Output Format is set to 'JSON'")
       .build();
   EXTENSIONAPI static constexpr auto BatchCommitSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Commit Size")
@@ -213,16 +213,16 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
 
  private:
   void refreshTimeZoneData();
-  void createAndCommitFlowFile(const cwel::ProcessedEvent& processed_event, core::ProcessSession& session) const;
+  void createAndCommitFlowFile(const wel::ProcessedEvent& processed_event, core::ProcessSession& session) const;
   wel::WindowsEventLogProvider& getEventLogProvider(const std::string& name);
   wel::HeaderNames createHeaderNames(const std::optional<std::string>& event_header_property) const;
-  nonstd::expected<cwel::ProcessedEvent, std::string> processEvent(EVT_HANDLE event_handle);
+  nonstd::expected<wel::ProcessedEvent, std::string> processEvent(EVT_HANDLE event_handle);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
   std::function<std::string(const std::string&)> userIdToUsernameFunction() const;
   nonstd::expected<std::string, std::string> renderEventAsXml(EVT_HANDLE event_handle);
   bool commitAndSaveBookmark(const std::wstring& bookmarkXml, core::ProcessContext& context, core::ProcessSession& session);
   std::tuple<size_t, std::wstring> processEventLogs(core::ProcessSession& session, EVT_HANDLE event_query_results);
-  std::unique_ptr<Bookmark> createBookmark(const core::ProcessContext& context) const;
+  std::unique_ptr<wel::Bookmark> createBookmark(const core::ProcessContext& context) const;
 
   core::StateManager* state_manager_{nullptr};
   wel::HeaderNames header_names_;
@@ -239,10 +239,10 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
   uint64_t batch_commit_size_{};
   bool cache_sid_lookups_ = true;
 
-  cwel::OutputFormat output_format_;
-  cwel::JsonFormat json_format_;
+  wel::OutputFormat output_format_;
+  wel::JsonFormat json_format_;
 
-  std::unique_ptr<Bookmark> bookmark_;
+  std::unique_ptr<wel::Bookmark> bookmark_;
   std::mutex on_trigger_mutex_;
   std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;
   HMODULE hMsobjsDll_{};
