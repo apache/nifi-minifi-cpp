@@ -32,7 +32,6 @@
 #include "utils/TimeUtil.h"
 #include "TestBase.h"
 
-#include "catch2/catch_tostring.hpp"
 #include "fmt/format.h"
 #include "rapidjson/document.h"
 #include "asio.hpp"
@@ -242,6 +241,15 @@ template <>
 struct StringMaker<minifi::state::response::ValueNode> {
   static std::string convert(const minifi::state::response::ValueNode& value_node) {
     return fmt::format(R"("{}")", value_node.to_string());
+  }
+};
+
+template <>
+struct StringMaker<std::unordered_map<std::string_view, std::string_view>> {
+  static std::string convert(const std::unordered_map<std::string_view, std::string_view>& map) {
+    return "{" + utils::string::join(", ", map, [](const auto& kv) {
+      return fmt::format(R"("{}" => "{}")", kv.first, kv.second);
+    }) + "}";
   }
 };
 }  // namespace Catch
