@@ -37,8 +37,12 @@ void splitCommaSeparatedKeyValuePairs(std::string_view input, Func output_callba
         | std::views::split('=')
         | std::views::transform([](std::span<const char> term) {
           size_t num_trim_left = count_whitespace(term.begin(), term.end());
-          size_t num_trim_right = count_whitespace(term.rbegin(), term.rend());
-          return std::string_view{term.data() + num_trim_left, term.size() - (num_trim_left + num_trim_right)};
+          if (num_trim_left < term.size()) {
+            size_t num_trim_right = count_whitespace(term.rbegin(), term.rend());
+            return std::string_view{term.data() + num_trim_left, term.size() - (num_trim_left + num_trim_right)};
+          } else {
+            return std::string_view{};
+          }
         })
         | std::ranges::to<std::vector>();
     if (key_value_vec.size() == 2) {

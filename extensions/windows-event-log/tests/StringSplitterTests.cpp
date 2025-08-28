@@ -35,6 +35,7 @@ TEST_CASE("splitCommaSeparatedKeyValuePairs works") {
 
   test("", {});
   test("foo", {{"foo", ""}});
+  test("foo =    ", {{"foo", ""}});
   test("foo = bar", {{"foo", "bar"}});
   test("foo == bar", {});  // more than two parts after splitting at '='
   test("foo != bar", {{"foo !", "bar"}});
