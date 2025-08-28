@@ -20,7 +20,6 @@
 #include <cassert>
 #include <chrono>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <string>
 #include <unordered_set>
@@ -249,7 +248,7 @@ template <>
 struct StringMaker<std::unordered_map<std::string_view, std::string_view>> {
   static std::string convert(const std::unordered_map<std::string_view, std::string_view>& map) {
     return "{" + utils::string::join(", ", map, [](const auto& kv) {
-      return std::format(R"("{}" => "{}")", kv.first, kv.second);
+      return fmt::format(R"("{}" => "{}")", kv.first, kv.second);
     }) + "}";
   }
 };
