@@ -37,7 +37,7 @@ using XmlString = org::apache::nifi::minifi::wel::XmlString;
 
 namespace {
 
-auto none_matcher = minifi::processors::cwel::parseSidMatcher(std::nullopt);
+auto none_matcher = minifi::wel::parseSidMatcher(std::nullopt);
 
 std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE provider_handle, EVT_HANDLE event_handle, bool update_xml, bool resolve,
     const std::function<bool(std::string_view)>& sid_matcher = none_matcher) {
@@ -98,7 +98,7 @@ TEST_CASE("MetadataWalker updates the Sid in the XML if both update_xml and reso
 
   SECTION("Resolve nobody") {
     std::string nobody = readFile("resources/withsids.xml");
-    const auto sid_matcher = minifi::processors::cwel::parseSidMatcher(".*Sid");
+    const auto sid_matcher = minifi::wel::parseSidMatcher(".*Sid");
     REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, sid_matcher) == formatXml(nobody));
   }
 }
@@ -113,7 +113,7 @@ TEST_CASE("MetadataWalker updates the Security/UserId attribute", "[updateXmlMet
 
   SECTION("Resolve nobody") {
     std::string nobody = readFile("resources/resolveduserid.xml");
-    const auto sid_matcher = minifi::processors::cwel::parseSidMatcher("(.*Sid)|UserID");
+    const auto sid_matcher = minifi::wel::parseSidMatcher("(.*Sid)|UserID");
     REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, sid_matcher) == formatXml(nobody));
   }
 }
@@ -135,7 +135,7 @@ TEST_CASE("MetadataWalker will leave a Sid unchanged if it doesn't correspond to
 
   REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, false, true) == formatXml(xml));
   REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true) == formatXml(xml));
-  const auto sid_matcher = minifi::processors::cwel::parseSidMatcher(".*Sid");
+  const auto sid_matcher = minifi::wel::parseSidMatcher(".*Sid");
   REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, sid_matcher) == formatXml(xml));
 }
 
@@ -165,7 +165,7 @@ void extractMappingsTestHelper(const std::string &file_name,
   pugi::xml_parse_result result = doc.load_string(input_xml.c_str());
   REQUIRE(result);
 
-  const auto sid_matcher = minifi::processors::cwel::parseSidMatcher(".*Sid");
+  const auto sid_matcher = minifi::wel::parseSidMatcher(".*Sid");
   MetadataWalker walker(FakeWindowsEventLogMetadata{}, METADATA_WALKER_TESTS_LOG_NAME, update_xml, resolve, sid_matcher, &utils::OsUtils::userIdToUsername);
   doc.traverse(walker);
 

@@ -58,6 +58,22 @@ auto createTimer() {
 }
 }  // namespace
 
+namespace org::apache::nifi::minifi::wel {
+std::function<bool(std::string_view)> parseSidMatcher(const std::optional<std::string>& sid_matcher) {
+  if (!sid_matcher || sid_matcher->empty()) {
+    return [](std::string_view){ return false; };
+  }
+
+  if (std::smatch match; utils::regexMatch(*sid_matcher, match, utils::Regex{R"_(\.\*(\w+))_"})) {
+    std::string suffix = match[1];
+    return [suffix](std::string_view field_name) { return utils::string::endsWith(field_name, suffix); };
+  }
+
+  utils::Regex sid_matcher_regex{*sid_matcher};
+  return [sid_matcher_regex](std::string_view field_name) { return utils::regexMatch(field_name, sid_matcher_regex); };
+}
+}  // namespace org::apache::nifi::minifi::wel
+
 namespace org::apache::nifi::minifi::processors {
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(core::ProcessorMetadata metadata)
@@ -121,11 +137,11 @@ void ConsumeWindowsEventLog::onSchedule(core::ProcessContext& context, core::Pro
   header_delimiter_ = utils::parseOptionalProperty(context, EventHeaderDelimiter);
   batch_commit_size_ = utils::parseU64Property(context, BatchCommitSize);
   header_names_ = createHeaderNames(utils::parseOptionalProperty(context, EventHeader));
-  sid_matcher_ = cwel::parseSidMatcher(utils::parseOptionalProperty(context, IdentifierMatcher));
-  output_format_ = utils::parseEnumProperty<cwel::OutputFormat>(context, OutputFormatProperty);
-  json_format_ = utils::parseEnumProperty<cwel::JsonFormat>(context, JsonFormatProperty);
+  sid_matcher_ = wel::parseSidMatcher(utils::parseOptionalProperty(context, IdentifierMatcher));
+  output_format_ = utils::parseEnumProperty<wel::OutputFormat>(context, OutputFormatProperty);
+  json_format_ = utils::parseEnumProperty<wel::JsonFormat>(context, JsonFormatProperty);
 
-  if (output_format_ != cwel::OutputFormat::Plaintext && !hMsobjsDll_) {
+  if (output_format_ != wel::OutputFormat::Plaintext && !hMsobjsDll_) {
     char systemDir[MAX_PATH];
     if (GetSystemDirectory(systemDir, sizeof(systemDir))) {
       hMsobjsDll_ = LoadLibrary((systemDir + std::string("\\msobjs.dll")).c_str());
@@ -161,32 +177,18 @@ void ConsumeWindowsEventLog::onSchedule(core::ProcessContext& context, core::Pro
   logger_->log_trace("Successfully configured CWEL");
 }
 
-std::unique_ptr<Bookmark> ConsumeWindowsEventLog::createBookmark(const core::ProcessContext& context) const {
+std::unique_ptr<wel::Bookmark> ConsumeWindowsEventLog::createBookmark(const core::ProcessContext& context) const {
   std::string bookmark_dir = context.getProperty(BookmarkRootDirectory).value_or("");
   if (bookmark_dir.empty()) {
     logger_->log_error("State Directory is empty");
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "State Directory is empty");
   }
   bool process_old_events = utils::parseBoolProperty(context, ProcessOldEvents);
-  auto bookmark = std::make_unique<Bookmark>(path_, wstr_query_, bookmark_dir, getUUID(), process_old_events, state_manager_, logger_);
+  auto bookmark = std::make_unique<wel::Bookmark>(path_, wstr_query_, bookmark_dir, getUUID(), process_old_events, state_manager_, logger_);
   if (!bookmark->isValid()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bookmark is empty");
   }
   return bookmark;
-}
-
-std::function<bool(std::string_view)> cwel::parseSidMatcher(const std::optional<std::string>& sid_matcher) {
-  if (!sid_matcher || sid_matcher->empty()) {
-    return [](std::string_view){ return false; };
-  }
-
-  if (std::smatch match; utils::regexMatch(*sid_matcher, match, utils::Regex{R"_(\.\*(\w+))_"})) {
-    std::string suffix = match[1];
-    return [suffix](std::string_view field_name) { return utils::string::endsWith(field_name, suffix); };
-  }
-
-  utils::Regex sid_matcher_regex{*sid_matcher};
-  return [sid_matcher_regex](std::string_view field_name) { return utils::regexMatch(field_name, sid_matcher_regex); };
 }
 
 bool ConsumeWindowsEventLog::commitAndSaveBookmark(const std::wstring &bookmark_xml, core::ProcessContext& context, core::ProcessSession& session) {
@@ -437,7 +439,7 @@ nonstd::expected<std::string, std::string> ConsumeWindowsEventLog::renderEventAs
   return utils::to_string(std::wstring{buf.get()});
 }
 
-nonstd::expected<cwel::ProcessedEvent, std::string> ConsumeWindowsEventLog::processEvent(EVT_HANDLE event_handle) {
+nonstd::expected<wel::ProcessedEvent, std::string> ConsumeWindowsEventLog::processEvent(EVT_HANDLE event_handle) {
   auto event_as_xml = renderEventAsXml(event_handle);
   if (!event_as_xml)
     return nonstd::make_unexpected(event_as_xml.error());
@@ -446,7 +448,7 @@ nonstd::expected<cwel::ProcessedEvent, std::string> ConsumeWindowsEventLog::proc
   if (!doc.load_string(event_as_xml->c_str()))
     return nonstd::make_unexpected("Invalid XML produced");
 
-  cwel::ProcessedEvent result;
+  wel::ProcessedEvent result;
 
   // this is a well known path.
   std::string provider_name = doc.child("Event").child("System").child("Provider").attribute("Name").value();
@@ -458,7 +460,7 @@ nonstd::expected<cwel::ProcessedEvent, std::string> ConsumeWindowsEventLog::proc
 
   logger_->log_trace("Finish doc traversing, performing writing...");
 
-  if (output_format_ == cwel::OutputFormat::Plaintext || output_format_ == cwel::OutputFormat::Both) {
+  if (output_format_ == wel::OutputFormat::Plaintext || output_format_ == wel::OutputFormat::Both) {
     logger_->log_trace("Writing event in plain text");
 
     auto& provider = getEventLogProvider(provider_name);
@@ -484,7 +486,7 @@ nonstd::expected<cwel::ProcessedEvent, std::string> ConsumeWindowsEventLog::proc
     logger_->log_trace("Finish writing in plain text");
   }
 
-  if (output_format_ != cwel::OutputFormat::Plaintext) {
+  if (output_format_ != wel::OutputFormat::Plaintext) {
     substituteXMLPercentageItems(doc);
     logger_->log_trace("Finish substituting %% in XML");
   }
@@ -493,7 +495,7 @@ nonstd::expected<cwel::ProcessedEvent, std::string> ConsumeWindowsEventLog::proc
     result.matched_fields = walker.getFieldValues();
   }
 
-  if (output_format_ == cwel::OutputFormat::XML || output_format_ == cwel::OutputFormat::Both) {
+  if (output_format_ == wel::OutputFormat::XML || output_format_ == wel::OutputFormat::Both) {
     logger_->log_trace("Writing event in XML");
 
     wel::XmlString writer;
@@ -504,21 +506,21 @@ nonstd::expected<cwel::ProcessedEvent, std::string> ConsumeWindowsEventLog::proc
     logger_->log_trace("Finish writing in XML");
   }
 
-  if (output_format_ == cwel::OutputFormat::JSON) {
+  if (output_format_ == wel::OutputFormat::JSON) {
     switch (json_format_) {
-      case cwel::JsonFormat::Raw: {
+      case wel::JsonFormat::Raw: {
         logger_->log_trace("Writing event in raw JSON");
         result.json = wel::jsonToString(wel::toRawJSON(doc));
         logger_->log_trace("Finish writing in raw JSON");
         break;
       }
-      case cwel::JsonFormat::Simple: {
+      case wel::JsonFormat::Simple: {
         logger_->log_trace("Writing event in simple JSON");
         result.json = wel::jsonToString(wel::toSimpleJSON(doc));
         logger_->log_trace("Finish writing in simple JSON");
         break;
       }
-      case cwel::JsonFormat::Flattened: {
+      case wel::JsonFormat::Flattened: {
         logger_->log_trace("Writing event in flattened JSON");
         result.json = wel::jsonToString(wel::toFlattenedJSON(doc));
         logger_->log_trace("Finish writing in flattened JSON");
@@ -565,7 +567,7 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
   logger_->log_trace("Timezone name: {}, offset: {}", timezone_name_, timezone_offset_);
 }
 
-void ConsumeWindowsEventLog::createAndCommitFlowFile(const cwel::ProcessedEvent& processed_event, core::ProcessSession& session) const {
+void ConsumeWindowsEventLog::createAndCommitFlowFile(const wel::ProcessedEvent& processed_event, core::ProcessSession& session) const {
   auto commit_flow_file = [&] (const std::string& content, const std::string& mimeType) {
     auto flow_file = session.create();
     for (const auto& [key, value] : processed_event.matched_fields) {
@@ -581,17 +583,17 @@ void ConsumeWindowsEventLog::createAndCommitFlowFile(const cwel::ProcessedEvent&
     session.transfer(flow_file, Success);
   };
 
-  if (output_format_ == cwel::OutputFormat::XML || output_format_ == cwel::OutputFormat::Both) {
+  if (output_format_ == wel::OutputFormat::XML || output_format_ == wel::OutputFormat::Both) {
     logger_->log_trace("Writing rendered XML to a flow file");
     commit_flow_file(processed_event.xml, "application/xml");
   }
 
-  if (output_format_ == cwel::OutputFormat::Plaintext || output_format_ == cwel::OutputFormat::Both) {
+  if (output_format_ == wel::OutputFormat::Plaintext || output_format_ == wel::OutputFormat::Both) {
     logger_->log_trace("Writing rendered plain text to a flow file");
     commit_flow_file(processed_event.plaintext, "text/plain");
   }
 
-  if (output_format_ == cwel::OutputFormat::JSON) {
+  if (output_format_ == wel::OutputFormat::JSON) {
     logger_->log_trace("Writing rendered {} JSON to a flow file", magic_enum::enum_name(json_format_));
     commit_flow_file(processed_event.json, "application/json");
   }
