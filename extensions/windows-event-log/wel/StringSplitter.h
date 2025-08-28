@@ -29,7 +29,7 @@ template<std::invocable<std::string_view, std::string_view> Func>
 void splitCommaSeparatedKeyValuePairs(std::string_view input, Func output_callback) {
   static constexpr auto count_whitespace = [](auto begin, auto end) {
     size_t counter = 0;
-    for (auto it = begin; it != end && std::isspace(static_cast<unsigned char>(*it)); ++it, ++counter);
+    for (auto it = begin; it != end && std::isspace(static_cast<unsigned char>(*it)); ++it) { ++counter; }
     return counter;
   };
   for (const auto key_value_str : input | std::views::split(',')) {
