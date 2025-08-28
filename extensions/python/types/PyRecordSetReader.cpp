@@ -86,7 +86,12 @@ PyObject* PyRecordSetReader::read(PyRecordSetReader* self, PyObject* args) {
     return nullptr;
   }
 
-  auto read_result = record_set_reader->read(flow_file, process_session->getSession());
+  nonstd::expected<core::RecordSet, std::error_code> read_result;
+  process_session->getSession().read(flow_file, [&record_set_reader, &read_result](const std::shared_ptr<io::InputStream>& input_stream) {
+    read_result = record_set_reader->read(*input_stream);
+    return gsl::narrow<int64_t>(input_stream->size());
+  });
+
   if  (!read_result) {
     std::string error_message = "failed to read record set with the following error: " + read_result.error().message();
     PyErr_SetString(PyExc_RuntimeError, error_message.c_str());
