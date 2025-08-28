@@ -31,8 +31,9 @@ namespace org::apache::nifi::minifi::core::logging {
 
 class LoggerProperties : public PropertiesImpl {
  public:
-  LoggerProperties()
-      : PropertiesImpl("Logger properties") {
+  explicit LoggerProperties(std::filesystem::path default_log_dir)
+      : PropertiesImpl("Logger properties"),
+        default_log_dir_(std::move(default_log_dir)) {
   }
   /**
    * Gets all keys that start with the given prefix and do not have a "." after the prefix and "." separator.
@@ -52,7 +53,10 @@ class LoggerProperties : public PropertiesImpl {
     return sinks_;
   }
 
+  std::filesystem::path getDefaultLogDir() const { return default_log_dir_; }
+
  private:
+  std::filesystem::path default_log_dir_;
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sinks_;
 };
 

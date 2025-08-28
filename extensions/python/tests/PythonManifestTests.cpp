@@ -32,9 +32,11 @@ using minifi::state::response::SerializedResponseNode;
 using minifi::state::response::ValueNode;
 
 template<typename F>
-const SerializedResponseNode* findNode(const std::vector<SerializedResponseNode>& nodes, F&& filter) {
+const SerializedResponseNode* findNode(const std::vector<SerializedResponseNode>& nodes, F filter) {
   for (auto& node : nodes) {
-    if (filter(node)) return &node;
+    if (filter(node)) {
+      return &node;
+    }
   }
   return nullptr;
 }
@@ -54,7 +56,7 @@ ValueNode getNthAllowableValue(const SerializedResponseNode& node, size_t n) {
 TEST_CASE("Python processor's description is part of the manifest") {
   TestControllerWithFlow controller(empty_flow, false /* DEFER FLOW SETUP */);
 
-  auto python_dir = controller.configuration_->getHome() / "minifi-python";
+  auto python_dir = controller.createTempDirectory() / "minifi-python";
   utils::file::create_dir(python_dir);
   std::ofstream{python_dir / "MyPyProc.py"} <<
     "def describe(proc):\n"

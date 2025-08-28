@@ -18,14 +18,14 @@
 
 #include "core/flow/AdaptiveConfiguration.h"
 
+#include "Defaults.h"
 #include "core/json/JsonFlowSerializer.h"
 #include "core/json/JsonNode.h"
 #include "core/yaml/YamlFlowSerializer.h"
 #include "core/yaml/YamlNode.h"
-#include "yaml-cpp/yaml.h"
-#include "utils/file/FileUtils.h"
-#include "Defaults.h"
 #include "rapidjson/error/en.h"
+#include "utils/file/FileUtils.h"
+#include "yaml-cpp/yaml.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 

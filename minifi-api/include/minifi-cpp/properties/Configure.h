@@ -16,10 +16,10 @@
  */
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
-#include <memory>
 
 #include "Configuration.h"
 #include "minifi-cpp/core/AgentIdentificationProvider.h"
@@ -28,6 +28,7 @@
 struct ConfigTestAccessor;
 
 namespace org::apache::nifi::minifi {
+
 
 class Configure : public virtual Configuration, public virtual core::AgentIdentificationProvider {
   friend struct ::ConfigTestAccessor;

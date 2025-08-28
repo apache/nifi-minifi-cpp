@@ -30,17 +30,18 @@ ARG MINIFI_OPTIONS=""
 ARG CMAKE_BUILD_TYPE=Release
 ARG DOCKER_SKIP_TESTS=ON
 ARG DOCKER_MAKE_TARGET="all"
+ARG DOCKER_CREATE_RPM=ON
 
-ENV MINIFI_BASE_DIR /opt/minifi
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
-ENV USER minificpp
+ENV MINIFI_BASE_DIR=/opt/minifi
+ENV MINIFI_HOME=$MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
+ENV USER=minificpp
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
 
 # Install the system dependencies needed for a build
 # ccache is in EPEL
-RUN dnf -y install epel-release && dnf -y install gcc-toolset-12 sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake && \
+RUN dnf -y install epel-release && dnf -y install gcc-toolset-12 sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake rpmdevtools && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_ALL=ON"; then dnf -y --enablerepo=devel install python3-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then dnf -y install python3-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SFTP=ON" && [ "${DOCKER_SKIP_TESTS}" == "OFF" ]; then dnf -y install java-1.8.0-openjdk maven; fi
@@ -66,3 +67,13 @@ RUN cd $MINIFI_BASE_DIR && \
     export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
     cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" ${DOCKER_MAKE_TARGET}
+
+# Perform RPM build
+RUN if [[ "${DOCKER_CREATE_RPM}" == "ON" ]] ; then  \
+        cd $MINIFI_BASE_DIR && \
+        cd build && \
+        source /opt/rh/gcc-toolset-12/enable && \
+        cmake -DMINIFI_PACKAGING_TYPE=RPM .. && \
+        make -j "$(nproc)" package&& \
+        ../packaging/rpm/check_rpm_contents.sh *.rpm expected-rpm-contents.txt; \
+    fi \
