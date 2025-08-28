@@ -1363,14 +1363,20 @@ TEST_CASE("Format Date", "[expressionFormatDate]") {
   CHECK(expression::compile("${trillion_milliseconds:format('%Y/%m/%d %H:%M:%SZ', 'America/Los_Angeles')}")(expression::Parameters{ flow_file_a.get() }).asString() == "2001/09/08 18:46:40.000Z");
 }
 
-TEST_CASE("IP", "[expressionIP]") {
+#if defined(__APPLE__)
+  #define RESOLVE_MIGHT_FAIL_TAG "[!mayfail]"
+#else
+  #define RESOLVE_MIGHT_FAIL_TAG
+#endif
+
+TEST_CASE("IP", "[expressionIP]" RESOLVE_MIGHT_FAIL_TAG) {
   auto expr = expression::compile("${ip()}");
 
   auto flow_file_a = std::make_shared<core::FlowFileImpl>();
   REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asString().empty());
 }
 
-TEST_CASE("Full Hostname", "[expressionFullHostname]") {
+TEST_CASE("Full Hostname", "[expressionFullHostname]" RESOLVE_MIGHT_FAIL_TAG) {
   auto expr = expression::compile("${hostname('true')}");
 
   auto flow_file_a = std::make_shared<core::FlowFileImpl>();
