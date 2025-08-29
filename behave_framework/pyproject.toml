@@ -1,0 +1,14 @@
+[project]
+name = "minifi-test-framework"
+version = "0.1.0"
+description = "A testing framework for MiNiFi extensions."
+dependencies = [
+    "behavex",
+    "docker",
+    "PyYAML",
+    "humanfriendly"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["minifi_test_framework"]
