@@ -15,28 +15,31 @@
 
 @CORE
 Feature: Split input text line-by-line using SplitText
-  Background:
-    Given the content of "/tmp/output" is monitored
 
   Scenario: Split textfile containing header lines specified by line count
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with filename "test_file.log" and content "[HEADER]header line 1\n[HEADER]header line 2\nDATA LINE 1\nDATA LINE 2\n\n" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "[HEADER]header line 1\n[HEADER]header line 2\nDATA LINE 1\nDATA LINE 2\n\n"
     And a SplitText processor with the "Line Split Count" property set to "1"
     And the "Header Line Count" property of the SplitText processor is set to "2"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And SplitText's original relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
+    And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the SplitText
     And the "splits" relationship of the SplitText processor is connected to the PutFile
     When the MiNiFi instance starts up
-    Then flowfiles with these contents are placed in the monitored directory in less than 15 seconds: "[HEADER]header line 1\n[HEADER]header line 2\nDATA LINE 1,[HEADER]header line 1\n[HEADER]header line 2\nDATA LINE 2,[HEADER]header line 1\n[HEADER]header line 2"
+    Then the contents of "/tmp/output" in less than 15 seconds are: "[HEADER]header line 1\n[HEADER]header line 2\nDATA LINE 1,[HEADER]header line 1\n[HEADER]header line 2\nDATA LINE 2,[HEADER]header line 1\n[HEADER]header line 2"
 
   Scenario: Split textfile containing header lines specified by header line marker characters
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with filename "test_file.log" and content "[HEADER]header line 1\n[HEADER]header line 2\nA BIT LONGER DATA LINE 1\nDATA 2\nDATA 3\n\n" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "[HEADER]header line 1\n[HEADER]header line 2\nA BIT LONGER DATA LINE 1\nDATA 2\nDATA 3\n\n"
     And a SplitText processor with the "Line Split Count" property set to "3"
     And the "Maximum Fragment Size" property of the SplitText processor is set to "60 B"
     And the "Header Line Marker Characters" property of the SplitText processor is set to "[HEADER]"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the SplitText
     And the "splits" relationship of the SplitText processor is connected to the PutFile
+    And SplitText's original relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
     When the MiNiFi instance starts up
-    Then flowfiles with these contents are placed in the monitored directory in less than 30 seconds: "[HEADER]header line 1\n[HEADER]header line 2\nA BIT LONGER DATA LINE 1,[HEADER]header line 1\n[HEADER]header line 2\nDATA 2\nDATA 3"
+    Then the contents of "/tmp/output" in less than 15 seconds are: "[HEADER]header line 1\n[HEADER]header line 2\nA BIT LONGER DATA LINE 1,[HEADER]header line 1\n[HEADER]header line 2\nDATA 2\nDATA 3"

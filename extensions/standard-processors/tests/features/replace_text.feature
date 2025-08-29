@@ -15,8 +15,6 @@
 
 @CORE
 Feature: Changing flowfile contents using the ReplaceText processor
-  Background:
-    Given the content of "/tmp/output" is monitored
 
   Scenario Outline: Replace text using Entire text mode
     Given a GenerateFlowFile processor with the "Custom Text" property set to "<input>"
@@ -31,7 +29,7 @@ Feature: Changing flowfile contents using the ReplaceText processor
     And the "success" relationship of the GenerateFlowFile processor is connected to the ReplaceText
     And the "success" relationship of the ReplaceText processor is connected to the PutFile
     When the MiNiFi instance starts up
-    Then a flowfile with the content "<output>" is placed in the monitored directory in less than 100 seconds
+    Then there is a single file with "<output>" content in the "/tmp/output" directory in less than 10 seconds
 
     Examples:
       | input                 | replacement_strategy | search_value | replacement_value | output                    |
@@ -42,7 +40,7 @@ Feature: Changing flowfile contents using the ReplaceText processor
       | one apple, two apples | Always Replace       | _            | banana            | banana                    |
 
   Scenario Outline: Replace text using Line-by-Line mode
-    Given a file with the content "<input>" is present in "/tmp/input"
+    Given a directory at "/tmp/input" has a file with the content "<input>"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a ReplaceText processor with the "Evaluation Mode" property set to "Line-by-Line"
     And the "Line-by-Line Evaluation Mode" property of the ReplaceText processor is set to "<evaluation_mode>"
@@ -53,7 +51,7 @@ Feature: Changing flowfile contents using the ReplaceText processor
     And the "success" relationship of the GetFile processor is connected to the ReplaceText
     And the "success" relationship of the ReplaceText processor is connected to the PutFile
     When the MiNiFi instance starts up
-    Then a flowfile with the content "<output>" is placed in the monitored directory in less than 10 seconds
+    Then there is a single file with "<output>" content in the "/tmp/output" directory in less than 10 seconds
 
     Examples:
       | input                      | evaluation_mode      | output                     |

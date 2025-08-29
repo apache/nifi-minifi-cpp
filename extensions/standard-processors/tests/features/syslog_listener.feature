@@ -16,9 +16,6 @@
 @CORE
 Feature: Minifi C++ can act as a syslog listener
 
-  Background:
-    Given the content of "/tmp/output" is monitored
-
   Scenario: A syslog client can send messages to Minifi over UDP
     Given a ListenSyslog processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -32,7 +29,7 @@ Feature: Minifi C++ can act as a syslog listener
     And the "success" relationship of the ReplaceText processor is connected to the PutFile
 
     When both instances start up
-    Then at least one flowfile's content match the following regex: "^((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)\t13\t.*\tsample_log$" in less than 10 seconds
+    Then at least one file in "/tmp/output" content match the following regex: "^((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)\t13\t.*\tsample_log$" in less than 10 seconds
 
   Scenario: A syslog client can send messages to Minifi over TCP
     Given a ListenSyslog processor
@@ -43,4 +40,4 @@ Feature: Minifi C++ can act as a syslog listener
     And the "success" relationship of the ListenSyslog processor is connected to the PutFile
 
     When both instances start up
-    Then at least one flowfile is placed in the monitored directory in less than 10 seconds
+    Then there are at least 1 files is in the "/tmp/output" directory in less than 10 seconds
