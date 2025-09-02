@@ -56,7 +56,7 @@ void PostElasticsearch::onSchedule(core::ProcessContext& context, core::ProcessS
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing Elasticsearch credentials service");
 
   auto ssl_context_service = utils::parseOptionalControllerService<minifi::controllers::SSLContextServiceInterface>(context, PostElasticsearch::SSLContext, getUUID());
-  client_.initialize(http::HttpRequestMethod::POST, host_url_ + "/_bulk", ssl_context_service);
+  client_.initialize(http::HttpRequestMethod::Post, host_url_ + "/_bulk", ssl_context_service);
   client_.setContentType("application/json");
   credentials_service_->authenticateClient(client_);
 }

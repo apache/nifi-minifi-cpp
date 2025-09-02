@@ -44,7 +44,7 @@ class HttpClientStoreTestAccessor {
 TEST_CASE("HttpClientStore can create new client for a url and is returned after it's not used anymore") {
   minifi::processors::invoke_http::HttpClientStore store(2, [](const std::string& url) {
     auto client = std::make_unique<minifi::http::HTTPClient>();
-    client->initialize(minifi::http::HttpRequestMethod::GET, url, nullptr);
+    client->initialize(minifi::http::HttpRequestMethod::Get, url, nullptr);
     return gsl::make_not_null(std::move(client));
   });
   REQUIRE(HttpClientStoreTestAccessor::getMaxSize(store) == 2);
@@ -65,7 +65,7 @@ TEST_CASE("HttpClientStore can create new client for a url and is returned after
 TEST_CASE("A http client can be reused") {
   minifi::processors::invoke_http::HttpClientStore store(2, [](const std::string& url) {
     auto client = std::make_unique<minifi::http::HTTPClient>();
-    client->initialize(minifi::http::HttpRequestMethod::GET, url, nullptr);
+    client->initialize(minifi::http::HttpRequestMethod::Get, url, nullptr);
     return gsl::make_not_null(std::move(client));
   });
   minifi::http::HTTPClient* client_ptr = nullptr;
@@ -89,7 +89,7 @@ TEST_CASE("A http client can be reused") {
 TEST_CASE("A new url always creates a new client") {
   minifi::processors::invoke_http::HttpClientStore store(3, [](const std::string& url) {
     auto client = std::make_unique<minifi::http::HTTPClient>();
-    client->initialize(minifi::http::HttpRequestMethod::GET, url, nullptr);
+    client->initialize(minifi::http::HttpRequestMethod::Get, url, nullptr);
     return gsl::make_not_null(std::move(client));
   });
   const auto& used_clients = HttpClientStoreTestAccessor::getUsedClients(store);
@@ -114,7 +114,7 @@ TEST_CASE("A new url always creates a new client") {
 TEST_CASE("If a store is full, the first unused client is replaced by the newly requested one") {
   minifi::processors::invoke_http::HttpClientStore store(3, [](const std::string& url) {
     auto client = std::make_unique<minifi::http::HTTPClient>();
-    client->initialize(minifi::http::HttpRequestMethod::GET, url, nullptr);
+    client->initialize(minifi::http::HttpRequestMethod::Get, url, nullptr);
     return gsl::make_not_null(std::move(client));
   });
   const auto& used_clients = HttpClientStoreTestAccessor::getUsedClients(store);
@@ -148,7 +148,7 @@ TEST_CASE("If a store is full, the first unused client is replaced by the newly 
 TEST_CASE("Multiple unused clients are present the oldest one is replaced") {
   minifi::processors::invoke_http::HttpClientStore store(4, [](const std::string& url) {
     auto client = std::make_unique<minifi::http::HTTPClient>();
-    client->initialize(minifi::http::HttpRequestMethod::GET, url, nullptr);
+    client->initialize(minifi::http::HttpRequestMethod::Get, url, nullptr);
     return gsl::make_not_null(std::move(client));
   });
   const auto& used_clients = HttpClientStoreTestAccessor::getUsedClients(store);
@@ -185,7 +185,7 @@ TEST_CASE("Multiple unused clients are present the oldest one is replaced") {
 TEST_CASE("If all clients are in use, the call will block until a client is returned") {
   minifi::processors::invoke_http::HttpClientStore store(2, [](const std::string& url) {
     auto client = std::make_unique<minifi::http::HTTPClient>();
-    client->initialize(minifi::http::HttpRequestMethod::GET, url, nullptr);
+    client->initialize(minifi::http::HttpRequestMethod::Get, url, nullptr);
     return gsl::make_not_null(std::move(client));
   });
   bool client2_created{false};
