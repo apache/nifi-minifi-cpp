@@ -98,8 +98,11 @@ void ThreadPool::run_tasks(const std::shared_ptr<WorkerThread>& thread) {
 }
 
 void ThreadPool::manage_delayed_queue() {
-  while (running_) {
+  while (true) {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+    if (!running_) {
+      return;
+    }
 
     // Put the tasks ready to run in the worker queue
     while (!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getNextExecutionTime() <= std::chrono::steady_clock::now()) {
