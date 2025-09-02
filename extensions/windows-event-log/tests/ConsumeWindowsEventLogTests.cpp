@@ -543,7 +543,7 @@ TEST_CASE("ConsumeWindowsEventLog can process events from a log file", "[cwel][l
 
 TEST_CASE("ConsumeWindowsEventLog::parseSidMatcher works correctly") {
   const auto verify = [](const std::optional<std::string>& sid_matcher, std::string_view field_name, bool result) {
-    const auto matcher_function = minifi::processors::cwel::parseSidMatcher(sid_matcher);
+    const auto matcher_function = minifi::wel::parseSidMatcher(sid_matcher);
     CHECK(matcher_function(field_name) == result);
   };
 

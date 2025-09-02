@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <windows.h>
+#include <Windows.h>
 #include <winevt.h>
 
 #include <string>
