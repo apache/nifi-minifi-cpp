@@ -26,7 +26,6 @@ ThreadPool::ThreadPool(int max_worker_threads, core::controller::ControllerServi
     : thread_reduction_count_(0),
       max_worker_threads_(max_worker_threads),
       current_workers_(0),
-      adjust_threads_(false),
       running_(false),
       controller_service_provider_(controller_service_provider),
       name_(std::move(name)),
@@ -98,8 +97,11 @@ void ThreadPool::run_tasks(const std::shared_ptr<WorkerThread>& thread) {
 }
 
 void ThreadPool::manage_delayed_queue() {
-  while (running_) {
+  while (true) {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+    if (!running_) {
+      return;
+    }
 
     // Put the tasks ready to run in the worker queue
     while (!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getNextExecutionTime() <= std::chrono::steady_clock::now()) {
