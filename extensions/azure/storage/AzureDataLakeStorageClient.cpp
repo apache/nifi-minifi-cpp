@@ -42,7 +42,7 @@ std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> Azure
     options.Retry.MaxRetries = gsl::narrow<int32_t>(*number_of_retries);
   }
 
-  if (credentials.getCredentialConfigurationStrategy() == CredentialConfigurationStrategyOption::fromProperties) {
+  if (credentials.getCredentialConfigurationStrategy() == CredentialConfigurationStrategyOption::FromProperties) {
     return std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(
       Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(credentials.buildConnectionString(), file_system_name, options));
   }

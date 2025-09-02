@@ -29,10 +29,10 @@ enum class EntityTracking {
 };
 
 enum class CredentialConfigurationStrategyOption {
-  fromProperties,
-  defaultCredential,
-  managedIdentity,
-  workloadIdentity
+  FromProperties,
+  DefaultCredential,
+  ManagedIdentity,
+  WorkloadIdentity
 };
 
 }  // namespace org::apache::nifi::minifi::azure
@@ -43,13 +43,13 @@ using CredentialConfigurationStrategyOption = org::apache::nifi::minifi::azure::
 template <>
 constexpr customize_t enum_name<CredentialConfigurationStrategyOption>(CredentialConfigurationStrategyOption value) noexcept {
   switch (value) {
-    case CredentialConfigurationStrategyOption::fromProperties:
+    case CredentialConfigurationStrategyOption::FromProperties:
       return "From Properties";
-    case CredentialConfigurationStrategyOption::defaultCredential:
+    case CredentialConfigurationStrategyOption::DefaultCredential:
       return "Default Credential";
-    case CredentialConfigurationStrategyOption::managedIdentity:
+    case CredentialConfigurationStrategyOption::ManagedIdentity:
       return "Managed Identity";
-    case CredentialConfigurationStrategyOption::workloadIdentity:
+    case CredentialConfigurationStrategyOption::WorkloadIdentity:
       return "Workload Identity";
   }
   return invalid_tag;

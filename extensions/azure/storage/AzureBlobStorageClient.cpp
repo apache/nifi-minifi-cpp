@@ -56,7 +56,7 @@ AzureBlobStorageClient::AzureBlobStorageClient() {
 }
 
 Azure::Storage::Blobs::BlobContainerClient AzureBlobStorageClient::createClient(const AzureStorageCredentials &credentials, const std::string &container_name) {
-  if (credentials.getCredentialConfigurationStrategy() == CredentialConfigurationStrategyOption::fromProperties) {
+  if (credentials.getCredentialConfigurationStrategy() == CredentialConfigurationStrategyOption::FromProperties) {
     return Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(credentials.buildConnectionString(), container_name);
   }
 

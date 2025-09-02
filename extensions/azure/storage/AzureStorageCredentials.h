@@ -55,7 +55,7 @@ class AzureStorageCredentials {
   std::string endpoint_suffix_;
   std::string connection_string_;
   std::string managed_identity_client_id_;
-  CredentialConfigurationStrategyOption credential_configuration_strategy_ = CredentialConfigurationStrategyOption::fromProperties;
+  CredentialConfigurationStrategyOption credential_configuration_strategy_ = CredentialConfigurationStrategyOption::FromProperties;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

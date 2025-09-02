@@ -222,16 +222,16 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Test Azure credentials w
   std::string managed_identity_client_id;
 
   SECTION("Managed Identity") {
-    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::managedIdentity;
+    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::ManagedIdentity;
     credential_configuration_strategy_string = "Managed Identity";
     managed_identity_client_id = "test-managed-identity-client-id";
   }
   SECTION("Default Credential") {
-    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::defaultCredential;
+    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::DefaultCredential;
     credential_configuration_strategy_string = "Default Credential";
   }
   SECTION("Workload Identity") {
-    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::workloadIdentity;
+    expected_configuration_strategy_option = minifi::azure::CredentialConfigurationStrategyOption::WorkloadIdentity;
     credential_configuration_strategy_string = "Workload Identity";
   }
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString, "test");
