@@ -110,8 +110,8 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             opencv-external
-            URL "https://github.com/opencv/opencv/archive/refs/tags/4.7.0.tar.gz"
-            URL_HASH "SHA256=8df0079cdbe179748a18d44731af62a245a45ebf5085223dc03133954c662973"
+            URL "https://github.com/opencv/opencv/archive/refs/tags/4.12.0.tar.gz"
+            URL_HASH "SHA256=44c106d5bb47efec04e531fd93008b3fcd1d27138985c5baf4eafac0e1ec9e9d"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/opencv-src"
             PATCH_COMMAND ${PC}
             CMAKE_ARGS ${OPENCV_CMAKE_ARGS}

@@ -38,8 +38,8 @@ function(use_bundled_zlib SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
         zlib-external
-        URL "https://github.com/madler/zlib/archive/v1.2.11.tar.gz"
-        URL_HASH "SHA256=629380c90a77b964d896ed37163f5c3a34f6e6d897311f1df2a7016355c45eff"
+        URL "https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz"
+        URL_HASH "SHA256=17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c"
         SOURCE_DIR "${BINARY_DIR}/thirdparty/zlib-src"
         CMAKE_ARGS ${ZLIB_CMAKE_ARGS}
         BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/zlib-install/${BYPRODUCT}"
@@ -50,7 +50,7 @@ function(use_bundled_zlib SOURCE_DIR BINARY_DIR)
     set(ZLIB_FOUND "YES" CACHE STRING "" FORCE)
     set(ZLIB_INCLUDE_DIRS "${BINARY_DIR}/thirdparty/zlib-install/include" CACHE STRING "" FORCE)
     set(ZLIB_LIBRARIES "${BINARY_DIR}/thirdparty/zlib-install/${BYPRODUCT}" CACHE STRING "" FORCE)
-    set(ZLIB_VERSION_STRING "1.2.11" CACHE STRING "" FORCE)
+    set(ZLIB_VERSION_STRING "1.3.1" CACHE STRING "" FORCE)
     set(ZLIB_VERSION_MAJOR 1 CACHE STRING "" FORCE)
     set(ZLIB_VERSION_MINOR 2 CACHE STRING "" FORCE)
     set(ZLIB_VERSION_PATCH 11 CACHE STRING "" FORCE)
