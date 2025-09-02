@@ -23,19 +23,21 @@
 #include "Defaults.h"
 
 namespace org::apache::nifi::minifi::utils {
-inline std::string getDefaultExtensionsPattern() {
-  constexpr std::string_view DEFAULT_EXTENSION_PATH = "../extensions/*";
-  constexpr std::string_view DEFAULT_EXTENSION_PATH_RPM = RPM_LIB_DIR "/extensions/*";
+inline std::string_view getDefaultExtensionsPattern() {
+  static constexpr std::string_view DEFAULT_EXTENSION_PATH = "../extensions/*";
+  static constexpr std::string_view DEFAULT_EXTENSION_PATH_RPM = RPM_LIB_DIR "/extensions/*";
   if (Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str()) == MINIFI_HOME_ENV_VALUE_FHS || file::get_executable_path().parent_path() == "/usr/bin") {
-    return std::string(DEFAULT_EXTENSION_PATH_RPM);
+    return DEFAULT_EXTENSION_PATH_RPM;
   }
-  return std::string(DEFAULT_EXTENSION_PATH);
+  return DEFAULT_EXTENSION_PATH;
 }
 
 inline std::filesystem::path getMinifiDir() {
-  if (Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str()) == MINIFI_HOME_ENV_VALUE_FHS || file::get_executable_path().parent_path() == "/usr/bin") {
-    return RPM_WORK_DIR;
+  if (const auto working_dir_from_env = Environment::getEnvironmentVariable(std::string(MINIFI_WORKING_DIR).c_str())) {
+    return *working_dir_from_env;
   }
-  return Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str()).value_or("");
+
+  // we should probably terminate instead, but tests rely on this behaviour
+  return "";
 }
 }  // namespace org::apache::nifi::minifi::utils

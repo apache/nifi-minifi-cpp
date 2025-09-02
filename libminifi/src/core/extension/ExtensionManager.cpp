@@ -70,7 +70,7 @@ bool ExtensionManagerImpl::initialize(const std::shared_ptr<Configure>& config) 
 
       auto default_extension_path = utils::getDefaultExtensionsPattern();
       logger_->log_warn("No extension path is provided in properties, using default: '{}'", default_extension_path);
-      return default_extension_path;
+      return std::string(default_extension_path);
     }();
 
     auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {

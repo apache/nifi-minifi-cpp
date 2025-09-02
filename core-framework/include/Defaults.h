@@ -28,4 +28,5 @@ const inline std::filesystem::path DEFAULT_UID_PROPERTIES_FILE = std::filesystem
 const inline std::filesystem::path DEFAULT_BOOTSTRAP_FILE = std::filesystem::path("conf") / "bootstrap.conf";
 
 constexpr inline std::string_view MINIFI_HOME_ENV_KEY = "MINIFI_HOME";
+constexpr inline std::string_view MINIFI_WORKING_DIR = "MINIFI_WORKING_DIR";
 constexpr inline std::string_view MINIFI_HOME_ENV_VALUE_FHS = "FHS";

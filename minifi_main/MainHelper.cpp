@@ -104,10 +104,6 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<core::logging::L
     return "";
   }
 
-  /* Set the valid MINIFI_HOME in our environment */
-  logger->log_info("Using {}={}", MINIFI_HOME_ENV_KEY, minifi_home);
-  utils::Environment::setEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str(), minifi_home.string().c_str());
-
   return minifi_home;
 }
 

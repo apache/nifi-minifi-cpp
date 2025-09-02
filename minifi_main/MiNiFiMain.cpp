@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -47,6 +46,7 @@
 
 #include "AgentDocs.h"
 #include "DiskSpaceWatchdog.h"
+#include "Defaults.h"
 #include "Fips.h"
 #include "FlowController.h"
 #include "MainHelper.h"
@@ -271,6 +271,8 @@ int main(int argc, char **argv) {
     // determineLocations already logged everything we need
     return -1;
   }
+  minifi::utils::Environment::setEnvironmentVariable(std::string(MINIFI_WORKING_DIR).c_str(), locations->working_dir_.string().c_str());
+
 
   logger->log_info("MiNiFi Locations={}", *locations);
 

@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "Controller.h"
+#include "Defaults.h"
 #include "Exception.h"
 #include "MainHelper.h"
 #include "agent/agent_version.h"
@@ -33,6 +34,7 @@
 #include "core/extension/ExtensionManager.h"
 #include "properties/Configure.h"
 #include "range/v3/algorithm/contains.hpp"
+#include "utils/Environment.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -96,6 +98,8 @@ int main(int argc, char **argv) {
     // determineLocations already logged everything we need
     return -1;
   }
+  minifi::utils::Environment::setEnvironmentVariable(std::string(MINIFI_WORKING_DIR).c_str(), locations->working_dir_.string().c_str());
+
 
   const auto configuration = std::make_shared<minifi::ConfigureImpl>();
   configuration->loadConfigureFile(locations->properties_path_);

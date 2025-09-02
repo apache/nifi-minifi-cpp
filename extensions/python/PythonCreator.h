@@ -219,7 +219,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
       };
       const auto default_extension_path = utils::getDefaultExtensionsPattern();
       logger_->log_warn("No extension path is provided in properties, using default: '{}'", default_extension_path);
-      return default_extension_path;
+      return std::string(default_extension_path);
     }();
     const auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
       logger_->log_error("Error in subpattern '{}': {}", subpattern, error_msg);
