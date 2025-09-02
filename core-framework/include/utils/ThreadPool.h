@@ -271,7 +271,6 @@ class ThreadPool {
   std::vector<std::shared_ptr<WorkerThread>> thread_queue_;
   std::thread manager_thread_;
   std::thread delayed_scheduler_thread_;
-  std::atomic<bool> adjust_threads_;
   std::atomic<bool> running_;
   core::controller::ControllerServiceLookup* controller_service_provider_;
   std::shared_ptr<controllers::ThreadManagementService> thread_manager_;

@@ -26,7 +26,6 @@ ThreadPool::ThreadPool(int max_worker_threads, core::controller::ControllerServi
     : thread_reduction_count_(0),
       max_worker_threads_(max_worker_threads),
       current_workers_(0),
-      adjust_threads_(false),
       running_(false),
       controller_service_provider_(controller_service_provider),
       name_(std::move(name)),
