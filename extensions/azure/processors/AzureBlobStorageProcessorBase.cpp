@@ -37,7 +37,7 @@ void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, co
 
   credential_configuration_strategy_ = minifi::utils::parseEnumProperty<CredentialConfigurationStrategyOption>(context, CredentialConfigurationStrategy);
 
-  if (credential_configuration_strategy_ != CredentialConfigurationStrategyOption::fromProperties) {
+  if (credential_configuration_strategy_ != CredentialConfigurationStrategyOption::FromProperties) {
     logger_->log_info("Using {} for authentication", magic_enum::enum_name(credential_configuration_strategy_));
     return;
   }
