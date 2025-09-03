@@ -27,10 +27,15 @@
 #include "core/state/PublishedMetricProvider.h"
 #include "core/Core.h"
 #include "core/Connectable.h"
-#include "minifi-cpp/core/state/nodes/MetricsBase.h"
-#include "core/state/nodes/ResponseNode.h"
+#include "ResponseNode.h"
 
 namespace org::apache::nifi::minifi::state::response {
+
+class ResponseNodeSource {
+  public:
+    virtual ~ResponseNodeSource() = default;
+    virtual SharedResponseNode getResponseNode() = 0;
+};
 
 class DeviceInformation : public ResponseNodeImpl {
  public:

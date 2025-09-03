@@ -16,24 +16,11 @@
  */
 #pragma once
 
-#include <chrono>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <unordered_set>
-#include <unordered_map>
 
-#include "ConfigurableComponent.h"
-#include "Connectable.h"
-#include "Property.h"
-#include "DynamicProperty.h"
-#include "Core.h"
 #include "minifi-cpp/core/Annotation.h"
-#include "Scheduling.h"
-#include "minifi-cpp/core/state/nodes/MetricsBase.h"
-#include "ProcessorMetrics.h"
-#include "utils/gsl.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/CustomProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -67,7 +54,7 @@ class ProcessorApi {
   virtual void onUnSchedule() = 0;
   virtual void notifyStop() = 0;
   virtual annotation::Input getInputRequirement() const = 0;
-  virtual gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const = 0;
+  virtual std::shared_ptr<CustomProcessorMetrics> getMetrics() const = 0;
   virtual void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) = 0;
 };
 

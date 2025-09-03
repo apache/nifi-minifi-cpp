@@ -23,9 +23,8 @@
 #include <mutex>
 #include <vector>
 
-#include "core/state/nodes/ResponseNode.h"
-#include "minifi-cpp/core/ProcessorMetrics.h"
 #include "core/state/Value.h"
+#include "state/nodes/MetricsBase.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -35,42 +34,42 @@ concept Summable = requires(T x) { x + x; };  // NOLINT(readability/braces)
 template<typename T>
 concept DividableByInteger = requires(T x, uint32_t divisor) { x / divisor; };  // NOLINT(readability/braces)
 
-class ProcessorImpl;
+class Processor;
 
-class ProcessorMetricsImpl : public state::response::ResponseNodeImpl, public virtual ProcessorMetrics {
+class ProcessorMetrics : public state::response::ResponseNodeImpl {
  public:
-  explicit ProcessorMetricsImpl(const ProcessorImpl& source_processor);
+  explicit ProcessorMetrics(const Processor& source_processor);
 
   [[nodiscard]] std::string getName() const override;
 
-  std::vector<state::response::SerializedResponseNode> serialize() override;
-  std::vector<state::PublishedMetric> calculateMetrics() override;
-  void increaseRelationshipTransferCount(const std::string& relationship, size_t count = 1) override;
-  std::chrono::milliseconds getAverageOnTriggerRuntime() const override;
-  std::chrono::milliseconds getLastOnTriggerRuntime() const override;
-  void addLastOnTriggerRuntime(std::chrono::milliseconds runtime) override;
+  std::vector<state::response::SerializedResponseNode> serialize() final;
+  std::vector<state::PublishedMetric> calculateMetrics() final;
+  void increaseRelationshipTransferCount(const std::string& relationship, size_t count = 1);
+  std::chrono::milliseconds getAverageOnTriggerRuntime() const;
+  std::chrono::milliseconds getLastOnTriggerRuntime() const;
+  void addLastOnTriggerRuntime(std::chrono::milliseconds runtime);
 
-  std::chrono::milliseconds getAverageSessionCommitRuntime() const override;
-  std::chrono::milliseconds getLastSessionCommitRuntime() const override;
-  void addLastSessionCommitRuntime(std::chrono::milliseconds runtime) override;
-  std::optional<size_t> getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const override;
+  std::chrono::milliseconds getAverageSessionCommitRuntime() const;
+  std::chrono::milliseconds getLastSessionCommitRuntime() const;
+  void addLastSessionCommitRuntime(std::chrono::milliseconds runtime);
+  std::optional<size_t> getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const;
 
-  std::atomic<size_t>& invocations() override {return invocations_;}
-  const std::atomic<size_t>& invocations() const override {return invocations_;}
-  std::atomic<size_t>& incomingFlowFiles() override {return incoming_flow_files_;}
-  const std::atomic<size_t>& incomingFlowFiles() const override {return incoming_flow_files_;}
-  std::atomic<size_t>& transferredFlowFiles() override {return transferred_flow_files_;}
-  const std::atomic<size_t>& transferredFlowFiles() const override {return transferred_flow_files_;}
-  std::atomic<uint64_t>& incomingBytes() override {return incoming_bytes_;}
-  const std::atomic<uint64_t>& incomingBytes() const override {return incoming_bytes_;}
-  std::atomic<uint64_t>& transferredBytes() override {return transferred_bytes_;}
-  const std::atomic<uint64_t>& transferredBytes() const override {return transferred_bytes_;}
-  std::atomic<uint64_t>& bytesRead() override {return bytes_read_;}
-  const std::atomic<uint64_t>& bytesRead() const override {return bytes_read_;}
-  std::atomic<uint64_t>& bytesWritten() override {return bytes_written_;}
-  const std::atomic<uint64_t>& bytesWritten() const override {return bytes_written_;}
-  std::atomic<uint64_t>& processingNanos() override {return processing_nanos_;}
-  const std::atomic<uint64_t>& processingNanos() const override {return processing_nanos_;}
+  std::atomic<size_t>& invocations() {return invocations_;}
+  const std::atomic<size_t>& invocations() const {return invocations_;}
+  std::atomic<size_t>& incomingFlowFiles() {return incoming_flow_files_;}
+  const std::atomic<size_t>& incomingFlowFiles() const {return incoming_flow_files_;}
+  std::atomic<size_t>& transferredFlowFiles() {return transferred_flow_files_;}
+  const std::atomic<size_t>& transferredFlowFiles() const {return transferred_flow_files_;}
+  std::atomic<uint64_t>& incomingBytes() {return incoming_bytes_;}
+  const std::atomic<uint64_t>& incomingBytes() const {return incoming_bytes_;}
+  std::atomic<uint64_t>& transferredBytes() {return transferred_bytes_;}
+  const std::atomic<uint64_t>& transferredBytes() const {return transferred_bytes_;}
+  std::atomic<uint64_t>& bytesRead() {return bytes_read_;}
+  const std::atomic<uint64_t>& bytesRead() const {return bytes_read_;}
+  std::atomic<uint64_t>& bytesWritten() {return bytes_written_;}
+  const std::atomic<uint64_t>& bytesWritten() const {return bytes_written_;}
+  std::atomic<uint64_t>& processingNanos() {return processing_nanos_;}
+  const std::atomic<uint64_t>& processingNanos() const {return processing_nanos_;}
 
  protected:
   template<typename ValueType>
@@ -97,7 +96,7 @@ class ProcessorMetricsImpl : public state::response::ResponseNodeImpl, public vi
 
   mutable std::mutex transferred_relationships_mutex_;
   std::unordered_map<std::string, size_t> transferred_relationships_;
-  const ProcessorImpl& source_processor_;
+  const Processor& source_processor_;
   Averager<std::chrono::milliseconds> on_trigger_runtime_averager_;
   Averager<std::chrono::milliseconds> session_commit_runtime_averager_;
 
