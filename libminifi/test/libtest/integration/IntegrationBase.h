@@ -31,12 +31,18 @@
 #include "utils/file/AssetManager.h"
 #include "utils/file/FileUtils.h"
 #include "core/BulletinStore.h"
+#include "unit/TestBase.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
 namespace utils = minifi::utils;
 
 namespace org::apache::nifi::minifi::test {
+
+struct FlowConfigPath {
+  std::unique_ptr<TempDirectory> temp_dir;
+  std::optional<std::filesystem::path> config_path;
+};
 
 class IntegrationBase {
  public:
@@ -95,6 +101,10 @@ class IntegrationBase {
 
   virtual void runAssertions() = 0;
 
+  std::optional<std::filesystem::path> getLastFlowConfigPath() const {
+    return last_flow_config_path_.config_path;
+  }
+
  protected:
   virtual void configureC2() {
   }
@@ -119,6 +129,7 @@ class IntegrationBase {
   std::filesystem::path key_dir;
   std::filesystem::path state_dir;
   std::atomic<int> restart_requested_count_{0};
+  FlowConfigPath last_flow_config_path_;
 };
 
 std::string parseUrl(std::string url);

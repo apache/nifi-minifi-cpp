@@ -40,15 +40,17 @@ foreach(testfile ${CONTROLLER_TESTS})
     add_test(NAME ${testfilename} COMMAND ${testfilename} WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
     math(EXPR CONTROLLER_TEST_COUNT "${CONTROLLER_TEST_COUNT}+1")
-
-    # Copy test resources
-    add_custom_command(
-        TARGET "${testfilename}"
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${CMAKE_SOURCE_DIR}/controller/tests/resources"
-                "$<TARGET_FILE_DIR:${testfilename}>/resources"
-        )
 endforeach()
+
+list(GET CONTROLLER_TESTS 0 firsttestfile)
+get_filename_component(firsttestfilename "${firsttestfile}" NAME_WE)
+# Copy test resources
+add_custom_command(
+    TARGET "${firsttestfilename}"
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/controller/tests/resources"
+            "$<TARGET_FILE_DIR:${firsttestfilename}>/resources"
+    )
 
 message("-- Finished building ${CONTROLLER_TEST_COUNT} controller test file(s)...")

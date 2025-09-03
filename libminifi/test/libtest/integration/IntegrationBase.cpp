@@ -18,6 +18,7 @@
 #include "IntegrationBase.h"
 
 #include <future>
+#include <filesystem>
 
 #include "utils/net/DNS.h"
 #include "utils/HTTPUtils.h"
@@ -50,8 +51,16 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-  if (test_file_location) {
-    configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location->string());
+  last_flow_config_path_.config_path = test_file_location;
+  if (test_file_location && std::filesystem::exists(*test_file_location) && std::filesystem::is_regular_file(*test_file_location)) {
+    last_flow_config_path_.temp_dir = std::make_unique<TempDirectory>();
+    last_flow_config_path_.config_path = last_flow_config_path_.temp_dir->getPath() / "config.yml";
+    std::filesystem::copy_file(*test_file_location, *last_flow_config_path_.config_path);
+    configuration->set(minifi::Configure::nifi_flow_configuration_file, last_flow_config_path_.config_path->string());
+  }
+
+  if (last_flow_config_path_.config_path) {
+    configuration->set(minifi::Configure::nifi_flow_configuration_file, last_flow_config_path_.config_path->string());
   }
   configuration->set(minifi::Configure::nifi_state_storage_local_class_name, "VolatileMapStateStorage");
 
@@ -97,13 +106,16 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
             .flow_file_repo = test_repo,
             .content_repo = content_repo,
             .configuration = configuration,
-            .path = test_file_location,
+            .path = last_flow_config_path_.config_path,
             .filesystem = filesystem,
             .sensitive_values_encryptor = sensitive_values_encryptor,
             .bulletin_store = bulletin_store_.get()
         }, nifi_configuration_class_name);
 
     auto controller_service_provider = flow_config->getControllerServiceProvider();
+    if (!state_dir.empty()) {
+      minifi::utils::file::delete_dir(state_dir);
+    }
     char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     state_dir = minifi::utils::file::create_temp_directory(state_dir_name_template);
     if (!configuration->get(minifi::Configure::nifi_state_storage_local_path)) {
