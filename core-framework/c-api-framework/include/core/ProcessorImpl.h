@@ -71,7 +71,7 @@ class ProcessorImpl {
 
   virtual void onTrigger(ProcessContext&, ProcessSession&) {}
 
-  virtual void onSchedule(ProcessContext&, ProcessSessionFactory&) {}
+  virtual void onSchedule(ProcessContext&) {}
 
   virtual void onUnSchedule() {}
 

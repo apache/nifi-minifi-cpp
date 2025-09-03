@@ -77,12 +77,12 @@ DECLARE_CONST_HANDLE(MinifiPropertyValidator);
 DECLARE_HANDLE(MinifiFlowFile);
 DECLARE_HANDLE(MinifiLogger);
 DECLARE_HANDLE(MinifiProcessContext);
-DECLARE_HANDLE(MinifiProcessSessionFactory);
 DECLARE_HANDLE(MinifiProcessSession);
 DECLARE_HANDLE(MinifiInputStream);
 DECLARE_HANDLE(MinifiOutputStream);
 DECLARE_HANDLE(MinifiConfigure);
 DECLARE_HANDLE(MinifiExtension);
+DECLARE_HANDLE(MinifiPublishedMetrics);
 
 typedef struct MinifiExtensionCreateInfo {
   MinifiStringView name;
@@ -144,8 +144,9 @@ typedef struct MinifiProcessorCallbacks {
   void(*restore)(void*, OWNED MinifiFlowFile);
   MinifiBool(*getTriggerWhenEmpty)(void*);
   MinifiStatus(*onTrigger)(void*, MinifiProcessContext, MinifiProcessSession);
-  MinifiStatus(*onSchedule)(void*, MinifiProcessContext, MinifiProcessSessionFactory);
+  MinifiStatus(*onSchedule)(void*, MinifiProcessContext);
   void(*onUnSchedule)(void*);
+  OWNED MinifiPublishedMetrics(*calculateMetrics)(void*);
 } MinifiProcessorCallbacks;
 
 typedef struct MinifiProcessorClassDescription {
@@ -185,6 +186,8 @@ void MinifiDestroyExtension(OWNED MinifiExtension);
 MinifiPropertyValidator MinifiGetStandardValidator(MinifiStandardPropertyValidator);
 void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription*);
 
+OWNED MinifiPublishedMetrics MinifiPublishedMetricsCreate(uint32_t count, const MinifiStringView*, const double*);
+
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext, MinifiStringView, MinifiFlowFile, void(*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx);
 void MinifiProcessContextYield(MinifiProcessContext);
 void MinifiProcessContextGetProcessorName(MinifiProcessContext, void(*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx);
@@ -213,6 +216,8 @@ int64_t MinifiInputStreamRead(MinifiInputStream, char*, uint64_t);
 int64_t MinifiOutputStreamWrite(MinifiOutputStream, const char*, uint64_t);
 
 void MinifiStatusToString(MinifiStatus, void(*cb)(void* user_ctx, MinifiStringView str), void* user_ctx);
+
+void MinifiFlowFileSetAttribute(MinifiFlowFile, MinifiStringView, MinifiStringView);
 
 #ifdef __cplusplus
 } // extern "C"

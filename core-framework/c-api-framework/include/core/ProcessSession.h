@@ -30,10 +30,13 @@ public:
   explicit ProcessSession(MinifiProcessSession impl): impl_(impl) {}
 
   std::shared_ptr<FlowFile> create(const FlowFile* parent = nullptr);
+  std::shared_ptr<FlowFile> get();
   void transfer(const std::shared_ptr<FlowFile>& ff, const Relationship& relationship);
   void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer);
   void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer);
   void write(core::FlowFile &flow, const io::OutputStreamCallback& callback);
+  void read(core::FlowFile &flow, const io::InputStreamCallback& callback);
+  std::vector<std::byte> readBuffer(core::FlowFile &flow);
 
 private:
   MinifiProcessSession impl_;

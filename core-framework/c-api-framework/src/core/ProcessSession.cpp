@@ -16,8 +16,10 @@
  */
 
 #include "core/ProcessSession.h"
-#include "utils/minifi-c-utils.h"
+
+#include "io/InputStream.h"
 #include "io/OutputStream.h"
+#include "utils/minifi-c-utils.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -35,12 +37,38 @@ class MinifiOutputStreamWrapper : public io::OutputStreamImpl {
   void seek(size_t /*offset*/) override {gsl_FailFast();}
   [[nodiscard]] size_t tell() const override {gsl_FailFast();}
   int initialize() override {gsl_FailFast();}
-  [[nodiscard]] virtual std::span<const std::byte> getBuffer() const override {gsl_FailFast();}
+  [[nodiscard]] std::span<const std::byte> getBuffer() const override {gsl_FailFast();}
 
  private:
   MinifiOutputStream impl_;
 };
 
+class MinifiInputStreamWrapper : public io::InputStreamImpl {
+public:
+  explicit MinifiInputStreamWrapper(MinifiInputStream impl): impl_(impl) {}
+
+  size_t read(std::span<std::byte> out_buffer) override {
+    return MinifiInputStreamRead(impl_, reinterpret_cast<char*>(out_buffer.data()), out_buffer.size());
+  }
+
+  [[nodiscard]] size_t size() const override {
+    return MinifiInputStreamSize(impl_);
+  }
+
+  void close() override {gsl_FailFast();}
+  void seek(size_t /*offset*/) override {gsl_FailFast();}
+  [[nodiscard]] size_t tell() const override {gsl_FailFast();}
+  int initialize() override {gsl_FailFast();}
+  [[nodiscard]] std::span<const std::byte> getBuffer() const override {gsl_FailFast();}
+
+private:
+  MinifiInputStream impl_;
+};
+
+}
+
+std::shared_ptr<FlowFile> ProcessSession::get() {
+  return std::make_shared<FlowFile>(MinifiProcessSessionGet(impl_));
 }
 
 std::shared_ptr<FlowFile> ProcessSession::create(const FlowFile* parent) {
@@ -63,9 +91,25 @@ void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_fil
   });
 }
 
+std::vector<std::byte> ProcessSession::readBuffer(core::FlowFile& flow_file) {
+  std::vector<std::byte> result;
+  read(flow_file, [&result](const std::shared_ptr<io::InputStream>& input_stream) {
+    result.resize(input_stream->size());
+    const auto read_status = input_stream->read(result);
+    return io::isError(read_status) ? -1 : gsl::narrow<int64_t>(read_status);
+  });
+  return result;
+}
+
 void ProcessSession::write(core::FlowFile& flow_file, const io::OutputStreamCallback& callback) {
   MinifiProcessSessionWrite(impl_, flow_file.getImpl(), [] (void* data, MinifiOutputStream output) {
-    return (*static_cast<const io::OutputStreamCallback*>(data))(std::make_shared<MinifiOutputStreamWrapper>(output));
+    return (*reinterpret_cast<const io::OutputStreamCallback*>(data))(std::make_shared<MinifiOutputStreamWrapper>(output));
+  }, (void*)&callback);
+}
+
+void ProcessSession::read(core::FlowFile& flow_file, const io::InputStreamCallback& callback) {
+  MinifiProcessSessionRead(impl_, flow_file.getImpl(), [] (void* data, MinifiInputStream input) {
+    return (*reinterpret_cast<const io::InputStreamCallback*>(data))(std::make_shared<MinifiInputStreamWrapper>(input));
   }, (void*)&callback);
 }
 

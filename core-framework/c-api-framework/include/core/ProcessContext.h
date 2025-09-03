@@ -33,6 +33,7 @@ class ProcessContext {
   nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const { return getProperty(property_reference.name, flow_file); }
 
   bool hasNonEmptyProperty(std::string_view name) const;
+  void yield() const;
 
   std::string getProcessorName() const;
 

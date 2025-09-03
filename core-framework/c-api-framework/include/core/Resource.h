@@ -31,7 +31,6 @@
 #include "utils/minifi-c-utils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessSessionFactory.h"
 #include "core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -137,11 +136,10 @@ class StaticClassType {
             return MINIFI_UNKNOWN_ERROR;
           }
         },
-        .onSchedule = [] (void* self, MinifiProcessContext context, MinifiProcessSessionFactory session_factory) -> MinifiStatus {
+        .onSchedule = [] (void* self, MinifiProcessContext context) -> MinifiStatus {
           ProcessContext context_wrapper(context);
-          ProcessSessionFactory session_factory_wrapper(session_factory);
           try {
-            static_cast<Class*>(self)->onSchedule(context_wrapper, session_factory_wrapper);
+            static_cast<Class*>(self)->onSchedule(context_wrapper);
             return MINIFI_SUCCESS;
           } catch (std::exception& ex) {
             return MINIFI_UNKNOWN_ERROR;

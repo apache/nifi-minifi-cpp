@@ -29,12 +29,7 @@
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
-void RunLlamaCppInference::initialize() {
-  setSupportedProperties(Properties);
-  setSupportedRelationships(Relationships);
-}
-
-void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+void RunLlamaCppInference::onSchedule(core::ProcessContext& context) {
   model_path_.clear();
   model_path_ = utils::parseProperty(context, ModelPath);
   system_prompt_ = context.getProperty(SystemPrompt).value_or("");
@@ -64,15 +59,11 @@ void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::Proce
 }
 
 void RunLlamaCppInference::increaseTokensIn(uint64_t token_count) {
-  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_extension_.get());
-  gsl_Assert(llamacpp_metrics);
-  llamacpp_metrics->tokens_in += token_count;
+  metrics_.tokens_in += token_count;
 }
 
 void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
-  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_extension_.get());
-  gsl_Assert(llamacpp_metrics);
-  llamacpp_metrics->tokens_out += token_count;
+  metrics_.tokens_out += token_count;
 }
 
 void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
@@ -84,11 +75,11 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
 
   auto prompt = context.getProperty(Prompt, flow_file.get()).value_or("");
 
-  auto read_result = session.readBuffer(flow_file);
+  auto read_result = session.readBuffer(*flow_file);
   std::string input_data_and_prompt;
-  if (!read_result.buffer.empty()) {
+  if (!read_result.empty()) {
     input_data_and_prompt.append("Input data (or flow file content):\n");
-    input_data_and_prompt.append({reinterpret_cast<const char*>(read_result.buffer.data()), read_result.buffer.size()});
+    input_data_and_prompt.append({reinterpret_cast<const char*>(read_result.data()), read_result.size()});
     input_data_and_prompt.append("\n\n");
   }
   input_data_and_prompt.append(prompt);
@@ -146,10 +137,12 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
   session.transfer(flow_file, Success);
 }
 
-void RunLlamaCppInference::notifyStop() {
+void RunLlamaCppInference::onUnSchedule() {
   llama_ctx_.reset();
 }
 
-REGISTER_RESOURCE(RunLlamaCppInference, Processor);
+REGISTER_PROCESSOR(RunLlamaCppInference);
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors
+
+extern const char* const MINIFI_API_VERSION_TAG_var = MINIFI_API_VERSION_TAG;
