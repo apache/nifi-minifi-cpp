@@ -48,7 +48,7 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
 
   EXTENSIONAPI static constexpr auto RangeLength = core::PropertyDefinitionBuilder<>::createProperty("Range Length")
       .withDescription("The number of bytes to download from the blob, starting from the Range Start. "
-                        "An empty value or a value that extends beyond the end of the blob will read to the end of the blob.")
+          "An empty value or a value that extends beyond the end of the blob will read to the end of the blob.")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::to_array<core::PropertyReference>({
