@@ -35,13 +35,7 @@ TEST_CASE("C2ConfigEncryption", "[c2test]") {
   SECTION("Json config") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "decrypted.config.json";
   }
-  TestController controller;
-  // copy config file to temporary location as it will get overridden
-  auto home_path = controller.createTempDirectory();
-  auto live_config_file = home_path / "config.yml";
-  minifi::utils::file::copy_file(test_file_path, live_config_file);
-  // the C2 server will update the flow with the contents of test_file_path
-  // which will be encrypted and persisted to the temporary live_config_file
+
   C2UpdateHandler handler(test_file_path.string());
   VerifyC2Update harness(10s);
   harness.getConfiguration()->set(minifi::Configure::nifi_flow_configuration_encrypt, "true");
@@ -49,12 +43,13 @@ TEST_CASE("C2ConfigEncryption", "[c2test]") {
   harness.setUrl("https://localhost:0/update", &handler);
   handler.setC2RestResponse(harness.getC2RestUrl(), "configuration", "true");
 
-  harness.run(live_config_file, TEST_RESOURCES);
+  harness.run(test_file_path, TEST_RESOURCES);
+  auto live_config_file = harness.getLastFlowConfigPath();
 
   auto encryptor = minifi::utils::crypto::EncryptionProvider::create(TEST_RESOURCES);
   REQUIRE(encryptor);
 
-  std::ifstream encrypted_file{live_config_file};
+  std::ifstream encrypted_file{*live_config_file};
   std::string decrypted_config = encryptor->decrypt(std::string(std::istreambuf_iterator<char>(encrypted_file), {}));
 
   std::ifstream expected_file{test_file_path.string() + ".reformatted"};
