@@ -97,7 +97,8 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto ClientID = core::PropertyDefinitionBuilder<>::createProperty("Client ID")
-      .withDescription("MQTT client ID to use. WARNING: Must not be empty when using MQTT 3.1.0!")
+      .withDescription("MQTT client ID to use. If not set, a UUID will be generated.")
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto QoS = core::PropertyDefinitionBuilder<magic_enum::enum_count<mqtt::MqttQoS>()>::createProperty("Quality of Service")
       .withDescription("The Quality of Service (QoS) of messages.")
@@ -236,7 +237,7 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
   std::chrono::seconds keep_alive_interval_{60};
   std::chrono::seconds connection_timeout_{10};
   mqtt::MqttQoS qos_{mqtt::MqttQoS::LEVEL_0};
-  std::string clientID_;
+  std::string client_id_;
   std::string username_;
   std::string password_;
   mqtt::MqttVersions mqtt_version_{mqtt::MqttVersions::V_3X_AUTO};
