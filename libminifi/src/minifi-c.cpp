@@ -60,6 +60,10 @@ minifi::core::annotation::Input toInputRequirement(MinifiInputRequirement req) {
   gsl_FailFast();
 }
 
+std::vector<minifi::state::PublishedMetric> toPublishedMetrics(OWNED MinifiPublishedMetrics metrics) {
+  return *std::unique_ptr<std::vector<minifi::state::PublishedMetric>>(reinterpret_cast<std::vector<minifi::state::PublishedMetric>*>(metrics));
+}
+
 minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel lvl) {
   switch (lvl) {
     case MINIFI_TRACE: return minifi::core::logging::trace;
@@ -215,9 +219,9 @@ class CProcessor : public minifi::core::ProcessorApi {
     }
   }
 
-  void onSchedule(minifi::core::ProcessContext& process_context, minifi::core::ProcessSessionFactory& process_session_factory) override {
+  void onSchedule(minifi::core::ProcessContext& process_context, minifi::core::ProcessSessionFactory& /*process_session_factory*/) override {
     std::optional<std::string> error;
-    auto status = class_description_.callbacks.onSchedule(impl_, reinterpret_cast<MinifiProcessContext>(&process_context), reinterpret_cast<MinifiProcessSessionFactory>(&process_session_factory));
+    auto status = class_description_.callbacks.onSchedule(impl_, reinterpret_cast<MinifiProcessContext>(&process_context));
     if (status != MINIFI_SUCCESS) {
       throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Error while scheduling processor");
     }
@@ -239,6 +243,13 @@ class CProcessor : public minifi::core::ProcessorApi {
     return metrics_;
   }
 
+  std::vector<minifi::state::PublishedMetric> getCustomMetrics() const {
+    if (class_description_.callbacks.calculateMetrics == nullptr) {
+      return {};
+    }
+    return toPublishedMetrics(class_description_.callbacks.calculateMetrics(impl_));
+  }
+
   void forEachLogger(const std::function<void(std::shared_ptr<minifi::core::logging::Logger>)>&) override {
     // pass
   }
@@ -249,18 +260,6 @@ class CProcessor : public minifi::core::ProcessorApi {
 
   minifi::utils::Identifier getUUID() const {
     return metadata_.uuid;
-  }
-
-  void serializeMetrics(std::vector<minifi::state::response::SerializedResponseNode>& resp) const {
-    for (auto& node : metrics_->serialize()) {
-      resp.push_back(node);
-    }
-  }
-
-  void calculateMetrics(std::vector<minifi::state::PublishedMetric>& resp) const {
-    for (auto& node : metrics_->calculateMetrics()) {
-      resp.push_back(node);
-    }
   }
 
  private:
@@ -308,13 +307,32 @@ minifi::utils::SmallString<36> CProcessorMetricsWrapper::CProcessorInfoProvider:
 
 std::vector<minifi::state::response::SerializedResponseNode> CProcessorMetricsWrapper::serialize() {
   auto nodes = ProcessorMetricsImpl::serialize();
-  source_processor_.serializeMetrics(nodes);
+  gsl_Assert(!nodes.empty());
+  for (auto& custom_node : source_processor_.getCustomMetrics()) {
+    size_t transformed_name_length = 0;
+    bool should_uppercase_next_letter = true;
+    for (size_t i = 0; i < custom_node.name.size(); i++) {
+      if (should_uppercase_next_letter) {
+        custom_node.name[transformed_name_length++] = static_cast<char>(std::toupper(static_cast<unsigned char>(custom_node.name[i])));
+        should_uppercase_next_letter = false;
+      } else if (custom_node.name[i] == '_') {
+        should_uppercase_next_letter = true;
+      } else {
+        custom_node.name[transformed_name_length++] = custom_node.name[i];
+      }
+    }
+    custom_node.name.resize(transformed_name_length);
+    nodes[0].children.push_back(minifi::state::response::SerializedResponseNode{.name = std::move(custom_node.name), .value = static_cast<uint64_t>(custom_node.value)});
+  }
   return nodes;
 }
 
 std::vector<minifi::state::PublishedMetric> CProcessorMetricsWrapper::calculateMetrics() {
   auto nodes = ProcessorMetricsImpl::calculateMetrics();
-  source_processor_.calculateMetrics(nodes);
+  for (auto& custom_node : source_processor_.getCustomMetrics()) {
+    custom_node.labels = getCommonLabels();
+    nodes.push_back(std::move(custom_node));
+  }
   return nodes;
 }
 
@@ -546,6 +564,15 @@ MinifiLogLevel MinifiLoggerLevel(MinifiLogger logger) {
   gsl_FailFast();
 }
 
+OWNED MinifiPublishedMetrics MinifiPublishedMetricsCreate(uint32_t count, const MinifiStringView* names, const double* values) {
+  auto* metrics = new std::vector<minifi::state::PublishedMetric>();
+  metrics->reserve(count);
+  for (uint32_t i = 0; i < count; i++) {
+    metrics->emplace_back(minifi::state::PublishedMetric{toString(names[i]), values[i], {}});
+  }
+  return reinterpret_cast<MinifiPublishedMetrics>(metrics);
+}
+
 int32_t MinifiLoggerGetMaxLogSize(MinifiLogger logger) {
   gsl_Assert(logger != MINIFI_NULL);
   return (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->getMaxLogSize();
@@ -623,6 +650,11 @@ void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiS
     }
   }();
   cb(user_ctx, MinifiStringView{.data = message.data(), .length = gsl::narrow<uint32_t>(message.size())});
+}
+
+void MinifiFlowFileSetAttribute(MinifiFlowFile ff, MinifiStringView name, MinifiStringView value) {
+  gsl_Assert(ff != MINIFI_NULL);
+  (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff))->setAttribute(toString(name), toString(value));
 }
 
 } // extern "C"
