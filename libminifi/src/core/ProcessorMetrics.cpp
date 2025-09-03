@@ -103,7 +103,7 @@ std::vector<state::PublishedMetric> ProcessorMetrics::calculateMetrics() {
     std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
     for (const auto& [relationship, count] : transferred_relationships_) {
       metrics.push_back({"transferred_to_" + relationship, static_cast<double>(count),
-        std::unordered_map<std::string, std::string>{{"metric_class", getName()}, {"processor_name", source_processor_.getName()}, {"processor_uuid", source_processor_.getUUIDStr()}}});
+        {{"metric_class", getName()}, {"processor_name", source_processor_.getName()}, {"processor_uuid", source_processor_.getUUIDStr()}}});
     }
   }
 

@@ -45,22 +45,22 @@ class ResponseNode : public virtual core::CoreComponent, public virtual Publishe
 };
 
 class NodeReporter {
-  public:
-    struct ReportedNode {
-      std::string name;
-      bool is_array;
-      std::vector<SerializedResponseNode> serialized_nodes;
-    };
+ public:
+  struct ReportedNode {
+    std::string name;
+    bool is_array;
+    std::vector<SerializedResponseNode> serialized_nodes;
+  };
 
-    NodeReporter() = default;
+  NodeReporter() = default;
 
-    virtual ~NodeReporter() = default;
+  virtual ~NodeReporter() = default;
 
-    virtual std::optional<ReportedNode> getMetricsNode(const std::string& metricsClass) const = 0;
+  virtual std::optional<ReportedNode> getMetricsNode(const std::string& metricsClass) const = 0;
 
-    virtual std::vector<ReportedNode> getHeartbeatNodes(bool includeManifest) const = 0;
+  virtual std::vector<ReportedNode> getHeartbeatNodes(bool includeManifest) const = 0;
 
-    virtual ReportedNode getAgentManifest() = 0;
+  virtual ReportedNode getAgentManifest() = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response
