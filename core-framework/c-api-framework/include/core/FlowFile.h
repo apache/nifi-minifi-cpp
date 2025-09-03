@@ -36,6 +36,8 @@ class FlowFile {
     MinifiDestroyFlowFile(impl_);
   }
 
+  void setAttribute(std::string_view name, std::string_view value);
+
   [[nodiscard]]
   MinifiFlowFile getImpl() const {return impl_;}
 

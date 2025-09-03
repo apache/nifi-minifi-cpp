@@ -1,7 +1,5 @@
 /**
- * @file ProcessSessionFactory.h
- * ProcessSessionFactory class declaration
- *
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,18 +16,13 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include "minifi-c.h"
+#include "core/FlowFile.h"
+#include "utils/minifi-c-utils.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class ProcessSessionFactory {
-public:
-  explicit ProcessSessionFactory(MinifiProcessSessionFactory impl): impl_(impl) {}
-
-private:
-  MinifiProcessSessionFactory impl_;
-};
+void FlowFile::setAttribute(std::string_view name, std::string_view value) {
+  MinifiFlowFileSetAttribute(impl_, utils::toStringView(name), utils::toStringView(value));
+}
 
 }  // namespace org::apache::nifi::minifi::core
