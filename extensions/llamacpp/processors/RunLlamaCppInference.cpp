@@ -64,13 +64,13 @@ void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::Proce
 }
 
 void RunLlamaCppInference::increaseTokensIn(uint64_t token_count) {
-  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_.get());
+  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_extension_.get());
   gsl_Assert(llamacpp_metrics);
   llamacpp_metrics->tokens_in += token_count;
 }
 
 void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
-  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_.get());
+  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_extension_.get());
   gsl_Assert(llamacpp_metrics);
   llamacpp_metrics->tokens_out += token_count;
 }

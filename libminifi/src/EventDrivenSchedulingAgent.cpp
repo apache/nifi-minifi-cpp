@@ -23,6 +23,7 @@
 #include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/core/ProcessSessionFactory.h"
 #include "minifi-cpp/core/Property.h"
+#include "core/ProcessSession.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -48,7 +49,8 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
   const auto start_time = std::chrono::steady_clock::now();
   // trigger processor while it has work to do, but no more than the configured nifi.flow.engine.event.driven.time.slice
 
-  const auto process_session = session_factory->createSession();
+  const auto process_session = std::dynamic_pointer_cast<core::ProcessSessionImpl>(session_factory->createSession());
+  gsl_Assert(process_session);
   process_session->setMetrics(processor->getMetrics());
   bool needs_commit = true;
 

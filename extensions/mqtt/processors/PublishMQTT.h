@@ -41,7 +41,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
   explicit PublishMQTT(core::ProcessorMetadata metadata)
       : processors::AbstractMQTTProcessor(metadata) {
-    metrics_ = gsl::make_not_null(std::make_shared<PublishMQTTMetrics>(*this, in_flight_message_counter_));
+    metrics_extension_ = gsl::make_not_null(std::make_shared<PublishMQTTMetrics>(in_flight_message_counter_));
   }
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
@@ -111,9 +111,9 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     uint16_t limit_{MQTT_MAX_RECEIVE_MAXIMUM};
   };
 
-  class PublishMQTTMetrics : public core::ProcessorMetricsImpl {
+  class PublishMQTTMetrics : public core::ProcessorMetricsExtension {
    public:
-    PublishMQTTMetrics(const core::ProcessorImpl& source_processor, const InFlightMessageCounter& in_flight_message_counter);
+    explicit PublishMQTTMetrics(const InFlightMessageCounter& in_flight_message_counter);
     std::vector<state::response::SerializedResponseNode> serialize() override;
     std::vector<state::PublishedMetric> calculateMetrics() override;
 

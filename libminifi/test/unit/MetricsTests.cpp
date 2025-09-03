@@ -212,8 +212,8 @@ TEST_CASE("VolatileRepositorymetricsCanBeFull", "[c2m4]") {
 }
 
 TEST_CASE("Test on trigger runtime processor metrics", "[ProcessorMetrics]") {
-  DummyProcessor dummy_processor("dummy");
-  minifi::core::ProcessorMetricsImpl metrics(dummy_processor);
+  auto dummy_processor = minifi::test::utils::make_processor<DummyProcessor>("dummy");
+  minifi::core::ProcessorMetrics metrics(*dummy_processor);
 
   REQUIRE("DummyProcessorMetrics" == metrics.getName());
 
@@ -251,8 +251,8 @@ TEST_CASE("Test on trigger runtime processor metrics", "[ProcessorMetrics]") {
 }
 
 TEST_CASE("Test commit runtime processor metrics", "[ProcessorMetrics]") {
-  DummyProcessor dummy_processor("dummy");
-  minifi::core::ProcessorMetricsImpl metrics(dummy_processor);
+  auto dummy_processor = minifi::test::utils::make_processor<DummyProcessor>("dummy");
+  minifi::core::ProcessorMetrics metrics(*dummy_processor);
 
   REQUIRE("DummyProcessorMetrics" == metrics.getName());
 

@@ -38,7 +38,7 @@
 #include "minifi-cpp/core/DynamicProperty.h"
 #include "minifi-cpp/core/Scheduling.h"
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
-#include "minifi-cpp/core/ProcessorMetrics.h"
+#include "core/ProcessorMetrics.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
@@ -113,6 +113,7 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   [[nodiscard]] bool supportsDynamicRelationships() const override;
   state::response::SharedResponseNode getResponseNode() override;
   gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const;
+  std::shared_ptr<ProcessorMetricsExtension> getMetricsExtension() const;
   std::string getProcessGroupName() const;
   void setProcessGroupName(const std::string &name);
   std::string getProcessGroupPath() const;
@@ -169,6 +170,8 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   std::string process_group_uuid_;
   std::string process_group_name_;
   std::string process_group_path_;
+
+  gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
 
  protected:
   std::unique_ptr<ProcessorApi> impl_;

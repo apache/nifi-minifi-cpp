@@ -30,6 +30,12 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
+class ResponseNodeSource {
+ public:
+  virtual ~ResponseNodeSource() = default;
+  virtual SharedResponseNode getResponseNode() = 0;
+};
+
 class DeviceInformation : public ResponseNodeImpl {
  public:
   DeviceInformation(std::string_view name, const utils::Identifier& uuid)

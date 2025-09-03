@@ -38,7 +38,7 @@
 #include "provenance/Provenance.h"
 #include "core/Relationship.h"
 #include "minifi-cpp/utils/gsl.h"
-#include "minifi-cpp/core/ProcessorMetrics.h"
+#include "core/ProcessorMetrics.h"
 #include "minifi-cpp/core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi::core::detail {
@@ -123,7 +123,7 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
 
   bool existsFlowFileInRelationship(const Relationship &relationship) override;
 
-  void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) override {
+  void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) {
     metrics_ = metrics;
   }
 

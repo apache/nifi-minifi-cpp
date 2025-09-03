@@ -16,7 +16,7 @@
  */
 #include "core/ProcessorMetrics.h"
 
-#include "core/ProcessorImpl.h"
+#include "core/Processor.h"
 #include "core/state/Value.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "range/v3/numeric/accumulate.hpp"
@@ -25,21 +25,21 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessorMetricsImpl::ProcessorMetricsImpl(const ProcessorImpl& source_processor)
+ProcessorMetrics::ProcessorMetrics(const Processor& source_processor)
     : source_processor_(source_processor),
       on_trigger_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT),
       session_commit_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT) {
 }
 
-std::string ProcessorMetricsImpl::getName() const {
+std::string ProcessorMetrics::getName() const {
   return source_processor_.getProcessorType() + "Metrics";
 }
 
-std::unordered_map<std::string, std::string> ProcessorMetricsImpl::getCommonLabels() const {
+std::unordered_map<std::string, std::string> ProcessorMetrics::getCommonLabels() const {
   return {{"metric_class", getName()}, {"processor_name", source_processor_.getName()}, {"processor_uuid", source_processor_.getUUIDStr()}};
 }
 
-std::vector<state::response::SerializedResponseNode> ProcessorMetricsImpl::serialize() {
+std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize() {
   std::vector<state::response::SerializedResponseNode> resp;
 
   state::response::SerializedResponseNode root_node {
@@ -74,10 +74,16 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetricsImpl::seria
 
   resp.push_back(root_node);
 
+  if (auto metrics_extension = source_processor_.getMetricsExtension()) {
+    for (auto&& extension_child : metrics_extension->serialize()) {
+      resp[0].children.push_back(std::move(extension_child));
+    }
+  }
+
   return resp;
 }
 
-std::vector<state::PublishedMetric> ProcessorMetricsImpl::calculateMetrics() {
+std::vector<state::PublishedMetric> ProcessorMetrics::calculateMetrics() {
   std::vector<state::PublishedMetric> metrics = {
     {"onTrigger_invocations", static_cast<double>(invocations()), getCommonLabels()},
     {"average_onTrigger_runtime_milliseconds", static_cast<double>(getAverageOnTriggerRuntime().count()), getCommonLabels()},
@@ -101,39 +107,47 @@ std::vector<state::PublishedMetric> ProcessorMetricsImpl::calculateMetrics() {
     }
   }
 
+  const auto common_labels = getCommonLabels();
+  if (auto metrics_extension = source_processor_.getMetricsExtension()) {
+    for (auto&& extension_node : metrics_extension->calculateMetrics()) {
+      extension_node.labels.insert(common_labels.begin(), common_labels.end());
+      metrics.push_back(std::move(extension_node));
+    }
+  }
+
   return metrics;
 }
 
-void ProcessorMetricsImpl::increaseRelationshipTransferCount(const std::string& relationship, size_t count) {
+void ProcessorMetrics::increaseRelationshipTransferCount(const std::string& relationship, size_t count) {
   std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
   transferred_relationships_[relationship] += count;
 }
 
-std::chrono::milliseconds ProcessorMetricsImpl::getAverageOnTriggerRuntime() const {
+std::chrono::milliseconds ProcessorMetrics::getAverageOnTriggerRuntime() const {
   return on_trigger_runtime_averager_.getAverage();
 }
 
-void ProcessorMetricsImpl::addLastOnTriggerRuntime(std::chrono::milliseconds runtime) {
+void ProcessorMetrics::addLastOnTriggerRuntime(std::chrono::milliseconds runtime) {
   on_trigger_runtime_averager_.addValue(runtime);
 }
 
-std::chrono::milliseconds ProcessorMetricsImpl::getLastOnTriggerRuntime() const {
+std::chrono::milliseconds ProcessorMetrics::getLastOnTriggerRuntime() const {
   return on_trigger_runtime_averager_.getLastValue();
 }
 
-std::chrono::milliseconds ProcessorMetricsImpl::getAverageSessionCommitRuntime() const {
+std::chrono::milliseconds ProcessorMetrics::getAverageSessionCommitRuntime() const {
   return session_commit_runtime_averager_.getAverage();
 }
 
-void ProcessorMetricsImpl::addLastSessionCommitRuntime(std::chrono::milliseconds runtime) {
+void ProcessorMetrics::addLastSessionCommitRuntime(std::chrono::milliseconds runtime) {
   session_commit_runtime_averager_.addValue(runtime);
 }
 
-std::chrono::milliseconds ProcessorMetricsImpl::getLastSessionCommitRuntime() const {
+std::chrono::milliseconds ProcessorMetrics::getLastSessionCommitRuntime() const {
   return session_commit_runtime_averager_.getLastValue();
 }
 
-std::optional<size_t> ProcessorMetricsImpl::getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const {
+std::optional<size_t> ProcessorMetrics::getTransferredFlowFilesToRelationshipCount(const std::string& relationship) const {
   std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
   const auto relationship_it = transferred_relationships_.find(relationship);
   if (relationship_it != std::end(transferred_relationships_)) {
@@ -144,7 +158,7 @@ std::optional<size_t> ProcessorMetricsImpl::getTransferredFlowFilesToRelationshi
 
 template<typename ValueType>
 requires Summable<ValueType> && DividableByInteger<ValueType>
-ValueType ProcessorMetricsImpl::Averager<ValueType>::getAverage() const {
+ValueType ProcessorMetrics::Averager<ValueType>::getAverage() const {
   std::lock_guard<std::mutex> lock(average_value_mutex_);
   if (values_.empty()) {
     return {};
@@ -154,7 +168,7 @@ ValueType ProcessorMetricsImpl::Averager<ValueType>::getAverage() const {
 
 template<typename ValueType>
 requires Summable<ValueType> && DividableByInteger<ValueType>
-void ProcessorMetricsImpl::Averager<ValueType>::addValue(ValueType runtime) {
+void ProcessorMetrics::Averager<ValueType>::addValue(ValueType runtime) {
   std::lock_guard<std::mutex> lock(average_value_mutex_);
   if (values_.size() < SAMPLE_SIZE_) {
     values_.push_back(runtime);
@@ -169,7 +183,7 @@ void ProcessorMetricsImpl::Averager<ValueType>::addValue(ValueType runtime) {
 
 template<typename ValueType>
 requires Summable<ValueType> && DividableByInteger<ValueType>
-ValueType ProcessorMetricsImpl::Averager<ValueType>::getLastValue() const {
+ValueType ProcessorMetrics::Averager<ValueType>::getLastValue() const {
   std::lock_guard<std::mutex> lock(average_value_mutex_);
   if (values_.empty()) {
     return {};

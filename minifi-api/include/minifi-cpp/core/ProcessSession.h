@@ -23,7 +23,6 @@
 
 #include "FlowFile.h"
 #include "minifi-cpp/provenance/Provenance.h"
-#include "ProcessorMetrics.h"
 #include "minifi-cpp/io/StreamCallback.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -116,8 +115,6 @@ class ProcessSession : public virtual ReferenceContainer {
   virtual void restore(const std::string &key, const std::shared_ptr<core::FlowFile> &flow) = 0;
 
   virtual bool existsFlowFileInRelationship(const Relationship &relationship) = 0;
-
-  virtual void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) = 0;
 
   virtual bool hasBeenTransferred(const core::FlowFile &flow) const = 0;
 };

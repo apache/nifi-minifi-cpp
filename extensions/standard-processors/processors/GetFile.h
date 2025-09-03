@@ -34,7 +34,7 @@
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/utils/Export.h"
-#include "core/ProcessorMetrics.h"
+#include "minifi-cpp/core/ProcessorMetricsExtension.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -52,29 +52,24 @@ struct GetFileRequest {
   std::filesystem::path inputDirectory;
 };
 
-class GetFileMetrics : public core::ProcessorMetricsImpl {
+class GetFileMetrics : public core::ProcessorMetricsExtension {
  public:
-  explicit GetFileMetrics(const core::ProcessorImpl& source_processor)
-    : core::ProcessorMetricsImpl(source_processor) {
-  }
-
   std::vector<state::response::SerializedResponseNode> serialize() override {
-    auto resp = core::ProcessorMetricsImpl::serialize();
-    auto& root_node = resp[0];
+    std::vector<state::response::SerializedResponseNode> resp;
 
     state::response::SerializedResponseNode accepted_files_node{"AcceptedFiles", accepted_files.load()};
-    root_node.children.push_back(accepted_files_node);
+    resp.push_back(accepted_files_node);
 
     state::response::SerializedResponseNode input_bytes_node{"InputBytes", input_bytes.load()};
-    root_node.children.push_back(input_bytes_node);
+    resp.push_back(input_bytes_node);
 
     return resp;
   }
 
   std::vector<state::PublishedMetric> calculateMetrics() override {
-    auto metrics = core::ProcessorMetricsImpl::calculateMetrics();
-    metrics.push_back({"accepted_files", static_cast<double>(accepted_files.load()), getCommonLabels()});
-    metrics.push_back({"input_bytes", static_cast<double>(input_bytes.load()), getCommonLabels()});
+    std::vector<state::PublishedMetric> metrics;
+    metrics.push_back({"accepted_files", static_cast<double>(accepted_files.load()), {}});
+    metrics.push_back({"input_bytes", static_cast<double>(input_bytes.load()), {}});
     return metrics;
   }
 
@@ -86,7 +81,7 @@ class GetFile : public core::ProcessorImpl {
  public:
   explicit GetFile(core::ProcessorMetadata metadata)
       : ProcessorImpl(metadata) {
-    metrics_ = gsl::make_not_null(std::make_shared<GetFileMetrics>(*this));
+    metrics_extension_ = std::make_shared<GetFileMetrics>();
   }
   ~GetFile() override = default;
 
