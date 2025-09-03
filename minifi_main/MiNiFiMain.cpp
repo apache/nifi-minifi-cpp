@@ -307,7 +307,7 @@ int main(int argc, char **argv) {
     std::string prov_repo_class = "provenancerepository";
     std::string flow_repo_class = "flowfilerepository";
     std::string nifi_configuration_class_name = "adaptiveconfiguration";
-    std::string content_repo_class = "filesystemrepository";
+    std::string content_repo_class = "DatabaseContentRepository";
 
     auto log_properties = std::make_shared<core::logging::LoggerProperties>();
     log_properties->setHome(minifiHome);
