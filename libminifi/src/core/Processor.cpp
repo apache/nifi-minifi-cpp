@@ -35,6 +35,7 @@
 #include "minifi-cpp/core/ProcessorDescriptor.h"
 #include "minifi-cpp/core/ProcessSessionFactory.h"
 #include "minifi-cpp/utils/gsl.h"
+#include "core/ProcessSession.h"
 #include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
 #include "minifi-cpp/Exception.h"
@@ -59,6 +60,7 @@ Processor::Processor(std::string_view name, std::unique_ptr<ProcessorApi> impl)
       yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
       active_tasks_(0),
       logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
+      metrics_(gsl::make_not_null(std::make_shared<ProcessorMetrics>(*this))),
       impl_(std::move(impl)) {
   has_work_.store(false);
   // Setup the default values
@@ -77,6 +79,7 @@ Processor::Processor(std::string_view name, const utils::Identifier& uuid, std::
       yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
       active_tasks_(0),
       logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
+      metrics_(gsl::make_not_null(std::make_shared<ProcessorMetrics>(*this))),
       impl_(std::move(impl)) {
   has_work_.store(false);
   // Setup the default values
@@ -173,7 +176,8 @@ bool Processor::addConnection(Connectable* conn) {
 }
 
 void Processor::triggerAndCommit(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory) {
-  const auto process_session = session_factory->createSession();
+  const auto process_session = std::dynamic_pointer_cast<core::ProcessSessionImpl>(session_factory->createSession());
+  gsl_Assert(process_session);
   process_session->setMetrics(getMetrics());
   try {
     trigger(context, process_session);
@@ -191,10 +195,10 @@ void Processor::triggerAndCommit(const std::shared_ptr<ProcessContext>& context,
 }
 
 void Processor::trigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& process_session) {
-  ++impl_->getMetrics()->invocations();
+  ++metrics_->invocations();
   const auto start = std::chrono::steady_clock::now();
   onTrigger(*context, *process_session);
-  impl_->getMetrics()->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
+  metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
 }
 
 bool Processor::isWorkAvailable() {
@@ -531,10 +535,14 @@ annotation::Input Processor::getInputRequirement() const {
 }
 
 state::response::SharedResponseNode Processor::getResponseNode() {
-  return getMetrics();
+  return metrics_;
 }
 
 gsl::not_null<std::shared_ptr<ProcessorMetrics>> Processor::getMetrics() const {
+  return metrics_;
+}
+
+std::shared_ptr<CustomProcessorMetrics> Processor::getCustomMetrics() const {
   return impl_->getMetrics();
 }
 

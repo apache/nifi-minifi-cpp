@@ -113,6 +113,7 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   [[nodiscard]] bool supportsDynamicRelationships() const override;
   state::response::SharedResponseNode getResponseNode() override;
   gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const;
+  std::shared_ptr<CustomProcessorMetrics> getCustomMetrics() const;
   std::string getProcessGroupName() const;
   void setProcessGroupName(const std::string &name);
   std::string getProcessGroupPath() const;
@@ -169,6 +170,8 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   std::string process_group_uuid_;
   std::string process_group_name_;
   std::string process_group_path_;
+
+  gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
 
  protected:
   std::unique_ptr<ProcessorApi> impl_;

@@ -123,7 +123,7 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
 
   bool existsFlowFileInRelationship(const Relationship &relationship) override;
 
-  void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) override {
+  void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) {
     metrics_ = metrics;
   }
 
