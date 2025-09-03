@@ -44,12 +44,6 @@ class ResponseNode : public virtual core::CoreComponent, public virtual Publishe
   virtual bool isEmpty() = 0;
 };
 
-class ResponseNodeSource {
- public:
-  virtual ~ResponseNodeSource() = default;
-  virtual SharedResponseNode getResponseNode() = 0;
-};
-
 class NodeReporter {
  public:
   struct ReportedNode {

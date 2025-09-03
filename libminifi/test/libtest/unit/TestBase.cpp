@@ -549,7 +549,9 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
     current_session->commit();
   } else {
     auto session_factory = std::make_shared<TestSessionFactory>(context, [&] (auto current_session) {
-      current_session->setMetrics(processor->getMetrics());
+      auto session = std::dynamic_pointer_cast<core::ProcessSessionImpl>(current_session);
+      gsl_Assert(session);
+      session->setMetrics(processor->getMetrics());
       process_sessions_.push_back(current_session);
     });
     logger_->log_info("Running {}", processor->getName());

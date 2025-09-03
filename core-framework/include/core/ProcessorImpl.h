@@ -34,8 +34,7 @@
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/DynamicProperty.h"
 #include "minifi-cpp/core/Scheduling.h"
-#include "minifi-cpp/core/state/nodes/MetricsBase.h"
-#include "minifi-cpp/core/ProcessorMetrics.h"
+#include "minifi-cpp/core/CustomProcessorMetrics.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
@@ -119,7 +118,7 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   annotation::Input getInputRequirement() const override = 0;
 
-  gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const override {
+  std::shared_ptr<CustomProcessorMetrics> getMetrics() const override {
     return metrics_;
   }
 
@@ -143,7 +142,7 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   std::atomic<bool> trigger_when_empty_;
 
-  gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
+  std::shared_ptr<CustomProcessorMetrics> metrics_;
 
   std::shared_ptr<logging::Logger> logger_;
 
