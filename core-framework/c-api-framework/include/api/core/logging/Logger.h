@@ -15,20 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <string_view>
+#include <algorithm>
+#include <iostream>
 #include <memory>
+#include <mutex>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
+#include "fmt/chrono.h"
+#include "fmt/ostream.h"
+#include "fmt/std.h"
+#include "minifi-c.h"
+#include "utils/Enum.h"
+#include "utils/GeneralUtils.h"
+#include "utils/gsl.h"
+#include "utils/SmallString.h"
 #include "minifi-cpp/core/logging/Logger.h"
-#include "minifi-cpp/core/Core.h"
 
-namespace org::apache::nifi::minifi::core::logging {
+namespace org::apache::nifi::minifi::api::core::logging {
 
-class LoggerFactoryBase {
+class Logger : public minifi::core::logging::Logger {
  public:
-  static std::shared_ptr<Logger> getAliasedLogger(std::string_view name, const std::optional<utils::Identifier>& id = {});
+  explicit Logger(MinifiLogger impl): impl_(impl) {}
+
+  void set_max_log_size(int size) override;
+  std::optional<std::string> get_id() override;
+  void log_string(minifi::core::logging::LOG_LEVEL level, std::string str) override;
+  bool should_log(minifi::core::logging::LOG_LEVEL level) override;
+  [[nodiscard]] minifi::core::logging::LOG_LEVEL level() const override;
+  int getMaxLogSize() override;
+
+ private:
+  MinifiLogger impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::logging

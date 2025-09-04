@@ -20,22 +20,22 @@
 #include "minifi-c.h"
 #include <string>
 #include "nonstd/expected.hpp"
-#include "FlowFile.h"
 #include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/IProcessContext.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi::api::core {
 
-class ProcessContext {
+class ProcessContext : public minifi::core::IProcessContext {
  public:
   explicit ProcessContext(MinifiProcessContext impl): impl_(impl) {}
 
-  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const;
-  nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const { return getProperty(property_reference.name, flow_file); }
+  using IProcessContext::getProperty;
+  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const minifi::core::IFlowFile* flow_file = nullptr) const override;
 
-  bool hasNonEmptyProperty(std::string_view name) const;
-  void yield() const;
+  bool hasNonEmptyProperty(std::string_view name) const override;
+  void yield() override;
 
-  std::string getProcessorName() const;
+  std::string getProcessorName() const override;
 
  private:
   MinifiProcessContext impl_;
