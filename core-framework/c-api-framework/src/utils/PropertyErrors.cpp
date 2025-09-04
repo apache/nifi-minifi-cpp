@@ -17,14 +17,14 @@
 
 #include "utils/PropertyErrors.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi::api::core {
 
-const PropertyErrorCategory& property_error_category() noexcept {
-  static PropertyErrorCategory category;
+const minifi::core::PropertyErrorCategory& property_error_category() noexcept {
+  static minifi::core::PropertyErrorCategory category;
   return category;
 };
 
-std::error_code make_error_code(PropertyErrorCode c) {
+std::error_code make_error_code(minifi::core::PropertyErrorCode c) {
   return {static_cast<int>(c), property_error_category()};
 }
 

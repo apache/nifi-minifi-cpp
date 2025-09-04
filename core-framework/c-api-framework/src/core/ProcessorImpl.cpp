@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/ProcessorImpl.h"
+#include "api/core/ProcessorImpl.h"
 
 #include <ctime>
 #include <cctype>
@@ -31,9 +31,9 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi::api::core {
 
-ProcessorImpl::ProcessorImpl(ProcessorMetadata metadata)
+ProcessorImpl::ProcessorImpl(minifi::core::ProcessorMetadata metadata)
     : metadata_(std::move(metadata)),
       trigger_when_empty_(false),
       // metrics_(std::make_shared<ProcessorMetricsImpl>(*this)),
@@ -64,5 +64,28 @@ utils::Identifier ProcessorImpl::getUUID() const {
 utils::SmallString<36> ProcessorImpl::getUUIDStr() const {
   return getUUID().to_string();
 }
+
+void ProcessorImpl::onSchedule(ProcessContext& ctx) {
+  try {
+    return onScheduleImpl(ctx);
+  } catch (const std::exception& e) {
+    logger_->log_error("{}", e.what());
+    throw;
+  } catch (...) {
+    throw;
+  }
+}
+
+void ProcessorImpl::onTrigger(ProcessContext& ctx, ProcessSession& session) {
+  try {
+    return onTriggerImpl(ctx, session);
+  } catch (const std::exception& e) {
+    logger_->log_error("{}", e.what());
+    throw;
+  } catch (...) {
+    throw;
+  }
+}
+
 
 }  // namespace org::apache::nifi::minifi::core

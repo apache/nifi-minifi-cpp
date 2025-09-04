@@ -1,6 +1,5 @@
 /**
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -17,32 +16,14 @@
  */
 #pragma once
 
-#include <array>
-#include <string_view>
-#include "minifi-c.h"
+#include <string>
 
 namespace org::apache::nifi::minifi::core {
 
-class FlowFile {
- public:
-  explicit FlowFile(OWNED MinifiFlowFile impl): impl_(impl) {}
-
-  FlowFile(FlowFile&& other) = delete;
-  FlowFile(const FlowFile& other) = delete;
-  FlowFile& operator=(FlowFile&& other) = delete;
-  FlowFile& operator=(const FlowFile& other) = delete;
-
-  ~FlowFile() {
-    MinifiDestroyFlowFile(impl_);
-  }
-
-  void setAttribute(std::string_view name, std::string_view value);
-
-  [[nodiscard]]
-  MinifiFlowFile getImpl() const {return impl_;}
-
- private:
-  OWNED MinifiFlowFile impl_;
+class IFlowFile {
+public:
+  virtual void setAttribute(std::string_view name, std::string value) = 0;
+  virtual ~IFlowFile() = default;
 };
 
 struct SpecialFlowAttribute {
@@ -58,8 +39,8 @@ struct SpecialFlowAttribute {
 
   static constexpr std::array<std::string_view, 9> getSpecialFlowAttributes() {
     return {
-        PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID
-    };
+      PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID
+  };
   }
 };
 

@@ -31,10 +31,11 @@
 #include "minifi-cpp/core/Connectable.h"
 #include "WeakReference.h"
 #include "minifi-cpp/utils/FlatMap.h"
+#include "minifi-cpp/core/IFlowFile.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer {
+class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer, public IFlowFile {
  public:
   using AttributeMap = utils::FlatMap<std::string, std::string>;
 
@@ -60,7 +61,6 @@ class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer
   [[nodiscard]] virtual std::optional<std::string> getAttribute(std::string_view key) const = 0;
   virtual bool updateAttribute(std::string_view key, const std::string& value) = 0;
   virtual bool removeAttribute(std::string_view key) = 0;
-  virtual bool setAttribute(std::string_view key, std::string value) = 0;
   [[nodiscard]] virtual std::map<std::string, std::string> getAttributes() const = 0;
   virtual AttributeMap *getAttributesPtr() = 0;
   virtual bool addAttribute(std::string_view key, const std::string& value) = 0;
@@ -78,24 +78,6 @@ class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer
   [[nodiscard]] virtual bool isStored() const = 0;
 
   static std::shared_ptr<FlowFile> create();
-};
-
-struct SpecialFlowAttribute {
-  MINIFIAPI static constexpr std::string_view PATH = "path";
-  MINIFIAPI static constexpr std::string_view ABSOLUTE_PATH = "absolute.path";
-  MINIFIAPI static constexpr std::string_view FILENAME = "filename";
-  MINIFIAPI static constexpr std::string_view UUID = "uuid";
-  MINIFIAPI static constexpr std::string_view priority = "priority";
-  MINIFIAPI static constexpr std::string_view MIME_TYPE = "mime.type";
-  MINIFIAPI static constexpr std::string_view DISCARD_REASON = "discard.reason";
-  MINIFIAPI static constexpr std::string_view ALTERNATE_IDENTIFIER = "alternate.identifier";
-  MINIFIAPI static constexpr std::string_view FLOW_ID = "flow.id";
-
-  static constexpr std::array<std::string_view, 9> getSpecialFlowAttributes() {
-    return {
-        PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID
-    };
-  }
 };
 
 }  // namespace org::apache::nifi::minifi::core

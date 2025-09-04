@@ -15,20 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
+#include <array>
 #include <string_view>
-#include <memory>
+#include "minifi-c.h"
+#include "minifi-cpp/core/IFlowFile.h"
 
-#include "minifi-cpp/core/logging/Logger.h"
-#include "minifi-cpp/core/Core.h"
+namespace org::apache::nifi::minifi::api::core {
 
-namespace org::apache::nifi::minifi::core::logging {
-
-class LoggerFactoryBase {
+class FlowFile : public minifi::core::IFlowFile {
  public:
-  static std::shared_ptr<Logger> getAliasedLogger(std::string_view name, const std::optional<utils::Identifier>& id = {});
+  explicit FlowFile(OWNED MinifiFlowFile impl): impl_(impl) {}
+
+  FlowFile(FlowFile&& other) = delete;
+  FlowFile(const FlowFile& other) = delete;
+  FlowFile& operator=(FlowFile&& other) = delete;
+  FlowFile& operator=(const FlowFile& other) = delete;
+
+  ~FlowFile() override {
+    MinifiDestroyFlowFile(impl_);
+  }
+
+  void setAttribute(std::string_view name, std::string value) override;
+
+  [[nodiscard]]
+  MinifiFlowFile getImpl() const {return impl_;}
+
+ private:
+  OWNED MinifiFlowFile impl_;
 };
 
-}  // namespace org::apache::nifi::minifi::core::logging
+}  // namespace org::apache::nifi::minifi::core

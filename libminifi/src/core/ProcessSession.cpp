@@ -222,15 +222,16 @@ void ProcessSessionImpl::penalize(const std::shared_ptr<core::FlowFile> &flow) {
   std::dynamic_pointer_cast<FlowFileImpl>(flow)->penalize(penalization_period);
 }
 
-void ProcessSessionImpl::transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) {
-  logger_->log_debug("Transferring {} from {} to relationship {}", flow->getUUIDStr(), process_context_->getProcessor().getName(), relationship.getName());
-  utils::Identifier uuid = flow->getUUID();
+void ProcessSessionImpl::transfer(const std::shared_ptr<core::IFlowFile>& ff, const Relationship& relationship) {
+  auto flow_file = std::dynamic_pointer_cast<FlowFile>(ff);
+  logger_->log_debug("Transferring {} from {} to relationship {}", flow_file->getUUIDStr(), process_context_->getProcessor().getName(), relationship.getName());
+  utils::Identifier uuid = flow_file->getUUID();
   if (auto it = added_flowfiles_.find(uuid); it != added_flowfiles_.end()) {
     it->second.rel = &*relationships_.insert(relationship).first;
   } else {
     updated_relationships_[uuid] = &*relationships_.insert(relationship).first;
   }
-  flow->setDeleted(false);
+  flow_file->setDeleted(false);
 }
 
 void ProcessSessionImpl::transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name) {

@@ -15,34 +15,34 @@
  * limitations under the License.
  */
 
-#include "core/logging/Logger.h"
+#include "api/core/logging/Logger.h"
 
-namespace org::apache::nifi::minifi::core::logging {
+namespace org::apache::nifi::minifi::api::core::logging {
 
 namespace {
 
-MinifiLogLevel toCLogLevel(LOG_LEVEL lvl) {
+MinifiLogLevel toCLogLevel(minifi::core::logging::LOG_LEVEL lvl) {
   switch (lvl) {
-    case trace: return MINIFI_TRACE;
-    case debug: return MINIFI_DEBUG;
-    case info: return MINIFI_INFO;
-    case warn: return MINIFI_WARNING;
-    case err: return MINIFI_ERROR;
-    case critical: return MINIFI_CRITICAL;
-    case off: return MINIFI_OFF;
+    case minifi::core::logging::trace: return MINIFI_TRACE;
+    case minifi::core::logging::debug: return MINIFI_DEBUG;
+    case minifi::core::logging::info: return MINIFI_INFO;
+    case minifi::core::logging::warn: return MINIFI_WARNING;
+    case minifi::core::logging::err: return MINIFI_ERROR;
+    case minifi::core::logging::critical: return MINIFI_CRITICAL;
+    case minifi::core::logging::off: return MINIFI_OFF;
   }
   gsl_FailFast();
 }
 
-LOG_LEVEL toLogLevel(MinifiLogLevel lvl) {
+minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel lvl) {
   switch (lvl) {
-    case MINIFI_TRACE: return trace;
-    case MINIFI_DEBUG: return debug;
-    case MINIFI_INFO: return info;
-    case MINIFI_WARNING: return warn;
-    case MINIFI_ERROR: return err;
-    case MINIFI_CRITICAL: return critical;
-    case MINIFI_OFF: return off;
+    case MINIFI_TRACE: return minifi::core::logging::trace;
+    case MINIFI_DEBUG: return minifi::core::logging::debug;
+    case MINIFI_INFO: return minifi::core::logging::info;
+    case MINIFI_WARNING: return minifi::core::logging::warn;
+    case MINIFI_ERROR: return minifi::core::logging::err;
+    case MINIFI_CRITICAL: return minifi::core::logging::critical;
+    case MINIFI_OFF: return minifi::core::logging::off;
   }
   gsl_FailFast();
 }
@@ -61,15 +61,15 @@ std::optional<std::string> Logger::get_id() {
   return result;
 }
 
-void Logger::log_string(LOG_LEVEL level, std::string str) {
+void Logger::log_string(minifi::core::logging::LOG_LEVEL level, std::string str) {
   MinifiLoggerLogString(impl_, toCLogLevel(level), MinifiStringView{.data = str.data(), .length = gsl::narrow_cast<uint32_t>(str.length())});
 }
 
-bool Logger::should_log(LOG_LEVEL level) {
+bool Logger::should_log(minifi::core::logging::LOG_LEVEL level) {
   return MinifiLoggerShouldLog(impl_, toCLogLevel(level));
 }
 
-[[nodiscard]] LOG_LEVEL Logger::level() const {
+[[nodiscard]] minifi::core::logging::LOG_LEVEL Logger::level() const {
   return toLogLevel(MinifiLoggerLevel(impl_));
 }
 

@@ -138,8 +138,8 @@ typedef struct MinifiProcessorMetadata {
 } MinifiProcessorMetadata;
 
 typedef struct MinifiProcessorCallbacks {
-  void*(*create)(MinifiProcessorMetadata);
-  void(*destroy)(void*);
+  OWNED void*(*create)(MinifiProcessorMetadata);
+  void(*destroy)(OWNED void*);
   MinifiBool(*isWorkAvailable)(void*);
   void(*restore)(void*, OWNED MinifiFlowFile);
   MinifiBool(*getTriggerWhenEmpty)(void*);

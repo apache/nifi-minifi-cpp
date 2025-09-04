@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-#include "core/FlowFile.h"
-#include "utils/minifi-c-utils.h"
+#include "api/core/FlowFile.h"
+#include "api/utils/minifi-c-utils.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi::api::core {
 
-void FlowFile::setAttribute(std::string_view name, std::string_view value) {
+void FlowFile::setAttribute(std::string_view name, std::string value) {
   MinifiFlowFileSetAttribute(impl_, utils::toStringView(name), utils::toStringView(value));
 }
 

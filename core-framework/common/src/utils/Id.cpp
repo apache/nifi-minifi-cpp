@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "utils/Id.h"
+#include "minifi-cpp/utils/Id.h"
 
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"

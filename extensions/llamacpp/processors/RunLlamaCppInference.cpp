@@ -16,40 +16,40 @@
  */
 
 #include "RunLlamaCppInference.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
-#include "core/Resource.h"
-#include "minifi-cpp/Exception.h"
+#include "api/core/ProcessContext.h"
+#include "api/core/ProcessSession.h"
+#include "api/core/Resource.h"
+#include "api/Exception.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 #include "LlamaContext.h"
-#include "utils/ProcessorConfigUtils.h"
+#include "api/utils/ProcessorConfigUtils.h"
 #include "DefaultLlamaContext.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
-void RunLlamaCppInference::onSchedule(core::ProcessContext& context) {
+void RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& context) {
   model_path_.clear();
-  model_path_ = utils::parseProperty(context, ModelPath);
+  model_path_ = api::utils::parseProperty(context, ModelPath);
   system_prompt_ = context.getProperty(SystemPrompt).value_or("");
 
   LlamaSamplerParams llama_sampler_params;
-  llama_sampler_params.temperature = utils::parseOptionalFloatProperty(context, Temperature);
-  if (auto top_k = utils::parseOptionalI64Property(context, TopK)) {
+  llama_sampler_params.temperature = api::utils::parseOptionalFloatProperty(context, Temperature);
+  if (auto top_k = api::utils::parseOptionalI64Property(context, TopK)) {
     llama_sampler_params.top_k = gsl::narrow<int32_t>(*top_k);
   }
-  llama_sampler_params.top_p = utils::parseOptionalFloatProperty(context, TopP);
-  llama_sampler_params.min_p = utils::parseOptionalFloatProperty(context, MinP);
-  llama_sampler_params.min_keep = utils::parseU64Property(context, MinKeep);
+  llama_sampler_params.top_p = api::utils::parseOptionalFloatProperty(context, TopP);
+  llama_sampler_params.min_p = api::utils::parseOptionalFloatProperty(context, MinP);
+  llama_sampler_params.min_keep = api::utils::parseU64Property(context, MinKeep);
 
   LlamaContextParams llama_ctx_params;
-  llama_ctx_params.n_ctx = gsl::narrow<uint32_t>(utils::parseU64Property(context, TextContextSize));
-  llama_ctx_params.n_batch = gsl::narrow<uint32_t>(utils::parseU64Property(context, LogicalMaximumBatchSize));
-  llama_ctx_params.n_ubatch = gsl::narrow<uint32_t>(utils::parseU64Property(context, PhysicalMaximumBatchSize));
-  llama_ctx_params.n_seq_max = gsl::narrow<uint32_t>(utils::parseU64Property(context, MaxNumberOfSequences));
-  llama_ctx_params.n_threads = gsl::narrow<int32_t>(utils::parseI64Property(context, ThreadsForGeneration));
-  llama_ctx_params.n_threads_batch = gsl::narrow<int32_t>(utils::parseI64Property(context, ThreadsForBatchProcessing));
+  llama_ctx_params.n_ctx = gsl::narrow<uint32_t>(api::utils::parseU64Property(context, TextContextSize));
+  llama_ctx_params.n_batch = gsl::narrow<uint32_t>(api::utils::parseU64Property(context, LogicalMaximumBatchSize));
+  llama_ctx_params.n_ubatch = gsl::narrow<uint32_t>(api::utils::parseU64Property(context, PhysicalMaximumBatchSize));
+  llama_ctx_params.n_seq_max = gsl::narrow<uint32_t>(api::utils::parseU64Property(context, MaxNumberOfSequences));
+  llama_ctx_params.n_threads = gsl::narrow<int32_t>(api::utils::parseI64Property(context, ThreadsForGeneration));
+  llama_ctx_params.n_threads_batch = gsl::narrow<int32_t>(api::utils::parseI64Property(context, ThreadsForBatchProcessing));
 
   if (llama_context_provider_) {
     llama_ctx_ = llama_context_provider_(model_path_, llama_sampler_params, llama_ctx_params);
@@ -66,7 +66,7 @@ void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
   metrics_.tokens_out += token_count;
 }
 
-void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+void RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   auto flow_file = session.get();
   if (!flow_file) {
     context.yield();

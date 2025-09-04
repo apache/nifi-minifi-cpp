@@ -38,6 +38,7 @@
 #include "minifi-cpp/core/extension/ExtensionManager.h"
 #include "utils/PropertyErrors.h"
 #include "minifi-cpp/agent/build_description.h"
+#include "utils/CProcessor.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -58,10 +59,6 @@ minifi::core::annotation::Input toInputRequirement(MinifiInputRequirement req) {
     case MINIFI_INPUT_FORBIDDEN: return minifi::core::annotation::Input::INPUT_FORBIDDEN;
   }
   gsl_FailFast();
-}
-
-std::vector<minifi::state::PublishedMetric> toPublishedMetrics(OWNED MinifiPublishedMetrics metrics) {
-  return *std::unique_ptr<std::vector<minifi::state::PublishedMetric>>(reinterpret_cast<std::vector<minifi::state::PublishedMetric>*>(metrics));
 }
 
 minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel lvl) {
@@ -115,168 +112,14 @@ minifi::core::Property createProperty(const MinifiProperty* property_description
   }};
 }
 
-class CProcessor;
-
-class CProcessorMetricsWrapper : public minifi::core::ProcessorMetricsImpl {
- public:
-  class CProcessorInfoProvider : public ProcessorMetricsImpl::ProcessorInfoProvider {
-   public:
-    CProcessorInfoProvider(const CProcessor& source_processor): source_processor_(source_processor) {}
-
-    std::string getProcessorType() const override;
-    std::string getName() const override;
-    minifi::utils::SmallString<36> getUUIDStr() const override;
-
-    ~CProcessorInfoProvider() override = default;
-
-   private:
-    const CProcessor& source_processor_;
-  };
-
-  explicit CProcessorMetricsWrapper(const CProcessor& source_processor)
-      : minifi::core::ProcessorMetricsImpl(std::make_unique<CProcessorInfoProvider>(source_processor)),
-        source_processor_(source_processor) {
-  }
-
-  std::vector<minifi::state::response::SerializedResponseNode> serialize() override;
-
-  std::vector<minifi::state::PublishedMetric> calculateMetrics() override;
-
- private:
-  const CProcessor& source_processor_;
-};
-
-struct CProcessorClassDescription {
-  std::string name;
-  std::vector<minifi::core::Property> class_properties;
-  std::vector<minifi::core::Relationship> class_relationships;
-  bool supports_dynamic_properties;
-  bool supports_dynamic_relationships;
-  minifi::core::annotation::Input input_requirement;
-  bool is_single_threaded;
-
-  MinifiProcessorCallbacks callbacks;
-};
-
-class CProcessor : public minifi::core::ProcessorApi {
- public:
-  CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata)
-      : class_description_(std::move(class_description)),
-        metrics_(std::make_shared<CProcessorMetricsWrapper>(*this)) {
-    metadata_ = metadata;
-    MinifiProcessorMetadata c_metadata;
-    auto uuid_str = metadata.uuid.to_string();
-    c_metadata.uuid = MinifiStringView{.data = uuid_str.data(), .length = gsl::narrow<uint32_t>(uuid_str.length())};
-    c_metadata.name = MinifiStringView{.data = metadata.name.data(), .length = gsl::narrow<uint32_t>(metadata.name.length())};
-    c_metadata.logger = reinterpret_cast<MinifiLogger>(&metadata_.logger);
-    impl_ = class_description_.callbacks.create(c_metadata);
-  }
-  ~CProcessor() override {
-    class_description_.callbacks.destroy(impl_);
-  }
-
-  bool isWorkAvailable() override {
-    return static_cast<bool>(class_description_.callbacks.isWorkAvailable(impl_));
-  }
-
-  void restore(const std::shared_ptr<minifi::core::FlowFile>& file) override {
-    class_description_.callbacks.restore(impl_, reinterpret_cast<OWNED MinifiFlowFile>(new std::shared_ptr<minifi::core::FlowFile>(file)));
-  }
-
-  bool supportsDynamicProperties() const override {
-    return class_description_.supports_dynamic_properties;
-  }
-
-  bool supportsDynamicRelationships() const override {
-    return class_description_.supports_dynamic_relationships;
-  }
-
-  void initialize(minifi::core::ProcessorDescriptor& descriptor) override {
-    descriptor.setSupportedProperties(std::span(class_description_.class_properties));
-
-    std::vector<minifi::core::RelationshipDefinition> relationships;
-    for (auto& rel : class_description_.class_relationships) {relationships.push_back(rel.getDefinition());}
-    descriptor.setSupportedRelationships(relationships);
-  }
-
-  bool isSingleThreaded() const override {
-    return class_description_.is_single_threaded;
-  }
-
-  std::string getProcessorType() const override {
-    return class_description_.name;
-  }
-
-  bool getTriggerWhenEmpty() const override {
-    return static_cast<bool>(class_description_.callbacks.getTriggerWhenEmpty(impl_));
-  }
-
-  void onTrigger(minifi::core::ProcessContext& process_context, minifi::core::ProcessSession& process_session) override {
-    std::optional<std::string> error;
-    auto status = class_description_.callbacks.onTrigger(impl_, reinterpret_cast<MinifiProcessContext>(&process_context), reinterpret_cast<MinifiProcessSession>(&process_session));
-    if (status != MINIFI_SUCCESS) {
-      throw minifi::Exception(minifi::ExceptionType::PROCESSOR_EXCEPTION, "Error while triggering processor");
-    }
-  }
-
-  void onSchedule(minifi::core::ProcessContext& process_context, minifi::core::ProcessSessionFactory& /*process_session_factory*/) override {
-    std::optional<std::string> error;
-    auto status = class_description_.callbacks.onSchedule(impl_, reinterpret_cast<MinifiProcessContext>(&process_context));
-    if (status != MINIFI_SUCCESS) {
-      throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Error while scheduling processor");
-    }
-  }
-
-  void onUnSchedule() override {
-    class_description_.callbacks.onUnSchedule(impl_);
-  }
-
-  void notifyStop() override {
-    class_description_.callbacks.onUnSchedule(impl_);
-  }
-
-  minifi::core::annotation::Input getInputRequirement() const override {
-    return class_description_.input_requirement;
-  }
-
-  gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetrics>> getMetrics() const override {
-    return metrics_;
-  }
-
-  std::vector<minifi::state::PublishedMetric> getCustomMetrics() const {
-    if (class_description_.callbacks.calculateMetrics == nullptr) {
-      return {};
-    }
-    return toPublishedMetrics(class_description_.callbacks.calculateMetrics(impl_));
-  }
-
-  void forEachLogger(const std::function<void(std::shared_ptr<minifi::core::logging::Logger>)>&) override {
-    // pass
-  }
-
-  std::string getName() const {
-    return metadata_.name;
-  }
-
-  minifi::utils::Identifier getUUID() const {
-    return metadata_.uuid;
-  }
-
- private:
-  CProcessorClassDescription class_description_;
-  void* impl_;
-  minifi::core::ProcessorMetadata metadata_;
-  gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetrics>> metrics_;
-};
-
 class CProcessorFactory : public minifi::core::ProcessorFactory {
  public:
-  CProcessorFactory(std::string group_name, std::string class_name, CProcessorClassDescription class_description)
+  CProcessorFactory(std::string group_name, std::string class_name, minifi::utils::CProcessorClassDescription class_description)
     : group_name_(std::move(group_name)),
       class_name_(std::move(class_name)),
       class_description_(class_description) {}
   std::unique_ptr<minifi::core::ProcessorApi> create(minifi::core::ProcessorMetadata metadata) override {
-    return std::make_unique<CProcessor>(class_description_, metadata);
+    return std::make_unique<minifi::utils::CProcessor>(class_description_, metadata);
   }
 
   std::string getGroupName() const override {
@@ -292,49 +135,8 @@ class CProcessorFactory : public minifi::core::ProcessorFactory {
  private:
   std::string group_name_;
   std::string class_name_;
-  CProcessorClassDescription class_description_;
+  minifi::utils::CProcessorClassDescription class_description_;
 };
-
-std::string CProcessorMetricsWrapper::CProcessorInfoProvider::getProcessorType() const {
-  return source_processor_.getProcessorType();
-}
-std::string CProcessorMetricsWrapper::CProcessorInfoProvider::getName() const {
-  return source_processor_.getName();
-}
-minifi::utils::SmallString<36> CProcessorMetricsWrapper::CProcessorInfoProvider::getUUIDStr() const {
-  return source_processor_.getUUID().to_string();
-}
-
-std::vector<minifi::state::response::SerializedResponseNode> CProcessorMetricsWrapper::serialize() {
-  auto nodes = ProcessorMetricsImpl::serialize();
-  gsl_Assert(!nodes.empty());
-  for (auto& custom_node : source_processor_.getCustomMetrics()) {
-    size_t transformed_name_length = 0;
-    bool should_uppercase_next_letter = true;
-    for (size_t i = 0; i < custom_node.name.size(); i++) {
-      if (should_uppercase_next_letter) {
-        custom_node.name[transformed_name_length++] = static_cast<char>(std::toupper(static_cast<unsigned char>(custom_node.name[i])));
-        should_uppercase_next_letter = false;
-      } else if (custom_node.name[i] == '_') {
-        should_uppercase_next_letter = true;
-      } else {
-        custom_node.name[transformed_name_length++] = custom_node.name[i];
-      }
-    }
-    custom_node.name.resize(transformed_name_length);
-    nodes[0].children.push_back(minifi::state::response::SerializedResponseNode{.name = std::move(custom_node.name), .value = static_cast<uint64_t>(custom_node.value)});
-  }
-  return nodes;
-}
-
-std::vector<minifi::state::PublishedMetric> CProcessorMetricsWrapper::calculateMetrics() {
-  auto nodes = ProcessorMetricsImpl::calculateMetrics();
-  for (auto& custom_node : source_processor_.getCustomMetrics()) {
-    custom_node.labels = getCommonLabels();
-    nodes.push_back(std::move(custom_node));
-  }
-  return nodes;
-}
 
 class CExtension : public minifi::core::extension::Extension {
  public:
@@ -356,7 +158,7 @@ class CExtension : public minifi::core::extension::Extension {
 
 }  // namespace
 
-extern "C" {
+namespace org::apache::nifi::minifi::utils {
 
 MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info) {
   gsl_Assert(extension_create_info);
@@ -368,22 +170,7 @@ MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extensio
   });
 }
 
-MinifiPropertyValidator MinifiGetStandardValidator(MinifiStandardPropertyValidator validator) {
-  switch (validator) {
-    case MINIFI_ALWAYS_VALID_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR);
-    case MINIFI_NON_BLANK_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::NON_BLANK_VALIDATOR);
-    case MINIFI_TIME_PERIOD_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR);
-    case MINIFI_BOOLEAN_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR);
-    case MINIFI_INTEGER_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::INTEGER_VALIDATOR);
-    case MINIFI_UNSIGNED_INTEGER_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR);
-    case MINIFI_DATA_SIZE_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::DATA_SIZE_VALIDATOR);
-    case MINIFI_PORT_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::PORT_VALIDATOR);
-    default: gsl_FailFast();
-  }
-}
-
-void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription* class_description) {
-  gsl_Expects(class_description);
+void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_description, std::function<void(minifi::ClassDescription, minifi::utils::CProcessorClassDescription)> fn) {
   std::vector<minifi::core::Property> properties;
   for (size_t i = 0; i < class_description->class_properties_count; ++i) {
     properties.push_back(createProperty(&class_description->class_properties_ptr[i]));
@@ -420,12 +207,6 @@ void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription* class_d
     ref.relationships = std::span(output_attribute_relationships.back());
     output_attributes.push_back(ref);
   }
-  auto module_name = toString(class_description->module_name);
-  minifi::BundleDetails bundle{
-    .artifact = module_name,
-    .group = module_name,
-    .version = "1.0.0"
-  };
 
   auto name_segments = minifi::utils::string::split(toStringView(class_description->full_name), ".");
   gsl_Assert(!name_segments.empty());
@@ -445,7 +226,7 @@ void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription* class_d
     .isSingleThreaded_ = static_cast<bool>(class_description->is_single_threaded),
   };
 
-  CProcessorClassDescription c_class_description{
+  minifi::utils::CProcessorClassDescription c_class_description{
     .name = name_segments.back(),
     .class_properties = properties,
     .class_relationships = relationships,
@@ -457,12 +238,46 @@ void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription* class_d
     .callbacks = class_description->callbacks
   };
 
-  minifi::ExternalBuildDescription::addExternalComponent(bundle, description);
+  fn(description, c_class_description);
+}
 
-  minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(module_name).registerClass(
-    name_segments.back(),
-    std::make_unique<CProcessorFactory>(module_name, toString(class_description->full_name), c_class_description)
-  );
+}  // namespace org::apache::nifi::minifi::utils
+
+extern "C" {
+
+MinifiPropertyValidator MinifiGetStandardValidator(MinifiStandardPropertyValidator validator) {
+  switch (validator) {
+    case MINIFI_ALWAYS_VALID_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR);
+    case MINIFI_NON_BLANK_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::NON_BLANK_VALIDATOR);
+    case MINIFI_TIME_PERIOD_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR);
+    case MINIFI_BOOLEAN_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR);
+    case MINIFI_INTEGER_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::INTEGER_VALIDATOR);
+    case MINIFI_UNSIGNED_INTEGER_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR);
+    case MINIFI_DATA_SIZE_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::DATA_SIZE_VALIDATOR);
+    case MINIFI_PORT_VALIDATOR: return reinterpret_cast<MinifiPropertyValidator>(&minifi::core::StandardPropertyValidators::PORT_VALIDATOR);
+    default: gsl_FailFast();
+  }
+}
+
+void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription* class_description) {
+  gsl_Expects(class_description);
+
+  auto module_name = toString(class_description->module_name);
+  minifi::BundleDetails bundle{
+    .artifact = module_name,
+    .group = module_name,
+    .version = "1.0.0"
+  };
+
+  minifi::utils::useCProcessorClassDescription(class_description, [&] (auto description, auto c_class_description) {
+    minifi::ExternalBuildDescription::addExternalComponent(bundle, description);
+
+    minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(module_name).registerClass(
+      c_class_description.name,
+      std::make_unique<CProcessorFactory>(module_name, toString(class_description->full_name), c_class_description)
+    );
+  });
+
 }
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext context, MinifiStringView property_name, MinifiFlowFile flow_file, void(*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {

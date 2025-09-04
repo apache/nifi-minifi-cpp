@@ -72,7 +72,7 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
   std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent) override;
   std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent, int64_t offset, int64_t size) override;
 
-  void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) override;
+  void transfer(const std::shared_ptr<core::IFlowFile>& flow, const Relationship& relationship) override;
   void transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name) override;
 
   void putAttribute(core::FlowFile& flow, std::string_view key, const std::string& value) override;

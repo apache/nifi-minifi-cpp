@@ -16,7 +16,7 @@
  */
 
 #include "DefaultLlamaContext.h"
-#include "minifi-cpp/Exception.h"
+#include "api/Exception.h"
 #include "fmt/format.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
@@ -41,7 +41,7 @@ std::vector<llama_token> tokenizeInput(const llama_vocab* vocab, const std::stri
 DefaultLlamaContext::DefaultLlamaContext(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params) {
   llama_model_ = llama_model_load_from_file(model_path.string().c_str(), llama_model_default_params());  // NOLINT(cppcoreguidelines-prefer-member-initializer)
   if (!llama_model_) {
-    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load model from '{}'", model_path.string()));
+    throw api::Exception(api::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load model from '{}'", model_path.string()));
   }
 
   llama_context_params ctx_params = llama_context_default_params();
