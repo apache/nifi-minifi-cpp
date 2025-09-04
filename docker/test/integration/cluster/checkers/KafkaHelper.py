@@ -26,19 +26,19 @@ class KafkaHelper:
 
     def create_topic(self, container_name: str, topic_name: str):
         logging.info(f"Creating topic {topic_name} in {container_name}")
-        (code, output) = self.container_communicator.execute_command(container_name, ["/bin/bash", "-c", f"/opt/bitnami/kafka/bin/kafka-topics.sh --create --topic {topic_name} --bootstrap-server {container_name}:9092"])
+        (code, output) = self.container_communicator.execute_command(container_name, ["/bin/bash", "-c", f"/opt/kafka/bin/kafka-topics.sh --create --topic {topic_name} --bootstrap-server {container_name}:9092"])
         logging.info(output)
         return code == 0
 
     def produce_message(self, container_name: str, topic_name: str, message: str):
         logging.info(f"Sending {message} to {container_name}:{topic_name}")
-        (code, output) = self.container_communicator.execute_command(container_name, ["/bin/bash", "-c", f"/opt/bitnami/kafka/bin/kafka-console-producer.sh --topic {topic_name} --bootstrap-server {container_name}:9092 <<< '{message}'"])
+        (code, output) = self.container_communicator.execute_command(container_name, ["/bin/bash", "-c", f"/opt/kafka/bin/kafka-console-producer.sh --topic {topic_name} --bootstrap-server {container_name}:9092 <<< '{message}'"])
         logging.info(output)
         return code == 0
 
     def produce_message_with_key(self, container_name: str, topic_name: str, message: str, message_key: str):
         logging.info(f"Sending {message} to {container_name}:{topic_name}")
-        (code, output) = self.container_communicator.execute_command(container_name, ["/bin/bash", "-c", f"/opt/bitnami/kafka/bin/kafka-console-producer.sh --property 'key.separator=:' --property 'parse.key=true' --topic {topic_name} --bootstrap-server {container_name}:9092 <<< '{message_key}:{message}'"])
+        (code, output) = self.container_communicator.execute_command(container_name, ["/bin/bash", "-c", f"/opt/kafka/bin/kafka-console-producer.sh --property 'key.separator=:' --property 'parse.key=true' --topic {topic_name} --bootstrap-server {container_name}:9092 <<< '{message_key}:{message}'"])
         logging.info(output)
         return code == 0
 
@@ -51,7 +51,7 @@ class KafkaHelper:
             RUN pip install confluent-kafka
             """
             dockerfile_stream = io.BytesIO(dockerfile_content.encode("utf-8"))
-            image, _ = self.container_communicator.client.images.build(fileobj=dockerfile_stream, tag="kafka-helper")
+            self.container_communicator.client.images.build(fileobj=dockerfile_stream, tag="kafka-helper")
 
         output = self.container_communicator.client.containers.run("kafka-helper", ["python", "-c", command], remove=True, stdout=True, stderr=True, network=f"minifi_integration_test_network-{self.feature_id}")
         logging.info(output)
