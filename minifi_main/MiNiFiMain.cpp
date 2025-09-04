@@ -41,6 +41,7 @@
 #include <csignal>
 
 #include <atomic>
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
@@ -69,7 +70,6 @@
 #include "agent/agent_version.h"
 #include "Fips.h"
 #include "core/BulletinStore.h"
-#include "range/v3/algorithm/min_element.hpp"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -437,7 +437,7 @@ int main(int argc, char **argv) {
         const auto available_spaces = minifi::disk_space_watchdog::check_available_space(repo_paths, logger.get());
         const auto config = minifi::disk_space_watchdog::read_config(*configure);
         const auto min_space = [](const std::vector<std::uintmax_t>& spaces) {
-          const auto it = ranges::min_element(spaces);
+          const auto it = std::ranges::min_element(spaces);
           return it != spaces.end() ? *it : (std::numeric_limits<std::uintmax_t>::max)();
         };
         if (min_space(available_spaces) <= config.stop_threshold_bytes) {
