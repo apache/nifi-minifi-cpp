@@ -313,6 +313,9 @@ class ContainerStore:
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
+    def acquire_transient_minifi(self, context, container_name: str, engine='minifi-cpp'):
+        self.acquire_container(context=context, container_name=container_name, engine=engine, command=["/bin/sh", "-c", "timeout 10s {run_minifi} && sleep 100".format(run_minifi=MinifiContainer.MINIFI_LOCATIONS.run_minifi_cmd)])
+
     def deploy_container(self, container_name: str):
         container_name = self.get_container_name_with_postfix(container_name)
         if container_name is None or container_name not in self.containers:

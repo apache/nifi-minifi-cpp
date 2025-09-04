@@ -81,6 +81,9 @@ def before_feature(context, feature):
         if not is_x86:
             feature.skip("This feature is only x86/x64 compatible")
 
+    if "SKIP_RPM" in feature.tags and "rpm" in os.environ['MINIFI_TAG_PREFIX']:
+        feature.skip("This feature is not yet supported on RPM installed images")
+
     feature_id = shortuuid.uuid()
     context.feature_id = feature_id
     context.directory_bindings = DockerTestDirectoryBindings(feature_id)

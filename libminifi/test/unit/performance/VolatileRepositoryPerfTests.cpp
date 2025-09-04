@@ -27,7 +27,7 @@
 // NOLINTBEGIN
 
 static bool initializeLogger = [] {
-  auto log_props = std::make_shared<org::apache::nifi::minifi::core::logging::LoggerProperties>();
+  auto log_props = std::make_shared<org::apache::nifi::minifi::core::logging::LoggerProperties>("");
   log_props->set("logger.root", "OFF");
   org::apache::nifi::minifi::core::logging::LoggerConfiguration::getConfiguration().initialize(log_props);
   return true;

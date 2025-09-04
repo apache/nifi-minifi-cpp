@@ -55,9 +55,7 @@ class Properties {
   virtual int getInt(const std::string &key, int default_value) const = 0;
   virtual std::optional<std::string> getString(const std::string& key) const = 0;
   virtual void loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix = "") = 0;
-  virtual void setHome(std::filesystem::path minifiHome) = 0;
   virtual std::vector<std::string> getConfiguredKeys() const = 0;
-  virtual std::filesystem::path getHome() const = 0;
   virtual bool commitChanges() = 0;
   virtual utils::ChecksumCalculator& getChecksumCalculator() = 0;
   virtual std::filesystem::path getFilePath() const = 0;

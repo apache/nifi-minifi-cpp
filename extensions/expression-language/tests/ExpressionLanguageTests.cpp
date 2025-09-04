@@ -193,7 +193,6 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   LogTestController::getInstance().setTrace<minifi::processors::UpdateAttribute>();
 
   auto conf = std::make_shared<minifi::ConfigureImpl>();
-  conf->setHome(testController.createTempDirectory());
 
   conf->set("nifi.my.own.property", "custom_value");
 
@@ -939,7 +938,7 @@ TEST_CASE("GT4 Value parsing errors", "[expressionGT4][outofrange]") {
   auto flow_file = std::make_shared<core::FlowFileImpl>();
   flow_file->addAttribute("attr1", test_str);
   try {
-    const auto result = expr(expression::Parameters{flow_file.get()}).asString();
+    [[maybe_unused]] const auto result = expr(expression::Parameters{flow_file.get()}).asString();
     REQUIRE(false);
   } catch (const std::exception& ex) {
     const std::string message = ex.what();
@@ -1302,9 +1301,9 @@ TEST_CASE("Parse RFC3339 with Expression Language toDate") {
   using namespace std::literals::chrono_literals;
   using std::chrono::milliseconds;
 
-  milliseconds expected_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s).time_since_epoch());
-  milliseconds expected_tenth_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 100ms).time_since_epoch());
-  milliseconds expected_milli_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 190ms).time_since_epoch());
+  auto expected_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s).time_since_epoch());
+  auto expected_tenth_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 100ms).time_since_epoch());
+  auto expected_milli_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 190ms).time_since_epoch());
 
   CHECK(expression::compile("${literal('2023-03-01T19:04:55Z'):toDate()}")(expression::Parameters()).asSignedLong() == expected_second.count());
   CHECK(expression::compile("${literal('2023-03-01T19:04:55.1Z'):toDate()}")(expression::Parameters()).asSignedLong() == expected_tenth_second.count());
@@ -1440,7 +1439,6 @@ TEST_CASE("Reverse DNS lookup with valid timeout parameter", "[ExpressionLanguag
   LogTestController::getInstance().clear();
 
   auto flow_file_a = std::make_shared<core::FlowFileImpl>();
-  std::string expected_hostname;
   flow_file_a->addAttribute("ip_addr", "8.8.8.8");
 
   SECTION("Shouldn't timeout") {

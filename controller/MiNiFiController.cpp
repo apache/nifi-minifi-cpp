@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "Controller.h"
+#include "Defaults.h"
 #include "Exception.h"
 #include "MainHelper.h"
 #include "agent/agent_version.h"
@@ -33,6 +34,7 @@
 #include "core/extension/ExtensionManager.h"
 #include "properties/Configure.h"
 #include "range/v3/algorithm/contains.hpp"
+#include "utils/Environment.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -91,19 +93,20 @@ std::shared_ptr<minifi::controllers::SSLContextServiceInterface> getSSLContextSe
 int main(int argc, char **argv) {
   const auto logger = minifi::core::logging::LoggerConfiguration::getConfiguration().getLogger("controller");
 
-  const auto minifi_home = determineMinifiHome(logger);
-  if (minifi_home.empty()) {
-    // determineMinifiHome already logged everything we need
+  const auto locations = minifi::determineLocations(logger);
+  if (!locations) {
+    // determineLocations already logged everything we need
     return -1;
   }
+  minifi::utils::Environment::setEnvironmentVariable(std::string(MINIFI_WORKING_DIR).c_str(), locations->working_dir_.string().c_str());
+
 
   const auto configuration = std::make_shared<minifi::ConfigureImpl>();
-  configuration->setHome(minifi_home);
-  configuration->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+  configuration->loadConfigureFile(locations->properties_path_);
 
-  const auto log_properties = std::make_shared<minifi::core::logging::LoggerProperties>();
-  log_properties->setHome(minifi_home);
-  log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
+  const auto log_properties = std::make_shared<minifi::core::logging::LoggerProperties>(locations->logs_dir_);
+  log_properties->loadConfigureFile(locations->log_properties_path_, "nifi.log.");
+
   minifi::core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
   minifi::utils::net::SocketData socket_data;

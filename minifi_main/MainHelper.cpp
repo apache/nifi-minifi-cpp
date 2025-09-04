@@ -20,33 +20,32 @@
 
 #include "utils/Environment.h"
 #include "utils/StringUtils.h"
+#include "Defaults.h"
 #include "utils/file/FileUtils.h"
 
-namespace minifi = org::apache::nifi::minifi;
-namespace utils = minifi::utils;
-namespace logging = minifi::core::logging;
 
+namespace org::apache::nifi::minifi {
 bool validHome(const std::filesystem::path& home_path) {
   return utils::file::exists(home_path / DEFAULT_NIFI_PROPERTIES_FILE);
 }
 
 void setSyslogLogger() {
-  std::shared_ptr<logging::LoggerProperties> service_logger = std::make_shared<logging::LoggerProperties>();
+  std::shared_ptr<core::logging::LoggerProperties> service_logger = std::make_shared<core::logging::LoggerProperties>("");
   service_logger->set("appender.syslog", "syslog");
   service_logger->set("logger.root", "INFO,syslog");
-  logging::LoggerConfiguration::getConfiguration().initialize(service_logger);
+  core::logging::LoggerConfiguration::getConfiguration().initialize(service_logger);
 }
 
-std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) {
+std::filesystem::path determineMinifiHome(const std::shared_ptr<core::logging::Logger>& logger) {
   /* Try to determine MINIFI_HOME */
   std::filesystem::path minifi_home = [&logger]() -> std::filesystem::path {
     /* If MINIFI_HOME is set as an environment variable, we will use that */
-    auto minifi_home_env_key = utils::Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY);
-    if (minifi_home_env_key) {
-      logger->log_info("Found " MINIFI_HOME_ENV_KEY "={} in environment", *minifi_home_env_key);
-      return *minifi_home_env_key;
+    auto minifi_home_env_value = utils::Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str());
+    if (minifi_home_env_value) {
+      logger->log_info("Found {}={} in environment", MINIFI_HOME_ENV_KEY, *minifi_home_env_value);
+      return *minifi_home_env_value;
     } else {
-      logger->log_info(MINIFI_HOME_ENV_KEY " is not set; trying to infer it");
+      logger->log_info("{} is not set; trying to infer it", MINIFI_HOME_ENV_KEY);
     }
 
     /* Try to determine MINIFI_HOME relative to the location of the minifi executable */
@@ -55,7 +54,7 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>
       logger->log_error("Failed to determine location of the minifi executable");
     } else {
       auto executable_parent_path = executable_path.parent_path();
-      logger->log_info("Inferred " MINIFI_HOME_ENV_KEY "={} based on the minifi executable location {}", executable_parent_path, executable_path);
+      logger->log_info("Inferred {}={} based on the minifi executable location {}", MINIFI_HOME_ENV_KEY, executable_parent_path, executable_path);
       return executable_parent_path;
     }
 
@@ -65,7 +64,7 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>
     if (cwd.empty()) {
       logger->log_error("Failed to determine current working directory");
     } else {
-      logger->log_info("Inferred " MINIFI_HOME_ENV_KEY "={} based on the current working directory {}", cwd, cwd);
+      logger->log_info("Inferred {}={} based on the current working directory {}", MINIFI_HOME_ENV_KEY, cwd, cwd);
       return cwd;
     }
 #endif
@@ -74,8 +73,8 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>
   }();
 
   if (minifi_home.empty()) {
-    logger->log_error("No " MINIFI_HOME_ENV_KEY " could be inferred. "
-                      "Please set " MINIFI_HOME_ENV_KEY " or run minifi from a valid location.");
+    logger->log_error("No {} could be inferred. "
+                      "Please set {} or run minifi from a valid location.", MINIFI_HOME_ENV_KEY, MINIFI_HOME_ENV_KEY);
     return "";
   }
 
@@ -105,9 +104,47 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>
     return "";
   }
 
-  /* Set the valid MINIFI_HOME in our environment */
-  logger->log_info("Using " MINIFI_HOME_ENV_KEY "={}", minifi_home);
-  utils::Environment::setEnvironmentVariable(MINIFI_HOME_ENV_KEY, minifi_home.string().c_str());
-
   return minifi_home;
 }
+
+Locations getFromMinifiHome(const std::filesystem::path& minifi_home) {
+  return {
+    .working_dir_ = minifi_home,
+    .lock_path_ = minifi_home / "LOCK",
+    .log_properties_path_ = minifi_home / DEFAULT_LOG_PROPERTIES_FILE,
+    .uid_properties_path_ = minifi_home / DEFAULT_UID_PROPERTIES_FILE,
+    .properties_path_ = minifi_home / DEFAULT_NIFI_PROPERTIES_FILE,
+    .logs_dir_ = minifi_home / "logs",
+    .fips_bin_path_ = minifi_home / "fips",
+    .fips_conf_path_ = minifi_home / "fips",
+  };
+}
+
+Locations getFromFHS() {
+  return {
+    .working_dir_ =  std::filesystem::path(RPM_WORK_DIR),
+    .lock_path_ = std::filesystem::path(RPM_WORK_DIR) / "LOCK",
+    .log_properties_path_ = std::filesystem::path(RPM_CONFIG_DIR) / "minifi-log.properties",
+    .uid_properties_path_ = std::filesystem::path(RPM_CONFIG_DIR) / "minifi-uid.properties",
+    .properties_path_ = std::filesystem::path(RPM_CONFIG_DIR) / "minifi.properties",
+    .logs_dir_ = std::filesystem::path(RPM_LOG_DIR),
+    .fips_bin_path_ = std::filesystem::path(RPM_LIB_DIR) / "fips",
+    .fips_conf_path_ = std::filesystem::path(RPM_CONFIG_DIR) / "fips"
+};
+}
+
+std::optional<Locations> determineLocations(const std::shared_ptr<core::logging::Logger>& logger) {
+  const auto minifi_home_env = utils::Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str());
+  const auto executable_path = utils::file::get_executable_path();
+
+  if (minifi_home_env == MINIFI_HOME_ENV_VALUE_FHS || (!minifi_home_env && executable_path.parent_path() == "/usr/bin")) {
+    return getFromFHS();
+  }
+
+  const auto minifi_home = determineMinifiHome(logger);
+  if (minifi_home.empty()) {
+    return std::nullopt;
+  }
+  return getFromMinifiHome(minifi_home);
+}
+}  // namespace org::apache::nifi::minifi
