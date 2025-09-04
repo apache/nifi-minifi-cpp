@@ -15,14 +15,15 @@
  * limitations under the License.
  */
 
-#include "core/ProcessContext.h"
-#include "utils/minifi-c-utils.h"
+#include "api/core/ProcessContext.h"
+#include "api/utils/minifi-c-utils.h"
+#include "api/core/FlowFile.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi::api::core {
 
-nonstd::expected<std::string, std::error_code> ProcessContext::getProperty(std::string_view name, const FlowFile* flow_file) const {
+nonstd::expected<std::string, std::error_code> ProcessContext::getProperty(std::string_view name, const minifi::core::IFlowFile* flow_file) const {
   std::optional<std::string> value;
-  MinifiStatus status = MinifiProcessContextGetProperty(impl_, utils::toStringView(name), flow_file ? flow_file->getImpl() : MINIFI_NULL,
+  MinifiStatus status = MinifiProcessContextGetProperty(impl_, utils::toStringView(name), flow_file ? dynamic_cast<const FlowFile*>(flow_file)->getImpl() : MINIFI_NULL,
     [] (void* data, MinifiStringView result) {
       (*static_cast<std::optional<std::string>*>(data)) = std::string(result.data, result.length);
     }, &value);
@@ -45,7 +46,7 @@ std::string ProcessContext::getProcessorName() const {
   return result;
 }
 
-void ProcessContext::yield() const {
+void ProcessContext::yield() {
   MinifiProcessContextYield(impl_);
 }
 

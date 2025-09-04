@@ -24,6 +24,7 @@
 #include "FlowFile.h"
 #include "minifi-cpp/provenance/Provenance.h"
 #include "minifi-cpp/io/StreamCallback.h"
+#include "minifi-cpp/core/IProcessSession.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -37,7 +38,7 @@ struct ReadBufferResult {
 }  // namespace detail
 
 // ProcessSession Class
-class ProcessSession : public virtual ReferenceContainer {
+class ProcessSession : public virtual ReferenceContainer, public IProcessSession {
  public:
   ~ProcessSession() override = default;
 
@@ -48,11 +49,10 @@ class ProcessSession : public virtual ReferenceContainer {
   virtual std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() = 0;
   virtual void flushContent() = 0;
   virtual std::shared_ptr<core::FlowFile> get() = 0;
-  virtual std::shared_ptr<core::FlowFile> create(const core::FlowFile* const parent = nullptr) = 0;
+  virtual std::shared_ptr<core::FlowFile> create(const core::FlowFile* parent = nullptr) = 0;
   virtual void add(const std::shared_ptr<core::FlowFile> &record) = 0;
   virtual std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent) = 0;
   virtual std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent, int64_t offset, int64_t size) = 0;
-  virtual void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) = 0;
   virtual void transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name) = 0;
 
   virtual void putAttribute(core::FlowFile& flow, std::string_view key, const std::string& value) = 0;
@@ -117,6 +117,19 @@ class ProcessSession : public virtual ReferenceContainer {
   virtual bool existsFlowFileInRelationship(const Relationship &relationship) = 0;
 
   virtual bool hasBeenTransferred(const core::FlowFile &flow) const = 0;
+
+  std::shared_ptr<IFlowFile> create(const IFlowFile* parent) override {
+    return create(dynamic_cast<const FlowFile*>(parent));
+  }
+  std::shared_ptr<IFlowFile> popFlowFile() override {
+    return get();
+  }
+  void write(IFlowFile &flow, const io::OutputStreamCallback& callback) override {
+    write(dynamic_cast<FlowFile&>(flow), callback);
+  }
+  void read(IFlowFile &flow, const io::InputStreamCallback& callback) override {
+    read(dynamic_cast<FlowFile&>(flow), callback);
+  }
 };
 
 }  // namespace org::apache::nifi::minifi::core

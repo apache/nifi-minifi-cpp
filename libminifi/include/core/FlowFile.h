@@ -156,8 +156,8 @@ class FlowFileImpl : public CoreComponentImpl, public ReferenceContainerImpl, pu
   /**
    * setAttribute, if attribute already there, update it, else, add it
    */
-  bool setAttribute(std::string_view key, std::string value) override {
-    return attributes_.insert_or_assign(std::string{key}, std::move(value)).second;
+  void setAttribute(std::string_view key, std::string value) override {
+    attributes_.insert_or_assign(std::string{key}, std::move(value));
   }
 
   /**

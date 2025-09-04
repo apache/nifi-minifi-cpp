@@ -34,13 +34,15 @@
 #include "minifi-cpp/core/DynamicProperty.h"
 // #include "minifi-cpp/core/ProcessorMetrics.h"
 #include "utils/gsl.h"
-#include "utils/Id.h"
+#include "minifi-cpp/utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
-#include "core/ProcessorMetadata.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/ProcessorMetadata.h"
+#include "FlowFile.h"
 #include "utils/StringUtils.h"
+#include "PublishedMetrics.h"
+#include "logging/Logger.h"
 
-namespace org::apache::nifi::minifi {
+namespace org::apache::nifi::minifi::api {
 
 class Connection;
 
@@ -52,7 +54,7 @@ class ProcessSessionFactory;
 
 class ProcessorImpl {
  public:
-  explicit ProcessorImpl(ProcessorMetadata metadata);
+  explicit ProcessorImpl(minifi::core::ProcessorMetadata metadata);
 
   ProcessorImpl(const ProcessorImpl&) = delete;
   ProcessorImpl(ProcessorImpl&&) = delete;
@@ -69,17 +71,17 @@ class ProcessorImpl {
     return trigger_when_empty_;
   }
 
-  virtual void onTrigger(ProcessContext&, ProcessSession&) {}
+  void onTrigger(ProcessContext&, ProcessSession&);
 
-  virtual void onSchedule(ProcessContext&) {}
+  void onSchedule(ProcessContext&);
 
   virtual void onUnSchedule() {}
 
   virtual bool isWorkAvailable();
 
-  static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
+  static constexpr auto DynamicProperties = std::array<minifi::core::DynamicProperty, 0>{};
 
-  static constexpr auto OutputAttributes = std::array<OutputAttributeReference, 0>{};
+  static constexpr auto OutputAttributes = std::array<minifi::core::OutputAttributeReference, 0>{};
 
   virtual void restore(const std::shared_ptr<FlowFile>& file);
 
@@ -87,12 +89,18 @@ class ProcessorImpl {
   utils::Identifier getUUID() const;
   utils::SmallString<36> getUUIDStr() const;
 
+  virtual PublishedMetrics calculateMetrics() const {return {};}
+
  protected:
-  ProcessorMetadata metadata_;
+  virtual void onTriggerImpl(ProcessContext&, ProcessSession&) {}
+
+  virtual void onScheduleImpl(ProcessContext&) {}
+
+  minifi::core::ProcessorMetadata metadata_;
 
   std::atomic<bool> trigger_when_empty_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<minifi::core::logging::Logger> logger_;
 
  private:
   mutable std::mutex mutex_;

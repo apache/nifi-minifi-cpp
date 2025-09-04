@@ -15,13 +15,14 @@
  * limitations under the License.
  */
 
-#include "core/ProcessSession.h"
+#include "api/core/ProcessSession.h"
 
 #include "io/InputStream.h"
 #include "io/OutputStream.h"
-#include "utils/minifi-c-utils.h"
+#include "api/utils/minifi-c-utils.h"
+#include "api/core/FlowFile.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi::api::core {
 
 namespace {
 
@@ -67,48 +68,27 @@ private:
 
 }
 
-std::shared_ptr<FlowFile> ProcessSession::get() {
+std::shared_ptr<minifi::core::IFlowFile> ProcessSession::popFlowFile() {
   return std::make_shared<FlowFile>(MinifiProcessSessionGet(impl_));
 }
 
-std::shared_ptr<FlowFile> ProcessSession::create(const FlowFile* parent) {
-  return std::make_shared<FlowFile>(MinifiProcessSessionCreate(impl_, parent ? parent->getImpl() : MINIFI_NULL));
+std::shared_ptr<minifi::core::IFlowFile> ProcessSession::create(const minifi::core::IFlowFile* parent) {
+  return std::make_shared<FlowFile>(MinifiProcessSessionCreate(impl_, parent ? dynamic_cast<const FlowFile*>(parent)->getImpl() : MINIFI_NULL));
 }
 
-void ProcessSession::transfer(const std::shared_ptr<FlowFile>& ff, const Relationship& relationship) {
+void ProcessSession::transfer(const std::shared_ptr<minifi::core::IFlowFile>& ff, const minifi::core::Relationship& relationship) {
   const auto rel_name = relationship.getName();
-  MinifiProcessSessionTransfer(impl_, ff->getImpl(), utils::toStringView(rel_name));
+  MinifiProcessSessionTransfer(impl_, dynamic_cast<FlowFile*>(ff.get())->getImpl(), utils::toStringView(rel_name));
 }
 
-void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer) {
-  writeBuffer(flow_file, as_bytes(buffer));
-}
-
-void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer) {
-  write(*flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
-    const auto write_status = output_stream->write(buffer);
-    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
-  });
-}
-
-std::vector<std::byte> ProcessSession::readBuffer(core::FlowFile& flow_file) {
-  std::vector<std::byte> result;
-  read(flow_file, [&result](const std::shared_ptr<io::InputStream>& input_stream) {
-    result.resize(input_stream->size());
-    const auto read_status = input_stream->read(result);
-    return io::isError(read_status) ? -1 : gsl::narrow<int64_t>(read_status);
-  });
-  return result;
-}
-
-void ProcessSession::write(core::FlowFile& flow_file, const io::OutputStreamCallback& callback) {
-  MinifiProcessSessionWrite(impl_, flow_file.getImpl(), [] (void* data, MinifiOutputStream output) {
+void ProcessSession::write(minifi::core::IFlowFile& flow_file, const io::OutputStreamCallback& callback) {
+  MinifiProcessSessionWrite(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiOutputStream output) {
     return (*reinterpret_cast<const io::OutputStreamCallback*>(data))(std::make_shared<MinifiOutputStreamWrapper>(output));
   }, (void*)&callback);
 }
 
-void ProcessSession::read(core::FlowFile& flow_file, const io::InputStreamCallback& callback) {
-  MinifiProcessSessionRead(impl_, flow_file.getImpl(), [] (void* data, MinifiInputStream input) {
+void ProcessSession::read(minifi::core::IFlowFile& flow_file, const io::InputStreamCallback& callback) {
+  MinifiProcessSessionRead(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiInputStream input) {
     return (*reinterpret_cast<const io::InputStreamCallback*>(data))(std::make_shared<MinifiInputStreamWrapper>(input));
   }, (void*)&callback);
 }

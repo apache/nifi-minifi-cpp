@@ -24,7 +24,7 @@
 #include "utils/StringUtils.h"
 #include "core/PropertyDefinition.h"
 
-namespace org::apache::nifi::minifi::utils {
+namespace org::apache::nifi::minifi::api::utils {
 
 inline MinifiStringView toStringView(std::string_view str) {
   return MinifiStringView{.data = str.data(), .length = gsl::narrow<uint32_t>(str.length())};
@@ -32,8 +32,36 @@ inline MinifiStringView toStringView(std::string_view str) {
 
 template<typename T>
 std::string classNameWithDots() {
-  std::string class_name{core::className<T>()};
-  return utils::string::replaceAll(class_name, "::", ".");
+  std::string class_name{minifi::core::className<T>()};
+  return minifi::utils::string::replaceAll(class_name, "::", ".");
+}
+
+inline MinifiStandardPropertyValidator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator) {
+  if (validator == &minifi::core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR) {
+    return MINIFI_ALWAYS_VALID_VALIDATOR;
+  }
+  if (validator == &minifi::core::StandardPropertyValidators::NON_BLANK_VALIDATOR) {
+    return MINIFI_NON_BLANK_VALIDATOR;
+  }
+  if (validator == &minifi::core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR) {
+    return MINIFI_TIME_PERIOD_VALIDATOR;
+  }
+  if (validator == &minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR) {
+    return MINIFI_BOOLEAN_VALIDATOR;
+  }
+  if (validator == &minifi::core::StandardPropertyValidators::INTEGER_VALIDATOR) {
+    return MINIFI_INTEGER_VALIDATOR;
+  }
+  if (validator == &minifi::core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR) {
+    return MINIFI_UNSIGNED_INTEGER_VALIDATOR;
+  }
+  if (validator == &minifi::core::StandardPropertyValidators::DATA_SIZE_VALIDATOR) {
+    return MINIFI_DATA_SIZE_VALIDATOR;
+  }
+  if (validator == &minifi::core::StandardPropertyValidators::PORT_VALIDATOR) {
+    return MINIFI_PORT_VALIDATOR;
+  }
+  gsl_FailFast();
 }
 
 inline MinifiInputRequirement toInputRequirement(minifi::core::annotation::Input req) {
@@ -45,7 +73,7 @@ inline MinifiInputRequirement toInputRequirement(minifi::core::annotation::Input
   gsl_FailFast();
 }
 
-inline std::vector<MinifiProperty> toProperties(std::span<const core::PropertyReference> props, std::vector<std::vector<MinifiStringView>>& cache) {
+inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::PropertyReference> props, std::vector<std::vector<MinifiStringView>>& cache) {
   std::vector<MinifiProperty> properties;
     for (auto& prop : props) {
       std::vector<MinifiStringView> sv_cache;
@@ -91,7 +119,7 @@ inline std::vector<MinifiProperty> toProperties(std::span<const core::PropertyRe
         .default_value = default_value_begin ? &sv_cache[default_value_begin.value()] : nullptr,
         .allowed_values_count = gsl::narrow<uint32_t>(prop.allowed_values.size()),
         .allowed_values_ptr = &sv_cache[allowed_values_begin],
-        .validator = MinifiGetStandardValidator(prop.validator->impl_),
+        .validator = MinifiGetStandardValidator(toStandardPropertyValidator(prop.validator)),
 
         .types_count = gsl::narrow<uint32_t>(prop.allowed_types.size()),
         .types_ptr = &sv_cache[allowed_types_begin],

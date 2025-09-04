@@ -20,10 +20,10 @@
 #include <mutex>
 #include <atomic>
 
-#include "core/ProcessorImpl.h"
+#include "api/core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "LlamaContext.h"
-#include "utils/Export.h"
+#include "api/utils/Export.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
@@ -32,8 +32,8 @@ using LlamaContextProvider =
 
 class RunLlamaCppInferenceMetrics {
  public:
-  std::vector<std::pair<std::string, double>> calculateMetrics() {
-    std::vector<std::pair<std::string, double>> metrics;
+  minifi::api::core::PublishedMetrics calculateMetrics() const {
+    minifi::api::core::PublishedMetrics metrics;
     metrics.push_back({"tokens_in", static_cast<double>(tokens_in.load())});
     metrics.push_back({"tokens_out", static_cast<double>(tokens_out.load())});
     return metrics;
@@ -43,10 +43,10 @@ class RunLlamaCppInferenceMetrics {
   std::atomic<uint64_t> tokens_out{0};
 };
 
-class RunLlamaCppInference : public core::ProcessorImpl {
+class RunLlamaCppInference : public api::core::ProcessorImpl {
  public:
   explicit RunLlamaCppInference(core::ProcessorMetadata metadata, LlamaContextProvider llama_context_provider = {})
-      : core::ProcessorImpl(metadata),
+      : api::core::ProcessorImpl(metadata),
         llama_context_provider_(std::move(llama_context_provider)) {
     metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>());
   }
@@ -158,9 +158,10 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
 
-  void onSchedule(core::ProcessContext& context) override;
-  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
+  void onScheduleImpl(api::core::ProcessContext& context) override;
+  void onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
   void onUnSchedule() override;
+  minifi::api::core::PublishedMetrics calculateMetrics() const override {return metrics_.calculateMetrics();}
 
  private:
   void increaseTokensIn(uint64_t token_count);
