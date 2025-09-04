@@ -19,11 +19,10 @@
 
 #include "core/controller/ControllerService.h"
 
-#include "minifi-cpp/core/FlowFile.h"
-#include "minifi-cpp/core/ProcessSession.h"
 #include "minifi-cpp/core/Record.h"
 #include "utils/Enum.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "minifi-cpp/io/InputStream.h"
 
 
 namespace org::apache::nifi::minifi::core {
@@ -36,7 +35,7 @@ class RecordSetReader : public virtual controller::ControllerService {
     .type = "org.apache.nifi.minifi.core.RecordSetReader",
   };
 
-  virtual nonstd::expected<RecordSet, std::error_code> read(const std::shared_ptr<FlowFile>& flow_file, ProcessSession& session) = 0;
+  virtual nonstd::expected<RecordSet, std::error_code> read(io::InputStream& input_stream) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core
