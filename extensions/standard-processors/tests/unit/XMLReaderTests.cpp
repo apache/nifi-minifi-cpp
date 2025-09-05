@@ -182,8 +182,9 @@ TEST_CASE_METHOD(XMLReaderTestFixture, "Parse attributes as in an XML with neste
   CHECK(std::get<std::string>(node_object.at("value").value_) == "nodetext");
   auto& subnodes = std::get<core::RecordArray>(node_object.at("subnode").value_);
   CHECK(subnodes.size() == 2);
-  CHECK(std::get<std::string>(std::get<core::RecordObject>(subnodes[0].value_).at("subattr").value_) == "subattr_value");
-  CHECK(std::get<uint64_t>(std::get<core::RecordObject>(subnodes[0].value_).at("value").value_) == 1);
+  const auto& subnode_object = std::get<core::RecordObject>(subnodes[0].value_);
+  CHECK(std::get<std::string>(subnode_object.at("subattr").value_) == "subattr_value");
+  CHECK(std::get<uint64_t>(subnode_object.at("value").value_) == 1);
   CHECK(std::get<uint64_t>(subnodes[1].value_) == 2);
 }
 
