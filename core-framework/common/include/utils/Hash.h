@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,29 +16,16 @@
  * limitations under the License.
  */
 
-#pragma once
+ #pragma once
 
-#include <optional>
-#include <string>
-#include <string_view>
-#include <stdexcept>
-
-#include "magic_enum.hpp"
-
-namespace org::apache::nifi::minifi::utils {
-
-template<typename T>
-T enumCast(std::string_view str, bool case_insensitive = false) {
-  std::optional<T> enum_optional_value;
-  if (case_insensitive) {
-    enum_optional_value = magic_enum::enum_cast<T>(str, magic_enum::case_insensitive);
-  } else {
-    enum_optional_value = magic_enum::enum_cast<T>(str);
-  }
-  if (enum_optional_value) {
-    return enum_optional_value.value();
-  }
-  throw std::runtime_error("Cannot convert \"" + std::string(str) + "\" to enum class value of enum type \"" + std::string(magic_enum::enum_type_name<T>()) + "\"");
-}
-
-}  // namespace org::apache::nifi::minifi::utils
+ #include <cstddef>
+ 
+ namespace org::apache::nifi::minifi::utils {
+ 
+ // from the boost hash_combine docs
+ inline size_t hash_combine(size_t seed, size_t new_hash) noexcept {
+   return seed ^ (new_hash + 0x9e3779b9 + (seed << 6U) + (seed >> 2U));
+ }
+ 
+ }  // namespace org::apache::nifi::minifi::utils
+ 

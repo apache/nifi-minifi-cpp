@@ -1,5 +1,5 @@
 /**
- *
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,6 +16,13 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "api/core/FlowFile.h"
+#include "api/utils/minifi-c-utils.h"
 
-#include "minifi-cpp/utils/gsl.h"
+namespace org::apache::nifi::minifi::api::core {
+
+void FlowFile::setAttribute(std::string_view name, std::string value) {
+  MinifiFlowFileSetAttribute(impl_, utils::toStringView(name), utils::toStringView(value));
+}
+
+}  // namespace org::apache::nifi::minifi::core

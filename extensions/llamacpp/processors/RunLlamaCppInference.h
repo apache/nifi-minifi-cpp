@@ -20,40 +20,22 @@
 #include <mutex>
 #include <atomic>
 
-#include "core/ProcessorImpl.h"
-#include "core/logging/LoggerFactory.h"
+#include "api/core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "LlamaContext.h"
-#include "core/ProcessorMetrics.h"
+#include "api/utils/Export.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
 using LlamaContextProvider =
   std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params)>;
 
-class RunLlamaCppInferenceMetrics : public core::ProcessorMetricsImpl {
+class RunLlamaCppInferenceMetrics {
  public:
-  explicit RunLlamaCppInferenceMetrics(const core::ProcessorImpl& source_processor)
-  : core::ProcessorMetricsImpl(source_processor) {
-  }
-
-  std::vector<state::response::SerializedResponseNode> serialize() override {
-    auto resp = core::ProcessorMetricsImpl::serialize();
-    auto& root_node = resp[0];
-
-    state::response::SerializedResponseNode tokens_in_node{"TokensIn", tokens_in.load()};
-    root_node.children.push_back(tokens_in_node);
-
-    state::response::SerializedResponseNode tokens_out_node{"TokensOut", tokens_out.load()};
-    root_node.children.push_back(tokens_out_node);
-
-    return resp;
-  }
-
-  std::vector<state::PublishedMetric> calculateMetrics() override {
-    auto metrics = core::ProcessorMetricsImpl::calculateMetrics();
-    metrics.push_back({"tokens_in", static_cast<double>(tokens_in.load()), getCommonLabels()});
-    metrics.push_back({"tokens_out", static_cast<double>(tokens_out.load()), getCommonLabels()});
+  minifi::api::core::PublishedMetrics calculateMetrics() const {
+    minifi::api::core::PublishedMetrics metrics;
+    metrics.push_back({"tokens_in", static_cast<double>(tokens_in.load())});
+    metrics.push_back({"tokens_out", static_cast<double>(tokens_out.load())});
     return metrics;
   }
 
@@ -61,12 +43,11 @@ class RunLlamaCppInferenceMetrics : public core::ProcessorMetricsImpl {
   std::atomic<uint64_t> tokens_out{0};
 };
 
-class RunLlamaCppInference : public core::ProcessorImpl {
+class RunLlamaCppInference : public api::core::ProcessorImpl {
  public:
   explicit RunLlamaCppInference(core::ProcessorMetadata metadata, LlamaContextProvider llama_context_provider = {})
-      : core::ProcessorImpl(metadata),
+      : api::core::ProcessorImpl(metadata),
         llama_context_provider_(std::move(llama_context_provider)) {
-    metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>(*this));
   }
   ~RunLlamaCppInference() override = default;
 
@@ -176,12 +157,10 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
 
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
-  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
-  void initialize() override;
-  void notifyStop() override;
+  void onScheduleImpl(api::core::ProcessContext& context) override;
+  void onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  void onUnSchedule() override;
+  minifi::api::core::PublishedMetrics calculateMetrics() const override {return metrics_.calculateMetrics();}
 
  private:
   void increaseTokensIn(uint64_t token_count);
@@ -192,6 +171,8 @@ class RunLlamaCppInference : public core::ProcessorImpl {
 
   LlamaContextProvider llama_context_provider_;
   std::unique_ptr<LlamaContext> llama_ctx_;
+
+  RunLlamaCppInferenceMetrics metrics_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors

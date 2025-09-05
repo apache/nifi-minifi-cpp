@@ -16,9 +16,8 @@
  */
 
 #include "DefaultLlamaContext.h"
-#include "Exception.h"
+#include "api/Exception.h"
 #include "fmt/format.h"
-#include "utils/ConfigurationUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
@@ -42,7 +41,7 @@ std::vector<llama_token> tokenizeInput(const llama_vocab* vocab, const std::stri
 DefaultLlamaContext::DefaultLlamaContext(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params) {
   llama_model_ = llama_model_load_from_file(model_path.string().c_str(), llama_model_default_params());  // NOLINT(cppcoreguidelines-prefer-member-initializer)
   if (!llama_model_) {
-    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load model from '{}'", model_path.string()));
+    throw api::Exception(api::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load model from '{}'", model_path.string()));
   }
 
   llama_context_params ctx_params = llama_context_default_params();
@@ -88,7 +87,7 @@ std::optional<std::string> DefaultLlamaContext::applyTemplate(const std::vector<
   std::transform(messages.begin(), messages.end(), std::back_inserter(llama_messages),
                  [](const LlamaChatMessage& msg) { return llama_chat_message{.role = msg.role.c_str(), .content = msg.content.c_str()}; });
   std::string text;
-  text.resize(utils::configuration::DEFAULT_BUFFER_SIZE);
+  text.resize(4096);
   const char * chat_template = llama_model_chat_template(llama_model_, nullptr);
   int32_t res_size = llama_chat_apply_template(chat_template, llama_messages.data(), llama_messages.size(), true, text.data(), gsl::narrow<int32_t>(text.size()));
   if (res_size < 0) {

@@ -26,7 +26,7 @@
 #include "ConfigurableComponent.h"
 #include "Connectable.h"
 #include "Property.h"
-#include "DynamicProperty.h"
+#include "minifi-cpp/core/DynamicProperty.h"
 #include "Core.h"
 #include "minifi-cpp/core/Annotation.h"
 #include "Scheduling.h"
@@ -68,7 +68,7 @@ class ProcessorApi {
   virtual void notifyStop() = 0;
   virtual annotation::Input getInputRequirement() const = 0;
   virtual gsl::not_null<std::shared_ptr<ProcessorMetrics>> getMetrics() const = 0;
-  virtual void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) = 0;
+  virtual void forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) = 0;
 };
 
 }  // namespace core

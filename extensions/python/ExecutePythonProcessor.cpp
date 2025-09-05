@@ -56,9 +56,15 @@ void ExecutePythonProcessor::initializeScript() {
 
 void ExecutePythonProcessor::initialize() {
   initializeScript();
-  std::vector<core::PropertyReference> all_properties{Properties.begin(), Properties.end()};
-  ranges::transform(python_properties_, std::back_inserter(all_properties), &core::Property::getReference);
-  setSupportedProperties(all_properties);
+  std::vector<core::Property> properties;
+  for (auto& property : Properties) {
+    properties.emplace_back(property);
+  }
+  for (auto& python_relationship : python_properties_) {
+    properties.emplace_back(python_relationship);
+  }
+
+  setSupportedProperties(gsl::make_span(properties));
   setSupportedRelationships(Relationships);
   logger_->log_debug("Processor has been initialized.");
 }
@@ -227,10 +233,10 @@ std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships()
   return relationships;
 }
 
-void ExecutePythonProcessor::setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) {
+void ExecutePythonProcessor::forEachLogger(const std::function<void(std::shared_ptr<core::logging::Logger>)>& callback) {
   gsl_Expects(logger_ && python_logger_);
-  logger_->setLogCallback(callback);
-  python_logger_->setLogCallback(callback);
+  callback(logger_);
+  callback(python_logger_);
 }
 
 REGISTER_RESOURCE(ExecutePythonProcessor, Processor);
