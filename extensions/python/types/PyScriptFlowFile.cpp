@@ -135,7 +135,8 @@ PyObject* PyScriptFlowFile::setAttribute(PyScriptFlowFile* self, PyObject* args)
     return nullptr;
   }
 
-  return object::returnReference(flow_file->setAttribute(key, value));
+  flow_file->setAttribute(key, value);
+  Py_RETURN_NONE;
 }
 
 PyObject* PyScriptFlowFile::getSize(PyScriptFlowFile* self, PyObject* /*args*/) {
