@@ -30,7 +30,7 @@ class LuaScriptFlowFile {
  public:
   explicit LuaScriptFlowFile(std::shared_ptr<core::FlowFile> flow_file);
   std::string getAttribute(const std::string &key);
-  bool setAttribute(const std::string &key, const std::string &value);
+  void setAttribute(const std::string &key, const std::string &value);
   bool addAttribute(const std::string &key, const std::string &value);
   bool updateAttribute(std::string_view key, const std::string& value);
   bool removeAttribute(std::string_view key);

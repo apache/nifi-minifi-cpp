@@ -48,12 +48,12 @@ bool LuaScriptFlowFile::addAttribute(const std::string& key, const std::string& 
   return flow_file_->addAttribute(key, value);
 }
 
-bool LuaScriptFlowFile::setAttribute(const std::string& key, const std::string& value) {
+void LuaScriptFlowFile::setAttribute(const std::string& key, const std::string& value) {
   if (!flow_file_) {
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  return flow_file_->setAttribute(key, value);
+  flow_file_->setAttribute(key, value);
 }
 
 bool LuaScriptFlowFile::updateAttribute(std::string_view key, const std::string& value) {
