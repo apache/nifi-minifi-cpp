@@ -63,7 +63,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   EXTENSIONAPI static constexpr auto CredentialConfigurationStrategy =
     core::PropertyDefinitionBuilder<magic_enum::enum_count<CredentialConfigurationStrategyOption>()>::createProperty("Credential Configuration Strategy")
       .withDescription("The strategy to use for credential configuration. If set to From Properties, the credentials are parsed from the SAS Token, Storage Account Key, "
-                       "and Connection String properties. In other cases, the selected Azure identity source is used.")
+          "and Connection String properties. In other cases, the selected Azure identity source is used.")
       .isRequired(true)
       .withDefaultValue(magic_enum::enum_name(CredentialConfigurationStrategyOption::FromProperties))
       .withAllowedValues(magic_enum::enum_names<CredentialConfigurationStrategyOption>())

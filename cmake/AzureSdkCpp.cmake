@@ -55,3 +55,5 @@ FetchContent_Declare(asdkext
 )
 
 FetchContent_MakeAvailable(asdkext)
+
+add_dependencies(azure-storage-common LibXml2::LibXml2)

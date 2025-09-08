@@ -61,7 +61,7 @@ Azure::Storage::Blobs::BlobContainerClient AzureBlobStorageClient::createClient(
   }
 
   auto storage_client = Azure::Storage::Blobs::BlobServiceClient("https://" + credentials.getStorageAccountName() + ".blob." + credentials.getEndpointSuffix(),
-    credentials.createAzureTokenCredential());
+      credentials.createAzureTokenCredential());
   return storage_client.GetBlobContainerClient(container_name);
 }
 
