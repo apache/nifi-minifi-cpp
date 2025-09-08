@@ -25,13 +25,13 @@
 #include <string>
 #include <memory>
 
-#include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerProperties.h"
 #include "utils/ThreadPool.h"
 #include "utils/StagingQueue.h"
 #include "utils/RegexUtils.h"
 #include "properties/Configure.h"
 #include "spdlog/sinks/base_sink.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 
 namespace org::apache::nifi::minifi::controllers {
 class SSLContextServiceInterface;
@@ -48,14 +48,13 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
 
   static std::shared_ptr<AlertSink> create(const std::string& prop_name_prefix, const std::shared_ptr<LoggerProperties>& logger_properties, std::shared_ptr<Logger> logger);
 
-  void initialize(core::controller::ControllerServiceProvider* controller, std::shared_ptr<AgentIdentificationProvider> agent_id);
+  void initialize(std::shared_ptr<AgentIdentificationProvider> agent_id, std::shared_ptr<controllers::SSLContextServiceInterface> ssl_service);
 
   ~AlertSink() override;
 
  private:
   struct Config {
     std::string url;
-    std::optional<std::string> ssl_service_name;
     int batch_size;
     std::chrono::milliseconds flush_period;
     std::chrono::milliseconds rate_limit;
