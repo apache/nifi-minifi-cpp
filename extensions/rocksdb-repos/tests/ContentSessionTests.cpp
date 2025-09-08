@@ -37,7 +37,6 @@ class ContentSessionController : public TestController {
       : contentRepository(std::make_shared<ContentRepositoryClass>()) {
     auto contentRepoPath = createTempDirectory();
     auto config = std::make_shared<minifi::ConfigureImpl>();
-    config->setHome(contentRepoPath);
     config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, contentRepoPath.string());
     contentRepository->initialize(config);
   }
@@ -54,12 +53,12 @@ class ContentSessionController : public TestController {
   std::shared_ptr<core::ContentRepository> contentRepository;
 };
 
-const std::shared_ptr<minifi::io::OutputStream>& operator<<(const std::shared_ptr<minifi::io::OutputStream>& stream, const std::string& str) {
+std::shared_ptr<minifi::io::OutputStream> operator<<(std::shared_ptr<minifi::io::OutputStream> stream, const std::string& str) {
   REQUIRE(stream->write(reinterpret_cast<const uint8_t*>(str.data()), str.length()) == str.length());
   return stream;
 }
 
-const std::shared_ptr<minifi::io::InputStream>& operator>>(const std::shared_ptr<minifi::io::InputStream>& stream, std::string& str) {
+std::shared_ptr<minifi::io::InputStream> operator>>(std::shared_ptr<minifi::io::InputStream> stream, std::string& str) {
   str = "";
   std::array<std::byte, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
   while (true) {
@@ -104,7 +103,7 @@ void test_template() {
   {
     auto other_session = contentRepository->createSession();
     other_session->append(oldClaim, 4, [&] (auto new_claim) {
-      copied_claim = new_claim;
+      copied_claim = std::move(new_claim);
     }) << "-some extra content";
     other_session->commit();
   }

@@ -60,7 +60,7 @@ for %%i in (%extensions%) do (
 	echo const char* const AgentBuild::BUILD_DATE = "%builddate%";
 	echo const char* const AgentBuild::COMPILER = "%compiler%";
 	echo const char* const AgentBuild::COMPILER_VERSION = "%compiler_version%";
-	echo const char* const AgentBuild::COMPILER_FLAGS = "%flags%";
+	echo const char* const AgentBuild::COMPILER_FLAGS = R"(%flags%)";
 	echo std^:^:vector^<std^:^:string^> AgentBuild::getExtensions^(^) {
   	echo 	static std^:^:vector^<std^:^:string^> extensions;
   	echo 	if ^(extensions.empty^(^)^){

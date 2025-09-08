@@ -102,16 +102,8 @@ class PropertiesImpl : public virtual Properties {
    */
   std::optional<std::string> getString(const std::string& key) const override;
 
-  /**
-   * Load configure file
-   * @param fileName path of the configuration file RELATIVE to MINIFI_HOME set by setHome()
-   */
   void loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix = "") override;
 
-  // Set the determined MINIFI_HOME
-  void setHome(std::filesystem::path minifiHome) override {
-    minifi_home_ = std::move(minifiHome);
-  }
 
   std::vector<std::string> getConfiguredKeys() const override {
     std::vector<std::string> keys;
@@ -119,11 +111,6 @@ class PropertiesImpl : public virtual Properties {
       keys.push_back(property.first);
     }
     return keys;
-  }
-
-  // Get the determined MINIFI_HOME
-  std::filesystem::path getHome() const override {
-    return minifi_home_;
   }
 
   bool commitChanges() override;
@@ -146,8 +133,6 @@ class PropertiesImpl : public virtual Properties {
   // Mutex for protection
   mutable std::mutex mutex_;
   std::shared_ptr<core::logging::Logger> logger_;
-  // Home location for this executable
-  std::filesystem::path minifi_home_;
 
   std::string name_;
 };

@@ -84,11 +84,23 @@ else()
         COMMENT "Creating symlink for minifi-python-script-extension"
     )
 
-    install(
-        FILES "${CMAKE_BINARY_DIR}/bin/minifi_native.so"
-        DESTINATION extensions
-        COMPONENT minifi_python_native_module
-    )
+
+    if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        install(
+                FILES "${CMAKE_BINARY_DIR}/bin/minifi_native.so"
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/extensions/
+                COMPONENT minifi_python_native_module
+        )
+    elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+        install(
+                FILES "${CMAKE_BINARY_DIR}/bin/minifi_native.so"
+                DESTINATION extensions
+                COMPONENT minifi_python_native_module
+        )
+    else()
+        message(FATAL_ERROR "Invalid MINIFI_PACKAGING_TYPE")
+    endif()
+
 endif()
 
 if (NOT WIN32)

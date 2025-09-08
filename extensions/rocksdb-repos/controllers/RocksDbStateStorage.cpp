@@ -15,14 +15,16 @@
  * limitations under the License.
  */
 
+#include "RocksDbStateStorage.h"
+
 #include <cinttypes>
 #include <fstream>
 #include <utility>
 
-#include "RocksDbStateStorage.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
-#include "utils/StringUtils.h"
 #include "core/Resource.h"
+#include "utils/Locations.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -60,9 +62,12 @@ void RocksDbStateStorage::onEnable() {
   auto_persistor_.start(always_persist, auto_persistence_interval, [this] { return persistNonVirtual(); });
   db_.reset();
 
-  auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
+
+  const auto working_dir = utils::getMinifiDir();
+
+  auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{working_dir}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   if (!encrypted_env) {
-    encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME_OLD});
+    encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{working_dir}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME_OLD});
   }
   logger_->log_info("Using {} RocksDbStateStorage", encrypted_env ? "encrypted" : "plaintext");
 

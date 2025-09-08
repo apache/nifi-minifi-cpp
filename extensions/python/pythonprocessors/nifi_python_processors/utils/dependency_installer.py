@@ -65,6 +65,7 @@ if __name__ == '__main__':
     if dependencies_found:
         try:
             subprocess.check_call(command)
+            print("Done installing dependencies for MiNiFi python processors.")
         except subprocess.CalledProcessError as e:
             print("Error occurred while installing dependencies: {}".format(e))
             sys.exit(1)

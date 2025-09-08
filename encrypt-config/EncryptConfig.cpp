@@ -23,13 +23,13 @@
 #include <optional>
 #include <stdexcept>
 
+#include "../core-framework/include/Defaults.h"
 #include "ConfigFile.h"
 #include "ConfigFileEncryptor.h"
+#include "FlowConfigEncryptor.h"
+#include "core/extension/ExtensionManager.h"
 #include "utils/Enum.h"
 #include "utils/file/FileUtils.h"
-#include "Defaults.h"
-#include "core/extension/ExtensionManager.h"
-#include "FlowConfigEncryptor.h"
 
 namespace {
 constexpr std::string_view ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";

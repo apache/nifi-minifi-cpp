@@ -189,8 +189,7 @@ TEST_CASE("C2DebugBundleTest", "[c2test]") {
     return true;
   });
 
-  harness.getConfiguration()->setHome(home_dir.string());
-  harness.getConfiguration()->loadConfigureFile("conf/minifi.properties");
+  harness.getConfiguration()->loadConfigureFile(home_dir / "conf/minifi.properties");
   harness.setUrl("http://localhost:0/heartbeat", &heartbeat_handler);
   harness.setUrl("http://localhost:0/acknowledge", &ack_handler);
   harness.setUrl("http://localhost:0/debug_bundle", &bundle_handler);

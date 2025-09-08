@@ -33,29 +33,33 @@ set_cpp_version()
 
 set(MINIFI_CONTROLLER_SOURCES MiNiFiController.cpp Controller.cpp ../minifi_main/MainHelper.cpp)
 if (WIN32)
-    set(EXECUTABLE_FILE_NAME "minificontroller.exe")
+    set(EXECUTABLE_FILE_NAME "minifi-controller.exe")
     set(EXECUTABLE_FILE_DESCRIPTION "${PRODUCT_NAME} controller")
     configure_file(${CMAKE_SOURCE_DIR}/versioninfo.rc.in ${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc @ONLY)
     list(APPEND MINIFI_CONTROLLER_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc")
 endif()
 
-add_minifi_executable(minificontroller ${MINIFI_CONTROLLER_SOURCES})
+add_minifi_executable(minifi-controller ${MINIFI_CONTROLLER_SOURCES})
 include(ArgParse)
-target_link_libraries(minificontroller ${LIBMINIFI} argparse Threads::Threads)
+target_link_libraries(minifi-controller ${LIBMINIFI} argparse Threads::Threads)
 
-set_target_properties(minificontroller PROPERTIES
-    OUTPUT_NAME minificontroller
+set_target_properties(minifi-controller PROPERTIES
+    OUTPUT_NAME minifi-controller
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 if (NOT WIN32)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT APPLE)
-        target_link_options(minificontroller PRIVATE "-Wl,--disable-new-dtags")
+        target_link_options(minifi-controller PRIVATE "-Wl,--disable-new-dtags")
     endif()
-    if (APPLE)
-        set_target_properties(minificontroller PROPERTIES INSTALL_RPATH "@loader_path")
+    if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        set_target_properties(minifi-controller PROPERTIES INSTALL_RPATH "/usr/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}")
     else()
-        set_target_properties(minificontroller PROPERTIES INSTALL_RPATH "$ORIGIN")
+        if (APPLE)
+            set_target_properties(minifi-controller PROPERTIES INSTALL_RPATH "@loader_path")
+        else()
+            set_target_properties(minifi-controller PROPERTIES INSTALL_RPATH "$ORIGIN")
+        endif()
     endif()
 endif()
 
-install(TARGETS minificontroller RUNTIME DESTINATION bin COMPONENT bin)
+install(TARGETS minifi-controller RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin)

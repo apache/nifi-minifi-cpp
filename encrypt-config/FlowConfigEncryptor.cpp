@@ -16,16 +16,16 @@
  */
 #include "FlowConfigEncryptor.h"
 
-#include "core/extension/ExtensionManager.h"
-#include "core/FlowConfiguration.h"
-#include "core/flow/AdaptiveConfiguration.h"
-#include "core/ProcessGroup.h"
-#include "core/RepositoryFactory.h"
-#include "core/repository/VolatileContentRepository.h"
 #include "Defaults.h"
 #include "Utils.h"
-#include "utils/file/FileSystem.h"
+#include "core/FlowConfiguration.h"
+#include "core/ProcessGroup.h"
+#include "core/RepositoryFactory.h"
+#include "core/extension/ExtensionManager.h"
+#include "core/flow/AdaptiveConfiguration.h"
+#include "core/repository/VolatileContentRepository.h"
 #include "utils/Id.h"
+#include "utils/file/FileSystem.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -180,8 +180,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
   }
 
   const auto configure = std::make_shared<ConfigureImpl>();
-  configure->setHome(minifi_home);
-  configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+  configure->loadConfigureFile(minifi_home / DEFAULT_NIFI_PROPERTIES_FILE);
 
   bool encrypt_whole_flow_config_file = (configure->get(Configure::nifi_flow_configuration_encrypt) | utils::andThen(utils::string::toBool)).value_or(false);
   auto whole_file_encryptor = encrypt_whole_flow_config_file ? utils::crypto::EncryptionProvider::create(minifi_home) : std::nullopt;
