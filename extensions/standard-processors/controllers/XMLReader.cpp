@@ -108,14 +108,14 @@ void XMLReader::parseNodeElement(core::RecordObject& record_object, const pugi::
       writeRecordField(child_record_object, attribute_prefix_ + attr.name(), attr.value());
     }
     parseXmlNode(child_record_object, node);
-    record_object.emplace(node.name(), core::RecordField(std::move(child_record_object)));
+    addRecordFieldToObject(record_object, node.name(), core::RecordField(std::move(child_record_object)));
     return;
   }
 
   if (hasChildNodes(node)) {
     core::RecordObject child_record_object;
     parseXmlNode(child_record_object, node);
-    record_object.emplace(node.name(), core::RecordField(std::move(child_record_object)));
+    addRecordFieldToObject(record_object, node.name(), core::RecordField(std::move(child_record_object)));
     return;
   }
 
