@@ -40,13 +40,12 @@ class XMLReader final : public core::RecordSetReaderImpl {
 
   EXTENSIONAPI static constexpr auto FieldNameForContent = core::PropertyDefinitionBuilder<>::createProperty("Field Name for Content")
       .withDescription("If tags with content (e. g. <field>content</field>) are defined as nested records in the schema, the name of the tag will be used as name for the record and the value of "
-                       "this property will be used as name for the field. If the tag contains subnodes besides the content (e.g. <field>content<subfield>subcontent</subfield></field>), "
-                       "or a node attribute is present, we need to define a name for the text content, so that it can be distinguished from the subnodes. If this property is not set, the default "
-                       "name 'value' will be used for the text content of the tag in this case.")
+        "this property will be used as name for the field. If the tag contains subnodes besides the content (e.g. <field>content<subfield>subcontent</subfield></field>), "
+        "or a node attribute is present, we need to define a name for the text content, so that it can be distinguished from the subnodes. If this property is not set, the default "
+        "name 'value' will be used for the text content of the tag in this case.")
       .build();
   EXTENSIONAPI static constexpr auto ParseXMLAttributes = core::PropertyDefinitionBuilder<>::createProperty("Parse XML Attributes")
-      .withDescription("When 'Schema Access Strategy' is 'Infer Schema' and this property is 'true' then XML attributes are parsed and added to the record as new fields. When the schema is "
-                       "inferred but this property is 'false', XML attributes and their values are ignored.")
+      .withDescription("When this property is 'true' then XML attributes are parsed and added to the record as new fields, otherwise XML attributes and their values are ignored.")
       .isRequired(true)
       .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
@@ -56,9 +55,9 @@ class XMLReader final : public core::RecordSetReaderImpl {
       .build();
   EXTENSIONAPI static constexpr auto ExpectRecordsAsArray = core::PropertyDefinitionBuilder<>::createProperty("Expect Records as Array")
       .withDescription("This property defines whether the reader expects a FlowFile to consist of a single Record or a series of Records with a \"wrapper element\". Because XML does not provide "
-                       "for a way to read a series of XML documents from a stream directly, it is common to combine many XML documents by concatenating them and then wrapping the entire XML blob "
-                       "with a \"wrapper element\". This property dictates whether the reader expects a FlowFile to consist of a single Record or a series of Records with a \"wrapper element\" "
-                       "that will be ignored.")
+          "for a way to read a series of XML documents from a stream directly, it is common to combine many XML documents by concatenating them and then wrapping the entire XML blob "
+          "with a \"wrapper element\". This property dictates whether the reader expects a FlowFile to consist of a single Record or a series of Records with a \"wrapper element\" "
+          "that will be ignored.")
       .isRequired(true)
       .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
@@ -81,7 +80,6 @@ class XMLReader final : public core::RecordSetReaderImpl {
 
  private:
   void writeRecordField(core::RecordObject& record_object, const std::string& name, const std::string& value, bool write_pcdata_node = false) const;
-  void writeRecordFieldFromXmlNode(core::RecordObject& record_object, const pugi::xml_node& node) const;
   void parseNodeElement(core::RecordObject& record_object, const pugi::xml_node& node) const;
   void parseXmlNode(core::RecordObject& record_object, const pugi::xml_node& node) const;
   void addRecordFromXmlNode(const pugi::xml_node& node, core::RecordSet& record_set) const;

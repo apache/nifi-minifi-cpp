@@ -27,6 +27,7 @@ namespace org::apache::nifi::minifi::standard::test {
 class XMLReaderTestFixture {
  public:
   XMLReaderTestFixture() : xml_reader_("XMLReader") {
+    LogTestController::getInstance().clear();
     LogTestController::getInstance().setTrace<XMLReader>();
   }
 

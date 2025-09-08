@@ -18,6 +18,7 @@
 #include "XMLReader.h"
 
 #include <algorithm>
+#include <ranges>
 
 #include "core/Resource.h"
 #include "utils/TimeUtil.h"
@@ -27,7 +28,7 @@ namespace org::apache::nifi::minifi::standard {
 
 namespace {
 bool hasChildNodes(const pugi::xml_node& node) {
-  return std::any_of(node.begin(), node.end(), [] (const pugi::xml_node& child) {
+  return std::ranges::any_of(node, [] (const pugi::xml_node& child) {
     return child.type() == pugi::node_element;
   });
 }
@@ -68,7 +69,7 @@ void XMLReader::writeRecordField(core::RecordObject& record_object, const std::s
     return;
   }
 
-  if (std::all_of(value.begin(), value.end(), ::isdigit)) {
+  if (std::ranges::all_of(value, ::isdigit)) {
     try {
       uint64_t value_as_uint64 = std::stoull(value);
       addRecordFieldToObject(record_object, name, core::RecordField(value_as_uint64));
@@ -77,7 +78,7 @@ void XMLReader::writeRecordField(core::RecordObject& record_object, const std::s
     }
   }
 
-  if (value.starts_with('-') && std::all_of(value.begin() + 1, value.end(), ::isdigit)) {
+  if (value.starts_with('-') && std::ranges::all_of(value | std::views::drop(1), ::isdigit)) {
     try {
       int64_t value_as_int64 = std::stoll(value);
       addRecordFieldToObject(record_object, name, core::RecordField(value_as_int64));
@@ -94,10 +95,6 @@ void XMLReader::writeRecordField(core::RecordObject& record_object, const std::s
   }
 
   addRecordFieldToObject(record_object, name, core::RecordField(value));
-}
-
-void XMLReader::writeRecordFieldFromXmlNode(core::RecordObject& record_object, const pugi::xml_node& node) const {
-  writeRecordField(record_object, node.name(), node.child_value());
 }
 
 void XMLReader::parseNodeElement(core::RecordObject& record_object, const pugi::xml_node& node) const {
@@ -119,7 +116,7 @@ void XMLReader::parseNodeElement(core::RecordObject& record_object, const pugi::
     return;
   }
 
-  writeRecordFieldFromXmlNode(record_object, node);
+  writeRecordField(record_object, node.name(), node.child_value());
 }
 
 void XMLReader::parseXmlNode(core::RecordObject& record_object, const pugi::xml_node& node) const {
@@ -177,16 +174,16 @@ void XMLReader::onEnable() {
 
 nonstd::expected<core::RecordSet, std::error_code> XMLReader::read(io::InputStream& input_stream) {
   core::RecordSet record_set{};
-  const auto read_result = [this, &record_set](io::InputStream& input_stream) -> int64_t {
+  const auto read_result = [this, &record_set](io::InputStream& input_stream) -> size_t {
     std::string content;
     content.resize(input_stream.size());
-    const auto read_ret = gsl::narrow<int64_t>(input_stream.read(as_writable_bytes(std::span(content))));
+    const auto read_ret = input_stream.read(as_writable_bytes(std::span(content)));
     if (io::isError(read_ret)) {
       logger_->log_error("Failed to read XML data from input stream");
-      return -1;
+      return io::STREAM_ERROR;
     }
     if (!parseRecordsFromXml(record_set, content)) {
-      return -1;
+      return io::STREAM_ERROR;
     }
     return read_ret;
   }(input_stream);
