@@ -40,6 +40,7 @@
 #include <csignal>
 
 #include <atomic>
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
@@ -63,13 +64,13 @@
 #include "core/repository/VolatileContentRepository.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "core/state/MetricsPublisherStore.h"
-#include "core/state/nodes/ResponseNodeLoader.h"
 #include "properties/Decryptor.h"
 #include "utils/Environment.h"
 #include "utils/FileMutex.h"
 #include "utils/file/AssetManager.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
+#include "range/v3/algorithm/min_element.hpp"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -84,7 +85,7 @@ static std::atomic_flag process_running;
  *
  * Semaphores are a portable choice when using signal handlers. Threads,
  * mutexes, and condition variables are not guaranteed to work within
- * a signal handler. Consequently we will use the semaphore to avoid thread
+ * a signal handler. Consequently, we will use the semaphore to avoid thread
  * safety issues.
  */
 
@@ -308,7 +309,7 @@ int main(int argc, char **argv) {
     std::string prov_repo_class = "provenancerepository";
     std::string flow_repo_class = "flowfilerepository";
     std::string nifi_configuration_class_name = "adaptiveconfiguration";
-    std::string content_repo_class = "filesystemrepository";
+    std::string content_repo_class = "DatabaseContentRepository";
 
     auto log_properties = std::make_shared<core::logging::LoggerProperties>(locations->logs_dir_);
     log_properties->loadConfigureFile(locations->log_properties_path_, "nifi.log.");
@@ -418,22 +419,22 @@ int main(int argc, char **argv) {
     if (disk_space_watchdog_enable) {
       try {
         const auto repo_paths = [&] {
-          std::vector<std::string> repo_paths;
-          repo_paths.reserve(3);
+          std::vector<std::string> paths;
+          paths.reserve(3);
           // REPOSITORY_DIRECTORY is a dummy path used by noop repositories
           const auto path_valid = [](const std::string& p) { return !p.empty() && p != org::apache::nifi::minifi::core::REPOSITORY_DIRECTORY; };
           auto prov_repo_path = prov_repo->getDirectory();
           auto flow_repo_path = flow_repo->getDirectory();
           auto content_repo_storage_path = content_repo->getStoragePath();
-          if (!prov_repo->isNoop() && path_valid(prov_repo_path)) { repo_paths.push_back(std::move(prov_repo_path)); }
-          if (!flow_repo->isNoop() && path_valid(flow_repo_path)) { repo_paths.push_back(std::move(flow_repo_path)); }
-          if (path_valid(content_repo_storage_path)) { repo_paths.push_back(std::move(content_repo_storage_path)); }
-          return repo_paths;
+          if (!prov_repo->isNoop() && path_valid(prov_repo_path)) { paths.push_back(std::move(prov_repo_path)); }
+          if (!flow_repo->isNoop() && path_valid(flow_repo_path)) { paths.push_back(std::move(flow_repo_path)); }
+          if (path_valid(content_repo_storage_path)) { paths.push_back(std::move(content_repo_storage_path)); }
+          return paths;
         }();
         const auto available_spaces = minifi::disk_space_watchdog::check_available_space(repo_paths, logger.get());
         const auto config = minifi::disk_space_watchdog::read_config(*configure);
         const auto min_space = [](const std::vector<std::uintmax_t>& spaces) {
-          const auto it = std::min_element(std::begin(spaces), std::end(spaces));
+          const auto it = std::ranges::min_element(spaces);
           return it != spaces.end() ? *it : (std::numeric_limits<std::uintmax_t>::max)();
         };
         if (min_space(available_spaces) <= config.stop_threshold_bytes) {
