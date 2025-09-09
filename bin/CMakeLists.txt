@@ -56,7 +56,7 @@ configure_file(
 )
 
 if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
-    install(FILES ${CMAKE_BINARY_DIR}/bin/minifi.service DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/system COMPONENT bin)
+    install(FILES ${CMAKE_BINARY_DIR}/bin/minifi.service DESTINATION /usr/lib/systemd/system COMPONENT bin)
 elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
     install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/minifi.sh DESTINATION bin COMPONENT bin)
     if (APPLE)
