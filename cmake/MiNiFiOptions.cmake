@@ -88,7 +88,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 add_minifi_option(ENABLE_ALL "Enables all extensions" OFF)
-add_minifi_option(ENABLE_EXPRESSION_LANGUAGE "Enables expression language." ON)
 add_minifi_option(ENABLE_CIVET "Enables CivetWeb components." ON)
 add_minifi_option(ENABLE_ROCKSDB "Enables the RocksDB extension." ON)
 add_minifi_option(ENABLE_LIBARCHIVE "Enables the lib archive extensions." ON)

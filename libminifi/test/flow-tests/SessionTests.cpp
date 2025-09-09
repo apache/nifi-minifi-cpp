@@ -26,7 +26,7 @@
 #include "repository/FileSystemRepository.h"
 #include "utils/Id.h"
 #include "io/BufferStream.h"
-#include "core/ProcessContext.h"
+#include "core/ProcessContextImpl.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorImpl.h"
 #include "core/RepositoryFactory.h"

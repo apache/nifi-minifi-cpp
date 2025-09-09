@@ -42,7 +42,6 @@ class MiNiFiCppMain(ConanFile):
 
         tc.variables["SKIP_TESTS"] = "OFF"
         tc.variables["ENABLE_CIVET"] = "ON"
-        tc.variables["ENABLE_EXPRESSION_LANGUAGE"] = "ON"
         tc.variables["ENABLE_LIBARCHIVE"] = "OFF"
         tc.variables["ENABLE_AWS"] = "OFF"
         tc.variables["ENABLE_SQL"] = "OFF"

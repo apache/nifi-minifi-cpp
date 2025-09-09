@@ -381,7 +381,6 @@ show_supported_features() {
   echo "A. Persistent Repositories .....$(print_feature_status ROCKSDB_ENABLED)"
   echo "C. libarchive features .........$(print_feature_status LIBARCHIVE_ENABLED)"
   echo "D. Python Scripting support ....$(print_feature_status PYTHON_SCRIPTING_ENABLED)"
-  echo "E. Expression Language support .$(print_feature_status EXPRESSION_LANGUAGE_ENABLED)"
   echo "F. Kafka support ...............$(print_feature_status KAFKA_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "L. Lua Scripting Support .......$(print_feature_status LUA_SCRIPTING_ENABLED)"
@@ -433,7 +432,6 @@ read_feature_options(){
     a) ToggleFeature ROCKSDB_ENABLED ;;
     c) ToggleFeature LIBARCHIVE_ENABLED ;;
     d) ToggleFeature PYTHON_SCRIPTING_ENABLED ;;
-    e) ToggleFeature EXPRESSION_LANGUAGE_ENABLED ;;
     f) ToggleFeature KAFKA_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature LUA_SCRIPTING_ENABLED ;;

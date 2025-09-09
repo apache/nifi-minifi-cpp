@@ -31,9 +31,8 @@
 
 #include "core/ClassLoader.h"
 #include "core/Processor.h"
-#include "minifi-cpp/core/ProcessContext.h"
+#include "core/ProcessContextImpl.h"
 #include "core/ProcessSessionFactory.h"
-#include "minifi-cpp/core/ProcessContextBuilder.h"
 #include "utils/ValueParser.h"
 
 using namespace std::literals::chrono_literals;
@@ -72,12 +71,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
     return;
   }
 
-  std::shared_ptr<core::ProcessContextBuilder> contextBuilder = core::ClassLoader::getDefaultClassLoader().instantiate<core::ProcessContextBuilder>("ProcessContextBuilder", "ProcessContextBuilder");
-
-  contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_service_provider_)->withProvenanceRepository(repo_)
-      ->withConfiguration(configure_);
-
-  auto process_context = contextBuilder->build(*processor);
+  auto process_context = std::make_shared<core::ProcessContextImpl>(*processor, controller_service_provider_, repo_, flow_repo_, configure_, content_repo_);
 
   auto session_factory = std::make_shared<core::ProcessSessionFactoryImpl>(process_context);
 

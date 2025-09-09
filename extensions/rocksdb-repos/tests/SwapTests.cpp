@@ -23,6 +23,7 @@
 #include "io/StreamPipe.h"
 #include "unit/TestUtils.h"
 #include "core/ProcessorImpl.h"
+#include "core/ProcessContextImpl.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
@@ -30,7 +31,6 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "core/repository/FileSystemRepository.h"
 #include "Connection.h"
-#include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::test {
 

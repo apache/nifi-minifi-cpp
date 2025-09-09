@@ -42,6 +42,7 @@
 #include "minifi-cpp/core/controller/ControllerServiceLookup.h"
 #include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "minifi-cpp/core/repository/FileSystemRepository.h"
+#include "expression-language/Expression.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -204,6 +205,10 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   Processor& processor_;
   gsl::not_null<std::shared_ptr<Configure>> configure_;
   std::unique_ptr<ProcessorInfo> info_;
+
+  mutable std::mutex mutex_;
+  mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_expressions_;
+  mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_dynamic_expressions_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

@@ -71,7 +71,6 @@ add_custom_target(
              -DENABLE_TEST_PROCESSORS=OFF
              -DENABLE_ROCKSDB=ON
              -DENABLE_LIBARCHIVE=ON
-             -DENABLE_EXPRESSION_LANGUAGE=ON
              -DENABLE_LZMA=ON
              -DENABLE_BZIP2=ON
              -DCI_BUILD=${CI_BUILD}\"

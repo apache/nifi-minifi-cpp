@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,13 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-
-if (NOT ENABLE_EXPRESSION_LANGUAGE)
-    return()
-endif()
-
-message("minifi-expression-language-extensions will depend on curl-external")
 
 if(WIN32)
     include(FetchContent)
@@ -96,13 +88,13 @@ find_package(FLEX REQUIRED)
 
 bison_target(
     el-parser
-    ${CMAKE_CURRENT_SOURCE_DIR}/Parser.yy
+    ${CMAKE_SOURCE_DIR}/libminifi/include/expression-language/Parser.yy
     ${CMAKE_BINARY_DIR}/el-generated/Parser.cpp
 )
 
 flex_target(
     el-scanner
-    ${CMAKE_CURRENT_SOURCE_DIR}/Scanner.ll
+    ${CMAKE_SOURCE_DIR}/libminifi/include/expression-language/Scanner.ll
     ${CMAKE_BINARY_DIR}/el-generated/Scanner.cpp
     COMPILE_FLAGS --c++
 )
@@ -112,22 +104,6 @@ file(MAKE_DIRECTORY ${EL_GENERATED_INCLUDE_DIR})
 
 add_flex_bison_dependency(el-scanner el-parser)
 
-include_directories(./ ../../libminifi/include  ../../libminifi/include/core)
-include_directories(SYSTEM ../../thirdparty/)
-include_directories(common)
-include_directories(impl)
-
-if(WIN32)
-    include_directories(../../libminifi/opsys/win)
-    set(SOCKET_SOURCES "src/io/win/*.cpp")
-else()
-    include_directories(../../libminifi/opsys/posix)
-    set(SOCKET_SOURCES "src/io/posix/*.cpp")
-endif()
-
-
-file(GLOB SOURCES  "*.cpp")
-
 if (NOT WIN32)
     set_source_files_properties(${BISON_el-parser_OUTPUTS} PROPERTIES COMPILE_FLAGS -Wno-error)
     set_source_files_properties(${FLEX_el-scanner_OUTPUTS} PROPERTIES COMPILE_FLAGS -Wno-error)
@@ -135,14 +111,3 @@ else()
     set_source_files_properties(${BISON_el-parser_OUTPUTS} PROPERTIES COMPILE_FLAGS /wd4244)
     set_source_files_properties(${FLEX_el-scanner_OUTPUTS} PROPERTIES COMPILE_FLAGS /wd4244)
 endif()
-
-add_minifi_library(minifi-expression-language-extensions SHARED ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})
-
-target_include_directories(minifi-expression-language-extensions SYSTEM PRIVATE ${EL_GENERATED_INCLUDE_DIR})
-target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI})
-target_link_libraries(minifi-expression-language-extensions RapidJSON)
-if (BREW_FLEX_INCLUDE)
-    target_include_directories(minifi-expression-language-extensions SYSTEM PRIVATE ${BREW_FLEX_INCLUDE})
-endif()
-
-register_extension(minifi-expression-language-extensions "EXPRESSION LANGUAGE EXTENSIONS" EXPRESSION-LANGUAGE-EXTENSIONS "This enables NiFi expression language" "extensions/expression-language/tests")

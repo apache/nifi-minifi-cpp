@@ -32,7 +32,7 @@
 #include "catch2/generators/catch_generators.hpp"
 #include "core/Core.h"
 #include "minifi-cpp/core/FlowFile.h"
-#include "core/ProcessContext.h"
+#include "core/ProcessContextImpl.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "core/Processor.h"

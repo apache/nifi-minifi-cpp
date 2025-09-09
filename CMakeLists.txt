@@ -756,7 +756,6 @@ set(EXTENSIONS_ENABLED_BY_DEFAULT (
     minifi-azure
     minifi-civet-extensions
     minifi-elasticsearch
-    minifi-expression-language-extensions
     minifi-gcp
     minifi-grafana-loki
     minifi-archive-extensions
@@ -852,7 +851,7 @@ if (MINIFI_ADVANCED_CODE_COVERAGE)
     setup_target_for_coverage_gcovr_html(
         NAME coverage
         EXCLUDE "build/*" "cmake/*" "minifi_main/*" "thirdparty/*" "libminifi/test/*" "encrypt-config/tests/*" "extensions/aws/tests/*"
-            "extensions/civetweb/tests/*" "extensions/elasticsearch/tests/*" "extensions/expression-language/tests/*" "extensions/gcp/tests/*" "extensions/grafana-loki/tests/*"
+            "extensions/civetweb/tests/*" "extensions/elasticsearch/tests/*" "extensions/gcp/tests/*" "extensions/grafana-loki/tests/*"
             "extensions/kubernetes/tests/*" "extensions/kafka/tests/*" "extensions/lua/tests/*" "extensions/mqtt/tests/*" "extensions/opencv/tests/*" "extensions/procfs/tests/*" "extensions/prometheus/tests/*"
             "extensions/script/tests/*" "extensions/sftp/tests/*" "extensions/splunk/tests/*" "extensions/standard-processors/tests/*" "extensions/systemd/tests/*" "extensions/test-processors/*"
             "controller/MiNiFiController.cpp"

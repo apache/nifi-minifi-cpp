@@ -23,8 +23,8 @@
 #include <utility>
 #include <vector>
 
-#include "common/Value.h"
-#include "FlowFile.h"
+#include "expression-language/Value.h"
+#include "core/FlowFile.h"
 #include "minifi-cpp/core/VariableRegistry.h"
 
 namespace org::apache::nifi::minifi::expression {
