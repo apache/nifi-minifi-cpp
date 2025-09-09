@@ -92,7 +92,7 @@ class XMLRecordSetWriter final : public core::RecordSetWriterImpl {
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto NameOfRootTag = core::PropertyDefinitionBuilder<>::createProperty("Name of Root Tag")
-      .withDescription("Specifies the name of the XML root tag wrapping the record set. This property has to be set if the writer is supposed to write multiple records in a single FlowFile.")
+      .withDescription("Specifies the name of the XML root tag wrapping the record set.")
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .isRequired(true)
       .build();
