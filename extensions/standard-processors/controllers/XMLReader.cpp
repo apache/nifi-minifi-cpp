@@ -166,10 +166,20 @@ bool XMLReader::parseRecordsFromXml(core::RecordSet& record_set, const std::stri
 }
 
 void XMLReader::onEnable() {
+  auto parseBoolProperty = [this](std::string_view property_name) -> bool {
+    if (auto property_value_str = getProperty(property_name); property_value_str && !property_value_str->empty()) {
+      if (auto property_value = parsing::parseBool(*property_value_str)) {
+        return *property_value;
+      }
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Invalid value for {} property: {}", property_name, *property_value_str));
+    }
+    return false;
+  };
+
   field_name_for_content_ = getProperty(FieldNameForContent.name).value_or("value");
-  parse_xml_attributes_ = getProperty(ParseXMLAttributes.name).value_or("false") == "true";
+  parse_xml_attributes_ = parseBoolProperty(ParseXMLAttributes.name);
   attribute_prefix_ = getProperty(AttributePrefix.name).value_or("");
-  expect_records_as_array_ = getProperty(ExpectRecordsAsArray.name).value_or("false") == "true";
+  expect_records_as_array_ = parseBoolProperty(ExpectRecordsAsArray.name);
 }
 
 nonstd::expected<core::RecordSet, std::error_code> XMLReader::read(io::InputStream& input_stream) {
