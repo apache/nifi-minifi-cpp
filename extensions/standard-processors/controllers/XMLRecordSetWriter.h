@@ -66,7 +66,10 @@ class XMLRecordSetWriter final : public core::RecordSetWriterImpl {
       .withDescription("Name of the tag used by property \"Wrap Elements of Arrays\" to write arrays")
       .build();
   EXTENSIONAPI static constexpr auto WrapElementsOfArrays = core::PropertyDefinitionBuilder<3>::createProperty("Wrap Elements of Arrays")
-      .withDescription("Specifies how the writer wraps elements of fields of type array")
+      .withDescription("Specifies how the writer wraps elements of fields of type array. If 'Use Property as Wrapper' is set, the property \"Array Tag Name\" will be used as the tag name to wrap "
+          "elements of an array. The field name of the array field will be used for the tag name of the elements. If 'Use Property for Elements' is set, the property \"Array Tag Name\" will be "
+          "used for the tag name of the elements of an array. The field name of the array field will be used as the tag name to wrap elements. If 'No Wrapping' is set, the elements of an array "
+          "will not be wrapped.")
       .withDefaultValue(magic_enum::enum_name(WrapElementsOfArraysOptions::NoWrapping))
       .withAllowedValues(magic_enum::enum_names<WrapElementsOfArraysOptions>())
       .isRequired(true)
@@ -89,7 +92,7 @@ class XMLRecordSetWriter final : public core::RecordSetWriterImpl {
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto NameOfRootTag = core::PropertyDefinitionBuilder<>::createProperty("Name of Root Tag")
-      .withDescription("Specifies the name of the XML root tag wrapping the record set. This property has to be defined if the writer is supposed to write multiple records in a single FlowFile.")
+      .withDescription("Specifies the name of the XML root tag wrapping the record set. This property has to be set if the writer is supposed to write multiple records in a single FlowFile.")
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .isRequired(true)
       .build();

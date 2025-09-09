@@ -19,6 +19,8 @@
 #include "core/Resource.h"
 #include "Exception.h"
 #include "utils/TimeUtil.h"
+#include "utils/ParsingUtils.h"
+#include "utils/GeneralUtils.h"
 
 namespace org::apache::nifi::minifi::standard {
 
@@ -36,8 +38,18 @@ void XMLRecordSetWriter::onEnable() {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Array Tag Name property must be set when Wrap Elements of Arrays is set to Use Property as Wrapper or Use Property for Elements");
   }
 
-  omit_xml_declaration_ = getProperty(OmitXMLDeclaration.name).value_or("false") == "true";
-  pretty_print_xml_ = getProperty(PrettyPrintXML.name).value_or("false") == "true";
+  auto parseBoolProperty = [this](std::string_view property_name) -> bool {
+    if (auto property_value_str = getProperty(property_name); property_value_str && !property_value_str->empty()) {
+      if (auto property_value = parsing::parseBool(*property_value_str)) {
+        return *property_value;
+      }
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Invalid value for {} property: {}", property_name, *property_value_str));
+    }
+    return false;
+  };
+
+  omit_xml_declaration_ = parseBoolProperty(OmitXMLDeclaration.name);
+  pretty_print_xml_ = parseBoolProperty(PrettyPrintXML.name);
 
   name_of_record_tag_ = getProperty(NameOfRecordTag.name).value_or("");
   if (name_of_record_tag_.empty()) {
@@ -52,7 +64,7 @@ void XMLRecordSetWriter::onEnable() {
 
 std::string XMLRecordSetWriter::formatXmlOutput(pugi::xml_document& xml_doc) const {
   std::ostringstream xml_string_stream;
-  uint64_t xml_formatting_flags = 0;
+  unsigned int xml_formatting_flags = 0;
   if (pretty_print_xml_) {
     xml_formatting_flags |= pugi::format_indent;
   } else {
@@ -61,7 +73,7 @@ std::string XMLRecordSetWriter::formatXmlOutput(pugi::xml_document& xml_doc) con
   if (omit_xml_declaration_) {
     xml_formatting_flags |= pugi::format_no_declaration;
   }
-  xml_doc.save(xml_string_stream, "  ", gsl::narrow<unsigned int>(xml_formatting_flags));
+  xml_doc.save(xml_string_stream, "  ", xml_formatting_flags);
   return xml_string_stream.str();
 }
 
@@ -91,26 +103,33 @@ void XMLRecordSetWriter::convertRecordField(const std::string& field_name, const
   }
 
   pugi::xml_node field_node = parent_node.append_child(field_name.c_str());
-  if (std::holds_alternative<std::string>(field.value_)) {
-    field_node.text().set(std::get<std::string>(field.value_));
-  } else if (std::holds_alternative<int64_t>(field.value_)) {
-    field_node.text().set(std::to_string(std::get<int64_t>(field.value_)).c_str());
-  } else if (std::holds_alternative<uint64_t>(field.value_)) {
-    field_node.text().set(std::to_string(std::get<uint64_t>(field.value_)).c_str());
-  } else if (std::holds_alternative<double>(field.value_)) {
-    field_node.text().set(fmt::format("{:g}", std::get<double>(field.value_)).c_str());
-  } else if (std::holds_alternative<bool>(field.value_)) {
-    field_node.text().set(std::get<bool>(field.value_) ? "true" : "false");
-  } else if (std::holds_alternative<std::chrono::system_clock::time_point>(field.value_)) {
-    auto time_point = std::get<std::chrono::system_clock::time_point>(field.value_);
-    auto time_str = utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(time_point));
-    field_node.text().set(time_str.c_str());
-  } else if (std::holds_alternative<core::RecordObject>(field.value_)) {
-    const auto& record_object = std::get<core::RecordObject>(field.value_);
-    for (const auto& [obj_key, obj_field] : record_object) {
-      convertRecordField(obj_key, obj_field, field_node);
+  std::visit(utils::overloaded {
+    [&field_node](const std::string& str_val) {
+      field_node.text().set(str_val);
+    },
+    [&field_node](int64_t i64_val) {
+      field_node.text().set(std::to_string(i64_val).c_str());
+    },
+    [&field_node](uint64_t u64_val) {
+      field_node.text().set(std::to_string(u64_val).c_str());
+    },
+    [&field_node](double double_val) {
+      field_node.text().set(fmt::format("{:g}", double_val).c_str());
+    },
+    [&field_node](bool bool_val) {
+      field_node.text().set(bool_val ? "true" : "false");
+    },
+    [&field_node](const std::chrono::system_clock::time_point& time_point) {
+      auto time_str = utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(time_point));
+      field_node.text().set(time_str.c_str());
+    },
+    [](const core::RecordArray&) {},
+    [this, &field_node](const core::RecordObject& record_object) {
+      for (const auto& [obj_key, obj_field] : record_object) {
+        convertRecordField(obj_key, obj_field, field_node);
+      }
     }
-  }
+  }, field.value_);
 }
 
 std::string XMLRecordSetWriter::convertRecordSetToXml(const core::RecordSet& record_set) const {
