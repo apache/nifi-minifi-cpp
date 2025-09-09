@@ -15,7 +15,7 @@
 /usr/lib64/nifi-minifi-cpp/fips/fips.so
 /usr/lib64/nifi-minifi-cpp/fips/openssl
 /usr/lib64/nifi-minifi-cpp/libcore-minifi.so
-/usr/lib64/systemd/system/minifi.service
+/usr/lib/systemd/system/minifi.service
 /usr/share/doc/nifi-minifi-cpp
 /usr/share/doc/nifi-minifi-cpp/C2.md
 /usr/share/doc/nifi-minifi-cpp/CONAN.md
