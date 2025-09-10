@@ -98,6 +98,8 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DWITH_TIFF=OFF"
             "-DWITH_CAROTENE=OFF"
             "-DWITH_PROTOBUF=OFF"
+            "-DWITH_AVIF=OFF"
+            "-DBUILD_ZLIB=OFF"
     )
 
     append_third_party_passthrough_args(OPENCV_CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
