@@ -673,7 +673,28 @@ else()
     if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
         set(CPACK_GENERATOR "RPM")
         set(CPACK_BINARY_RPM, "ON")
+
         set(CPACK_RPM_PACKAGE_NAME "nifi-minifi-cpp")
+        set(CPACK_RPM_PACKAGE_VERSION ${PROJECT_VERSION})
+        set(CPACK_RPM_PACKAGE_RELEASE )
+        set(CPACK_RPM_PACKAGE_LICENSE "Apache-2.0")
+        set(CPACK_RPM_PACKAGE_GROUP "System Environment/Daemons")
+        set(CPACK_RPM_PACKAGE_VENDOR "Apache Software Foundation")
+        set(CPACK_RPM_PACKAGE_URL "https://nifi.apache.org/projects/minifi/")
+        set(CPACK_RPM_PACKAGE_CONTACT "dev@nifi.apache.org")
+        set(CPACK_RPM_PACKAGE_SUMMARY "Apache NiFi MiNiFi C++, a lightweight data collection agent.")
+        set(CPACK_RPM_PACKAGE_DESCRIPTION "
+Apache NiFi - MiNiFi C++ is a complementary data collection approach that supplements the core tenets of NiFi in dataflow management, focusing on the collection of data at the source of its creation.
+The C++ implementation is an additional implementation to the one in Java with the aim of an even smaller resource footprint.
+
+Specific goals for MiNiFi comprise:
+
+  - small and lightweight footprint
+  - central management of agents
+  - generation of data provenance
+  - integration with NiFi for follow-on dataflow management and full chain of custody of information
+  - Perspectives of the role of MiNiFi should be from the perspective of the agent acting immediately at, or directly adjacent to, source sensors, systems, or servers.")
+
         set(CPACK_RPM_PACKAGE_AUTOREQ OFF)
         set(CPACK_RPM_PACKAGE_REQUIRES "")
         set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 0)
