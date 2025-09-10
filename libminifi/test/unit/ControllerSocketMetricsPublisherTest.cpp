@@ -129,4 +129,15 @@ TEST_CASE_METHOD(ControllerSocketMetricsPublisherTestFixture, "Test getting mani
   CHECK(agent_manifest.find("\"agentType\": \"cpp\"") != std::string::npos);
 }
 
+TEST_CASE_METHOD(ControllerSocketMetricsPublisherTestFixture, "Test getting flow status", "[ControllerSocketMetricsPublisher]") {
+  auto flow_status = controller_socket_metrics_publisher_.getFlowStatus({});
+  CHECK(flow_status.find("\"controllerServiceStatusList\":") != std::string::npos);
+  CHECK(flow_status.find("\"connectionStatusList\":") != std::string::npos);
+  CHECK(flow_status.find("\"remoteProcessGroupStatusList\":") != std::string::npos);
+  CHECK(flow_status.find("\"instanceStatus\":") != std::string::npos);
+  CHECK(flow_status.find("\"systemDiagnosticsStatus\":") != std::string::npos);
+  CHECK(flow_status.find("\"processorStatusList\":") != std::string::npos);
+  CHECK(flow_status.find("\"errorsGeneratingReport\":[") != std::string::npos);
+}
+
 }  // namespace org::apache::nifi::minifi::test

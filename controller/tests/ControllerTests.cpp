@@ -200,6 +200,16 @@ class TestControllerSocketReporter : public c2::ControllerSocketReporter {
   std::string getAgentManifest() override {
     return "testAgentManifest";
   }
+
+  void setRoot(core::ProcessGroup* /*root*/) override {
+  }
+
+  void setFlowStatusDependencies(core::BulletinStore* /*bulletin_store*/, const std::filesystem::path& /*flowfile_repo_dir*/, const std::filesystem::path& /*flowfile_repo_dir*/) override {
+  }
+
+  std::string getFlowStatus(const std::vector<c2::FlowStatusRequest>& /*requests*/) override {
+    return "";
+  }
 };
 
 class TestControllerServiceProvider : public core::controller::ControllerServiceProviderImpl {
@@ -568,6 +578,31 @@ TEST_CASE_METHOD(ControllerTestFixture, "Debug bundle retrieval fails if target 
   auto result = minifi::controller::getDebugBundle(controller_socket_data_, invalid_path);
   REQUIRE(!result);
   REQUIRE(result.error() == "Object specified as the target directory already exists and it is not a directory");
+}
+
+TEST_CASE_METHOD(ControllerTestFixture, "Test flow status getter", "[controllerTests]") {
+  SECTION("With SSL from service provider") {
+    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
+  }
+
+  SECTION("With SSL from properties") {
+    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
+  }
+
+  SECTION("Without SSL") {
+    setConnectionType(ControllerTestFixture::ConnectionType::UNSECURE);
+  }
+
+  auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoaderImpl>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  reporter->initialize(configuration_, response_node_loader);
+  initalizeControllerSocket(reporter);
+
+  std::stringstream flow_status_stream;
+  minifi::controller::getFlowStatus(controller_socket_data_, "processor:TailFile:health", flow_status_stream);
+  std::string expected_status = "{\"controllerServiceStatusList\":null,\"connectionStatusList\":null,\"remoteProcessGroupStatusList\":null,\"instanceStatus\":null,\"systemDiagnosticsStatus\":null,"
+                                "\"processorStatusList\":[],\"errorsGeneratingReport\":[\"Unable to get processorStatus: No processor with key 'TailFile' to report status on\"]}\n";
+  REQUIRE(flow_status_stream.str() == expected_status);
 }
 
 }  // namespace org::apache::nifi::minifi::test

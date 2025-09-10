@@ -53,6 +53,7 @@ class BulletinStore {
   explicit BulletinStore(const Configure& configure);
   void addProcessorBulletin(const core::Processor& processor, core::logging::LOG_LEVEL log_level, const std::string& message);
   std::deque<Bulletin> getBulletins(std::optional<std::chrono::system_clock::duration> time_interval_to_include = {}) const;
+  std::vector<Bulletin> getBulletinsForProcessor(const std::string& processor_uuid) const;
   size_t getMaxBulletinCount() const;
 
  private:

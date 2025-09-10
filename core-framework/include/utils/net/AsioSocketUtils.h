@@ -82,6 +82,8 @@ struct SocketData {
 
 class AsioSocketConnection : public io::BaseStreamImpl {
  public:
+  using OutputStream::write;
+  using InputStream::read;
   explicit AsioSocketConnection(SocketData socket_data);
   int initialize() override;
   size_t read(std::span<std::byte> out_buffer) override {

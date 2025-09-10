@@ -36,6 +36,7 @@ bool listComponents(const utils::net::SocketData& socket_data, std::ostream &out
 bool listConnections(const utils::net::SocketData& socket_data, std::ostream &out, bool show_header = true);
 bool printManifest(const utils::net::SocketData& socket_data, std::ostream &out);
 bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out);
+bool getFlowStatus(const utils::net::SocketData& socket_data, const std::string& status_query, std::ostream &out);
 nonstd::expected<void, std::string> getDebugBundle(const utils::net::SocketData& socket_data, const std::filesystem::path& target_dir);
 
 }  // namespace org::apache::nifi::minifi::controller

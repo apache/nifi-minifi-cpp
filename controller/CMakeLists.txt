@@ -63,3 +63,6 @@ if (NOT WIN32)
 endif()
 
 install(TARGETS minifi-controller RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin)
+if(WIN32)
+    install(FILES "${CMAKE_SOURCE_DIR}/bin/flowstatus-minifi.bat" DESTINATION bin COMPONENT bin)
+endif()
