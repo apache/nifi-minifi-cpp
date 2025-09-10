@@ -676,7 +676,6 @@ else()
 
         set(CPACK_RPM_PACKAGE_NAME "nifi-minifi-cpp")
         set(CPACK_RPM_PACKAGE_VERSION ${PROJECT_VERSION})
-        set(CPACK_RPM_PACKAGE_RELEASE )
         set(CPACK_RPM_PACKAGE_LICENSE "Apache-2.0")
         set(CPACK_RPM_PACKAGE_GROUP "System Environment/Daemons")
         set(CPACK_RPM_PACKAGE_VENDOR "Apache Software Foundation")
