@@ -208,13 +208,13 @@ void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_
     output_attributes.push_back(ref);
   }
 
-  auto name_segments = minifi::utils::string::split(toStringView(class_description->full_name), ".");
+  auto name_segments = minifi::utils::string::split(toStringView(class_description->full_name), "::");
   gsl_Assert(!name_segments.empty());
 
   minifi::ClassDescription description{
     .type_ = minifi::ResourceType::Processor,
     .short_name_ = name_segments.back(),
-    .full_name_ = toString(class_description->full_name),
+    .full_name_ = minifi::utils::string::join(".", name_segments),
     .description_ = toString(class_description->description),
     .class_properties_ = properties,
     .dynamic_properties_ = dynamic_properties,
