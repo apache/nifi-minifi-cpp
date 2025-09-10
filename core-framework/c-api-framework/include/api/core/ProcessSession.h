@@ -42,6 +42,11 @@ public:
   void write(minifi::core::IFlowFile &flow, const io::OutputStreamCallback& callback) override;
   void read(minifi::core::IFlowFile &flow, const io::InputStreamCallback& callback) override;
 
+  void setAttribute(minifi::core::IFlowFile& ff, std::string_view key, std::string value) override;
+  void removeAttribute(minifi::core::IFlowFile& ff, std::string_view key) override;
+  std::optional<std::string> getAttribute(minifi::core::IFlowFile& ff, std::string_view key) override;
+  std::map<std::string, std::string> getAttributes(minifi::core::IFlowFile& ff) override;
+
 private:
   MinifiProcessSession impl_;
 };

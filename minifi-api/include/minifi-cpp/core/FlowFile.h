@@ -57,6 +57,7 @@ class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer
   [[nodiscard]] virtual std::chrono::system_clock::time_point getlineageStartDate() const = 0;
   virtual void setLineageStartDate(std::chrono::system_clock::time_point date) = 0;
   virtual void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) = 0;
+  virtual void setAttribute(std::string_view name, std::string value) = 0;
   virtual bool getAttribute(std::string_view key, std::string& value) const = 0;
   [[nodiscard]] virtual std::optional<std::string> getAttribute(std::string_view key) const = 0;
   virtual bool updateAttribute(std::string_view key, const std::string& value) = 0;
