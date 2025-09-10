@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyC2PauseResume : public VerifyC2Base {
  public:
-  explicit VerifyC2PauseResume(const std::filesystem::path test_file_path, const std::atomic_bool& flow_resumed_successfully)
+  explicit VerifyC2PauseResume(const std::filesystem::path& test_file_path, const std::atomic_bool& flow_resumed_successfully)
       : VerifyC2Base(test_file_path),
         flow_resumed_successfully_(flow_resumed_successfully) {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
