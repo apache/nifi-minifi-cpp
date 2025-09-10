@@ -195,7 +195,7 @@ void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_
   std::vector<minifi::core::OutputAttributeReference> output_attributes;
   for (size_t i = 0; i < class_description->output_attributes_count; ++i) {
     minifi::core::OutputAttributeReference ref{minifi::core::OutputAttributeDefinition{"", {}, ""}};
-    ref.name = toString(class_description->output_attributes_ptr[i].name);
+    ref.name = toStringView(class_description->output_attributes_ptr[i].name);
     ref.description = toStringView(class_description->output_attributes_ptr[i].description);
     output_attribute_relationships.push_back({});
     for (size_t j = 0; j < class_description->output_attributes_ptr[i].relationships_count; ++j) {
