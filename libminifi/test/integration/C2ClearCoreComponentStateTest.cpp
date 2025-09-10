@@ -32,7 +32,9 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyC2ClearCoreComponentState : public VerifyC2Base {
  public:
-  explicit VerifyC2ClearCoreComponentState(const std::atomic_bool& component_cleared_successfully) : component_cleared_successfully_(component_cleared_successfully) {
+  explicit VerifyC2ClearCoreComponentState(const std::filesystem::path& test_file_location, const std::atomic_bool& component_cleared_successfully)
+      : VerifyC2Base(test_file_location),
+        component_cleared_successfully_(component_cleared_successfully) {
     auto temp_dir = testController.createTempDirectory();
     test_file_1_ = utils::putFileToDir(temp_dir, "test1.txt", "foo\n");
     test_file_2_ = utils::putFileToDir(temp_dir, "test2.txt", "foobar\n");
@@ -194,11 +196,10 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
 
 TEST_CASE("C2ClearCoreComponentState", "[c2test]") {
   std::atomic_bool component_cleared_successfully{false};
-  VerifyC2ClearCoreComponentState harness(component_cleared_successfully);
+  VerifyC2ClearCoreComponentState harness(std::filesystem::path(TEST_RESOURCES) / "TestC2DescribeCoreComponentState.yml", component_cleared_successfully);
   ClearCoreComponentStateHandler handler(component_cleared_successfully, harness.getConfiguration(), harness.getFile1Location());
   harness.setUrl("http://localhost:0/api/heartbeat", &handler);
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestC2DescribeCoreComponentState.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

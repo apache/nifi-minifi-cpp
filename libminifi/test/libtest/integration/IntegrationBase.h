@@ -46,17 +46,20 @@ struct FlowConfigPath {
 
 class IntegrationBase {
  public:
-  explicit IntegrationBase(std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS));
+  explicit IntegrationBase(const std::optional<std::filesystem::path>& test_file_location = {}, const std::optional<std::filesystem::path>& home_path = {},
+      std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS));
   IntegrationBase(const IntegrationBase&) = delete;
   IntegrationBase(IntegrationBase&& other) noexcept
-      :configuration{std::move(other.configuration)},
-      flowController_{std::move(other.flowController_)},
-      wait_time_{other.wait_time_},
-      port{std::move(other.port)},
-      scheme{std::move(other.scheme)},
-      key_dir{std::move(other.key_dir)},
-      state_dir{std::move(other.state_dir)},
-      restart_requested_count_{other.restart_requested_count_.load()}
+      : configuration{std::move(other.configuration)},
+        flowController_{std::move(other.flowController_)},
+        wait_time_{other.wait_time_},
+        port{std::move(other.port)},
+        scheme{std::move(other.scheme)},
+        key_dir{std::move(other.key_dir)},
+        state_dir{std::move(other.state_dir)},
+        restart_requested_count_{other.restart_requested_count_.load()},
+        home_path_{std::move(other.home_path_)},
+        flow_config_path_{std::move(other.flow_config_path_)}
   {}
   IntegrationBase& operator=(const IntegrationBase&) = delete;
   IntegrationBase& operator=(IntegrationBase&& other) noexcept {
@@ -69,11 +72,13 @@ class IntegrationBase {
     key_dir = std::move(other.key_dir);
     state_dir = std::move(other.state_dir);
     restart_requested_count_ = other.restart_requested_count_.load();
+    home_path_ = std::move(other.home_path_);
+    flow_config_path_ = std::move(other.flow_config_path_);
     return *this;
   }
   virtual ~IntegrationBase() = default;
 
-  virtual void run(const std::optional<std::filesystem::path>& test_file_location = {}, const std::optional<std::filesystem::path>& home_path = {});
+  virtual void run();
 
   void setKeyDir(const std::filesystem::path& key_dir) {
     this->key_dir = key_dir;
@@ -101,8 +106,8 @@ class IntegrationBase {
 
   virtual void runAssertions() = 0;
 
-  std::optional<std::filesystem::path> getLastFlowConfigPath() const {
-    return last_flow_config_path_.config_path;
+  std::optional<std::filesystem::path> getFlowConfigPath() const {
+    return flow_config_path_.config_path;
   }
 
  protected:
@@ -129,7 +134,8 @@ class IntegrationBase {
   std::filesystem::path key_dir;
   std::filesystem::path state_dir;
   std::atomic<int> restart_requested_count_{0};
-  FlowConfigPath last_flow_config_path_;
+  std::optional<std::filesystem::path> home_path_;
+  FlowConfigPath flow_config_path_;
 };
 
 std::string parseUrl(std::string url);

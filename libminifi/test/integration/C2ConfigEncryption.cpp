@@ -37,14 +37,14 @@ TEST_CASE("C2ConfigEncryption", "[c2test]") {
   }
 
   C2UpdateHandler handler(test_file_path.string());
-  VerifyC2Update harness(10s);
+  VerifyC2Update harness(test_file_path, TEST_RESOURCES, 10s);
   harness.getConfiguration()->set(minifi::Configure::nifi_flow_configuration_encrypt, "true");
   harness.setKeyDir(TEST_RESOURCES);
   harness.setUrl("https://localhost:0/update", &handler);
   handler.setC2RestResponse(harness.getC2RestUrl(), "configuration", "true");
 
-  harness.run(test_file_path, TEST_RESOURCES);
-  auto live_config_file = harness.getLastFlowConfigPath();
+  harness.run();
+  auto live_config_file = harness.getFlowConfigPath();
 
   auto encryptor = minifi::utils::crypto::EncryptionProvider::create(TEST_RESOURCES);
   REQUIRE(encryptor);

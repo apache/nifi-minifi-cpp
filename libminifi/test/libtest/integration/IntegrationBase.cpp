@@ -29,9 +29,16 @@
 
 namespace org::apache::nifi::minifi::test {
 
-IntegrationBase::IntegrationBase(std::chrono::milliseconds waitTime)
+IntegrationBase::IntegrationBase(const std::optional<std::filesystem::path>& test_file_location, const std::optional<std::filesystem::path>& home_path, std::chrono::milliseconds waitTime)
     : configuration(std::make_shared<minifi::ConfigureImpl>()),
-      wait_time_(waitTime) {
+      wait_time_(waitTime),
+      home_path_(home_path) {
+  flow_config_path_.config_path = test_file_location;
+  if (test_file_location && std::filesystem::exists(*test_file_location) && std::filesystem::is_regular_file(*test_file_location)) {
+    flow_config_path_.temp_dir = std::make_unique<TempDirectory>();
+    flow_config_path_.config_path = flow_config_path_.temp_dir->getPath() / "config.yml";
+    std::filesystem::copy_file(*test_file_location, *flow_config_path_.config_path);
+  }
 }
 
 void IntegrationBase::configureSecurity() {
@@ -44,23 +51,15 @@ void IntegrationBase::configureSecurity() {
   }
 }
 
-void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_location, const std::optional<std::filesystem::path>& home_path) {
+void IntegrationBase::run() {
   using namespace std::literals::chrono_literals;
   testSetup();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-  last_flow_config_path_.config_path = test_file_location;
-  if (test_file_location && std::filesystem::exists(*test_file_location) && std::filesystem::is_regular_file(*test_file_location)) {
-    last_flow_config_path_.temp_dir = std::make_unique<TempDirectory>();
-    last_flow_config_path_.config_path = last_flow_config_path_.temp_dir->getPath() / "config.yml";
-    std::filesystem::copy_file(*test_file_location, *last_flow_config_path_.config_path);
-    configuration->set(minifi::Configure::nifi_flow_configuration_file, last_flow_config_path_.config_path->string());
-  }
-
-  if (last_flow_config_path_.config_path) {
-    configuration->set(minifi::Configure::nifi_flow_configuration_file, last_flow_config_path_.config_path->string());
+  if (flow_config_path_.config_path) {
+    configuration->set(minifi::Configure::nifi_flow_configuration_file, flow_config_path_.config_path->string());
   }
   configuration->set(minifi::Configure::nifi_state_storage_local_class_name, "VolatileMapStateStorage");
 
@@ -80,17 +79,17 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
         | minifi::utils::andThen(minifi::utils::string::toBool)).value_or(false);
 
     std::shared_ptr<minifi::utils::file::FileSystem> filesystem;
-    if (home_path) {
+    if (home_path_) {
       filesystem = std::make_shared<minifi::utils::file::FileSystem>(
           should_encrypt_flow_config,
-          minifi::utils::crypto::EncryptionProvider::create(*home_path));
+          minifi::utils::crypto::EncryptionProvider::create(*home_path_));
     } else {
       filesystem = std::make_shared<minifi::utils::file::FileSystem>();
     }
 
     std::optional<minifi::utils::crypto::EncryptionProvider> sensitive_values_encryptor = [&]() {
-      if (home_path) {
-        return minifi::utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(*home_path);
+      if (home_path_) {
+        return minifi::utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(*home_path_);
       } else {
         auto encryption_key = minifi::utils::string::from_hex("e4bce4be67f417ed2530038626da57da7725ff8c0b519b692e4311e4d4fe8a28");
         return minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{encryption_key}};
@@ -106,7 +105,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
             .flow_file_repo = test_repo,
             .content_repo = content_repo,
             .configuration = configuration,
-            .path = last_flow_config_path_.config_path,
+            .path = flow_config_path_.config_path,
             .filesystem = filesystem,
             .sensitive_values_encryptor = sensitive_values_encryptor,
             .bulletin_store = bulletin_store_.get()

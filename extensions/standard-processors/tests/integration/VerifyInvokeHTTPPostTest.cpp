@@ -28,6 +28,7 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyInvokeHTTPOKResponse : public VerifyInvokeHTTP {
  public:
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
   void runAssertions() override {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
         "key:invokehttp.status.code value:201",
@@ -37,6 +38,7 @@ class VerifyInvokeHTTPOKResponse : public VerifyInvokeHTTP {
 
 class VerifyInvokeHTTPOK200Response : public VerifyInvokeHTTP {
  public:
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
   void runAssertions() override {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
         "key:invokehttp.status.code value:200",
@@ -46,8 +48,9 @@ class VerifyInvokeHTTPOK200Response : public VerifyInvokeHTTP {
 
 class VerifyInvokeHTTPRedirectResponse : public VerifyInvokeHTTP {
  public:
-  void setupFlow(const std::optional<std::filesystem::path>& flow_yml_path) override {
-    VerifyInvokeHTTP::setupFlow(flow_yml_path);
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
+  void setupFlow() override {
+    VerifyInvokeHTTP::setupFlow();
     setProperty(minifi::processors::InvokeHTTP::FollowRedirects, "false");
   }
 
@@ -60,6 +63,7 @@ class VerifyInvokeHTTPRedirectResponse : public VerifyInvokeHTTP {
 
 class VerifyCouldNotConnectInvokeHTTP : public VerifyInvokeHTTP {
  public:
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
   void runAssertions() override {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(6), "key:invoke_http value:failure"));
   }
@@ -67,6 +71,7 @@ class VerifyCouldNotConnectInvokeHTTP : public VerifyInvokeHTTP {
 
 class VerifyNoRetryInvokeHTTP : public VerifyInvokeHTTP {
  public:
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
   void runAssertions() override {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
         "key:invokehttp.status.message value:HTTP/1.1 404 Not Found",
@@ -76,6 +81,7 @@ class VerifyNoRetryInvokeHTTP : public VerifyInvokeHTTP {
 
 class VerifyRetryInvokeHTTP : public VerifyInvokeHTTP {
  public:
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
   void runAssertions() override {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
         "key:invokehttp.status.message value:HTTP/1.1 501 Not Implemented",
@@ -85,6 +91,7 @@ class VerifyRetryInvokeHTTP : public VerifyInvokeHTTP {
 
 class VerifyRWTimeoutInvokeHTTP : public VerifyInvokeHTTP {
  public:
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
   void runAssertions() override {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
         "key:invoke_http value:failure",
@@ -96,18 +103,21 @@ TEST_CASE("Verify InvokeHTTP POST request with unreachable remote endpoint", "[i
   // Stop civet server to simulate
   // unreachable remote end point
   InvokeHTTPCouldNotConnectHandler handler;
-  VerifyCouldNotConnectInvokeHTTP harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Secure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPostSecure.yml";
-    harness.setKeyDir(TEST_RESOURCES);
+    key_dir = TEST_RESOURCES;
   }
   SECTION("Insecure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPost.yml";
   }
+  VerifyCouldNotConnectInvokeHTTP harness(test_file_path);
+  if (!key_dir.empty()) {
+    harness.setKeyDir(key_dir);
+  }
   harness.setUrl("http://localhost:0/", &handler);
-  harness.setupFlow(test_file_path);
+  harness.setupFlow();
   harness.shutdownBeforeFlowController();
   harness.startFlowController();
   harness.runAssertions();
@@ -116,92 +126,110 @@ TEST_CASE("Verify InvokeHTTP POST request with unreachable remote endpoint", "[i
 
 TEST_CASE("Verify InvokeHTTP POST request with 201 OK response", "[invokehttp]") {
   InvokeHTTPResponseOKHandler handler;
-  VerifyInvokeHTTPOKResponse harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Secure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPostSecure.yml";
-    harness.setKeyDir(TEST_RESOURCES);
+    key_dir = TEST_RESOURCES;
   }
   SECTION("Insecure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPost.yml";
   }
-  harness.run("http://localhost:0/", test_file_path.string(), key_dir, &handler);
+  VerifyInvokeHTTPOKResponse harness(test_file_path);
+  if (!key_dir.empty()) {
+    harness.setKeyDir(key_dir);
+  }
+  harness.run("http://localhost:0/", key_dir, &handler);
 }
 
 TEST_CASE("Verify InvokeHTTP POST request with 200 OK response", "[invokehttp]") {
   InvokeHTTPRedirectHandler handler;
-  VerifyInvokeHTTPOK200Response harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Secure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPostSecure.yml";
-    harness.setKeyDir(TEST_RESOURCES);
+    key_dir = TEST_RESOURCES;
   }
   SECTION("Insecure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPost.yml";
   }
-  harness.run("http://localhost:0/", test_file_path.string(), key_dir, &handler);
+  VerifyInvokeHTTPOK200Response harness(test_file_path);
+  if (!key_dir.empty()) {
+    harness.setKeyDir(key_dir);
+  }
+  harness.run("http://localhost:0/", key_dir, &handler);
 }
 
 TEST_CASE("Verify InvokeHTTP POST request with 301 redirect response", "[invokehttp]") {
   InvokeHTTPRedirectHandler handler;
-  VerifyInvokeHTTPRedirectResponse harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Secure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPostSecure.yml";
-    harness.setKeyDir(TEST_RESOURCES);
+    key_dir = TEST_RESOURCES;
   }
   SECTION("Insecure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPost.yml";
   }
-  harness.run("http://localhost:0/", test_file_path.string(), key_dir, &handler);
+  VerifyInvokeHTTPRedirectResponse harness(test_file_path);
+  if (!key_dir.empty()) {
+    harness.setKeyDir(key_dir);
+  }
+  harness.run("http://localhost:0/", key_dir, &handler);
 }
 
 TEST_CASE("Verify InvokeHTTP POST request with 404 not found response", "[invokehttp]") {
   InvokeHTTPResponse404Handler handler;
-  VerifyNoRetryInvokeHTTP harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Secure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPostSecure.yml";
-    harness.setKeyDir(TEST_RESOURCES);
+    key_dir = TEST_RESOURCES;
   }
   SECTION("Insecure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPost.yml";
   }
-  harness.run("http://localhost:0/", test_file_path.string(), key_dir, &handler);
+  VerifyNoRetryInvokeHTTP harness(test_file_path);
+  if (!key_dir.empty()) {
+    harness.setKeyDir(key_dir);
+  }
+  harness.run("http://localhost:0/", key_dir, &handler);
 }
 
 TEST_CASE("Verify InvokeHTTP POST request with 501 not implemented response", "[invokehttp]") {
   InvokeHTTPResponse501Handler handler;
-  VerifyRetryInvokeHTTP harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Secure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPostSecure.yml";
-    harness.setKeyDir(TEST_RESOURCES);
+    key_dir = TEST_RESOURCES;
   }
   SECTION("Insecure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPost.yml";
   }
-  harness.run("http://localhost:0/", test_file_path.string(), key_dir, &handler);
+  VerifyRetryInvokeHTTP harness(test_file_path);
+  if (!key_dir.empty()) {
+    harness.setKeyDir(key_dir);
+  }
+  harness.run("http://localhost:0/", key_dir, &handler);
 }
 
 TEST_CASE("Verify InvokeHTTP POST request with timeout failure", "[invokehttp]") {
   TimeoutingHTTPHandler handler({std::chrono::seconds(2)});
-  VerifyRWTimeoutInvokeHTTP harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Secure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPostSecure.yml";
-    harness.setKeyDir(TEST_RESOURCES);
+    key_dir = TEST_RESOURCES;
   }
   SECTION("Insecure") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestInvokeHTTPPost.yml";
   }
-  harness.run("http://localhost:0/", test_file_path.string(), key_dir, &handler);
+  VerifyRWTimeoutInvokeHTTP harness(test_file_path);
+  if (!key_dir.empty()) {
+    harness.setKeyDir(key_dir);
+  }
+  harness.run("http://localhost:0/", key_dir, &handler);
 }
 
 }  // namespace org::apache::nifi::minifi::test

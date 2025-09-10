@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::test {
 
 class ProcessGroupTestHarness : public IntegrationBase {
  public:
-  ProcessGroupTestHarness() : IntegrationBase(2s) {
+  explicit ProcessGroupTestHarness(const std::filesystem::path& test_file_location) : IntegrationBase(test_file_location, {}, 2s) {
   }
 
   void testSetup() override {
@@ -50,9 +50,8 @@ class ProcessGroupTestHarness : public IntegrationBase {
 };
 
 TEST_CASE("ProcessGroupTest", "[ProcessGroupTest]") {
-  ProcessGroupTestHarness harness;
-  auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestProcessGroup.yml";
-  harness.run(test_file_path);
+  ProcessGroupTestHarness harness(std::filesystem::path(TEST_RESOURCES) / "TestProcessGroup.yml");
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

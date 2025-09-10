@@ -28,8 +28,8 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
  public:
-  explicit VerifyC2DescribeCoreComponentState(std::atomic_bool& verified)
-    : VerifyC2Describe(verified) {
+  explicit VerifyC2DescribeCoreComponentState(const std::filesystem::path& test_file_path, std::atomic_bool& verified)
+    : VerifyC2Describe(test_file_path, verified) {
     temp_dir_ = testController.createTempDirectory();
 
     test_file_1_ = temp_dir_ / "test1.txt";
@@ -97,12 +97,11 @@ class DescribeCoreComponentStateHandler: public HeartbeatHandler {
 
 TEST_CASE("C2DescribeCoreComponentStateTest", "[c2test]") {
   std::atomic_bool verified{false};
-  VerifyC2DescribeCoreComponentState harness(verified);
+  VerifyC2DescribeCoreComponentState harness(std::filesystem::path(TEST_RESOURCES) / "TestC2DescribeCoreComponentState.yml", verified);
   harness.setKeyDir(TEST_RESOURCES);
   DescribeCoreComponentStateHandler handler(harness.getConfiguration(), verified);
   harness.setUrl("https://localhost:0/api/heartbeat", &handler);
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestC2DescribeCoreComponentState.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -39,8 +39,9 @@ int ssl_enable(void* /*ssl_context*/, void* /*user_data*/);
 
 class HTTPIntegrationBase : public IntegrationBase {
  public:
-  explicit HTTPIntegrationBase(std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS))
-      : IntegrationBase(waitTime),
+  explicit HTTPIntegrationBase(const std::optional<std::filesystem::path>& test_file_location = {}, const std::optional<std::filesystem::path>& home_path = {},
+    std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS))
+      : IntegrationBase(test_file_location, home_path, waitTime),
         server(nullptr) {
   }
   HTTPIntegrationBase(const HTTPIntegrationBase&) = delete;
@@ -86,8 +87,8 @@ class VerifyC2Base : public HTTPIntegrationBase {
 
 class VerifyC2Describe : public VerifyC2Base {
  public:
-  explicit VerifyC2Describe(std::atomic<bool>& verified)
-    : verified_(verified) {
+  explicit VerifyC2Describe(const std::filesystem::path& test_file_path, std::atomic<bool>& verified)
+    : VerifyC2Base(test_file_path), verified_(verified) {
   }
 
   void testSetup() override {
@@ -111,8 +112,9 @@ class VerifyC2Describe : public VerifyC2Base {
 
 class VerifyC2Update : public HTTPIntegrationBase {
  public:
-  explicit VerifyC2Update(std::chrono::milliseconds waitTime)
-      : HTTPIntegrationBase(waitTime) {
+  explicit VerifyC2Update(const std::filesystem::path& test_file_location, const std::optional<std::filesystem::path>& home_path = {},
+    std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS))
+      : HTTPIntegrationBase(test_file_location, home_path, waitTime) {
   }
 
   void testSetup() override {
@@ -171,8 +173,8 @@ class VerifyFlowFetched : public HTTPIntegrationBase {
 
 class VerifyC2FailedUpdate : public VerifyC2Update {
  public:
-  explicit VerifyC2FailedUpdate(std::chrono::milliseconds waitTime)
-      : VerifyC2Update(waitTime) {
+  explicit VerifyC2FailedUpdate(const std::filesystem::path& test_file_location, std::chrono::milliseconds waitTime)
+      : VerifyC2Update(test_file_location, {}, waitTime) {
   }
 
   void testSetup() override {

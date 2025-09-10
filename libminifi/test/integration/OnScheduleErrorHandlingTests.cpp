@@ -31,6 +31,7 @@ namespace org::apache::nifi::minifi::test {
  * KamikazeProcessor is a test processor to trigger errors in these functions */
 class KamikazeErrorHandlingTests : public IntegrationBase {
  public:
+  explicit KamikazeErrorHandlingTests(const std::filesystem::path& test_file_location) : IntegrationBase(test_file_location) {}
   void runAssertions() override {
     using minifi::test::utils::verifyEventHappenedInPollTime;
     REQUIRE(verifyEventHappenedInPollTime(wait_time_, [&] {
@@ -75,6 +76,7 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
 /*Verify that event driven processors without incoming connections are not scheduled*/
 class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
  public:
+  explicit EventDriverScheduleErrorHandlingTests(const std::filesystem::path& test_file_location) : IntegrationBase(test_file_location) {}
   void updateProperties(minifi::FlowController& fc) override {
     /* This tests depends on a configuration that contains only one KamikazeProcessor named kamikaze
      * (See testOnScheduleRetry.yml)
@@ -115,17 +117,13 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
 };
 
 TEST_CASE("KamikazeErrorHandlingTests", "[OnScheduleErrorHandlingTests]") {
-  KamikazeErrorHandlingTests harness_kamikaze;
-
-  const auto test_file_location = std::filesystem::path(TEST_RESOURCES) / "TestOnScheduleRetry.yml";
-  harness_kamikaze.run(test_file_location);
+  KamikazeErrorHandlingTests harness_kamikaze(std::filesystem::path(TEST_RESOURCES) / "TestOnScheduleRetry.yml");
+  harness_kamikaze.run();
 }
 
 TEST_CASE("EventDriverScheduleErrorHandlingTests", "[OnScheduleErrorHandlingTests]") {
-  EventDriverScheduleErrorHandlingTests harness_eventdrivenerror;
-
-  const auto test_file_location = std::filesystem::path(TEST_RESOURCES) / "TestOnScheduleRetry.yml";
-  harness_eventdrivenerror.run(test_file_location);
+  EventDriverScheduleErrorHandlingTests harness_eventdrivenerror(std::filesystem::path(TEST_RESOURCES) / "TestOnScheduleRetry.yml");
+  harness_eventdrivenerror.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

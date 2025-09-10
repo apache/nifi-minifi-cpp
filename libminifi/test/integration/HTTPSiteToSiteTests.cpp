@@ -38,8 +38,8 @@ namespace org::apache::nifi::minifi::test {
 
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
  public:
-  explicit SiteToSiteTestHarness(std::chrono::seconds waitTime = 2s)
-      : HTTPIntegrationBase(waitTime) {
+  explicit SiteToSiteTestHarness(const std::filesystem::path& test_file_path, std::chrono::seconds waitTime = 2s)
+      : HTTPIntegrationBase(test_file_path, {}, waitTime) {
     dir = testController.createTempDirectory();
   }
 
@@ -86,8 +86,8 @@ struct test_profile {
   bool invalid_checksum{false};
 };
 
-void run_variance(const std::string& test_file_location, const std::string& url, const struct test_profile &profile) {
-  SiteToSiteTestHarness harness;
+void run_variance(const std::filesystem::path& test_file_location, const std::string& url, const struct test_profile &profile) {
+  SiteToSiteTestHarness harness(test_file_location);
 
   std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";
   std::string out_port = "471deef6-2a6e-4a7d-912a-81cc17e3a203";
@@ -154,7 +154,7 @@ void run_variance(const std::string& test_file_location, const std::string& url,
   auto *deleteOutputResponse = new DeleteTransactionResponder(delete_output_url, "201 OK", producedFlows);
   harness.setUrl(delete_output_url, deleteOutputResponse);
 
-  harness.run(test_file_location);
+  harness.run();
 
   std::stringstream assertStr;
   if (profile.allFalse()) {
@@ -202,8 +202,7 @@ TEST_CASE("Test site to site with HTTP", "[s2s]") {
     profile.invalid_checksum = true;
   }
 
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPSiteToSite.yml";
-  run_variance(test_file_path.string(), parseUrl("http://localhost:8099/nifi-api"), profile);
+  run_variance(std::filesystem::path(TEST_RESOURCES) / "TestHTTPSiteToSite.yml", parseUrl("http://localhost:8099/nifi-api"), profile);
 }
 
 }  // namespace org::apache::nifi::minifi::test

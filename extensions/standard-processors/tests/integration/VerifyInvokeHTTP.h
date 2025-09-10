@@ -40,8 +40,8 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyInvokeHTTP : public HTTPIntegrationBase {
  public:
-  VerifyInvokeHTTP()
-      : HTTPIntegrationBase(6s) {
+  explicit VerifyInvokeHTTP(const std::filesystem::path& test_file_location)
+      : HTTPIntegrationBase(test_file_location, {}, 6s) {
   }
 
   void testSetup() override {
@@ -82,14 +82,14 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     REQUIRE(executed);
   }
 
-  virtual void setupFlow(const std::optional<std::filesystem::path>& flow_yml_path) {
+  virtual void setupFlow() {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-    if (flow_yml_path) {
-      configuration->set(minifi::Configure::nifi_flow_configuration_file, flow_yml_path->string());
+    if (flow_config_path_.config_path) {
+      configuration->set(minifi::Configure::nifi_flow_configuration_file, flow_config_path_.config_path->string());
     }
     configuration->set(minifi::Configure::nifi_c2_agent_heartbeat_period, "200");
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -99,7 +99,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
         .flow_file_repo = test_repo,
         .content_repo = content_repo,
         .configuration = configuration,
-        .path = flow_yml_path,
+        .path = flow_config_path_.config_path,
         .filesystem = std::make_shared<minifi::utils::file::FileSystem>(),
         .sensitive_values_encryptor = minifi::utils::crypto::EncryptionProvider{minifi::utils::crypto::XSalsa20Cipher{encryption_key}}
     };
@@ -111,8 +111,8 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     setProperty(minifi::processors::InvokeHTTP::URL, url);
   }
 
-  void run(const std::optional<std::filesystem::path>& flow_yml_path = {}, const std::optional<std::filesystem::path>& = {}) override {
-    setupFlow(flow_yml_path);
+  void run() override {
+    setupFlow();
     startFlowController();
 
     runAssertions();
@@ -122,12 +122,11 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
   }
 
   void run(const std::string& url,
-           const std::string& test_file_location,
            const std::string& key_dir,
            ServerAwareHandler* handler) {
     setKeyDir(key_dir);
     setUrl(url, handler);
-    run(test_file_location);
+    run();
   }
 
   void startFlowController() {

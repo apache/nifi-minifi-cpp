@@ -33,7 +33,8 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyDebugInfo : public VerifyC2Base {
  public:
-  explicit VerifyDebugInfo(std::function<bool()> verify): verify_(std::move(verify)) {}
+  explicit VerifyDebugInfo(const std::filesystem::path& test_file_location, std::function<bool()> verify)
+    : VerifyC2Base(test_file_location), verify_(std::move(verify)) {}
 
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
@@ -151,7 +152,7 @@ TEST_CASE("C2DebugBundleTest", "[c2test]") {
   std::ofstream{home_dir / "conf/minifi.properties", std::ios::binary} << properties_file;
   std::ofstream{home_dir / "conf/config.yml", std::ios::binary} << flow_config_file;
 
-  VerifyDebugInfo harness([&]() -> bool {
+  VerifyDebugInfo harness(home_dir / "conf/config.yml", [&]() -> bool {
     if (!ack_handler.isAcknowledged("79")) {
       return false;
     }
@@ -200,7 +201,7 @@ TEST_CASE("C2DebugBundleTest", "[c2test]") {
 
   logging::LoggerFactory<C2HeartbeatHandler>::getLogger()->log_error("Tis but a scratch");
 
-  harness.run((home_dir / "conf/config.yml").string());
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test
