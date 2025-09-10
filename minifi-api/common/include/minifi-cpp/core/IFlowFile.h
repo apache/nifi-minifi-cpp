@@ -22,7 +22,6 @@ namespace org::apache::nifi::minifi::core {
 
 class IFlowFile {
 public:
-  virtual void setAttribute(std::string_view name, std::string value) = 0;
   virtual ~IFlowFile() = default;
 };
 

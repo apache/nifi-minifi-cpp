@@ -121,14 +121,33 @@ class ProcessSession : public virtual ReferenceContainer, public IProcessSession
   std::shared_ptr<IFlowFile> create(const IFlowFile* parent) override {
     return create(dynamic_cast<const FlowFile*>(parent));
   }
+
   std::shared_ptr<IFlowFile> popFlowFile() override {
     return get();
   }
-  void write(IFlowFile &flow, const io::OutputStreamCallback& callback) override {
-    write(dynamic_cast<FlowFile&>(flow), callback);
+
+  void write(IFlowFile& ff, const io::OutputStreamCallback& callback) override {
+    write(dynamic_cast<FlowFile&>(ff), callback);
   }
-  void read(IFlowFile &flow, const io::InputStreamCallback& callback) override {
-    read(dynamic_cast<FlowFile&>(flow), callback);
+
+  void read(IFlowFile& ff, const io::InputStreamCallback& callback) override {
+    read(dynamic_cast<FlowFile&>(ff), callback);
+  }
+
+  void setAttribute(IFlowFile& ff, std::string_view key, std::string value) override {
+    putAttribute(dynamic_cast<FlowFile&>(ff), key, value);
+  }
+  
+  std::optional<std::string> getAttribute(IFlowFile& ff, std::string_view key) override {
+    return dynamic_cast<FlowFile&>(ff).getAttribute(key);
+  }
+
+  std::map<std::string, std::string> getAttributes(IFlowFile& ff)  override {
+    return dynamic_cast<FlowFile&>(ff).getAttributes();
+  }
+
+  void removeAttribute(IFlowFile& ff, std::string_view key) override {
+    removeAttribute(dynamic_cast<FlowFile&>(ff), key);
   }
 };
 

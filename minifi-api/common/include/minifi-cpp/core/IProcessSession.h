@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <map>
 #include <span>
 
 #include "IFlowFile.h"
@@ -28,11 +29,16 @@ namespace org::apache::nifi::minifi::core {
 
 class IProcessSession {
 public:
+  virtual void setAttribute(IFlowFile& ff, std::string_view key, std::string value) = 0;
+  virtual void removeAttribute(IFlowFile& ff, std::string_view key) = 0;
+  virtual std::optional<std::string> getAttribute(IFlowFile& ff, std::string_view key) = 0;
+  virtual std::map<std::string, std::string> getAttributes(IFlowFile& ff) = 0;
+
   virtual std::shared_ptr<IFlowFile> create(const IFlowFile* parent) = 0;
   virtual std::shared_ptr<IFlowFile> popFlowFile() = 0;
   virtual void transfer(const std::shared_ptr<IFlowFile>& ff, const Relationship& relationship) = 0;
-  virtual void write(IFlowFile &flow, const io::OutputStreamCallback& callback) = 0;
-  virtual void read(IFlowFile &flow, const io::InputStreamCallback& callback) = 0;
+  virtual void write(IFlowFile& ff, const io::OutputStreamCallback& callback) = 0;
+  virtual void read(IFlowFile& ff, const io::InputStreamCallback& callback) = 0;
   virtual ~IProcessSession() = default;
 
   void writeBuffer(const std::shared_ptr<IFlowFile>& flow_file, std::span<const char> buffer) {

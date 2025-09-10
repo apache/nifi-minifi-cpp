@@ -467,9 +467,33 @@ void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiS
   cb(user_ctx, MinifiStringView{.data = message.data(), .length = gsl::narrow<uint32_t>(message.size())});
 }
 
-void MinifiFlowFileSetAttribute(MinifiFlowFile ff, MinifiStringView name, MinifiStringView value) {
+void MinifiFlowFileSetAttribute(MinifiProcessSession session, MinifiFlowFile ff, MinifiStringView key, const MinifiStringView* value) {
+  gsl_Assert(session != MINIFI_NULL);
   gsl_Assert(ff != MINIFI_NULL);
-  (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff))->setAttribute(toString(name), toString(value));
+  if (value == nullptr) {
+    (*reinterpret_cast<minifi::core::ProcessSession*>(session)).removeAttribute(**reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), toString(key));
+  } else {
+    (*reinterpret_cast<minifi::core::ProcessSession*>(session)).putAttribute(**reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), toString(key), toString(*value));
+  }
+}
+
+MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession session, MinifiFlowFile ff, MinifiStringView key, void(*cb)(void* user_ctx, MinifiStringView), void* user_ctx) {
+  gsl_Assert(session != MINIFI_NULL);
+  gsl_Assert(ff != MINIFI_NULL);
+  auto value = (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff))->getAttribute(toString(key));
+  if (!value.has_value()) {
+    return MINIFI_FALSE;
+  }
+  cb(user_ctx, MinifiStringView{.data = value->data(), .length = gsl::narrow<uint32_t>(value->size())});
+  return MINIFI_TRUE;
+}
+
+void MinifiFlowFileGetAttributes(MinifiProcessSession session, MinifiFlowFile ff, void(*cb)(void* user_ctx, MinifiStringView, MinifiStringView), void* user_ctx) {
+  gsl_Assert(session != MINIFI_NULL);
+  gsl_Assert(ff != MINIFI_NULL);
+  for (auto& [key, value] : (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff))->getAttributes()) {
+    cb(user_ctx, MinifiStringView{.data = key.data(), .length = gsl::narrow<uint32_t>(key.size())}, MinifiStringView{.data = value.data(), .length = gsl::narrow<uint32_t>(value.size())});
+  }
 }
 
 } // extern "C"
