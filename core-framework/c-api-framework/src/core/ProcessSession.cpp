@@ -93,5 +93,30 @@ void ProcessSession::read(minifi::core::IFlowFile& flow_file, const io::InputStr
   }, (void*)&callback);
 }
 
+void ProcessSession::setAttribute(minifi::core::IFlowFile& ff, std::string_view key, std::string value) {
+  MinifiStringView value_ref = utils::toStringView(value);
+  MinifiFlowFileSetAttribute(impl_, dynamic_cast<FlowFile&>(ff).getImpl(), utils::toStringView(key), &value_ref);
+}
+
+void ProcessSession::removeAttribute(minifi::core::IFlowFile& ff, std::string_view key) {
+  MinifiFlowFileSetAttribute(impl_, dynamic_cast<FlowFile&>(ff).getImpl(), utils::toStringView(key), nullptr);
+}
+
+std::optional<std::string> ProcessSession::getAttribute(minifi::core::IFlowFile& ff, std::string_view key) {
+  std::optional<std::string> result;
+  MinifiFlowFileGetAttribute(impl_, dynamic_cast<FlowFile&>(ff).getImpl(), utils::toStringView(key), [] (void* user_ctx, MinifiStringView value) {
+    *reinterpret_cast<std::optional<std::string>*>(user_ctx) = std::string{value.data, value.length};
+  }, (void*)&result);
+  return result;
+}
+
+std::map<std::string, std::string> ProcessSession::getAttributes(minifi::core::IFlowFile& ff) {
+  std::map<std::string, std::string> result;
+  MinifiFlowFileGetAttributes(impl_, dynamic_cast<FlowFile&>(ff).getImpl(), [] (void* user_ctx, MinifiStringView value, MinifiStringView key) {
+    reinterpret_cast<std::map<std::string, std::string>*>(user_ctx)->insert({std::string{value.data, value.length}, std::string{key.data, key.length}});
+  }, (void*)&result);
+  return result;
+}
+
 }  // namespace org::apache::nifi::minifi::cpp::core
 

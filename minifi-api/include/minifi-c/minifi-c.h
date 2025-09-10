@@ -217,7 +217,9 @@ int64_t MinifiOutputStreamWrite(MinifiOutputStream, const char*, uint64_t);
 
 void MinifiStatusToString(MinifiStatus, void(*cb)(void* user_ctx, MinifiStringView str), void* user_ctx);
 
-void MinifiFlowFileSetAttribute(MinifiFlowFile, MinifiStringView, MinifiStringView);
+void MinifiFlowFileSetAttribute(MinifiProcessSession, MinifiFlowFile, MinifiStringView, const MinifiStringView*);
+MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession, MinifiFlowFile, MinifiStringView, void(*cb)(void* user_ctx, MinifiStringView), void* user_ctx);
+void MinifiFlowFileGetAttributes(MinifiProcessSession, MinifiFlowFile, void(*cb)(void* user_ctx, MinifiStringView, MinifiStringView), void* user_ctx);
 
 #ifdef __cplusplus
 } // extern "C"
