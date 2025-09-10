@@ -151,7 +151,7 @@ typedef struct MinifiProcessorCallbacks {
 
 typedef struct MinifiProcessorClassDescription {
   MinifiStringView module_name;
-  MinifiStringView full_name;
+  MinifiStringView full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::GenerateFlowFile'
   MinifiStringView description;
   uint32_t class_properties_count;
   const MinifiProperty* class_properties_ptr;

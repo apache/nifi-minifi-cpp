@@ -50,7 +50,7 @@ void useProcessorClassDescription(Fn&& fn) {
 
   std::vector<std::vector<MinifiStringView>> string_vector_cache;
 
-  const auto full_name = utils::classNameWithDots<Class>();
+  const auto full_name = minifi::core::className<Class>();
 
   std::vector<MinifiProperty> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
   std::vector<MinifiDynamicProperty> dynamic_properties;
