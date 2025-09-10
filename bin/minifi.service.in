@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=simple
 Environment=MINIFI_HOME=@MINIFI_HOME_ENV_VALUE@
+Environment=MINIFI_MODE=@MINIFI_MODE_ENV_VALUE@
 ExecStart=@MINIFI_EXEC_PATH@
 Restart=on-failure
 RestartSec=3
