@@ -205,8 +205,8 @@ OWNED MinifiFlowFile MinifiProcessSessionCreate(MinifiProcessSession, MinifiFlow
 void MinifiDestroyFlowFile(OWNED MinifiFlowFile);
 void MinifiProcessSessionTransfer(MinifiProcessSession, MinifiFlowFile, MinifiStringView);
 void MinifiProcessSessionRemove(MinifiProcessSession, MinifiFlowFile);
-void MinifiProcessSessionRead(MinifiProcessSession, MinifiFlowFile, int64_t(*cb)(void* user_ctx, MinifiInputStream), void* user_ctx);
-void MinifiProcessSessionWrite(MinifiProcessSession, MinifiFlowFile, int64_t(*cb)(void* user_ctx, MinifiOutputStream), void* user_ctx);
+MinifiStatus MinifiProcessSessionRead(MinifiProcessSession, MinifiFlowFile, int64_t(*cb)(void* user_ctx, MinifiInputStream), void* user_ctx);
+MinifiStatus MinifiProcessSessionWrite(MinifiProcessSession, MinifiFlowFile, int64_t(*cb)(void* user_ctx, MinifiOutputStream), void* user_ctx);
 
 void MinifiConfigureGet(MinifiConfigure, MinifiStringView, void(*cb)(void*, MinifiStringView), void*);
 

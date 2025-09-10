@@ -21,6 +21,7 @@
 #include "io/OutputStream.h"
 #include "api/utils/minifi-c-utils.h"
 #include "api/core/FlowFile.h"
+#include "Exception.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
@@ -82,15 +83,21 @@ void ProcessSession::transfer(const std::shared_ptr<minifi::core::IFlowFile>& ff
 }
 
 void ProcessSession::write(minifi::core::IFlowFile& flow_file, const io::OutputStreamCallback& callback) {
-  MinifiProcessSessionWrite(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiOutputStream output) {
+  auto status = MinifiProcessSessionWrite(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiOutputStream output) {
     return (*reinterpret_cast<const io::OutputStreamCallback*>(data))(std::make_shared<MinifiOutputStreamWrapper>(output));
   }, (void*)&callback);
+  if (status != MINIFI_SUCCESS) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
+  }
 }
 
 void ProcessSession::read(minifi::core::IFlowFile& flow_file, const io::InputStreamCallback& callback) {
-  MinifiProcessSessionRead(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiInputStream input) {
+  auto status = MinifiProcessSessionRead(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiInputStream input) {
     return (*reinterpret_cast<const io::InputStreamCallback*>(data))(std::make_shared<MinifiInputStreamWrapper>(input));
   }, (void*)&callback);
+  if (status != MINIFI_SUCCESS) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
+  }
 }
 
 void ProcessSession::setAttribute(minifi::core::IFlowFile& ff, std::string_view key, std::string value) {

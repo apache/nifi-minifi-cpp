@@ -19,7 +19,6 @@
 #include "api/core/ProcessContext.h"
 #include "api/core/ProcessSession.h"
 #include "api/core/Resource.h"
-#include "api/Exception.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"

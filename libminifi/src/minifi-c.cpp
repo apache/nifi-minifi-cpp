@@ -421,20 +421,30 @@ void MinifiProcessSessionTransfer(MinifiProcessSession session, MinifiFlowFile f
   reinterpret_cast<minifi::core::ProcessSession*>(session)->transfer(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), minifi::core::Relationship{toString(rel), ""});
 }
 
-void MinifiProcessSessionRead(MinifiProcessSession session, MinifiFlowFile ff, int64_t(*cb)(void* user_ctx, MinifiInputStream), void* user_ctx) {
+MinifiStatus MinifiProcessSessionRead(MinifiProcessSession session, MinifiFlowFile ff, int64_t(*cb)(void* user_ctx, MinifiInputStream), void* user_ctx) {
   gsl_Assert(session != MINIFI_NULL);
   gsl_Assert(ff != MINIFI_NULL);
-  reinterpret_cast<minifi::core::ProcessSession*>(session)->read(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), [&] (auto& input_stream) -> int64_t {
-    return cb(user_ctx, reinterpret_cast<MinifiInputStream>(input_stream.get()));
-  });
+  try {
+    reinterpret_cast<minifi::core::ProcessSession*>(session)->read(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), [&] (auto& input_stream) -> int64_t {
+      return cb(user_ctx, reinterpret_cast<MinifiInputStream>(input_stream.get()));
+    });
+    return MINIFI_SUCCESS;
+  } catch (...) {
+    return MINIFI_UNKNOWN_ERROR;
+  }
 }
 
-void MinifiProcessSessionWrite(MinifiProcessSession session, MinifiFlowFile ff, int64_t(*cb)(void* user_ctx, MinifiOutputStream), void* user_ctx) {
+MinifiStatus MinifiProcessSessionWrite(MinifiProcessSession session, MinifiFlowFile ff, int64_t(*cb)(void* user_ctx, MinifiOutputStream), void* user_ctx) {
   gsl_Assert(session != MINIFI_NULL);
   gsl_Assert(ff != MINIFI_NULL);
-  reinterpret_cast<minifi::core::ProcessSession*>(session)->write(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), [&] (auto& output_stream) -> int64_t {
-    return cb(user_ctx, reinterpret_cast<MinifiOutputStream>(output_stream.get()));
-  });
+  try {
+    reinterpret_cast<minifi::core::ProcessSession*>(session)->write(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), [&] (auto& output_stream) -> int64_t {
+      return cb(user_ctx, reinterpret_cast<MinifiOutputStream>(output_stream.get()));
+    });
+    return MINIFI_SUCCESS;
+  } catch (...) {
+    return MINIFI_UNKNOWN_ERROR;
+  }
 }
 
 uint64_t MinifiInputStreamSize(MinifiInputStream stream) {
@@ -444,12 +454,12 @@ uint64_t MinifiInputStreamSize(MinifiInputStream stream) {
 
 int64_t MinifiInputStreamRead(MinifiInputStream stream, char* data, uint64_t size) {
   gsl_Assert(stream != MINIFI_NULL);
-  return gsl::narrow<uint64_t>(reinterpret_cast<minifi::io::InputStream*>(stream)->read(std::span(reinterpret_cast<std::byte*>(data), size)));
+  return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::InputStream*>(stream)->read(std::span(reinterpret_cast<std::byte*>(data), size)));
 }
 
 int64_t MinifiOutputStreamWrite(MinifiOutputStream stream, const char* data, uint64_t size) {
   gsl_Assert(stream != MINIFI_NULL);
-  return gsl::narrow<uint64_t>(reinterpret_cast<minifi::io::OutputStream*>(stream)->write(std::span(reinterpret_cast<const std::byte*>(data), size)));
+  return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::OutputStream*>(stream)->write(std::span(reinterpret_cast<const std::byte*>(data), size)));
 }
 
 void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiStringView str), void* user_ctx) {
