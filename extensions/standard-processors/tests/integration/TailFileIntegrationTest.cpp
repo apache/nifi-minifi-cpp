@@ -37,7 +37,7 @@ namespace org::apache::nifi::minifi::test {
 class TailFileTestHarness : public IntegrationBase {
  public:
   explicit TailFileTestHarness(const std::filesystem::path& test_file_location)
-      : IntegrationBase(test_file_location, {}, 2s) {
+      : IntegrationBase(test_file_location) {
     dir = testController.createTempDirectory();
 
     statefile = dir / "statefile";
