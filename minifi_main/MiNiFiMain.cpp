@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
     // determineLocations already logged everything we need
     return -1;
   }
-  minifi::utils::Environment::setEnvironmentVariable(std::string(MINIFI_WORKING_DIR).c_str(), locations->working_dir_.string().c_str());
+  minifi::utils::Environment::setEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str(), locations->working_dir_.string().c_str());
   logger->log_info("MiNiFi Locations={}", *locations);
 
   utils::FileMutex minifi_home_mtx(locations->lock_path_);
