@@ -42,7 +42,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessor
       .build();
   EXTENSIONAPI static constexpr auto RangeLength = core::PropertyDefinitionBuilder<>::createProperty("Range Length")
       .withDescription("The number of bytes to download from the object, starting from the Range Start. "
-                        "An empty value or a value that extends beyond the end of the object will read to the end of the object.")
+          "An empty value or a value that extends beyond the end of the object will read to the end of the object.")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto NumberOfRetries = core::PropertyDefinitionBuilder<>::createProperty("Number of Retries")
