@@ -25,11 +25,11 @@ endif()
 
 
 if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
-    set(MINIFI_MODE_ENV_VALUE "FHS")
+    set(MINIFI_INSTALLATION_TYPE_ENV_VALUE "FHS")
     set(MINIFI_HOME_ENV_VALUE "")
     set(MINIFI_EXEC_PATH "/usr/bin/minifi")
 elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
-    set(MINIFI_MODE_ENV_VALUE "")
+    set(MINIFI_INSTALLATION_TYPE_ENV_VALUE "")
     set(MINIFI_HOME_ENV_VALUE "/opt/minifi-cpp")
     set(MINIFI_EXEC_PATH "/opt/minifi-cpp/bin/minifi")
 else()

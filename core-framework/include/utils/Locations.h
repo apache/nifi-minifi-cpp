@@ -24,10 +24,10 @@
 
 namespace org::apache::nifi::minifi::utils {
 inline bool isFhsMode() {
-  const auto minifi_mode_env = utils::Environment::getEnvironmentVariable(std::string(MINIFI_MODE_ENV_KEY).c_str());
+  const auto minifi_installation_type_env = utils::Environment::getEnvironmentVariable(std::string(MINIFI_INSTALLATION_TYPE_ENV_KEY).c_str());
   const auto minifi_home_env = utils::Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str());
   const auto executable_path = utils::file::get_executable_path();
-  return minifi_mode_env == MINIFI_MODE_FHS
+  return minifi_installation_type_env == MINIFI_INSTALLATION_TYPE_FHS
       || (!minifi_home_env.has_value() && executable_path.parent_path() == "/usr/bin");
 }
 
