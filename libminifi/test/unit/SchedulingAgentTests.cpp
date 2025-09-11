@@ -22,6 +22,7 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/TestUtils.h"
 #include "utils/TimeUtil.h"
+#include "utils/TimeZoneUtils.h"
 
 using namespace std::literals::chrono_literals;
 

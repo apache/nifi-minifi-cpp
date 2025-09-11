@@ -23,8 +23,8 @@
 #include <functional>
 #include <memory>
 #include <utility>
-#include "InputStream.h"
-#include "OutputStream.h"
+#include "io/InputStream.h"
+#include "io/OutputStream.h"
 #include "minifi-cpp/io/StreamCallback.h"
 #include "utils/ConfigurationUtils.h"
 

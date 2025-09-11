@@ -50,6 +50,7 @@ class DummyProcessorDescriptor : public core::ProcessorDescriptor {
 
   void setSupportedRelationships(std::span<const core::RelationshipDefinition> /*relationships*/) override {}
   void setSupportedProperties(std::span<const core::PropertyReference> /*properties*/) override {}
+  void setSupportedProperties(std::span<const core::Property> /*properties*/) override {}
 };
 
 class DummyLogger : public core::logging::Logger {
@@ -68,10 +69,6 @@ class DummyLogger : public core::logging::Logger {
 
   int getMaxLogSize() override {
     return 0;
-  }
-
-  void setLogCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string&)>& /*callback*/) override {
-    // pass
   }
 
   ~DummyLogger() override = default;

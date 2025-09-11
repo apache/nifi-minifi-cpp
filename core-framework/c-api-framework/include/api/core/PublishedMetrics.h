@@ -1,6 +1,5 @@
 /**
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,16 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <cstddef>
+#include <vector>
+#include <string>
 
-namespace org::apache::nifi::minifi::utils {
+namespace org::apache::nifi::minifi::api::core {
 
-// from the boost hash_combine docs
-inline size_t hash_combine(size_t seed, size_t new_hash) noexcept {
-  return seed ^ (new_hash + 0x9e3779b9 + (seed << 6U) + (seed >> 2U));
-}
+using PublishedMetrics = std::vector<std::pair<std::string, double>>;
 
-}  // namespace org::apache::nifi::minifi::utils
+}  // namespace org::apache::nifi::minifi::api::core
