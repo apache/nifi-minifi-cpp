@@ -24,6 +24,7 @@
 #include "utils/TimeUtil.h"
 #include "core/ProcessContextImpl.h"
 #include "core/ProcessSessionFactory.h"
+#include "utils/TimeZoneUtils.h"
 
 using namespace std::literals::chrono_literals;
 
