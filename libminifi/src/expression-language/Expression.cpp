@@ -35,6 +35,7 @@
 #include "expression-language/Expression.h"
 #include "utils/RegexUtils.h"
 #include "utils/TimeUtil.h"
+#include "utils/TimeZoneUtils.h"
 
 #ifdef WIN32
 #pragma comment(lib, "wldap32.lib" )

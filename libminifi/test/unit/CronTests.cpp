@@ -21,6 +21,7 @@
 #include "date/date.h"
 #include "date/tz.h"
 #include "utils/TimeUtil.h"
+#include "utils/TimeZoneUtils.h"
 
 using std::chrono::system_clock;
 using std::chrono::seconds;
