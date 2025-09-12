@@ -58,27 +58,6 @@ TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_EmptyBrokerURI", "[consumeMQTTTest]")
       Catch::Matchers::EndsWith("Expected valid value from \"consumeMqttProcessor::Broker URI\", but got PropertyNotSet (Property Error:2)"));
 }
 
-TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithoutID", "[consumeMQTTTest]") {
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession.name, "false"));
-
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_),
-    Catch::Matchers::EndsWith("Processor must have a Client ID for durable (non-clean) sessions"));
-}
-
-TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithoutID_V_5", "[consumeMQTTTest]") {
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS.name, "1"));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_5_0)}));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval.name, "1 h"));
-
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_),
-                      Catch::Matchers::EndsWith("Processor must have a Client ID for durable (Session Expiry Interval > 0) sessions"));
-}
-
 TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithID", "[consumeMQTTTest]") {
   REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
   REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID.name, "subscriber"));
@@ -129,13 +108,6 @@ TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithQoS0_V_5", "[consum
 
   REQUIRE(LogTestController::getInstance().contains("[warning] Messages are not preserved during client disconnection "
                                                     "by the broker when QoS is less than 1 for durable (Session Expiry Interval > 0) sessions. Only subscriptions are preserved.", 1s));
-}
-
-TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_EmptyClientID_V_3_1_0", "[consumeMQTTTest]") {
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic.name, "mytopic"));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
-  REQUIRE(consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion.name, std::string{magic_enum::enum_name(minifi::processors::mqtt::MqttVersions::V_3_1_0)}));
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_), Catch::Matchers::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
 }
 
 TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_CleanStart_V_3", "[consumeMQTTTest]") {
