@@ -43,7 +43,6 @@ THIRD PARTY COMPONENTS
 This software includes third party software subject to the following copyrights:
 - Very fast, header-only/compiled, C++ logging library from spdlog - Copyright (c) 2016 Gabi Melman
 - An open-source formatting library for C++ from fmt - Copyright (c) 2012 - present, Victor Zverovich
-- XML parsing and utility functions from TinyXml2 - Lee Thomason
 - JSON parsing and utility functions from JsonCpp - Copyright (c) 2007-2010 Baptiste Lepilleur
 - OpenSSL build files for cmake used for Android Builds - Copyright (C) 2007-2012 LuaDist and Copyright (C) 2013 Brian Sidebotham
 - Android tool chain cmake build files - Copyright (c) 2010-2011, Ethan Rublee and Copyright (c) 2011-2014, Andrey Kamaev
@@ -78,6 +77,7 @@ This software includes third party software subject to the following copyrights:
 - llhttp - Copyright Fedor Indutny, 2018.
 - benchmark - Copyright 2015 Google Inc.
 - llama.cpp - Copyright (c) 2023-2024 The ggml authors
+- pugixml - Copyright (C) 2003, by Kristen Wegner (kristen@tima.net)
 
 The licenses for these third party components are included in LICENSE.txt
 
