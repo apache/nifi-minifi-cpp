@@ -23,7 +23,7 @@
 #include "core/AbstractProcessor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "controllers/RecordSetReader.h"
 #include "controllers/RecordSetWriter.h"
 

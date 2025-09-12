@@ -28,7 +28,7 @@
 #include "PropertyValidator.h"
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/transform.hpp"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 

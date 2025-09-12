@@ -17,7 +17,7 @@
 #include "XMLRecordSetWriter.h"
 
 #include "core/Resource.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "utils/TimeUtil.h"
 #include "utils/ParsingUtils.h"
 #include "utils/GeneralUtils.h"

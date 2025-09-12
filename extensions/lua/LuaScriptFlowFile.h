@@ -21,7 +21,7 @@
 #include <string>
 #include <memory>
 
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
 
@@ -32,8 +32,8 @@ class LuaScriptFlowFile {
   std::string getAttribute(const std::string &key);
   bool setAttribute(const std::string &key, const std::string &value);
   bool addAttribute(const std::string &key, const std::string &value);
-  bool updateAttribute(std::string key, std::string value);
-  bool removeAttribute(std::string key);
+  bool updateAttribute(std::string_view key, const std::string& value);
+  bool removeAttribute(std::string_view key);
   std::shared_ptr<core::FlowFile> getFlowFile();
   void releaseFlowFile();
 

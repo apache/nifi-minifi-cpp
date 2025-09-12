@@ -22,7 +22,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 

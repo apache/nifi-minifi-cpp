@@ -24,14 +24,14 @@
 
 #include "utils/Environment.h"
 #include "utils/file/PathUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 
 TEST_CASE("getenv already existing", "[getenv]") {
   auto res = utils::Environment::getEnvironmentVariable("PATH");
   REQUIRE(res.has_value());
-  REQUIRE(0 < res->length());
+  REQUIRE(!res->empty());
 }
 
 TEST_CASE("getenv not existing", "[getenv]") {
@@ -91,6 +91,7 @@ TEST_CASE("unsetenv existing", "[unsetenv]") {
 
 TEST_CASE("multithreaded environment manipulation", "[getenv][setenv][unsetenv]") {
   std::vector<std::thread> threads;
+  threads.reserve(16U);
   for (size_t i = 0U; i < 16U; i++) {
     threads.emplace_back([](){
       std::mt19937 gen(std::random_device { }());
@@ -107,7 +108,7 @@ TEST_CASE("multithreaded environment manipulation", "[getenv][setenv][unsetenv]"
               const size_t value_len = gen() % 256;
               std::vector<char> value(value_len + 1, '\0');
               std::generate_n(value.begin(), value_len, [&]() -> char {
-                return 'A' + gen() % static_cast<uint8_t>('Z' - 'A');
+                return gsl::narrow<char>('A' + (gen() % static_cast<uint8_t>('Z' - 'A')));
               });
               const bool overwrite = gen() % 2;
               utils::Environment::setEnvironmentVariable(env_name.c_str(), value.data(), overwrite);

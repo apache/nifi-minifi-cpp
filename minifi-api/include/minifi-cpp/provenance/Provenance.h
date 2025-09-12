@@ -35,7 +35,7 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/Connection.h"
 #include "minifi-cpp/ResourceClaim.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::provenance {

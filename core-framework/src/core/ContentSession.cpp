@@ -19,7 +19,6 @@
 #include "core/ContentSession.h"
 #include "io/StreamPipe.h"
 #include "io/StreamSlice.h"
-#include "core/ContentRepository.h"
 
 namespace org::apache::nifi::minifi::core {
 

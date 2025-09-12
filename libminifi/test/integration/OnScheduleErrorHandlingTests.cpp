@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "integration/IntegrationBase.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/Scheduling.h"
 #include "core/state/ProcessorController.h"
 #include "unit/TestBase.h"

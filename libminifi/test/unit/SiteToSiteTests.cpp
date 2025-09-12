@@ -22,7 +22,7 @@
 #include <string>
 #include <utility>
 
-#include "io/BaseStream.h"
+#include "minifi-cpp/io/BaseStream.h"
 #include "sitetosite/Peer.h"
 #include "sitetosite/RawSiteToSiteClient.h"
 #include "unit/TestBase.h"
@@ -30,6 +30,7 @@
 #include "unit/SiteToSiteHelper.h"
 #include "unit/DummyProcessor.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "Connection.h"
 
 namespace org::apache::nifi::minifi::test {
 

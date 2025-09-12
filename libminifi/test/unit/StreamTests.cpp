@@ -25,7 +25,7 @@
 #include <utility>
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "io/BaseStream.h"
+#include "minifi-cpp/io/BaseStream.h"
 #include "io/StreamSlice.h"
 #include "utils/span.h"
 

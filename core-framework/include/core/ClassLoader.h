@@ -19,7 +19,6 @@
 
 #include "minifi-cpp/core/ClassLoader.h"
 #include "utils/GeneralUtils.h"
-#include "ObjectFactory.h"
 
 namespace org::apache::nifi::minifi::core {
 

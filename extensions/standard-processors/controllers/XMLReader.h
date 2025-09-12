@@ -18,7 +18,7 @@
 
 #include "controllers/RecordSetReader.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "pugixml.hpp"
 

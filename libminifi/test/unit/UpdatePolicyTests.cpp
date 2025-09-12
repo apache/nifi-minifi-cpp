@@ -23,7 +23,6 @@
 #include "unit/Catch.h"
 #include "core/Processor.h"
 #include "../../controller/Controller.h"
-#include "core/controller/ControllerService.h"
 #include "c2/ControllerSocketProtocol.h"
 #include "controllers/UpdatePolicyControllerService.h"
 

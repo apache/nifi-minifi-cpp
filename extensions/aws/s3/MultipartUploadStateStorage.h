@@ -26,12 +26,12 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "core/StateManager.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/StateManager.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "aws/core/utils/DateTime.h"
 #include "utils/file/FileUtils.h"
-#include "properties/Configure.h"
+#include "minifi-cpp/properties/Configure.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 

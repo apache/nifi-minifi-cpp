@@ -1,6 +1,7 @@
 Checks: >
   -clang-analyzer-optin.cplusplus.VirtualCall,
   -clang-analyzer-optin.core.EnumCastOutOfRange,
+  -clang-analyzer-unix.BlockInCriticalSection,
   boost-use-to-string,
   portability-restrict-system-includes,
   portability-simd-intrinsics,
@@ -251,7 +252,6 @@ Checks: >
   readability-avoid-return-with-void-value,
   readability-avoid-unconditional-preprocessor-if,
   readability-enum-initial-value,
-  readability-math-missing-parentheses,
   readability-operators-representation,
   readability-redundant-casting,
   readability-redundant-inline-specifier,

@@ -18,7 +18,7 @@
 
 #include <utility>
 
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/ClassName.h"
 

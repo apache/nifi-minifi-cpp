@@ -42,7 +42,7 @@
 #endif
 
 #include "utils/StringUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -170,8 +170,8 @@ std::optional<Identifier> Identifier::parse(const std::string &str) {
 bool Identifier::parseByte(Data &data, const uint8_t *input, int &charIdx, int &byteIdx) {
   uint8_t upper = 0;
   uint8_t lower = 0;
-  if (!string::from_hex(input[charIdx++], upper)
-      || !string::from_hex(input[charIdx++], lower)) {
+  if (!string::from_hex(input[charIdx++], upper)  // NOLINT(bugprone-inc-dec-in-conditions)
+      || !string::from_hex(input[charIdx++], lower)) {  // NOLINT(bugprone-inc-dec-in-conditions)
     return false;
   }
   data[byteIdx++] = (upper << 4) | lower;

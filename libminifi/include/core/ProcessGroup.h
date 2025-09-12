@@ -30,13 +30,13 @@
 #include <tuple>
 
 #include "core/Processor.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "CronDrivenSchedulingAgent.h"
 #include "Port.h"
-#include "core/logging/Logger.h"
-#include "controller/ControllerServiceNode.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/core/controller/ControllerServiceNode.h"
 #include "controller/ControllerServiceNodeMap.h"
 #include "utils/Id.h"
 #include "http/BaseHTTPClient.h"

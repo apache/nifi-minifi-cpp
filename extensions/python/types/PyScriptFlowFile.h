@@ -18,7 +18,7 @@
 
 #include <memory>
 #include "../PythonBindings.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

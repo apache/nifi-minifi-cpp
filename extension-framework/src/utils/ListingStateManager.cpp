@@ -18,7 +18,7 @@
 
 #include "utils/ListingStateManager.h"
 
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -27,7 +27,7 @@ static const std::string LATEST_LISTED_OBJECT_TIMESTAMP = "listed_timestamp";
 
 bool ListingState::wasObjectListedAlready(const ListedObject &object) const {
   return listed_key_timestamp > object.getLastModified() ||
-      (listed_key_timestamp == object.getLastModified() && listed_keys.find(object.getKey()) != listed_keys.end());
+      (listed_key_timestamp == object.getLastModified() && listed_keys.contains(object.getKey()));
 }
 
 void ListingState::updateState(const ListedObject &object) {
@@ -62,7 +62,7 @@ uint64_t ListingStateManager::getLatestListedKeyTimestampInMilliseconds(const st
 std::unordered_set<std::string> ListingStateManager::getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) {
   std::unordered_set<std::string> latest_listed_keys;
   for (const auto& kvp : state) {
-    if (kvp.first.rfind(LATEST_LISTED_OBJECT_PREFIX, 0) == 0) {
+    if (kvp.first.starts_with(LATEST_LISTED_OBJECT_PREFIX)) {
       latest_listed_keys.insert(kvp.second);
     }
   }

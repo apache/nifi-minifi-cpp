@@ -29,8 +29,8 @@
 #include <optional>
 
 #include "open62541/client.h"
-#include "core/logging/Logger.h"
-#include "Exception.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::opc {
 
@@ -123,7 +123,7 @@ struct NodeData {
   UA_Variant* var_;
 
   explicit NodeData(UA_Variant * var = nullptr) {
-    var_ = var;
+    var_ = var;  // NOLINT(clang-analyzer-optin.cplusplus.UninitializedObject)
   }
   void addVariant(UA_Variant * var) {
     if (var_) {

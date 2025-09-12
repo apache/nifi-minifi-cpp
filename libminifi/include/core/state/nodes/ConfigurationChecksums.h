@@ -23,7 +23,7 @@
 
 #include "core/state/nodes/MetricsBase.h"
 #include "utils/ChecksumCalculator.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::state::response {
 

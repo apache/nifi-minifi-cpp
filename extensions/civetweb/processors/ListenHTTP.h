@@ -23,20 +23,21 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <future>
 
 #include <CivetServer.h>
 
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/MinifiConcurrentQueue.h"
-#include "utils/gsl.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/utils/Export.h"
 #include "utils/RegexUtils.h"
 #include "core/FlowFileStore.h"
 #include "core/ProcessorImpl.h"

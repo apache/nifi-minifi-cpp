@@ -23,10 +23,10 @@
 #include <utility>
 
 #include "core/Core.h"
-#include "properties/Configure.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/properties/Configure.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "InMemoryKeyValueStorage.h"

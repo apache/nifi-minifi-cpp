@@ -28,9 +28,8 @@
 #include <vector>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "FlowFileRecord.h"
 #include "io/CRCStream.h"
 #include "Peer.h"
 #include "SiteToSite.h"

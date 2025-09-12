@@ -22,8 +22,8 @@
 #include <utility>
 
 #include "utils/crypto/EncryptionUtils.h"
-#include "Exception.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/Exception.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org {
 namespace apache {

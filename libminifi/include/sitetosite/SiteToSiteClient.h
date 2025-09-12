@@ -29,7 +29,7 @@
 #include "Peer.h"
 #include "SiteToSite.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi {
 

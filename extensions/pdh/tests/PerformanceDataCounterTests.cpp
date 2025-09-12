@@ -20,7 +20,7 @@
 #include "unit/Catch.h"
 #include "PDHCounters.h"
 #include "MemoryConsumptionCounter.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 using org::apache::nifi::minifi::processors::SinglePDHCounter;
 using org::apache::nifi::minifi::processors::PDHCounterArray;

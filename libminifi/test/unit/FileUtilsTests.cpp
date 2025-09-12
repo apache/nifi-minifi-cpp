@@ -27,7 +27,7 @@
 #include "unit/Catch.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/TimeUtil.h"
 
 using namespace std::literals::chrono_literals;

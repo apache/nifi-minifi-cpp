@@ -23,7 +23,7 @@
 #include "types/PyOutputStream.h"
 #include "types/PyInputStream.h"
 #include "range/v3/algorithm/remove_if.hpp"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

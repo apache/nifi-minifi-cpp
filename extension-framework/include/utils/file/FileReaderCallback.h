@@ -23,7 +23,7 @@
 #include <string>
 
 #include "io/StreamPipe.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::utils {
 

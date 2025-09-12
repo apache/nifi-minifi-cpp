@@ -17,14 +17,14 @@
 
 #include <memory>
 
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "controllers/keyvalue/KeyValueStateManager.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 

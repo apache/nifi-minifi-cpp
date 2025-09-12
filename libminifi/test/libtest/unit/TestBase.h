@@ -33,7 +33,7 @@
 
 #include "core/Core.h"
 #include "core/extension/ExtensionManager.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/LoggerProperties.h"
 #include "core/Relationship.h"

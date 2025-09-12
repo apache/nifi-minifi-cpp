@@ -18,7 +18,7 @@
 
 #include <random>
 
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "catch2/generators/catch_generators.hpp"
 #include "processors/SegmentContent.h"
 #include "range/v3/algorithm/equal.hpp"

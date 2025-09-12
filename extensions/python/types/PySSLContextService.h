@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "../PythonBindings.h"
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

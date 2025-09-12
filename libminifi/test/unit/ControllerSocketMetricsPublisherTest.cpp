@@ -17,7 +17,7 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "c2/ControllerSocketMetricsPublisher.h"
-#include "core/state/nodes/MetricsBase.h"
+#include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "core/state/nodes/QueueMetrics.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "properties/Configure.h"

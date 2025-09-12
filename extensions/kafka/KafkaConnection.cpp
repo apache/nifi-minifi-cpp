@@ -20,7 +20,7 @@
 #include <memory>
 #include <utility>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
 

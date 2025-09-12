@@ -25,15 +25,15 @@
 #include <utility>
 
 #include "core/ProcessorImpl.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 #include "core/ProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi::processors {

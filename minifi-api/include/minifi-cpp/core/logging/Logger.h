@@ -27,7 +27,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/Enum.h"
 #include "utils/GeneralUtils.h"
 #include "fmt/chrono.h"

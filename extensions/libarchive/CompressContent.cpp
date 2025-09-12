@@ -22,7 +22,7 @@
 #include <memory>
 #include <string>
 #include <map>
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "utils/StringUtils.h"
 #include "core/Resource.h"

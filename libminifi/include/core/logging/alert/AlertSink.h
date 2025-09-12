@@ -25,7 +25,7 @@
 #include <string>
 #include <memory>
 
-#include "core/controller/ControllerServiceProvider.h"
+#include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerProperties.h"
 #include "utils/ThreadPool.h"
 #include "utils/StagingQueue.h"

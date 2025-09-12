@@ -22,7 +22,7 @@
 
 #include "core/Resource.h"
 #include "utils/TimeUtil.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::standard {
 

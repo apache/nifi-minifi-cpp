@@ -30,14 +30,14 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "core/ProcessContext.h"
-#include "FlowFileRecord.h"
-#include "Exception.h"
+#include "minifi-cpp/core/ProcessContext.h"
+#include "minifi-cpp/Exception.h"
 #include "core/logging/LoggerFactory.h"
 #include "FlowFile.h"
 #include "WeakReference.h"
 #include "provenance/Provenance.h"
-#include "utils/gsl.h"
+#include "core/Relationship.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "minifi-cpp/core/ProcessorMetrics.h"
 #include "minifi-cpp/core/ProcessSession.h"
 

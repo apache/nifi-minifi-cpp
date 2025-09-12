@@ -25,12 +25,12 @@
 #include <list>
 #include <utility>
 
-#include "core/Repository.h"
+#include "minifi-cpp/core/Repository.h"
 #include "io/BufferStream.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "FlowController.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::provenance {
 
@@ -457,7 +457,7 @@ void ProvenanceReporterImpl::commit() {
   std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
 
   for (auto& event : _events) {
-    std::unique_ptr<io::BufferStream> stramptr(new io::BufferStream());
+    auto stramptr = std::make_unique<io::BufferStream>();
     event->serialize(*stramptr);
 
     flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));

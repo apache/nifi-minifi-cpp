@@ -21,7 +21,7 @@
 #include <functional>
 #include <utility>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org {
 namespace apache {

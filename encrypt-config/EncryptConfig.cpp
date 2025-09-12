@@ -27,7 +27,6 @@
 #include "ConfigFile.h"
 #include "ConfigFileEncryptor.h"
 #include "FlowConfigEncryptor.h"
-#include "core/extension/ExtensionManager.h"
 #include "utils/Enum.h"
 #include "utils/file/FileUtils.h"
 

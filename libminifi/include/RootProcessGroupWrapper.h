@@ -28,10 +28,9 @@
 #include "core/ProcessGroup.h"
 #include "utils/Id.h"
 #include "core/state/ProcessorController.h"
-#include "core/state/MetricsPublisher.h"
 #include "core/state/MetricsPublisherStore.h"
-#include "utils/gsl.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "c2/ControllerSocketProtocol.h"
 
 namespace org::apache::nifi::minifi {

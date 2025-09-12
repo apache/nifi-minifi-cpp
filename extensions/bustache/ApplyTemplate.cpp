@@ -27,7 +27,7 @@
 #include "bustache/model.hpp"
 #include "bustache/render/string.hpp"
 #include "core/Resource.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::processors {
 

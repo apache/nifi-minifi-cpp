@@ -26,7 +26,7 @@
 #include "utils/ArrayUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/RegexUtils.h"
 #include "aws/core/utils/HashingUtils.h"
 #include "range/v3/algorithm/any_of.hpp"

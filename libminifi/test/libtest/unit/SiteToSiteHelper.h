@@ -21,7 +21,7 @@
 #include <queue>
 #include "io/BufferStream.h"
 #include "core/Core.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace minifi = org::apache::nifi::minifi;
 

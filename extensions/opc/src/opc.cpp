@@ -25,10 +25,10 @@
 #include <array>
 
 #include "utils/StringUtils.h"
-#include "core/logging/Logger.h"
-#include "Exception.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/Exception.h"
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 #include "open62541/client_highlevel.h"
 #include "open62541/client_config_default.h"
@@ -160,7 +160,7 @@ Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::
   UA_ClientConfig *config_ptr = UA_Client_getConfig(client_);
   config_ptr->logging = &minifi_ua_logger_;
 
-  if (application_uri.length() > 0) {
+  if (!application_uri.empty()) {
     UA_String_clear(&config_ptr->clientDescription.applicationUri);
     config_ptr->clientDescription.applicationUri = UA_STRING_ALLOC(application_uri.c_str());
   }
@@ -246,7 +246,6 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       request.timestampsToReturn = UA_TIMESTAMPSTORETURN_BOTH;
       UA_ReadResponse response = UA_Client_Service_read(client_, request);
       UA_DataValue *dv = response.results;
-      auto server_timestamp = OPCDateTime2String(dv->serverTimestamp);
       auto source_timestamp = OPCDateTime2String(dv->sourceTimestamp);
       nodedata.attributes["Sourcetimestamp"] = source_timestamp;
       UA_ReadResponse_clear(&response);

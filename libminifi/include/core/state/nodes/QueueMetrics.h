@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "Connection.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/ConnectionStore.h"
 

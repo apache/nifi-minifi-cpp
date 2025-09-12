@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 

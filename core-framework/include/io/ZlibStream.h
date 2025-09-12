@@ -27,7 +27,7 @@
 #include "OutputStream.h"
 #include "Stream.h"
 #include "minifi-cpp/core/logging/Logger.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::io {
 

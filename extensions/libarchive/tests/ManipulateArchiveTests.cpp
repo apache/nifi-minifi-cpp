@@ -25,7 +25,7 @@
 #include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "util/ArchiveTests.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"

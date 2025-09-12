@@ -25,7 +25,7 @@
 
 #include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/detail/MonadicOperationWrappers.h"
 #include "fmt/format.h"
 

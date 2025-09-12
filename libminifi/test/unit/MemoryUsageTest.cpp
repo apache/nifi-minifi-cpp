@@ -23,7 +23,7 @@
 #include <iostream>
 #include <numeric>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/OsUtils.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"

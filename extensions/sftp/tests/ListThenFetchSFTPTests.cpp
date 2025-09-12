@@ -35,7 +35,7 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "utils/file/FileUtils.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
 #include "unit/ProvenanceTestHelper.h"
@@ -158,7 +158,7 @@ class ListThenFetchSFTPTestsFixture {
   }
 
   void createFileWithModificationTimeDiff(const std::string& relative_path, const std::string& content, std::chrono::seconds modification_timediff = -5min) const {
-    return createFile(relative_path, content, std::chrono::file_clock::now() + modification_timediff);
+    createFile(relative_path, content, std::chrono::file_clock::now() + modification_timediff);
   }
 
   enum TestWhere {

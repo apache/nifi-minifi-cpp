@@ -19,7 +19,7 @@
 #pragma once
 
 #include <memory>
-#include "io/OutputStream.h"
+#include "minifi-cpp/io/OutputStream.h"
 #include "FlowFileSerializer.h"
 
 namespace org {

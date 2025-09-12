@@ -24,14 +24,14 @@
 
 #include "core/Core.h"
 #include "core/ConfigurableComponentImpl.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/controller/ControllerServiceNode.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "properties/Configure.h"
 #include "minifi-cpp/core/controller/ControllerService.h"
 #include "io/validation.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 

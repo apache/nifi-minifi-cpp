@@ -25,10 +25,10 @@
 #include "opc.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 
 namespace org::apache::nifi::minifi::processors {
 

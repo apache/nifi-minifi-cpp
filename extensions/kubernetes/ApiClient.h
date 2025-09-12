@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 struct apiClient_t;
 struct list_t;

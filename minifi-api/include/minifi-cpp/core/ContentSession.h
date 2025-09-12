@@ -22,7 +22,7 @@
 #include <utility>
 #include <map>
 #include "minifi-cpp/ResourceClaim.h"
-#include "io/BaseStream.h"
+#include "minifi-cpp/io/BaseStream.h"
 
 namespace org::apache::nifi::minifi::core {
 

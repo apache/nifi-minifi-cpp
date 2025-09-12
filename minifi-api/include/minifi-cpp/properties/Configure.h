@@ -23,7 +23,7 @@
 
 #include "Configuration.h"
 #include "minifi-cpp/core/AgentIdentificationProvider.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 struct ConfigTestAccessor;
 

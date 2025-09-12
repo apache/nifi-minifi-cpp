@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "core/state/nodes/MetricsBase.h"
-#include "core/RepositoryMetricsSource.h"
+#include "minifi-cpp/core/RepositoryMetricsSource.h"
 #include "RepositoryMetricsSourceStore.h"
 
 namespace org::apache::nifi::minifi::state::response {

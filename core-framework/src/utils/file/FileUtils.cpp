@@ -23,7 +23,7 @@
 #include <iostream>
 
 #include "utils/ConfigurationUtils.h"
-#include "utils/Literals.h"
+#include "minifi-cpp/utils/Literals.h"
 #include "utils/Searcher.h"
 
 #ifdef WIN32
