@@ -33,7 +33,9 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyC2PauseResume : public VerifyC2Base {
  public:
-  explicit VerifyC2PauseResume(const std::atomic_bool& flow_resumed_successfully) : VerifyC2Base(), flow_resumed_successfully_(flow_resumed_successfully) {
+  explicit VerifyC2PauseResume(const std::filesystem::path& test_file_path, const std::atomic_bool& flow_resumed_successfully)
+      : VerifyC2Base(test_file_path),
+        flow_resumed_successfully_(flow_resumed_successfully) {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
@@ -116,13 +118,13 @@ class PauseResumeHandler: public HeartbeatHandler {
 
 TEST_CASE("C2PauseResumeTest", "[c2test]") {
   std::atomic_bool flow_resumed_successfully{false};
-  VerifyC2PauseResume harness{flow_resumed_successfully};
+  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "C2PauseResumeTest.yml";
+  VerifyC2PauseResume harness{test_file_path, flow_resumed_successfully};
   PauseResumeHandler responder{flow_resumed_successfully, harness.getConfiguration()};
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "C2PauseResumeTest.yml";
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_path.string());
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -163,7 +165,7 @@ TEST_CASE("C2PauseResumeTest", "[c2test]") {
   server = std::make_unique<TestServer>(port, path, &responder);
 
   harness.setUrl("http://localhost:0/heartbeat", &responder);
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

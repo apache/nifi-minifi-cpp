@@ -95,8 +95,9 @@ class MultipleC2CommandHandler: public HeartbeatHandler {
 
 class VerifyC2MultipleCommands : public VerifyC2Base {
  public:
-  explicit VerifyC2MultipleCommands(AckAuditor& auditor)
-    : ack_auditor_(auditor) {
+  explicit VerifyC2MultipleCommands(const std::filesystem::path& test_file_path, AckAuditor& auditor)
+    : VerifyC2Base(test_file_path),
+      ack_auditor_(auditor) {
   }
 
   void testSetup() override {
@@ -121,11 +122,10 @@ class VerifyC2MultipleCommands : public VerifyC2Base {
 
 TEST_CASE("C2MultipleCommandsTest", "[c2test]") {
   AckAuditor ack_auditor;
-  VerifyC2MultipleCommands harness(ack_auditor);
+  VerifyC2MultipleCommands harness(std::filesystem::path(TEST_RESOURCES) / "TestC2DescribeCoreComponentState.yml", ack_auditor);
   MultipleC2CommandHandler responder(ack_auditor, harness.getConfiguration());
   harness.setUrl("https://localhost:0/heartbeat", &responder);
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestC2DescribeCoreComponentState.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

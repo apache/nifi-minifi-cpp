@@ -30,6 +30,8 @@ namespace org::apache::nifi::minifi::test {
 
 class TestHarness : public IntegrationBase {
  public:
+  using IntegrationBase::IntegrationBase;
+
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::FlowController>();
     LogTestController::getInstance().setTrace<core::ProcessSession>();
@@ -51,9 +53,8 @@ class TestHarness : public IntegrationBase {
 };
 
 TEST_CASE("UpdateAttributeIntegrationTest", "[updateattribute]") {
-  TestHarness harness;
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestUpdateAttribute.yml";
-  harness.run(test_file_path);
+  TestHarness harness(std::filesystem::path(TEST_RESOURCES) / "TestUpdateAttribute.yml");
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

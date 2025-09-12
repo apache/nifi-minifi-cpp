@@ -36,7 +36,8 @@ namespace org::apache::nifi::minifi::test {
 
 class TailFileTestHarness : public IntegrationBase {
  public:
-  TailFileTestHarness() {
+  explicit TailFileTestHarness(const std::filesystem::path& test_file_location)
+      : IntegrationBase(test_file_location) {
     dir = testController.createTempDirectory();
 
     statefile = dir / "statefile";
@@ -85,7 +86,6 @@ class TailFileTestHarness : public IntegrationBase {
 };
 
 TEST_CASE("TailFile integration test", "[tailfile]") {
-  TailFileTestHarness harness;
   std::filesystem::path test_file_path;
   SECTION("Timer driven") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestTailFile.yml";
@@ -93,7 +93,8 @@ TEST_CASE("TailFile integration test", "[tailfile]") {
   SECTION("Cron driven") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestTailFileCron.yml";
   }
-  harness.run(test_file_path);
+  TailFileTestHarness harness(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

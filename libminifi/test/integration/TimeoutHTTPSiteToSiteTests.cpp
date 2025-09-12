@@ -39,8 +39,8 @@ namespace org::apache::nifi::minifi::test {
 
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
  public:
-  explicit SiteToSiteTestHarness(bool isSecure, std::chrono::seconds waitTime = 1s)
-      : HTTPIntegrationBase(waitTime), isSecure(isSecure) {
+  explicit SiteToSiteTestHarness(const std::filesystem::path& test_file_path, bool isSecure, std::chrono::seconds waitTime = 1s)
+      : HTTPIntegrationBase(test_file_path, {}, waitTime), isSecure(isSecure) {
     dir = testController.createTempDirectory();
   }
 
@@ -97,8 +97,8 @@ struct timeout_test_profile{
   defaulted_handler delete_;
 };
 
-void run_timeout_variance(std::string test_file_location, bool isSecure, const std::string& url, const timeout_test_profile &profile) {
-  SiteToSiteTestHarness harness(isSecure);
+void run_timeout_variance(const std::filesystem::path& test_file_location, bool isSecure, const std::string& url, const timeout_test_profile &profile) {
+  SiteToSiteTestHarness harness(test_file_location, isSecure);
 
   std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";
 
@@ -135,7 +135,7 @@ void run_timeout_variance(std::string test_file_location, bool isSecure, const s
   auto deleteResponse = std::make_unique<DeleteTransactionResponder>(delete_url, "201 OK", 12);
   harness.setUrl(delete_url, profile.delete_.get(deleteResponse.get()));
 
-  harness.run(test_file_location);
+  harness.run();
 
   REQUIRE(LogTestController::getInstance().contains("limit (200ms) reached, terminating connection"));
 
@@ -166,8 +166,7 @@ TEST_CASE("Test timeout handling in HTTP site to site", "[s2s]") {
     profile.peer_.set({timeout});
   }
 
-  const auto test_file_location = std::filesystem::path(TEST_RESOURCES) / "TestTimeoutHTTPSiteToSite.yml";
-  run_timeout_variance(test_file_location.string(), false, parseUrl("http://localhost:8098/nifi-api"), profile);
+  run_timeout_variance(std::filesystem::path(TEST_RESOURCES) / "TestTimeoutHTTPSiteToSite.yml", false, parseUrl("http://localhost:8098/nifi-api"), profile);
 }
 
 }  // namespace org::apache::nifi::minifi::test

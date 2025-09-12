@@ -35,7 +35,7 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyEmptyC2Metric : public VerifyC2Base {
  public:
-  explicit VerifyEmptyC2Metric(const std::atomic_bool& metrics_found) : metrics_found_(metrics_found) {
+  explicit VerifyEmptyC2Metric(const std::filesystem::path& test_file_path, const std::atomic_bool& metrics_found) : VerifyC2Base(test_file_path), metrics_found_(metrics_found) {
   }
 
   void testSetup() override {
@@ -96,7 +96,7 @@ class MetricsHandler: public HeartbeatHandler {
 
 TEST_CASE("Test support for setting metrics for multiple processors of the same type in a flow", "[c2test]") {
   std::atomic_bool metrics_found{false};
-  VerifyEmptyC2Metric harness(metrics_found);
+  VerifyEmptyC2Metric harness(std::filesystem::path(TEST_RESOURCES) / "TestSameProcessorMetrics.yml", metrics_found);
   harness.getConfiguration()->set("nifi.c2.root.class.definitions", "metrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.name", "metrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics", "processormetrics");
@@ -104,8 +104,7 @@ TEST_CASE("Test support for setting metrics for multiple processors of the same 
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "GetFileMetrics,GetTCPMetrics");
   MetricsHandler handler(metrics_found, harness.getConfiguration());
   harness.setUrl("http://localhost:0/api/heartbeat", &handler);
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestSameProcessorMetrics.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

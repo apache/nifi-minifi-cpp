@@ -27,12 +27,11 @@ namespace org::apache::nifi::minifi::test {
 TEST_CASE("C2FailedUpdateTest", "[c2test]") {
   const auto bad_test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestBad.yml";
   C2FailedUpdateHandler handler(bad_test_file_path.string());
-  VerifyC2FailedUpdate harness(10s);
+  VerifyC2FailedUpdate harness(std::filesystem::path(TEST_RESOURCES) / "TestHTTPGet.yml", 10s);
   harness.setKeyDir(TEST_RESOURCES);
   harness.setUrl("http://localhost:0/update", &handler);
   handler.setC2RestResponse(harness.getC2RestUrl(), "configuration");
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPGet.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -30,12 +30,11 @@ TEST_CASE("C2FetchFlowIfMissingTest", "[c2test]") {
   auto minifi_home = controller.createTempDirectory();
   const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestEmpty.yml";
   C2FlowProvider handler(test_file_path.string());
-  VerifyFlowFetched harness(10s);
+  VerifyFlowFetched harness(minifi_home / "config.yml", {}, 10s);
   harness.setKeyDir(TEST_RESOURCES);
   harness.setUrl("https://localhost:0/", &handler);
   harness.setFlowUrl(harness.getC2RestUrl());
-
-  harness.run(minifi_home / "config.yml");
+  harness.run();
 
   // check existence of the config file
   REQUIRE(std::ifstream{minifi_home / "config.yml"});

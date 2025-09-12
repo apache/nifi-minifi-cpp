@@ -36,11 +36,12 @@ struct HookCollection {
 
 class StatefulIntegrationTest : public IntegrationBase {
  public:
-  explicit StatefulIntegrationTest(std::string testCase, HookCollection hookCollection)
-    : on_schedule_hook_(std::move(hookCollection.on_schedule_hook_))
-    , on_trigger_hooks_(std::move(hookCollection.on_trigger_hooks_))
-    , log_checker_(hookCollection.log_checker_)
-    , test_case_(std::move(testCase)) {
+  StatefulIntegrationTest(const std::filesystem::path& test_file_path, std::string testCase, HookCollection hookCollection)
+    : IntegrationBase(test_file_path),
+      on_schedule_hook_(std::move(hookCollection.on_schedule_hook_)),
+      on_trigger_hooks_(std::move(hookCollection.on_trigger_hooks_)),
+      log_checker_(hookCollection.log_checker_),
+      test_case_(std::move(testCase)) {
   }
 
   void testSetup() override {
@@ -584,9 +585,8 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
 
 TEST_CASE("Test state transactionality", "[statemanagement]") {
   for (const auto& test : testCasesToHookLists) {
-    StatefulIntegrationTest statefulIntegrationTest(test.first, test.second);
-    const auto test_file_location = std::filesystem::path(TEST_RESOURCES) / "TestStateTransactionality.yml";
-    statefulIntegrationTest.run(test_file_location);
+    StatefulIntegrationTest statefulIntegrationTest(std::filesystem::path(TEST_RESOURCES) / "TestStateTransactionality.yml", test.first, test.second);
+    statefulIntegrationTest.run();
   }
 }
 

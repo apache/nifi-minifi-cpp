@@ -53,6 +53,7 @@ class LightWeightC2Handler : public StoppingHeartbeatHandler {
 
 class VerifyLightWeightC2Heartbeat : public VerifyC2Base {
  public:
+  using VerifyC2Base::VerifyC2Base;
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
@@ -73,7 +74,7 @@ class VerifyLightWeightC2Heartbeat : public VerifyC2Base {
 };
 
 TEST_CASE("Verify C2 lightweight heartbeat and stop operation", "[c2test]") {
-  VerifyLightWeightC2Heartbeat harness;
+  VerifyLightWeightC2Heartbeat harness(std::filesystem::path(TEST_RESOURCES) / "C2VerifyHeartbeatAndStopSecure.yml");
   LightWeightC2Handler responder(harness.getConfiguration());
   SECTION("Secure") {
     harness.setKeyDir(TEST_RESOURCES);
@@ -82,8 +83,7 @@ TEST_CASE("Verify C2 lightweight heartbeat and stop operation", "[c2test]") {
   SECTION("Insecure") {
     harness.setUrl("http://localhost:0/heartbeat", &responder);
   }
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "C2VerifyHeartbeatAndStopSecure.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -106,6 +106,7 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
 
 class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
  public:
+  using VerifyC2Base::VerifyC2Base;
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
@@ -129,7 +130,7 @@ class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
 };
 
 TEST_CASE("Verify resource consumption in C2 heartbeat", "[c2test]") {
-  VerifyResourceConsumptionInHeartbeat harness;
+  VerifyResourceConsumptionInHeartbeat harness(std::filesystem::path(TEST_RESOURCES) / "C2VerifyHeartbeatAndStop.yml");
   ResourceConsumptionInHeartbeatHandler responder(harness.getConfiguration());
   auto event_to_wait_for = [&responder] {
     return responder.getNumberOfHandledHeartBeats() >= 3;
@@ -137,8 +138,7 @@ TEST_CASE("Verify resource consumption in C2 heartbeat", "[c2test]") {
 
   harness.setUrl("http://localhost:0/heartbeat", &responder);
   harness.setEventToWaitFor(event_to_wait_for);
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "C2VerifyHeartbeatAndStop.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

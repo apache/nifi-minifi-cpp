@@ -50,7 +50,7 @@ class DescribeManifestHandler: public HeartbeatHandler {
 
 TEST_CASE("C2DescribeManifestTest", "[c2test]") {
   std::atomic_bool verified{false};
-  VerifyC2Describe harness(verified);
+  VerifyC2Describe harness(std::filesystem::path(TEST_RESOURCES) / "TestHTTPGet.yml", verified);
   minifi::utils::crypto::Bytes encryption_key = minifi::utils::string::from_hex("4024b327fdc987ce3eb43dd1f690b9987e4072e0020e3edf4349ce1ad91a4e38");
   minifi::Decryptor decryptor{minifi::utils::crypto::EncryptionProvider{encryption_key}};
   std::string encrypted_value = "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo=";
@@ -68,8 +68,7 @@ TEST_CASE("C2DescribeManifestTest", "[c2test]") {
   harness.getConfiguration()->set(minifi::Configuration::nifi_log_appender_rolling_directory, "/var/log/minifi");
 
   harness.setUrl("https://localhost:0/api/heartbeat", &responder);
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPGet.yml";
-  harness.run(test_file_path.string());
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -33,8 +33,8 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyC2Server : public HTTPIntegrationBase {
  public:
-  explicit VerifyC2Server(bool isSecure)
-      : isSecure(isSecure) {
+  explicit VerifyC2Server(const std::filesystem::path& test_file_path)
+      : HTTPIntegrationBase(test_file_path) {
     dir = testController.createTempDirectory();
   }
 
@@ -76,16 +76,14 @@ class VerifyC2Server : public HTTPIntegrationBase {
   }
 
  protected:
-  bool isSecure;
   std::filesystem::path dir;
   TestController testController;
 };
 
 TEST_CASE("C2NullConfiguration", "[c2test]") {
-  VerifyC2Server harness(true);
+  VerifyC2Server harness(std::filesystem::path(TEST_RESOURCES) / "TestNull.yml");
   harness.setKeyDir(TEST_RESOURCES);
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestNull.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

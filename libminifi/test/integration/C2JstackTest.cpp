@@ -46,12 +46,11 @@ class DescribeJstackHandler : public HeartbeatHandler {
 
 TEST_CASE("C2JstackTest", "[c2test]") {
   std::atomic_bool acknowledgement_received{ false };
-  VerifyC2Describe harness{acknowledgement_received};
+  VerifyC2Describe harness{std::filesystem::path(TEST_RESOURCES) / "TestHTTPGet.yml", acknowledgement_received};
   harness.setKeyDir(TEST_RESOURCES);
   DescribeJstackHandler responder{acknowledgement_received, harness.getConfiguration()};
   harness.setUrl("https://localhost:0/heartbeat", &responder);
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPGet.yml";
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -38,7 +38,9 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyC2Metrics : public VerifyC2Base {
  public:
-  explicit VerifyC2Metrics(const std::atomic_bool& metrics_updated_successfully) : metrics_updated_successfully_(metrics_updated_successfully) {
+  explicit VerifyC2Metrics(const std::filesystem::path& test_file_path, const std::atomic_bool& metrics_updated_successfully)
+      : VerifyC2Base(test_file_path),
+        metrics_updated_successfully_(metrics_updated_successfully) {
   }
 
   void testSetup() override {
@@ -257,7 +259,8 @@ class MetricsHandler: public HeartbeatHandler {
 
 TEST_CASE("C2MetricsTest", "[c2test]") {
   std::atomic_bool metrics_updated_successfully{false};
-  VerifyC2Metrics harness(metrics_updated_successfully);
+  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestC2Metrics.yml";
+  VerifyC2Metrics harness(test_file_path, metrics_updated_successfully);
   harness.getConfiguration()->set("nifi.c2.root.classes", "FlowInformation,AgentInformation");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions", "metrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.name", "metrics");
@@ -268,12 +271,11 @@ TEST_CASE("C2MetricsTest", "[c2test]") {
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.loadmetrics.classes", "QueueMetrics,RepositoryMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processorMetrics.name", "ProcessorMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processorMetrics.classes", "processorMetrics/GetTCP.*");
-  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestC2Metrics.yml";
   auto replacement_path = test_file_path.string();
   minifi::utils::string::replaceAll(replacement_path, "TestC2Metrics", "TestC2MetricsUpdate");
   MetricsHandler handler(metrics_updated_successfully, harness.getConfiguration(), replacement_path);
   harness.setUrl("https://localhost:0/api/heartbeat", &handler);
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

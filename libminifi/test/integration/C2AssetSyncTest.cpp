@@ -147,6 +147,7 @@ class C2HeartbeatHandler : public HeartbeatHandler {
 
 class VerifyC2AssetSync : public VerifyC2Base {
  public:
+  using VerifyC2Base::VerifyC2Base;
   void configureC2() override {
     configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
     configuration->set("nifi.c2.enable", "true");
