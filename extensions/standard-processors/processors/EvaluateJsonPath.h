@@ -166,8 +166,8 @@ class EvaluateJsonPath final : public core::ProcessorImpl {
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr auto EvaluationResult = core::DynamicProperty{"Evaluation Result", "JsonPath expression to evaluate", "Dynamic property values are evaluated as JsonPaths. "
-      "In case of 'flowfile-conent' destination, only one dynamic property with JsonPath may be specified, in this case the name of the property is ignored. "
-      "In case of 'flowfile-attribute' destination, the result of the JsonPath evaluation is written to the 'Evaluation Result' property.", true};
+      "In case of 'flowfile-content' destination, only one dynamic property with JsonPath may be specified, in this case the name of the property is ignored. "
+      "In case of 'flowfile-attribute' destination, the result of the JsonPath evaluation is written to the attribute matching the dynamic property name.", true};
   EXTENSIONAPI static constexpr auto DynamicProperties = std::array{EvaluationResult};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
