@@ -25,3 +25,6 @@ class InputPort(Connectable):
         self.properties = {}
         if self.remote_process_group:
             self.properties = self.remote_process_group.properties
+
+    def id_for_connection(self):
+        return self.instance_id
