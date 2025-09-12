@@ -24,10 +24,10 @@
 
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "SQLProcessor.h"
 #include "utils/ArrayUtils.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::processors {
 

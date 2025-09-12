@@ -18,7 +18,7 @@
 
 #include "core/ProcessorImpl.h"
 #include "core/state/Value.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "range/v3/numeric/accumulate.hpp"
 
 using namespace std::literals::chrono_literals;

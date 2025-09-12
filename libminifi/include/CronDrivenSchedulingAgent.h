@@ -25,10 +25,10 @@
 #include <string>
 #include <utility>
 
-#include "core/logging/Logger.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/Processor.h"
-#include "core/ProcessSessionFactory.h"
+#include "minifi-cpp/core/ProcessSessionFactory.h"
 #include "utils/Cron.h"
 #include "ThreadedSchedulingAgent.h"
 

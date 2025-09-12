@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "processors/SplitText.h"

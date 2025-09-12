@@ -32,7 +32,7 @@
 #include "unit/TestUtils.h"
 #include "utils/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 core::Relationship Success{"success", "Everything is fine"};
 

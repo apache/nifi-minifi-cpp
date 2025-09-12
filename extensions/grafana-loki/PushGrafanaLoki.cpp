@@ -18,7 +18,7 @@
 
 #include <utility>
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"

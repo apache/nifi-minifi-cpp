@@ -20,9 +20,9 @@
 #include <string>
 
 #include "core/ProcessorImpl.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
 #include "utils/Searcher.h"

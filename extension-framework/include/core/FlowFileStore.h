@@ -21,7 +21,7 @@
 #include <unordered_set>
 #include <utility>
 
-#include "FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 namespace org::apache::nifi::minifi::core {
 
 class FlowFileStore {

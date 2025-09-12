@@ -21,7 +21,7 @@
 #include <string>
 
 #include "sol/sol.hpp"
-#include "io/InputStream.h"
+#include "minifi-cpp/io/InputStream.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
 

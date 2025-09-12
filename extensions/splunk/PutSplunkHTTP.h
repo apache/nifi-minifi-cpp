@@ -23,12 +23,12 @@
 
 #include "SplunkHECProcessor.h"
 #include "http/HTTPClient.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 #include "utils/ResourceQueue.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
 

@@ -20,12 +20,12 @@
 #include <algorithm>
 
 #include "SplitText.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "utils/ConfigurationUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "io/StreamPipe.h"
 
@@ -401,7 +401,7 @@ void SplitText::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   split_text_config_.line_split_count = utils::parseU64Property(context, LineSplitCount);
   logger_->log_debug("SplitText line split count: {}", split_text_config_.line_split_count);
   if (const auto max_fragment_data_size_value = utils::parseOptionalDataSizeProperty(context, MaximumFragmentSize)) {
-    split_text_config_.maximum_fragment_size = *max_fragment_data_size_value;
+    split_text_config_.maximum_fragment_size = max_fragment_data_size_value;
     logger_->log_debug("SplitText maximum fragment size: {}", split_text_config_.maximum_fragment_size.value());
   }
   if (split_text_config_.maximum_fragment_size && split_text_config_.maximum_fragment_size.value() == 0) {

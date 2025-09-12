@@ -20,7 +20,7 @@
 
 #include "EncryptConfig.h"
 #include "argparse/argparse.hpp"
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "utils/StringUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;

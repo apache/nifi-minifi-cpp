@@ -26,7 +26,7 @@
 #include "core/logging/LoggerFactory.h"
 
 #include "core/flow/Node.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/flow/FlowSchema.h"
 
 namespace org::apache::nifi::minifi::core::flow {

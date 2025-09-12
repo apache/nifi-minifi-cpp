@@ -27,17 +27,17 @@
 #include <vector>
 #include <optional>
 
-#include "controllers/AttributeProviderService.h"
+#include "minifi-cpp/controllers/AttributeProviderService.h"
 #include "core/Core.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/Enum.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 #include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::processors {

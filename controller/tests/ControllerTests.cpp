@@ -30,7 +30,6 @@
 #include "c2/ControllerSocketProtocol.h"
 #include "unit/TestUtils.h"
 #include "c2/ControllerSocketMetricsPublisher.h"
-#include "core/controller/ControllerServiceProvider.h"
 #include "controllers/SSLContextService.h"
 #include "utils/StringUtils.h"
 #include "state/UpdateController.h"

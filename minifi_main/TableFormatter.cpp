@@ -23,7 +23,7 @@
 #include "range/v3/view/join.hpp"
 #include "range/v3/range/conversion.hpp"
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace {
 

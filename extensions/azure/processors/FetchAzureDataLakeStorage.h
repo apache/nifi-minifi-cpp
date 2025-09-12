@@ -21,7 +21,7 @@
 #include <utility>
 #include <memory>
 
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "io/StreamPipe.h"
 #include "utils/ArrayUtils.h"

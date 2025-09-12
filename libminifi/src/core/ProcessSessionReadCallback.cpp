@@ -25,7 +25,7 @@
 #include <utility>
 
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -48,7 +48,7 @@ int64_t ProcessSessionReadCallback::operator()(const std::shared_ptr<io::InputSt
     const auto read = stream->read(buffer);
     if (io::isError(read)) return -1;
     if (read == 0) break;
-    if (!tmp_file_os_.write(reinterpret_cast<char*>(buffer.data()), read)) {
+    if (!tmp_file_os_.write(reinterpret_cast<char*>(buffer.data()), gsl::narrow<std::streamsize>(read))) {
       return -1;
     }
     size += read;

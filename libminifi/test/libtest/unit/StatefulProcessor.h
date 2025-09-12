@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 #include "core/ProcessorImpl.h"
-#include "core/StateManager.h"
+#include "minifi-cpp/core/StateManager.h"
 
 namespace org::apache::nifi::minifi::processors {
 

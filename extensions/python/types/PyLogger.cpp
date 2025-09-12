@@ -16,7 +16,7 @@
  */
 
 #include "PyLogger.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {

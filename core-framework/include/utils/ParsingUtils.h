@@ -16,12 +16,10 @@
  */
 #pragma once
 
-
-
 #include "ParsingErrors.h"
 #include "StringUtils.h"
 #include "TimeUtil.h"
-#include "Literals.h"
+#include "minifi-cpp/utils/Literals.h"
 #include "fmt/format.h"
 
 namespace org::apache::nifi::minifi::parsing {

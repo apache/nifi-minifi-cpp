@@ -18,7 +18,7 @@
 
 #include "core/PropertyDefinitionBuilder.h"
 #include "controllers/RecordSetWriter.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "core/ProcessSession.h"
 #include "utils/Enum.h"
 #include "rapidjson/document.h"

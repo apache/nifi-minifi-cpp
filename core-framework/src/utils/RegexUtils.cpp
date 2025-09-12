@@ -21,7 +21,7 @@
 #include <iostream>
 #include <vector>
 
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::utils {
 

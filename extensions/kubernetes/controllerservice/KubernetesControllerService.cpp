@@ -25,8 +25,8 @@ extern "C" {
 
 #include "core/Resource.h"
 #include "core/logging/LoggerFactory.h"
-#include "Exception.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/Exception.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {

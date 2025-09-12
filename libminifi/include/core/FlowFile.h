@@ -27,15 +27,13 @@
 #include <vector>
 
 #include "utils/TimeUtil.h"
-#include "ResourceClaim.h"
-#include "core/Connectable.h"
+#include "minifi-cpp/ResourceClaim.h"
+#include "core/Core.h"
 #include "WeakReference.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 #include "minifi-cpp/core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::core {
-
-class Connectable;
 
 class FlowFileImpl : public CoreComponentImpl, public ReferenceContainerImpl, public virtual FlowFile {
  public:

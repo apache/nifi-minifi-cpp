@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "../PythonBindings.h"
-#include "io/InputStream.h"
+#include "minifi-cpp/io/InputStream.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

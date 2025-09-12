@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "RocksDbStream.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
@@ -31,7 +31,7 @@
 #include "database/StringAppender.h"
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "utils/Locations.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 

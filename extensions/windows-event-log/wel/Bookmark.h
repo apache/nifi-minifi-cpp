@@ -24,9 +24,9 @@
 #include <memory>
 #include <type_traits>
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "utils/expected.h"
 #include "EventPath.h"
 #include "UniqueEvtHandle.h"

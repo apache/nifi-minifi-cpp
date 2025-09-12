@@ -27,7 +27,7 @@
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
 #include "utils/GeneralUtils.h"
-#include "properties/Configure.h"
+#include "minifi-cpp/properties/Configure.h"
 
 namespace org::apache::nifi::minifi::internal {
 

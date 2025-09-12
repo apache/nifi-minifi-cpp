@@ -28,21 +28,20 @@
 #include <string>
 
 #include "core/ConfigurableComponentImpl.h"
-#include "core/Connectable.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/Core.h"
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/DynamicProperty.h"
 #include "minifi-cpp/core/Scheduling.h"
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "minifi-cpp/core/ProcessorMetrics.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "minifi-cpp/core/ProcessorApi.h"
 #include "utils/PropertyErrors.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 #define ADD_GET_PROCESSOR_NAME \
   std::string getProcessorType() const override { \

@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "core/StateManager.h"
+#include "minifi-cpp/core/StateManager.h"
 #include "../PythonBindings.h"
 
 namespace org::apache::nifi::minifi::extensions::python {

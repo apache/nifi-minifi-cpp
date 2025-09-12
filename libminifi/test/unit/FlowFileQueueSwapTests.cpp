@@ -25,7 +25,7 @@
 #include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -102,7 +102,7 @@ struct FlowFileComparator {
 };
 
 struct VerifiedQueue {
-  void push(FlowFilePtr ff) {
+  void push(const FlowFilePtr& ff) {
     size();
     impl.push(ff);
     ref_.insert(std::lower_bound(ref_.begin(), ref_.end(), ff, FlowFileComparator{}), ff);
@@ -179,7 +179,7 @@ class SwapTestController : public TestController {
     queue_ = std::make_shared<VerifiedQueue>(std::static_pointer_cast<minifi::SwapManager>(flow_repo_));
   }
 
-  void setLimits(size_t min_size, size_t target_size, size_t max_size) {
+  void setLimits(size_t min_size, size_t target_size, size_t max_size) const {
     queue_->impl.setMinSize(min_size);
     queue_->impl.setTargetSize(target_size);
     queue_->impl.setMaxSize(max_size);
@@ -190,32 +190,32 @@ class SwapTestController : public TestController {
     std::initializer_list<unsigned > seconds;
   };
 
-  void verifySwapEvents(std::vector<SwapEventPattern> events) {
+  void verifySwapEvents(const std::vector<SwapEventPattern>& events) const {
     REQUIRE(flow_repo_->swap_events_.size() == events.size());
     size_t idx = 0;
-    for (auto& pattern : events) {
+    for (const auto& pattern : events) {
       REQUIRE(pattern.kind == flow_repo_->swap_events_[idx].kind);
       flow_repo_->swap_events_[idx].verifyTimes(pattern.seconds);
     }
   }
 
-  void clearSwapEvents() {
+  void clearSwapEvents() const {
     flow_repo_->swap_events_.clear();
   }
 
-  void verifyQueue(std::initializer_list<unsigned> live, std::optional<std::initializer_list<unsigned>> inter, std::initializer_list<unsigned> swapped) {
+  void verifyQueue(std::initializer_list<unsigned> live, std::optional<std::initializer_list<unsigned>> inter, std::initializer_list<unsigned> swapped) const {
     queue_->verify(live, inter, swapped);
   }
 
-  void pushAll(std::initializer_list<unsigned> seconds) {
+  void pushAll(std::initializer_list<unsigned> seconds) const {
     for (auto sec : seconds) {
       auto ff = std::static_pointer_cast<core::FlowFile>(std::make_shared<minifi::FlowFileRecordImpl>());
       ff->setPenaltyExpiration(Timepoint{std::chrono::seconds{sec}});
-      queue_->push(std::move(ff));
+      queue_->push(ff);
     }
   }
 
-  void popAll(std::initializer_list<unsigned> seconds, bool check_is_work_available = false) {
+  void popAll(std::initializer_list<unsigned> seconds, bool check_is_work_available = false) const {
     for (auto sec : seconds) {
       if (check_is_work_available) {
         REQUIRE(queue_->isWorkAvailable());

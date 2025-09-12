@@ -23,7 +23,7 @@
 #include <vector>
 #include <string>
 #include "BaseStream.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org {
 namespace apache {

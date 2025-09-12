@@ -27,8 +27,9 @@
 #include <vector>
 
 #include "core/Resource.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -485,7 +486,7 @@ void ListenHTTP::Handler::writeBody(core::ProcessSession* payload_reader, mg_con
 }
 
 bool ListenHTTP::isSecure() const {
-  return (listeningPort.length() > 0) && *listeningPort.rbegin() == 's';
+  return !listeningPort.empty() && *listeningPort.rbegin() == 's';
 }
 
 std::string ListenHTTP::getPort() const {

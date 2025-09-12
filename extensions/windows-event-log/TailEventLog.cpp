@@ -26,12 +26,12 @@
 #include <memory>
 
 #include "io/BufferStream.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 #include "utils/OsUtils.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {

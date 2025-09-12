@@ -18,7 +18,7 @@
 
 #include "core/state/nodes/BuildInformation.h"
 #include "core/Resource.h"
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "core/state/Value.h"
 
 namespace org::apache::nifi::minifi::state::response {

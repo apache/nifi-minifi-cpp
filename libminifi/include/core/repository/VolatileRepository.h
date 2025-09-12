@@ -28,10 +28,8 @@
 #include <cinttypes>
 
 #include "AtomicRepoEntries.h"
-#include "Connection.h"
 #include "core/Core.h"
 #include "core/ThreadedRepository.h"
-#include "core/SerializableComponent.h"
 #include "utils/StringUtils.h"
 #include "VolatileRepositoryData.h"
 

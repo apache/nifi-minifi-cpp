@@ -23,7 +23,7 @@
 #include <memory>
 #include <string>
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
 namespace org::apache::nifi::minifi::azure::processors {

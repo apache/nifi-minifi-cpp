@@ -26,16 +26,16 @@
 #include <map>
 #include <utility>
 
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "core/logging/LoggerFactory.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/Id.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 #include "core/FlowFileStore.h"
 
 namespace org::apache::nifi::minifi::processors {

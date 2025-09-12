@@ -26,7 +26,7 @@
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/ConfigurationChecksums.h"
 #include "core/state/nodes/AssetInformation.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
 #include "c2/C2Utils.h"

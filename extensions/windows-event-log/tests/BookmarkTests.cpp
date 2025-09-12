@@ -20,7 +20,7 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "wel/Bookmark.h"
 #include "wel/UniqueEvtHandle.h"
 #include "CWELTestUtils.h"

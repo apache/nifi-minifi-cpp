@@ -18,7 +18,7 @@
 #pragma once
 
 #include <string>
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors::textfragmentutils {
   constexpr const char* BASE_NAME_ATTRIBUTE = "TextFragmentAttribute.base_name";

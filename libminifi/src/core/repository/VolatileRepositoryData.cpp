@@ -16,8 +16,8 @@
  */
 #include "core/repository/VolatileRepositoryData.h"
 
-#include "core/Property.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/core/Property.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 

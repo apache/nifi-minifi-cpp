@@ -39,18 +39,20 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "utils/file/FileUtils.h"
 #include "core/Core.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/ProcessSessionFactory.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "core/Resource.h"
-#include "utils/gsl.h"
-#include "utils/PropertyExceptions.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/utils/PropertyExceptions.h"
 #include "unit/TestUtils.h"
 #include "io/BufferStream.h"
 #include "fmt/format.h"
 #include "processors/TailFile.h"
+#include "Connection.h"
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;

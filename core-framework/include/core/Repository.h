@@ -30,13 +30,13 @@
 #include <utility>
 #include <vector>
 
-#include "core/Connectable.h"
-#include "core/ContentRepository.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Connectable.h"
+#include "minifi-cpp/core/ContentRepository.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/RepositoryMetricsSource.h"
 #include "utils/BackTrace.h"
-#include "utils/Literals.h"
+#include "minifi-cpp/utils/Literals.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
 #include "core/Core.h"

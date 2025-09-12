@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 #ifndef WIN32
 #include <cxxabi.h>

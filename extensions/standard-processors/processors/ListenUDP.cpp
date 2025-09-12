@@ -16,7 +16,7 @@
  */
 #include "ListenUDP.h"
 
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 

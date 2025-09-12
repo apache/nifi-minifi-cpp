@@ -25,7 +25,7 @@
 
 #include "common/Value.h"
 #include "FlowFile.h"
-#include "core/VariableRegistry.h"
+#include "minifi-cpp/core/VariableRegistry.h"
 
 namespace org::apache::nifi::minifi::expression {
 

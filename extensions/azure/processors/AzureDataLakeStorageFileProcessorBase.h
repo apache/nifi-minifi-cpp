@@ -22,7 +22,7 @@
 #include <memory>
 
 #include "AzureDataLakeStorageProcessorBase.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/ArrayUtils.h"
 

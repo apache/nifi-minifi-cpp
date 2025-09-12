@@ -18,7 +18,7 @@
 
 #include "properties/Configure.h"
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/LoggerFactory.h"

@@ -21,7 +21,7 @@
 #include <cstdarg>
 
 #include "aws/core/utils/logging/LogLevel.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::aws::utils {
 

@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 
 #include "LuaScriptFlowFile.h"
 
@@ -56,20 +56,20 @@ bool LuaScriptFlowFile::setAttribute(const std::string& key, const std::string& 
   return flow_file_->setAttribute(key, value);
 }
 
-bool LuaScriptFlowFile::updateAttribute(std::string key, std::string value) {
+bool LuaScriptFlowFile::updateAttribute(std::string_view key, const std::string& value) {
   if (!flow_file_) {
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  return flow_file_->updateAttribute(std::move(key), std::move(value));
+  return flow_file_->updateAttribute(key, value);
 }
 
-bool LuaScriptFlowFile::removeAttribute(std::string key) {
+bool LuaScriptFlowFile::removeAttribute(std::string_view key) {
   if (!flow_file_) {
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  return flow_file_->removeAttribute(std::move(key));
+  return flow_file_->removeAttribute(key);
 }
 
 std::shared_ptr<core::FlowFile> LuaScriptFlowFile::getFlowFile() {

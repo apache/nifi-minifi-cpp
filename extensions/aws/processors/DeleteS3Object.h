@@ -23,7 +23,7 @@
 #include <string>
 #include <utility>
 
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "S3Processor.h"
 #include "utils/ArrayUtils.h"

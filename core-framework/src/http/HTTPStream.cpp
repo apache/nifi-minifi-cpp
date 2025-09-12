@@ -24,7 +24,7 @@
 
 #include "http/HTTPCallback.h"
 #include "io/validation.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::http {
 

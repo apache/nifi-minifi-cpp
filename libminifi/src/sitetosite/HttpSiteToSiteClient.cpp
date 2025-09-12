@@ -30,7 +30,7 @@
 #include "io/validation.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"

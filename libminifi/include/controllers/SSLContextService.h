@@ -35,7 +35,7 @@
 #include "openssl/pkcs12.h"
 #include "openssl/ssl.h"
 
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerFactory.h"
@@ -43,7 +43,7 @@
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/ConfigurationUtils.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 #include "utils/StringUtils.h"
 #include "utils/tls/CertificateUtils.h"
 #include "utils/tls/ExtendedKeyUsage.h"
