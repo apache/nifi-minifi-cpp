@@ -35,6 +35,8 @@ IntegrationBase::IntegrationBase(const std::optional<std::filesystem::path>& tes
       home_path_(home_path) {
   flow_config_path_.config_path = test_file_location;
   if (test_file_location && std::filesystem::exists(*test_file_location) && std::filesystem::is_regular_file(*test_file_location)) {
+    // The original configuration file is changed, because after the flow configuration is parsed, the sensitive values are encrypted, and the new configuration is written back to the file
+    // We create a temporary copy of the flow configuration file for the test harness to use, so that multiple tests using the same flow configuration can run in parallel
     flow_config_path_.temp_dir = std::make_unique<TempDirectory>();
     flow_config_path_.config_path = flow_config_path_.temp_dir->getPath() / "config.yml";
     std::filesystem::copy_file(*test_file_location, *flow_config_path_.config_path);
