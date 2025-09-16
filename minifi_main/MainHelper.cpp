@@ -18,11 +18,10 @@
 
 #include "MainHelper.h"
 
-#include "utils/Environment.h"
-#include "utils/StringUtils.h"
 #include "Defaults.h"
+#include "utils/Environment.h"
+#include "utils/Locations.h"
 #include "utils/file/FileUtils.h"
-
 
 namespace org::apache::nifi::minifi {
 bool validHome(const std::filesystem::path& home_path) {
@@ -134,10 +133,7 @@ Locations getFromFHS() {
 }
 
 std::optional<Locations> determineLocations(const std::shared_ptr<core::logging::Logger>& logger) {
-  const auto minifi_home_env = utils::Environment::getEnvironmentVariable(std::string(MINIFI_HOME_ENV_KEY).c_str());
-  const auto executable_path = utils::file::get_executable_path();
-
-  if (minifi_home_env == MINIFI_HOME_ENV_VALUE_FHS || (!minifi_home_env && executable_path.parent_path() == "/usr/bin")) {
+  if (utils::isFhsMode()) {
     return getFromFHS();
   }
 

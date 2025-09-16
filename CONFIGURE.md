@@ -80,7 +80,7 @@
 The `MINIFI_HOME` environment variable should point to the installation directory, if `MINIFI_HOME` is not defined, MiNiFi will try to infer it from binary's location.
 
 ### Filesystem Hierarchy Standard installation (from .rpm package)
-The `MINIFI_HOME` environment variable should be set to `FHS`. If `MINIFI_HOME` is not defined but the binary is in the `/usr/bin` directory it will try to run as an FHS application.
+The `MINIFI_INSTALLATION_TYPE` environment variable should be set to `FHS`. If `MINIFI_HOME` and `MINIFI_INSTALLATION_TYPE` are both undefined but the binary is in the `/usr/bin` directory it will try to run as an FHS application.
 
 
 ## Configuring
