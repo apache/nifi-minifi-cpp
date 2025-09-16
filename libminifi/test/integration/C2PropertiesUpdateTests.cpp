@@ -87,8 +87,10 @@ class C2HeartbeatHandler : public ServerAwareHandler {
 
 class VerifyPropertyUpdate : public HTTPIntegrationBase {
  public:
-  VerifyPropertyUpdate() :fn_{[]{}} {}
-  explicit VerifyPropertyUpdate(std::function<void()> fn) : fn_(std::move(fn)) {}
+  VerifyPropertyUpdate() : fn_{[]{}} {}
+  explicit VerifyPropertyUpdate(const std::filesystem::path& test_file_path, std::function<void()> fn)
+    : HTTPIntegrationBase(test_file_path),
+      fn_(std::move(fn)) {}
   VerifyPropertyUpdate(const VerifyPropertyUpdate&) = delete;
   VerifyPropertyUpdate(VerifyPropertyUpdate&&) = default;
   VerifyPropertyUpdate& operator=(const VerifyPropertyUpdate&) = delete;
@@ -160,7 +162,7 @@ TEST_CASE("C2PropertiesUpdateTests", "[c2test]") {
 
   // On msvc, the passed lambda can't capture a reference to the object under construction, so we need to late-init harness.
   VerifyPropertyUpdate harness;
-  harness = VerifyPropertyUpdate([&] {
+  harness = VerifyPropertyUpdate(home_dir / "conf/config.yml", [&] {
     REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&] {return ack_handler.isAcknowledged("79");}));
     REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&] {
       return ack_handler.getApplyCount("FULLY_APPLIED") == 1;
@@ -227,7 +229,7 @@ TEST_CASE("C2PropertiesUpdateTests", "[c2test]") {
     {"nifi.log.logger.org::apache::nifi::minifi::test::DummyClass1", "DEBUG,ostream", true}
   });
 
-  harness.run((home_dir / "conf/config.yml").string());
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -35,7 +35,7 @@ namespace org::apache::nifi::minifi::test {
 
 class HttpTestHarness : public HTTPIntegrationBase {
  public:
-  HttpTestHarness() {
+  explicit HttpTestHarness(const std::filesystem::path& test_file_location) : HTTPIntegrationBase(test_file_location) {
     dir_ = test_controller_.createTempDirectory();
   }
 
@@ -79,18 +79,18 @@ class HttpTestHarness : public HTTPIntegrationBase {
 };
 
 TEST_CASE("Test HTTP client POST request", "[httptest]") {
-  HttpTestHarness harness;
-  harness.setKeyDir(TEST_RESOURCES);
+  std::filesystem::path test_file_path;
   SECTION("Without chunked encoding") {
-    const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPPost.yml";
-    harness.run(test_file_path);
+    test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPPost.yml";
   }
 #ifndef __APPLE__
   SECTION("With chunked encoding") {
-    const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPPostChunkedEncoding.yml";
-    harness.run(test_file_path);
+    test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPPostChunkedEncoding.yml";
   }
 #endif
+  HttpTestHarness harness(test_file_path);
+  harness.setKeyDir(TEST_RESOURCES);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -62,8 +62,9 @@ class Responder : public ServerAwareHandler {
 
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
  public:
-  explicit SiteToSiteTestHarness(bool isSecure)
-      : isSecure(isSecure) {
+  explicit SiteToSiteTestHarness(const std::filesystem::path& test_file_path, bool isSecure)
+      : HTTPIntegrationBase(test_file_path),
+        isSecure(isSecure) {
     dir_ = test_controller_.createTempDirectory();
   }
 
@@ -104,12 +105,11 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 };
 
 TEST_CASE("Test site to site using REST", "[s2s]") {
-  SiteToSiteTestHarness harness(false);
+  SiteToSiteTestHarness harness(std::filesystem::path(TEST_RESOURCES) / "TestSite2SiteRest.yml", false);
   Responder responder(false);
   harness.setKeyDir(TEST_RESOURCES);
   harness.setUrl(parseUrl("http://localhost:8077/nifi-api/site-to-site"), &responder);
-  const auto test_file_location = std::filesystem::path(TEST_RESOURCES) / "TestSite2SiteRest.yml";
-  harness.run(test_file_location);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

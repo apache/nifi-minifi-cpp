@@ -105,7 +105,9 @@ REGISTER_RESOURCE(DummmyControllerUserProcessor, Processor);
 
 class VerifyC2ControllerUpdate : public VerifyC2Base {
  public:
-  explicit VerifyC2ControllerUpdate(const std::atomic_bool& flow_updated_successfully) : flow_updated_successfully_(flow_updated_successfully) {
+  explicit VerifyC2ControllerUpdate(const std::filesystem::path& test_file_location, const std::atomic_bool& flow_updated_successfully)
+      : VerifyC2Base(test_file_location),
+        flow_updated_successfully_(flow_updated_successfully) {
   }
 
   void testSetup() override {
@@ -177,13 +179,13 @@ class ControllerUpdateHandler: public HeartbeatHandler {
 
 TEST_CASE("C2ControllerEnableFailureTest", "[c2test]") {
   std::atomic_bool flow_updated_successfully{false};
-  VerifyC2ControllerUpdate harness(flow_updated_successfully);
   const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestC2InvalidController.yml";
+  VerifyC2ControllerUpdate harness(test_file_path, flow_updated_successfully);
   auto replacement_path = test_file_path.string();
   minifi::utils::string::replaceAll(replacement_path, "TestC2InvalidController", "TestC2ValidController");
   ControllerUpdateHandler handler(flow_updated_successfully, harness.getConfiguration(), replacement_path);
   harness.setUrl("https://localhost:0/api/heartbeat", &handler);
-  harness.run(test_file_path);
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -25,6 +25,7 @@ namespace org::apache::nifi::minifi::test {
 
 class VerifyHTTPGet : public VerifyInvokeHTTP {
  public:
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
   void runAssertions() override {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds(10),
@@ -35,6 +36,7 @@ class VerifyHTTPGet : public VerifyInvokeHTTP {
 
 class VerifyRetryHTTPGet : public VerifyInvokeHTTP {
  public:
+  using VerifyInvokeHTTP::VerifyInvokeHTTP;
   void runAssertions() override {
     REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds(10),
@@ -47,7 +49,6 @@ class VerifyRetryHTTPGet : public VerifyInvokeHTTP {
 
 TEST_CASE("Verify InvokeHTTP GET request", "[invokehttp]") {
   HttpGetResponder http_handler;
-  VerifyHTTPGet harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Insecure") {
@@ -57,12 +58,12 @@ TEST_CASE("Verify InvokeHTTP GET request", "[invokehttp]") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPGetSecure.yml";
     key_dir = TEST_RESOURCES;
   }
-  harness.run("http://localhost:0/", test_file_path.string(), key_dir, &http_handler);
+  VerifyHTTPGet harness(test_file_path);
+  harness.run("http://localhost:0/", key_dir, &http_handler);
 }
 
 TEST_CASE("Verify InvokeHTTP GET request with retry", "[invokehttp]") {
   RetryHttpGetResponder http_handler;
-  VerifyRetryHTTPGet harness;
   std::filesystem::path test_file_path;
   std::string key_dir;
   SECTION("Insecure") {
@@ -72,7 +73,8 @@ TEST_CASE("Verify InvokeHTTP GET request with retry", "[invokehttp]") {
     test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestHTTPGetSecure.yml";
     key_dir = TEST_RESOURCES;
   }
-  harness.run("http://localhost:0/", test_file_path.string(), key_dir, &http_handler);
+  VerifyRetryHTTPGet harness(test_file_path);
+  harness.run("http://localhost:0/", key_dir, &http_handler);
 }
 
 }  // namespace org::apache::nifi::minifi::test

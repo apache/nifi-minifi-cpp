@@ -58,6 +58,7 @@ class AlertHandler : public ServerAwareHandler {
 
 class VerifyAlerts : public HTTPIntegrationBase {
  public:
+  using HTTPIntegrationBase::HTTPIntegrationBase;
   void testSetup() override {}
 
   void runAssertions() override {
@@ -76,7 +77,7 @@ TEST_CASE("Alert system forwards logs") {
   std::ofstream(flow_config_file) << empty_flow;
 
   std::string agent_id = "test-agent-1";
-  VerifyAlerts harness;
+  VerifyAlerts harness(flow_config_file.string(), dir.getPath());
   AlertHandler handler(agent_id);
   harness.setUrl("http://localhost:0/api/alerts", &handler);
   harness.getConfiguration()->set(minifi::Configuration::nifi_c2_agent_identifier, agent_id);
@@ -140,7 +141,7 @@ TEST_CASE("Alert system forwards logs") {
     return true;
   };
 
-  harness.run(flow_config_file.string(), dir.getPath());
+  harness.run();
 }
 
 }  // namespace org::apache::nifi::minifi::test

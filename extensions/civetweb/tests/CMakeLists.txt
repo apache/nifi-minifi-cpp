@@ -33,15 +33,18 @@ FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
     target_link_libraries(${testfilename} Catch2WithMain)
     MATH(EXPR CIVETWEB-EXTENSIONS_TEST_COUNT "${CIVETWEB-EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
-    # Copy test resources
-    add_custom_command(
-        TARGET "${testfilename}"
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${CMAKE_SOURCE_DIR}/extensions/civetweb/tests/resources"
-                "$<TARGET_FILE_DIR:${testfilename}>/resources"
-        )
     set_tests_properties("${testfilename}" PROPERTIES LABELS "civetweb")
 ENDFOREACH()
+
+list(GET CIVETWEB_INTEGRATION_TESTS 0 firsttestfile)
+get_filename_component(firsttestfilename "${firsttestfile}" NAME_WE)
+# Copy test resources
+add_custom_command(
+    TARGET "${firsttestfilename}"
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/extensions/civetweb/tests/resources"
+            "$<TARGET_FILE_DIR:${firsttestfilename}>/resources"
+    )
 
 message("-- Finished building ${CIVETWEB-EXTENSIONS_TEST_COUNT} civetweb related test file(s)...")

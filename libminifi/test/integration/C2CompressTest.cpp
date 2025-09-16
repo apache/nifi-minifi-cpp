@@ -65,6 +65,7 @@ class CompressedHeartbeatHandler : public HeartbeatHandler {
 
 class VerifyCompressedHeartbeat : public VerifyC2Base {
  public:
+  using VerifyC2Base::VerifyC2Base;
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
