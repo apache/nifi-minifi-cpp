@@ -41,7 +41,7 @@ void SplitJson::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
 std::optional<jsoncons::json> SplitJson::queryArrayUsingJsonPath(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const {
   const auto json_string = to_string(session.readBuffer(flow_file));
   if (json_string.empty()) {
-    logger_->log_error("FlowFile content is empty, transferring to Failure relationship");
+    logger_->log_error("FlowFile content is empty, transferring to the 'failure' relationship");
     return std::nullopt;
   }
 
@@ -49,7 +49,7 @@ std::optional<jsoncons::json> SplitJson::queryArrayUsingJsonPath(core::ProcessSe
   try {
     json_object = jsoncons::json::parse(json_string);
   } catch (const jsoncons::json_exception& e) {
-    logger_->log_error("FlowFile content is not a valid JSON document, transferring to Failure relationship: {}", e.what());
+    logger_->log_error("FlowFile content is not a valid JSON document, transferring to the 'failure' relationship: {}", e.what());
     return std::nullopt;
   }
 
@@ -91,13 +91,13 @@ void SplitJson::onTrigger(core::ProcessContext& context, core::ProcessSession& s
 
   gsl_Assert(query_result->is_array());
   if (query_result->empty()) {
-    logger_->log_error("JSON Path expression '{}' did not match the input flow file content, transferring to Failure relationship", json_path_expression_);
+    logger_->log_error("JSON Path expression '{}' did not match the input flow file content, transferring to the 'failure' relationship", json_path_expression_);
     session.transfer(flow_file, Failure);
     return;
   }
 
   if (query_result->size() == 1 && !query_result.value()[0].is_array()) {
-    logger_->log_error("JSON Path expression '{}' did not return an array, transferring to Failure relationship", json_path_expression_);
+    logger_->log_error("JSON Path expression '{}' did not return an array, transferring to the 'failure' relationship", json_path_expression_);
     session.transfer(flow_file, Failure);
     return;
   }

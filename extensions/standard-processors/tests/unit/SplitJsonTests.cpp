@@ -70,12 +70,12 @@ TEST_CASE_METHOD(SplitJsonTestFixture, "Query fails with parsing issues", "[Spli
   REQUIRE(controller_.plan->setProperty(split_json_processor_, processors::SplitJson::JsonPathExpression, "invalid json path"));
   SECTION("Flow file content is empty") {
     result = controller_.trigger({{.content = ""}});
-    error_log = "FlowFile content is empty, transferring to Failure relationship";
+    error_log = "FlowFile content is empty, transferring to the 'failure' relationship";
   }
 
   SECTION("Flow file content is invalid json") {
     result = controller_.trigger({{.content = "invalid json"}});
-    error_log = "FlowFile content is not a valid JSON document, transferring to Failure relationship";
+    error_log = "FlowFile content is not a valid JSON document, transferring to the 'failure' relationship";
   }
 
   SECTION("Json Path expression is invalid") {
@@ -106,7 +106,7 @@ TEST_CASE_METHOD(SplitJsonTestFixture, "Query does not match input JSON content"
   CHECK(result.at(processors::SplitJson::Original).empty());
   CHECK(result.at(processors::SplitJson::Split).empty());
   CHECK(result.at(processors::SplitJson::Failure).size() == 1);
-  CHECK(utils::verifyLogLinePresenceInPollTime(1s, "JSON Path expression '$.email' did not match the input flow file content, transferring to Failure relationship"));
+  CHECK(utils::verifyLogLinePresenceInPollTime(1s, "JSON Path expression '$.email' did not match the input flow file content, transferring to the 'failure' relationship"));
 }
 
 TEST_CASE_METHOD(SplitJsonTestFixture, "Query returns non-array result", "[SplitJsonTests]") {
@@ -117,7 +117,7 @@ TEST_CASE_METHOD(SplitJsonTestFixture, "Query returns non-array result", "[Split
   CHECK(result.at(processors::SplitJson::Original).empty());
   CHECK(result.at(processors::SplitJson::Split).empty());
   CHECK(result.at(processors::SplitJson::Failure).size() == 1);
-  CHECK(utils::verifyLogLinePresenceInPollTime(1s, "JSON Path expression '$.name' did not return an array, transferring to Failure relationship"));
+  CHECK(utils::verifyLogLinePresenceInPollTime(1s, "JSON Path expression '$.name' did not return an array, transferring to the 'failure' relationship"));
 }
 
 TEST_CASE_METHOD(SplitJsonTestFixture, "Query returns a single array of scalars", "[SplitJsonTests]") {
