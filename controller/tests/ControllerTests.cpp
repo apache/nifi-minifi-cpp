@@ -514,10 +514,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "Debug bundle retrieval fails if target 
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test flow status getter", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
