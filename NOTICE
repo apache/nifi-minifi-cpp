@@ -78,6 +78,7 @@ This software includes third party software subject to the following copyrights:
 - benchmark - Copyright 2015 Google Inc.
 - llama.cpp - Copyright (c) 2023-2024 The ggml authors
 - pugixml - Copyright (C) 2003, by Kristen Wegner (kristen@tima.net)
+- jsoncons - Copyright Daniel Parker 2013 - 2020.
 
 The licenses for these third party components are included in LICENSE.txt
 
