@@ -3,7 +3,7 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE} AS build
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
-ENV MINIFI_BASE_DIR /opt/minifi
+ENV MINIFI_BASE_DIR=/opt/minifi
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN mkdir -p $MINIFI_BASE_DIR
