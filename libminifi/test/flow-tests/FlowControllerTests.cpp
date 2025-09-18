@@ -24,8 +24,6 @@
 #include "core/Core.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "core/RepositoryFactory.h"
-#include "FlowFileRecord.h"
-#include "provenance/Provenance.h"
 #include "properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/TestBase.h"
@@ -92,7 +90,7 @@ Controller Services:
 )";
 
 template<typename Fn>
-bool verifyWithBusyWait(std::chrono::milliseconds timeout, Fn&& fn) {
+bool verifyWithBusyWait(std::chrono::milliseconds timeout, const Fn& fn) {
   auto start = std::chrono::steady_clock::now();
   while (std::chrono::steady_clock::now() - start < timeout) {
     if (fn()) {

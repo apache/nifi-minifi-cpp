@@ -24,7 +24,7 @@
 #include "utils/net/AsioSocketUtils.h"
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 using GetTCP = org::apache::nifi::minifi::processors::GetTCP;
 

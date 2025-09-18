@@ -25,7 +25,7 @@
 #include <mutex>
 #include <atomic>
 #include "core/Core.h"
-#include "core/StreamManager.h"
+#include "minifi-cpp/core/StreamManager.h"
 #include "properties/Configure.h"
 #include "utils/Id.h"
 

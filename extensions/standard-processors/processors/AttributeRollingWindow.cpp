@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <numeric>
 #include "fmt/format.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/expected.h"
@@ -113,7 +113,7 @@ void AttributeRollingWindow::calculateAndSetAttributes(core::FlowFile &flow_file
   }());
   // https://math.stackexchange.com/questions/1720876/sums-of-squares-minus-square-of-sums
   const auto avg_of_squares = std::accumulate(std::begin(sorted_values), std::end(sorted_values), 0.0, [&](double acc, double value) {
-    return acc + std::pow(value, 2) / gsl::narrow_cast<double>(sorted_values.size());
+    return acc + (std::pow(value, 2) / gsl::narrow_cast<double>(sorted_values.size()));
   });
   const auto variance = avg_of_squares - std::pow(mean, 2);
   set_aggregate("variance", variance);

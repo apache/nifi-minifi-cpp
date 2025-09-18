@@ -22,7 +22,7 @@
 #include "core/Core.h"
 #include "core/ConfigurableComponentImpl.h"
 #include "core/controller/ControllerService.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Resource.h"
 #include "core/state/nodes/AgentInformation.h"

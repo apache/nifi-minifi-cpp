@@ -17,7 +17,7 @@
 #include "MultipartUploadStateStorage.h"
 
 #include "utils/StringUtils.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 

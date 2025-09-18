@@ -16,7 +16,7 @@
  */
 #include "KafkaProcessorBase.h"
 
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "rdkafka_utils.h"
 #include "utils/ProcessorConfigUtils.h"
 

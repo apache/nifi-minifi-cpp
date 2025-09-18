@@ -20,6 +20,7 @@
 #include "ReplaceText.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
+#include "FlowFileRecord.h"
 
 namespace org::apache::nifi::minifi::processors {
 

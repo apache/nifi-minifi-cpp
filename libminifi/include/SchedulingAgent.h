@@ -38,12 +38,10 @@
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "properties/Configure.h"
-#include "FlowFileRecord.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/Processor.h"
-#include "core/ProcessContext.h"
-#include "core/controller/ControllerServiceProvider.h"
-#include "core/controller/ControllerServiceNode.h"
+#include "minifi-cpp/core/ProcessContext.h"
+#include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 
 constexpr std::chrono::milliseconds SCHEDULING_WATCHDOG_CHECK_PERIOD = std::chrono::seconds(1);
 constexpr std::chrono::milliseconds SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD = std::chrono::seconds(5);

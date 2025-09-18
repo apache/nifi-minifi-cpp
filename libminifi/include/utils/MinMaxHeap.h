@@ -22,7 +22,7 @@
 #include <cmath>
 #include <utility>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 struct MinMaxHeapTestAccessor;
 

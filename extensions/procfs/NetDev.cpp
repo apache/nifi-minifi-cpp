@@ -16,7 +16,7 @@
  */
 
 #include "NetDev.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 using namespace std::literals::chrono_literals;
 

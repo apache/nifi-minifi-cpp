@@ -22,7 +22,7 @@
 
 #include "core/logging/internal/CompressionManager.h"
 #include "core/logging/internal/LogCompressorSink.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerProperties.h"
 #include "core/TypedValues.h"
 #include "core/Core.h"
@@ -34,7 +34,7 @@ std::shared_ptr<LogCompressorSink> CompressionManager::initialize(
   const auto get_size = [&] (const char* const property_name) -> std::optional<size_t> {
     auto size_str = properties->getString(property_name);
     if (!size_str) return {};
-    size_t value;
+    size_t value = 0;
     if (DataSizeValue::StringToInt(*size_str, value)) {
       return value;
     }

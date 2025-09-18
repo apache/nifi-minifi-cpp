@@ -34,7 +34,6 @@
 #endif
 
 #include "core/extension/DynamicLibrary.h"
-#include "core/extension/Extension.h"
 #include "utils/GeneralUtils.h"
 #include "core/logging/LoggerFactory.h"
 

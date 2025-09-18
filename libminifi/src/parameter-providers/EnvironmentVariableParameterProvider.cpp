@@ -17,7 +17,7 @@
 #include "parameter-providers/EnvironmentVariableParameterProvider.h"
 #include "core/Resource.h"
 #include "utils/Environment.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "range/v3/view/filter.hpp"
 #include "utils/RegexUtils.h"
 

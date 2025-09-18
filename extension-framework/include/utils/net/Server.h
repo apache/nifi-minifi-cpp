@@ -23,7 +23,7 @@
 
 #include "utils/Enum.h"
 #include "utils/MinifiConcurrentQueue.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "asio/ts/buffer.hpp"
 #include "asio/awaitable.hpp"
 #include "asio/co_spawn.hpp"

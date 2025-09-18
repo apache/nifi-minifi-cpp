@@ -25,7 +25,7 @@
 #include "asio/ssl/context.hpp"
 #include "asio/ssl/stream.hpp"
 #include "asio/connect.hpp"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/net/AsioSocketUtils.h"
 #include "utils/file/FileUtils.h"

@@ -52,7 +52,7 @@ class SingleProcessorTestController : public TestController {
   }
 
   ProcessorTriggerResult trigger();
-  ProcessorTriggerResult trigger(InputFlowFileData&& input_flow_file_data);
+  ProcessorTriggerResult trigger(InputFlowFileData input_flow_file_data);
   ProcessorTriggerResult trigger(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {});
   ProcessorTriggerResult trigger(std::vector<InputFlowFileData>&& input_flow_file_datas);
   bool triggerUntil(const std::unordered_map<core::Relationship, size_t>& expected_quantities,
@@ -70,7 +70,7 @@ class SingleProcessorTestController : public TestController {
   std::shared_ptr<TestPlan> plan = createPlan();
 
  private:
-  std::shared_ptr<core::FlowFile> createFlowFile(const std::string_view content, std::unordered_map<std::string, std::string> attributes);
+  std::shared_ptr<core::FlowFile> createFlowFile(const std::string_view content, std::unordered_map<std::string, std::string> attributes) const;
 
   core::Processor* processor_ = nullptr;
   std::unordered_map<core::Relationship, Connection*> outgoing_connections_;

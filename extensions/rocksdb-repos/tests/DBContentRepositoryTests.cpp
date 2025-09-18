@@ -21,14 +21,14 @@
 
 #include "core/Core.h"
 #include "DatabaseContentRepository.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "properties/Configure.h"
-#include "provenance/Provenance.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/ContentRepositoryDependentTests.h"
 #include "unit/TestUtils.h"
+#include "ResourceClaim.h"
 
 class TestDatabaseContentRepository : public core::repository::DatabaseContentRepository {
  public:

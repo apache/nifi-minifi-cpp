@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "processors/SplitText.h"
@@ -81,7 +81,7 @@ TEST_CASE("Test LineReader with input larger than buffer length") {
 
 TEST_CASE("Test LineReader with input of same size as buffer length") {
   auto stream = std::make_shared<io::BufferStream>();
-  std::string input = std::string(BUFFER_SIZE - 1, 'a') + "\n" + std::string(BUFFER_SIZE * 2 - 1, 'b') + "\n";
+  std::string input = std::string(BUFFER_SIZE - 1, 'a') + "\n" + std::string((BUFFER_SIZE * 2) - 1, 'b') + "\n";
   stream->write(reinterpret_cast<const uint8_t*>(input.data()), input.size());
   processors::detail::LineReader reader{stream, BUFFER_SIZE};
   CHECK(reader.readNextLine() == processors::detail::LineReader::LineInfo{.offset = 0, .size = BUFFER_SIZE, .endline_size = 1});

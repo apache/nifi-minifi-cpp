@@ -18,8 +18,8 @@
 
 #include "serialization/FlowFileV3Serializer.h"
 #include "io/StreamPipe.h"
-#include "utils/gsl.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/core/FlowFile.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -84,7 +84,7 @@ int64_t FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& f
     }
   }
   {
-    const auto ret = out->write(static_cast<uint64_t>(flowFile->getSize()));
+    const auto ret = out->write(flowFile->getSize());
     if (io::isError(ret)) return -1;
     sum += ret;
   }

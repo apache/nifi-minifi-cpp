@@ -24,9 +24,9 @@
 #include <string>
 #include <ctime>
 
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "data/DatabaseConnectors.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::sql {
 

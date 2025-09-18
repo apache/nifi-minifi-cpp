@@ -29,13 +29,13 @@
 
 #include <memory>
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "SmartArchivePtrs.h"
 #include "utils/ConfigurationUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace {
 inline constexpr auto BUFFER_SIZE = org::apache::nifi::minifi::utils::configuration::DEFAULT_BUFFER_SIZE;
@@ -68,7 +68,6 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext& context, core::ProcessSe
 
   // For each extracted entry, import & stash to key
   std::string targetEntryStashKey;
-  std::string targetEntry;
 
   for (auto &entryMetadata : archiveMetadata.entryMetadata) {
     if (entryMetadata.entryType == AE_IFREG) {

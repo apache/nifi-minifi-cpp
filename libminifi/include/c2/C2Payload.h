@@ -27,7 +27,7 @@
 #include "core/state/Value.h"
 #include "core/state/UpdateController.h"
 #include "utils/Enum.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/span.h"
 #include "rapidjson/document.h"
 

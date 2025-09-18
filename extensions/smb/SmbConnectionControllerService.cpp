@@ -20,6 +20,7 @@
 #include "core/Resource.h"
 #include "utils/OsUtils.h"
 #include "utils/expected.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::extensions::smb {
 

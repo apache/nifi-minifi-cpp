@@ -26,7 +26,7 @@
 #include <utility>
 #include "nonstd/expected.hpp"
 #include "utils/StringUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 

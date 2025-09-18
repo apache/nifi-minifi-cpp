@@ -19,7 +19,7 @@
 #include "AWSCredentialsProvider.h"
 
 #include "aws/core/auth/AWSCredentialsProviderChain.h"
-#include "properties/Properties.h"
+#include "minifi-cpp/properties/Properties.h"
 
 namespace org::apache::nifi::minifi::aws {
 

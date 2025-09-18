@@ -22,7 +22,7 @@
 #include "protocols/RESTSender.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "integration/HTTPHandlers.h"
-#include "io/ArchiveStream.h"
+#include "minifi-cpp/io/ArchiveStream.h"
 #include "unit/EmptyFlow.h"
 #include "properties/Configuration.h"
 #include "unit/Catch.h"

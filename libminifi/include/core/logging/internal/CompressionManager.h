@@ -26,11 +26,11 @@
 #include <string>
 #include <vector>
 
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "LogCompressorSink.h"
 #include "core/logging/LoggerProperties.h"
-#include "io/InputStream.h"
-#include "utils/Literals.h"
+#include "minifi-cpp/io/InputStream.h"
+#include "minifi-cpp/utils/Literals.h"
 
 class LoggerTestAccessor;
 

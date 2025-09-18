@@ -24,17 +24,17 @@
 
 #include "opc.h"
 #include "opcbase.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "core/ProcessSession.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Id.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "minifi-cpp/core/StateManager.h"
 
 namespace org::apache::nifi::minifi::processors {

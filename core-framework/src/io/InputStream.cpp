@@ -19,7 +19,7 @@
 #include <vector>
 #include <string>
 #include "io/InputStream.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::io {
 

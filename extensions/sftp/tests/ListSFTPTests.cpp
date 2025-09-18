@@ -39,7 +39,7 @@
 #include "unit/Catch.h"
 #include "utils/file/FileUtils.h"
 #include "core/Core.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
 #include "properties/Configure.h"

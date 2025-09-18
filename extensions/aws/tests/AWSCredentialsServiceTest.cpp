@@ -23,7 +23,7 @@
 #include "unit/Catch.h"
 #include "controllerservices/AWSCredentialsService.h"
 #include "unit/TestUtils.h"
-#include "core/controller/ControllerServiceNode.h"
+#include "minifi-cpp/core/controller/ControllerServiceNode.h"
 
 class AWSCredentialsServiceTestAccessor {
  public:

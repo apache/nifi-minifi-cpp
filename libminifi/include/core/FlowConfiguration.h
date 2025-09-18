@@ -26,16 +26,15 @@
 #include <filesystem>
 
 #include "core/Core.h"
-#include "Connection.h"
+#include "minifi-cpp/Connection.h"
 #include "RemoteProcessorGroupPort.h"
-#include "core/controller/ControllerServiceNode.h"
+#include "minifi-cpp/core/controller/ControllerServiceNode.h"
 #include "core/controller/StandardControllerServiceProvider.h"
-#include "provenance/Provenance.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 
 #include "core/Processor.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessGroup.h"
 #include "core/state/nodes/FlowInformation.h"

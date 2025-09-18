@@ -24,7 +24,7 @@
 #include "unit/Catch.h"
 #include "ConsumeJournald.h"
 #include "libwrapper/LibWrapper.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "unit/TestUtils.h"
 
@@ -90,7 +90,7 @@ struct TestJournal final : libwrapper::Journal {
   }
 
   int getCursor(gsl::owner<char*>* const cursor_out) noexcept override {
-    *cursor_out = gsl::owner<char*>(strdup(std::to_string(consumed).c_str()));
+    *cursor_out = gsl::owner<char*>(strdup(std::to_string(consumed).c_str()));  // NOLINT(readability-redundant-casting)
     return *cursor_out ? 0 : -ENOMEM;
   }
 

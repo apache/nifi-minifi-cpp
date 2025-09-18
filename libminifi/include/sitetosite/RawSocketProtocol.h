@@ -33,10 +33,9 @@
 #include <vector>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/Property.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/core/Property.h"
 #include "io/CRCStream.h"
 #include "Peer.h"
 #include "properties/Configure.h"

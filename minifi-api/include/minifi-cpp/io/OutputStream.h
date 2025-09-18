@@ -22,7 +22,7 @@
 #include <vector>
 #include <string>
 #include "Stream.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/SmallString.h"
 #include "utils/Id.h"
 

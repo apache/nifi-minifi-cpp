@@ -27,9 +27,9 @@
 
 #include "azure/storage/blobs/blob_responses.hpp"
 #include "AzureStorageCredentials.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/Enum.h"
-#include "io/InputStream.h"
+#include "minifi-cpp/io/InputStream.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 

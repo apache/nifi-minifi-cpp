@@ -24,7 +24,7 @@
 
 #include "yaml-cpp/yaml.h"
 #include "core/flow/Node.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 
 namespace org::apache::nifi::minifi::core {

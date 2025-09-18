@@ -25,15 +25,14 @@
 #include "core/Core.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "core/RepositoryFactory.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "FlowFileRepository.h"
 #include "ProvenanceRepository.h"
-#include "provenance/Provenance.h"
 #include "properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "unit/TestUtils.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "core/repository/VolatileProvenanceRepository.h"
@@ -41,6 +40,9 @@
 #include "catch2/generators/catch_generators.hpp"
 #include "core/repository/FileSystemRepository.h"
 #include "core/Processor.h"
+#include "Connection.h"
+#include "core/ProcessContext.h"
+#include "ResourceClaim.h"
 
 using namespace std::literals::chrono_literals;
 

@@ -32,7 +32,7 @@
 #include "properties/Configuration.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/StringUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/net/AsioSocketUtils.h"
 
 namespace org::apache::nifi::minifi::c2 {

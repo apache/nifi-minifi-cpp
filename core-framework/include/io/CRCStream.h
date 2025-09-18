@@ -34,7 +34,7 @@
 #endif
 #include "InputStream.h"
 #include "OutputStream.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::io {
 namespace internal {

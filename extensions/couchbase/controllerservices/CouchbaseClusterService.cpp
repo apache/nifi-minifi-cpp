@@ -23,6 +23,7 @@
 #include "couchbase/codec/raw_json_transcoder.hxx"
 #include "couchbase/codec/raw_string_transcoder.hxx"
 #include "utils/TimeUtil.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::couchbase {
 

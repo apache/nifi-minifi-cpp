@@ -20,7 +20,7 @@
 #include <algorithm>
 
 #include "prometheus/client_metric.h"
-#include "core/state/PublishedMetricProvider.h"
+#include "minifi-cpp/core/state/PublishedMetricProvider.h"
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/transform.hpp"
 

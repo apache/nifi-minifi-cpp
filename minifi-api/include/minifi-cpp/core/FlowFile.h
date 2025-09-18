@@ -27,13 +27,11 @@
 #include <vector>
 
 #include "minifi-cpp/ResourceClaim.h"
-#include "Connectable.h"
+#include "minifi-cpp/core/Connectable.h"
 #include "WeakReference.h"
 #include "minifi-cpp/utils/FlatMap.h"
 
 namespace org::apache::nifi::minifi::core {
-
-class Connectable;
 
 class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer {
  public:

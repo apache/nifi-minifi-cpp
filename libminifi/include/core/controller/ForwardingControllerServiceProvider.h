@@ -23,7 +23,7 @@
 #include <string>
 
 #include "ControllerServiceProvider.h"
-#include "ControllerServiceNode.h"
+#include "minifi-cpp/core/controller/ControllerServiceNode.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 

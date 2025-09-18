@@ -16,14 +16,12 @@
  */
 #pragma once
 
-
-#include "core/controller/ControllerService.h"
-
+#include "minifi-cpp/core/controller/ControllerService.h"
+#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/Record.h"
 #include "utils/Enum.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "minifi-cpp/io/InputStream.h"
-
 
 namespace org::apache::nifi::minifi::core {
 

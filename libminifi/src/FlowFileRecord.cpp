@@ -30,8 +30,9 @@
 #include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Relationship.h"
-#include "core/Repository.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/core/Repository.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "ResourceClaim.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -177,7 +178,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecordImpl::DeSerialize(io::InputStream&
   auto file = std::make_shared<FlowFileRecordImpl>();
 
   {
-    uint64_t event_time_in_ms;
+    uint64_t event_time_in_ms = 0;
     const auto ret = inStream.read(event_time_in_ms);
     if (ret != 8) {
       return {};
@@ -186,7 +187,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecordImpl::DeSerialize(io::InputStream&
   }
 
   {
-    uint64_t entry_date_in_ms;
+    uint64_t entry_date_in_ms = 0;
     const auto ret = inStream.read(entry_date_in_ms);
     if (ret != 8) {
       return {};
@@ -195,7 +196,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecordImpl::DeSerialize(io::InputStream&
   }
 
   {
-    uint64_t lineage_start_date_in_ms;
+    uint64_t lineage_start_date_in_ms = 0;
     const auto ret = inStream.read(lineage_start_date_in_ms);
     if (ret != 8) {
       return {};

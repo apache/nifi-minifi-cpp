@@ -20,7 +20,7 @@
 #include <cstring>
 #include <string>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::utils::tls {

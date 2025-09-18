@@ -22,7 +22,7 @@
 #include <optional>
 
 #include "core/Core.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::core {
 

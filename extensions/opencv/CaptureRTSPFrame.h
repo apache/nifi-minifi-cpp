@@ -29,8 +29,8 @@
 #include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "io/StreamPipe.h"
-#include "utils/gsl.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 

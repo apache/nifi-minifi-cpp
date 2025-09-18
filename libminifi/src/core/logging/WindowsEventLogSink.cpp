@@ -23,7 +23,7 @@
 #include <string>
 
 #include "core/logging/WindowsMessageTextFile.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "spdlog/common.h"
 #include "spdlog/sinks/sink.h"
 #include "spdlog/details/log_msg.h"

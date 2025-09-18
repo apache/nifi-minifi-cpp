@@ -26,8 +26,8 @@
 
 #include "AzureStorageCredentials.h"
 
-#include "utils/gsl.h"
-#include "io/InputStream.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/io/InputStream.h"
 #include "azure/storage/files/datalake/datalake_responses.hpp"
 #include "utils/Enum.h"
 #include "utils/RegexUtils.h"

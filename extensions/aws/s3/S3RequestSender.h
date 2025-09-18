@@ -47,7 +47,7 @@
 #include "aws/s3/model/ListMultipartUploadsResult.h"
 #include "aws/s3/model/AbortMultipartUploadRequest.h"
 #include "aws/s3/model/AbortMultipartUploadResult.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/AWSInitializer.h"
 

@@ -22,7 +22,7 @@
 #include <utility>
 #include <string>
 
-#include "io/ArchiveStream.h"
+#include "minifi-cpp/io/ArchiveStream.h"
 #include "archive_entry.h"
 #include "archive.h"
 #include "SmartArchivePtrs.h"

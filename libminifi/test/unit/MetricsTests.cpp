@@ -30,6 +30,7 @@
 #include "unit/SingleProcessorTestController.h"
 #include "core/ProcessorMetrics.h"
 #include "unit/TestUtils.h"
+#include "Connection.h"
 
 using namespace std::literals::chrono_literals;
 

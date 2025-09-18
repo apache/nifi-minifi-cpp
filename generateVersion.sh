@@ -58,7 +58,7 @@ cat >"$out_dir/agent_version.cpp" <<EOF
 
 #include <string>
 #include <vector>
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 
 namespace org {
 namespace apache {

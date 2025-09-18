@@ -28,7 +28,7 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/ResourceClaim.h"
 #include "StreamManager.h"
-#include "ContentSession.h"
+#include "minifi-cpp/core/ContentSession.h"
 #include "minifi-cpp/core/RepositoryMetricsSource.h"
 #include "core/Core.h"
 #include "utils/GeneralUtils.h"

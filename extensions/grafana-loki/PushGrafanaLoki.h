@@ -21,13 +21,13 @@
 #include <vector>
 #include <map>
 
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "core/ProcessorImpl.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
-#include "core/StateManager.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
+#include "minifi-cpp/core/StateManager.h"
 #include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::grafana::loki {

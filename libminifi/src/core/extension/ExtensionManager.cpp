@@ -23,7 +23,7 @@
 #include "core/extension/Executable.h"
 #include "utils/file/FilePattern.h"
 #include "core/extension/DynamicLibrary.h"
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "core/extension/Utils.h"
 #include "properties/Configuration.h"
 #include "utils/Locations.h"

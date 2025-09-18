@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "core/StreamManager.h"
 #include "utils/Id.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/ContentRepository.h"
@@ -65,7 +64,7 @@ ResourceClaimImpl::~ResourceClaimImpl() {
 }
 
 std::shared_ptr<ResourceClaim> ResourceClaim::create(std::shared_ptr<core::ContentRepository> repository) {
-  return std::make_shared<ResourceClaimImpl>(repository);
+  return std::make_shared<ResourceClaimImpl>(std::move(repository));
 }
 
 }  // namespace org::apache::nifi::minifi

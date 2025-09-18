@@ -20,7 +20,7 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "properties/Configure.h"
 #include "core/extension/Module.h"
 

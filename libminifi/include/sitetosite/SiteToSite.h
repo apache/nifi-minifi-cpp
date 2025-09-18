@@ -23,12 +23,12 @@
 
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "Peer.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "properties/Configure.h"
 #include "io/CRCStream.h"
 #include "utils/Id.h"
 #include "http/BaseHTTPClient.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
 #if defined(__GNUC__) || defined(__GNUG__)

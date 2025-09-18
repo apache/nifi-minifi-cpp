@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "minifi-cpp/core/Core.h"
-#include "ControllerServiceLookup.h"
+#include "minifi-cpp/core/controller/ControllerServiceLookup.h"
 #include "minifi-cpp/core/ConfigurableComponent.h"
 #include "ControllerServiceNode.h"
 

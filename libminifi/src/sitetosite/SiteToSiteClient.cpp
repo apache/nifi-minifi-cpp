@@ -21,8 +21,9 @@
 #include <string>
 #include <memory>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/Enum.h"
+#include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
 
@@ -482,13 +483,13 @@ int16_t SiteToSiteClient::send(const utils::Identifier& transactionID, DataPacke
         return -2;
       }
     }
-    if (packet->payload_.length() == 0 && len == 0) {
+    if (packet->payload_.empty() && len == 0) {
       if (flowFile->getResourceClaim() == nullptr)
         logger_->log_trace("no claim");
       else
         logger_->log_trace("Flowfile empty {}", flowFile->getResourceClaim()->getContentFullPath());
     }
-  } else if (packet->payload_.length() > 0) {
+  } else if (!packet->payload_.empty()) {
     len = packet->payload_.length();
     {
       const auto ret = transaction->getStream().write(len);

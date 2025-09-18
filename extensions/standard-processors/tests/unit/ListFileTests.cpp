@@ -21,7 +21,7 @@
 #include "unit/TestBase.h"
 #include "unit/SingleProcessorTestController.h"
 #include "unit/Catch.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/Processor.h"
 #include "processors/LogAttribute.h"
 #include "processors/ListFile.h"

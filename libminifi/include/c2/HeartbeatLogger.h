@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "HeartbeatReporter.h"
 #include "c2/protocols/RESTProtocol.h"
 

@@ -24,21 +24,21 @@
 #include <vector>
 #include <atomic>
 #include <asio/io_context.hpp>
-#include "utils/Literals.h"
+#include "minifi-cpp/utils/Literals.h"
 
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/Core.h"
 #include "concurrentqueue.h"
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerFactory.h"
-#include "controllers/SSLContextServiceInterface.h"
-#include "utils/gsl.h"
-#include "utils/Export.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/utils/Export.h"
 #include "utils/net/AsioSocketUtils.h"
 #include "utils/net/Message.h"
 

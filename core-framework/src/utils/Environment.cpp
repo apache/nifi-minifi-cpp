@@ -29,7 +29,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #ifdef WIN32
 #include "utils/UnicodeConversion.h"
 #endif

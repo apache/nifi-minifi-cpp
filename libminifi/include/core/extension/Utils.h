@@ -26,7 +26,7 @@
 #include <string>
 #include <utility>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"

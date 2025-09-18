@@ -18,16 +18,10 @@
 #include "LibWrapper.h"
 #include "DlopenWrapper.h"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd { namespace libwrapper {
+namespace org::apache::nifi::minifi::extensions::systemd::libwrapper {
 
 std::unique_ptr<LibWrapper> createLibWrapper() {
   return std::make_unique<DlopenWrapper>();
 }
 
-}  // namespace libwrapper
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd::libwrapper

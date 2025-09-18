@@ -19,7 +19,7 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 TEST_CASE("Test general exception .what()", "[testi general what]") {
   auto ex = minifi::Exception(minifi::GENERAL_EXCEPTION, "Test exception message");

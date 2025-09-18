@@ -24,7 +24,7 @@
 #include <optional>
 
 #include "ParameterContext.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "utils/crypto/EncryptionProvider.h"
 
 namespace org::apache::nifi::minifi::core {

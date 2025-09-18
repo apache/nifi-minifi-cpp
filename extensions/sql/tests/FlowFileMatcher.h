@@ -27,7 +27,7 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 
 struct AttributeValue {
   explicit AttributeValue(std::string value)

@@ -37,7 +37,7 @@
 #include "minifi-cpp/SwapManager.h"
 #include "FlowFileLoader.h"
 #include "range/v3/algorithm/all_of.hpp"
-#include "utils/Literals.h"
+#include "minifi-cpp/utils/Literals.h"
 #include "utils/StoppableThread.h"
 #include "RocksDbRepository.h"
 

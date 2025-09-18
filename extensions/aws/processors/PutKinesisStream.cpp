@@ -24,7 +24,7 @@
 
 #include "aws/kinesis/KinesisClient.h"
 #include "aws/kinesis/model/PutRecordsRequest.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "range/v3/algorithm/for_each.hpp"

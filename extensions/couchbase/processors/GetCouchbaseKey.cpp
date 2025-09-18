@@ -18,7 +18,7 @@
 
 #include "GetCouchbaseKey.h"
 #include "CouchbaseClusterService.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 

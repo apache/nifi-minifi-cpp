@@ -26,10 +26,10 @@
 #include <utility>
 #include <vector>
 
-#include "core/ProcessContext.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/ProcessContext.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/logging/LoggerFactory.h"
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
 #include "io/StreamPipe.h"

@@ -16,8 +16,8 @@
  */
 #include <memory>
 #include "unit/Catch.h"
-#include "core/ProcessContext.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/ProcessContext.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "utils/meta/detected.h"
 
 namespace org::apache::nifi::minifi {

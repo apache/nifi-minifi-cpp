@@ -47,7 +47,7 @@ for %%i in (%extensions%) do (
 (
     echo #include ^<string^>
 	echo #include ^<vector^>
-	echo #include "agent/agent_version.h"
+	echo #include "minifi-cpp/agent/agent_version.h"
 
 	echo namespace org {
 	echo namespace apache {
@@ -72,7 +72,7 @@ for %%i in (%extensions%) do (
 		)>> "%out_dir%/agent_version.cpp"
 	)
 
-	
+
 (
 	echo 	 extensions.push_back^("minifi-system"^);
 	echo   }
@@ -87,7 +87,7 @@ for %%i in (%extensions%) do (
 
  goto :EOF
 
- rem see license regarding the following snippet of code taken from 
+ rem see license regarding the following snippet of code taken from
  rem https://github.com/ritchielawrence/batchfunctionlibrary
 
 :GetUnixTime

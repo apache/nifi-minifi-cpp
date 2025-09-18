@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "PythonConfigState.h"
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "core/Resource.h"
 #include "range/v3/algorithm/find_if.hpp"
 #include "range/v3/range/conversion.hpp"

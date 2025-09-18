@@ -27,7 +27,7 @@
 
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "utils/ByteArrayCallback.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::http {
 

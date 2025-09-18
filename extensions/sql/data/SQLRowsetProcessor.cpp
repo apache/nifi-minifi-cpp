@@ -18,14 +18,10 @@
 
 #include "SQLRowsetProcessor.h"
 
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 SQLRowsetProcessor::SQLRowsetProcessor(std::unique_ptr<Rowset> rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers)
   : rowset_(std::move(rowset)), row_subscribers_(std::move(row_subscribers)) {
@@ -104,11 +100,11 @@ void SQLRowsetProcessor::addRow(const Row& row, size_t rowCount) {
         case DataType::DATE: {
           const std::tm when = row.getDate(i);
 
-          char value[128];
-          if (!std::strftime(value, sizeof(value), "%Y-%m-%d %H:%M:%S", &when))
+          std::array<char, 128> value{};
+          if (!std::strftime(value.data(), value.size(), "%Y-%m-%d %H:%M:%S", &when))
             throw minifi::Exception(PROCESSOR_EXCEPTION, "SQLRowsetProcessor: !strftime.");
 
-          processColumn(name, std::string(value));
+          processColumn(name, std::string(value.data()));
         }
         break;
         default: {
@@ -123,9 +119,4 @@ void SQLRowsetProcessor::addRow(const Row& row, size_t rowCount) {
   }
 }
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::sql

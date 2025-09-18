@@ -33,7 +33,7 @@
 #include "minifi-cpp/core/ContentRepository.h"
 #include "minifi-cpp/core/FlowFile.h"
 #include "minifi-cpp/core/Repository.h"
-#include "io/OutputStream.h"
+#include "minifi-cpp/io/OutputStream.h"
 
 namespace org::apache::nifi::minifi {
 

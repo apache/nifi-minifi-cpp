@@ -21,12 +21,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "agent/build_description.h"
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 #include "RemoteProcessorGroupPort.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 #include "range/v3/view/filter.hpp"
 #include "range/v3/view/transform.hpp"

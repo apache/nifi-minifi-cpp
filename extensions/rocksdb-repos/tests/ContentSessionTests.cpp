@@ -25,7 +25,7 @@
 #include "VolatileContentRepository.h"
 #include "DatabaseContentRepository.h"
 #include "core/BufferedContentSession.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "utils/ConfigurationUtils.h"

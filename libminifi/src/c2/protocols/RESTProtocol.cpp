@@ -29,7 +29,7 @@
 #include <utility>
 
 #include "rapidjson/error/en.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "properties/Configuration.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson

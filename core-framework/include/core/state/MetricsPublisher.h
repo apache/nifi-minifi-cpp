@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "core/Core.h"
-#include "properties/Configure.h"
+#include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/core/state/MetricsPublisher.h"
 
 namespace org::apache::nifi::minifi::state {

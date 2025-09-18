@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include "utils/net/Ssl.h"
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 

@@ -18,7 +18,7 @@
 
 #include "core/state/nodes/MetricsBase.h"
 #include "utils/file/AssetManager.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::state::response {
 

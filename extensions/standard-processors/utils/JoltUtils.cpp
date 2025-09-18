@@ -17,7 +17,7 @@
 
 #include "JoltUtils.h"
 #include "rapidjson/error/en.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::utils::jolt {
 
@@ -284,7 +284,7 @@ std::optional<std::vector<std::string_view>> Spec::Regex::match(std::string_view
   }
 
   // first fragment is at the beginning of the string
-  if (str.substr(0, fragments.front().size()) != fragments.front()) {
+  if (!str.starts_with(fragments.front())) {
     return std::nullopt;
   }
   auto it = str.begin() + fragments.front().size();
@@ -833,9 +833,9 @@ void putValue(const Spec::Context& ctx, const Spec::Destination& dest, const rap
         member_value = inner_member_value.value();
       } else {
         auto sub_path = toString(ctx, val_ref->second);
-        ctx.log([&] (auto logger) {
+        ctx.log([&] (const auto& logger) {
           logger->log_trace("Could not find member at @({},{} as {}) from {}", val_ref->first, sub_path.first, sub_path.second, ctx.path());
-        }, [] (auto) {});
+        }, [] (const auto&) {});
         // do not write anything and do not throw
         return;
       }
@@ -1009,9 +1009,9 @@ void Spec::Pattern::process(const Value& val, const Context& ctx, const rapidjso
 }
 
 bool Spec::Pattern::processMember(const Context& ctx, std::string_view name, const rapidjson::Value& member, rapidjson::Document& output) const {
-  auto on_exit = ctx.log([&] (auto logger) {
+  auto on_exit = ctx.log([&] (const auto& logger) {
     logger->log_trace("Processing member '{}' of {}", name, ctx.path());
-  }, [&] (auto logger) {
+  }, [&] (const auto& logger) {
     logger->log_trace("Finished processing member '{}' of {}", name, ctx.path());
   });
   if (auto it = literal_indices.find(std::string{name}); it != literal_indices.end()) {
@@ -1078,9 +1078,9 @@ void Spec::Pattern::processObject(const Context& ctx, const rapidjson::Value &in
 }
 
 void Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const {
-  auto on_exit = ctx.log([&] (auto logger) {
+  auto on_exit = ctx.log([&] (const auto& logger) {
     logger->log_trace("Processing node at {}", ctx.path());
-  }, [&] (auto logger) {
+  }, [&] (const auto& logger) {
     logger->log_trace("Finished processing node at {}", ctx.path());
   });
   for (auto& [val_ref, dest] : values) {
@@ -1096,16 +1096,17 @@ void Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, r
       Context sub_ctx = ctx.extend(ctx.matches, ctx.node);
       process(dest, sub_ctx, value.value(), output);
     } else {
-      ctx.log([&, path_ptr = &path] (auto logger) {
+      ctx.log([&, path_ptr = &path] (const auto& logger) {
         auto path_str = toString(ctx, *path_ptr);
         logger->log_trace("Failed to resolve value path {} (evaled as {}) at {} (triggered from {}): {}", path_str.first, path_str.second, target->path(), ctx.path(), value.error());
-      }, [&] (auto) {});
+      }, [] (const auto&) {});
       // pass, non-existent member is not an error
     }
   }
   for (auto& [key, dest] : keys) {
     auto key_str = ctx.find(key.first)->matches.at(key.second);
-    putValue(ctx.extend({key_str}, nullptr), dest, rapidjson::Value{key_str.data(), gsl::narrow<rapidjson::SizeType>(key_str.size()), output.GetAllocator()}, output);
+    putValue(ctx.extend({key_str}, nullptr), dest,
+        rapidjson::Value{key_str.data(), gsl::narrow<rapidjson::SizeType>(key_str.size()), output.GetAllocator()}, output);  // NOLINT(bugprone-suspicious-stringview-data-usage)
   }
   for (auto& [value, dest] : defaults) {
     Context sub_ctx = ctx.extend({value}, nullptr);

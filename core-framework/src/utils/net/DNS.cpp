@@ -16,7 +16,7 @@
  */
 #include "utils/net/DNS.h"
 
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "utils/StringUtils.h"
 #include "utils/net/AsioCoro.h"
 #include "asio/detached.hpp"

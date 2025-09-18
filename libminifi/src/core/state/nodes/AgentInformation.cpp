@@ -17,7 +17,7 @@
  */
 #include "core/state/nodes/AgentInformation.h"
 
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "core/Resource.h"
 #include "core/ClassLoader.h"
 #include "utils/OsUtils.h"

@@ -20,20 +20,19 @@
 #include <memory>
 #include <map>
 #include "c2/C2MetricsPublisher.h"
-#include "core/state/nodes/MetricsBase.h"
+#include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "core/state/nodes/QueueMetrics.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/ConfigurationChecksums.h"
 #include "core/state/nodes/RepositoryMetrics.h"
 #include "properties/Configure.h"
 #include "core/state/UpdateController.h"
-#include "core/controller/ControllerServiceProvider.h"
 #include "c2/C2Agent.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "properties/Configuration.h"
 #include "utils/file/FileSystem.h"
 #include "utils/file/FileUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "core/Resource.h"
 

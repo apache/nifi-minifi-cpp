@@ -25,9 +25,9 @@
 
 #include "core/ProcessorImpl.h"
 #include "core/FlowFileStore.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
 #include "serialization/PayloadSerializer.h"

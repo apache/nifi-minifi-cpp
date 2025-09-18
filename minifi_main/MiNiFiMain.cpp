@@ -53,7 +53,7 @@
 #include "MainHelper.h"
 #include "ResourceClaim.h"
 #include "agent/JsonSchema.h"
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "argparse/argparse.hpp"
 #include "core/BulletinStore.h"
 #include "core/ConfigurationFactory.h"

@@ -30,7 +30,9 @@
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/ProcessSessionFactory.h"
 #include "FlowController.h"
+#include "Connection.h"
 #include "../../include/core/FlowFile.h"
 #include "MergeContent.h"
 #include "processors/LogAttribute.h"
@@ -41,7 +43,7 @@
 #include "serialization/FlowFileV3Serializer.h"
 #include "serialization/PayloadSerializer.h"
 #include "unit/TestUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/span.h"
 
 std::string FLOW_FILE;
@@ -637,9 +639,9 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping Only C
   std::shared_ptr<core::FlowFile> flow = output_->poll(expiredFlowRecords);
 
   auto attributes = flow->getAttributes();
-  REQUIRE(attributes.find("tagUncommon") == attributes.end());
-  REQUIRE(attributes.find("tagUnique1") == attributes.end());
-  REQUIRE(attributes.find("tagUnique2") == attributes.end());
+  CHECK_FALSE(attributes.contains("tagUncommon"));
+  CHECK_FALSE(attributes.contains("tagUnique1"));
+  CHECK_FALSE(attributes.contains("tagUnique2"));
   REQUIRE(attributes["tagCommon"] == "common");
   REQUIRE(attributes["mime.type"] == "application/tar");
 }
@@ -686,7 +688,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
   std::shared_ptr<core::FlowFile> flow = output_->poll(expiredFlowRecords);
 
   auto attributes = flow->getAttributes();
-  REQUIRE(attributes.find("tagUncommon") == attributes.end());
+  CHECK_FALSE(attributes.contains("tagUncommon"));
   REQUIRE(attributes["tagUnique1"] == "unique1");
   REQUIRE(attributes["tagUnique2"] == "unique2");
   REQUIRE(attributes["tagCommon"] == "common");

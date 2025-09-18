@@ -23,7 +23,7 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/Processor.h"
 #include "processors/FetchFile.h"
 #include "unit/TestUtils.h"

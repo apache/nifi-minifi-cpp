@@ -21,6 +21,7 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/TestUtils.h"
+#include "core/FlowFile.h"
 
 namespace core = minifi::core;
 

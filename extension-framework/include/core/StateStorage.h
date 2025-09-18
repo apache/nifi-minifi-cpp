@@ -22,7 +22,7 @@
 #include <unordered_map>
 
 #include "core/Core.h"
-#include "StateManager.h"
+#include "minifi-cpp/core/StateManager.h"
 #include "minifi-cpp/core/StateStorage.h"
 
 namespace org::apache::nifi::minifi::core {

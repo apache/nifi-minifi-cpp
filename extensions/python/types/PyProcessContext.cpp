@@ -22,8 +22,8 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #include "PyStateManager.h"
 #include "PyScriptFlowFile.h"
 #include "core/ProcessorImpl.h"
-#include "controllers/RecordSetReader.h"
-#include "controllers/RecordSetWriter.h"
+#include "minifi-cpp/controllers/RecordSetReader.h"
+#include "minifi-cpp/controllers/RecordSetWriter.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {

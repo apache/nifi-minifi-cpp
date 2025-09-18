@@ -17,7 +17,7 @@
  */
 #include <string>
 
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "FlowController.h"
 #include "unit/TestBase.h"
 #include "processors/GenerateFlowFile.h"

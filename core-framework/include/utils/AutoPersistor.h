@@ -26,7 +26,7 @@
 #include "core/ConfigurableComponentImpl.h"
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 
 namespace org::apache::nifi::minifi::controllers {
 

@@ -20,7 +20,7 @@
 #include "utils/ProcessorConfigUtils.h"
 
 #include "../controllerservices/GCPCredentialsControllerService.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
 namespace gcs = ::google::cloud::storage;

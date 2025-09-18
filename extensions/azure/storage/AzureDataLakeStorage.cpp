@@ -26,7 +26,7 @@
 #include "io/StreamPipe.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/GeneralUtils.h"
 #include "utils/RegexUtils.h"
 

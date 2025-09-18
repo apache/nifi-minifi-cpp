@@ -24,7 +24,7 @@
 
 #include "aws/core/auth/AWSCredentials.h"
 #include "utils/AWSInitializer.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org {

@@ -24,7 +24,6 @@
 #include "unit/Catch.h"
 #include "unit/TestBase.h"
 #include "catch2/catch_session.hpp"
-#include "core/controller/ControllerService.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"

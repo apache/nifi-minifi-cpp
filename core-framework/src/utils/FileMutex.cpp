@@ -19,7 +19,7 @@
 
 #include <span>
 #include <iostream>
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/OsUtils.h"
 #include "utils/Error.h"
 

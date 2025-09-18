@@ -22,8 +22,8 @@
 #include <map>
 
 #include "fmt/format.h"
-#include "utils/gsl.h"
-#include "Exception.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/Exception.h"
 
 #ifdef __linux__
 #include <sys/sysinfo.h>
@@ -177,7 +177,7 @@ int64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
   std::string line;
 
   while (std::getline(status_file, line)) {
-    if (line.rfind(resident_set_size_prefix, 0) == 0) {
+    if (line.starts_with(resident_set_size_prefix)) {
       std::istringstream resident_set_size_value(line.substr(resident_set_size_prefix.length()));
       uint64_t memory_usage_in_kBytes = 0;
       resident_set_size_value >> memory_usage_in_kBytes;
@@ -221,11 +221,11 @@ int64_t OsUtils::getSystemPhysicalMemoryUsage() {
   std::optional<uint64_t> total_memory_kByte;
   std::optional<uint64_t> available_memory_kByte;
   while ((!total_memory_kByte.has_value() || !available_memory_kByte.has_value()) && std::getline(meminfo_file, line)) {
-    if (line.rfind(total_memory_prefix, 0) == 0) {
+    if (line.starts_with(total_memory_prefix)) {
       std::istringstream total_memory_line(line.substr(total_memory_prefix.length()));
       total_memory_kByte.emplace(0);
       total_memory_line >> total_memory_kByte.value();
-    } else if (line.rfind(available_memory_prefix, 0) == 0) {
+    } else if (line.starts_with(available_memory_prefix)) {
       std::istringstream available_memory_line(line.substr(available_memory_prefix.length()));
       available_memory_kByte.emplace(0);
       available_memory_line >> available_memory_kByte.value();

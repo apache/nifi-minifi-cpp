@@ -23,7 +23,7 @@
 #include "minifi-cpp/core/Annotation.h"
 #include "core/Core.h"
 #include "core/ProcessorImpl.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "utils/StringUtils.h"
 #include "core/logging/LoggerFactory.h"

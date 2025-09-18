@@ -23,6 +23,8 @@
 #include "core/repository/VolatileContentRepository.h"
 #include "properties/Configuration.h"
 #include "core/Resource.h"
+#include "core/state/MetricsPublisher.h"
+#include "core/state/MetricsPublisherStore.h"
 
 namespace org::apache::nifi::minifi::test {
 

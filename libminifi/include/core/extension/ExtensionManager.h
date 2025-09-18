@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "Module.h"
 #include "properties/Configure.h"
 #include "minifi-cpp/core/extension/ExtensionManager.h"

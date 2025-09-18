@@ -21,6 +21,7 @@
 
 #include "FlowFileRecord.h"
 #include "range/v3/algorithm/all_of.hpp"
+#include "Connection.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -41,7 +42,7 @@ ProcessorTriggerResult SingleProcessorTestController::trigger() {
   return result;
 }
 
-ProcessorTriggerResult SingleProcessorTestController::trigger(InputFlowFileData&& input_flow_file_data) {
+ProcessorTriggerResult SingleProcessorTestController::trigger(InputFlowFileData input_flow_file_data) {
   input_->put(createFlowFile(input_flow_file_data.content, std::move(input_flow_file_data.attributes)));
   return trigger();
 }
@@ -83,7 +84,7 @@ core::Relationship SingleProcessorTestController::addDynamicRelationship(std::st
   return relationship;
 }
 
-std::shared_ptr<core::FlowFile> SingleProcessorTestController::createFlowFile(const std::string_view content, std::unordered_map<std::string, std::string> attributes) {
+std::shared_ptr<core::FlowFile> SingleProcessorTestController::createFlowFile(const std::string_view content, std::unordered_map<std::string, std::string> attributes) const {
   const auto flow_file = std::make_shared<FlowFileRecordImpl>();
   for (auto& attr : std::move(attributes)) {
     flow_file->setAttribute(attr.first, std::move(attr.second));

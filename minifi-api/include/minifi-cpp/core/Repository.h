@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "Connectable.h"
+#include "minifi-cpp/core/Connectable.h"
 #include "ContentRepository.h"
 #include "SerializableComponent.h"
 #include "RepositoryMetricsSource.h"

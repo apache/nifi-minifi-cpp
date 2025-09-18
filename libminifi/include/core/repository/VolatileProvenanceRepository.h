@@ -21,7 +21,6 @@
 #include <string_view>
 
 #include "VolatileRepository.h"
-#include "core/ThreadedRepository.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 

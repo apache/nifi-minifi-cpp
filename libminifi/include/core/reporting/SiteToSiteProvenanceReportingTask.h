@@ -24,7 +24,6 @@
 #include <stack>
 #include <utility>
 
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "RemoteProcessorGroupPort.h"

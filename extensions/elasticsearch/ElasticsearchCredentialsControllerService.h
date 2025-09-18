@@ -24,7 +24,7 @@
 
 #include "http/HTTPClient.h"
 #include "core/controller/ControllerService.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
 

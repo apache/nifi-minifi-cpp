@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "../PythonBindings.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

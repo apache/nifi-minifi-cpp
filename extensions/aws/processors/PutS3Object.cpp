@@ -21,10 +21,10 @@
 #include <memory>
 
 #include "AWSCredentialsService.h"
-#include "properties/Properties.h"
+#include "minifi-cpp/properties/Properties.h"
 #include "utils/StringUtils.h"
 #include "utils/MapUtils.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "range/v3/algorithm/contains.hpp"
@@ -69,13 +69,13 @@ void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSession
   }
 
   multipart_threshold_ = context.getProperty(MultipartThreshold)
-      | minifi::utils::andThen([&](const auto str) { return parsing::parseDataSizeMinMax(str, getMinPartSize(), getMaxUploadSize()); })
+      | minifi::utils::andThen([&](const auto& str) { return parsing::parseDataSizeMinMax(str, getMinPartSize(), getMaxUploadSize()); })
       | minifi::utils::orThrow("Multipart Part Size is not between the valid 5MB and 5GB range!");
 
   logger_->log_debug("PutS3Object: Multipart Threshold {}", multipart_threshold_);
 
   multipart_size_ = context.getProperty(MultipartPartSize)
-    | minifi::utils::andThen([&](const auto str) { return parsing::parseDataSizeMinMax(str, getMinPartSize(), getMaxUploadSize()); })
+    | minifi::utils::andThen([&](const auto& str) { return parsing::parseDataSizeMinMax(str, getMinPartSize(), getMaxUploadSize()); })
     | minifi::utils::orThrow("Multipart Part Size is not between the valid 5MB and 5GB range!");
 
 

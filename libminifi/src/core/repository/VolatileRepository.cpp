@@ -21,7 +21,6 @@
 #include <limits>
 #include <string>
 #include <vector>
-#include "FlowFileRecord.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 

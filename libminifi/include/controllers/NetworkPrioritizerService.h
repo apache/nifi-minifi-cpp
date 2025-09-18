@@ -27,12 +27,11 @@
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "ThreadManagementService.h"
 #include "io/NetworkPrioritizer.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 
 namespace org::apache::nifi::minifi::controllers {
 

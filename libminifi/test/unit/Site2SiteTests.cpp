@@ -22,7 +22,7 @@
 #include <string>
 #include <utility>
 
-#include "io/BaseStream.h"
+#include "minifi-cpp/io/BaseStream.h"
 #include "sitetosite/Peer.h"
 #include "sitetosite/RawSocketProtocol.h"
 #include "unit/TestBase.h"

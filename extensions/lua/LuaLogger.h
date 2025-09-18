@@ -22,7 +22,6 @@
 #include <memory>
 
 #include "sol/sol.hpp"
-#include "core/StateManager.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
 

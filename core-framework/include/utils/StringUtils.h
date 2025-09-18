@@ -35,7 +35,7 @@
 #endif
 #include "utils/expected.h"
 #include "utils/FailurePolicy.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/span.h"
 #include "utils/meta/detected.h"
 #include "range/v3/view/transform.hpp"

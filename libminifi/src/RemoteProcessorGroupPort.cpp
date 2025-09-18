@@ -26,12 +26,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "controllers/SSLContextService.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/Processor.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "http/BaseHTTPClient.h"
 #include "rapidjson/document.h"
 #include "sitetosite/Peer.h"
@@ -72,7 +73,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
         sitetosite::SiteToSiteClientConfiguration config(peers_[this->peer_index_].getPeer(), local_network_interface_, client_type_);
         config.setSecurityContext(ssl_service);
         peer_index_++;
-        if (peer_index_ >= static_cast<int>(peers_.size())) {
+        if (peer_index_.load() >= static_cast<int>(peers_.size())) {
           peer_index_ = 0;
         }
         config.setHTTPProxy(this->proxy_);
@@ -89,9 +90,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
 }
 
 void RemoteProcessorGroupPort::returnProtocol(core::ProcessContext& context, std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
-  auto count = peers_.size();
-  if (context.getProcessor().getMaxConcurrentTasks() > count)
-    count = context.getProcessor().getMaxConcurrentTasks();
+  auto count = std::max(static_cast<size_t>(context.getProcessor().getMaxConcurrentTasks()), peers_.size());
   if (available_protocols_.size_approx() >= count) {
     logger_->log_debug("not enqueueing protocol {}", getUUIDStr());
     // let the memory be freed
@@ -139,15 +138,13 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::P
   }
   // populate the site2site protocol for load balancing between them
   if (!peers_.empty()) {
-    auto count = peers_.size();
-    if (context.getProcessor().getMaxConcurrentTasks() > count)
-      count = context.getProcessor().getMaxConcurrentTasks();
+    auto count = std::max(static_cast<size_t>(context.getProcessor().getMaxConcurrentTasks()), peers_.size());
     for (uint32_t i = 0; i < count; i++) {
       std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
       sitetosite::SiteToSiteClientConfiguration config(peers_[this->peer_index_].getPeer(), this->getInterface(), client_type_);
       config.setSecurityContext(ssl_service);
       peer_index_++;
-      if (peer_index_ >= static_cast<int>(peers_.size())) {
+      if (peer_index_.load() >= static_cast<int>(peers_.size())) {
         peer_index_ = 0;
       }
       logger_->log_trace("Creating client");
@@ -182,8 +179,6 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext& context, core::Pr
   }
 
   RPGLatch count;
-
-  std::string value;
 
   logger_->log_trace("On trigger {}", getUUIDStr());
 

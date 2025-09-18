@@ -25,8 +25,8 @@
 #include <utility>
 
 #include "core/Processor.h"
-#include "core/ProcessContextBuilder.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/ProcessContextBuilder.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "core/controller/StandardControllerServiceProvider.h"
@@ -38,6 +38,10 @@
 #include "utils/span.h"
 #include "LogUtils.h"
 #include "utils/GeneralUtils.h"
+#include "Connection.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSessionFactory.h"
+#include "ResourceClaim.h"
 
 #include "fmt/format.h"
 #include "spdlog/sinks/stdout_sinks.h"

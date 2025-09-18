@@ -25,7 +25,7 @@ set_property(GLOBAL PROPERTY EXTENSION-OPTIONS "")
 set(extension-build-info-file "${CMAKE_CURRENT_BINARY_DIR}/ExtensionBuildInfo.cpp")
 file(GENERATE OUTPUT ${extension-build-info-file}
     CONTENT "\
-    #include \"utils/Export.h\"\n\
+    #include \"minifi-cpp/utils/Export.h\"\n\
     #ifdef BUILD_ID_VARIABLE_NAME\n\
     EXTENSIONAPI extern const char* const BUILD_ID_VARIABLE_NAME = \"__EXTENSION_BUILD_IDENTIFIER_BEGIN__${BUILD_IDENTIFIER}__EXTENSION_BUILD_IDENTIFIER_END__\";\n\
     #else\n\

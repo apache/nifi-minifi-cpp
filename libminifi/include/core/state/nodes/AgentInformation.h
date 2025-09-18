@@ -24,12 +24,12 @@
 
 #include "agent/agent_docs.h"
 #include "agent/build_description.h"
-#include "core/state/nodes/MetricsBase.h"
+#include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "core/state/nodes/StateMonitor.h"
 #include "utils/ProcessCpuUsageTracker.h"
 #include "minifi-cpp/core/AgentIdentificationProvider.h"
-#include "utils/Export.h"
-#include "core/RepositoryMetricsSource.h"
+#include "minifi-cpp/utils/Export.h"
+#include "minifi-cpp/core/RepositoryMetricsSource.h"
 #include "controllers/UpdatePolicyControllerService.h"
 #include "RepositoryMetricsSourceStore.h"
 

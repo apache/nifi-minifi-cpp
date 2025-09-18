@@ -19,14 +19,14 @@
 
 #include <fstream>
 
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/TestControllerWithFlow.h"
 #include "unit/EmptyFlow.h"
 #include "unit/TestUtils.h"
 #include "c2/C2MetricsPublisher.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 using minifi::state::response::SerializedResponseNode;
 using minifi::state::response::ValueNode;

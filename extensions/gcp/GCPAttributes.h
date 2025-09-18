@@ -20,7 +20,7 @@
 #include <string_view>
 
 #include "google/cloud/storage/object_metadata.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 

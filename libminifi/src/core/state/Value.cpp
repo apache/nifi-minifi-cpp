@@ -21,7 +21,7 @@
 #include <utility>
 #include <string>
 #include "rapidjson/prettywriter.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "rapidjson/document.h"
 #include "utils/StringUtils.h"
 

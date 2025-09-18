@@ -24,15 +24,15 @@
 #include <utility>
 #include <vector>
 
-#include "core/FlowFile.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/FlowFile.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "range/v3/algorithm/any_of.hpp"
 #include "range/v3/view/filter.hpp"
 #include "utils/OptionalUtils.h"
 #include "utils/ProcessorConfigUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 using namespace std::literals::chrono_literals;
 

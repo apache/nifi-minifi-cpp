@@ -25,7 +25,7 @@
 #include "MemInfo.h"
 #include "NetDev.h"
 #include "ProcessStat.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::procfs {
 

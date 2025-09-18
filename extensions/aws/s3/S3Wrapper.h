@@ -27,7 +27,7 @@
 #include <utility>
 #include <vector>
 
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "MultipartUploadStateStorage.h"
 #include "S3RequestSender.h"
 #include "aws/s3/model/ObjectCannedACL.h"
@@ -35,17 +35,17 @@
 #include "aws/s3/model/StorageClass.h"
 #include "aws/s3/model/ChecksumAlgorithm.h"
 
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
-#include "io/InputStream.h"
-#include "io/OutputStream.h"
+#include "minifi-cpp/io/InputStream.h"
+#include "minifi-cpp/io/OutputStream.h"
 #include "range/v3/algorithm/find.hpp"
 #include "utils/AWSInitializer.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/ListingStateManager.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/ProxyOptions.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {

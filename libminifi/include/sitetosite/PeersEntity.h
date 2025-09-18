@@ -28,7 +28,7 @@
 #include "sitetosite/Peer.h"
 #include "utils/StringUtils.h"
 #include "utils/Enum.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
 

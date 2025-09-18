@@ -26,7 +26,7 @@
 #include <list>
 
 #include "StreamManager.h"
-#include "ContentSession.h"
+#include "minifi-cpp/core/ContentSession.h"
 #include "core/Core.h"
 #include "minifi-cpp/core/ContentRepository.h"
 #include "core/RepositoryMetricsSource.h"

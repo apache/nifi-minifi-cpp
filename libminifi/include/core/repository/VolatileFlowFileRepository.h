@@ -23,8 +23,7 @@
 
 #include "VolatileRepository.h"
 #include "FlowFileRecord.h"
-#include "core/ThreadedRepository.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 struct VolatileFlowFileRepositoryTestAccessor;
 

@@ -24,7 +24,7 @@
 #include "core/state/MetricsPublisher.h"
 #include "PublishedMetricGaugeCollection.h"
 #include "core/Core.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/Id.h"
 #include "PrometheusExposerWrapper.h"

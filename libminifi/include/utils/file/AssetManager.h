@@ -23,7 +23,7 @@
 #include <string>
 #include <memory>
 #include <set>
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "utils/expected.h"
 #include "properties/Configure.h"
 

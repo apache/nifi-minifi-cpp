@@ -25,16 +25,16 @@
 #include <utility>
 #include <vector>
 
-#include "io/InputStream.h"
+#include "minifi-cpp/io/InputStream.h"
 #include "core/ProcessorImpl.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 #include "asio/io_context.hpp"
 #include "asio/ssl/context.hpp"
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "core/Core.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/StringUtils.h"  // for string <=> on libc++
 #include "utils/net/AsioSocketUtils.h"

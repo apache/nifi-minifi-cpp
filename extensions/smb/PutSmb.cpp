@@ -17,7 +17,7 @@
  */
 
 #include "PutSmb.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/OsUtils.h"
 #include "utils/file/FileWriterCallback.h"

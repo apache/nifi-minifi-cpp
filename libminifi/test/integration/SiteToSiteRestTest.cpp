@@ -24,7 +24,7 @@
 #include "RemoteProcessorGroupPort.h"
 #include "controllers/SSLContextService.h"
 #include "core/ConfigurableComponentImpl.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "integration/HTTPIntegrationBase.h"
 #include "processors/InvokeHTTP.h"
 #include "unit/TestBase.h"

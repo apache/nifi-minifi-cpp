@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "PySSLContextService.h"
 #include "PyRecordSetReader.h"
 #include "PyRecordSetWriter.h"

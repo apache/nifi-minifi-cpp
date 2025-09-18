@@ -20,7 +20,7 @@
 #include "MockElastic.h"
 #include "unit/SingleProcessorTestController.h"
 #include "unit/Catch.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch::test {

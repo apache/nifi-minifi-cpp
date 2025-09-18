@@ -24,7 +24,7 @@
 #include "properties/Properties.h"
 #include "minifi-cpp/properties/Configuration.h"
 #include "utils/OptionalUtils.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 
 namespace org::apache::nifi::minifi {
 

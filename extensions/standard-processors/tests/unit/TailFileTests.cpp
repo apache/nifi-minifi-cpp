@@ -30,7 +30,7 @@
 #include "TextFragmentUtils.h"
 #include "catch2/generators/catch_generators.hpp"
 #include "core/Core.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Processor.h"
 #include "core/Resource.h"
@@ -41,6 +41,7 @@
 #include "unit/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "controllers/AttributeProviderService.h"
 
 using namespace std::literals::chrono_literals;
 

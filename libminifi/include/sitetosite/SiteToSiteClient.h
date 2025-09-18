@@ -29,9 +29,9 @@
 #include "Peer.h"
 #include "SiteToSite.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/Connectable.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
 

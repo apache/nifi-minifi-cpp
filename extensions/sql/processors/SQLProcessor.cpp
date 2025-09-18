@@ -20,10 +20,10 @@
 #include <vector>
 #include <memory>
 
-#include "core/FlowFile.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/FlowFile.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {

@@ -30,7 +30,7 @@
 #include "core/Core.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "utils/OsUtils.h"
 
 #include "concurrentqueue.h"

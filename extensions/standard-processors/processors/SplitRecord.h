@@ -16,16 +16,16 @@
  */
 #pragma once
 
-#include "core/Annotation.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/Annotation.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "minifi-cpp/core/ProcessSessionFactory.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/RelationshipDefinition.h"
-#include "core/logging/Logger.h"
-#include "controllers/RecordSetReader.h"
-#include "controllers/RecordSetWriter.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/controllers/RecordSetReader.h"
+#include "minifi-cpp/controllers/RecordSetWriter.h"
 #include "core/AbstractProcessor.h"
 
 namespace org::apache::nifi::minifi::processors {

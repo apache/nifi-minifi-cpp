@@ -19,7 +19,7 @@
 
 #include "integration/HTTPIntegrationBase.h"
 #include "integration/HTTPHandlers.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "unit/TestUtils.h"
 #include "unit/EmptyFlow.h"
 #include "fmt/format.h"

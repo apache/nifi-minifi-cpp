@@ -23,7 +23,7 @@
 #include "io/CRCStream.h"
 #include "io/BufferStream.h"
 #include "rapidjson/error/en.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "agent/build_description.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/view/filter.hpp"
@@ -406,10 +406,10 @@ void HeartbeatHandler::verifyProperties(const rapidjson::Value& operation_node, 
     case minifi::c2::Operation::start:
     case minifi::c2::Operation::stop: {
       auto operands = getOperandsOfProperties(operation_node);
-      REQUIRE(operands.find("c2") != operands.end());
+      REQUIRE(operands.contains("c2"));
       // FlowController is also present, but this handler has no way of knowing its UUID to test it
       for (const auto& component : verify_components) {
-        REQUIRE(operands.find(component) != operands.end());
+        REQUIRE(operands.contains(component));
       }
       break;
     }

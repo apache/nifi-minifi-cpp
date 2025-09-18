@@ -24,7 +24,7 @@
 #include "core/FlowFile.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/span.h"
 #include "FlowFile.h"
 #include "FlowFileRecord.h"

@@ -32,7 +32,7 @@
 #include "SFTPProcessorBase.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/ArrayUtils.h"
@@ -279,7 +279,7 @@ class ListSFTP : public SFTPProcessorBase {
       uint16_t port,
       const std::string& username,
       const std::string& remote_path,
-      std::vector<Child>&& files);
+      std::vector<Child> files);
 
   void listByTrackingEntities(
       core::ProcessContext& context,
@@ -289,7 +289,7 @@ class ListSFTP : public SFTPProcessorBase {
       const std::string& username,
       const std::string& remote_path,
       std::chrono::milliseconds entity_tracking_time_window,
-      std::vector<Child>&& files);
+      std::vector<Child> files);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

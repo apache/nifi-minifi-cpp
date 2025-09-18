@@ -22,6 +22,8 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/TestUtils.h"
 #include "utils/TimeUtil.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSessionFactory.h"
 
 using namespace std::literals::chrono_literals;
 

@@ -23,7 +23,7 @@
 #include "unit/SingleProcessorTestController.h"
 #include "unit/Catch.h"
 #include "PutUDP.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "utils/net/UdpServer.h"
 #include "utils/expected.h"
 #include "utils/StringUtils.h"

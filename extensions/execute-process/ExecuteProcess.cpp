@@ -26,14 +26,14 @@
 #include <memory>
 #include <string>
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/Environment.h"
 #include "utils/StringUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/ProcessorConfigUtils.h"
 
 using namespace std::literals::chrono_literals;
@@ -158,7 +158,7 @@ void ExecuteProcess::readOutput(core::ProcessSession& session) const {
   std::shared_ptr<core::FlowFile> flow_file;
   auto num_read = read(pipefd_[0], buf_ptr, buffer.size());
   while (num_read > 0) {
-    if (num_read == static_cast<ssize_t>(buffer.size() - read_to_buffer)) {
+    if (num_read == static_cast<ssize_t>(buffer.size() - read_to_buffer)) {  // NOLINT(modernize-use-integer-sign-comparison)
       // we reach the max buffer size
       logger_->log_debug("Execute Command Max Respond {}", buffer.size());
       if (!writeToFlowFile(session, flow_file, buffer)) {

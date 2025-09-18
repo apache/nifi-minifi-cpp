@@ -26,7 +26,7 @@
 #include "sitetosite/RawSocketProtocol.h"
 #include "io/CRCStream.h"
 #include "sitetosite/Peer.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/Enum.h"
 
 using namespace std::literals::chrono_literals;
@@ -557,7 +557,7 @@ bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, core::P
                                           std::map<std::string, std::string> attributes) {
   std::shared_ptr<Transaction> transaction;
 
-  if (payload.length() <= 0)
+  if (payload.empty())
     return false;
 
   if (peer_state_ != READY) {

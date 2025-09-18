@@ -21,7 +21,7 @@
 #include "processors/InvokeHTTP.h"
 #include "processors/LogAttribute.h"
 #include "unit/TestBase.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
 #include "integration/HTTPIntegrationBase.h"

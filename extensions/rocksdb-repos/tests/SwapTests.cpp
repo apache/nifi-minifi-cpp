@@ -24,10 +24,13 @@
 #include "unit/TestUtils.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
-#include "core/RelationshipDefinition.h"
+#include "core/ProcessSessionFactory.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "core/repository/FileSystemRepository.h"
+#include "Connection.h"
+#include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::test {
 

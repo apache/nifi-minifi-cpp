@@ -27,8 +27,8 @@
 #include <compare>
 #include <concepts>
 
-#include "core/logging/Logger.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "rapidjson/document.h"
 #include "utils/expected.h"
 #include "utils/StringUtils.h"
@@ -58,7 +58,7 @@ class Spec {
       return nullptr;
     }
 
-    template<std::invocable<std::shared_ptr<core::logging::Logger>> OnEnterFn, std::invocable<std::shared_ptr<core::logging::Logger>> OnExitFn>
+    template<std::invocable<const std::shared_ptr<core::logging::Logger>&> OnEnterFn, std::invocable<const std::shared_ptr<core::logging::Logger>&> OnExitFn>
     ::gsl::final_action<std::function<void()>> log(OnEnterFn on_enter, OnExitFn on_exit) const {
       if (logger) {
         on_enter(logger);

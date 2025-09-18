@@ -18,9 +18,9 @@
 
 #include "range/v3/range/conversion.hpp"
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/expected.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerFactory.h"
@@ -90,7 +90,7 @@ void PutUDP::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
     for (const auto& resolver_entry : resolved_query) {
       error.clear();
       udp::socket socket(io_context);
-      socket.open(resolver_entry.endpoint().protocol(), error);
+      std::ignore = socket.open(resolver_entry.endpoint().protocol(), error);
       if (error) {
         logger->log_debug("opening {} socket failed due to {} ", resolver_entry.endpoint().protocol() == udp::v4() ? "IPv4" : "IPv6", error.message());
         continue;

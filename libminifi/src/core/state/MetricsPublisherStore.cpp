@@ -19,6 +19,7 @@
 
 #include "c2/C2Utils.h"
 #include "core/state/MetricsPublisherFactory.h"
+#include "core/state/nodes/ResponseNodeLoader.h"
 
 namespace org::apache::nifi::minifi::state {
 

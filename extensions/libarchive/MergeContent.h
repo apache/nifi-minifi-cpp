@@ -33,8 +33,8 @@
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "serialization/FlowFileSerializer.h"
 #include "utils/ArrayUtils.h"
-#include "utils/gsl.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/utils/Export.h"
 #include "io/Stream.h"
 
 namespace org::apache::nifi::minifi::processors {

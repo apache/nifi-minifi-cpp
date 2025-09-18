@@ -25,7 +25,7 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/StringUtils.h"
 #include "unit/TestUtils.h"

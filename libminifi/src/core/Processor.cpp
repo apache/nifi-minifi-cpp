@@ -34,11 +34,11 @@
 #include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
 #include "minifi-cpp/core/ProcessSessionFactory.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
-#include "Exception.h"
-#include "core/ProcessorMetrics.h"
+#include "minifi-cpp/Exception.h"
+#include "minifi-cpp/core/ProcessorMetrics.h"
 
 using namespace std::literals::chrono_literals;
 

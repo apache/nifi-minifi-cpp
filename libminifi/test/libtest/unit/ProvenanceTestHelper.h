@@ -31,11 +31,9 @@
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "core/Processor.h"
 #include "core/ThreadedRepository.h"
-#include "Connection.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "provenance/Provenance.h"
-#include "SwapManager.h"
+#include "minifi-cpp/SwapManager.h"
 #include "io/BufferStream.h"
 
 using namespace std::literals::chrono_literals;

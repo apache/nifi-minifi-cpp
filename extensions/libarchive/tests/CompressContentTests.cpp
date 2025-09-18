@@ -28,11 +28,13 @@
 
 #include "CompressContent.h"
 #include "FlowController.h"
+#include "Connection.h"
 #include "catch2/generators/catch_generators.hpp"
 #include "core/Core.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/ProcessSessionFactory.h"
 #include "core/Processor.h"
 #include "io/FileStream.h"
 #include "processors/GetFile.h"
@@ -43,7 +45,7 @@
 #include "unit/TestBase.h"
 #include "unit/TestUtils.h"
 #include "utils/file/FileUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 class ReadCallback {
  public:

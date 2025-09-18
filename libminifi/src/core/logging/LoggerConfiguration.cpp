@@ -35,7 +35,7 @@
 #include "utils/Environment.h"
 #include "core/logging/internal/LogCompressorSink.h"
 #include "core/logging/alert/AlertSink.h"
-#include "utils/Literals.h"
+#include "minifi-cpp/utils/Literals.h"
 #include "core/TypedValues.h"
 #include "core/logging/Utils.h"
 

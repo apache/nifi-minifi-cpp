@@ -30,9 +30,9 @@
 #include "FlowFileSource.h"
 #include "SQLProcessor.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/StateManager.h"
+#include "minifi-cpp/core/StateManager.h"
 #include "data/SQLColumnIdentifier.h"
 #include "utils/ArrayUtils.h"
 

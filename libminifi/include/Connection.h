@@ -30,12 +30,13 @@
 #include <utility>
 #include "core/Core.h"
 #include "core/Connectable.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/Relationship.h"
-#include "core/FlowFile.h"
-#include "core/Repository.h"
+#include "minifi-cpp/core/FlowFile.h"
+#include "minifi-cpp/core/Repository.h"
 #include "utils/FlowFileQueue.h"
 #include "minifi-cpp/Connection.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi {
 

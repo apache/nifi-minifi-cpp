@@ -28,15 +28,14 @@
 #include <vector>
 
 #include "minifi-cpp/Connection.h"
-#include "core/Connectable.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/ProcessorConfig.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/core/ProcessSessionFactory.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "core/ProcessorMetrics.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
 

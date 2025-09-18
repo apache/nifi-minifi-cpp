@@ -29,15 +29,15 @@
 #include <utility>
 #include <vector>
 
-#include "core/StateManager.h"
+#include "minifi-cpp/core/StateManager.h"
 #include "core/ProcessorImpl.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/FifoExecutor.h"
 
 namespace org::apache::nifi::minifi::extensions::systemd {

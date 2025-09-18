@@ -22,8 +22,8 @@
 #include <memory>
 #include <utility>
 
-#include "core/FlowFile.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/FlowFile.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"

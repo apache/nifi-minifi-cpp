@@ -27,14 +27,12 @@
 #include <functional>
 
 #include "c2/C2Agent.h"
-#include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
-#include "core/logging/Logger.h"
-#include "core/state/nodes/MetricsBase.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "core/ProcessGroup.h"
 #include "core/Core.h"
 #include "utils/file/FileSystem.h"
-#include "core/state/nodes/ResponseNodeLoader.h"
 #include "utils/Id.h"
 #include "core/state/MetricsPublisher.h"
 

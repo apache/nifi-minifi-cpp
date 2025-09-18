@@ -16,7 +16,7 @@
  */
 #include <openssl/x509v3.h>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/tls/ExtendedKeyUsage.h"
 #include "unit/Catch.h"
 
@@ -42,12 +42,12 @@ std::vector<unsigned char> createDerEncodedExtendedKeyUsage(const std::vector<ui
   der_encoded_key_usage[1] = gsl::narrow<unsigned char>(oids_size);
 
   for (size_t i = 0; i < last_bytes_of_oids.size(); ++i) {
-    der_encoded_key_usage[2 + OID_ENCODED_LENGTH * i] = OID_TAG;
-    der_encoded_key_usage[3 + OID_ENCODED_LENGTH * i] = OID_LENGTH;
+    der_encoded_key_usage[2 + (OID_ENCODED_LENGTH * i)] = OID_TAG;
+    der_encoded_key_usage[3 + (OID_ENCODED_LENGTH * i)] = OID_LENGTH;
     for (size_t j = 0; j < OID_PREFIX.size(); ++j) {
-      der_encoded_key_usage[4 + j + OID_ENCODED_LENGTH * i] = OID_PREFIX[j];
+      der_encoded_key_usage[4 + j + (OID_ENCODED_LENGTH * i)] = OID_PREFIX[j];
     }
-    der_encoded_key_usage[4 + OID_PREFIX.size() + OID_ENCODED_LENGTH * i] = last_bytes_of_oids[i];
+    der_encoded_key_usage[4 + OID_PREFIX.size() + (OID_ENCODED_LENGTH * i)] = last_bytes_of_oids[i];
   }
   return der_encoded_key_usage;
 }
@@ -61,11 +61,11 @@ utils::tls::EXTENDED_KEY_USAGE_unique_ptr createExtendedKeyUsage(const std::vect
 }
 
 void testIsSubsetOf(
-    const utils::tls::ExtendedKeyUsage key_usage_empty,
-    const utils::tls::ExtendedKeyUsage key_usage_clientauth,
-    const utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth,
-    const utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth_codesigning,
-    const utils::tls::ExtendedKeyUsage key_usage_clientauth_serverauth_timestamping) {
+    const utils::tls::ExtendedKeyUsage& key_usage_empty,
+    const utils::tls::ExtendedKeyUsage& key_usage_clientauth,
+    const utils::tls::ExtendedKeyUsage& key_usage_clientauth_serverauth,
+    const utils::tls::ExtendedKeyUsage& key_usage_clientauth_serverauth_codesigning,
+    const utils::tls::ExtendedKeyUsage& key_usage_clientauth_serverauth_timestamping) {
   REQUIRE(key_usage_empty.isSubsetOf(key_usage_empty));
   REQUIRE(key_usage_empty.isSubsetOf(key_usage_clientauth));
   REQUIRE(key_usage_empty.isSubsetOf(key_usage_clientauth_serverauth));

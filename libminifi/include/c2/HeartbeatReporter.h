@@ -24,7 +24,7 @@
 
 #include "C2Protocol.h"
 #include "C2Payload.h"
-#include "core/controller/ControllerServiceProvider.h"
+#include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
 #include "core/Connectable.h"
 

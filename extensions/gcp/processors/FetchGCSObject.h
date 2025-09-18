@@ -23,8 +23,8 @@
 
 #include "../GCPAttributes.h"
 #include "GCSProcessor.h"
-#include "core/PropertyDefinition.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "google/cloud/storage/well_known_headers.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"

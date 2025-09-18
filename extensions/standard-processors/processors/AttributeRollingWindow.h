@@ -24,13 +24,12 @@
 #include <string_view>
 
 #include "core/AbstractProcessor.h"
-#include "core/Annotation.h"
+#include "minifi-cpp/core/Annotation.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "RollingWindow.h"
-#include "core/StateManager.h"
 
 namespace org::apache::nifi::minifi::processors {
 

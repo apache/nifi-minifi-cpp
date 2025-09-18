@@ -21,7 +21,7 @@
 #include <string>
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "core/controller/ControllerService.h"
+#include "minifi-cpp/core/controller/ControllerService.h"
 #include "controllers/NetworkPrioritizerService.h"
 #include "unit/TestUtils.h"
 

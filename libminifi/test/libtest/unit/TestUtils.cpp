@@ -24,7 +24,7 @@
 #include <aclapi.h>
 #endif
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 #ifdef WIN32
 namespace {
@@ -174,7 +174,7 @@ std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents
   asio::io_context io_context;
   asio::ip::tcp::socket socket(io_context);
   std::error_code err;
-  socket.connect(remote_endpoint, err);
+  std::ignore = socket.connect(remote_endpoint, err);
   if (err)
     return err;
   for (auto& content : contents) {
@@ -192,7 +192,7 @@ std::error_code sendUdpDatagram(const asio::const_buffer content, const asio::ip
   asio::io_context io_context;
   asio::ip::udp::socket socket(io_context);
   std::error_code err;
-  socket.open(remote_endpoint.protocol(), err);
+  std::ignore = socket.open(remote_endpoint.protocol(), err);
   if (err)
     return err;
   socket.send_to(content, remote_endpoint, 0, err);
@@ -211,7 +211,7 @@ bool isIPv6Disabled() {
   asio::io_context io_context;
   std::error_code error_code;
   asio::ip::tcp::socket socket_tcp(io_context);
-  socket_tcp.connect(asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), 10), error_code);
+  std::ignore = socket_tcp.connect(asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), 10), error_code);
   return error_code.value() == EADDRNOTAVAIL;
 }
 
@@ -233,15 +233,15 @@ std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents
   asio::ssl::stream<asio::ip::tcp::socket> socket(io_context, ctx);
   auto shutdown_socket = gsl::finally([&] {
     asio::error_code ec;
-    socket.lowest_layer().cancel(ec);
-    socket.shutdown(ec);
+    std::ignore = socket.lowest_layer().cancel(ec);
+    std::ignore = socket.shutdown(ec);
   });
   asio::error_code err;
-  socket.lowest_layer().connect(remote_endpoint, err);
+  std::ignore = socket.lowest_layer().connect(remote_endpoint, err);
   if (err) {
     return err;
   }
-  socket.handshake(asio::ssl::stream_base::client, err);
+  std::ignore = socket.handshake(asio::ssl::stream_base::client, err);
   if (err) {
     return err;
   }

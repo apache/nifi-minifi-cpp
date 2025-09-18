@@ -21,7 +21,7 @@
 #include <variant>
 
 #include "core/Core.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi::extensions::script {

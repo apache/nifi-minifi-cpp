@@ -30,6 +30,7 @@
 #include "utils/OptionalUtils.h"
 #include "utils/Macro.h"
 #include "core/ProcessorFactoryImpl.h"
+#include "core/ObjectFactory.h"
 
 namespace org::apache::nifi::minifi::core {
 

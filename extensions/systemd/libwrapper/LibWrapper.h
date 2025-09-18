@@ -21,9 +21,9 @@
 #include <memory>
 
 #include "../Common.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd { namespace libwrapper {
+namespace org::apache::nifi::minifi::extensions::systemd::libwrapper {
 
 struct Journal {
   virtual int seekHead() noexcept = 0;
@@ -48,10 +48,4 @@ struct LibWrapper {
 
 std::unique_ptr<LibWrapper> createLibWrapper();
 
-}  // namespace libwrapper
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd::libwrapper

@@ -33,14 +33,14 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h"
 
-#include "core/Repository.h"
+#include "minifi-cpp/core/Repository.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "utils/TimeUtil.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "provenance/Provenance.h"
+#include "minifi-cpp/provenance/Provenance.h"
 #include "FlowController.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::reporting {
 
@@ -166,7 +166,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
   logger_->log_debug("Captured {} records", deserialized);
   std::string jsonStr;
   this->getJsonReport(context, session, records, jsonStr);
-  if (jsonStr.length() <= 0) {
+  if (jsonStr.empty()) {
     return;
   }
 

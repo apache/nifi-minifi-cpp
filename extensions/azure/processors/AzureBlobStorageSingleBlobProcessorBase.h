@@ -26,7 +26,7 @@
 #include <utility>
 
 #include "AzureBlobStorageProcessorBase.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {

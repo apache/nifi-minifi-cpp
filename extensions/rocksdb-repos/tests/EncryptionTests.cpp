@@ -23,6 +23,7 @@
 #include "repository/VolatileContentRepository.h"
 #include "FlowFileRecord.h"
 #include "utils/span.h"
+#include "Connection.h"
 
 using core::repository::FlowFileRepository;
 

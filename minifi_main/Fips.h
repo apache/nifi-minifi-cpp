@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "MainHelper.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/properties/Configure.h"
 
 namespace org::apache::nifi::minifi::fips {

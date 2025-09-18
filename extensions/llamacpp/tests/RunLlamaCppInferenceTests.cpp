@@ -19,7 +19,7 @@
 #include "unit/Catch.h"
 #include "RunLlamaCppInference.h"
 #include "unit/SingleProcessorTestController.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::test {

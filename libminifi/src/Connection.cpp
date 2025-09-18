@@ -25,7 +25,7 @@
 #include <chrono>
 #include <thread>
 #include <list>
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "core/Connectable.h"
 
 using namespace std::literals::chrono_literals;

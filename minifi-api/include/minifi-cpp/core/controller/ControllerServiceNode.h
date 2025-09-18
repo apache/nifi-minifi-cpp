@@ -28,7 +28,7 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "ControllerService.h"
 #include "io/validation.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 

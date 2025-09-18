@@ -21,7 +21,7 @@
 #include <memory>
 
 #include "../PythonBindings.h"
-#include "io/OutputStream.h"
+#include "minifi-cpp/io/OutputStream.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

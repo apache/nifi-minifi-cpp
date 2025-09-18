@@ -29,7 +29,7 @@
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/Enum.h"
 #include "utils/GeneralUtils.h"

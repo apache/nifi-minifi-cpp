@@ -23,7 +23,7 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/ResourceClaim.h"
 #include "io/BufferStream.h"
-#include "io/BaseStream.h"
+#include "minifi-cpp/io/BaseStream.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -34,7 +34,7 @@ class StreamAppendLock {
 
 /**
  * Purpose: Provides a base for all stream based managers. The goal here is to provide
- * a small set of interfaces that provide a small set of operations to provide state 
+ * a small set of interfaces that provide a small set of operations to provide state
  * management for streams.
  */
 template<typename T>

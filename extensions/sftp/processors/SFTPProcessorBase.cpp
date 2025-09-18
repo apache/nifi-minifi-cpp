@@ -31,15 +31,16 @@
 #include <utility>
 #include <vector>
 
-#include "ResourceClaim.h"
-#include "core/FlowFile.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/ResourceClaim.h"
+#include "minifi-cpp/core/FlowFile.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/Relationship.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "io/BufferStream.h"
 #include "utils/ByteArrayCallback.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "io/validation.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -184,9 +185,7 @@ void SFTPProcessorBase::keepaliveThreadFunc() {
                            connection.first.hostname,
                            connection.first.port,
                            seconds_to_next);
-        if (seconds_to_next < min_wait) {
-          min_wait = seconds_to_next;
-        }
+        min_wait = std::min(min_wait, seconds_to_next);
       } else {
         logger_->log_debug("Failed to send keepalive to {}@{}:{}",
                            connection.first.username,
@@ -196,9 +195,7 @@ void SFTPProcessorBase::keepaliveThreadFunc() {
     }
 
     /* Avoid busy loops */
-    if (min_wait < 1) {
-      min_wait = 1;
-    }
+    min_wait = std::max(min_wait, 1);
 
     logger_->log_trace("Keepalive thread is going to sleep for {} s", min_wait);
     keepalive_cv_.wait_for(lock, std::chrono::seconds(min_wait), [this] {

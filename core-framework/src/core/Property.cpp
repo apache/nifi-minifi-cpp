@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 
 #include <utility>
 
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/PropertyErrors.h"
 #include "range/v3/algorithm/none_of.hpp"

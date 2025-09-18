@@ -29,9 +29,9 @@
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileWriterCallback.h"
 #include "utils/ProcessorConfigUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/Resource.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -82,7 +82,8 @@ void PutFile::onTrigger(core::ProcessContext& context, core::ProcessSession& ses
 
   auto dest_path = getDestinationPath(context, flow_file);
   if (!dest_path) {
-    return session.transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
+    return;
   }
 
   logger_->log_trace("PutFile writing file {} into directory {}", dest_path->filename(), dest_path->parent_path());
@@ -90,15 +91,18 @@ void PutFile::onTrigger(core::ProcessContext& context, core::ProcessSession& ses
   if (directoryIsFull(dest_path->parent_path())) {
     logger_->log_warn("Routing to failure because the output directory {} has at least {} files, which exceeds the "
                       "configured max number of files", dest_path->parent_path(), *max_dest_files_);
-    return session.transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
+    return;
   }
 
   if (utils::file::exists(*dest_path)) {
     logger_->log_info("Destination file {} exists; applying Conflict Resolution Strategy: {}", dest_path->string(), magic_enum::enum_name(conflict_resolution_strategy_));
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::fail) {
-      return session.transfer(flow_file, Failure);
+      session.transfer(flow_file, Failure);
+      return;
     } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::ignore) {
-      return session.transfer(flow_file, Success);
+      session.transfer(flow_file, Success);
+      return;
     }
   }
 

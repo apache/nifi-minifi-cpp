@@ -19,8 +19,8 @@
 #include <utility>
 
 #include "io/ZlibStream.h"
-#include "Exception.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/Exception.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/logging/LoggerFactory.h"
 #include "magic_enum.hpp"
 

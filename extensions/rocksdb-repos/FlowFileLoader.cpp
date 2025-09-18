@@ -24,8 +24,8 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "utils/gsl.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/FlowFileRecord.h"
 
 namespace org::apache::nifi::minifi {
 

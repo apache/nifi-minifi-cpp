@@ -20,7 +20,8 @@
 #include <memory>
 
 #include "civetweb.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "io/InputStream.h"
 
 namespace org::apache::nifi::minifi::io {
 

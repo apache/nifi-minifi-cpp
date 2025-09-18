@@ -33,7 +33,7 @@
 #include "core/ProcessSessionReadCallback.h"
 #include "io/StreamSlice.h"
 #include "io/StreamPipe.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/Processor.h"
 
 /* This implementation is only for native Windows systems.  */
@@ -86,7 +86,7 @@ ProcessSessionImpl::~ProcessSessionImpl() {
 
 void ProcessSessionImpl::add(const std::shared_ptr<core::FlowFile> &record) {
   utils::Identifier uuid = record->getUUID();
-  if (updated_flowfiles_.find(uuid) != updated_flowfiles_.end()) {
+  if (updated_flowfiles_.contains(uuid)) {
     throw Exception(ExceptionType::PROCESSOR_EXCEPTION, "Mustn't add file that was provided by this session");
   }
   added_flowfiles_[uuid].flow_file = record;
@@ -238,7 +238,7 @@ void ProcessSessionImpl::transferToCustomRelationship(const std::shared_ptr<core
 }
 
 void ProcessSessionImpl::write(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) {
-  return write(*flow, callback);
+  write(*flow, callback);
 }
 
 void ProcessSessionImpl::write(core::FlowFile &flow, const io::OutputStreamCallback& callback) {
@@ -298,7 +298,8 @@ void ProcessSessionImpl::append(const std::shared_ptr<core::FlowFile> &flow, con
   std::shared_ptr<ResourceClaim> claim = flow->getResourceClaim();
   if (!claim) {
     // No existed claim for append, we need to create new claim
-    return write(flow, callback);
+    write(flow, callback);
+    return;
   }
 
   try {
@@ -457,7 +458,7 @@ detail::ReadBufferResult ProcessSessionImpl::readBuffer(const std::shared_ptr<co
   return result;
 }
 
-void ProcessSessionImpl::importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow) {
+void ProcessSessionImpl::importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow) {  // NOLINT(cppcoreguidelines-rvalue-reference-param-not-moved)
   importFrom(stream, flow);
 }
 /**
