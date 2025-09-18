@@ -100,7 +100,7 @@ class LoggerConfiguration {
     return getCompressedLogs(std::chrono::milliseconds{0});
   }
 
-  void initializeAlertSinks(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<AgentIdentificationProvider>& agent_id);
+  void initializeAlertSinks(const std::shared_ptr<Configure>& config);
 
   template<class Rep, class Period>
   static std::vector<std::unique_ptr<io::InputStream>> getCompressedLogs(const std::chrono::duration<Rep, Period>& time) {

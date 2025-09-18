@@ -1034,7 +1034,16 @@ Here's an example of an alert appender with its available properties:
     appender.alert1.batch.size=100 KB
     appender.alert1.buffer.limit=1 MB
     appender.alert1.level=TRACE
-    appender.alert1.ssl.context.service=<Name of the SSLContextService>
+
+If you want to use SSL connection for the alert appender, you can set up the certificate configuration properties in the minifi.properties file:
+
+    # setup the client certificate and private key PEM files
+    nifi.security.client.certificate=./conf/client.pem
+    nifi.security.client.private.key=./conf/client.pem
+    # setup the client private key passphrase file
+    nifi.security.client.pass.phrase=./conf/password
+    # setup the client CA certificate file
+    nifi.security.client.ca.certificate=./conf/nifi-cert.pem
 
 ### Log levels
 After the appenders are defined you can set the log level and logging target for each of them. Appenders can be set to log everything on a specific log level, but you can also define some appenders to only write logs from specific namespaces or classes with different log levels. The log level can be set to one of the following values: OFF, TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL. The log levels can be set in the following way:

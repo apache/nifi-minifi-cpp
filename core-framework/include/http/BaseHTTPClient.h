@@ -30,6 +30,31 @@
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::http {
+enum class HttpRequestMethod {
+  Get, Post, Put, Patch, Delete, Connect, Head, Options, Trace
+};
+}  // namespace org::apache::nifi::minifi::http
+
+namespace magic_enum::customize {
+using HttpRequestMethod = org::apache::nifi::minifi::http::HttpRequestMethod;
+template<>
+constexpr customize_t enum_name<HttpRequestMethod>(HttpRequestMethod type) noexcept {
+  switch (type) {
+    case HttpRequestMethod::Get: return "GET";
+    case HttpRequestMethod::Post: return "POST";
+    case HttpRequestMethod::Put: return "PUT";
+    case HttpRequestMethod::Patch: return "PATCH";
+    case HttpRequestMethod::Delete: return "DELETE";
+    case HttpRequestMethod::Connect: return "CONNECT";
+    case HttpRequestMethod::Head: return "HEAD";
+    case HttpRequestMethod::Options: return "OPTIONS";
+    case HttpRequestMethod::Trace: return "TRACE";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::http {
 
 struct HTTPProxy {
   std::string host;
@@ -176,12 +201,6 @@ namespace HTTPRequestResponse {
   size_t send_write(char * data, size_t size, size_t nmemb, void * p);
   int seek_callback(void *p, int64_t offset, int);
 }
-
-#undef DELETE  // this is a macro in winnt.h
-
-enum class HttpRequestMethod {
-  GET, POST, PUT, PATCH, DELETE, CONNECT, HEAD, OPTIONS, TRACE
-};
 
 class BaseHTTPClient {
  public:
