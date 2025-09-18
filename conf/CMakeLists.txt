@@ -17,8 +17,6 @@
 # under the License.
 #
 
-# Exclude conf for windows since we'll be doing the work in the WiX template
-
 if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
     set(MINIFI_PATH_FLOW_CONFIG "/${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}/config.yml")
     set(MINIFI_PATH_EXTENSIONS "/usr/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/extensions/*")
@@ -67,6 +65,10 @@ configure_file(
         @ONLY
 )
 
+# Exclude conf for windows since we'll be doing the work in the WiX template
+if (WIN32)
+    return()
+endif()
 
 if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
     install(FILES

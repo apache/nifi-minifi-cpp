@@ -26,7 +26,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
 
     # Define byproducts
     if (WIN32)
-        set(SUFFIX "410.lib")
+        set(SUFFIX "4120.lib")
         set(THIRDPARTY_SUFFIX ".lib")
         set(PREFIX "")
         set(THIRDPARTY_DIR "")
@@ -105,8 +105,10 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     append_third_party_passthrough_args(OPENCV_CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
 
     set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/opencv/c++23_fixes.patch")
+    set(PATCH_FILE_2 "${SOURCE_DIR}/thirdparty/opencv/windows-install-path.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\")")
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\") ")
 
 
     # Build project

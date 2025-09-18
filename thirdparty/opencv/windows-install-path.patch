@@ -1,0 +1,34 @@
+diff --git a/cmake/OpenCVInstallLayout.cmake b/cmake/OpenCVInstallLayout.cmake
+index 25aede72c5..2a9df02b33 100644
+--- a/cmake/OpenCVInstallLayout.cmake
++++ b/cmake/OpenCVInstallLayout.cmake
+@@ -21,18 +21,8 @@ if(ANDROID)
+   ocv_update(OPENCV_JNI_BIN_INSTALL_PATH        "${OPENCV_JNI_INSTALL_PATH}")
+ 
+ elseif(WIN32 AND CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+-
+-  if(DEFINED OpenCV_RUNTIME AND DEFINED OpenCV_ARCH)
+-    ocv_update(OPENCV_INSTALL_BINARIES_PREFIX "${OpenCV_ARCH}/${OpenCV_RUNTIME}/")
+-  else()
+-    message(STATUS "Can't detect runtime and/or arch")
+-    ocv_update(OPENCV_INSTALL_BINARIES_PREFIX "")
+-  endif()
+-  if(OpenCV_STATIC)
+-    ocv_update(OPENCV_INSTALL_BINARIES_SUFFIX "staticlib")
+-  else()
+-    ocv_update(OPENCV_INSTALL_BINARIES_SUFFIX "lib")
+-  endif()
++  ocv_update(OPENCV_INSTALL_BINARIES_PREFIX "")
++  ocv_update(OPENCV_INSTALL_BINARIES_SUFFIX "lib")
+   if(INSTALL_CREATE_DISTRIB)
+     set(_jni_suffix "/${OpenCV_ARCH}")
+   else()
+@@ -44,7 +34,7 @@ elseif(WIN32 AND CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+   ocv_update(OPENCV_SAMPLES_BIN_INSTALL_PATH   "${OPENCV_INSTALL_BINARIES_PREFIX}samples")
+   ocv_update(OPENCV_LIB_INSTALL_PATH           "${OPENCV_INSTALL_BINARIES_PREFIX}${OPENCV_INSTALL_BINARIES_SUFFIX}")
+   ocv_update(OPENCV_LIB_ARCHIVE_INSTALL_PATH   "${OPENCV_LIB_INSTALL_PATH}")
+-  ocv_update(OPENCV_3P_LIB_INSTALL_PATH        "${OPENCV_INSTALL_BINARIES_PREFIX}staticlib")
++  ocv_update(OPENCV_3P_LIB_INSTALL_PATH        "${OPENCV_INSTALL_BINARIES_PREFIX}lib")
+   ocv_update(OPENCV_CONFIG_INSTALL_PATH        ".")
+   ocv_update(OPENCV_INCLUDE_INSTALL_PATH       "include")
+   ocv_update(OPENCV_OTHER_INSTALL_PATH         "etc")
