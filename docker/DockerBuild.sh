@@ -30,6 +30,7 @@ DISTRO_NAME=
 BUILD_NUMBER=
 DOCKER_CCACHE_DUMP_LOCATION=
 DOCKER_SKIP_TESTS=ON
+DOCKER_CREATE_RPM=ON
 CMAKE_BUILD_TYPE=Release
 PLATFORMS=
 PUSH_OR_LOAD="--load"
@@ -105,6 +106,8 @@ while [[ $# -gt 0 ]]; do
         DOCKER_CCACHE_DUMP_LOCATION="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_SKIP_TESTS" ]; then
         DOCKER_SKIP_TESTS="${ARR[1]}"
+      elif [ "${ARR[0]}" == "DOCKER_CREATE_RPM" ]; then
+        DOCKER_CREATE_RPM="${ARR[1]}"
       elif [ "${ARR[0]}" == "CMAKE_BUILD_TYPE" ]; then
         CMAKE_BUILD_TYPE="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_PLATFORMS" ] && [ -n "${ARR[1]}" ]; then
@@ -198,6 +201,7 @@ BUILD_ARGS+=("--build-arg" "UID=${UID_ARG}"
              "--build-arg" "DUMP_LOCATION=${DUMP_LOCATION}"
              "--build-arg" "DISTRO_NAME=${DISTRO_NAME}"
              "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}"
+             "--build-arg" "DOCKER_CREATE_RPM=${DOCKER_CREATE_RPM}"
              "--build-arg" "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 if [ -n "${DUMP_LOCATION}" ]; then
   BUILD_ARGS+=("--build-arg" "DOCKER_MAKE_TARGET=package")
@@ -231,6 +235,8 @@ fi
 if [ -n "${DUMP_LOCATION}" ]; then
   container_id=$(docker create "${TAG}")
   docker cp "${container_id}:/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz" || true
-  docker cp "${container_id}:/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.rpm" "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.rpm" || true
+  if [ "${DOCKER_CREATE_RPM}" == "ON" ]; then
+    docker cp "${container_id}:/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.rpm" "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.rpm" || true
+  fi
   docker rm -f "${container_id}"
 fi
