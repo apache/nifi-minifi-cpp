@@ -27,7 +27,7 @@
 #include "utils/expected.h"
 #include "utils/OptionalUtils.h"
 #include "utils/ParsingUtils.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::api::utils {
 

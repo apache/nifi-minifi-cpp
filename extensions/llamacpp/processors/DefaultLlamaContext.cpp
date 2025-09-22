@@ -16,7 +16,7 @@
  */
 
 #include "DefaultLlamaContext.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "fmt/format.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {

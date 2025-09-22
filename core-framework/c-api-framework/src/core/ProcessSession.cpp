@@ -21,7 +21,7 @@
 #include "io/OutputStream.h"
 #include "api/utils/minifi-c-utils.h"
 #include "api/core/FlowFile.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::api::core {
 

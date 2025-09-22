@@ -20,7 +20,7 @@
 #include "minifi-c.h"
 #include <string>
 #include "nonstd/expected.hpp"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/IProcessContext.h"
 
 namespace org::apache::nifi::minifi::api::core {
