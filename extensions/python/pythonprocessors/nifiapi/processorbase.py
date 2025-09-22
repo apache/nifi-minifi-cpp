@@ -46,7 +46,13 @@ class ProcessorBase(ABC):
             processor.setVersion(self.ProcessorDetails.version)
 
     def onInitialize(self, processor: Processor):
-        processor.setSupportsDynamicProperties()
+        get_dynamic_property_descriptor_attr = getattr(self, 'getDynamicPropertyDescriptor', None)
+        if get_dynamic_property_descriptor_attr and callable(get_dynamic_property_descriptor_attr):
+            processor.setSupportsDynamicProperties()
+            self.supports_dynamic_properties = True
+        else:
+            self.supports_dynamic_properties = False
+
         for property in self.getPropertyDescriptors():
             property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
             expression_language_supported = True if property.expressionLanguageScope != ExpressionLanguageScope.NONE else False

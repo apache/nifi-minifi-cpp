@@ -1235,7 +1235,7 @@ def step_impl(context, install_mode):
         raise Exception("Unknown python install mode.")
 
 
-@given("python virtualenv is installed on the MiNiFi agent")
+@given("python processors without dependencies are present on the MiNiFi agent")
 def step_impl(context):
     context.test.use_nifi_python_processors_without_dependencies_in_minifi()
 

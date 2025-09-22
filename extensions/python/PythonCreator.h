@@ -174,7 +174,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
       .description_ = processor->getDescription(),
       .class_properties_ = processor->getPythonProperties(),
       .class_relationships_ = processor->getPythonRelationships(),
-      .supports_dynamic_properties_ = processor->getPythonSupportDynamicProperties(),
+      .supports_dynamic_properties_ = processor->supportsDynamicProperties(),
       .inputRequirement_ = toString(processor->getInputRequirement()),
       .isSingleThreaded_ = processor->isSingleThreaded()};
 

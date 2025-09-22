@@ -39,6 +39,19 @@ Feature: MiNiFi can use python processors in its flows
     When all instances start up
     Then the Minifi logs contain the following message: "key:Python attribute value:attributevalue" in less than 60 seconds
 
+  Scenario: A MiNiFi instance can handle dynamic properties through native python processor
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a LogDynamicProperties processor with the "Static Property" property set to "static value"
+    And the "Dynamic Property" property of the LogDynamicProperties processor is set to "dynamic value"
+    And the "success" relationship of the GenerateFlowFile processor is connected to the LogDynamicProperties
+    And python processors without dependencies are present on the MiNiFi agent
+
+    When all instances start up
+    Then the Minifi logs contain the following message: "Static Property value: static value" in less than 60 seconds
+    And the Minifi logs contain the following message: "Dynamic Property value: dynamic value" in less than 60 seconds
+    And the Minifi logs contain the following message: "dynamic property key count: 1" in less than 60 seconds
+    And the Minifi logs contain the following message: "dynamic property key: Dynamic Property" in less than 60 seconds
+
   Scenario: Native python processor can read empty input stream
     Given the example MiNiFi python processors are present
     And a GenerateFlowFile processor with the "File Size" property set to "0B"
@@ -67,7 +80,7 @@ Feature: MiNiFi can use python processors in its flows
     When all instances start up
     Then flowfiles with these contents are placed in the monitored directory in less than 5 seconds: "0,1,2,3,4,5"
 
-  @USE_NIFI_PYTHON_PROCESSORS
+  @USE_NIFI_PYTHON_PROCESSORS_WITH_LANGCHAIN
   Scenario Outline: MiNiFi C++ can use native NiFi python processors
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with filename "test_file.log" and content "test_data" is present in "/tmp/input"
@@ -94,20 +107,18 @@ Feature: MiNiFi can use python processors in its flows
       | with a pre-created virtualenv containing the required python packages |
       | using inline defined Python dependencies to install packages          |
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: MiNiFi C++ can use native NiFi source python processors
     Given a CreateFlowFile processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "space" relationship of the CreateFlowFile processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
     When the MiNiFi instance starts up
     Then a flowfile with the content "Hello World!" is placed in the monitored directory in less than 10 seconds
     And the Minifi logs contain the following message: "key:filename value:" in less than 60 seconds
     And the Minifi logs contain the following message: "key:type value:space" in less than 60 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: MiNiFi C++ can use custom relationships in NiFi native python processors
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with filename "test_file.log" and content "test_data_one" is present in "/tmp/input"
@@ -116,7 +127,7 @@ Feature: MiNiFi can use python processors in its flows
     And a file with filename "test_file4.log" and content "test_data_four" is present in "/tmp/input"
     And a RotatingForwarder processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
 
     And the "success" relationship of the GetFile processor is connected to the RotatingForwarder
     And the "first" relationship of the RotatingForwarder processor is connected to the PutFile
@@ -128,12 +139,11 @@ Feature: MiNiFi can use python processors in its flows
 
     Then flowfiles with these contents are placed in the monitored directory in less than 10 seconds: "test_data_one,test_data_two,test_data_three,test_data_four"
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: MiNiFi C++ can use special property types including controller services in NiFi native python processors
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a SpecialPropertyTypeChecker processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
     And a SSL context service is set up for the following processor: "SpecialPropertyTypeChecker"
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the SpecialPropertyTypeChecker
@@ -143,12 +153,11 @@ Feature: MiNiFi can use python processors in its flows
 
     Then one flowfile with the contents "Check successful!" is placed in the monitored directory in less than 30 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: NiFi native python processor's ProcessContext interface can be used in MiNiFi C++
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a ProcessContextInterfaceChecker processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the ProcessContextInterfaceChecker
     And the "myrelationship" relationship of the ProcessContextInterfaceChecker processor is connected to the PutFile
@@ -157,14 +166,13 @@ Feature: MiNiFi can use python processors in its flows
 
     Then one flowfile with the contents "Check successful!" is placed in the monitored directory in less than 30 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
-  Scenario: NiiFi native python processor can update attributes of a flow file transferred to failure relationship
+  Scenario: NiFi native python processor can update attributes of a flow file transferred to failure relationship
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a UpdateAttribute processor with the "my.attribute" property set to "my.value"
     And the "error.message" property of the UpdateAttribute processor is set to "Old error"
     And a FailureWithAttributes processor
     And a LogAttribute processor
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the FailureWithAttributes
@@ -175,12 +183,11 @@ Feature: MiNiFi can use python processors in its flows
     Then the Minifi logs contain the following message: "key:error.message value:Error" in less than 60 seconds
     And the Minifi logs contain the following message: "key:my.attribute value:my.value" in less than 10 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: NiFi native python processors support relative imports
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a RelativeImporterProcessor processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the RelativeImporterProcessor
     And the "success" relationship of the RelativeImporterProcessor processor is connected to the PutFile
@@ -189,21 +196,19 @@ Feature: MiNiFi can use python processors in its flows
 
     Then one flowfile with the contents "The final result is 1990" is placed in the monitored directory in less than 30 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: NiFi native python processor is allowed to be triggered without creating any flow files
     Given a CreateNothing processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the CreateNothing processor is connected to the PutFile
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
     When the MiNiFi instance starts up
     Then no files are placed in the monitored directory in 10 seconds of running time
     And the Minifi logs do not contain the following message: "Caught Exception during SchedulingAgent::onTrigger of processor CreateNothing" after 1 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: NiFi native python processor cannot specify content of failure result
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a FailureWithContent processor
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the FailureWithContent
 
@@ -211,11 +216,10 @@ Feature: MiNiFi can use python processors in its flows
 
     Then the Minifi logs contain the following message: "'failure' relationship should not have content, the original flow file will be transferred automatically in this case." in less than 60 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: NiFi native python processor cannot transfer to original relationship
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a TransferToOriginal processor
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the TransferToOriginal
 
@@ -223,7 +227,6 @@ Feature: MiNiFi can use python processors in its flows
 
     Then the Minifi logs contain the following message: "Result relationship cannot be 'original', it is reserved for the original flow file, and transferred automatically in non-failure cases." in less than 60 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: MiNiFi C++ supports RecordTransform native python processors
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content '{"group": "group1", "name": "John"}\n{"group": "group1", "name": "Jane"}\n{"group": "group2", "name": "Kyle"}\n{"name": "Zoe"}' is present in '/tmp/input'
@@ -234,7 +237,7 @@ Feature: MiNiFi can use python processors in its flows
     And a JsonRecordSetWriter controller service is set up with "Array" output grouping
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "Log Payload" property of the LogAttribute processor is set to "true"
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
 
     And the "success" relationship of the GetFile processor is connected to the SetRecordField
     And the "success" relationship of the SetRecordField processor is connected to the LogAttribute
@@ -247,12 +250,22 @@ Feature: MiNiFi can use python processors in its flows
     And the Minifi logs contain the following message: '[{"group":"group1","name":"Steve"}]' in less than 5 seconds
     And the Minifi logs contain the following message: '[{}]' in less than 5 seconds
 
-  @USE_NIFI_PYTHON_PROCESSORS
   Scenario: MiNiFi C++ can use state manager commands in native NiFi python processors
     Given a TestStateManager processor
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "success" relationship of the TestStateManager processor is connected to the LogAttribute
-    And python virtualenv is installed on the MiNiFi agent
+    And python processors without dependencies are present on the MiNiFi agent
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "key:state_key value:1" in less than 60 seconds
     And the Minifi logs contain the following message: "key:state_key value:2" in less than 60 seconds
+
+  Scenario: MiNiFi C++ can use dynamic properties in native NiFi python processors
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a NifiStyleLogDynamicProperties processor with the "Static Property" property set to "static value"
+    And the "Dynamic Property" property of the NifiStyleLogDynamicProperties processor is set to "dynamic value"
+    And the "success" relationship of the GenerateFlowFile processor is connected to the NifiStyleLogDynamicProperties
+    And python processors without dependencies are present on the MiNiFi agent
+
+    When all instances start up
+    Then the Minifi logs contain the following message: "Static Property value: static value" in less than 60 seconds
+    And the Minifi logs contain the following message: "Dynamic Property value: dynamic value" in less than 60 seconds

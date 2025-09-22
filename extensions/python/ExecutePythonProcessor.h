@@ -86,7 +86,11 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; }
+  minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; }
+  bool isSingleThreaded() const override { return IsSingleThreaded; }
+  ADD_GET_PROCESSOR_NAME
 
   void initializeScript();
   void initialize() override;
@@ -105,7 +109,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
     return python_properties_;
   }
 
-  bool getPythonSupportDynamicProperties() {
+  bool supportsDynamicProperties() const override {
     return python_dynamic_;
   }
 

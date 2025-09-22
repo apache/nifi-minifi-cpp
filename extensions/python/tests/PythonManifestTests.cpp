@@ -111,6 +111,11 @@ class MyPyProc3(FlowFileTransform):
     def getPropertyDescriptors(self):
         return [self.COLOR, self.MOOD]
 
+    def getDynamicPropertyDescriptor(self, propertyname):
+        return PropertyDescriptor(name=propertyname,
+                                  description="A user-defined property",
+                                  dynamic=True)
+
     def transform(self, context, flow_file):
         color = context.getProperty(self.COLOR).getValue()
         mood = context.getProperty(self.MOOD).evaluateAttributeExpressions(flowfile).getValue() or "OK"
