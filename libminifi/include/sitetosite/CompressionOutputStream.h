@@ -29,7 +29,6 @@ class CompressionOutputStream : public io::StreamImpl, public virtual io::Output
  public:
   explicit CompressionOutputStream(gsl::not_null<io::OutputStream*> internal_stream)
       : internal_stream_(internal_stream) {
-    buffer_.resize(COMPRESSION_BUFFER_SIZE);
   }
 
   using io::OutputStream::write;
@@ -43,7 +42,7 @@ class CompressionOutputStream : public io::StreamImpl, public virtual io::Output
   bool was_data_written_{false};
   size_t buffer_offset_{0};
   gsl::not_null<io::OutputStream*> internal_stream_;
-  std::vector<std::byte> buffer_{};
+  std::vector<std::byte> buffer_{COMPRESSION_BUFFER_SIZE};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressionOutputStream>::getLogger();
 };
 

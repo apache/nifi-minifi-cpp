@@ -28,7 +28,6 @@ class CompressionInputStream : public io::InputStreamImpl {
  public:
   explicit CompressionInputStream(gsl::not_null<io::InputStream*> internal_stream)
       : internal_stream_(internal_stream) {
-    buffer_.resize(COMPRESSION_BUFFER_SIZE);
   }
 
   using io::InputStream::read;
@@ -45,7 +44,7 @@ class CompressionInputStream : public io::InputStreamImpl {
 
   bool eof_{false};
   gsl::not_null<io::InputStream*> internal_stream_;
-  std::vector<std::byte> buffer_{};
+  std::vector<std::byte> buffer_{COMPRESSION_BUFFER_SIZE};
   size_t buffer_offset_{0};
   size_t buffered_data_length_{0};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressionInputStream>::getLogger();

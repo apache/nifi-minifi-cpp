@@ -47,12 +47,6 @@ size_t CompressionInputStream::decompressData() {
     return io::STREAM_ERROR;
   }
 
-  ret = internal_stream_->read(std::span(local_buffer).subspan(0, compressed_size));
-  if (io::isError(ret) || ret != compressed_size) {
-    logger_->log_error("Failed to read compressed data, ret: {}", ret);
-    return io::STREAM_ERROR;
-  }
-
   if (compressed_size == 0 && original_size != 0) {
     logger_->log_error("Compressed size is 0 but original size is not");
     return io::STREAM_ERROR;
@@ -65,6 +59,12 @@ size_t CompressionInputStream::decompressData() {
 
   if (original_size > COMPRESSION_BUFFER_SIZE) {
     logger_->log_error("Original size exceeds buffer size");
+    return io::STREAM_ERROR;
+  }
+
+  ret = internal_stream_->read(std::span(local_buffer).subspan(0, compressed_size));
+  if (io::isError(ret) || ret != compressed_size) {
+    logger_->log_error("Failed to read compressed data, ret: {}", ret);
     return io::STREAM_ERROR;
   }
 

@@ -22,7 +22,7 @@
 
 namespace org::apache::nifi::minifi::sitetosite {
 
-static constexpr size_t COMPRESSION_BUFFER_SIZE = 65536;
-static constexpr std::array<char, 4> SYNC_BYTES = { 'S', 'Y', 'N', 'C' };
+inline constexpr size_t COMPRESSION_BUFFER_SIZE = 65536;
+inline constexpr std::array<char, 4> SYNC_BYTES = { 'S', 'Y', 'N', 'C' };
 
 }  // namespace org::apache::nifi::minifi::sitetosite

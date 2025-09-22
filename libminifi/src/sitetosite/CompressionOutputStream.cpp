@@ -64,8 +64,6 @@ size_t CompressionOutputStream::compressAndWrite() {
     return ret;
   }
 
-  was_data_written_ = true;
-
   io::BufferStream buffer_stream;
   {
     io::ZlibCompressStream zlib_stream{gsl::make_not_null(&buffer_stream), io::ZlibCompressionFormat::ZLIB, Z_BEST_SPEED};
@@ -99,6 +97,7 @@ size_t CompressionOutputStream::compressAndWrite() {
   }
 
   buffer_offset_ = 0;
+  was_data_written_ = true;
   return ret;
 }
 
