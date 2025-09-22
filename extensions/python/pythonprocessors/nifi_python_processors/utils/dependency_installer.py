@@ -45,7 +45,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         sys.exit(1)
 
-    print("Installing dependencies for MiNiFi python processors...")
+    print("Checking dependencies for MiNiFi python processors...")
 
     # --no-cache-dir is used to be in line with NiFi's dependency install behavior
     command = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "--progress-bar", "off"]
@@ -69,3 +69,5 @@ if __name__ == '__main__':
         except subprocess.CalledProcessError as e:
             print("Error occurred while installing dependencies: {}".format(e))
             sys.exit(1)
+    else:
+        print("No dependencies were found for MiNiFi python processors. No python packages were installed.")
