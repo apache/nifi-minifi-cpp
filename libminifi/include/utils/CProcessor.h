@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include "core/Annotation.h"
+#include "minifi-cpp/core/Annotation.h"
 #include "core/ProcessorMetrics.h"
 #include "minifi-c/minifi-c.h"
 #include "minifi-cpp/agent/agent_docs.h"

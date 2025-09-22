@@ -18,11 +18,11 @@
 
 #include "minifi-c.h"
 #include <string_view>
-#include "core/Annotation.h"
+#include "minifi-cpp/core/Annotation.h"
 #include "utils/gsl.h"
 #include "core/ClassName.h"
 #include "utils/StringUtils.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 
 namespace org::apache::nifi::minifi::api::utils {
 

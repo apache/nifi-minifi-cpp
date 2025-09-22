@@ -30,7 +30,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/Annotation.h"
+#include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/DynamicProperty.h"
 // #include "minifi-cpp/core/ProcessorMetrics.h"
 #include "utils/gsl.h"

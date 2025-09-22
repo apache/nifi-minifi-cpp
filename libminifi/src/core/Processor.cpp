@@ -30,6 +30,7 @@
 #include "minifi-cpp/Connection.h"
 #include "core/Connectable.h"
 #include "core/logging/LoggerFactory.h"
+#include "core/logging/LoggerBase.h"
 #include "minifi-cpp/core/ProcessorConfig.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
