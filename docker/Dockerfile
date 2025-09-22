@@ -52,10 +52,10 @@ RUN apk --no-cache add gcc \
   doxygen \
   ccache
 
-ENV USER minificpp
-ENV MINIFI_BASE_DIR /opt/minifi
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
-ENV MINIFI_VERSION ${MINIFI_VERSION}
+ENV USER=minificpp
+ENV MINIFI_BASE_DIR=/opt/minifi
+ENV MINIFI_HOME=$MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
+ENV MINIFI_VERSION=${MINIFI_VERSION}
 
 # Setup minificpp user
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
@@ -85,10 +85,10 @@ ARG MINIFI_OPTIONS
 # Add testing repo for rocksdb
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
 
-ENV USER minificpp
-ENV MINIFI_BASE_DIR /opt/minifi
-ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
-ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
+ENV USER=minificpp
+ENV MINIFI_BASE_DIR=/opt/minifi
+ENV MINIFI_HOME=${MINIFI_BASE_DIR}/minifi-current
+ENV MINIFI_VERSIONED_HOME=${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
 
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
     install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME} && \
