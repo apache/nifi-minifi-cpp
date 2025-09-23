@@ -16,14 +16,21 @@
 # Apache NiFi - MiNiFi - Python Processors Readme
 
 
-This readme defines the configuration parameters to use ExecutePythonProcessor to run native python processors. ExecutePythonProcessor is not used explicitly in the flow, instead the python processors are referenced directly by their filename in the flow configuration, ExecutePythonProcessor only manages the execution of these processors under the hood.
+This readme defines the configuration parameters to run native python processors.
 
 ## Table of Contents
 - [Requirements](#requirements)
+  - [CentOS/RHEL system python](#centosrhel-system-python)
+  - [Debian/Ubuntu system python](#debianubuntu-system-python)
+  - [Windows system python](#windows-system-python)
+  - [Anaconda](#anaconda)
+  - [PyEnv](#pyenv)
 - [Description](#description)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Installing Python processors](#installing-python-processors)
+  - [Example: Sentiment Analysis](#example-sentiment-analysis)
+- [Using MiNiFi C++ style native python processors](#using-minifi-c-style-native-python-processors)
 - [Using NiFi Python Processors](#using-nifi-python-processors)
 - [Use Python processors from virtualenv](#use-python-processors-from-virtualenv)
 - [Automatically install dependencies from requirements.txt files](#automatically-install-dependencies-from-requirementstxt-files)
@@ -75,10 +82,13 @@ export LD_LIBRARY_PATH="${PYENV_ROOT}/versions/${PY_VERSION}/lib${LD_LIBRARY_PAT
 
 ## Description
 
-Python native processors can be updated at any time by simply adding a new processor to the directory defined in
-the `minifi.properties` file in the `nifi.python.processor.dir` property. The processor name, when provided to MiNiFi C++ and any C2 manifest will be that
+There are two types of python processors that can be used: MiNiFi C++ style native python processors and NiFi style python processors. MiNiFi C++ style native python processors are defined using a simple python API, while NiFi python processors use the NiFi python API documented in the [Apache NiFi Python Developer’s Guide](https://nifi.apache.org/nifi-docs/python-developer-guide.html). This readme describes the use of both types of processors.
+
+Python processors can be updated at any time by simply adding a new processor to the minifi-python directory defined in
+the `minifi.properties` file in the `nifi.python.processor.dir` property. For NiFi style python processors the `${nifi.python.processor.dir}/nifi_python_processor` directory should be used.
+The processor name, when provided to MiNiFi C++ and any C2 manifest will be that
 of the name of the python script. For example, "AttributePrinter.py" will be named and referenced in the flow
-as "org.apache.nifi.minifi.processors.AttributePrinter" and would look something like this in the flow configuration:
+as "org.apache.nifi.minifi.processors.AttributePrinter" and would look like this in the flow configuration:
 
 ```yaml
 - name: My AttributePrinter
@@ -93,9 +103,78 @@ as "org.apache.nifi.minifi.processors.AttributePrinter" and would look something
     Attributes To Print: filename,path
 ```
 
+The class name must follow the directory hierarchy after the `org.apache.nifi.minifi.processors` prefix. For example, if there is a NiFi style python processor in the nifi_python_processors directory in the mypackage package (which means placed in the `minifi-python/nifi_python_processors/mypackage` directory) and the processor file is named MyProcessor.py, the class name will be `org.apache.nifi.minifi.processors.nifi_python_processors.mypackage.MyProcessor`:
+
+```yaml
+- name: My MyProcessor
+  id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
+  class: org.apache.nifi.minifi.processors.nifi_python_processors.mypackage.MyProcessor
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+    - failure
+    - success
+    - original
+  Properties:
+```
+
 Every python processor has a success, failure and original relationship where the original relationship is auto-terminated by default.
 
-Methods that are enabled within the processor are  describe, onSchedule, onInitialize, and onTrigger.
+To see some example minifi style native python processors, please refer to the pythonprocessor-examples in the repository under the extensions/python/pythonprocessor-examples directory.
+
+For NiFi style python processor examples please refer to the [Apache NiFi Python Extensions](https://github.com/apache/nifi-python-extensions) repository.
+
+
+## Installation
+
+On Linux, you need the "libminifi-python-lib-loader-extension.so", "libminifi-python-script-extension.so" and
+"libminifi-script-extension.so" libraries to be present in the extensions directory, and "minifi_native.so"
+must be a symbolic link to "libminifi-python-script-extension.so". You can build these libraries by setting the `ENABLE_PYTHON_SCRIPTING` CMake build option to `ON`.
+
+On Windows, when installing MiNiFi using the MSI installer, enable the "minifi-python-script-extension" feature, which is disabled by default.
+
+
+## Configuration
+
+To enable python Processor capabilities, the following options need to be provided in minifi.properties. The directory specified
+can contain processors. Note that the processor name will be the reference in your flow. Directories are treated like package names.
+Therefore if the nifi.python.processor.dir is /tmp/ and you have a subdirectory named packagedir with the file name file.py, it will
+produce a processor with the name org.apache.nifi.minifi.processors.packagedir.file. Note that each subdirectory will append a package
+to the reference class name.
+
+    # in minifi.properties
+    #directory where processors exist
+    nifi.python.processor.dir=XXXX
+
+NiFi style python processor specific configuration options are described in the [Using NiFi Python Processors](#using-nifi-python-processors) section.
+
+
+## Installing Python processors
+
+In order to make Python processors available for flows, you need to copy them to the minifi-python directory (or to the
+minifi-python/nifi_python_processors subdirectory, for processors using the NiFi API). You can copy either individual
+processor modules (files), or packages (directories) containing one or more processors.
+
+The examples directory (pythonprocessor-examples in the source, or minifi-python-examples in the MiNiFi installation)
+contains sample python processors.
+
+Normally, python processor dependencies [should be installed automatically](#automatically-install-dependencies-from-requirementstxt-files).
+In some cases, you may need to install the required dependencies manually, either on the system or in the virtual environment.
+
+Note that on startup, MiNiFi will load all Python processors under the minifi-python directory, and at the first startup
+it will install all their dependencies into the virtualenv -- this can take a long time. A virtualenv containing many
+dependencies may use several gigabytes of disk space. You should only install the Python processors you will be using
+in your flow.
+
+### Example: Sentiment Analysis
+
+The SentimentAnalysis processor will perform a Vader Sentiment Analysis. This requires that you install nltk and VaderSentiment
+    pip install nltk
+    pip install VaderSentiment
+
+
+## Using MiNiFi C++ style native python processors
+
+In MiNiFi C++ style native python processors, methods that are enabled within the processor are  describe, onSchedule, onInitialize, and onTrigger.
 
 Describe is passed the processor and is a required function. You must set the description like so:
 
@@ -143,56 +222,9 @@ class VaderSentiment(object):
     return len(self.content)
 ```
 
-
-## Installation
-
-On Linux, you need the "libminifi-python-lib-loader-extension.so", "libminifi-python-script-extension.so" and
-"libminifi-script-extension.so" libraries to be present in the extensions directory, and "minifi_native.so"
-must be a symbolic link to "libminifi-python-script-extension.so". You can build these libraries by setting the `ENABLE_PYTHON_SCRIPTING` CMake build option to `ON`.
-
-On Windows, when installing MiNiFi using the MSI installer, enable the "minifi-python-script-extension" feature, which is disabled by default.
-
-
-## Configuration
-
-To enable python Processor capabilities, the following options need to be provided in minifi.properties. The directory specified
-can contain processors. Note that the processor name will be the reference in your flow. Directories are treated like package names.
-Therefore if the nifi.python.processor.dir is /tmp/ and you have a subdirectory named packagedir with the file name file.py, it will
-produce a processor with the name org.apache.nifi.minifi.processors.packagedir.file. Note that each subdirectory will append a package
-to the reference class name.
-
-    # in minifi.properties
-    #directory where processors exist
-    nifi.python.processor.dir=XXXX
-
-
-## Installing Python processors
-
-In order to make Python processors available for flows, you need to copy them to the minifi-python directory (or to the
-minifi-python/nifi_python_processors subdirectory, for processors using the NiFi API). You can copy either individual
-processor modules (files), or packages (directories) containing one or more processors.
-
-The examples directory (pythonprocessor-examples in the source, or minifi-python-examples in the MiNiFi installation)
-contains sample python processors.
-
-Normally, python processor dependencies [should be installed automatically](#automatically-install-dependencies-from-requirementstxt-files).
-In some cases, you may need to install the required dependencies manually, either on the system or in the virtual environment.
-
-Note that on startup, MiNiFi will load all Python processors under the minifi-python directory, and at the first startup
-it will install all their dependencies into the virtualenv -- this can take a long time. A virtualenv containing many
-dependencies may use several gigabytes of disk space. You should only install the Python processors you will be using
-in your flow.
-
-### Example: Sentiment Analysis
-
-The SentimentAnalysis processor will perform a Vader Sentiment Analysis. This requires that you install nltk and VaderSentiment
-    pip install nltk
-    pip install VaderSentiment
-
-
 ## Using NiFi Python Processors
 
-MiNiFi C++ supports the use of NiFi Python processors, that are inherited from the FlowFileTransform, RecordTransform or the FlowFileSource base class. To use these processors, copy the Python processor module to the nifi_python_processors subdirectory of the python directory. By default, the python directory is ${minifi_root}/minifi-python. To see how to write NiFi Python processors, please refer to the Python Developer Guide under the [Apache NiFi documentation](https://nifi.apache.org/documentation/v2/).
+MiNiFi C++ supports the use of NiFi Python processors, that are inherited from the FlowFileTransform, RecordTransform or the FlowFileSource base class. To use these processors, copy the Python processor module to the nifi_python_processors subdirectory of the python directory. By default, the python directory is ${minifi_root}/minifi-python. To see how to write NiFi Python processors, please refer to the Python Developer Guide under the [Apache NiFi documentation](https://nifi.apache.org/nifi-docs/python-developer-guide.html).
 
 In the flow configuration these Python processors can be referenced by their fully qualified class name, which looks like this: org.apache.nifi.minifi.processors.nifi_python_processors.<package_name>.<processor_name>. For example, the fully qualified class name of the PromptChatGPT processor implemented in the file nifi_python_processors/PromptChatGPT.py is org.apache.nifi.minifi.processors.nifi_python_processors.PromptChatGPT. If a processor is copied under a subdirectory, because it is part of a python submodule, the submodule name will be appended to the fully qualified class name. For example, if the QueryPinecone processor is implemented in the QueryPinecone.py file that is copied to nifi_python_processors/vectorstores/QueryPinecone.py, the fully qualified class name will be org.apache.nifi.minifi.processors.nifi_python_processors.vectorstores.QueryPinecone in the configuration file.
 

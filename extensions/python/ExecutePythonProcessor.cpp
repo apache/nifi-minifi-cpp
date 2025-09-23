@@ -36,90 +36,49 @@
 
 namespace org::apache::nifi::minifi::extensions::python::processors {
 
-void ExecutePythonProcessor::initializeScript() {
-  if (processor_initialized_) {
-    logger_->log_debug("Processor has already been initialized, returning...");
-    return;
-  }
-
-  try {
-    loadScript();
-  } catch(const std::runtime_error&) {
-    return;
-  }
-
-  // In case of native python processors we require initialization before onSchedule
-  // so that we can provide manifest of processor identity on C2
-  python_script_engine_ = createScriptEngine();
-  initalizeThroughScriptEngine();
-}
-
 void ExecutePythonProcessor::initialize() {
   initializeScript();
-  std::vector<core::PropertyReference> all_properties{Properties.begin(), Properties.end()};
+  std::vector<core::PropertyReference> all_properties;
   ranges::transform(python_properties_, std::back_inserter(all_properties), &core::Property::getReference);
   setSupportedProperties(all_properties);
   setSupportedRelationships(Relationships);
   logger_->log_debug("Processor has been initialized.");
 }
 
-void ExecutePythonProcessor::initalizeThroughScriptEngine() {
-  try {
-    appendPathForImportModules();
-    python_script_engine_->appendModulePaths(python_paths_);
-    python_script_engine_->setModuleAttributes(qualified_module_name_);
-    python_script_engine_->eval(script_to_exec_);
-    if (python_class_name_) {
-      python_script_engine_->initializeProcessorObject(*python_class_name_);
-    }
-    python_script_engine_->describe(this);
-    python_script_engine_->onInitialize(this);
-    processor_initialized_ = true;
-  } catch (const PythonScriptWarning&) {
-    throw;
-  } catch (const std::exception& e) {
-    std::string python_processor_name = python_class_name_ ? *python_class_name_ : script_file_path_;
-    logger_->log_error("Failed to initialize python processor '{}' due to error: {}", python_processor_name, e.what());
-    throw;
-  }
-}
-
 void ExecutePythonProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*sessionFactory*/) {
-  context.addAutoTerminatedRelationship(Original);
-  if (!processor_initialized_) {
-    script_file_path_ = context.getProperty(ScriptFile.name).value_or("");
-    script_to_exec_ = context.getProperty(ScriptBody.name).value_or("");
-    module_directory_ = context.getProperty(ModuleDirectory.name).value_or("");
-    loadScript();
-    python_script_engine_ = createScriptEngine();
-    initalizeThroughScriptEngine();
-  } else {
-    reloadScriptIfUsingScriptFileProperty();
-    if (script_to_exec_.empty()) {
-      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-    }
-  }
-
   gsl_Expects(python_script_engine_);
+  context.addAutoTerminatedRelationship(Original);
+  reloadScriptFile();
   python_script_engine_->eval(script_to_exec_);
   python_script_engine_->onSchedule(context);
-
-  reload_on_script_change_ = utils::parseBoolProperty(context, ReloadOnScriptChange);
 }
 
 void ExecutePythonProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  reloadScriptIfUsingScriptFileProperty();
-  if (script_to_exec_.empty()) {
-    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-  }
-
+  gsl_Expects(python_script_engine_);
+  reloadScriptFile();
   python_script_engine_->onTrigger(context, session);
 }
 
-void ExecutePythonProcessor::appendPathForImportModules() const {
-  if (!module_directory_.empty()) {
-    python_script_engine_->appendModulePaths(utils::string::splitAndTrimRemovingEmpty(module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
-  }
+std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships() const {
+  gsl_Expects(python_script_engine_);
+  std::vector<core::Relationship> relationships{Relationships.begin(), Relationships.end()};
+  auto custom_relationships = python_script_engine_->getCustomPythonRelationships();
+  relationships.reserve(relationships.size() + std::distance(custom_relationships.begin(), custom_relationships.end()));
+  relationships.insert(relationships.end(), custom_relationships.begin(), custom_relationships.end());
+  return relationships;
+}
+
+void ExecutePythonProcessor::setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) {
+  gsl_Expects(logger_ && python_logger_);
+  logger_->setLogCallback(callback);
+  python_logger_->setLogCallback(callback);
+}
+
+void ExecutePythonProcessor::initializeScript() {
+  loadScriptFromFile();
+  last_script_write_time_ = utils::file::last_write_time(script_file_path_);
+  python_script_engine_ = createScriptEngine();
+  initalizeThroughScriptEngine();
 }
 
 void ExecutePythonProcessor::loadScriptFromFile() {
@@ -129,32 +88,8 @@ void ExecutePythonProcessor::loadScriptFromFile() {
     throw std::runtime_error("Failed to read Script File: " + script_file_path_);
   }
   script_to_exec_ = std::string{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
-}
-
-void ExecutePythonProcessor::loadScript() {
-  if (script_file_path_.empty() && script_to_exec_.empty()) {
-    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-  }
-
-  if (!script_file_path_.empty()) {
-    if (!script_to_exec_.empty()) {
-      throw std::runtime_error("Only one of Script File or Script Body may be used");
-    }
-    loadScriptFromFile();
-    last_script_write_time_ = utils::file::last_write_time(script_file_path_);
-  }
-}
-
-void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
-  if (script_file_path_.empty() || !reload_on_script_change_) {
-    return;
-  }
-  auto file_write_time = utils::file::last_write_time(script_file_path_);
-  if (file_write_time != last_script_write_time_) {
-    logger_->log_debug("Script file has changed since last time, reloading...");
-    loadScriptFromFile();
-    last_script_write_time_ = file_write_time;
-    python_script_engine_->eval(script_to_exec_);
+  if (script_to_exec_.empty()) {
+    throw std::runtime_error("Script body to execute is empty");
   }
 }
 
@@ -162,6 +97,38 @@ std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine()
   auto engine = std::make_unique<PythonScriptEngine>();
   engine->initialize(Success, Failure, Original, python_logger_);
   return engine;
+}
+
+void ExecutePythonProcessor::initalizeThroughScriptEngine() {
+  gsl_Expects(python_script_engine_);
+  try {
+    python_script_engine_->appendModulePaths(python_paths_);
+    python_script_engine_->setModuleAttributes(qualified_module_name_);
+    python_script_engine_->eval(script_to_exec_);
+    if (python_class_name_) {
+      python_script_engine_->initializeProcessorObject(*python_class_name_);
+    }
+    python_script_engine_->describe(this);
+    python_script_engine_->onInitialize(this);
+  } catch (const PythonScriptWarning&) {
+    throw;
+  } catch (const std::exception& e) {
+    std::string python_processor_name = python_class_name_ ? *python_class_name_ : script_file_path_;
+    logger_->log_error("Failed to initialize python processor '{}' due to error: {}", python_processor_name, e.what());
+    throw;
+  }
+}
+
+void ExecutePythonProcessor::reloadScriptFile() {
+  auto file_write_time = utils::file::last_write_time(script_file_path_);
+  if (file_write_time == last_script_write_time_) {
+    return;
+  }
+
+  logger_->log_debug("Script file has changed since last time, reloading...");
+  loadScriptFromFile();
+  last_script_write_time_ = file_write_time;
+  python_script_engine_->eval(script_to_exec_);
 }
 
 namespace {
@@ -177,8 +144,7 @@ enum class PropertyValidatorCode : int64_t {
 
 const core::PropertyValidator& translateCodeToPropertyValidator(const PropertyValidatorCode& code) {
   switch (code) {
-    case PropertyValidatorCode::INTEGER:  // NOLINT(*-branch-clone)
-      return core::StandardPropertyValidators::INTEGER_VALIDATOR;
+    case PropertyValidatorCode::INTEGER:
     case PropertyValidatorCode::LONG:
       return core::StandardPropertyValidators::INTEGER_VALIDATOR;
     case PropertyValidatorCode::BOOLEAN:
@@ -218,21 +184,5 @@ void ExecutePythonProcessor::addProperty(const std::string &name, const std::str
   std::lock_guard<std::mutex> lock(python_properties_mutex_);
   python_properties_.emplace_back(property);
 }
-
-std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships() const {
-  std::vector<core::Relationship> relationships{Relationships.begin(), Relationships.end()};
-  auto custom_relationships = python_script_engine_->getCustomPythonRelationships();
-  relationships.reserve(relationships.size() + std::distance(custom_relationships.begin(), custom_relationships.end()));
-  relationships.insert(relationships.end(), custom_relationships.begin(), custom_relationships.end());
-  return relationships;
-}
-
-void ExecutePythonProcessor::setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) {
-  gsl_Expects(logger_ && python_logger_);
-  logger_->setLogCallback(callback);
-  python_logger_->setLogCallback(callback);
-}
-
-REGISTER_RESOURCE(ExecutePythonProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::python::processors

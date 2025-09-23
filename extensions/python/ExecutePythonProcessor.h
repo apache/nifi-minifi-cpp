@@ -42,43 +42,14 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
  public:
   explicit ExecutePythonProcessor(core::ProcessorMetadata metadata)
       : ProcessorImpl(metadata),
-        processor_initialized_(false),
-        python_dynamic_(false),
-        reload_on_script_change_(true) {
+        python_dynamic_(false) {
     python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName(), metadata.uuid);
   }
 
-  EXTENSIONAPI static constexpr const char* Description = "DEPRECATED. This processor should only be used internally for running NiFi and MiNiFi C++ style python processors. "
-      "Do not use this processor in your own flows, move your python processors to the minifi-python directory instead, where they will be parsed, "
-      "and then they can be used with their filename as the processor class in the flow configuration.\n\n"
-      "This processor executes a script given the flow file and a process session. "
-      "The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as "
-      "any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back. Scripts must define an onTrigger function which accepts NiFi Context "
-      "and ProcessSession objects. Scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state "
-      "if they wish. The python script files are expected to contain `describe(processor)` and `onTrigger(context, session)`.";
+  EXTENSIONAPI static constexpr const char* Description = "This processor is only used internally for running NiFi and MiNiFi C++ style python processors. Do not use this processor in your own "
+      "flows. Move your python processors to the minifi-python directory where they will be parsed and then they can be used with filename as processor classes.";
 
-  EXTENSIONAPI static constexpr auto ScriptFile = core::PropertyDefinitionBuilder<>::createProperty("Script File")
-      .withDescription("Path to script file to execute. Only one of Script File or Script Body may be used")
-      .build();
-  EXTENSIONAPI static constexpr auto ScriptBody = core::PropertyDefinitionBuilder<>::createProperty("Script Body")
-      .withDescription("Script to execute. Only one of Script File or Script Body may be used")
-      .build();
-  EXTENSIONAPI static constexpr auto ModuleDirectory = core::PropertyDefinitionBuilder<>::createProperty("Module Directory")
-      .withDescription("Comma-separated list of paths to files and/or directories which contain modules required by the script")
-      .build();
-  EXTENSIONAPI static constexpr auto ReloadOnScriptChange = core::PropertyDefinitionBuilder<>::createProperty("Reload on Script Change")
-      .withDescription("If true and Script File property is used, then script file will be reloaded if it has changed, otherwise the first loaded version will be used at all times.")
-      .isRequired(true)
-      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
-      .withDefaultValue("true")
-      .build();
-  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
-      ScriptFile,
-      ScriptBody,
-      ModuleDirectory,
-      ReloadOnScriptChange
-  });
-
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Script succeeds"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Script fails"};
@@ -96,7 +67,6 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   bool isSingleThreaded() const override { return IsSingleThreaded; }
   ADD_GET_PROCESSOR_NAME
 
-  void initializeScript();
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
@@ -155,11 +125,9 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   std::string description_;
   std::optional<std::string> version_;
 
-  bool processor_initialized_;
   bool python_dynamic_;
 
   std::string script_to_exec_;
-  bool reload_on_script_change_;
   std::optional<std::chrono::file_clock::time_point> last_script_write_time_;
   std::string script_file_path_;
   std::shared_ptr<core::logging::Logger> python_logger_;
@@ -167,15 +135,12 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   std::optional<std::string> python_class_name_;
   std::vector<std::filesystem::path> python_paths_;
   std::string qualified_module_name_;
-  std::string module_directory_;
 
-  void appendPathForImportModules() const;
+  void initializeScript();
   void loadScriptFromFile();
-  void loadScript();
-  void reloadScriptIfUsingScriptFileProperty();
-  void initalizeThroughScriptEngine();
-
   std::unique_ptr<PythonScriptEngine> createScriptEngine();
+  void initalizeThroughScriptEngine();
+  void reloadScriptFile();
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::python::processors
