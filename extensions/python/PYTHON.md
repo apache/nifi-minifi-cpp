@@ -16,7 +16,7 @@
 # Apache NiFi - MiNiFi - Python Processors Readme
 
 
-This readme defines the configuration parameters to use ExecutePythonProcessor to run native python processors.
+This readme defines the configuration parameters to use ExecutePythonProcessor to run native python processors. ExecutePythonProcessor is not used explicitly in the flow, instead the python processors are referenced directly by their filename in the flow configuration, ExecutePythonProcessor only manages the execution of these processors under the hood.
 
 ## Table of Contents
 - [Requirements](#requirements)
@@ -76,9 +76,24 @@ export LD_LIBRARY_PATH="${PYENV_ROOT}/versions/${PY_VERSION}/lib${LD_LIBRARY_PAT
 ## Description
 
 Python native processors can be updated at any time by simply adding a new processor to the directory defined in
-the configuration options. The processor name, when provided to MiNiFi C++ and any C2 manifest will be that
+the `minifi.properties` file in the `nifi.python.processor.dir` property. The processor name, when provided to MiNiFi C++ and any C2 manifest will be that
 of the name of the python script. For example, "AttributePrinter.py" will be named and referenced in the flow
-as "org.apache.nifi.minifi.processors.AttributePrinter"
+as "org.apache.nifi.minifi.processors.AttributePrinter" and would look something like this in the flow configuration:
+
+```yaml
+- name: My AttributePrinter
+  id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
+  class: org.apache.nifi.minifi.processors.AttributePrinter
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+    - failure
+    - success
+    - original
+  Properties:
+    Attributes To Print: filename,path
+```
+
+Every python processor has a success, failure and original relationship where the original relationship is auto-terminated by default.
 
 Methods that are enabled within the processor are  describe, onSchedule, onInitialize, and onTrigger.
 
