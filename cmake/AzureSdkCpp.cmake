@@ -29,6 +29,12 @@ if (WIN32)
     FetchContent_MakeAvailable(wil)
 endif()
 
+if (NOT WIN32)
+    include(GetLibXml2)
+    get_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
+endif()
+
 set(WARNINGS_AS_ERRORS OFF CACHE INTERNAL "")
 set(DISABLE_AZURE_CORE_OPENTELEMETRY ON CACHE INTERNAL "")
 set(BUILD_TRANSPORT_CURL ON CACHE INTERNAL "")
