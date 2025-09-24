@@ -55,3 +55,8 @@ FetchContent_Declare(asdkext
 )
 
 FetchContent_MakeAvailable(asdkext)
+
+if (NOT WIN32)
+    add_dependencies(azure-storage-common LibXml2::LibXml2)
+    add_dependencies(azure-data-tables LibXml2::LibXml2)
+endif()

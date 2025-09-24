@@ -370,7 +370,7 @@ add_subdirectory(core-framework)
 add_subdirectory(extension-framework)
 add_subdirectory(libminifi)
 
-if (ENABLE_ALL OR ENABLE_AZURE)
+if (NOT WIN32 AND (ENABLE_ALL OR ENABLE_AZURE))
     include(GetLibXml2)
     get_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
