@@ -30,11 +30,13 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 static PyMethodDef PyProcessContext_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"getProperty", (PyCFunction) PyProcessContext::getProperty, METH_VARARGS, nullptr},
+    {"getDynamicProperty", (PyCFunction) PyProcessContext::getDynamicProperty, METH_VARARGS, nullptr},
+    {"getDynamicPropertyKeys", (PyCFunction) PyProcessContext::getDynamicPropertyKeys, METH_VARARGS, nullptr},
     {"getStateManager", (PyCFunction) PyProcessContext::getStateManager, METH_VARARGS, nullptr},
     {"getControllerService", (PyCFunction) PyProcessContext::getControllerService, METH_VARARGS, nullptr},
     {"getName", (PyCFunction) PyProcessContext::getName, METH_VARARGS, nullptr},
     {"getProperties", (PyCFunction) PyProcessContext::getProperties, METH_VARARGS, nullptr},
-    {"yieldResources", (PyCFunction) PyProcessContext::getProperties, METH_VARARGS, nullptr},
+    {"yieldResources", (PyCFunction) PyProcessContext::yieldResources, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -98,6 +100,54 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
     return object::returnReference(*property_value);
   }
   Py_RETURN_NONE;
+}
+
+PyObject* PyProcessContext::getDynamicProperty(PyProcessContext* self, PyObject* args) {
+  auto context = self->process_context_;
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  const char* property_name = nullptr;
+  PyObject* script_flow_file = nullptr;
+  if (!PyArg_ParseTuple(args, "s|O", &property_name, &script_flow_file)) {
+    return nullptr;
+  }
+
+  if (!script_flow_file) {
+    if (const auto property_value = context->getDynamicProperty(property_name, nullptr)) {
+      return object::returnReference(*property_value);
+    }
+    Py_RETURN_NONE;
+  }
+  auto py_flow = reinterpret_cast<PyScriptFlowFile*>(script_flow_file);
+  const auto flow_file = py_flow->script_flow_file_.lock();
+  if (!flow_file) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
+    return nullptr;
+  }
+
+  if (const auto property_value = context->getDynamicProperty(property_name, flow_file.get())) {
+    return object::returnReference(*property_value);
+  }
+  Py_RETURN_NONE;
+}
+
+PyObject* PyProcessContext::getDynamicPropertyKeys(PyProcessContext* self, PyObject*) {
+  auto context = self->process_context_;
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  auto property_keys = context->getDynamicPropertyKeys();
+  auto py_properties = OwnedList::create();
+  for (const auto& property_name : property_keys) {
+    py_properties.append(property_name);
+  }
+
+  return object::returnReference(py_properties);
 }
 
 PyObject* PyProcessContext::getStateManager(PyProcessContext* self, PyObject*) {

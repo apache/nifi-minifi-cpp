@@ -292,6 +292,8 @@ class ProcessContext:
             expression_language_support = descriptor.expressionLanguageScope != ExpressionLanguageScope.NONE
             controller_service_definition = descriptor.controllerServiceDefinition
         property_value = self.cpp_context.getProperty(property_name)
+        if not property_value and self.processor.supports_dynamic_properties:
+            property_value = self.cpp_context.getDynamicProperty(property_name)
         return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support, controller_service_definition)
 
     def getStateManager(self) -> StateManager:
