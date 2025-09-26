@@ -56,6 +56,9 @@ thirdparty/**/*.o
 thirdparty/**/*.a
 libminifi/test/**/*.a
 libminifi/test/corecomponentstate/
+libminifi/test/asset/
+libminifi/test/conf/
+extensions/standard-processors/tests/conf/
 docs/generated
 /compile_commands.json
 __pycache__/
@@ -80,6 +83,8 @@ docker/behavex_output
 /.vscode
 .ccache
 *profraw
+CMakePresets.json
+CMakeUserPresets.json
 
 # generated files from WEL test
 extensions/windows-event-log/tests/custom-provider/unit-test-provider.cs

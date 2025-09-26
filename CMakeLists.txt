@@ -570,7 +570,6 @@ endif(WIN32)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
 set(CPACK_SOURCE_IGNORE_FILES
     "/.*build.*/"
-    "/build_description\\\\.cpp"
     "~"
     "\\\\.git/"
     "\\\\.idea"
@@ -609,6 +608,11 @@ set(CPACK_SOURCE_IGNORE_FILES
     "bootstrap/option_state\\\\.json"
     "docker/test-env-py3"
     "\\\\.ropeproject"
+    "CMakePresets\\\\.json"
+    "CMakeUserPresets\\\\.json"
+    "extensions/standard-processors/tests/conf/"
+    "libminifi/test/asset/"
+    "libminifi/test/conf/"
 )
 
 add_subdirectory(conf)
