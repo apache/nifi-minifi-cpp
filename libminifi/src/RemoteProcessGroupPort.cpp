@@ -242,7 +242,7 @@ std::optional<std::string> RemoteProcessGroupPort::getRestApiToken(const RPG& ni
   client->setReadTimeout(idle_timeout_);
 
   auto token = http::get_token(client.get(), rest_user_name, rest_password);
-  logger_->log_debug("Token from NiFi REST Api endpoint {},  {}", login_url.str(), token);
+  logger_->log_debug("Got token from NiFi REST Api endpoint {}", login_url.str());
   return token;
 }
 
@@ -343,7 +343,7 @@ std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::refreshR
 void RemoteProcessGroupPort::refreshPeerList() {
   auto connection = refreshRemoteSiteToSiteInfo();
   if (!connection) {
-    logger_->log_debug("No port configured");
+    logger_->log_warn("No port configured");
     return;
   }
 
