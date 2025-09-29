@@ -61,9 +61,9 @@ class Spec {
     template<std::invocable<std::shared_ptr<core::logging::Logger>> OnEnterFn, std::invocable<std::shared_ptr<core::logging::Logger>> OnExitFn>
     ::gsl::final_action<std::function<void()>> log(OnEnterFn on_enter, OnExitFn on_exit) const {
       if (logger) {
-        on_enter(logger);
+        std::invoke(on_enter, logger);
         return gsl::finally<std::function<void()>>([on_exit, logger = logger] {
-          on_exit(logger);
+          std::invoke(on_exit, logger);
         });
       }
       if (parent) {

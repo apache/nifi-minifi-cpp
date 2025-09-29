@@ -16,8 +16,9 @@
  */
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include <concepts>
+#include <functional>
 #include <string_view>
 
 #include "CpuStat.h"
@@ -33,16 +34,16 @@ template<class Serializer>
 requires std::invocable<Serializer, const char*, uint64_t>
 void SerializeCPUStatData(const CpuStatData& cpu_stat_data,
                           Serializer serializer) {
-  serializer("user time", cpu_stat_data.getUser().count());
-  serializer("nice time", cpu_stat_data.getNice().count());
-  serializer("system time", cpu_stat_data.getSystem().count());
-  serializer("idle time", cpu_stat_data.getIdle().count());
-  serializer("io wait time", cpu_stat_data.getIoWait().count());
-  serializer("irq time", cpu_stat_data.getIrq().count());
-  serializer("soft irq time", cpu_stat_data.getSoftIrq().count());
-  serializer("steal time", cpu_stat_data.getSteal().count());
-  serializer("guest time", cpu_stat_data.getGuest().count());
-  serializer("guest nice time", cpu_stat_data.getGuestNice().count());
+  std::invoke(serializer, "user time", cpu_stat_data.getUser().count());
+  std::invoke(serializer, "nice time", cpu_stat_data.getNice().count());
+  std::invoke(serializer, "system time", cpu_stat_data.getSystem().count());
+  std::invoke(serializer, "idle time", cpu_stat_data.getIdle().count());
+  std::invoke(serializer, "io wait time", cpu_stat_data.getIoWait().count());
+  std::invoke(serializer, "irq time", cpu_stat_data.getIrq().count());
+  std::invoke(serializer, "soft irq time", cpu_stat_data.getSoftIrq().count());
+  std::invoke(serializer, "steal time", cpu_stat_data.getSteal().count());
+  std::invoke(serializer, "guest time", cpu_stat_data.getGuest().count());
+  std::invoke(serializer, "guest nice time", cpu_stat_data.getGuestNice().count());
 }
 
 template<class Serializer>
@@ -50,31 +51,31 @@ requires std::invocable<Serializer, const char*, double>
 void SerializeNormalizedCPUStat(const CpuStatData& cpu_stat_data,
                                 Serializer serializer) {
   gsl_Expects(cpu_stat_data.getTotal() > 0ms);
-  serializer("user time %", cpu_stat_data.getUser()/cpu_stat_data.getTotal());
-  serializer("nice time %", cpu_stat_data.getNice()/cpu_stat_data.getTotal());
-  serializer("system time %", cpu_stat_data.getSystem()/cpu_stat_data.getTotal());
-  serializer("idle time %", cpu_stat_data.getIdle()/cpu_stat_data.getTotal());
-  serializer("io wait time %", cpu_stat_data.getIoWait()/cpu_stat_data.getTotal());
-  serializer("irq time %", cpu_stat_data.getIrq()/cpu_stat_data.getTotal());
-  serializer("soft irq %", cpu_stat_data.getSoftIrq()/cpu_stat_data.getTotal());
-  serializer("steal time %", cpu_stat_data.getSteal()/cpu_stat_data.getTotal());
-  serializer("guest time %", cpu_stat_data.getGuest()/cpu_stat_data.getTotal());
-  serializer("guest nice time %", cpu_stat_data.getGuestNice()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "user time %", cpu_stat_data.getUser()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "nice time %", cpu_stat_data.getNice()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "system time %", cpu_stat_data.getSystem()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "idle time %", cpu_stat_data.getIdle()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "io wait time %", cpu_stat_data.getIoWait()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "irq time %", cpu_stat_data.getIrq()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "soft irq %", cpu_stat_data.getSoftIrq()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "steal time %", cpu_stat_data.getSteal()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "guest time %", cpu_stat_data.getGuest()/cpu_stat_data.getTotal());
+  std::invoke(serializer, "guest nice time %", cpu_stat_data.getGuestNice()/cpu_stat_data.getTotal());
 }
 
 template<class Serializer>
 requires std::invocable<Serializer, const char*, uint64_t>
 void SerializeDiskStatData(const DiskStatData& disk_stat_data,
                            Serializer serializer) {
-  serializer("Major Device Number", disk_stat_data.getMajorDeviceNumber());
-  serializer("Minor Device Number", disk_stat_data.getMinorDeviceNumber());
-  serializer("Reads Completed", disk_stat_data.getReadsCompleted());
-  serializer("Reads Merged", disk_stat_data.getReadsMerged());
-  serializer("Sectors Read", disk_stat_data.getSectorsRead());
-  serializer("Writes Completed", disk_stat_data.getWritesCompleted());
-  serializer("Writes Merged", disk_stat_data.getWritesMerged());
-  serializer("Sectors Written", disk_stat_data.getSectorsWritten());
-  serializer("IOs in progress", disk_stat_data.getIosInProgress());
+  std::invoke(serializer, "Major Device Number", disk_stat_data.getMajorDeviceNumber());
+  std::invoke(serializer, "Minor Device Number", disk_stat_data.getMinorDeviceNumber());
+  std::invoke(serializer, "Reads Completed", disk_stat_data.getReadsCompleted());
+  std::invoke(serializer, "Reads Merged", disk_stat_data.getReadsMerged());
+  std::invoke(serializer, "Sectors Read", disk_stat_data.getSectorsRead());
+  std::invoke(serializer, "Writes Completed", disk_stat_data.getWritesCompleted());
+  std::invoke(serializer, "Writes Merged", disk_stat_data.getWritesMerged());
+  std::invoke(serializer, "Sectors Written", disk_stat_data.getSectorsWritten());
+  std::invoke(serializer, "IOs in progress", disk_stat_data.getIosInProgress());
 }
 
 template<class Serializer>
@@ -83,49 +84,49 @@ void SerializeDiskStatDataPerSec(const DiskStatData& disk_stat_data,
                                  const std::chrono::duration<double> duration,
                                  Serializer serializer) {
   gsl_Expects(duration > 0ms);
-  serializer("Major Device Number", disk_stat_data.getMajorDeviceNumber());
-  serializer("Minor Device Number", disk_stat_data.getMinorDeviceNumber());
-  serializer("Reads Completed/sec", disk_stat_data.getReadsCompleted()/duration.count());
-  serializer("Reads Merged/sec", disk_stat_data.getReadsMerged()/duration.count());
-  serializer("Sectors Read/sec", disk_stat_data.getSectorsRead()/duration.count());
-  serializer("Writes Completed/sec", disk_stat_data.getWritesCompleted()/duration.count());
-  serializer("Writes Merged/sec", disk_stat_data.getWritesMerged()/duration.count());
-  serializer("Sectors Written/sec", disk_stat_data.getSectorsWritten()/duration.count());
-  serializer("IOs in progress", disk_stat_data.getIosInProgress()/duration.count());
+  std::invoke(serializer, "Major Device Number", disk_stat_data.getMajorDeviceNumber());
+  std::invoke(serializer, "Minor Device Number", disk_stat_data.getMinorDeviceNumber());
+  std::invoke(serializer, "Reads Completed/sec", disk_stat_data.getReadsCompleted()/duration.count());
+  std::invoke(serializer, "Reads Merged/sec", disk_stat_data.getReadsMerged()/duration.count());
+  std::invoke(serializer, "Sectors Read/sec", disk_stat_data.getSectorsRead()/duration.count());
+  std::invoke(serializer, "Writes Completed/sec", disk_stat_data.getWritesCompleted()/duration.count());
+  std::invoke(serializer, "Writes Merged/sec", disk_stat_data.getWritesMerged()/duration.count());
+  std::invoke(serializer, "Sectors Written/sec", disk_stat_data.getSectorsWritten()/duration.count());
+  std::invoke(serializer, "IOs in progress", disk_stat_data.getIosInProgress()/duration.count());
 }
 
 template<class Serializer>
 requires std::invocable<Serializer, const char*, uint64_t>
 void SerializeMemInfo(const MemInfo& mem_info,
                       Serializer serializer) {
-  serializer("MemTotal", mem_info.getTotalMemory());
-  serializer("MemFree", mem_info.getFreeMemory());
-  serializer("MemAvailable", mem_info.getAvailableMemory());
-  serializer("SwapTotal", mem_info.getTotalSwap());
-  serializer("SwapFree", mem_info.getFreeSwap());
+  std::invoke(serializer, "MemTotal", mem_info.getTotalMemory());
+  std::invoke(serializer, "MemFree", mem_info.getFreeMemory());
+  std::invoke(serializer, "MemAvailable", mem_info.getAvailableMemory());
+  std::invoke(serializer, "SwapTotal", mem_info.getTotalSwap());
+  std::invoke(serializer, "SwapFree", mem_info.getFreeSwap());
 }
 
 template<class Serializer>
 requires std::invocable<Serializer, const char*, uint64_t>
 void SerializeNetDevData(const NetDevData& net_dev_data,
                          Serializer serializer) {
-  serializer("Bytes Received", net_dev_data.getBytesReceived());
-  serializer("Packets Received", net_dev_data.getPacketsReceived());
-  serializer("Receive Errors", net_dev_data.getReceiveErrors());
-  serializer("Receive Drop Errors", net_dev_data.getReceiveDropErrors());
-  serializer("Receive Fifo Errors", net_dev_data.getReceiveFifoErrors());
-  serializer("Receive Frame Errors", net_dev_data.getReceiveFrameErrors());
-  serializer("Compressed Packets Received", net_dev_data.getCompressedPacketsReceived());
-  serializer("Multicast Frames Received", net_dev_data.getMulticastFramesReceived());
+  std::invoke(serializer, "Bytes Received", net_dev_data.getBytesReceived());
+  std::invoke(serializer, "Packets Received", net_dev_data.getPacketsReceived());
+  std::invoke(serializer, "Receive Errors", net_dev_data.getReceiveErrors());
+  std::invoke(serializer, "Receive Drop Errors", net_dev_data.getReceiveDropErrors());
+  std::invoke(serializer, "Receive Fifo Errors", net_dev_data.getReceiveFifoErrors());
+  std::invoke(serializer, "Receive Frame Errors", net_dev_data.getReceiveFrameErrors());
+  std::invoke(serializer, "Compressed Packets Received", net_dev_data.getCompressedPacketsReceived());
+  std::invoke(serializer, "Multicast Frames Received", net_dev_data.getMulticastFramesReceived());
 
-  serializer("Bytes Transmitted", net_dev_data.getBytesTransmitted());
-  serializer("Packets Transmitted", net_dev_data.getPacketsTransmitted());
-  serializer("Transmit errors", net_dev_data.getTransmitErrors());
-  serializer("Transmit drop errors", net_dev_data.getTransmitDropErrors());
-  serializer("Transmit fifo errors", net_dev_data.getTransmitFifoErrors());
-  serializer("Transmit collisions", net_dev_data.getTransmitCollisions());
-  serializer("Transmit carrier losses", net_dev_data.getTransmitCarrierLosses());
-  serializer("Compressed Packets Transmitted", net_dev_data.getCompressedPacketsTransmitted());
+  std::invoke(serializer, "Bytes Transmitted", net_dev_data.getBytesTransmitted());
+  std::invoke(serializer, "Packets Transmitted", net_dev_data.getPacketsTransmitted());
+  std::invoke(serializer, "Transmit errors", net_dev_data.getTransmitErrors());
+  std::invoke(serializer, "Transmit drop errors", net_dev_data.getTransmitDropErrors());
+  std::invoke(serializer, "Transmit fifo errors", net_dev_data.getTransmitFifoErrors());
+  std::invoke(serializer, "Transmit collisions", net_dev_data.getTransmitCollisions());
+  std::invoke(serializer, "Transmit carrier losses", net_dev_data.getTransmitCarrierLosses());
+  std::invoke(serializer, "Compressed Packets Transmitted", net_dev_data.getCompressedPacketsTransmitted());
 }
 
 template<class Serializer>
@@ -134,23 +135,23 @@ void SerializeNetDevDataPerSec(const NetDevData& net_dev_data,
                                const std::chrono::duration<double> duration,
                                Serializer serializer) {
   gsl_Expects(duration > 0ms);
-  serializer("Bytes Received/sec", net_dev_data.getBytesReceived()/duration.count());
-  serializer("Packets Received/sec", net_dev_data.getPacketsReceived()/duration.count());
-  serializer("Receive Errors/sec", net_dev_data.getReceiveErrors()/duration.count());
-  serializer("Receive Drop Errors/sec", net_dev_data.getReceiveDropErrors()/duration.count());
-  serializer("Receive Fifo Errors/sec", net_dev_data.getReceiveFifoErrors()/duration.count());
-  serializer("Receive Frame Errors/sec", net_dev_data.getReceiveFrameErrors()/duration.count());
-  serializer("Compressed Packets Received/sec", net_dev_data.getCompressedPacketsReceived()/duration.count());
-  serializer("Multicast Frames Received/sec", net_dev_data.getMulticastFramesReceived()/duration.count());
+  std::invoke(serializer, "Bytes Received/sec", net_dev_data.getBytesReceived()/duration.count());
+  std::invoke(serializer, "Packets Received/sec", net_dev_data.getPacketsReceived()/duration.count());
+  std::invoke(serializer, "Receive Errors/sec", net_dev_data.getReceiveErrors()/duration.count());
+  std::invoke(serializer, "Receive Drop Errors/sec", net_dev_data.getReceiveDropErrors()/duration.count());
+  std::invoke(serializer, "Receive Fifo Errors/sec", net_dev_data.getReceiveFifoErrors()/duration.count());
+  std::invoke(serializer, "Receive Frame Errors/sec", net_dev_data.getReceiveFrameErrors()/duration.count());
+  std::invoke(serializer, "Compressed Packets Received/sec", net_dev_data.getCompressedPacketsReceived()/duration.count());
+  std::invoke(serializer, "Multicast Frames Received/sec", net_dev_data.getMulticastFramesReceived()/duration.count());
 
-  serializer("Bytes Transmitted/sec", net_dev_data.getBytesTransmitted()/duration.count());
-  serializer("Packets Transmitted/sec", net_dev_data.getPacketsTransmitted()/duration.count());
-  serializer("Transmit errors/sec", net_dev_data.getTransmitErrors()/duration.count());
-  serializer("Transmit drop errors/sec", net_dev_data.getTransmitDropErrors()/duration.count());
-  serializer("Transmit fifo errors/sec", net_dev_data.getTransmitFifoErrors()/duration.count());
-  serializer("Transmit collisions/sec", net_dev_data.getTransmitCollisions()/duration.count());
-  serializer("Transmit carrier losses/sec", net_dev_data.getTransmitCarrierLosses()/duration.count());
-  serializer("Compressed Packets Transmitted/sec", net_dev_data.getCompressedPacketsTransmitted()/duration.count());
+  std::invoke(serializer, "Bytes Transmitted/sec", net_dev_data.getBytesTransmitted()/duration.count());
+  std::invoke(serializer, "Packets Transmitted/sec", net_dev_data.getPacketsTransmitted()/duration.count());
+  std::invoke(serializer, "Transmit errors/sec", net_dev_data.getTransmitErrors()/duration.count());
+  std::invoke(serializer, "Transmit drop errors/sec", net_dev_data.getTransmitDropErrors()/duration.count());
+  std::invoke(serializer, "Transmit fifo errors/sec", net_dev_data.getTransmitFifoErrors()/duration.count());
+  std::invoke(serializer, "Transmit collisions/sec", net_dev_data.getTransmitCollisions()/duration.count());
+  std::invoke(serializer, "Transmit carrier losses/sec", net_dev_data.getTransmitCarrierLosses()/duration.count());
+  std::invoke(serializer, "Compressed Packets Transmitted/sec", net_dev_data.getCompressedPacketsTransmitted()/duration.count());
 }
 
 template<class Serializer>
@@ -158,9 +159,9 @@ requires std::invocable<Serializer, const  char*, uint64_t> &&
          std::invocable<Serializer, const char*, std::string_view>
 void SerializeProcessStat(const ProcessStat& process_stat,
                           Serializer serializer) {
-  serializer("COMM", process_stat.getComm());
-  serializer("RES", process_stat.getMemory());
-  serializer("CPUTIME", process_stat.getCpuTime().count());
+  std::invoke(serializer, "COMM", process_stat.getComm());
+  std::invoke(serializer, "RES", process_stat.getMemory());
+  std::invoke(serializer, "CPUTIME", process_stat.getCpuTime().count());
 }
 
 template<class Serializer>
@@ -175,9 +176,9 @@ void SerializeNormalizedProcessStat(const ProcessStat& process_stat_start,
   gsl_Expects(process_stat_start.getComm() == process_stat_end.getComm());
   gsl_Expects(process_stat_end.getCpuTime() >= process_stat_start.getCpuTime());
   auto cpu_time_diff = process_stat_end.getCpuTime()-process_stat_start.getCpuTime();
-  serializer("COMM", process_stat_start.getComm());
-  serializer("RES", process_stat_end.getMemory());
-  serializer("CPU%", 100*(cpu_time_diff/all_cpu_time));
+  std::invoke(serializer, "COMM", process_stat_start.getComm());
+  std::invoke(serializer, "RES", process_stat_end.getMemory());
+  std::invoke(serializer, "CPU%", 100*(cpu_time_diff/all_cpu_time));
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::procfs
