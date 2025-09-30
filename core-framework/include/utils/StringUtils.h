@@ -386,13 +386,13 @@ inline std::string to_base64(std::string_view str, bool url = false, bool padded
 
 std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map);
 
-constexpr std::pair<size_t, int> countOccurrences(std::string_view str, std::string_view pattern) {
+constexpr std::pair<size_t, size_t> countOccurrences(std::string_view str, std::string_view pattern) {
   if (pattern.empty()) {
-    return {str.size(), gsl::narrow<int>(str.size() + 1)};
+    return {str.size(), str.size() + 1};
   }
 
   size_t last_pos = 0;
-  int occurrences = 0;
+  size_t occurrences = 0;
   for (size_t pos = 0; (pos = str.find(pattern, pos)) != std::string_view::npos; pos += pattern.size()) {
     last_pos = pos;
     ++occurrences;

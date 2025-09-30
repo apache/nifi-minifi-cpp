@@ -36,11 +36,7 @@
 
 #include "PerformanceDataCounter.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class PerformanceDataMonitor final : public core::ProcessorImpl {
  public:
@@ -128,8 +124,4 @@ class PerformanceDataMonitor final : public core::ProcessorImpl {
   std::vector<std::unique_ptr<PerformanceDataCounter>> resource_consumption_counters_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

@@ -170,7 +170,7 @@ void AlertSink::run() {
     Services* expected{nullptr};
     // only restore the services pointer if no initialize set it to something else meanwhile
     if (services_.compare_exchange_strong(expected, services.get())) {
-      (void)services.release();
+      std::ignore = services.release();
     }
   }
 }

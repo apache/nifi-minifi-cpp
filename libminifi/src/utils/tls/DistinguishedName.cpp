@@ -39,7 +39,7 @@ DistinguishedName DistinguishedName::fromSlashSeparated(const std::string &slash
 
 std::optional<std::string> DistinguishedName::getCN() const {
   const auto it = std::find_if(components_.begin(), components_.end(),
-      [](const std::string& component) { return component.compare(0, 3, "CN=") == 0; });
+      [](const std::string& component) { return component.starts_with("CN="); });
   if (it != components_.end()) {
     return it->substr(3);
   } else {

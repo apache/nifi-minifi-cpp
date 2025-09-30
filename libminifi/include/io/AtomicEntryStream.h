@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -30,11 +29,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 template<typename T>
 class AtomicEntryStream : public BaseStreamImpl {
@@ -158,10 +153,4 @@ size_t AtomicEntryStream<T>::read(std::span<std::byte> buf) {
   return STREAM_ERROR;
 }
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_IO_ATOMICENTRYSTREAM_H_
+}  // namespace org::apache::nifi::minifi::io

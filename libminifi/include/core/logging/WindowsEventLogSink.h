@@ -29,13 +29,7 @@
 #include "spdlog/details/null_mutex.h"
 #include "spdlog/sinks/base_sink.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
-namespace internal {
+namespace org::apache::nifi::minifi::core::logging::internal {
 
 class windowseventlog_sink : public spdlog::sinks::base_sink<spdlog::details::null_mutex> {
  private:
@@ -59,12 +53,6 @@ class windowseventlog_sink : public spdlog::sinks::base_sink<spdlog::details::nu
   windowseventlog_sink& operator=(windowseventlog_sink&&) = delete;
 };
 
-}  // namespace internal
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::logging::internal
 
 #endif

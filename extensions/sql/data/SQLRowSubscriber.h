@@ -21,11 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 struct SQLRowSubscriber {
   virtual ~SQLRowSubscriber() = default;
@@ -44,8 +40,4 @@ struct SQLRowSubscriber {
   virtual void processColumn(const std::string& name, const char* value) = 0;
 };
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql

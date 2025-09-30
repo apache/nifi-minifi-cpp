@@ -21,11 +21,7 @@
 #include <string>
 #include "utils/OsUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class MemoryConsumptionCounter : public PerformanceDataCounter {
  public:
@@ -63,8 +59,4 @@ class MemoryConsumptionCounter : public PerformanceDataCounter {
   int64_t available_physical_memory_;
   int64_t total_paging_file_size_;
 };
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

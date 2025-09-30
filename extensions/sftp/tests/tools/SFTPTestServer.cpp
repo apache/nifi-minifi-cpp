@@ -99,7 +99,7 @@ bool SFTPTestServer::start() {
     for (size_t i = 0; i < 15; i++) {
       std::ifstream port_file(port_file_path_);
       if (port_file.is_open() && port_file.good()) {
-        uint16_t port;
+        uint16_t port = 0;
         if (port_file >> port) {
           port_ = port;
           started_ = true;
@@ -128,7 +128,7 @@ bool SFTPTestServer::stop() {
       logger_->log_error("Failed to kill child process, error: {}", strerror(errno));
       return false;
     }
-    int wstatus;
+    int wstatus = 0;
     if (::waitpid(server_pid_, &wstatus, 0) == -1) {
       logger_->log_error("Failed to waitpid for child process, error: {}", strerror(errno));
       return false;

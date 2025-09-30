@@ -23,7 +23,7 @@ namespace utils = org::apache::nifi::minifi::utils;
 
 TEST_CASE("NetworkInterfaceInfo test", "[testnetworkinterfaceinfo]") {
   auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos();
-  REQUIRE(network_interface_infos.size() > 0);
+  REQUIRE_FALSE(network_interface_infos.empty());
 
   auto valid_interface_name = network_interface_infos.begin()->getName();
   auto filter = [&valid_interface_name](const utils::NetworkInterfaceInfo& interface_info) -> bool { return interface_info.getName() == valid_interface_name; };

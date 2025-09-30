@@ -50,7 +50,7 @@ void checkRequiredField(const Node &node, const std::vector<std::string>& field_
     if (error_message.empty()) {
       throw std::invalid_argument(buildErrorMessage(node, field_names));
     }
-    throw std::invalid_argument(error_message.data());
+    throw std::invalid_argument(std::string{error_message});
   }
 }
 
@@ -63,7 +63,7 @@ std::string getRequiredField(const Node &node, const std::vector<std::string> &a
   if (error_message.empty()) {
     throw std::invalid_argument(buildErrorMessage(node, alternate_names));
   }
-  throw std::invalid_argument(error_message.data());
+  throw std::invalid_argument(std::string{error_message});
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow

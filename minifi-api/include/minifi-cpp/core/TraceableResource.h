@@ -19,11 +19,7 @@
 
 #include "utils/BackTrace.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Purpose: Defines a resource eligible for tracing
@@ -42,8 +38,4 @@ class TraceableResource {
   virtual BackTrace getTraces() = 0;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

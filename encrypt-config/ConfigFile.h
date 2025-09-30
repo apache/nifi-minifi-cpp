@@ -22,11 +22,7 @@
 #include "utils/crypto/EncryptionUtils.h"
 #include "properties/PropertiesFile.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
+namespace org::apache::nifi::minifi::encrypt_config {
 
 class ConfigFile : public PropertiesFile {
  public:
@@ -38,9 +34,4 @@ class ConfigFile : public PropertiesFile {
   friend bool operator==(const ConfigFile&, const ConfigFile&);
 };
 
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
+}  // namespace org::apache::nifi::minifi::encrypt_config

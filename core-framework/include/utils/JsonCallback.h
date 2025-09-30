@@ -27,11 +27,7 @@
 
 #include "io/StreamPipe.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 class JsonInputCallback {
  public:
@@ -93,8 +89,4 @@ class PrettyJsonOutputCallback {
   std::optional<uint8_t> decimal_places_;
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

@@ -25,11 +25,7 @@
 #include "BaseStream.h"
 #include "minifi-cpp/utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 class BufferStream : public BaseStreamImpl {
  public:
@@ -100,8 +96,4 @@ class BufferStream : public BaseStreamImpl {
   uint64_t readOffset_ = 0;
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::io

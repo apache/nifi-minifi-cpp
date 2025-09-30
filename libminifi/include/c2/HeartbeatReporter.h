@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_HEARTBEATREPORTER_H_
-#define LIBMINIFI_INCLUDE_C2_HEARTBEATREPORTER_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -89,5 +88,3 @@ class HeartbeatReporter : public core::ConnectableImpl {
 };
 
 }  // namespace org::apache::nifi::minifi::c2
-
-#endif  // LIBMINIFI_INCLUDE_C2_HEARTBEATREPORTER_H_

@@ -44,7 +44,6 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
   // base URL when one is not specified.
   if (nullptr != configure) {
     std::optional<std::string> rest_base_path = configure->get(Configuration::nifi_c2_rest_path_base);
-    std::string update_str;
     std::string ssl_context_service_str;
     configure->get(Configuration::nifi_c2_rest_url, "c2.rest.url", rest_uri_);
     configure->get(Configuration::nifi_c2_rest_url_ack, "c2.rest.url.ack", ack_uri_);
@@ -128,7 +127,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
 
   auto setUpHttpRequest = [&](http::HttpRequestMethod http_method) {
     client.set_request_method(http_method);
-    if (url.find("https://") == 0) {
+    if (url.starts_with("https://")) {
       if (!ssl_context_service_) {
         setSecurityContext(client, http_method, url);
       } else {

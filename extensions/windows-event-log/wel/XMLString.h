@@ -37,11 +37,7 @@
 #include "pugixml.hpp"
 
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace wel {
+namespace org::apache::nifi::minifi::wel {
 
 class XmlString : public pugi::xml_writer {
  public:
@@ -52,9 +48,4 @@ class XmlString : public pugi::xml_writer {
   }
 };
 
-} /* namespace wel */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::wel

@@ -53,7 +53,7 @@ struct does_compile : std::false_type {};
 template<int N, int D>
 struct does_compile<N, D,
     // we must force evaluation so decltype won't do
-    typename std::enable_if<(utils::intdiv_ceil(N, D), true)>::type> : std::true_type {};
+    typename std::enable_if_t<(utils::intdiv_ceil(N, D), true)>> : std::true_type {};
 
 static_assert(does_compile<2, 3>::value, "does_compile should work");
 static_assert(!does_compile<1, 0>::value, "constexpr division by zero shouldn't compile");

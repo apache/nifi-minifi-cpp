@@ -84,7 +84,7 @@ PyInit_minifi_native(void) {
     Py_INCREF(type.first);
   }
   const auto result = std::all_of(std::begin(types), std::end(types), [&](std::pair<PyTypeObject*, std::string_view> type) {
-    return PyModule_AddObject(minifi_module_instance, type.second.data(), reinterpret_cast<PyObject*>(type.first)) == 0;
+    return PyModule_AddObject(minifi_module_instance, type.second.data(), reinterpret_cast<PyObject*>(type.first)) == 0;  // NOLINT(bugprone-suspicious-stringview-data-usage)
   });
 
   if (!result) {

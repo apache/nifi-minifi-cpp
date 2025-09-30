@@ -24,11 +24,7 @@
 #include "LegacyForwardIterator.h"
 #include "EqualityComparable.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
 struct assert_container :
@@ -70,8 +66,4 @@ struct assert_container :
   static_assert(std::is_convertible<decltype(std::declval<T&>().empty()), bool>::value, "");
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

@@ -20,18 +20,10 @@
 #include "utils/crypto/EncryptionUtils.h"
 #include "Utils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
+namespace org::apache::nifi::minifi::encrypt_config {
 
 uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key);
 
 uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const EncryptionKeys& keys);
 
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::encrypt_config

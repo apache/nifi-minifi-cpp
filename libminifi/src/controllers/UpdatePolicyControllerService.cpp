@@ -51,8 +51,6 @@ bool UpdatePolicyControllerService::isWorkAvailable() {
 }
 
 void UpdatePolicyControllerService::onEnable() {
-  std::string persistStr;
-
   const bool enable_all = (getProperty(AllowAllProperties.name) | utils::andThen(parsing::parseBool)).value_or(false);
   persist_updates_ = (getProperty(PersistUpdates.name) | utils::andThen(parsing::parseBool)).value_or(false);
 

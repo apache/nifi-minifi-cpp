@@ -81,7 +81,7 @@ bool AsioSocketConnection::connectTcpSocketOverSsl() {
     logger_->log_error("Connecting to host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, socket_data_.port, err.message());
     return false;
   }
-  socket.handshake(asio::ssl::stream_base::client, err);
+  std::ignore = socket.handshake(asio::ssl::stream_base::client, err);
   if (err) {
     logger_->log_error("SSL handshake failed while connecting to host '{}' on port '{}' with the following message: '{}'", socket_data_.host, socket_data_.port, err.message());
     return false;

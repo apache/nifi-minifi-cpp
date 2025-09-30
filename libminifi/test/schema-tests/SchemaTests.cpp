@@ -233,7 +233,7 @@ TEST_CASE("The JSON schema detects invalid values in the json flow") {
   std::unordered_map<std::string, std::string> errors;
   extractExpectedErrors(config_json, "", errors);
 
-  ErrorHandler err_handler{[&] (auto err) {
+  ErrorHandler err_handler{[&] (const auto& err) {
     auto it = errors.find(err.path);
     if (it == errors.end()) {
       throw std::logic_error("Unexpected error in json flow at " + err.path + ": " + err.error);

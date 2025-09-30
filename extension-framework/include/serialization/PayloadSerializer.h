@@ -22,10 +22,7 @@
 #include "minifi-cpp/io/OutputStream.h"
 #include "FlowFileSerializer.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class PayloadSerializer : public FlowFileSerializer {
  public:
@@ -34,7 +31,4 @@ class PayloadSerializer : public FlowFileSerializer {
   int64_t serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) override;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

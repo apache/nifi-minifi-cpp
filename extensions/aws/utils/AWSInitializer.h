@@ -32,12 +32,7 @@
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace utils {
+namespace org::apache::nifi::minifi::aws::utils {
 
 class AWSInitializer {
  public:
@@ -50,9 +45,4 @@ class AWSInitializer {
   Aws::SDKOptions options_;
 };
 
-} /* namespace utils */
-} /* namespace aws */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::aws::utils

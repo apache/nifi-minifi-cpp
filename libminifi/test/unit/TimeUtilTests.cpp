@@ -140,9 +140,9 @@ TEST_CASE("Test windows FILETIME epoch") {
 #endif
 
 TEST_CASE("Test clock resolutions", "[clockresolutiontests]") {
-  CHECK(std::is_constructible<std::chrono::system_clock::duration, std::chrono::microseconds>::value);  // The resolution of the system_clock is at least microseconds
-  CHECK(std::is_constructible<std::chrono::steady_clock::duration, std::chrono::microseconds>::value);  // The resolution of the steady_clock is at least microseconds
-  CHECK(std::is_constructible<std::chrono::high_resolution_clock::duration, std::chrono::nanoseconds>::value);  // The resolution of the high_resolution_clock is at least nanoseconds
+  CHECK(std::is_constructible_v<std::chrono::system_clock::duration, std::chrono::microseconds>);  // The resolution of the system_clock is at least microseconds
+  CHECK(std::is_constructible_v<std::chrono::steady_clock::duration, std::chrono::microseconds>);  // The resolution of the steady_clock is at least microseconds
+  CHECK(std::is_constructible_v<std::chrono::high_resolution_clock::duration, std::chrono::nanoseconds>);  // The resolution of the high_resolution_clock is at least nanoseconds
 }
 
 TEST_CASE("Test string to duration conversion", "[timedurationtests]") {

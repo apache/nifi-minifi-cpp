@@ -20,11 +20,7 @@
 
 #include "rocksdb/db.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+namespace org::apache::nifi::minifi::internal {
 
 class WriteBatch {
   friend class OpenRocksDb;
@@ -38,9 +34,4 @@ class WriteBatch {
   rocksdb::ColumnFamilyHandle* column_;
 };
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
+}  // namespace org::apache::nifi::minifi::internal

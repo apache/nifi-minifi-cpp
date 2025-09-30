@@ -22,11 +22,7 @@
 #include <utility>
 #include "utils/MinifiConcurrentQueue.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 namespace internal {
 template<typename T>
@@ -183,8 +179,4 @@ class StagingQueue {
   ConditionConcurrentQueue<Item> queue_;
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

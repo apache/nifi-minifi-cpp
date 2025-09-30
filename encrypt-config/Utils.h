@@ -20,19 +20,11 @@
 
 #include "utils/crypto/EncryptionUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
+namespace org::apache::nifi::minifi::encrypt_config {
 
 struct EncryptionKeys {
   std::optional<utils::crypto::Bytes> old_key;
   utils::crypto::Bytes encryption_key;
 };
 
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::encrypt_config

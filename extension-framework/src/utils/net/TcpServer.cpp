@@ -107,7 +107,7 @@ asio::awaitable<void> TcpServer::secureSession(asio::ip::tcp::socket socket, asi
   co_await readLoop(ssl_socket, remote_address, local_port);  // NOLINT
 
   asio::error_code ec;
-  ssl_socket.lowest_layer().cancel(ec);
+  std::ignore = ssl_socket.lowest_layer().cancel(ec);
   if (ec) {
     logger_->log_error("Cancelling asynchronous operations of SSL socket failed with: {}", ec.message());
   }

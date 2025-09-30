@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_
-#define LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -31,11 +30,7 @@
 #include "io/BufferStream.h"
 #include "minifi-cpp/utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 class PayloadSerializer {
  public:
@@ -333,10 +328,4 @@ class PayloadSerializer {
   virtual ~PayloadSerializer();
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_C2_PAYLOADSERIALIZER_H_
+}  // namespace org::apache::nifi::minifi::c2

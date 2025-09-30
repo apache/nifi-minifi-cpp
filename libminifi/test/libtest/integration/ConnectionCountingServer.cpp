@@ -68,7 +68,7 @@ bool ReverseBodyPostHandler::handlePost(CivetServer* /*server*/, struct mg_conne
   request_body.reserve(2048);
   size_t read_size = mg_read(conn, request_body.data(), 2048);
   assert(read_size < 2048);
-  std::string response_body{request_body.begin(), request_body.begin() + read_size};
+  std::string response_body{request_body.begin(), request_body.begin() + gsl::narrow<std::vector<char>::difference_type>(read_size)};
   std::reverse(std::begin(response_body), std::end(response_body));
   mg_printf(conn, "HTTP/1.1 200 OK\r\n");
   mg_printf(conn, "Content-length: %zu\r\n", read_size);
@@ -85,14 +85,13 @@ void ReverseBodyPostHandler::saveConnectionId(struct mg_connection* conn) {
 
 AddIdToUserConnectionData::AddIdToUserConnectionData() {
   init_connection = [](const struct mg_connection*, void** user_connection_data) -> int {
-    minifi::utils::SmallString<36>* id = new minifi::utils::SmallString<36>(minifi::utils::IdGenerator::getIdGenerator()->generate().to_string());
+    auto id = new minifi::utils::SmallString<36>(minifi::utils::IdGenerator::getIdGenerator()->generate().to_string());
     *user_connection_data = reinterpret_cast<void*>(id);
     return 0;
   };
 
   connection_close = [](const struct mg_connection* conn) -> void {
-    auto user_connection_data = reinterpret_cast<minifi::utils::SmallString<36>*>(mg_get_user_connection_data(conn));
-    delete user_connection_data;
+    std::ignore = std::unique_ptr<minifi::utils::SmallString<36>>(reinterpret_cast<minifi::utils::SmallString<36>*>(mg_get_user_connection_data(conn)));
   };
 }
 }  // namespace details

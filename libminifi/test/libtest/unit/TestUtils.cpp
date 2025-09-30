@@ -158,7 +158,7 @@ void verifyJSON(const std::string& actual_str, const std::string& expected_str, 
 }
 
 bool countLogOccurrencesUntil(const std::string& pattern,
-                              const int occurrences,
+                              const size_t occurrences,
                               const std::chrono::milliseconds max_duration,
                               const std::chrono::milliseconds wait_time) {
   auto start_time = std::chrono::steady_clock::now();

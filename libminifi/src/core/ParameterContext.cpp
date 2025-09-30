@@ -20,7 +20,7 @@
 namespace org::apache::nifi::minifi::core {
 
 void ParameterContext::addParameter(const Parameter &parameter) {
-  if (parameters_.find(parameter.name) != parameters_.end()) {
+  if (parameters_.contains(parameter.name)) {
     throw ParameterException("Parameter name '" + parameter.name + "' already exists, parameter names must be unique within a parameter context!");
   }
   parameters_.emplace(parameter.name, parameter);

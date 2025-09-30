@@ -20,11 +20,7 @@
 
 #include "rapidjson/document.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class PerformanceDataCounter {
  public:
@@ -45,8 +41,4 @@ class PerformanceDataCounter {
   }
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

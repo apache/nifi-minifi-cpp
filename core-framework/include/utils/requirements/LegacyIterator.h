@@ -24,11 +24,7 @@
 #include "utils/GeneralUtils.h"
 #include "Swappable.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 namespace detail {
 
@@ -66,8 +62,4 @@ struct assert_legacy_iterator {
   using iterator_category = typename std::iterator_traits<T>::iterator_category;
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

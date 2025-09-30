@@ -43,7 +43,9 @@ std::string HTTPIntegrationBase::getC2RestUrl() const {
 }
 
 void HTTPIntegrationBase::setUrl(const std::string &url, ServerAwareHandler *handler) {
-  std::string url_port, url_scheme, url_path;
+  std::string url_port;
+  std::string url_scheme;
+  std::string url_path;
   minifi::utils::parse_http_components(url, url_port, url_scheme, url_path);
   if (server) {
     if (url_port != "0" && url_port != port) {

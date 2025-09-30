@@ -20,11 +20,7 @@
 
 #include <type_traits>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename T, typename = void>
 struct is_equality_comparable : std::false_type {};
@@ -35,8 +31,4 @@ struct is_equality_comparable<T,
       std::is_convertible<decltype(std::declval<const T>() == std::declval<const T>()), bool>::value
     >::type> : std::true_type {};
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

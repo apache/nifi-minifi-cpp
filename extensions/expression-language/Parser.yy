@@ -38,17 +38,9 @@
   #undef S_FALSE  // winerror.h #defines S_FALSE, which conflicts with the generated token
   #endif
 
-  namespace org {
-  namespace apache {
-  namespace nifi {
-  namespace minifi {
-  namespace expression {
+  namespace org::apache::nifi::minifi::expression {
     class Driver;
-  } /* namespace expression */
-  } /* namespace minifi */
-  } /* namespace nifi */
-  } /* namespace apache */
-  } /* namespace org */
+  }  // namespace org::apache::nifi::minifi::expression
 }
 
 %code

@@ -79,7 +79,7 @@ void Aes256EcbCipher::encrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
   }
   ciphertext_len += len;
 
-  gsl_Expects(ciphertext_len == BLOCK_SIZE);
+  gsl_Expects(gsl::narrow<size_t>(ciphertext_len) == BLOCK_SIZE);
 }
 
 void Aes256EcbCipher::decrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
@@ -111,7 +111,7 @@ void Aes256EcbCipher::decrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
   }
   plaintext_len += len;
 
-  gsl_Expects(plaintext_len == BLOCK_SIZE);
+  gsl_Expects(gsl::narrow<size_t>(plaintext_len) == BLOCK_SIZE);
 }
 
 bool Aes256EcbCipher::operator==(const Aes256EcbCipher &other) const {
