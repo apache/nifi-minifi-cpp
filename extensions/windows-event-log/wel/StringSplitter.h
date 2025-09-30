@@ -19,6 +19,7 @@
 
 #include <cctype>
 #include <concepts>
+#include <functional>
 #include <ranges>
 #include <string_view>
 #include <vector>
@@ -46,9 +47,9 @@ void splitCommaSeparatedKeyValuePairs(std::string_view input, Func output_callba
         })
         | std::ranges::to<std::vector>();
     if (key_value_vec.size() == 2) {
-      output_callback(key_value_vec[0], key_value_vec[1]);
+      std::invoke(output_callback, key_value_vec[0], key_value_vec[1]);
     } else if (key_value_vec.size() == 1) {
-      output_callback(key_value_vec[0], "");
+      std::invoke(output_callback, key_value_vec[0], "");
     }
   }
 }

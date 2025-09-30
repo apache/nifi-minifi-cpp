@@ -341,7 +341,7 @@ class InvokeHTTP : public core::ProcessorImpl {
   [[nodiscard]] bool shouldEmitFlowFile() const;
   void onTriggerWithClient(core::ProcessContext& context, core::ProcessSession& session,
       const std::shared_ptr<core::FlowFile>& flow_file, http::HTTPClient& client);
-  [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header);
+  [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, std::invocable<std::string, std::string> auto append_header);
 
 
   void setupMembersFromProperties(const core::ProcessContext& context);

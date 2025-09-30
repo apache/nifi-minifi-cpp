@@ -19,6 +19,7 @@
 #include "InvokeHTTP.h"
 
 #include <cinttypes>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -208,8 +209,7 @@ bool InvokeHTTP::shouldEmitFlowFile() const {
  * @param append_header Callback to append HTTP header to the request
  * @return false when the flow file should be routed to failure, true otherwise
  */
-bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header) {
-  static_assert(std::is_invocable_v<decltype(append_header), std::string, std::string>);
+bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, std::invocable<std::string, std::string> auto append_header) {
   if (!attributes_to_send_) return true;
   const auto key_fn = [](const std::pair<std::string, std::string>& pair) { return pair.first; };
   const auto original_attributes = flow_file.getAttributes();
@@ -219,16 +219,18 @@ bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable
   switch (invalid_http_header_field_handling_strategy_) {
     case invoke_http::InvalidHTTPHeaderFieldHandlingOption::fail:
       if (ranges::any_of(matching_attributes, std::not_fn(&http::HTTPClient::isValidHttpHeaderField), key_fn)) return false;
-      for (const auto& header: matching_attributes) append_header(header.first, http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
+      for (const auto& header: matching_attributes) {
+        std::invoke(append_header, header.first, http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
+      }
       return true;
     case invoke_http::InvalidHTTPHeaderFieldHandlingOption::drop:
       for (const auto& header: matching_attributes | ranges::views::filter(&http::HTTPClient::isValidHttpHeaderField, key_fn)) {
-        append_header(header.first, http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
+        std::invoke(append_header, header.first, http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
       }
       return true;
     case invoke_http::InvalidHTTPHeaderFieldHandlingOption::transform:
       for (const auto& header: matching_attributes) {
-        append_header(http::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(header.first), http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
+        std::invoke(append_header, http::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(header.first), http::HTTPClient::removeInvalidCharactersFromHttpHeaderFieldBody(header.second));
       }
       return true;
   }
