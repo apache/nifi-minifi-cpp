@@ -21,6 +21,7 @@
 #include <set>
 
 #include "core/Resource.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::azure::controllers {
 
@@ -29,6 +30,12 @@ void AzureStorageCredentialsService::initialize() {
 }
 
 void AzureStorageCredentialsService::onEnable() {
+  auto credential_configuration_strategy_str = getProperty(CredentialConfigurationStrategy.name).value_or(std::string{magic_enum::enum_name(CredentialConfigurationStrategyOption::FromProperties)});
+  if (auto credential_configuration_strategy = magic_enum::enum_cast<CredentialConfigurationStrategyOption>(credential_configuration_strategy_str)) {
+    credentials_.setCredentialConfigurationStrategy(*credential_configuration_strategy);
+  } else {
+    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Invalid Credential Configuration Strategy: " + credential_configuration_strategy_str);
+  }
   if (auto storage_account_name = getProperty(StorageAccountName.name)) {
     credentials_.setStorageAccountName(*storage_account_name);
   }
@@ -39,13 +46,13 @@ void AzureStorageCredentialsService::onEnable() {
     credentials_.setSasToken(*sas_token);
   }
   if (auto common_storage_account_endpoint_suffix = getProperty(CommonStorageAccountEndpointSuffix.name)) {
-    credentials_.setEndpontSuffix(*common_storage_account_endpoint_suffix);
+    credentials_.setEndpointSuffix(*common_storage_account_endpoint_suffix);
   }
   if (auto connection_String = getProperty(ConnectionString.name)) {
     credentials_.setConnectionString(*connection_String);
   }
-  if (auto use_managed_identity_credentials = getProperty(UseManagedIdentityCredentials.name) | utils::andThen(parsing::parseBool)) {
-    credentials_.setUseManagedIdentityCredentials(*use_managed_identity_credentials);
+  if (auto managed_identity_client_id = getProperty(ManagedIdentityClientId.name)) {
+    credentials_.setManagedIdentityClientId(*managed_identity_client_id);
   }
 }
 
