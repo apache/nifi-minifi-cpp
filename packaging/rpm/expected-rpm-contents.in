@@ -34,6 +34,7 @@
 /usr/share/doc/nifi-minifi-cpp/FIPS.md
 /usr/share/doc/nifi-minifi-cpp/ThirdParties.md
 /usr/share/doc/nifi-minifi-cpp/Windows.md
+/usr/share/doc/nifi-minifi-cpp/SITE_TO_SITE.md
 /usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples
 /usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples/AddPythonAttribute.py
 /usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples/CountingProcessor.py

@@ -532,7 +532,7 @@ TEST_CASE("TestEmptyContent", "[emptyContent]") {
  */
 void testRPGBypass(const std::string &host, const std::string &port, bool has_error = true) {
   TestController testController;
-  LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
+  LogTestController::getInstance().setTrace<minifi::RemoteProcessGroupPort>();
   LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
   LogTestController::getInstance().setTrace<TestPlan>();
 
@@ -543,10 +543,10 @@ void testRPGBypass(const std::string &host, const std::string &port, bool has_er
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::dynamic_pointer_cast<TestRepository>(test_repo);
 
-  auto rpg = minifi::test::utils::make_custom_processor<minifi::RemoteProcessorGroupPort>("rpg", "http://localhost:8989/nifi", configuration, utils::IdGenerator::getIdGenerator()->generate());
+  auto rpg = minifi::test::utils::make_custom_processor<minifi::RemoteProcessGroupPort>("rpg", "http://localhost:8989/nifi", configuration, utils::IdGenerator::getIdGenerator()->generate());
   rpg->initialize();
-  REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName.name, host));
-  REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::port.name, port));
+  REQUIRE(rpg->setProperty(minifi::RemoteProcessGroupPort::hostName.name, host));
+  REQUIRE(rpg->setProperty(minifi::RemoteProcessGroupPort::port.name, port));
   auto context = std::make_shared<core::ProcessContextImpl>(*rpg, nullptr, repo, repo, content_repo);
   auto psf = std::make_shared<core::ProcessSessionFactoryImpl>(context);
   if (has_error) {
