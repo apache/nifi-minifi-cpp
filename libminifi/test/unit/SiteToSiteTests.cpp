@@ -236,9 +236,8 @@ TEST_CASE("TestSiteToSiteVerifySend using flowfile data", "[S2S]") {
 TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S]") {
   auto collector = std::make_unique<SiteToSiteResponder>();
 
-  const char negotiated_abort_code = gsl::narrow<char>(magic_enum::enum_underlying(sitetosite::ResourceNegotiationStatusCode::NEGOTIATED_ABORT));
-  std::string resp_code;
-  resp_code.insert(resp_code.begin(), negotiated_abort_code);
+  const auto negotiated_abort_code = magic_enum::enum_underlying(sitetosite::ResourceNegotiationStatusCode::NEGOTIATED_ABORT);
+  const std::string resp_code{reinterpret_cast<const char*>(&negotiated_abort_code), 1};
   collector->push_response(resp_code);
   collector->push_response(resp_code);
 

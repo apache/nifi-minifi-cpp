@@ -91,7 +91,8 @@ AddIdToUserConnectionData::AddIdToUserConnectionData() {
   };
 
   connection_close = [](const struct mg_connection* conn) -> void {
-    std::ignore = std::unique_ptr<minifi::utils::SmallString<36>>(reinterpret_cast<minifi::utils::SmallString<36>*>(mg_get_user_connection_data(conn)));
+    auto user_connection_data = reinterpret_cast<minifi::utils::SmallString<36>*>(mg_get_user_connection_data(conn));
+    delete user_connection_data;  // NOLINT(cppcoreguidelines-owning-memory)
   };
 }
 }  // namespace details
