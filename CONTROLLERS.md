@@ -27,6 +27,7 @@ limitations under the License.
 - [NetworkPrioritizerService](#NetworkPrioritizerService)
 - [ODBCService](#ODBCService)
 - [PersistentMapStateStorage](#PersistentMapStateStorage)
+- [ProxyConfigurationService](#ProxyConfigurationService)
 - [RocksDbStateStorage](#RocksDbStateStorage)
 - [SmbConnectionControllerService](#SmbConnectionControllerService)
 - [SSLContextService](#SSLContextService)
@@ -242,6 +243,24 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Always Persist            | false         | true<br/>false   | Persist every change instead of persisting it periodically.                                                                                            |
 | Auto Persistence Interval | 1 min         |                  | The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled. |
 | **File**                  |               |                  | Path to a file to store state                                                                                                                          |
+
+
+## ProxyConfigurationService
+
+### Description
+
+Provides a set of configurations for different MiNiFi C++ components to use a proxy server.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                  | Default Value | Allowable Values | Description                                                                                |
+|-----------------------|---------------|------------------|--------------------------------------------------------------------------------------------|
+| **Proxy Server Host** |               |                  | Proxy server hostname or ip-address.                                                       |
+| Proxy Server Port     |               |                  | Proxy server port number.                                                                  |
+| Proxy User Name       |               |                  | The name of the proxy client for user authentication.                                      |
+| Proxy User Password   |               |                  | The password of the proxy client for user authentication.<br/>**Sensitive Property: true** |
 
 
 ## RocksDbStateStorage

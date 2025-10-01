@@ -25,8 +25,17 @@
 
 #include "minifi-cpp/core/ProcessContext.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
+
+void AzureStorageProcessorBase::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  auto proxy_controller_service = minifi::utils::parseOptionalControllerService<minifi::controllers::ProxyConfigurationServiceInterface>(context, ProxyConfigurationService, getUUID());
+  if (proxy_controller_service) {
+    logger_->log_debug("Proxy configuration is set for Azure Storage processor");
+    proxy_configuration_ = proxy_controller_service->getProxyConfiguration();
+  }
+}
 
 std::tuple<AzureStorageProcessorBase::GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> AzureStorageProcessorBase::getCredentialsFromControllerService(
     core::ProcessContext &context) const {
