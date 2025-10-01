@@ -103,14 +103,14 @@ void verifyCompressedChunks(io::BufferStream& buffer_stream, uint32_t expected_s
 
 TEST_CASE("Write empty output stream", "[CompressionOutputStream]") {
   io::BufferStream buffer_stream;
-  sitetosite::CompressionOutputStream output_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionOutputStream output_stream(buffer_stream);
   output_stream.close();
   REQUIRE(buffer_stream.size() == 0);
 }
 
 TEST_CASE("Write a 4 byte integer and flush", "[CompressionOutputStream]") {
   io::BufferStream buffer_stream;
-  sitetosite::CompressionOutputStream output_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionOutputStream output_stream(buffer_stream);
   CHECK(output_stream.write(static_cast<uint32_t>(42)) == 4);
   output_stream.flush();
   verifyCompressedChunks(buffer_stream, 4);
@@ -118,7 +118,7 @@ TEST_CASE("Write a 4 byte integer and flush", "[CompressionOutputStream]") {
 
 TEST_CASE("Write a single chunk of compressed data and flush on close", "[CompressionOutputStream]") {
   io::BufferStream buffer_stream;
-  sitetosite::CompressionOutputStream output_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionOutputStream output_stream(buffer_stream);
   for (size_t i = 0; i < 10000; ++i) {
     CHECK(output_stream.write(static_cast<uint32_t>(42)) == 4);
   }
@@ -131,7 +131,7 @@ TEST_CASE("Write a single chunk of compressed data and flush on close", "[Compre
 
 TEST_CASE("Write 2 chunks of compressed data and flush on demand", "[CompressionOutputStream]") {
   io::BufferStream buffer_stream;
-  sitetosite::CompressionOutputStream output_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionOutputStream output_stream(buffer_stream);
   for (size_t i = 0; i < 10000; ++i) {
     CHECK(output_stream.write(static_cast<uint32_t>(42)) == 4);
   }
@@ -149,7 +149,7 @@ TEST_CASE("Write 2 chunks of compressed data and flush on demand", "[Compression
 
 TEST_CASE("Write 3 chunks of compressed data and flush on demand", "[CompressionOutputStream]") {
   io::BufferStream buffer_stream;
-  sitetosite::CompressionOutputStream output_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionOutputStream output_stream(buffer_stream);
   for (size_t i = 0; i < 10000; ++i) {
     CHECK(output_stream.write(static_cast<uint32_t>(42)) == 4);
   }
@@ -170,10 +170,10 @@ TEST_CASE("Write 3 chunks of compressed data and flush on demand", "[Compression
 
 TEST_CASE("Read single 4 byte integer compressed", "[CompressionOutputStream]") {
   io::BufferStream buffer_stream;
-  sitetosite::CompressionOutputStream output_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionOutputStream output_stream(buffer_stream);
   CHECK(output_stream.write(static_cast<uint32_t>(42)) == 4);
   output_stream.flush();
-  sitetosite::CompressionInputStream input_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionInputStream input_stream(buffer_stream);
   uint32_t read_byte{};
   CHECK(input_stream.read(read_byte) == 4);
   CHECK(read_byte == 42);
@@ -181,12 +181,12 @@ TEST_CASE("Read single 4 byte integer compressed", "[CompressionOutputStream]") 
 
 TEST_CASE("Read large number of bytes compressed", "[CompressionOutputStream]") {
   io::BufferStream buffer_stream;
-  sitetosite::CompressionOutputStream output_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionOutputStream output_stream(buffer_stream);
   for (size_t i = 0; i < 10000; ++i) {
     CHECK(output_stream.write(static_cast<uint32_t>(42)) == 4);
   }
   output_stream.flush();
-  sitetosite::CompressionInputStream input_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionInputStream input_stream(buffer_stream);
   for (size_t i = 0; i < 10000; ++i) {
     uint32_t read_byte{};
     CHECK(input_stream.read(read_byte) == 4);
@@ -196,7 +196,7 @@ TEST_CASE("Read large number of bytes compressed", "[CompressionOutputStream]") 
 
 TEST_CASE("Read large number of bytes that uses multiple buffers", "[CompressionOutputStream]") {
   io::BufferStream buffer_stream;
-  sitetosite::CompressionOutputStream output_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionOutputStream output_stream(buffer_stream);
   uint32_t count = 0;
   while (buffer_stream.size() + 100 < sitetosite::COMPRESSION_BUFFER_SIZE) {
     ++count;
@@ -204,7 +204,7 @@ TEST_CASE("Read large number of bytes that uses multiple buffers", "[Compression
   }
   output_stream.flush();
 
-  sitetosite::CompressionInputStream input_stream(gsl::make_not_null(&buffer_stream));
+  sitetosite::CompressionInputStream input_stream(buffer_stream);
   for (size_t i = 1; i <= count; ++i) {
     uint32_t read_byte{};
     CHECK(input_stream.read(read_byte) == 4);

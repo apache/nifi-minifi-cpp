@@ -19,7 +19,6 @@
 
 #include "io/OutputStream.h"
 #include "io/BaseStream.h"
-#include "utils/gsl.h"
 #include "CompressionConsts.h"
 #include "core/logging/LoggerFactory.h"
 
@@ -27,7 +26,7 @@ namespace org::apache::nifi::minifi::sitetosite {
 
 class CompressionOutputStream : public io::StreamImpl, public virtual io::OutputStreamImpl {
  public:
-  explicit CompressionOutputStream(gsl::not_null<io::OutputStream*> internal_stream)
+  explicit CompressionOutputStream(io::OutputStream& internal_stream)
       : internal_stream_(internal_stream) {
   }
 
@@ -41,7 +40,7 @@ class CompressionOutputStream : public io::StreamImpl, public virtual io::Output
 
   bool was_data_written_{false};
   size_t buffer_offset_{0};
-  gsl::not_null<io::OutputStream*> internal_stream_;
+  io::OutputStream& internal_stream_;
   std::vector<std::byte> buffer_{COMPRESSION_BUFFER_SIZE};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressionOutputStream>::getLogger();
 };

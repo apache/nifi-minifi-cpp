@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 #include "sitetosite/CompressionInputStream.h"
+
+#include <algorithm>
 #include "io/ZlibStream.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
@@ -26,7 +28,7 @@ size_t CompressionInputStream::decompressData() {
   }
 
   std::vector<std::byte> local_buffer(COMPRESSION_BUFFER_SIZE);
-  auto ret = internal_stream_->read(std::span(local_buffer).subspan(0, SYNC_BYTES.size()));
+  auto ret = internal_stream_.read(std::span(local_buffer).subspan(0, SYNC_BYTES.size()));
   if (ret != SYNC_BYTES.size() ||
       !std::equal(SYNC_BYTES.begin(), SYNC_BYTES.end(), local_buffer.begin(), [](char sync_char, std::byte read_byte) { return static_cast<std::byte>(sync_char) == read_byte;})) {
     logger_->log_error("Failed to read sync bytes or sync bytes do not match");
@@ -34,14 +36,14 @@ size_t CompressionInputStream::decompressData() {
   }
 
   uint32_t original_size = 0;
-  ret = internal_stream_->read(original_size);
+  ret = internal_stream_.read(original_size);
   if (io::isError(ret) || ret != 4) {
     logger_->log_error("Failed to read original size, ret: {}", ret);
     return io::STREAM_ERROR;
   }
 
   uint32_t compressed_size = 0;
-  ret = internal_stream_->read(compressed_size);
+  ret = internal_stream_.read(compressed_size);
   if (io::isError(ret) || ret != 4) {
     logger_->log_error("Failed to read compressed size, ret: {}", ret);
     return io::STREAM_ERROR;
@@ -62,7 +64,7 @@ size_t CompressionInputStream::decompressData() {
     return io::STREAM_ERROR;
   }
 
-  ret = internal_stream_->read(std::span(local_buffer).subspan(0, compressed_size));
+  ret = internal_stream_.read(std::span(local_buffer).subspan(0, compressed_size));
   if (io::isError(ret) || ret != compressed_size) {
     logger_->log_error("Failed to read compressed data, ret: {}", ret);
     return io::STREAM_ERROR;
@@ -87,7 +89,7 @@ size_t CompressionInputStream::decompressData() {
   }
 
   uint8_t end_byte = 0;
-  ret = internal_stream_->read(end_byte);
+  ret = internal_stream_.read(end_byte);
   if (io::isError(ret) || ret != 1) {
     logger_->log_error("Failed to read end byte, ret: {}", ret);
     return io::STREAM_ERROR;
@@ -111,38 +113,42 @@ size_t CompressionInputStream::read(std::span<std::byte> out_buffer) {
     return 0;
   }
 
-  size_t bytes_to_read = out_buffer.size();
-  size_t bytes_read = 0;
-  while (bytes_to_read > 0) {
+  std::span<std::byte> remaining_output = out_buffer;
+  size_t total_bytes_read = 0;
+
+  while (!remaining_output.empty()) {
     if (buffered_data_length_ == 0 || buffered_data_length_ == buffer_offset_) {
       auto ret = decompressData();
       if (io::isError(ret)) {
         return io::STREAM_ERROR;
       }
     }
-    uint64_t bytes_available = buffered_data_length_ - buffer_offset_;
+
+    const auto bytes_available = buffered_data_length_ - buffer_offset_;
     if (bytes_available == 0) {
       break;
     }
-    if (bytes_available <= bytes_to_read) {
-      std::memcpy(out_buffer.data(), buffer_.data() + buffer_offset_, bytes_available);
+
+    const auto bytes_to_copy = std::min(bytes_available, remaining_output.size());
+    const auto source_data = std::span<const std::byte>(buffer_).subspan(buffer_offset_, bytes_to_copy);
+
+    std::ranges::copy(source_data, remaining_output.begin());
+
+    buffer_offset_ += bytes_to_copy;
+    total_bytes_read += bytes_to_copy;
+    remaining_output = remaining_output.subspan(bytes_to_copy);
+
+    if (buffer_offset_ == buffered_data_length_) {
       buffer_offset_ = 0;
       buffered_data_length_ = 0;
-      bytes_to_read -= bytes_available;
-      bytes_read += bytes_available;
-    } else {
-      std::memcpy(out_buffer.data(), buffer_.data() + buffer_offset_, bytes_to_read);
-      buffer_offset_ += bytes_to_read;
-      bytes_read += bytes_to_read;
-      bytes_to_read = 0;
     }
   }
 
-  return bytes_read;
+  return total_bytes_read;
 }
 
 void CompressionInputStream::close() {
-  internal_stream_->close();
+  internal_stream_.close();
 }
 
 }  // namespace org::apache::nifi::minifi::sitetosite

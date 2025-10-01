@@ -461,7 +461,7 @@ bool SiteToSiteClient::sendFlowFile(const std::shared_ptr<Transaction>& transact
   std::unique_ptr<CompressionOutputStream> compression_stream;
   std::unique_ptr<io::CRCStream<io::OutputStream>> compression_wrapper_crc_stream;
   if (use_compression_) {
-    compression_stream = std::make_unique<CompressionOutputStream>(gsl::make_not_null(&transaction->getStream()));
+    compression_stream = std::make_unique<CompressionOutputStream>(transaction->getStream());
     compression_wrapper_crc_stream = std::make_unique<io::CRCStream<io::OutputStream>>(gsl::make_not_null(compression_stream.get()));
   }
   io::OutputStream& stream = use_compression_ ?  static_cast<io::OutputStream&>(*compression_wrapper_crc_stream) : static_cast<io::OutputStream&>(transaction->getStream());
@@ -526,7 +526,7 @@ bool SiteToSiteClient::sendPacket(const DataPacket& packet) {
   std::unique_ptr<CompressionOutputStream> compression_stream;
   std::unique_ptr<io::CRCStream<io::OutputStream>> compression_wrapper_crc_stream;
   if (use_compression_) {
-    compression_stream = std::make_unique<CompressionOutputStream>(gsl::make_not_null(&packet.transaction->getStream()));
+    compression_stream = std::make_unique<CompressionOutputStream>(packet.transaction->getStream());
     compression_wrapper_crc_stream = std::make_unique<io::CRCStream<io::OutputStream>>(gsl::make_not_null(compression_stream.get()));
   }
   io::OutputStream& stream = use_compression_ ?  static_cast<io::OutputStream&>(*compression_wrapper_crc_stream) : static_cast<io::OutputStream&>(transaction->getStream());
@@ -675,7 +675,7 @@ std::pair<uint64_t, uint64_t> SiteToSiteClient::readFlowFiles(const std::shared_
   std::unique_ptr<CompressionInputStream> compression_stream;
   std::unique_ptr<io::CRCStream<io::InputStream>> compression_wrapper_crc_stream;
   if (use_compression_) {
-    compression_stream = std::make_unique<CompressionInputStream>(gsl::make_not_null(&transaction->getStream()));
+    compression_stream = std::make_unique<CompressionInputStream>(transaction->getStream());
     compression_wrapper_crc_stream = std::make_unique<io::CRCStream<io::InputStream>>(gsl::make_not_null(compression_stream.get()));
   }
   io::InputStream& stream = use_compression_ ?  static_cast<io::InputStream&>(*compression_wrapper_crc_stream) : static_cast<io::InputStream&>(transaction->getStream());
