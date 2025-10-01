@@ -32,6 +32,7 @@
 #include "core/ProcessorImpl.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "storage/AzureStorageCredentials.h"
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -40,9 +41,15 @@ class AzureStorageProcessorBase : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto AzureStorageCredentialsService = core::PropertyDefinitionBuilder<>::createProperty("Azure Storage Credentials Service")
       .withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({AzureStorageCredentialsService});
+  EXTENSIONAPI static constexpr auto ProxyConfigurationService = core::PropertyDefinitionBuilder<>::createProperty("Proxy Configuration Service")
+      .withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests.")
+      .withAllowedTypes<minifi::controllers::ProxyConfigurationServiceInterface>()
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({AzureStorageCredentialsService, ProxyConfigurationService});
 
   using ProcessorImpl::ProcessorImpl;
+
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
   enum class GetCredentialsFromControllerResult {
@@ -52,6 +59,9 @@ class AzureStorageProcessorBase : public core::ProcessorImpl {
   };
 
   std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(core::ProcessContext &context) const;
+
+ protected:
+  std::optional<minifi::controllers::ProxyConfiguration> proxy_configuration_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

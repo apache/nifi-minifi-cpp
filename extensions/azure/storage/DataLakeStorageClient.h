@@ -31,6 +31,7 @@
 #include "azure/storage/files/datalake/datalake_responses.hpp"
 #include "utils/Enum.h"
 #include "utils/RegexUtils.h"
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -39,6 +40,7 @@ struct AzureDataLakeStorageParameters {
   std::string file_system_name;
   std::string directory_name;
   std::optional<uint64_t> number_of_retries;
+  std::optional<minifi::controllers::ProxyConfiguration> proxy_configuration;
 };
 
 struct AzureDataLakeStorageFileOperationParameters : public AzureDataLakeStorageParameters {

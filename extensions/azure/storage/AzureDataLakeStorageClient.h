@@ -93,8 +93,8 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
     Azure::Storage::Files::DataLake::Models::DownloadFileResult result_;
   };
 
-  static std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> createClient(
-    const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries);
+  static std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> createClient(const AzureStorageCredentials& credentials,
+    const std::string& file_system_name, std::optional<uint64_t> number_of_retries, const std::optional<minifi::controllers::ProxyConfiguration>& proxy_configuration);
   static Azure::Storage::Files::DataLake::DataLakeDirectoryClient getDirectoryClient(const AzureDataLakeStorageParameters& params);
   static Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const AzureDataLakeStorageFileOperationParameters& params);
 

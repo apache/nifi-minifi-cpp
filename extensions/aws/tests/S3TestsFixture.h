@@ -96,7 +96,7 @@ class S3TestsFixture {
 
   virtual void setAccesKeyCredentialsInProcessor() = 0;
   virtual void setBucket() = 0;
-  virtual void setProxy() = 0;
+  virtual void setProxy(bool use_controller_service) = 0;
 
   void setRequiredProperties() {
     setAccesKeyCredentialsInProcessor();
@@ -178,15 +178,24 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
     this->plan->setProperty(this->s3_processor, "Bucket", "${test.bucket}");
   }
 
-  void setProxy() override {
-    this->plan->setDynamicProperty(update_attribute, "test.proxyHost", "host");
-    this->plan->setProperty(this->s3_processor, "Proxy Host", "${test.proxyHost}");
-    this->plan->setDynamicProperty(update_attribute, "test.proxyPort", "1234");
-    this->plan->setProperty(this->s3_processor, "Proxy Port", "${test.proxyPort}");
-    this->plan->setDynamicProperty(update_attribute, "test.proxyUsername", "username");
-    this->plan->setProperty(this->s3_processor, "Proxy Username", "${test.proxyUsername}");
-    this->plan->setDynamicProperty(update_attribute, "test.proxyPassword", "password");
-    this->plan->setProperty(this->s3_processor, "Proxy Password", "${test.proxyPassword}");
+  void setProxy(bool use_controller_service) override {
+    if (use_controller_service) {
+      auto proxy_configuration_service = this->plan->addController("ProxyConfigurationService", "ProxyConfigurationService");
+      this->plan->setProperty(proxy_configuration_service, "Proxy Server Host", "host");
+      this->plan->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
+      this->plan->setProperty(proxy_configuration_service, "Proxy User Name", "username");
+      this->plan->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+      this->plan->setProperty(this->s3_processor, "Proxy Configuration Service", "ProxyConfigurationService");
+    } else {
+      this->plan->setDynamicProperty(update_attribute, "test.proxyHost", "host");
+      this->plan->setProperty(this->s3_processor, "Proxy Host", "${test.proxyHost}");
+      this->plan->setDynamicProperty(update_attribute, "test.proxyPort", "1234");
+      this->plan->setProperty(this->s3_processor, "Proxy Port", "${test.proxyPort}");
+      this->plan->setDynamicProperty(update_attribute, "test.proxyUsername", "username");
+      this->plan->setProperty(this->s3_processor, "Proxy Username", "${test.proxyUsername}");
+      this->plan->setDynamicProperty(update_attribute, "test.proxyPassword", "password");
+      this->plan->setProperty(this->s3_processor, "Proxy Password", "${test.proxyPassword}");
+    }
   }
 
  protected:
@@ -224,10 +233,19 @@ class FlowProducerS3TestsFixture : public S3TestsFixture<T> {
     this->plan->setProperty(this->s3_processor, "Bucket", this->S3_BUCKET);
   }
 
-  void setProxy() override {
-    this->plan->setProperty(this->s3_processor, "Proxy Host", "host");
-    this->plan->setProperty(this->s3_processor, "Proxy Port", "1234");
-    this->plan->setProperty(this->s3_processor, "Proxy Username", "username");
-    this->plan->setProperty(this->s3_processor, "Proxy Password", "password");
+  void setProxy(bool use_controller_service) override {
+    if (use_controller_service) {
+      auto proxy_configuration_service = this->plan->addController("ProxyConfigurationService", "ProxyConfigurationService");
+      this->plan->setProperty(proxy_configuration_service, "Proxy Server Host", "host");
+      this->plan->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
+      this->plan->setProperty(proxy_configuration_service, "Proxy User Name", "username");
+      this->plan->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+      this->plan->setProperty(this->s3_processor, "Proxy Configuration Service", "ProxyConfigurationService");
+    } else {
+      this->plan->setProperty(this->s3_processor, "Proxy Host", "host");
+      this->plan->setProperty(this->s3_processor, "Proxy Port", "1234");
+      this->plan->setProperty(this->s3_processor, "Proxy Username", "username");
+      this->plan->setProperty(this->s3_processor, "Proxy Password", "password");
+    }
   }
 };
