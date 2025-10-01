@@ -25,7 +25,8 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  AzureStorageProcessorBase::onSchedule(context, session_factory);
   if (!context.hasNonEmptyProperty(ContainerName.name)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Container Name property missing or invalid");
   }
@@ -104,6 +105,8 @@ bool AzureBlobStorageProcessorBase::setCommonStorageParameters(
     logger_->log_error("Container Name is invalid or empty!");
     return false;
   }
+
+  params.proxy_configuration = proxy_configuration_;
 
   return true;
 }

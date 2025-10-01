@@ -153,4 +153,26 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete result is false
   REQUIRE(failed_flowfiles[0] == TEST_DATA);
 }
 
+TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Test Azure data lake storage delete using proxy", "[azureDataLakeStorageDelete]") {
+  auto proxy_configuration_service = plan_->addController("ProxyConfigurationService", "ProxyConfigurationService");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "host");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+  plan_->setProperty(azure_data_lake_storage_, "Proxy Configuration Service", "ProxyConfigurationService");
+
+  test_controller_.runSession(plan_, true);
+
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedDeleteParams();
+  REQUIRE(passed_params.proxy_configuration);
+  REQUIRE(passed_params.proxy_configuration->proxy_host == "host");
+  REQUIRE(passed_params.proxy_configuration->proxy_port);
+  REQUIRE(*passed_params.proxy_configuration->proxy_port == 1234);
+  REQUIRE(passed_params.proxy_configuration->proxy_user);
+  REQUIRE(*passed_params.proxy_configuration->proxy_user == "username");
+  REQUIRE(passed_params.proxy_configuration->proxy_password);
+  REQUIRE(*passed_params.proxy_configuration->proxy_password == "password");
+  CHECK(getFailedFlowFileContents().empty());
+}
+
 }  // namespace
