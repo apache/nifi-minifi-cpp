@@ -54,8 +54,12 @@ class ProcessorBase(ABC):
             self.supports_dynamic_properties = False
 
         for property in self.getPropertyDescriptors():
-            property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
             expression_language_supported = True if property.expressionLanguageScope != ExpressionLanguageScope.NONE else False
+            property_type_code = None
+
+            # MiNiFi C++ does not support validators for expression language enabled properties
+            if not expression_language_supported:
+                property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
 
             # MiNiFi C++ does not support dependant properties, so if a property depends on another property, it should not be required
             is_required = True if property.required and not property.dependencies else False
