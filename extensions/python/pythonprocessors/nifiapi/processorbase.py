@@ -15,7 +15,7 @@
 
 from abc import ABC, abstractmethod
 from typing import List
-from .properties import ExpressionLanguageScope, PropertyDescriptor, translateStandardValidatorToMiNiFiPropertype
+from .properties import ExpressionLanguageScope, PropertyDescriptor, translateStandardValidatorToMiNiFiPropertype, MinifiPropertyTypes
 from .properties import ProcessContext as ProcessContextProxy
 from minifi_native import OutputStream, Processor, ProcessContext, ProcessSession
 
@@ -54,8 +54,13 @@ class ProcessorBase(ABC):
             self.supports_dynamic_properties = False
 
         for property in self.getPropertyDescriptors():
-            property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
             expression_language_supported = True if property.expressionLanguageScope != ExpressionLanguageScope.NONE else False
+            property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
+
+            # MiNiFi C++ does not support validators for expression language enabled properties
+            if expression_language_supported and property_type_code is not None and property_type_code != MinifiPropertyTypes.NON_BLANK_TYPE:
+                self.logger.warn("Property '{}' has validators defined, but since it also supports Expression Language, the validators will be ignored.".format(property.name))
+                property_type_code = None
 
             # MiNiFi C++ does not support dependant properties, so if a property depends on another property, it should not be required
             is_required = True if property.required and not property.dependencies else False

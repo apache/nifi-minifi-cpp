@@ -213,6 +213,7 @@ class ImageStore:
                 COPY TestStateManager.py {minifi_python_dir}/nifi_python_processors/TestStateManager.py
                 COPY NifiStyleLogDynamicProperties.py {minifi_python_dir}/nifi_python_processors/NifiStyleLogDynamicProperties.py
                 COPY LogDynamicProperties.py {minifi_python_dir}/LogDynamicProperties.py
+                COPY ExpressionLanguagePropertyWithValidator.py {minifi_python_dir}/nifi_python_processors/ExpressionLanguagePropertyWithValidator.py
                 RUN python3 -m venv {minifi_python_venv_parent}/venv
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
                            pip3_install_command=pip3_install_command,
@@ -237,7 +238,8 @@ class ImageStore:
             build_full_python_resource_path("SetRecordField.py"),
             build_full_python_resource_path("TestStateManager.py"),
             build_full_python_resource_path("NifiStyleLogDynamicProperties.py"),
-            build_full_python_resource_path("LogDynamicProperties.py")
+            build_full_python_resource_path("LogDynamicProperties.py"),
+            build_full_python_resource_path("ExpressionLanguagePropertyWithValidator.py")
         ])
 
     def __build_minifi_cpp_image_with_llamacpp_model(self):
