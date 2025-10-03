@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@ENABLE_LUA_SCRIPT
+@ENABLE_LUA_SCRIPTING
 Feature: MiNiFi can execute Lua scripts
   Background:
     Given the content of "/tmp/output" is monitored
