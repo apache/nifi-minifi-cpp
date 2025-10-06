@@ -139,7 +139,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   void initializeScript();
   void loadScriptFromFile();
   std::unique_ptr<PythonScriptEngine> createScriptEngine();
-  void initalizeThroughScriptEngine();
+  void initializeThroughScriptEngine();
   void reloadScriptFile();
 };
 

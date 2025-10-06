@@ -121,17 +121,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
   void testsStatefulProcessor() {
     reInitialize();
     const auto output_dir = testController_->createTempDirectory();
-
-    auto uuid = utils::IdGenerator::getIdGenerator()->generate();
-    auto execute_python_processor = std::make_unique<minifi::extensions::python::processors::ExecutePythonProcessor>(core::ProcessorMetadata{
-      .uuid = uuid,
-      .name = "ExecutePythonProcessor",
-      .logger = logging::LoggerFactory<minifi::extensions::python::processors::ExecutePythonProcessor>::getLogger(uuid)
-    });
-    execute_python_processor->setScriptFilePath(getScriptFullPath("stateful_processor.py").string());
-    auto execute_python_processor_unique_ptr = std::make_unique<core::Processor>(execute_python_processor->getName(), execute_python_processor->getUUID(), std::move(execute_python_processor));
-    plan_->addProcessor(std::move(execute_python_processor_unique_ptr), "executePythonProcessor");
-
+    addExecutePythonProcessorToPlan(getScriptFullPath("stateful_processor.py"), false);
     addPutFileProcessorToPlan(core::Relationship("success", "description"), output_dir);
     plan_->runNextProcessor();  // ExecutePythonProcessor
     for (std::size_t i = 0; i < 10; ++i) {
@@ -154,7 +144,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     return getfile;
   }
 
-  core::Processor* addExecutePythonProcessorToPlan(const std::filesystem::path& used_as_script_file) {
+  core::Processor* addExecutePythonProcessorToPlan(const std::filesystem::path& used_as_script_file, bool link_to_previous = true) {
     auto uuid = utils::IdGenerator::getIdGenerator()->generate();
     auto execute_python_processor = std::make_unique<minifi::extensions::python::processors::ExecutePythonProcessor>(core::ProcessorMetadata{
       .uuid = uuid,
@@ -163,7 +153,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     });
     execute_python_processor->setScriptFilePath(getScriptFullPath(used_as_script_file).string());
     auto execute_python_processor_unique_ptr = std::make_unique<core::Processor>(execute_python_processor->getName(), execute_python_processor->getUUID(), std::move(execute_python_processor));
-    auto processor = plan_->addProcessor(std::move(execute_python_processor_unique_ptr), "executePythonProcessor", core::Relationship("success", "description"), true);
+    auto processor = plan_->addProcessor(std::move(execute_python_processor_unique_ptr), "executePythonProcessor", core::Relationship("success", "description"), link_to_previous);
     return processor;
   }
 
@@ -194,7 +184,7 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Simple file passthrough", "[
   const core::Relationship FAILURE{"failure", "description"};
 
   // 0. Neither valid script file nor script body provided
-  //                                      TEST EXPECTATION  OUT_REL        USE_AS_SCRIPT_FILE
+  //                                TEST EXPECTATION  OUT_REL        USE_AS_SCRIPT_FILE
   testSimpleFilePassthrough(INITIALIZATION_EXCEPTION, SUCCESS, "non_existent_script.py");  // NOLINT
   testSimpleFilePassthrough(INITIALIZATION_EXCEPTION, FAILURE, "non_existent_script.py");  // NOLINT
 

@@ -85,7 +85,7 @@ export LD_LIBRARY_PATH="${PYENV_ROOT}/versions/${PY_VERSION}/lib${LD_LIBRARY_PAT
 There are two types of python processors that can be used: MiNiFi C++ style native python processors and NiFi style python processors. MiNiFi C++ style native python processors are defined using a simple python API, while NiFi python processors use the NiFi python API documented in the [Apache NiFi Python Developer’s Guide](https://nifi.apache.org/nifi-docs/python-developer-guide.html). This readme describes the use of both types of processors.
 
 Python processors can be updated at any time by simply adding a new processor to the minifi-python directory defined in
-the `minifi.properties` file in the `nifi.python.processor.dir` property. For NiFi style python processors the `${nifi.python.processor.dir}/nifi_python_processor` directory should be used.
+the `minifi.properties` file in the `nifi.python.processor.dir` property. For NiFi style python processors the `${nifi.python.processor.dir}/nifi_python_processors` directory should be used.
 The processor name, when provided to MiNiFi C++ and any C2 manifest will be that
 of the name of the python script. For example, "AttributePrinter.py" will be named and referenced in the flow
 as "org.apache.nifi.minifi.processors.AttributePrinter" and would look like this in the flow configuration:
@@ -209,7 +209,7 @@ The onSchedule function is passed the context and session factory. This should b
 the getProperty function. onTrigger is executed and passed the processor context and session. You may keep state within your processor.
 
 Much like C++ processors, callbacks may be defined for reading/writing streams of data through the session. Those callback classes will
-have a process function that accepts the input stream. You may use codecs getReader to read that data as in the example, below, from
+have a process function that accepts the input stream. You may use `codecs.getreader` to read that data as in the example below, from
 VaderSentiment
 
 ```python

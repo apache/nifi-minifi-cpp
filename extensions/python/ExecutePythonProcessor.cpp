@@ -78,7 +78,7 @@ void ExecutePythonProcessor::initializeScript() {
   loadScriptFromFile();
   last_script_write_time_ = utils::file::last_write_time(script_file_path_);
   python_script_engine_ = createScriptEngine();
-  initalizeThroughScriptEngine();
+  initializeThroughScriptEngine();
 }
 
 void ExecutePythonProcessor::loadScriptFromFile() {
@@ -99,7 +99,7 @@ std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine()
   return engine;
 }
 
-void ExecutePythonProcessor::initalizeThroughScriptEngine() {
+void ExecutePythonProcessor::initializeThroughScriptEngine() {
   gsl_Expects(python_script_engine_);
   try {
     python_script_engine_->appendModulePaths(python_paths_);
