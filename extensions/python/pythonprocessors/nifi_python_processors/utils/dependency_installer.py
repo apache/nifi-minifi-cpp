@@ -42,7 +42,7 @@ def extract_dependencies(file_path):
 
 
 def has_progress_bar() -> bool:
-    return sys.version_info[0] == 3 and sys.version_info[1] >= 9
+    return sys.version_info.major > 3 or (sys.version_info.major == 3 and sys.version_info.minor >= 9)
 
 
 if __name__ == '__main__':
