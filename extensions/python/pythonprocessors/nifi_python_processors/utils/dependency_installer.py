@@ -41,6 +41,10 @@ def extract_dependencies(file_path):
     return visitor.dependencies
 
 
+def has_progress_bar() -> bool:
+    return sys.version_info.major > 3 or (sys.version_info.major == 3 and sys.version_info.minor >= 9)
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         sys.exit(1)
@@ -48,7 +52,10 @@ if __name__ == '__main__':
     print("Checking dependencies for MiNiFi python processors...")
 
     # --no-cache-dir is used to be in line with NiFi's dependency install behavior
-    command = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "--progress-bar", "off"]
+    if has_progress_bar():
+        command = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "--progress-bar", "off"]
+    else:
+        command = [sys.executable, "-m", "pip", "install", "--no-cache-dir"]
     dependencies_found = False
     for i in range(1, len(sys.argv)):
         if "requirements.txt" in sys.argv[i]:
