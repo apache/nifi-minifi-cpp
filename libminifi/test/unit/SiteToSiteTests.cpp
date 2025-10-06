@@ -237,7 +237,7 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S]") {
   auto collector = std::make_unique<SiteToSiteResponder>();
 
   const auto negotiated_abort_code = magic_enum::enum_underlying(sitetosite::ResourceNegotiationStatusCode::NEGOTIATED_ABORT);
-  const std::string resp_code{reinterpret_cast<const char*>(&negotiated_abort_code), 1};
+  const std::string resp_code{static_cast<char>(negotiated_abort_code)};
   collector->push_response(resp_code);
   collector->push_response(resp_code);
 

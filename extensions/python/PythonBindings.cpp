@@ -54,7 +54,7 @@ struct PyModuleDef minifi_module = {
 
 PyMODINIT_FUNC
 PyInit_minifi_native(void) {
-  const std::array types = std::to_array<std::pair<PyTypeObject*, std::string_view>>({
+  const std::array types = std::to_array<std::pair<PyTypeObject*, std::string>>({
       std::make_pair(PyLogger::typeObject(), "Logger"),
       std::make_pair(PyProcessSessionObject::typeObject(), "ProcessSession"),
       std::make_pair(PyProcessContext::typeObject(), "ProcessContext"),
@@ -83,8 +83,8 @@ PyInit_minifi_native(void) {
   for (const auto& type : types) {
     Py_INCREF(type.first);
   }
-  const auto result = std::all_of(std::begin(types), std::end(types), [&](std::pair<PyTypeObject*, std::string_view> type) {
-    return PyModule_AddObject(minifi_module_instance, type.second.data(), reinterpret_cast<PyObject*>(type.first)) == 0;  // NOLINT(bugprone-suspicious-stringview-data-usage)
+  const auto result = std::all_of(std::begin(types), std::end(types), [&](const std::pair<PyTypeObject*, std::string>& type) {
+    return PyModule_AddObject(minifi_module_instance, type.second.data(), reinterpret_cast<PyObject*>(type.first)) == 0;
   });
 
   if (!result) {

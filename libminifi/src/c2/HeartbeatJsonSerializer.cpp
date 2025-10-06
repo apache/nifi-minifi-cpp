@@ -28,6 +28,7 @@ namespace org::apache::nifi::minifi::c2 {
 static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) {
   gsl_Expects(target.IsObject());
 
+  // magic_enum::enum_name() returns a string_view that is a null-terminated string literal
   target.AddMember("operation", rapidjson::Value(magic_enum::enum_name<Operation>(payload.getOperation()).data(), alloc), alloc);  // NOLINT(bugprone-suspicious-stringview-data-usage)
 
   std::string id = payload.getIdentifier();
