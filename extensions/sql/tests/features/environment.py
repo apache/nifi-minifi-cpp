@@ -26,7 +26,7 @@ def before_all(context):
     if "rocky" in minifi_tag_prefix:
         install_sql_cmd = "dnf -y install postgresql-odbc"
         so_location = "psqlodbca.so"
-    elif "bullseye" in minifi_tag_prefix or "bookworm" in minifi_tag_prefix:
+    elif "bullseye" in minifi_tag_prefix or "bookworm" in minifi_tag_prefix or "trixie" in minifi_tag_prefix:
         install_sql_cmd = "apt -y install odbc-postgresql"
         so_location = "/usr/lib/$(gcc -dumpmachine)/odbc/psqlodbca.so"
     elif "jammy" in minifi_tag_prefix or "noble" in minifi_tag_prefix:
