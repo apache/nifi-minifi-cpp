@@ -32,7 +32,6 @@
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
 #include "utils/RegexUtils.h"
-#include "minifi-c/minifi-c.h"
 
 namespace org::apache::nifi::minifi::core::extension::internal {
 

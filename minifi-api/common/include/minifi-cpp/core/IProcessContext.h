@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -17,13 +17,14 @@
 #pragma once
 
 #include <string_view>
+
 #include "IFlowFile.h"
 #include "PropertyDefinition.h"
 
 namespace org::apache::nifi::minifi::core {
 
 class IProcessContext {
-public:
+ public:
   virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const IFlowFile* flow_file) const = 0;
   virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
   virtual void yield() = 0;
@@ -31,7 +32,10 @@ public:
 
   virtual ~IProcessContext() = default;
 
-  nonstd::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference, const IFlowFile* flow_file = nullptr) const { return getProperty(property_reference.name, flow_file); }
+  nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference,
+      const IFlowFile* flow_file = nullptr) const {
+    return getProperty(property_reference.name, flow_file);
+  }
 };
 
 }  // namespace org::apache::nifi::minifi::core

@@ -28,7 +28,7 @@
 namespace org::apache::nifi::minifi::core {
 
 class IProcessSession {
-public:
+ public:
   virtual void setAttribute(IFlowFile& ff, std::string_view key, std::string value) = 0;
   virtual void removeAttribute(IFlowFile& ff, std::string_view key) = 0;
   virtual std::optional<std::string> getAttribute(IFlowFile& ff, std::string_view key) = 0;

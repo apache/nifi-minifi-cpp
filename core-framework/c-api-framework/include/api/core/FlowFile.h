@@ -44,4 +44,4 @@ class FlowFile : public minifi::core::IFlowFile {
   OWNED MinifiFlowFile impl_;
 };
 
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi::api::core

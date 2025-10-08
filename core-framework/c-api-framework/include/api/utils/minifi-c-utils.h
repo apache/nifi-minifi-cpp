@@ -132,4 +132,4 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
 
 std::error_code make_error_code(MinifiStatus status);
 
-}  // namespace org::apache::nifi::minifi::cpp::utils
+}  // namespace org::apache::nifi::minifi::api::utils

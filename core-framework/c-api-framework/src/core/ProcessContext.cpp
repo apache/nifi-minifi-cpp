@@ -52,4 +52,4 @@ void ProcessContext::yield() {
 
 
 
-}  // namespace org::apache::nifi::minifi::cpp::core
+}  // namespace org::apache::nifi::minifi::api::core

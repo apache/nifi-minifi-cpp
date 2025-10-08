@@ -19,7 +19,6 @@
 
 #include "minifi-c.h"
 #include "minifi-cpp/core/Relationship.h"
-#include <span>
 #include "minifi-cpp/io/StreamCallback.h"
 #include "minifi-cpp/core/IProcessSession.h"
 #include "FlowFile.h"
@@ -27,7 +26,7 @@
 namespace org::apache::nifi::minifi::api::core {
 
 class ProcessSession : public minifi::core::IProcessSession {
-public:
+ public:
   explicit ProcessSession(MinifiProcessSession impl): impl_(impl) {}
 
   std::shared_ptr<minifi::core::IFlowFile> create(const minifi::core::IFlowFile* parent) override;
@@ -47,8 +46,8 @@ public:
   std::optional<std::string> getAttribute(minifi::core::IFlowFile& ff, std::string_view key) override;
   std::map<std::string, std::string> getAttributes(minifi::core::IFlowFile& ff) override;
 
-private:
+ private:
   MinifiProcessSession impl_;
 };
 
-}  // namespace org::apache::nifi::minifi::cpp::core
+}  // namespace org::apache::nifi::minifi::api::core

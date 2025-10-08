@@ -28,4 +28,4 @@ std::error_code make_error_code(minifi::core::ParsingErrorCode c) {
   return {static_cast<int>(c), parsing_error_category()};
 }
 
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi::api::core

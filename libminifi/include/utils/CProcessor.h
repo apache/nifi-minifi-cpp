@@ -35,7 +35,7 @@ class CProcessorMetricsWrapper : public minifi::core::ProcessorMetricsImpl {
  public:
   class CProcessorInfoProvider : public ProcessorMetricsImpl::ProcessorInfoProvider {
    public:
-    CProcessorInfoProvider(const CProcessor& source_processor): source_processor_(source_processor) {}
+    explicit CProcessorInfoProvider(const CProcessor& source_processor): source_processor_(source_processor) {}
 
     std::string getProcessorType() const override;
     std::string getName() const override;
@@ -183,6 +183,6 @@ class CProcessor : public minifi::core::ProcessorApi {
   gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetrics>> metrics_;
 };
 
-void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_description, std::function<void(ClassDescription, CProcessorClassDescription)> fn);
+void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_description, const std::function<void(ClassDescription, CProcessorClassDescription)>& fn);
 
 }  // namespace org::apache::nifi::minifi::utils

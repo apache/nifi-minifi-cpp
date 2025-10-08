@@ -57,7 +57,7 @@ std::optional<std::string> Logger::get_id() {
   std::optional<std::string> result;
   MinifiLoggerGetId(impl_, [] (void* data, MinifiStringView id) {
     (*(std::optional<std::string>*)data) = std::string_view{id.data, id.length};
-  }, (void*)&result);
+  }, &result);
   return result;
 }
 
@@ -78,4 +78,4 @@ int Logger::getMaxLogSize() {
 }
 
 
-}  // nnamespace org::apache::nifi::minifi::cpp::core::logging
+}  // namespace org::apache::nifi::minifi::api::core::logging

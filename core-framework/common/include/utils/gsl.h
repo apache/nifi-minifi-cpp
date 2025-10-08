@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
- #pragma once
+#pragma once
 
- #include "minifi-cpp/utils/gsl.h"
- 
+#include "minifi-cpp/utils/gsl.h"

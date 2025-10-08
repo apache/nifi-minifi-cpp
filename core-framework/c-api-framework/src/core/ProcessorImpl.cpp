@@ -67,7 +67,7 @@ utils::SmallString<36> ProcessorImpl::getUUIDStr() const {
 
 void ProcessorImpl::onSchedule(ProcessContext& ctx) {
   try {
-    return onScheduleImpl(ctx);
+    onScheduleImpl(ctx);
   } catch (const std::exception& e) {
     logger_->log_error("{}", e.what());
     throw;
@@ -78,7 +78,7 @@ void ProcessorImpl::onSchedule(ProcessContext& ctx) {
 
 void ProcessorImpl::onTrigger(ProcessContext& ctx, ProcessSession& session) {
   try {
-    return onTriggerImpl(ctx, session);
+    onTriggerImpl(ctx, session);
   } catch (const std::exception& e) {
     logger_->log_error("{}", e.what());
     throw;
@@ -88,4 +88,4 @@ void ProcessorImpl::onTrigger(ProcessContext& ctx, ProcessSession& session) {
 }
 
 
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi::api::core

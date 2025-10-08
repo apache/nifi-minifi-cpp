@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,12 +16,13 @@
  */
 #pragma once
 
-#include <string>
+#include <array>
+#include <string_view>
 
 namespace org::apache::nifi::minifi::core {
 
 class IFlowFile {
-public:
+ public:
   virtual ~IFlowFile() = default;
 };
 
@@ -37,9 +38,7 @@ struct SpecialFlowAttribute {
   static constexpr std::string_view FLOW_ID = "flow.id";
 
   static constexpr std::array<std::string_view, 9> getSpecialFlowAttributes() {
-    return {
-      PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID
-  };
+    return {PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID};
   }
 };
 
