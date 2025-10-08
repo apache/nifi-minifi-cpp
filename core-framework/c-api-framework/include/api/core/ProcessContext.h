@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include "minifi-c.h"
 #include <string>
+
+#include "minifi-c.h"
 #include "nonstd/expected.hpp"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/IProcessContext.h"
@@ -41,4 +42,4 @@ class ProcessContext : public minifi::core::IProcessContext {
   MinifiProcessContext impl_;
 };
 
-}  // namespace org::apache::nifi::minifi::cpp::core
+}  // namespace org::apache::nifi::minifi::api::core

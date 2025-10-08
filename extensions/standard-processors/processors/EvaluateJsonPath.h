@@ -21,6 +21,7 @@
 #include <array>
 
 #include "core/ProcessorImpl.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"

@@ -17,29 +17,37 @@
 
 #pragma once
 
-#include <string>
 #include <chrono>
+#include <condition_variable>
+#include <functional>
+#include <mutex>
+#include <string>
 
 namespace org::apache::nifi::minifi::utils::timeutils {
 
 class Clock {
  public:
   virtual ~Clock() = default;
-  virtual std::chrono::milliseconds timeSinceEpoch() const = 0;
-  virtual bool wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) {
+  Clock() = default;
+  Clock(const Clock&) = delete;
+  Clock(Clock&&) = delete;
+  Clock& operator=(const Clock&) = delete;
+  Clock& operator=(Clock&&) = delete;
+
+  [[nodiscard]] virtual std::chrono::milliseconds timeSinceEpoch() const = 0;
+  virtual bool wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time,
+      const std::function<bool()>& pred) {
     return cv.wait_for(lck, time - timeSinceEpoch(), pred);
   }
 };
 
 class SteadyClock : public Clock {
  public:
-  std::chrono::milliseconds timeSinceEpoch() const override {
+  [[nodiscard]] std::chrono::milliseconds timeSinceEpoch() const override {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch());
   }
 
-  virtual std::chrono::time_point<std::chrono::steady_clock> now() const {
-    return std::chrono::steady_clock::now();
-  }
+  [[nodiscard]] virtual std::chrono::time_point<std::chrono::steady_clock> now() const { return std::chrono::steady_clock::now(); }
 };
 
 std::shared_ptr<SteadyClock> getClock();
@@ -52,4 +60,3 @@ void dateSetGlobalInstall(const std::string& install);
 #endif
 
 }  // namespace org::apache::nifi::minifi::utils::timeutils
-

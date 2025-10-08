@@ -30,4 +30,4 @@ std::error_code make_error_code(MinifiStatus status) {
   }
 }
 
-} //  namespace org::apache::nifi::minifi::cpp::utils
+}  // namespace org::apache::nifi::minifi::api::utils

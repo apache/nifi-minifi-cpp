@@ -107,4 +107,4 @@ class ProcessorImpl {
 };
 
 }  // namespace core
-}  // namespace org::apache::nifi::minifi
+}  // namespace org::apache::nifi::minifi::api

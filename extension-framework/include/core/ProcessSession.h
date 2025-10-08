@@ -24,4 +24,3 @@ namespace org::apache::nifi::minifi::core::detail {
 std::string to_string(const ReadBufferResult& read_buffer_result);
 
 }  // namespace org::apache::nifi::minifi::core::detail
-

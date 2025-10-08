@@ -46,7 +46,7 @@ class MinifiOutputStreamWrapper : public io::OutputStreamImpl {
 };
 
 class MinifiInputStreamWrapper : public io::InputStreamImpl {
-public:
+ public:
   explicit MinifiInputStreamWrapper(MinifiInputStream impl): impl_(impl) {}
 
   size_t read(std::span<std::byte> out_buffer) override {
@@ -63,11 +63,11 @@ public:
   int initialize() override {gsl_FailFast();}
   [[nodiscard]] std::span<const std::byte> getBuffer() const override {gsl_FailFast();}
 
-private:
+ private:
   MinifiInputStream impl_;
 };
 
-}
+}  // namespace
 
 std::shared_ptr<minifi::core::IFlowFile> ProcessSession::popFlowFile() {
   return std::make_shared<FlowFile>(MinifiProcessSessionGet(impl_));
@@ -83,18 +83,18 @@ void ProcessSession::transfer(const std::shared_ptr<minifi::core::IFlowFile>& ff
 }
 
 void ProcessSession::write(minifi::core::IFlowFile& flow_file, const io::OutputStreamCallback& callback) {
-  auto status = MinifiProcessSessionWrite(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiOutputStream output) {
-    return (*reinterpret_cast<const io::OutputStreamCallback*>(data))(std::make_shared<MinifiOutputStreamWrapper>(output));
-  }, (void*)&callback);
+  const auto status = MinifiProcessSessionWrite(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiOutputStream output) {
+    return (*static_cast<const io::OutputStreamCallback*>(data))(std::make_shared<MinifiOutputStreamWrapper>(output));
+  }, const_cast<io::OutputStreamCallback*>(&callback));
   if (status != MINIFI_SUCCESS) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
   }
 }
 
 void ProcessSession::read(minifi::core::IFlowFile& flow_file, const io::InputStreamCallback& callback) {
-  auto status = MinifiProcessSessionRead(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiInputStream input) {
-    return (*reinterpret_cast<const io::InputStreamCallback*>(data))(std::make_shared<MinifiInputStreamWrapper>(input));
-  }, (void*)&callback);
+  const auto status = MinifiProcessSessionRead(impl_, dynamic_cast<FlowFile&>(flow_file).getImpl(), [] (void* data, MinifiInputStream input) {
+    return (*static_cast<const io::InputStreamCallback*>(data))(std::make_shared<MinifiInputStreamWrapper>(input));
+  }, const_cast<io::InputStreamCallback*>(&callback));
   if (status != MINIFI_SUCCESS) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
   }
@@ -112,18 +112,17 @@ void ProcessSession::removeAttribute(minifi::core::IFlowFile& ff, std::string_vi
 std::optional<std::string> ProcessSession::getAttribute(minifi::core::IFlowFile& ff, std::string_view key) {
   std::optional<std::string> result;
   MinifiFlowFileGetAttribute(impl_, dynamic_cast<FlowFile&>(ff).getImpl(), utils::toStringView(key), [] (void* user_ctx, MinifiStringView value) {
-    *reinterpret_cast<std::optional<std::string>*>(user_ctx) = std::string{value.data, value.length};
-  }, (void*)&result);
+    *static_cast<std::optional<std::string>*>(user_ctx) = std::string{value.data, value.length};
+  }, &result);
   return result;
 }
 
 std::map<std::string, std::string> ProcessSession::getAttributes(minifi::core::IFlowFile& ff) {
   std::map<std::string, std::string> result;
   MinifiFlowFileGetAttributes(impl_, dynamic_cast<FlowFile&>(ff).getImpl(), [] (void* user_ctx, MinifiStringView value, MinifiStringView key) {
-    reinterpret_cast<std::map<std::string, std::string>*>(user_ctx)->insert({std::string{value.data, value.length}, std::string{key.data, key.length}});
-  }, (void*)&result);
+    static_cast<std::map<std::string, std::string>*>(user_ctx)->insert({std::string{value.data, value.length}, std::string{key.data, key.length}});
+  }, &result);
   return result;
 }
 
-}  // namespace org::apache::nifi::minifi::cpp::core
-
+}  // namespace org::apache::nifi::minifi::api::core

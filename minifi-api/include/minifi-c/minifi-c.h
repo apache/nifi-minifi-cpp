@@ -222,7 +222,7 @@ MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession, MinifiFlowFile, Mini
 void MinifiFlowFileGetAttributes(MinifiProcessSession, MinifiFlowFile, void(*cb)(void* user_ctx, MinifiStringView, MinifiStringView), void* user_ctx);
 
 #ifdef __cplusplus
-} // extern "C"
-#endif // __cplusplus
+}  // extern "C"
+#endif  // __cplusplus
 
-#endif // MINIFI_C_H
+#endif  // MINIFI_API_INCLUDE_MINIFI_C_MINIFI_C_H_

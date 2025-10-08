@@ -137,7 +137,7 @@ class ProcessSession : public virtual ReferenceContainer, public IProcessSession
   void setAttribute(IFlowFile& ff, std::string_view key, std::string value) override {
     putAttribute(dynamic_cast<FlowFile&>(ff), key, value);
   }
-  
+
   std::optional<std::string> getAttribute(IFlowFile& ff, std::string_view key) override {
     return dynamic_cast<FlowFile&>(ff).getAttribute(key);
   }

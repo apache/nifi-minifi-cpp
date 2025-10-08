@@ -54,4 +54,4 @@ class Logger : public minifi::core::logging::Logger {
   MinifiLogger impl_;
 };
 
-}  // namespace org::apache::nifi::minifi::core::logging
+}  // namespace org::apache::nifi::minifi::api::core::logging
