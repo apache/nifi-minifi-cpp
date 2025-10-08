@@ -27,7 +27,7 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-std::shared_ptr<google::cloud::storage::oauth2::Credentials> GCSProcessor::getCredentials(core::ProcessContext& context) const {
+std::shared_ptr<google::cloud::Credentials> GCSProcessor::getCredentials(core::ProcessContext& context) const {
   auto gcp_credentials_controller_service = utils::parseOptionalControllerService<GCPCredentialsControllerService>(context, GCSProcessor::GCPCredentials, getUUID());
   if (gcp_credentials_controller_service) {
     return gcp_credentials_controller_service->getCredentials();
@@ -51,10 +51,14 @@ void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
 }
 
 gcs::Client GCSProcessor::getClient() const {
-  auto options = gcs::ClientOptions(gcp_credentials_);
-  if (endpoint_url_)
-    options.set_endpoint(*endpoint_url_);
-  return gcs::Client(options, *retry_policy_);
+  auto options = google::cloud::Options{}
+      .set<google::cloud::UnifiedCredentialsOption>(gcp_credentials_)
+      .set<google::cloud::storage::RetryPolicyOption>(retry_policy_);
+
+  if (endpoint_url_) {
+    options.set<gcs::RestEndpointOption>(*endpoint_url_);
+  }
+  return gcs::Client(options);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp
