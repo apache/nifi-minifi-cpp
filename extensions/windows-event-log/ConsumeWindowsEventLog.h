@@ -142,10 +142,11 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
       .withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,"
           "EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")
       .build();
-  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<wel::OutputFormat>()>::createProperty("Output Format")
+  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<wel::OutputFormat>() - 1>::createProperty("Output Format")
       .isRequired(true)
       .withDefaultValue(magic_enum::enum_name(wel::OutputFormat::XML))
-      .withAllowedValues(magic_enum::enum_names<wel::OutputFormat>())
+      // NOTE: wel::OutputFormat::Both is not included in the Allowed Values, because it is deprecated and we don't want to include it in the manifest
+      .withAllowedValues(std::array{magic_enum::enum_name(wel::OutputFormat::XML), magic_enum::enum_name(wel::OutputFormat::Plaintext), magic_enum::enum_name(wel::OutputFormat::JSON)})
       .withDescription("The format of the output flow files.")
       .build();
   EXTENSIONAPI static constexpr auto JsonFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<wel::JsonFormat>()>::createProperty("JSON Format")
