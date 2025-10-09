@@ -25,6 +25,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "LlamaContext.h"
 #include "minifi-cpp/core/CustomProcessorMetrics.h"
+#include "core/state/Value.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
@@ -63,7 +64,7 @@ class RunLlamaCppInference : public core::ProcessorImpl {
   explicit RunLlamaCppInference(core::ProcessorMetadata metadata, LlamaContextProvider llama_context_provider = {})
       : core::ProcessorImpl(metadata),
         llama_context_provider_(std::move(llama_context_provider)) {
-    metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>(*this));
+    metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>());
   }
   ~RunLlamaCppInference() override = default;
 
