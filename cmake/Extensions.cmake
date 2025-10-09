@@ -112,6 +112,9 @@ macro(register_c_api_extension extension-name extension-display-name extension-g
 #        target_compile_options(${extension-name} PRIVATE "-fvisibility=hidden")
 #    endif()
     if(WIN32)
+        target_link_options(${extension-name} PRIVATE "/FORCE:UNRESOLVED")
+    endif()
+    if(WIN32)
         set_target_properties(${extension-name} PROPERTIES
                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
                 ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
