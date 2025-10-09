@@ -21,7 +21,7 @@ def step_impl(context: MinifiTestContext, processor_name: str, service_name: str
     processor.add_property("DB Controller Service", "ODBCService")
 
 
-@step("a PostgresSQL server is set up")
+@step("a PostgreSQL server is set up")
 def step_impl(context):
     context.containers.append(PostgresContainer(context))
 
