@@ -22,6 +22,7 @@
 #include "minifi-cpp/agent/agent_version.h"
 #include "core/extension/Utils.h"
 #include "unit/TestUtils.h"
+#include "minifi-c/minifi-c.h"
 
 using namespace std::literals;
 

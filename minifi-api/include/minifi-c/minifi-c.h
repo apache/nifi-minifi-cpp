@@ -70,19 +70,19 @@ typedef struct MinifiDynamicProperty {
   MinifiBool supports_expression_language;
 } MinifiDynamicProperty;
 
-#define DECLARE_HANDLE(name) typedef struct name ## _T* name
-#define DECLARE_CONST_HANDLE(name) typedef const struct name ## _T* name
+#define MINIFI_DECLARE_HANDLE(name) typedef struct name ## _T* name
+#define MINIFI_DECLARE_CONST_HANDLE(name) typedef const struct name ## _T* name
 
-DECLARE_CONST_HANDLE(MinifiPropertyValidator);
-DECLARE_HANDLE(MinifiFlowFile);
-DECLARE_HANDLE(MinifiLogger);
-DECLARE_HANDLE(MinifiProcessContext);
-DECLARE_HANDLE(MinifiProcessSession);
-DECLARE_HANDLE(MinifiInputStream);
-DECLARE_HANDLE(MinifiOutputStream);
-DECLARE_HANDLE(MinifiConfigure);
-DECLARE_HANDLE(MinifiExtension);
-DECLARE_HANDLE(MinifiPublishedMetrics);
+MINIFI_DECLARE_CONST_HANDLE(MinifiPropertyValidator);
+MINIFI_DECLARE_HANDLE(MinifiFlowFile);
+MINIFI_DECLARE_HANDLE(MinifiLogger);
+MINIFI_DECLARE_HANDLE(MinifiProcessContext);
+MINIFI_DECLARE_HANDLE(MinifiProcessSession);
+MINIFI_DECLARE_HANDLE(MinifiInputStream);
+MINIFI_DECLARE_HANDLE(MinifiOutputStream);
+MINIFI_DECLARE_HANDLE(MinifiConfigure);
+MINIFI_DECLARE_HANDLE(MinifiExtension);
+MINIFI_DECLARE_HANDLE(MinifiPublishedMetrics);
 
 typedef struct MinifiExtensionCreateInfo {
   MinifiStringView name;
