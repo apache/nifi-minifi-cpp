@@ -502,7 +502,7 @@ void Processor::setLogBulletinLevel(logging::LOG_LEVEL level) {
 }
 
 void Processor::setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) {
-  impl_->forEachLogger([&] (std::shared_ptr<logging::Logger> logger) {
+  impl_->forEachLogger([&] (const std::shared_ptr<logging::Logger>& logger) {
     std::dynamic_pointer_cast<logging::LoggerBase>(logger)->setLogCallback(callback);
   });
 }

@@ -86,9 +86,9 @@ std::optional<std::string> find(const std::filesystem::path& file_path, std::str
     std::copy(buf.end() - max_length, buf.end(), buf.begin());
     ifs.read(buf.data() + max_length, gsl::narrow<std::streamsize>(buf.size() - max_length));
     view = std::span<char>(buf.data(), max_length + gsl::narrow<size_t>(ifs.gcount()));
-    auto prefix_end = view.begin() + (view.size() - (max_length - prefix.size()));
+    auto prefix_end = view.begin() + gsl::narrow<std::span<char>::difference_type>(view.size() - (max_length - prefix.size()));
     if (auto it = std::search(view.begin(), prefix_end, searcher); it != prefix_end) {
-      return std::string{it, it + max_length};
+      return std::string{it, it + gsl::narrow<std::span<char>::difference_type>(max_length)};
     }
   } while (ifs);
   // there might be a partial (less than max_length) at the end
