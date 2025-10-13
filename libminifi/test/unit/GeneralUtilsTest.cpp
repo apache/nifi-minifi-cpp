@@ -58,7 +58,7 @@ struct compiles_as_a_constant_expression<N, D,
 static_assert(compiles_as_a_constant_expression<2, 3>::value, "compiles_as_a_constant_expression should work");
 static_assert(!compiles_as_a_constant_expression<1, 0>::value, "constexpr division by zero shouldn't compile");
 
-TEST_CASE("Generalminifi::utils::dereference", "[dereference]") {
+TEST_CASE("GeneralUtils::dereference", "[dereference]") {
   const int a = 42;
   const auto pa = gsl::make_not_null(&a);
   REQUIRE(42 == minifi::utils::dereference(pa));
@@ -68,7 +68,7 @@ TEST_CASE("Generalminifi::utils::dereference", "[dereference]") {
   REQUIRE(99 == minifi::utils::dereference(uniq_a));
 }
 
-TEST_CASE("Generalminifi::utils::unsafe_dereference", "[unsafe_dereference]") {
+TEST_CASE("GeneralUtils::unsafe_dereference", "[unsafe_dereference]") {
   const int a = 42;
   const int* const pa = &a;
   REQUIRE(42 == minifi::utils::unsafe_dereference(pa));
