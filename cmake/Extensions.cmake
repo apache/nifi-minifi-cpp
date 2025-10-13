@@ -107,10 +107,8 @@ macro(register_c_api_extension extension-name extension-display-name extension-g
     target_compile_definitions(${extension-name}
             PRIVATE "MODULE_NAME=${extension-name}")
     set_target_properties(${extension-name} PROPERTIES
+            ENABLE_EXPORTS True
             POSITION_INDEPENDENT_CODE ON)
-#    if (NOT WIN32)
-#        target_compile_options(${extension-name} PRIVATE "-fvisibility=hidden")
-#    endif()
     if(WIN32)
         target_link_options(${extension-name} PRIVATE "/FORCE:UNRESOLVED")
     endif()

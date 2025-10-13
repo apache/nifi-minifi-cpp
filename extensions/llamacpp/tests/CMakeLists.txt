@@ -31,10 +31,6 @@ FOREACH(testfile ${LLAMACPP_TESTS})
     target_link_libraries(${testfilename} minifi-standard-processors)
     target_compile_definitions("${testfilename}" PRIVATE TZ_DATA_DIR="${CMAKE_BINARY_DIR}/tzdata")
 
-    if(WIN32)
-        target_link_options(${testfilename} PRIVATE "/FORCE:UNRESOLVED")
-    endif()
-
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME ${testfilename} COMMAND ${testfilename} WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
