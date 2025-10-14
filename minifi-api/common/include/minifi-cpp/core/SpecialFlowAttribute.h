@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,15 +16,7 @@
  */
 #pragma once
 
-#include <array>
-#include <string_view>
-
 namespace org::apache::nifi::minifi::core {
-
-class IFlowFile {
- public:
-  virtual ~IFlowFile() = default;
-};
 
 struct SpecialFlowAttribute {
   static constexpr std::string_view PATH = "path";
