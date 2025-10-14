@@ -1,6 +1,23 @@
-import time
+#
+#  Licensed to the Apache Software Foundation (ASF) under one or more
+#  contributor license agreements.  See the NOTICE file distributed with
+#  this work for additional information regarding copyright ownership.
+#  The ASF licenses this file to You under the Apache License, Version 2.0
+#  (the "License"); you may not use this file except in compliance with
+#  the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 
 import humanfriendly
+import time
 from behave import then, step
 from minifi_test_framework.containers.http_proxy_container import HttpProxy
 from minifi_test_framework.core.helpers import wait_for_condition
@@ -55,7 +72,8 @@ def step_impl(context: MinifiTestContext):
 def step_impl(context: MinifiTestContext, message: str, duration: str):
     duration_seconds = humanfriendly.parse_timespan(duration)
     assert wait_for_condition(condition=lambda: message in context.minifi_container.get_logs(),
-                              timeout_seconds=duration_seconds, bail_condition=lambda: context.minifi_container.exited, context=context)
+                              timeout_seconds=duration_seconds, bail_condition=lambda: context.minifi_container.exited,
+                              context=context)
 
 
 @step('no errors were generated on the http-proxy regarding "{url}"')
@@ -69,14 +87,16 @@ def step_impl(context: MinifiTestContext, url: str):
 def step_impl(context: MinifiTestContext, num_str: str, directory: str, duration: str):
     duration_seconds = humanfriendly.parse_timespan(duration)
     assert wait_for_condition(condition=lambda: context.minifi_container.get_number_of_files(directory) == int(num_str),
-                              timeout_seconds=duration_seconds, bail_condition=lambda: context.minifi_container.exited, context=context)
+                              timeout_seconds=duration_seconds, bail_condition=lambda: context.minifi_container.exited,
+                              context=context)
 
 
 @then('there are at least {num_str} files is in the "{directory}" directory in less than {duration}')
 def step_impl(context: MinifiTestContext, num_str: str, directory: str, duration: str):
     duration_seconds = humanfriendly.parse_timespan(duration)
     assert wait_for_condition(condition=lambda: context.minifi_container.get_number_of_files(directory) >= int(num_str),
-                              timeout_seconds=duration_seconds, bail_condition=lambda: context.minifi_container.exited, context=context)
+                              timeout_seconds=duration_seconds, bail_condition=lambda: context.minifi_container.exited,
+                              context=context)
 
 
 @then('at least one file in "{directory}" content match the following regex: "{regex_str}" in less than {duration}')
@@ -94,7 +114,8 @@ def step_impl(context: MinifiTestContext, directory: str, timeout: str, content_
     c2 = content_two.replace("\\n", "\n")
     contents_arr = [c1, c2]
     assert wait_for_condition(condition=lambda: context.minifi_container.verify_file_contents(directory, contents_arr),
-                              timeout_seconds=timeout_seconds, bail_condition=lambda: context.minifi_container.exited, context=context)
+                              timeout_seconds=timeout_seconds, bail_condition=lambda: context.minifi_container.exited,
+                              context=context)
 
 
 @then('the contents of {directory} in less than {timeout} are: "{contents}"')
@@ -103,4 +124,5 @@ def step_impl(context: MinifiTestContext, directory: str, timeout: str, contents
     new_contents = contents.replace("\\n", "\n")
     contents_arr = new_contents.split(",")
     assert wait_for_condition(condition=lambda: context.minifi_container.verify_file_contents(directory, contents_arr),
-                              timeout_seconds=timeout_seconds, bail_condition=lambda: context.minifi_container.exited, context=context)
+                              timeout_seconds=timeout_seconds, bail_condition=lambda: context.minifi_container.exited,
+                              context=context)

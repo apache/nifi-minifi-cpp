@@ -16,7 +16,6 @@
 
 import logging
 import os
-
 from behave.model import Scenario
 from behave.runner import Context
 from minifi_test_framework.containers.minifi_container import MinifiContainer
