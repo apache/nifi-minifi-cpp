@@ -31,11 +31,11 @@
 #include "minifi-cpp/core/Connectable.h"
 #include "WeakReference.h"
 #include "minifi-cpp/utils/FlatMap.h"
-#include "minifi-cpp/core/IFlowFile.h"
+#include "minifi-cpp/core/SpecialFlowAttribute.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer, public IFlowFile {
+class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer {
  public:
   using AttributeMap = utils::FlatMap<std::string, std::string>;
 

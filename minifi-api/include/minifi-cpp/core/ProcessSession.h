@@ -24,7 +24,6 @@
 #include "FlowFile.h"
 #include "minifi-cpp/provenance/Provenance.h"
 #include "minifi-cpp/io/StreamCallback.h"
-#include "minifi-cpp/core/IProcessSession.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -38,7 +37,7 @@ struct ReadBufferResult {
 }  // namespace detail
 
 // ProcessSession Class
-class ProcessSession : public virtual ReferenceContainer, public IProcessSession {
+class ProcessSession : public virtual ReferenceContainer {
  public:
   ~ProcessSession() override = default;
 
@@ -118,37 +117,7 @@ class ProcessSession : public virtual ReferenceContainer, public IProcessSession
 
   virtual bool hasBeenTransferred(const core::FlowFile &flow) const = 0;
 
-  std::shared_ptr<IFlowFile> create(const IFlowFile* parent) override {
-    return create(dynamic_cast<const FlowFile*>(parent));
-  }
-
-  std::shared_ptr<IFlowFile> popFlowFile() override {
-    return get();
-  }
-
-  void write(IFlowFile& ff, const io::OutputStreamCallback& callback) override {
-    write(dynamic_cast<FlowFile&>(ff), callback);
-  }
-
-  void read(IFlowFile& ff, const io::InputStreamCallback& callback) override {
-    read(dynamic_cast<FlowFile&>(ff), callback);
-  }
-
-  void setAttribute(IFlowFile& ff, std::string_view key, std::string value) override {
-    putAttribute(dynamic_cast<FlowFile&>(ff), key, value);
-  }
-
-  std::optional<std::string> getAttribute(IFlowFile& ff, std::string_view key) override {
-    return dynamic_cast<FlowFile&>(ff).getAttribute(key);
-  }
-
-  std::map<std::string, std::string> getAttributes(IFlowFile& ff)  override {
-    return dynamic_cast<FlowFile&>(ff).getAttributes();
-  }
-
-  void removeAttribute(IFlowFile& ff, std::string_view key) override {
-    removeAttribute(dynamic_cast<FlowFile&>(ff), key);
-  }
+  virtual void transfer(const std::shared_ptr<FlowFile>& ff, const Relationship& relationship) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

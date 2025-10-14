@@ -20,11 +20,11 @@
 #include <array>
 #include <string_view>
 #include "minifi-c.h"
-#include "minifi-cpp/core/IFlowFile.h"
+#include "minifi-cpp/core/SpecialFlowAttribute.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
-class FlowFile : public minifi::core::IFlowFile {
+class FlowFile {
  public:
   explicit FlowFile(OWNED MinifiFlowFile impl): impl_(impl) {}
 
@@ -33,7 +33,7 @@ class FlowFile : public minifi::core::IFlowFile {
   FlowFile& operator=(FlowFile&& other) = delete;
   FlowFile& operator=(const FlowFile& other) = delete;
 
-  ~FlowFile() override {
+  ~FlowFile() {
     MinifiDestroyFlowFile(impl_);
   }
 
