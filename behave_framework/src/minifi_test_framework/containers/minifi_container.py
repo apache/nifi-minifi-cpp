@@ -1,11 +1,26 @@
-from typing import Dict
+#
+#  Licensed to the Apache Software Foundation (ASF) under one or more
+#  contributor license agreements.  See the NOTICE file distributed with
+#  this work for additional information regarding copyright ownership.
+#  The ASF licenses this file to You under the Apache License, Version 2.0
+#  (the "License"); you may not use this file except in compliance with
+#  the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 
 from docker.models.networks import Network
+from minifi_test_framework.containers.file import File
+from minifi_test_framework.minifi.flow_definition import FlowDefinition
+from typing import Dict
 
 from .container import Container
-
-from minifi_test_framework.minifi.flow_definition import FlowDefinition
-from minifi_test_framework.containers.file import File
 
 
 class MinifiContainer(Container):
@@ -25,11 +40,14 @@ class MinifiContainer(Container):
         if self.is_fhs:
             self.files.append(File("/etc/nifi-minifi-cpp", "config.yml", self.flow_definition.to_yaml()))
             self.files.append(File("/etc/nifi-minifi-cpp", "minifi.properties", self._get_properties_file_content()))
-            self.files.append(File("/etc/nifi-minifi-cpp", "minifi-log.properties", self._get_log_properties_file_content()))
+            self.files.append(
+                File("/etc/nifi-minifi-cpp", "minifi-log.properties", self._get_log_properties_file_content()))
         else:
             self.files.append(File("/opt/minifi/minifi-current/conf", "config.yml", self.flow_definition.to_yaml()))
-            self.files.append(File("/opt/minifi/minifi-current/conf", "minifi.properties", self._get_properties_file_content()))
-            self.files.append(File("/opt/minifi/minifi-current/conf", "minifi-log.properties", self._get_log_properties_file_content()))
+            self.files.append(
+                File("/opt/minifi/minifi-current/conf", "minifi.properties", self._get_properties_file_content()))
+            self.files.append(File("/opt/minifi/minifi-current/conf", "minifi-log.properties",
+                                   self._get_log_properties_file_content()))
 
         return super().deploy()
 

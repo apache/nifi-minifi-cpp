@@ -1,9 +1,25 @@
-from textwrap import dedent
+#
+#  Licensed to the Apache Software Foundation (ASF) under one or more
+#  contributor license agreements.  See the NOTICE file distributed with
+#  this work for additional information regarding copyright ownership.
+#  The ASF licenses this file to You under the Apache License, Version 2.0
+#  (the "License"); you may not use this file except in compliance with
+#  the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 
 from minifi_test_framework.containers.container import Container
 from minifi_test_framework.containers.docker_container_builder import DockerContainerBuilder
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from textwrap import dedent
 
 
 class HttpProxy(Container):
@@ -17,7 +33,8 @@ class HttpProxy(Container):
                     echo 'acl authenticated proxy_auth REQUIRED' >> /etc/squid/squid.conf && \
                     echo 'http_access allow authenticated' >> /etc/squid/squid.conf && \
                     echo 'http_port {proxy_port}' >> /etc/squid/squid.conf
-                """.format(base_image='ubuntu/squid:5.2-22.04_beta', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
+                """.format(base_image='ubuntu/squid:5.2-22.04_beta', proxy_username='admin', proxy_password='test101',
+                           proxy_port='3128'))
 
         builder = DockerContainerBuilder(
             image_tag="minifi-http-proxy:latest",
@@ -41,5 +58,5 @@ class HttpProxy(Container):
         (code, output) = self.exec_run(["cat", "/var/log/squid/access.log"])
         return code == 0 and url.lower() in output.lower() \
             and ((output.count("TCP_DENIED") != 0
-                 and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
+                  and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
                  or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output)
