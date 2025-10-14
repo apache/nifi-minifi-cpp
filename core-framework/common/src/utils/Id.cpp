@@ -121,10 +121,11 @@ std::optional<Identifier> Identifier::parse(const std::string &str) {
 bool Identifier::parseByte(Data &data, const uint8_t *input, int &charIdx, int &byteIdx) {
   uint8_t upper = 0;
   uint8_t lower = 0;
-  if (!string::from_hex(input[charIdx++], upper)
-      || !string::from_hex(input[charIdx++], lower)) {
+  if (!string::from_hex(input[charIdx], upper)
+      || !string::from_hex(input[charIdx + 1], lower)) {
     return false;
   }
+  charIdx += 2;
   data[byteIdx++] = (upper << 4) | lower;
   return true;
 }
