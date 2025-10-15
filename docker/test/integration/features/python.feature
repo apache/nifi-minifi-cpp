@@ -279,3 +279,28 @@ Feature: MiNiFi can use python processors in its flows
 
     When all instances start up
     Then the Minifi logs contain the following message: "ProcessSession rollback for ExpressionLanguagePropertyWithValidator" in less than 60 seconds
+
+  Scenario: MiNiFi C++ can use evaluate expression language expressions correctly using the NiFi python API
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a UpdateAttribute processor with the "my.attribute" property set to "my.value"
+    And a EvaluateExpressionLanguageChecker processor
+    And the "EL Property" property of the EvaluateExpressionLanguageChecker processor is set to "${my.attribute:toUpper()}"
+    And the "Non EL Property" property of the EvaluateExpressionLanguageChecker processor is set to "non el ${my.attribute}"
+    And the "My Dynamic Property" property of the EvaluateExpressionLanguageChecker processor is set to "Dynamic ${my.attribute}"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And python processors without dependencies are present on the MiNiFi agent
+
+    And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
+    And the "success" relationship of the UpdateAttribute processor is connected to the EvaluateExpressionLanguageChecker
+    And the "success" relationship of the EvaluateExpressionLanguageChecker processor is connected to the PutFile
+
+    When all instances start up
+
+    Then one flowfile with the contents "Check successful!" is placed in the monitored directory in less than 30 seconds
+    And the Minifi logs contain the following message: "EL Property value: ${my.attribute:toUpper()}" in less than 1 seconds
+    And the Minifi logs contain the following message: "Evaluated EL Property value: MY.VALUE" in less than 1 seconds
+    And the Minifi logs contain the following message: "Non EL Property value: non el ${my.attribute}" in less than 1 seconds
+    And the Minifi logs contain the following message: "Evaluated Non EL Property value: non el ${my.attribute}" in less than 1 seconds
+    And the Minifi logs contain the following message: "Non-existent property value is empty" in less than 1 seconds
+    And the Minifi logs contain the following message: "My Dynamic Property value is: Dynamic ${my.attribute}" in less than 1 seconds
+    And the Minifi logs contain the following message: "My Dynamic Property evaluated value is: Dynamic my.value" in less than 1 seconds

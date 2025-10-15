@@ -195,14 +195,13 @@ class FlowFile:
 
 
 class PythonPropertyValue:
-    def __init__(self, cpp_context: CppProcessContext, name: str, string_value: str, el_supported: bool, controller_service_definition: str):
+    def __init__(self, cpp_context: CppProcessContext, name: str, string_value: str, el_supported: bool, controller_service_definition: str, is_dynamic: bool = False):
         self.cpp_context = cpp_context
-        self.value = None
+        self.value = string_value
         self.name = name
-        if string_value is not None:
-            self.value = string_value
         self.el_supported = el_supported
         self.controller_service_definition = controller_service_definition
+        self.is_dynamic = is_dynamic
 
     def getValue(self) -> str:
         return self.value
@@ -262,12 +261,17 @@ class PythonPropertyValue:
         return 0
 
     def evaluateAttributeExpressions(self, flow_file: FlowFile = None):
-        if flow_file is None or not self.el_supported:
-            return self
-        # If Expression Language is supported and present, evaluate it and return a new PropertyValue.
+        # If Expression Language is supported, evaluate it and return a new PropertyValue.
         # Otherwise just return self, in order to avoid the cost of making the call to cpp for getProperty
-        new_string_value = self.cpp_context.getProperty(self.name, flow_file.cpp_flow_file)
-        return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported, self.controller_service_definition)
+        if not self.el_supported or not self.value:
+            return self
+
+        new_string_value = None
+        if self.is_dynamic:
+            new_string_value = self.cpp_context.getDynamicProperty(self.name, flow_file.cpp_flow_file)
+        else:
+            new_string_value = self.cpp_context.getProperty(self.name, flow_file.cpp_flow_file)
+        return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported, self.controller_service_definition, self.is_dynamic)
 
     def asControllerService(self):
         if not self.controller_service_definition:
@@ -291,10 +295,13 @@ class ProcessContext:
             property_name = descriptor.name
             expression_language_support = descriptor.expressionLanguageScope != ExpressionLanguageScope.NONE
             controller_service_definition = descriptor.controllerServiceDefinition
-        property_value = self.cpp_context.getProperty(property_name)
-        if not property_value and self.processor.supports_dynamic_properties:
-            property_value = self.cpp_context.getDynamicProperty(property_name)
-        return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support, controller_service_definition)
+        is_dynamic = False
+        property_value = self.cpp_context.getRawProperty(property_name)
+        if property_value is None and self.processor.supports_dynamic_properties:
+            property_value = self.cpp_context.getRawDynamicProperty(property_name)
+            if property_value is not None:
+                is_dynamic = True
+        return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support, controller_service_definition, is_dynamic)
 
     def getStateManager(self) -> StateManager:
         return StateManager(self.cpp_context.getStateManager())
