@@ -23,7 +23,7 @@ import platform
 
 
 def _create_system_dependencies(minifi_options: MinifiOptions) -> Dict[str, Set[str]]:
-    system_dependencies = {'patch': {'patch'}, 'make': {'make'}, 'perl': {'perl'}, 'git': {'git'}}
+    system_dependencies = {'patch': {'patch'}, 'make': {'make'}, 'perl': {'perl'}, 'git': {'git'}, 'bison': {'bison'}, 'flex': {'flex'}, 'm4': {'m4'}}
     if minifi_options.is_enabled("ENABLE_LIBARCHIVE"):
         system_dependencies['libarchive'] = {'libarchive'}
     if minifi_options.is_enabled("ENABLE_SQL"):
