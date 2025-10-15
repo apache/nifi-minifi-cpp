@@ -853,12 +853,49 @@ The location for downloaded assets is specified by the `nifi.asset.directory` ag
 * In a **self-contained (TGZ)** installation, this defaults to **`${MINIFI_HOME}/asset`**.
 * In a **system-wide FHS** installation, the default is **`/var/lib/nifi-minifi-cpp/asset`**.
 
-The files referenced in the `.state` file in this directory are managed by the agent. They are deleted, updated, downloaded 
+The files referenced in the `.state` file in this directory are managed by the agent. They are deleted, updated, downloaded
 using the asset sync c2 command. For the asset sync command to work, the c2 server must be made aware of the current state of the
 managed assets by adding the `AssetInformation` entry to the `nifi.c2.root.classes` property.
 
 Files and directories not referenced in the `.state` file are not directly controlled by the agent, although
 it is possible to download an asset (triggered through the c2 protocol) into the asset directory instead.
+
+### Asset resolution
+
+Assets can be referenced in processor properties using the syntax `@{asset-id:<asset-id>}`.
+When the flow is started, MiNiFi will resolve the asset reference to the actual file path in the asset directory.
+The ID of the asset can be found in the `.state` file in the asset directory.
+
+For example, if the `.state` file contains the following content:
+
+    {
+        "digest": "dd46a660e637d83a8cf5b97cb5a92ac0bf1aea54870ce915700861009357d4b710e3c4ef649e4e4c60ab77cb50482281e23864dccd753a33b03a32de9f475a5c",
+        "assets": {
+            "4658b1a5-012a-4c75-afdd-3f2e9c0955c1": {
+                "path": "data.json",
+                "url": "/c2-protocol/resource/4658b1a5-012a-4c75-afdd-3f2e9c0955c1"
+            }
+        }
+    }
+
+You can use the asset ID `4658b1a5-012a-4c75-afdd-3f2e9c0955c1` to reference the `data.json` file in the asset directory. This asset can be referenced in processor properties, such as the `File to Fetch` property of the `FetchFile` processor:
+
+    Processors:
+      - id: 25bdc712-444a-4fef-aebb-90dd982ddeb8
+        name: FetchFile
+        class: org.apache.nifi.minifi.processors.FetchFile
+        scheduling strategy: TIMER_DRIVEN
+        scheduling period: 1000 ms
+        auto-terminated relationships list:
+          - permission.denied
+          - failure
+          - not.found
+        Properties:
+          Completion Strategy: None
+          File to Fetch: "@{asset-id:4658b1a5-012a-4c75-afdd-3f2e9c0955c1}"
+          Log level when file not found: ERROR
+          Log level when permission denied: ERROR
+          Move Conflict Strategy: Rename
 
 ### Controller Services
  If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1
