@@ -30,11 +30,9 @@ It will also create a batch file (.\bootstrap\build_environment.bat),
 which sets the necessary environment variables for the build, so it can be built without bootstrapping everytime.
 
 
-## Alternative: Building via build script (advanced)
+## Alternative: Building manually (advanced)
 
-Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via Visual Studio 2022 or our `win_build_vs.bat` script.
-
-The project previously required OpenSSL to be installed. If you follow our build procedures, below, you will not need to install that dependency.
+Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via Visual Studio 2022.
 
 #### Required software
 
@@ -58,66 +56,10 @@ CMake must generate its cache, under Cache in the CMake Menu. After that is comp
 that you build `minifi.lib` then `minifi.exe` targets.  `Build All` works, too, but it takes much longer.
 Once you have built these targets, you may use the `cpack` command to build your MSI.
 
-### Building via the build script
-
-The preferred way of building the project is via the `win_build_vs.bat` script found in our root source folder. Its first parameter is mandatory, the directory in which it will build the project. `build` is a good default choice for this.
-
-After the build directory it will take optional parameters modifying the CMake configuration used in the build:
-
-| Argument             | Effect                                                                              |
-|----------------------|-------------------------------------------------------------------------------------|
-| /T                   | Disables building tests                                                             |
-| /R                   | Disables automatic test running after build                                         |
-| /P                   | Enables MSI creation                                                                |
-| /NO_KAFKA            | Disables Kafka extension                                                            |
-| /NO_SQL              | Disables SQL extension                                                              |
-| /NO_AWS              | Disables AWS extension                                                              |
-| /SFTP                | Enables SFTP extension                                                              |
-| /PDH                 | Enables Performance Monitor extension                                               |
-| /NO_SPLUNK           | Disables Splunk extension                                                           |
-| /NO_GCP              | Disables Google cloud storage extension                                             |
-| /NO_ELASTIC          | Disables Elastic extension                                                          |
-| /NO_AZURE            | Disables Azure extension                                                            |
-| /NO_MQTT             | Disables MQTT extension                                                             |
-| /NO_LUA_SCRIPTING    | Disables Lua scripting extension                                                    |
-| /NO_PYTHON_SCRIPTING | Disables Python scripting extension                                                 |
-| /O                   | Enables OpenCV                                                                      |
-| /NO_PROMETHEUS       | Disables Prometheus                                                                 |
-| /RO                  | Use real ODBC driver in tests instead of mock SQL driver                            |
-| /M                   | Creates installer with merge modules                                                |
-| /32                  | Creates 32-bit build instead of a 64-bit one                                        |
-| /D                   | Builds RelWithDebInfo build instead of Release                                      |
-| /DD                  | Builds Debug build instead of Release                                               |
-| /CI                  | Sets STRICT_GSL_CHECKS to AUDIT                                                     |
-| /RO                  | Use SQLite ODBC driver in SQL extenstion unit tests instead of a mock database      |
-| /NINJA               | Uses Ninja build system instead of MSBuild                                          |
-| /NO_ENCRYPT_CONFIG   | Disables build of encrypt-config binary                                             |
-| /SCCACHE             | Uses sccache build caching                                                          |
-| /BUSTACHE            | Enables Bustache templating support                                                 |
-| /NO_OPC              | Disables OPC extension                                                              |
-| /NO_OPS              | Disables OPS extension                                                              |
-| /LOKI                | Enables Grafana Loki extension                                                      |
-| /NONFREEUCRT         | Enables inclusion of non-free UCRT libraries in the installer (not redistributable) |
-
-Examples:
- - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build32 /T /K /P`
- - 64-bit build with PDH, with debug symbols: `win_build_vs.bat build64 /64 /D /PDH`
-
-`win_build_vs.bat` requires a Visual Studio 2022 build environment to be set up. Use the `x86 Native Tools Command Prompt for VS 2022`, or the `x64 Native Tools Command Prompt for VS 2022` for 32-bit and 64-bit builds respectively.
-
-You can specify additional CMake arguments by setting the EXTRA_CMAKE_ARGUMENTS variable:
-```
-> set EXTRA_CMAKE_ARGUMENTS=-DCOMPANY_NAME="Acme Inc" -DPRODUCT_NAME="Roadrunner Stopper"
-> win_build_vs.bat ...
-```
 
 ### Alternative building: Manual bootstrapping (advanced)
 
-The project can also be built manually using CMake. It requires the same environment the build script does (the proper Native Tools Command Prompt).
-
-A basic working CMake configuration can be inferred from the `win_build_vs.bat`.
-
-`win_build_vs.bat /64 /P` is equivalent to running the following commands:
+The project can also be built manually using CMake. It requires a Visual Studio 2022 build environment to be set up. Use the `x64 Native Tools Command Prompt for VS 2022`.
 
 ```
 mkdir build
