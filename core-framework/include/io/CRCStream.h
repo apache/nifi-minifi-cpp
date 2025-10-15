@@ -66,6 +66,10 @@ class CRCStreamBase : public virtual StreamImpl {
     crc_ = crc32(0L, Z_NULL, 0);
   }
 
+  void setCrc(uint64_t crc) {
+    crc_ = gsl::narrow<uLong>(crc);
+  }
+
  protected:
   uLong crc_ = 0;
   StreamType* child_stream_ = nullptr;

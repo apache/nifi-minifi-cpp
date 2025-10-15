@@ -229,10 +229,24 @@ def step_impl(context, port_name, rpg_name):
     context.test.add_node(input_port_node)
 
 
+@given("an input port using compression with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context, port_name, rpg_name):
+    remote_process_group = context.test.get_remote_process_group_by_name(rpg_name)
+    input_port_node = context.test.generate_input_port_for_remote_process_group(remote_process_group, port_name, True)
+    context.test.add_node(input_port_node)
+
+
 @given("an output port with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
 def step_impl(context, port_name, rpg_name):
     remote_process_group = context.test.get_remote_process_group_by_name(rpg_name)
     input_port_node = context.test.generate_output_port_for_remote_process_group(remote_process_group, port_name)
+    context.test.add_node(input_port_node)
+
+
+@given("an output port using compression with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context, port_name, rpg_name):
+    remote_process_group = context.test.get_remote_process_group_by_name(rpg_name)
+    input_port_node = context.test.generate_output_port_for_remote_process_group(remote_process_group, port_name, True)
     context.test.add_node(input_port_node)
 
 

@@ -106,6 +106,7 @@ class Minifi_flow_json_serializer:
                 res_group['inputPorts'].append({
                     'identifier': str(connectable.instance_id),
                     'name': connectable.name,
+                    'useCompression': connectable.use_compression,
                     'properties': connectable.properties
                 })
 

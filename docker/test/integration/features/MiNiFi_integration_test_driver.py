@@ -155,17 +155,19 @@ class MiNiFi_integration_test:
         raise Exception("Trying to fetch unknown node: \"%s\"" % name)
 
     @staticmethod
-    def generate_input_port_for_remote_process_group(remote_process_group, name):
+    def generate_input_port_for_remote_process_group(remote_process_group, name, use_compression=False):
         input_port_node = InputPort(name, remote_process_group)
         # Generate an MD5 hash unique to the remote process group id
         input_port_node.set_uuid(uuid.uuid3(remote_process_group.get_uuid(), "input_port"))
+        input_port_node.set_use_compression(use_compression)
         return input_port_node
 
     @staticmethod
-    def generate_output_port_for_remote_process_group(remote_process_group, name):
+    def generate_output_port_for_remote_process_group(remote_process_group, name, use_compression=False):
         output_port_node = OutputPort(name, remote_process_group)
         # Generate an MD5 hash unique to the remote process group id
         output_port_node.set_uuid(uuid.uuid3(remote_process_group.get_uuid(), "output_port"))
+        output_port_node.set_use_compression(use_compression)
         return output_port_node
 
     def add_test_data(self, path, test_data, file_name=None):
