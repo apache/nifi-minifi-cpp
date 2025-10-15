@@ -265,11 +265,14 @@ class TestPlan {
       const minifi::core::Relationship& relationship = minifi::core::Relationship("success", "description"), bool linkToPrevious = false) {
     return addProcessor(processor_name, name, { relationship }, linkToPrevious);
   }
-  minifi::core::Processor* addProcessor(std::unique_ptr<minifi::core::Processor> processor, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
-  minifi::core::Processor* addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
-  minifi::core::Processor* addProcessor(const std::string &processor_name, const minifi::utils::Identifier& uuid, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
+  minifi::core::Processor* addProcessor(std::unique_ptr<minifi::core::Processor> processor, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships,
+    bool linkToPrevious = false);
+  minifi::core::Processor* addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships,
+    bool linkToPrevious = false);
+  minifi::core::Processor* addProcessor(const std::string &processor_name, const minifi::utils::Identifier& uuid, const std::string &name,
+    const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false);
 
-  minifi::Connection* addConnection(minifi::core::Processor* source_proc, const minifi::core::Relationship& source_relationship, minifi::core::Processor* destination_proc); // NOLINT
+  minifi::Connection* addConnection(minifi::core::Processor* source_proc, const minifi::core::Relationship& source_relationship, minifi::core::Processor* destination_proc);
 
   std::shared_ptr<minifi::core::controller::ControllerServiceNode> addController(const std::string &controller_name, const std::string &name);
 
