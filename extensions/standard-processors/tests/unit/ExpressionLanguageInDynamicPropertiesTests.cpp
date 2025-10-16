@@ -42,7 +42,6 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   conf->set("nifi.my.own.property", "custom_value");
 
   auto plan = testController.createPlan(conf);
-  auto repo = std::make_shared<TestRepository>();
 
   auto in_dir = testController.createTempDirectory();
   REQUIRE(!in_dir.empty());

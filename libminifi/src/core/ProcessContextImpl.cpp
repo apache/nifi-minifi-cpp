@@ -18,6 +18,7 @@
 #include "core/ProcessContextImpl.h"
 #include "core/Processor.h"
 #include "utils/PropertyErrors.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -129,6 +130,8 @@ nonstd::expected<void, std::error_code> ProcessContextImpl::setProperty(const st
 }
 
 nonstd::expected<void, std::error_code> ProcessContextImpl::clearProperty(const std::string_view name) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  cached_expressions_.erase(std::string{name});
   return getProcessor().clearProperty(name);
 }
 

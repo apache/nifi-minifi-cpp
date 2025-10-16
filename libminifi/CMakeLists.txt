@@ -35,7 +35,6 @@ include_directories(include)
 include(ExpressionLanguage)
 
 set(TLS_SOURCES "src/utils/tls/*.cpp" "src/io/tls/*.cpp")
-set(EL_GENERATED_SOURCES "${EL_GENERATED_INCLUDE_DIR}/*.cpp")
 
 file(GLOB SOURCES
     "src/agent/*.cpp" "src/properties/*.cpp" "src/utils/file/*.cpp" "src/sitetosite/*.cpp"
