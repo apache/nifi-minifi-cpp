@@ -41,9 +41,13 @@ class PropertiesImpl : public virtual Properties {
   };
 
  public:
-  explicit PropertiesImpl(std::string name = "");
+  enum class PersistTo { SingleFile, MultipleFiles };
+
+  explicit PropertiesImpl(PersistTo persist_to, std::string name = "");
 
   ~PropertiesImpl() override = default;
+
+  static constexpr std::string_view C2PropertiesFileName = "90_c2_properties";
 
   const std::string& getName() const override {
     return name_;
@@ -104,7 +108,6 @@ class PropertiesImpl : public virtual Properties {
 
   void loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix = "") override;
 
-
   std::vector<std::string> getConfiguredKeys() const override {
     std::vector<std::string> keys;
     for (auto &property : properties_) {
@@ -122,18 +125,16 @@ class PropertiesImpl : public virtual Properties {
   std::map<std::string, std::string> getProperties() const override;
 
  private:
+  std::filesystem::path extra_properties_files_dir_name() const;
+
   std::map<std::string, PropertyValue> properties_;
-
   bool dirty_{false};
-
-  std::filesystem::path properties_file_;
-
+  std::filesystem::path base_properties_file_;
+  std::vector<std::filesystem::path> properties_files_;
   utils::ChecksumCalculator checksum_calculator_;
-
-  // Mutex for protection
   mutable std::mutex mutex_;
   std::shared_ptr<core::logging::Logger> logger_;
-
+  PersistTo persist_to_;
   std::string name_;
 };
 
