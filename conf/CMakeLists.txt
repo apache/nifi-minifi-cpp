@@ -42,12 +42,6 @@ else()
 endif()
 
 configure_file(
-        config.yml.in
-        ${CMAKE_BINARY_DIR}/conf/config.yml
-        @ONLY
-)
-
-configure_file(
         minifi.properties.in
         ${CMAKE_BINARY_DIR}/conf/minifi.properties
         @ONLY
@@ -75,7 +69,6 @@ if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
             ${CMAKE_BINARY_DIR}/conf/minifi.properties
             ${CMAKE_BINARY_DIR}/conf/minifi-log.properties
             ${CMAKE_BINARY_DIR}/conf/minifi-uid.properties
-            ${CMAKE_BINARY_DIR}/conf/config.yml
             DESTINATION /${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}
             COMPONENT bin)
 elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
@@ -83,7 +76,6 @@ elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
             ${CMAKE_BINARY_DIR}/conf/minifi.properties
             ${CMAKE_BINARY_DIR}/conf/minifi-log.properties
             ${CMAKE_BINARY_DIR}/conf/minifi-uid.properties
-            ${CMAKE_BINARY_DIR}/conf/config.yml
             DESTINATION conf
             COMPONENT bin)
 else()
