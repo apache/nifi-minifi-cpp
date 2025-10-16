@@ -18,19 +18,20 @@
 #include "properties/Properties.h"
 
 #include <fstream>
+#include <ranges>
 #include <string>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/Configuration.h"
 #include "properties/PropertiesFile.h"
-#include "range/v3/algorithm/all_of.hpp"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi {
 
-PropertiesImpl::PropertiesImpl(std::string name)
+PropertiesImpl::PropertiesImpl(PersistTo persist_to, std::string name)
     : logger_(core::logging::LoggerFactory<Properties>::getLogger()),
+    persist_to_(persist_to),
     name_(std::move(name)) {
 }
 
@@ -72,12 +73,12 @@ const core::PropertyValidator* getValidator(const std::string& lookup_value) {
 
 // isdigit requires unsigned chars as input
 bool allDigits(const std::string& value) {
-  return ranges::all_of(value, [](const unsigned char c){ return ::isdigit(c); });
+  return std::ranges::all_of(value, [](const unsigned char c){ return ::isdigit(c); });
 }
 
 // isdigit requires unsigned chars as input
 bool allDigitsOrSpaces(const std::string& value) {
-  return ranges::all_of(value, [](const unsigned char c) { return std::isdigit(c) || std::isspace(c);});
+  return std::ranges::all_of(value, [](const unsigned char c) { return std::isdigit(c) || std::isspace(c);});
 }
 
 std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, const std::string& value) {
@@ -159,6 +160,12 @@ void fixValidatedProperty(const std::string& property_name,
 }
 }  // namespace
 
+std::filesystem::path PropertiesImpl::extra_properties_files_dir_name() const {
+  auto extra_properties_files_dir = base_properties_file_;
+  extra_properties_files_dir += ".d";
+  return extra_properties_files_dir;
+}
+
 void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
@@ -173,55 +180,82 @@ void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuratio
   }
 
   std::error_code ec;
-  properties_file_ = std::filesystem::canonical(configuration_file, ec);
+  base_properties_file_ = std::filesystem::canonical(configuration_file, ec);
 
   if (ec.value() != 0) {
     logger_->log_warn("Configuration file '{}' does not exist, and it could not be created", configuration_file);
     return;
   }
 
-  logger_->log_info("Using configuration file to load configuration for {} from {} (located at {})",
-                    getName().c_str(), configuration_file.string(), properties_file_.string());
+  properties_files_ = { base_properties_file_ };
 
-  std::ifstream file(properties_file_, std::ifstream::in);
-  if (!file.good()) {
-    logger_->log_error("load configure file failed {}", properties_file_);
-    return;
+  const auto extra_properties_files_dir = extra_properties_files_dir_name();
+  std::vector<std::filesystem::path> extra_properties_file_names;
+  if (utils::file::exists(extra_properties_files_dir) && utils::file::is_directory(extra_properties_files_dir)) {
+    utils::file::list_dir(extra_properties_files_dir, [&](const std::filesystem::path&, const std::filesystem::path& file_name) {
+      if (!file_name.string().ends_with(".bak")) {
+        extra_properties_file_names.push_back(file_name);
+      }
+      return true;
+    }, logger_, /* recursive = */ false);
   }
+  std::ranges::sort(extra_properties_file_names);
+  for (const auto& file_name : extra_properties_file_names) {
+    properties_files_.push_back(extra_properties_files_dir / file_name);
+  }
+
+  logger_->log_info("Using configuration file to load configuration for {} from {} (located at {})",
+                    getName().c_str(), configuration_file.string(), base_properties_file_.string());
+  if (!extra_properties_file_names.empty()) {
+    auto list_of_files = utils::string::join(", ", extra_properties_file_names, [](const auto& path) { return path.string(); });
+    logger_->log_info("Also reading configuration from files {} in {}", list_of_files, extra_properties_files_dir.string());
+  }
+
   properties_.clear();
   dirty_ = false;
-  for (const auto& line : PropertiesFile{file}) {
-    auto key = line.getKey();
-    auto persisted_value = line.getValue();
-    auto value = utils::string::replaceEnvironmentVariables(persisted_value);
-    bool need_to_persist_new_value = false;
-    fixValidatedProperty(std::string(prefix) + key, persisted_value, value, need_to_persist_new_value, *logger_);
-    dirty_ = dirty_ || need_to_persist_new_value;
-    properties_[key] = {persisted_value, value, need_to_persist_new_value};
+  for (const auto& properties_file : properties_files_) {
+    std::ifstream file(properties_file, std::ifstream::in);
+    if (!file.good()) {
+      logger_->log_error("load configure file failed {}", properties_file);
+      continue;
+    }
+    for (const auto& line : PropertiesFile{file}) {
+      auto key = line.getKey();
+      auto persisted_value = line.getValue();
+      auto value = utils::string::replaceEnvironmentVariables(persisted_value);
+      bool need_to_persist_new_value = false;
+      fixValidatedProperty(std::string(prefix) + key, persisted_value, value, need_to_persist_new_value, *logger_);
+      dirty_ = dirty_ || need_to_persist_new_value;
+      properties_[key] = {persisted_value, value, need_to_persist_new_value};
+    }
   }
-  checksum_calculator_.setFileLocation(properties_file_);
+
+  checksum_calculator_.setFileLocations(properties_files_);
 }
 
 std::filesystem::path PropertiesImpl::getFilePath() const {
   std::lock_guard<std::mutex> lock(mutex_);
-  return properties_file_;
+  return base_properties_file_;
 }
 
 bool PropertiesImpl::commitChanges() {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!dirty_) {
-    logger_->log_info("Attempt to persist, but properties are not updated");
+    logger_->log_debug("commitChanges() called, but properties have not changed, nothing to do");
     return true;
   }
-  std::ifstream file(properties_file_, std::ifstream::in);
-  if (!file) {
-    logger_->log_error("load configure file failed {}", properties_file_);
-    return false;
+  const auto output_file = (persist_to_ == PersistTo::SingleFile ? base_properties_file_ : extra_properties_files_dir_name() / C2PropertiesFileName);
+  if (!std::filesystem::exists(output_file)) {
+    logger_->log_debug("Configuration file {} does not exist yet, creating it", output_file);
+    utils::file::create_dir(output_file.parent_path(), /* recursive = */ true);
+    std::ofstream file{output_file};
   }
 
-  auto new_file = properties_file_;
-  new_file += ".new";
-
+  std::ifstream file(output_file, std::ifstream::in);
+  if (!file) {
+    logger_->log_error("Failed to load configuration file {}", output_file);
+    return false;
+  }
   PropertiesFile current_content{file};
   for (const auto& prop : properties_) {
     if (!prop.second.need_to_persist_new_value) {
@@ -233,25 +267,37 @@ bool PropertiesImpl::commitChanges() {
       current_content.append(prop.first, prop.second.persisted_value);
     }
   }
+  file.close();
 
+  auto new_file = output_file;
+  new_file += ".new";
   try {
     current_content.writeTo(new_file);
   } catch (const std::exception&) {
-    logger_->log_error("Could not update {}", properties_file_);
+    logger_->log_error("Could not write to {}", new_file);
     return false;
   }
 
-  auto backup = properties_file_;
-  backup += ".bak";
-  if (utils::file::FileUtils::copy_file(properties_file_, backup) == 0 && utils::file::FileUtils::copy_file(new_file, properties_file_) == 0) {
-    logger_->log_info("Persisted {}", properties_file_);
-    checksum_calculator_.invalidateChecksum();
-    dirty_ = false;
-    return true;
+  std::error_code ec;
+  const auto existing_file_size = std::filesystem::file_size(output_file, ec);
+  if (ec || existing_file_size == 0) {
+    if (!utils::file::move_file(new_file, output_file)) {
+      logger_->log_error("Could not create minifi properties file {}", output_file);
+      return false;
+    }
+  } else {
+    auto backup = output_file;
+    backup += ".bak";
+    if (!utils::file::move_file(output_file, backup) || !utils::file::move_file(new_file, output_file)) {
+      logger_->log_error("Could not update minifi properties file {}", output_file);
+      return false;
+    }
   }
 
-  logger_->log_error("Could not update {}", properties_file_);
-  return false;
+  logger_->log_info("Persisted {}", output_file);
+  checksum_calculator_.invalidateChecksum();
+  dirty_ = false;
+  return true;
 }
 
 std::map<std::string, std::string> PropertiesImpl::getProperties() const {
@@ -264,7 +310,7 @@ std::map<std::string, std::string> PropertiesImpl::getProperties() const {
 }
 
 std::shared_ptr<Properties> Properties::create() {
-  return std::make_shared<PropertiesImpl>();
+  return std::make_shared<PropertiesImpl>(PropertiesImpl::PersistTo::SingleFile);
 }
 
 }  // namespace org::apache::nifi::minifi

@@ -20,7 +20,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
-#include <utility>
+#include <vector>
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -29,16 +29,15 @@ class ChecksumCalculator {
   static constexpr const char* CHECKSUM_TYPE = "SHA256";
   static constexpr size_t LENGTH_OF_HASH_IN_BYTES = 32;
 
-  void setFileLocation(const std::filesystem::path& file_location);
+  void setFileLocations(std::vector<std::filesystem::path> file_locations);
   [[nodiscard]] std::filesystem::path getFileName() const;
   std::string getChecksum();
   void invalidateChecksum();
 
  private:
-  static std::string computeChecksum(const std::filesystem::path& file_location);
+  static std::string computeChecksum(const std::vector<std::filesystem::path>& file_locations);
 
-  std::optional<std::filesystem::path> file_location_;
-  std::optional<std::filesystem::path> file_name_;
+  std::vector<std::filesystem::path> file_locations_;
   std::optional<std::string> checksum_;
 };
 

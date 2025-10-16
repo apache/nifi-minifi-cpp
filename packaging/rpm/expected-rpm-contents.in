@@ -1,5 +1,4 @@
 /etc/nifi-minifi-cpp
-/etc/nifi-minifi-cpp/config.yml
 /etc/nifi-minifi-cpp/fips
 /etc/nifi-minifi-cpp/fips/openssl.cnf
 /etc/nifi-minifi-cpp/minifi-log.properties

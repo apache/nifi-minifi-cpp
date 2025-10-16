@@ -21,7 +21,6 @@
 #include <fstream>
 
 #include "sodium/crypto_hash_sha256.h"
-#include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "properties/Configuration.h"
 
@@ -29,42 +28,18 @@ namespace {
 
 const std::string AGENT_IDENTIFIER_KEY = std::string(org::apache::nifi::minifi::Configuration::nifi_c2_agent_identifier) + "=";
 
-}  // namespace
+namespace utils = org::apache::nifi::minifi::utils;
 
-namespace org::apache::nifi::minifi::utils {
-
-void ChecksumCalculator::setFileLocation(const std::filesystem::path& file_location) {
-  file_location_ = file_location;
-  file_name_ = file_location.filename();
-  invalidateChecksum();
-}
-
-std::filesystem::path ChecksumCalculator::getFileName() const {
-  gsl_Expects(file_name_);
-  return *file_name_;
-}
-
-std::string ChecksumCalculator::getChecksum() {
-  gsl_Expects(file_location_);
-  if (!checksum_) {
-    checksum_ = computeChecksum(*file_location_);
-  }
-  return *checksum_;
-}
-
-std::string ChecksumCalculator::computeChecksum(const std::filesystem::path& file_location) {
-  std::ifstream input_file{file_location, std::ios::in | std::ios::binary};
+void addFileToChecksum(const std::filesystem::path& file_path, crypto_hash_sha256_state& state) {
+  std::ifstream input_file{file_path, std::ios::in | std::ios::binary};
   if (!input_file.is_open()) {
-    throw std::runtime_error(string::join_pack("Could not open config file '", file_location.string(), "' to compute the checksum: ", std::strerror(errno)));
+    throw std::runtime_error(utils::string::join_pack("Could not open config file '", file_path.string(), "' to compute the checksum: ", std::strerror(errno)));
   }
-
-  crypto_hash_sha256_state state;
-  crypto_hash_sha256_init(&state);
 
   std::string line;
   while (std::getline(input_file, line)) {
     // skip lines containing the agent identifier, so agents in the same class will have the same checksum
-    if (string::startsWith(line, AGENT_IDENTIFIER_KEY)) {
+    if (line.starts_with(AGENT_IDENTIFIER_KEY)) {
       continue;
     }
     if (!input_file.eof()) {  // eof() means we have just read the last line, which was not terminated by a newline
@@ -73,7 +48,39 @@ std::string ChecksumCalculator::computeChecksum(const std::filesystem::path& fil
     crypto_hash_sha256_update(&state, reinterpret_cast<const unsigned char*>(line.data()), line.size());
   }
   if (input_file.bad()) {
-    throw std::runtime_error(string::join_pack("Error reading config file '", file_location.string(), "' while computing the checksum: ", std::strerror(errno)));
+    throw std::runtime_error(utils::string::join_pack("Error reading config file '", file_path.string(), "' while computing the checksum: ", std::strerror(errno)));
+  }
+}
+
+}  // namespace
+
+namespace org::apache::nifi::minifi::utils {
+
+void ChecksumCalculator::setFileLocations(std::vector<std::filesystem::path> file_locations) {
+  gsl_Expects(!file_locations.empty());
+  file_locations_ = std::move(file_locations);
+  invalidateChecksum();
+}
+
+std::filesystem::path ChecksumCalculator::getFileName() const {
+  gsl_Expects(!file_locations_.empty());
+  return file_locations_.front().filename();
+}
+
+std::string ChecksumCalculator::getChecksum() {
+  gsl_Expects(!file_locations_.empty());
+  if (!checksum_) {
+    checksum_ = computeChecksum(file_locations_);
+  }
+  return *checksum_;
+}
+
+std::string ChecksumCalculator::computeChecksum(const std::vector<std::filesystem::path>& file_locations) {
+  crypto_hash_sha256_state state;
+  crypto_hash_sha256_init(&state);
+
+  for (const auto& file_location : file_locations) {
+    addFileToChecksum(file_location, state);
   }
 
   std::array<unsigned char, LENGTH_OF_HASH_IN_BYTES> hash{};
