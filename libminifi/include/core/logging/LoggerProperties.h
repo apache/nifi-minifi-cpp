@@ -32,7 +32,7 @@ namespace org::apache::nifi::minifi::core::logging {
 class LoggerProperties : public PropertiesImpl {
  public:
   explicit LoggerProperties(std::filesystem::path default_log_dir)
-      : PropertiesImpl("Logger properties"),
+      : PropertiesImpl(PersistTo::MultipleFiles, "Logger properties"),
         default_log_dir_(std::move(default_log_dir)) {
   }
   /**
