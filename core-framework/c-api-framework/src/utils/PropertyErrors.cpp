@@ -17,7 +17,7 @@
 
 #include "utils/PropertyErrors.h"
 
-namespace org::apache::nifi::minifi::api::core {
+namespace org::apache::nifi::minifi::core {
 
 const minifi::core::PropertyErrorCategory& property_error_category() noexcept {
   static minifi::core::PropertyErrorCategory category;
@@ -28,4 +28,4 @@ std::error_code make_error_code(minifi::core::PropertyErrorCode c) {
   return {static_cast<int>(c), property_error_category()};
 }
 
-}  // namespace org::apache::nifi::minifi::api::core
+}  // namespace org::apache::nifi::minifi::core

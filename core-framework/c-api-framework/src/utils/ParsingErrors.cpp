@@ -17,7 +17,7 @@
 
 #include "utils/ParsingErrors.h"
 
-namespace org::apache::nifi::minifi::api::core {
+namespace org::apache::nifi::minifi::core {
 
 const minifi::core::ParsingErrorCategory& parsing_error_category() noexcept {
   static minifi::core::ParsingErrorCategory category;
@@ -28,4 +28,4 @@ std::error_code make_error_code(minifi::core::ParsingErrorCode c) {
   return {static_cast<int>(c), parsing_error_category()};
 }
 
-}  // namespace org::apache::nifi::minifi::api::core
+}  // namespace org::apache::nifi::minifi::core
