@@ -72,17 +72,25 @@ class DefaultObjectFactory : public ObjectFactoryImpl {
   /**
    * Create a raw pointer to a new processor.
    */
-  CoreComponent* createRaw(const std::string &name) override {
-    T *ptr = new T(name);
-    return dynamic_cast<CoreComponent*>(ptr);
+  gsl::owner<CoreComponent*> createRaw(const std::string &name) override {
+    const gsl::owner<T*> ptr = new T(name);
+    if (const auto converted = dynamic_cast<CoreComponent*>(ptr)) {
+      return converted;
+    }
+    delete ptr;
+    return nullptr;
   }
 
   /**
    * Create a raw pointer to a new processor.
    */
-  CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
-    T *ptr = new T(name, uuid);
-    return dynamic_cast<CoreComponent*>(ptr);
+  gsl::owner<CoreComponent*> createRaw(const std::string &name, const utils::Identifier &uuid) override {
+    const gsl::owner<T*> ptr = new T(name, uuid);
+    if (const auto converted = dynamic_cast<CoreComponent*>(ptr)) {
+      return converted;
+    }
+    delete ptr;
+    return nullptr;
   }
 
   /**

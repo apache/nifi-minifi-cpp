@@ -78,7 +78,7 @@ class ClassLoader {
   [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(
       const std::string &class_name, const std::string &name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) = 0;
 
-  [[nodiscard]] virtual CoreComponent* instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
+  [[nodiscard]] virtual gsl::owner<CoreComponent*> instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
 
   /**
    * Instantiate object based on class_name
@@ -105,7 +105,7 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  [[nodiscard]] T *instantiateRaw(const std::string &class_name, const std::string &name);
+  [[nodiscard]] gsl::owner<T*> instantiateRaw(const std::string &class_name, const std::string &name);
 
   template<class T = CoreComponent>
   [[nodiscard]] std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name, const utils::Identifier &uuid);
