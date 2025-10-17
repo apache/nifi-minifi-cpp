@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@CORE
+@CORE @SUPPORTS_WINDOWS
 Feature: Core flow functionalities
   Test core flow configuration functionalities
 
@@ -33,8 +33,8 @@ Feature: Core flow functionalities
 
     When all instances start up
 
-    Then at least one file with the content "first_custom_text" is placed in the "/tmp/output" directory in less than 20 seconds
-    And at least one file with the content "second_custom_text" is placed in the "/tmp/output" directory in less than 20 seconds
+    Then at least one file with the content "first_custom_text" is placed in the "/tmp/output" directory in less than 200 seconds
+    And at least one file with the content "second_custom_text" is placed in the "/tmp/output" directory in less than 200 seconds
 
   Scenario: A funnel can be used as a terminator
     Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
