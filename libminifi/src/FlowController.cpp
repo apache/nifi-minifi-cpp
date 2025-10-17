@@ -92,7 +92,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       controller_socket_metrics_publisher = std::dynamic_pointer_cast<c2::ControllerSocketMetricsPublisher>(publisher);
       controller_socket_metrics_publisher->setFlowStatusDependencies(bulletin_store, flow_file_repo_->getDirectory(), content_repo_->getStoragePath());
     }
-    controller_socket_protocol_ = std::make_unique<c2::ControllerSocketProtocol>(*this, *this, configuration_, controller_socket_metrics_publisher);
+    controller_socket_protocol_ = std::make_unique<c2::ControllerSocketProtocol>(*this, configuration_, controller_socket_metrics_publisher);
     root_wrapper_.setControllerSocketProtocol(controller_socket_protocol_.get());
   }
 }
@@ -345,7 +345,7 @@ int16_t FlowController::start() {
       start_time_ = std::chrono::steady_clock::now();
     }
 
-    core::logging::LoggerConfiguration::getConfiguration().initializeAlertSinks(this, configuration_);
+    core::logging::LoggerConfiguration::getConfiguration().initializeAlertSinks(configuration_);
     running_ = true;
     content_repo_->start();
     provenance_repo_->start();

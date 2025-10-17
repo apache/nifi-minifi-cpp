@@ -69,13 +69,12 @@ ControllerSocketProtocol::SocketRestartCommandProcessor::~SocketRestartCommandPr
   }
 }
 
-ControllerSocketProtocol::ControllerSocketProtocol(core::controller::ControllerServiceProvider& controller, state::StateMonitor& update_sink,
-    std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter)
-      : controller_(controller),
-        update_sink_(update_sink),
-        controller_socket_reporter_(controller_socket_reporter),
-        configuration_(std::move(configuration)),
-        socket_restart_processor_(update_sink_, logger_) {
+ControllerSocketProtocol::ControllerSocketProtocol(state::StateMonitor& update_sink, std::shared_ptr<Configure> configuration,
+  const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter)
+    : update_sink_(update_sink),
+      controller_socket_reporter_(controller_socket_reporter),
+      configuration_(std::move(configuration)),
+      socket_restart_processor_(update_sink_, logger_) {
   gsl_Expects(configuration_);
 }
 
@@ -145,19 +144,10 @@ asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<m
 void ControllerSocketProtocol::initialize() {
   std::unique_lock<std::mutex> lock(initialization_mutex_);
   std::shared_ptr<minifi::controllers::SSLContextServiceInterface> secure_context;
-  std::string context_name;
-  if (configuration_->get(Configure::controller_ssl_context_service, context_name)) {
-    std::shared_ptr<core::controller::ControllerService> service = controller_.getControllerService(context_name);
-    if (nullptr != service) {
-      secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(service);
-    }
-  }
-  if (nullptr == secure_context) {
-    std::string secure_str;
-    if (configuration_->get(Configure::nifi_remote_input_secure, secure_str) && org::apache::nifi::minifi::utils::string::toBool(secure_str).value_or(false)) {
-      secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration_);
-      secure_context->onEnable();
-    }
+  std::string secure_str;
+  if (configuration_->get(Configure::nifi_remote_input_secure, secure_str) && org::apache::nifi::minifi::utils::string::toBool(secure_str).value_or(false)) {
+    secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration_);
+    secure_context->onEnable();
   }
 
   std::string limit_str;

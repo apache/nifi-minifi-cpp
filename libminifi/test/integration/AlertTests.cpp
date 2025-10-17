@@ -79,7 +79,14 @@ TEST_CASE("Alert system forwards logs") {
   std::string agent_id = "test-agent-1";
   VerifyAlerts harness(flow_config_file.string(), dir.getPath());
   AlertHandler handler(agent_id);
-  harness.setUrl("http://localhost:0/api/alerts", &handler);
+
+  SECTION("Secure") {
+    harness.setKeyDir(TEST_RESOURCES);
+    harness.setUrl("https://localhost:0/api/alerts", &handler);
+  }
+  SECTION("Unsecure") {
+    harness.setUrl("http://localhost:0/api/alerts", &handler);
+  }
   harness.getConfiguration()->set(minifi::Configuration::nifi_c2_agent_identifier, agent_id);
 
   auto log_props = std::make_shared<logging::LoggerProperties>(dir.getPath() / "logs");

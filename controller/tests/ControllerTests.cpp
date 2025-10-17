@@ -212,40 +212,10 @@ class TestControllerSocketReporter : public c2::ControllerSocketReporter {
   }
 };
 
-class TestControllerServiceProvider : public core::controller::ControllerServiceProviderImpl {
- public:
-  explicit TestControllerServiceProvider(std::shared_ptr<controllers::SSLContextServiceInterface> ssl_context_service)
-    : core::controller::ControllerServiceProviderImpl("TestControllerServiceProvider"),
-      ssl_context_service_(std::move(ssl_context_service)) {
-  }
-  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string&) const override {
-    return is_ssl_ ? ssl_context_service_ : nullptr;
-  }
-
-  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&) override {
-    return nullptr;
-  }
-  void clearControllerServices() override {
-  }
-  void enableAllControllerServices() override {
-  }
-  void disableAllControllerServices() override {
-  }
-
-  void setSsl() {
-    is_ssl_ = true;
-  }
-
- private:
-  bool is_ssl_{};
-  std::shared_ptr<controllers::SSLContextServiceInterface> ssl_context_service_;
-};
-
 class ControllerTestFixture {
  public:
   enum class ConnectionType {
     UNSECURE,
-    SSL_FROM_SERVICE_PROVIDER,
     SSL_FROM_CONFIGURATION
   };
 
@@ -259,10 +229,8 @@ class ControllerTestFixture {
     configuration_->set(minifi::Configure::nifi_security_client_private_key, (minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "minifi-cpp-flow.key").string());
     configuration_->set(minifi::Configure::nifi_security_client_pass_phrase, "abcdefgh");
     configuration_->set(minifi::Configure::nifi_security_client_ca_certificate, (minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "root-ca.pem").string());
-    configuration_->set(minifi::Configure::controller_ssl_context_service, "SSLContextService");
     ssl_context_service_ = std::make_shared<controllers::SSLContextService>("SSLContextService", configuration_);
     ssl_context_service_->onEnable();
-    controller_service_provider_ = std::make_unique<TestControllerServiceProvider>(ssl_context_service_);
     controller_socket_data_.host = "localhost";
     controller_socket_data_.port = 9997;
   }
@@ -271,10 +239,7 @@ class ControllerTestFixture {
     if (connection_type_ == ConnectionType::SSL_FROM_CONFIGURATION) {
       configuration_->set(minifi::Configure::nifi_remote_input_secure, "true");
     }
-    controller_socket_protocol_ = std::make_unique<minifi::c2::ControllerSocketProtocol>(*controller_service_provider_, *update_sink_, configuration_, reporter);
-    if (connection_type_ == ConnectionType::SSL_FROM_SERVICE_PROVIDER) {
-      controller_service_provider_->setSsl();
-    }
+    controller_socket_protocol_ = std::make_unique<minifi::c2::ControllerSocketProtocol>(*update_sink_, configuration_, reporter);
     controller_socket_protocol_->initialize();
   }
 
@@ -294,15 +259,11 @@ class ControllerTestFixture {
   std::unique_ptr<TestUpdateSink> update_sink_;
   std::unique_ptr<minifi::c2::ControllerSocketProtocol> controller_socket_protocol_;
   std::shared_ptr<controllers::SSLContextServiceInterface> ssl_context_service_;
-  std::unique_ptr<TestControllerServiceProvider> controller_service_provider_;
+
   minifi::utils::net::SocketData controller_socket_data_;
 };
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
@@ -329,10 +290,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[controllerTests
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
@@ -356,10 +313,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[controllerTests]") {
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
@@ -382,10 +335,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[controllerTests]") {
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters on empty flow", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
@@ -422,10 +371,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters on empty flow",
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
@@ -476,10 +421,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[controllerT
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
@@ -499,10 +440,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[controllerTest
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test jstack getter", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
@@ -527,10 +464,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test jstack getter", "[controllerTests]
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test debug bundle getter", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }
@@ -581,10 +514,6 @@ TEST_CASE_METHOD(ControllerTestFixture, "Debug bundle retrieval fails if target 
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test flow status getter", "[controllerTests]") {
-  SECTION("With SSL from service provider") {
-    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
-  }
-
   SECTION("With SSL from properties") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
   }

@@ -35,8 +35,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 
-#undef DELETE  // macro on windows
-
 namespace org::apache::nifi::minifi::sitetosite {
 
 namespace {
@@ -97,7 +95,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(TransferDir
   std::string dir_str = direction == TransferDirection::SEND ? "input-ports" : "output-ports";
   std::stringstream uri;
   uri << getBaseURI() << "data-transfer/" << dir_str << "/" << getPortId().to_string() << "/transactions";
-  auto client = createHttpClient(uri.str(), http::HttpRequestMethod::POST);
+  auto client = createHttpClient(uri.str(), http::HttpRequestMethod::Post);
   setSiteToSiteHeaders(*client);
   client->setConnectionTimeout(std::chrono::milliseconds(5000));
   client->setContentType("application/json");
@@ -241,7 +239,7 @@ std::optional<std::vector<PeerStatus>> HttpSiteToSiteClient::getPeerList() {
   std::stringstream uri;
   uri << getBaseURI() << "site-to-site/peers";
 
-  auto client = createHttpClient(uri.str(), http::HttpRequestMethod::GET);
+  auto client = createHttpClient(uri.str(), http::HttpRequestMethod::Get);
 
   setSiteToSiteHeaders(*client);
 
@@ -256,7 +254,7 @@ std::optional<std::vector<PeerStatus>> HttpSiteToSiteClient::getPeerList() {
 std::shared_ptr<minifi::http::HTTPClient> HttpSiteToSiteClient::openConnectionForSending(const std::shared_ptr<HttpTransaction> &transaction) {
   std::stringstream uri;
   uri << transaction->getTransactionUrl() << "/flow-files";
-  std::shared_ptr<minifi::http::HTTPClient> client = createHttpClient(uri.str(), http::HttpRequestMethod::POST);
+  std::shared_ptr<minifi::http::HTTPClient> client = createHttpClient(uri.str(), http::HttpRequestMethod::Post);
   client->setContentType("application/octet-stream");
   client->setRequestHeader("Accept", "text/plain");
   client->setRequestHeader("Transfer-Encoding", "chunked");
@@ -266,7 +264,7 @@ std::shared_ptr<minifi::http::HTTPClient> HttpSiteToSiteClient::openConnectionFo
 std::shared_ptr<minifi::http::HTTPClient> HttpSiteToSiteClient::openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction) {
   std::stringstream uri;
   uri << transaction->getTransactionUrl() << "/flow-files";
-  return createHttpClient(uri.str(), http::HttpRequestMethod::GET);
+  return createHttpClient(uri.str(), http::HttpRequestMethod::Get);
 }
 
 std::string HttpSiteToSiteClient::getBaseURI() {
@@ -346,7 +344,7 @@ void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transaction
     uri << "&checksum=" << transaction->getCRC();
   }
 
-  auto client = createHttpClient(uri.str(), http::HttpRequestMethod::DELETE);
+  auto client = createHttpClient(uri.str(), http::HttpRequestMethod::Delete);
   setSiteToSiteHeaders(*client);
   client->setConnectionTimeout(std::chrono::milliseconds(5000));
   client->setRequestHeader("Accept", "application/json");

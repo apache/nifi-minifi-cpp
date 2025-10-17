@@ -21,7 +21,6 @@
 #include "http/BaseHTTPClient.h"
 #include "utils/Hash.h"
 #include "core/logging/Utils.h"
-#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
@@ -87,33 +86,15 @@ std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix
   config.rate_limit = readPropertyOr(".rate.limit", TimePeriodValue::fromString, "10 min").getMilliseconds();
   config.buffer_limit = readPropertyOr(".buffer.limit", datasize_parser, "1 MB");
   config.level = readPropertyOr(".level", utils::parse_log_level, "trace");
-  config.ssl_service_name = logger_properties->getString(prop_name_prefix + ".ssl.context.service");
 
   return std::shared_ptr<AlertSink>(new AlertSink(std::move(config), std::move(logger)));
 }
 
-void AlertSink::initialize(core::controller::ControllerServiceProvider* controller, std::shared_ptr<AgentIdentificationProvider> agent_id) {
+void AlertSink::initialize(std::shared_ptr<AgentIdentificationProvider> agent_id, std::shared_ptr<controllers::SSLContextServiceInterface> ssl_service) {
   auto services = std::make_unique<Services>();
 
   services->agent_id = std::move(agent_id);
-
-  if (config_.ssl_service_name) {
-    if (!controller) {
-      logger_->log_error("Could not find service '{}': no service provider", config_.ssl_service_name.value());
-      return;
-    }
-    if (auto service = controller->getControllerService(config_.ssl_service_name.value())) {
-      if (auto ssl_service = std::dynamic_pointer_cast<controllers::SSLContextServiceInterface>(service)) {
-        services->ssl_service = ssl_service;
-      } else {
-        logger_->log_error("Service '{}' is not an SSLContextService", config_.ssl_service_name.value());
-        return;
-      }
-    } else {
-      logger_->log_error("Could not find service '{}'", config_.ssl_service_name.value());
-      return;
-    }
-  }
+  services->ssl_service = std::move(ssl_service);
 
   services.reset(services_.exchange(services.release()));
 }
@@ -170,7 +151,7 @@ void AlertSink::run() {
     Services* expected{nullptr};
     // only restore the services pointer if no initialize set it to something else meanwhile
     if (services_.compare_exchange_strong(expected, services.get())) {
-      (void)services.release();
+      std::ignore = services.release();
     }
   }
 }
@@ -199,7 +180,7 @@ void AlertSink::send(Services& services) {
     logger_->log_error("Could not instantiate a HTTPClient object");
     return;
   }
-  client->initialize(http::HttpRequestMethod::PUT, config_.url, services.ssl_service);
+  client->initialize(http::HttpRequestMethod::Put, config_.url, services.ssl_service);
 
   rapidjson::Document doc(rapidjson::kObjectType);
   std::string agent_id = services.agent_id->getAgentIdentifier();

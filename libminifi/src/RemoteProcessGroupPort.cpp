@@ -94,7 +94,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::getNextPro
       auto& peer_status = peers_[peer_index_];
       sitetosite::SiteToSiteClientConfiguration config(peer_status.getPortId(), peer_status.getHost(), peer_status.getPort(), local_network_interface_, client_type_);
       peer_index_++;
-      if (peer_index_ >= static_cast<int>(peers_.size())) {
+      if (peer_index_ >= gsl::narrow<int>(peers_.size())) {
         peer_index_ = 0;
       }
       next_protocol = initializeProtocol(config);
@@ -161,7 +161,7 @@ void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::Pro
       auto peer_status = peers_[peer_index_];
       sitetosite::SiteToSiteClientConfiguration config(peer_status.getPortId(), peer_status.getHost(), peer_status.getPort(), local_network_interface_, client_type_);
       peer_index_++;
-      if (peer_index_ >= static_cast<int>(peers_.size())) {
+      if (peer_index_ >= gsl::narrow<int>(peers_.size())) {
         peer_index_ = 0;
       }
       logger_->log_trace("Creating client");
@@ -235,7 +235,7 @@ std::optional<std::string> RemoteProcessGroupPort::getRestApiToken(const RPG& ni
     return std::nullopt;
   }
   auto client = std::unique_ptr<http::BaseHTTPClient>(dynamic_cast<http::BaseHTTPClient*>(client_ptr));
-  client->initialize(http::HttpRequestMethod::GET, login_url.str(), ssl_service_);
+  client->initialize(http::HttpRequestMethod::Get, login_url.str(), ssl_service_);
   // use a connection timeout. if this times out we will simply attempt re-connection
   // so no need for configuration parameter that isn't already defined in Processor
   client->setConnectionTimeout(10s);
@@ -296,7 +296,7 @@ std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::tryRefre
 
   auto client = std::unique_ptr<http::BaseHTTPClient>(dynamic_cast<http::BaseHTTPClient*>(client_ptr));
   auto full_url  = buildFullSiteToSiteUrl(nifi);
-  client->initialize(http::HttpRequestMethod::GET, full_url, ssl_service_);
+  client->initialize(http::HttpRequestMethod::Get, full_url, ssl_service_);
   // use a connection timeout. if this times out we will simply attempt re-connection
   // so no need for configuration parameter that isn't already defined in Processor
   client->setConnectionTimeout(10s);

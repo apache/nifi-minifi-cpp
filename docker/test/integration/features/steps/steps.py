@@ -1009,18 +1009,6 @@ def step_impl(context, doc_id, index, value, field):
 
 
 # MiNiFi C2 Server
-@given("a ssl context service is set up for MiNiFi C2 server")
-def step_impl(context):
-    minifi_crt_file = '/tmp/resources/minifi_client.crt'
-    minifi_key_file = '/tmp/resources/minifi_client.key'
-    root_ca_crt_file = '/tmp/resources/root_ca.crt'
-    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
-    ssl_context_service.name = "SSLContextService"
-    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
-    container.add_controller(ssl_context_service)
-    context.test.enable_c2_with_ssl_in_minifi()
-
-
 @given("ssl properties are set up for MiNiFi C2 server")
 def step_impl(context):
     context.test.enable_c2_with_ssl_in_minifi()
