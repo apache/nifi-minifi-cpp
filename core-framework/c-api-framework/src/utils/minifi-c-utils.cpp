@@ -30,4 +30,32 @@ std::error_code make_error_code(MinifiStatus status) {
   }
 }
 
+MinifiStandardPropertyValidator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator) {
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_ALWAYS_VALID_VALIDATOR;
+  }
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::NON_BLANK_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_NON_BLANK_VALIDATOR;
+  }
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_TIME_PERIOD_VALIDATOR;
+  }
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_BOOLEAN_VALIDATOR;
+  }
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::INTEGER_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_INTEGER_VALIDATOR;
+  }
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_UNSIGNED_INTEGER_VALIDATOR;
+  }
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::DATA_SIZE_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_DATA_SIZE_VALIDATOR;
+  }
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::PORT_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_PORT_VALIDATOR;
+  }
+  gsl_FailFast();
+}
+
 }  // namespace org::apache::nifi::minifi::api::utils

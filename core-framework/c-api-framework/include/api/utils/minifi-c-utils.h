@@ -36,33 +36,7 @@ std::string classNameWithDots() {
   return minifi::utils::string::replaceAll(class_name, "::", ".");
 }
 
-inline MinifiStandardPropertyValidator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator) {
-  if (validator == &minifi::core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR) {
-    return MINIFI_ALWAYS_VALID_VALIDATOR;
-  }
-  if (validator == &minifi::core::StandardPropertyValidators::NON_BLANK_VALIDATOR) {
-    return MINIFI_NON_BLANK_VALIDATOR;
-  }
-  if (validator == &minifi::core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR) {
-    return MINIFI_TIME_PERIOD_VALIDATOR;
-  }
-  if (validator == &minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR) {
-    return MINIFI_BOOLEAN_VALIDATOR;
-  }
-  if (validator == &minifi::core::StandardPropertyValidators::INTEGER_VALIDATOR) {
-    return MINIFI_INTEGER_VALIDATOR;
-  }
-  if (validator == &minifi::core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR) {
-    return MINIFI_UNSIGNED_INTEGER_VALIDATOR;
-  }
-  if (validator == &minifi::core::StandardPropertyValidators::DATA_SIZE_VALIDATOR) {
-    return MINIFI_DATA_SIZE_VALIDATOR;
-  }
-  if (validator == &minifi::core::StandardPropertyValidators::PORT_VALIDATOR) {
-    return MINIFI_PORT_VALIDATOR;
-  }
-  gsl_FailFast();
-}
+MinifiStandardPropertyValidator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator);
 
 inline MinifiInputRequirement toInputRequirement(minifi::core::annotation::Input req) {
   switch (req) {
@@ -111,18 +85,18 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
         .is_required = prop.is_required ? MINIFI_TRUE : MINIFI_FALSE,
         .is_sensitive = prop.is_sensitive ? MINIFI_TRUE : MINIFI_FALSE,
         .dependent_properties_count = gsl::narrow<uint32_t>(prop.dependent_properties.size()),
-        .dependent_properties_ptr = &sv_cache[dependent_properties_begin],
+        .dependent_properties_ptr = sv_cache.data() + dependent_properties_begin,
         .exclusive_of_properties_count = gsl::narrow<uint32_t>(prop.exclusive_of_properties.size()),
-        .exclusive_of_property_names_ptr = &sv_cache[exclusive_of_property_names_begin],
-        .exclusive_of_property_values_ptr = &sv_cache[exclusive_of_property_values_begin],
+        .exclusive_of_property_names_ptr = sv_cache.data() + exclusive_of_property_names_begin,
+        .exclusive_of_property_values_ptr = sv_cache.data() + exclusive_of_property_values_begin,
 
-        .default_value = default_value_begin ? &sv_cache[default_value_begin.value()] : nullptr,
+        .default_value = default_value_begin ? sv_cache.data() + default_value_begin.value() : nullptr,
         .allowed_values_count = gsl::narrow<uint32_t>(prop.allowed_values.size()),
-        .allowed_values_ptr = &sv_cache[allowed_values_begin],
+        .allowed_values_ptr = sv_cache.data() + allowed_values_begin,
         .validator = MinifiGetStandardValidator(toStandardPropertyValidator(prop.validator)),
 
         .types_count = gsl::narrow<uint32_t>(prop.allowed_types.size()),
-        .types_ptr = &sv_cache[allowed_types_begin],
+        .types_ptr = sv_cache.data() + allowed_types_begin,
         .supports_expression_language = prop.supports_expression_language ? MINIFI_TRUE : MINIFI_FALSE
       });
       cache.emplace_back(std::move(sv_cache));
