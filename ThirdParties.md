@@ -25,7 +25,6 @@ This document describes the way we build and use third parties and provides a gu
     + [License](#license)
   * [Built-in or system dependency](#built-in-or-system-dependency)
   * [System dependency](#system-dependency)
-    + [bootstrap.sh](#bootstrapsh)
     + [Find\<Package\>.cmake](#find--package--cmake)
     + [find_package](#find-package)
   * [Built-in dependency](#built-in-dependency)
@@ -97,12 +96,6 @@ Both a system and a built-in version can be supported, in which case the choice 
 ## System dependency
 
 To add a new system dependency, you have to follow the following steps:
-
-### bootstrap.sh
-
-If you are using a system dependency, you have to ensure that the development packages are installed on the build system if the extension is selected.
-
-To ensure this, edit `bootstrap.sh` and all the platform-specific scripts (`centos.sh`, `fedora.sh`, `debian.sh`, `suse.sh`, `rheldistro.sh`, `darwin.sh`).
 
 ### Find\<Package\>.cmake
 
