@@ -20,11 +20,7 @@
 #include <utility>
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
+namespace org::apache::nifi::minifi::state {
 
 UpdateStatus::UpdateStatus(UpdateState state, int16_t reason)
     : state_(state),
@@ -43,8 +39,4 @@ int16_t UpdateStatus::getReadonCode() const {
   return reason_;
 }
 
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::state

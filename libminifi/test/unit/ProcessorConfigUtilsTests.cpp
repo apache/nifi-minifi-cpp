@@ -18,15 +18,16 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "core/controller/ControllerService.h"
-#include "core/controller/ControllerServiceNode.h"
 #include "core/controller/ControllerServiceProvider.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/controller/ControllerServiceNode.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/Enum.h"
 #include "utils/Id.h"
 #include "unit/TestUtils.h"
+#include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace {

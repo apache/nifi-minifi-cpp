@@ -29,7 +29,7 @@
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/provenance/Provenance.h"
-#include "utils/Literals.h"
+#include "minifi-cpp/utils/Literals.h"
 #include "RocksDbRepository.h"
 
 namespace org::apache::nifi::minifi::provenance {

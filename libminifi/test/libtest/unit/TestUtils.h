@@ -45,7 +45,6 @@
 using namespace std::literals::chrono_literals;
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
-#include "Connection.h"
 #include "utils/FlowFileQueue.h"
 #include "Catch.h"
 

@@ -22,7 +22,7 @@
 #include <memory>
 #include <unordered_map>
 #include <optional>
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 #ifdef WIN32
 struct _IP_ADAPTER_ADDRESSES_LH;

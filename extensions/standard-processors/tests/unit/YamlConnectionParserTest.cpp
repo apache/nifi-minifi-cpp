@@ -24,6 +24,7 @@
 #include "unit/Catch.h"
 #include "unit/TestUtils.h"
 #include "core/yaml/YamlNode.h"
+#include "Connection.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -146,7 +147,6 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
       CHECK_THROWS(StructuredConnectionParser(connection_node, "test_node", parent_ptr, logger));
     }
     SECTION("With a configuration that lists keys but has no assigned values") {
-      std::string serialized_yaml;
       SECTION("Single relationship name left empty") {
         YAML::Node yaml_node = YAML::Load(std::string {
             "source name: \n"

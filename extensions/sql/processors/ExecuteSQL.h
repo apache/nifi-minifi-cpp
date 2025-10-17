@@ -23,13 +23,13 @@
 #include <string>
 
 #include "core/ProcessSession.h"
-#include "core/ProcessContext.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/ProcessContext.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "SQLProcessor.h"
 #include "FlowFileSource.h"
 #include "utils/ArrayUtils.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::processors {
 

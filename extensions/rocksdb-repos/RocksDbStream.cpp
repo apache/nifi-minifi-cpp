@@ -23,7 +23,7 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include <Exception.h>
+#include "minifi-cpp/Exception.h"
 #include "io/validation.h"
 
 namespace org::apache::nifi::minifi::io {

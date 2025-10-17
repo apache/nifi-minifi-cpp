@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_UPDATECONTROLLER_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_UPDATECONTROLLER_H_
+#pragma once
 
 #include <memory>
 #include <utility>
@@ -25,14 +24,10 @@
 #include <map>
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
-#include "io/InputStream.h"
+#include "minifi-cpp/io/InputStream.h"
 #include "utils/expected.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
+namespace org::apache::nifi::minifi::state {
 
 enum class UpdateState {
   INITIATE,
@@ -211,10 +206,4 @@ class UpdateController {
   std::atomic<bool> controller_running_;
 };
 
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_UPDATECONTROLLER_H_
+}  // namespace org::apache::nifi::minifi::state

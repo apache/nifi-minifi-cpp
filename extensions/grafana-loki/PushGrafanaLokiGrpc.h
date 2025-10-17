@@ -19,7 +19,6 @@
 #include "PushGrafanaLoki.h"
 
 #include "core/logging/LoggerFactory.h"
-#include "core/StateManager.h"
 #include "grafana-loki-push.grpc.pb.h"
 #include "grafana-loki-push.pb.h"
 #include "grpc/grpc.h"

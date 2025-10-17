@@ -33,13 +33,13 @@
 #include "wel/JSONUtils.h"
 #include "wel/WindowsError.h"
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/Deleters.h"
 #include "core/logging/LoggerFactory.h"
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/UnicodeConversion.h"

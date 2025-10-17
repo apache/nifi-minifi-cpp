@@ -24,14 +24,14 @@
 #include <utility>
 #include <vector>
 
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
 #include "utils/Locations.h"
 #include "utils/OptionalUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 using namespace std::literals::chrono_literals;
 

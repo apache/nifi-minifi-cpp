@@ -20,15 +20,9 @@
 
 #include <memory>
 #include "io/ZlibStream.h"
-#include "io/OutputStream.h"
+#include "minifi-cpp/io/OutputStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
-namespace internal {
+namespace org::apache::nifi::minifi::core::logging::internal {
 
 class LogCompressor : public io::ZlibCompressStream {
  public:
@@ -42,10 +36,4 @@ class LogCompressor : public io::ZlibCompressStream {
   FlushResult flush();
 };
 
-}  // namespace internal
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::logging::internal

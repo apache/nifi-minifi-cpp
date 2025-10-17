@@ -16,8 +16,8 @@
  */
 #pragma once
 
-#include "controllers/RecordSetWriter.h"
-#include "controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/RecordSetWriter.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/logging/LoggerFactory.h"

@@ -20,7 +20,7 @@
 
 #include "FetchAzureDataLakeStorage.h"
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -40,17 +40,17 @@ std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeSt
   }
 
   if (auto range_start = utils::parseOptionalU64Property(context, RangeStart, &flow_file)) {
-    params.range_start = *range_start;
+    params.range_start = range_start;
     logger_->log_debug("Range Start property set to {}", *params.range_start);
   }
 
   if (auto range_length = utils::parseOptionalU64Property(context, RangeLength, &flow_file)) {
-    params.range_length = *range_length;
+    params.range_length = range_length;
     logger_->log_debug("Range Length property set to {}", *params.range_length);
   }
 
   if (auto number_of_retries = utils::parseOptionalU64Property(context, NumberOfRetries, &flow_file)) {
-    params.number_of_retries = *number_of_retries;
+    params.number_of_retries = number_of_retries;
     logger_->log_debug("Number Of Retries property set to {}", *params.number_of_retries);
   }
 

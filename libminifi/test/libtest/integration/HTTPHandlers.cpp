@@ -23,7 +23,7 @@
 #include "io/CRCStream.h"
 #include "io/BufferStream.h"
 #include "rapidjson/error/en.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "agent/build_description.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/view/filter.hpp"

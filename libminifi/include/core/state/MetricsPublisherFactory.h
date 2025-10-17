@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "minifi-cpp/core/state/MetricsPublisher.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::state {
 

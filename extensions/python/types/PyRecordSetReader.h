@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "controllers/RecordSetReader.h"
+#include "minifi-cpp/controllers/RecordSetReader.h"
 #include "../PythonBindings.h"
 
 namespace org::apache::nifi::minifi::extensions::python {

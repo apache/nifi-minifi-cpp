@@ -18,7 +18,7 @@
 
 #include <memory>
 #include "minifi-cpp/core/Core.h"
-#include "core/ContentRepository.h"
+#include "minifi-cpp/core/ContentRepository.h"
 #include "minifi-cpp/properties/Configure.h"
 #include "minifi-cpp/core/controller/ControllerServiceProvider.h"
 #include "ProcessContext.h"

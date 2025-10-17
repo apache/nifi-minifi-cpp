@@ -27,7 +27,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "concurrentqueue.h"
 #include "utils/MinifiConcurrentQueue.h"
 

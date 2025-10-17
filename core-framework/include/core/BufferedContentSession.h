@@ -20,7 +20,7 @@
 
 #include <memory>
 #include <map>
-#include "io/BaseStream.h"
+#include "minifi-cpp/io/BaseStream.h"
 #include "ContentSession.h"
 
 namespace org::apache::nifi::minifi::core {

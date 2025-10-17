@@ -29,7 +29,7 @@
 #include "range/v3/view/join.hpp"
 
 #include "agent/agent_docs.h"
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "core/Core.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/Relationship.h"

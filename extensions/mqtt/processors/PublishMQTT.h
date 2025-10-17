@@ -23,16 +23,16 @@
 #include <utility>
 #include <vector>
 
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/logging/LoggerFactory.h"
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/ProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi::processors {

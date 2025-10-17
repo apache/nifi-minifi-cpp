@@ -19,7 +19,6 @@
 #include <utility>
 #include <string>
 #include "../../SmbConnectionControllerService.h"
-#include "core/controller/ControllerService.h"
 #include "utils/OsUtils.h"
 #include "utils/file/FileUtils.h"
 #include "ListSmb.h"

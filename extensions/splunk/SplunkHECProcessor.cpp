@@ -19,7 +19,7 @@
 
 #include <utility>
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "http/HTTPClient.h"
 #include "utils/ProcessorConfigUtils.h"
 

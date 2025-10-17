@@ -27,8 +27,8 @@
 #include <compare>
 #include <concepts>
 
-#include "core/logging/Logger.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "rapidjson/document.h"
 #include "utils/expected.h"
 #include "utils/StringUtils.h"

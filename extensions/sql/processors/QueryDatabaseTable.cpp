@@ -22,10 +22,10 @@
 #include <algorithm>
 
 #include "io/BufferStream.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "data/MaxCollector.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -143,7 +143,7 @@ bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<s
     }
   }
   for (auto& column : max_value_columns_) {
-    if (new_max_values.find(column) == new_max_values.end()) {
+    if (!new_max_values.contains(column)) {
       logger_->log_info("New maximum-value column \"{}\" specified, resetting state.", column.str());
       return false;
     }

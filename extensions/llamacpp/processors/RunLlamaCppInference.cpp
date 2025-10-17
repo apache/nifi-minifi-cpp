@@ -16,10 +16,10 @@
  */
 
 #include "RunLlamaCppInference.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"

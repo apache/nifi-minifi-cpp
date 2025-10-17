@@ -19,7 +19,7 @@
 #include <filesystem>
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "agent/agent_version.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "core/extension/Utils.h"
 #include "unit/TestUtils.h"
 

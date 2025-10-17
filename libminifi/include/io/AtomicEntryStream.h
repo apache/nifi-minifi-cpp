@@ -26,9 +26,9 @@
 
 #include "io/BaseStream.h"
 #include "core/repository/AtomicRepoEntries.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 #include "core/logging/LoggerFactory.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org {
 namespace apache {

@@ -22,7 +22,7 @@
 #include "../controllerservice/KubernetesControllerService.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/ProcessorImpl.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 
 namespace org::apache::nifi::minifi::processors {

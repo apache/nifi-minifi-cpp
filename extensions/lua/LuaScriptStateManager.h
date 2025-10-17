@@ -22,7 +22,7 @@
 #include <memory>
 
 #include "sol/sol.hpp"
-#include "core/StateManager.h"
+#include "minifi-cpp/core/StateManager.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
 

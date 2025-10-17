@@ -20,7 +20,7 @@
 #include <iostream>
 #include "processors/InvokeHTTP.h"
 #include "unit/TestBase.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "integration/TestServer.h"
 #include "c2/C2Agent.h"

@@ -24,7 +24,7 @@
 
 #include "core/flow/Node.h"
 #include "rapidjson/document.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/ValueCaster.h"
 
 namespace org::apache::nifi::minifi::core {

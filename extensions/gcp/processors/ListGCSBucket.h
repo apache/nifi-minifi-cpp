@@ -24,11 +24,11 @@
 #include "../GCPAttributes.h"
 #include "GCSProcessor.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/OutputAttributeDefinition.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/OutputAttributeDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {

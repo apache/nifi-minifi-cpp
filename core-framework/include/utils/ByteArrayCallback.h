@@ -24,8 +24,8 @@
 
 #include "concurrentqueue.h"
 #include "core/logging/LoggerFactory.h"
-#include "utils/gsl.h"
-#include "io/InputStream.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/io/InputStream.h"
 
 namespace org::apache::nifi::minifi::utils {
 

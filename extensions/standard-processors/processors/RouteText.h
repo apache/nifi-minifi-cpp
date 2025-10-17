@@ -23,14 +23,14 @@
 #include <string>
 #include <memory>
 
-#include "core/OutputAttributeDefinition.h"
+#include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "core/ProcessorImpl.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "utils/Enum.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 #include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::processors::route_text {

@@ -16,7 +16,7 @@
  */
 
 #include "utils/SystemCpuUsageTracker.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 #ifdef __linux__
@@ -44,6 +44,7 @@ void SystemCpuUsageTracker::queryCpuTimes() {
   previous_total_sys_ = total_sys_;
   previous_total_idle_ = total_idle_;
   gsl::owner<FILE*> file = fopen("/proc/stat", "r");
+  if (!file) { return; }
   if (fscanf(file, "cpu %lu %lu %lu %lu", &total_user_, &total_user_low_, &total_sys_, &total_idle_) != 4) {  // NOLINT(cert-err34-c)
     total_user_ = previous_total_user_;
     total_user_low_ = previous_total_user_low_;
@@ -76,7 +77,7 @@ double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
   if (total_diff + total_idle_diff == 0) {
     return -1.0;
   }
-  double percent = static_cast<double>(total_diff) / static_cast<double>(total_diff + total_idle_diff);
+  double percent = static_cast<double>(total_diff) / static_cast<double>(total_diff + total_idle_diff);  // NOLINT(clang-analyzer-optin.taint.TaintedDiv)
 
   return percent;
 }

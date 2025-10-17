@@ -19,8 +19,8 @@
 
 #include <string>
 
-#include "Exception.h"
-#include "utils/Literals.h"
+#include "minifi-cpp/Exception.h"
+#include "minifi-cpp/utils/Literals.h"
 
 namespace org::apache::nifi::minifi::internal {
 

@@ -28,7 +28,7 @@
 
 #include <iostream>
 #include "utils/file/FileUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils::file {
 

@@ -33,7 +33,7 @@
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "minifi-cpp/core/Scheduling.h"
 #include "minifi-cpp/core/state/FlowIdentifier.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "minifi-cpp/core/Connectable.h"
 
 namespace org::apache::nifi::minifi::core {

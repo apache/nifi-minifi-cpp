@@ -34,7 +34,7 @@
 #include "types/PyProcessSession.h"
 #include "PythonScriptException.h"
 #include "PythonInterpreter.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::extensions::python {

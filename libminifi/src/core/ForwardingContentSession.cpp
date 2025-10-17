@@ -20,10 +20,9 @@
 
 #include <memory>
 
-#include "core/ContentRepository.h"
-#include "ResourceClaim.h"
-#include "io/BaseStream.h"
-#include "Exception.h"
+#include "minifi-cpp/ResourceClaim.h"
+#include "minifi-cpp/io/BaseStream.h"
+#include "minifi-cpp/Exception.h"
 #include "io/StreamPipe.h"
 #include "io/StreamSlice.h"
 

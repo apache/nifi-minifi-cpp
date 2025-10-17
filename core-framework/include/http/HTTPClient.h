@@ -42,7 +42,7 @@
 #include <vector>
 
 #include "core/Connectable.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "utils/ByteArrayCallback.h"

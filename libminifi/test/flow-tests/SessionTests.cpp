@@ -32,6 +32,7 @@
 #include "core/RepositoryFactory.h"
 #include "repository/VolatileContentRepository.h"
 #include "unit/TestUtils.h"
+#include "Connection.h"
 
 namespace {
 

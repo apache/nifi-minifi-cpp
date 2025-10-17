@@ -17,7 +17,7 @@
 
 #include "utils/LineByLineInputOutputStreamCallback.h"
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/span.h"
 
 namespace org::apache::nifi::minifi::utils {

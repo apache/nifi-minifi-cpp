@@ -26,7 +26,7 @@
 #include "sitetosite/SiteToSite.h"
 #include "sitetosite/SiteToSiteClient.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "sitetosite/Peer.h"
 #include "utils/Id.h"

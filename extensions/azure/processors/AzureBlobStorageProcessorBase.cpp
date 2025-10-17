@@ -20,7 +20,7 @@
 
 #include "AzureBlobStorageProcessorBase.h"
 
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {

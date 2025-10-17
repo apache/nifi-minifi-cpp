@@ -21,14 +21,13 @@
 #include <memory>
 #include <utility>
 #include <map>
-#include "io/BaseStream.h"
+#include "minifi-cpp/io/BaseStream.h"
 #include "minifi-cpp/core/ContentSession.h"
-#include "ContentRepository.h"
+#include "minifi-cpp/core/ContentRepository.h"
 
 namespace org::apache::nifi::minifi::core {
 
 class StreamAppendLock;
-class ContentRepository;
 
 class ContentSessionImpl : public virtual ContentSession {
   struct AppendState {

@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/TypedValues.h"
 #include "core/logging/LoggerFactory.h"
 

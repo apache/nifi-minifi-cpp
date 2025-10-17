@@ -23,16 +23,16 @@
 #include "archive.h"
 
 #include "ArchiveMetadata.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/file/FileManager.h"
-#include "utils/Export.h"
+#include "minifi-cpp/utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 

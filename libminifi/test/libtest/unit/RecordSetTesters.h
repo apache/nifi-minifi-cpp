@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include "controllers/RecordSetReader.h"
-#include "controllers/RecordSetWriter.h"
+#include "minifi-cpp/controllers/RecordSetReader.h"
+#include "minifi-cpp/controllers/RecordSetWriter.h"
 #include "minifi-cpp/core/Record.h"
 #include "TestBase.h"
 #include "core/ProcessSession.h"

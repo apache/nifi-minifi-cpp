@@ -74,7 +74,7 @@
 #include "utils/StringUtils.h"
 #include "utils/expected.h"
 #include "utils/file/PathUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)

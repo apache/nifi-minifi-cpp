@@ -31,10 +31,10 @@
 #include "processors/PutFile.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "core/Core.h"
-#include "core/FlowFile.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "core/Processor.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
-#include "Exception.h"
+#include "minifi-cpp/Exception.h"
 
 TEST_CASE("Test Creation of PutFile", "[getfileCreate]") {
   TestController testController;

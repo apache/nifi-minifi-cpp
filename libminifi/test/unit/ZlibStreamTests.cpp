@@ -22,7 +22,7 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "io/ZlibStream.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "utils/span.h"
 

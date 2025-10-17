@@ -24,10 +24,10 @@
 #include "core/Core.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyDefinition.h"
-#include "core/RelationshipDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
 #include "core/Resource.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
 #pragma once

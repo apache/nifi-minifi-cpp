@@ -20,10 +20,10 @@
 #include <string>
 #include <set>
 #include <cinttypes>
-#include "core/Repository.h"
 #include "utils/Id.h"
 #include "core/FlowFile.h"
 #include "utils/requirements/Container.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi {
 namespace core {

@@ -22,7 +22,7 @@
 #include "core/controller/ControllerService.h"
 #include "DatabaseService.h"
 #include "io/validation.h"
-#include "properties/Configure.h"
+#include "minifi-cpp/properties/Configure.h"
 
 namespace org::apache::nifi::minifi::sql::controllers {
 

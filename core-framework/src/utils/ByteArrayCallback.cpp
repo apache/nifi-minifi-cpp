@@ -22,7 +22,7 @@
 #include <string>
 #include <memory>
 
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -100,7 +100,7 @@ size_t ByteOutputCallback::read_current_str(char *buffer, size_t size) {
   read_started_ = true;
   do {
     std::lock_guard<std::recursive_mutex> lock(vector_lock_);
-    if (current_str_pos <= current_str.length() && current_str.length() > 0) {
+    if (current_str_pos <= current_str.length() && !current_str.empty()) {
       size_t str_remaining = current_str.length() - current_str_pos;
       size_t current_str_read = str_remaining;
       if (str_remaining > amount_to_read) {
@@ -137,9 +137,9 @@ size_t ByteOutputCallback::read_current_str(char *buffer, size_t size) {
 
 bool ByteOutputCallback::preload_next_str() {
   // wait until there is data or this stream has been stopped.
-  if (queue_.size_approx() == 0 && current_str.length() == 0) {
+  if (queue_.size_approx() == 0 && current_str.empty()) {
     std::unique_lock<std::recursive_mutex> lock(vector_lock_);
-    if (queue_.size_approx() == 0 && current_str.length() == 0) {
+    if (queue_.size_approx() == 0 && current_str.empty()) {
       spinner_.wait(lock, [&] {
         return queue_.size_approx() > 0 || !is_alive_;});
     }

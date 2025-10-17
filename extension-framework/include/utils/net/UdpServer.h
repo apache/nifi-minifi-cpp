@@ -23,7 +23,7 @@
 
 #include "Server.h"
 #include "utils/MinifiConcurrentQueue.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::utils::net {

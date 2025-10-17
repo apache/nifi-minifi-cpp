@@ -20,9 +20,9 @@
 #include <memory>
 #include <optional>
 
-#include "core/ProcessContext.h"
-#include "core/Property.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/ProcessContext.h"
+#include "minifi-cpp/core/Property.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::utils::net {

@@ -31,8 +31,8 @@
 #include <utility>
 #include <vector>
 
-#include "core/FlowFile.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/FlowFile.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "rapidjson/ostreamwrapper.h"
@@ -384,7 +384,7 @@ bool ListSFTP::updateFromTrackingTimestampsCache(core::ProcessContext& /*context
     return false;
   }
   for (const auto &kv : state_map) {
-    if (kv.first.compare(0, strlen("id."), "id.") == 0) {
+    if (kv.first.starts_with("id.")) {
       state_ids.emplace(kv.second);
     }
   }
@@ -420,7 +420,7 @@ void ListSFTP::listByTrackingTimestamps(
     uint16_t port,
     const std::string& username,
     const std::string& remote_path,
-    std::vector<Child>&& files) {
+    std::vector<Child> files) {
   auto min_timestamp_to_list = last_listed_latest_entry_timestamp_;
 
   /* Load state from cache file if needed */
@@ -676,7 +676,7 @@ void ListSFTP::listByTrackingEntities(
     const std::string& username,
     const std::string& remote_path,
     std::chrono::milliseconds entity_tracking_time_window,
-    std::vector<Child>&& files) {
+    std::vector<Child> files) {
   /* Load state from cache file if needed */
   if (!already_loaded_from_cache_) {
     if (updateFromTrackingEntitiesCache(context, hostname, username, remote_path)) {

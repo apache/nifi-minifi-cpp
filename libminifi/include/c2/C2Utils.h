@@ -24,7 +24,7 @@
 
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
-#include "io/ArchiveStream.h"
+#include "minifi-cpp/io/ArchiveStream.h"
 #include "utils/expected.h"
 #include "io/BufferStream.h"
 

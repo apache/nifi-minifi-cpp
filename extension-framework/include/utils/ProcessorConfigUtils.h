@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "core/ClassName.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "utils/Enum.h"
 #include "utils/expected.h"

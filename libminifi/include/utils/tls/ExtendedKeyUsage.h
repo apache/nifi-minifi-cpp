@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 struct stack_st_ASN1_OBJECT;
 typedef stack_st_ASN1_OBJECT EXTENDED_KEY_USAGE;

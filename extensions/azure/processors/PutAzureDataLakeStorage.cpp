@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "utils/ProcessorConfigUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 

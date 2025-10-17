@@ -26,7 +26,7 @@
 #include "utils/crypto/EncryptionUtils.h"
 #include "utils/crypto/ciphers/XSalsa20.h"
 #include "utils/crypto/ciphers/Aes256Ecb.h"
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::utils::crypto {

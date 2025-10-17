@@ -25,7 +25,7 @@
 #include <string>
 
 #include "utils/Deleters.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/UnicodeConversion.h"
 #include "UniqueEvtHandle.h"
 

@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/logging/Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "utils/ChecksumCalculator.h"
 #include "utils/StringUtils.h"
 #include "minifi-cpp/properties/Properties.h"

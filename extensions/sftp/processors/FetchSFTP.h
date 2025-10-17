@@ -22,11 +22,11 @@
 
 #include "SFTPProcessorBase.h"
 #include "utils/ByteArrayCallback.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Property.h"
+#include "minifi-cpp/core/Property.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/logging/LoggerFactory.h"

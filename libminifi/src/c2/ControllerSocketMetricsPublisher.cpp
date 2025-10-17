@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include "c2/ControllerSocketMetricsPublisher.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/Resource.h"
 #include "c2/C2Agent.h"
 #include "rapidjson/stringbuffer.h"

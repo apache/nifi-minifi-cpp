@@ -35,7 +35,7 @@
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "utils/OsUtils.h"
-#include "FlowFileRecord.h"
+#include "minifi-cpp/FlowFileRecord.h"
 #include "UniqueEvtHandle.h"
 
 #include "pugixml.hpp"
