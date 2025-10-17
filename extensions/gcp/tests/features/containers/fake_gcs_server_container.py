@@ -15,12 +15,12 @@
 
 import logging
 from minifi_test_framework.core.helpers import wait_for_condition, retry_check
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class FakeGcsServerContainer(Container):
+class FakeGcsServerContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         super().__init__("fsouza/fake-gcs-server:1.45.1", f"fake-gcs-server-{test_context.scenario_id}", test_context.network,
                          command=f'-scheme http -host fake-gcs-server-{test_context.scenario_id}')

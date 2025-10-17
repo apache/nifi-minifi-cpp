@@ -15,26 +15,25 @@
 
 import logging
 
-from OpenSSL import crypto
 from minifi_test_framework.core.helpers import wait_for_condition, retry_check
-from minifi_test_framework.core.ssl_utils import make_server_cert
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.core.ssl_utils import make_server_cert, dump_cert, dump_key
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from docker.errors import ContainerError
 
 
-class CouchbaseServerContainer(Container):
+class CouchbaseServerContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         super().__init__("couchbase:enterprise-7.2.5", f"couchbase-server-{test_context.scenario_id}", test_context.network)
 
         couchbase_cert, couchbase_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
 
-        root_ca_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)
+        root_ca_content = dump_cert(test_context.root_ca_cert)
         self.files.append(File("/opt/couchbase/var/lib/couchbase/inbox/CA/root_ca.crt", root_ca_content, permissions=0o666))
-        couchbase_cert_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=couchbase_cert)
+        couchbase_cert_content = dump_cert(couchbase_cert)
         self.files.append(File("/opt/couchbase/var/lib/couchbase/inbox/chain.pem", couchbase_cert_content, permissions=0o666))
-        couchbase_key_content = crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=couchbase_key)
+        couchbase_key_content = dump_key(couchbase_key)
         self.files.append(File("/opt/couchbase/var/lib/couchbase/inbox/pkey.key", couchbase_key_content, permissions=0o666))
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
@@ -66,7 +65,7 @@ class CouchbaseServerContainer(Container):
 
         return True
 
-    @retry_check(max_tries=12, retry_interval=5)
+    @retry_check(12, 5)
     def _run_couchbase_cli_command(self, command):
         (code, output) = self.exec_run(command)
         if code != 0:
@@ -90,7 +89,7 @@ class CouchbaseServerContainer(Container):
             logging.error(f"Unexpected error while running python command '{command}' in couchbase helper docker: '{e}'")
             return False
 
-    @retry_check(max_tries=15, retry_interval=2)
+    @retry_check(15, 2)
     def _load_couchbase_certs(self):
         python_command = f"""
 import requests

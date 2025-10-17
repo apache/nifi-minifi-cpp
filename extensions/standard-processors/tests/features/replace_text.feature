@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@CORE
+@CORE @SUPPORTS_WINDOWS
 Feature: Changing flowfile contents using the ReplaceText processor
 
   Scenario Outline: Replace text using Entire text mode

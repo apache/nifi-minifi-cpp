@@ -18,6 +18,10 @@
 from behave import step, given
 
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_test_framework.containers.minifi_protocol import enable_openssl_fips_mode
+from minifi_test_framework.containers.minifi_protocol import set_up_ssl_properties
+from minifi_test_framework.containers.minifi_protocol import enable_log_metrics_publisher
+from minifi_test_framework.containers.minifi_protocol import configure_c2_flow_url
 
 
 @step('MiNiFi configuration "{config_key}" is set to "{config_value}"')
@@ -27,7 +31,7 @@ def set_minifi_config_property(context: MinifiTestContext, config_key: str, conf
 
 @step("log metrics publisher is enabled in MiNiFi")
 def enable_minifi_log_metrics_publisher(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_log_metrics_publisher()
+    enable_log_metrics_publisher(context.get_or_create_default_minifi_container())
 
 
 @step('log property "{log_property_key}" is set to "{log_property_value}"')
@@ -37,14 +41,14 @@ def set_minifi_log_property(context: MinifiTestContext, log_property_key: str, l
 
 @given("OpenSSL FIPS mode is enabled in MiNiFi")
 def enable_minifi_openssl_fips_mode(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_openssl_fips_mode()
+    enable_openssl_fips_mode(context.get_or_create_default_minifi_container())
 
 
 @given("the C2 flow URL property is configured")
 def configure_c2_flow_url(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().configure_c2_flow_url()
+    configure_c2_flow_url(context.get_or_create_default_minifi_container(), context.scenario_id)
 
 
 @given("SSL properties are set in MiNiFi")
 def set_minifi_ssl_properties(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().set_up_ssl_properties()
+    set_up_ssl_properties(context.get_or_create_default_minifi_container())

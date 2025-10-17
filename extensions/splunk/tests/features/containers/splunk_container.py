@@ -15,15 +15,14 @@
 
 import json
 
-from OpenSSL import crypto
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.core.helpers import wait_for_condition, retry_check
 from minifi_test_framework.containers.file import File
-from minifi_test_framework.core.ssl_utils import make_server_cert
+from minifi_test_framework.core.ssl_utils import make_server_cert, dump_cert, dump_key
 
 
-class SplunkContainer(Container):
+class SplunkContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         super().__init__("splunk/splunk:9.2.1-patch2", f"splunk-{test_context.scenario_id}", test_context.network)
         self.user = None
@@ -43,9 +42,9 @@ splunk:
         self.files.append(File("/tmp/defaults/default.yml", splunk_config_content, mode="rw", permissions=0o644))
 
         splunk_cert, splunk_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
-        splunk_cert_content = crypto.dump_certificate(crypto.FILETYPE_PEM, splunk_cert)
-        splunk_key_content = crypto.dump_privatekey(crypto.FILETYPE_PEM, splunk_key)
-        root_ca_content = crypto.dump_certificate(crypto.FILETYPE_PEM, test_context.root_ca_cert)
+        splunk_cert_content = dump_cert(splunk_cert)
+        splunk_key_content = dump_key(splunk_key)
+        root_ca_content = dump_cert(test_context.root_ca_cert)
         self.files.append(File("/opt/splunk/etc/auth/splunk_cert.pem", splunk_cert_content.decode() + splunk_key_content.decode() + root_ca_content.decode(), permissions=0o644))
         self.files.append(File("/opt/splunk/etc/auth/root_ca.pem", root_ca_content.decode(), permissions=0o644))
 

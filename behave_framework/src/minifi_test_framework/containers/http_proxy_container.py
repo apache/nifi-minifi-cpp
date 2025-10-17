@@ -17,13 +17,13 @@
 
 from textwrap import dedent
 
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class HttpProxy(Container):
+class HttpProxy(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         dockerfile = dedent("""\
                 FROM {base_image}

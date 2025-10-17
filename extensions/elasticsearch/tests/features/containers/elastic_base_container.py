@@ -14,11 +14,11 @@
 # limitations under the License.
 
 from minifi_test_framework.core.helpers import wait_for_condition, retry_check
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class ElasticBaseContainer(Container):
+class ElasticBaseContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext, image: str, container_name: str):
         super().__init__(image, container_name, test_context.network)
         self.user = None
