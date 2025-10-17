@@ -304,68 +304,6 @@ Prerequisites:
 
 This will set up a virtual environment in the bootstrap folder, and guide you through the build process.
 
-#### Shell based bootstrapping (linux and macOS)
-- Please run the command `bootstrap.sh` from the root of the MiNiFi C++ source tree.
-
-- Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features
-  you wish to build, enter P to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts
-  (including the package installation prompts ) and -b to automatically run make once the cmake process is complete. Alternatively, you may include the package argument to bootstrap, -p,
-  which will run make package.
-
-- If you provide -b or -p to bootstrap.sh, you do not need to follow the Building section, below. If you do not provide these arguments you may skip the cmake .. section from Building.
-
-- Using the Release build profile is recommended to reduce binary size. (~200 MB vs ~30 MB)
-
-  ```
-  # ~/Development/code/apache/nifi-minifi-cpp on git:master
-  $ ./bootstrap.sh
-  # CMAKE Build dir exists, should we overwrite your build directory before we begin?
-    If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] Y
-    ****************************************
-     Select MiNiFi C++ Features to toggle.
-    ****************************************
-    A. Persistent Repositories .....Enabled
-    C. libarchive features .........Enabled
-    D. Python Scripting support ....Enabled
-    E. Expression Language support .Enabled
-    F. Kafka support ...............Enabled
-    K. Bustache Support ............Disabled
-    L. Lua Scripting Support .......Enabled
-    M. MQTT Support ................Enabled
-    O. SFTP Support ................Disabled
-    S. AWS Support .................Enabled
-    T. OpenCV Support ..............Disabled
-    U. OPC-UA Support...............Enabled
-    V. SQL Support..................Enabled
-    X. Azure Support ...............Enabled
-    Y. Systemd Support .............Enabled
-    AA. Splunk Support .............Enabled
-    AB. Kubernetes Support .........Enabled
-    AC. Google Cloud Support .......Enabled
-    AD. ProcFs Support .............Enabled
-    AE. Prometheus Support .........Enabled
-    AF. Elasticsearch Support ......Enabled
-    ****************************************
-                Build Options.
-    ****************************************
-    1. Enable Tests ................Enabled
-    2. Enable all extensions
-    4. Use Shared Dependency Links .Enabled
-    5. Build Profile ...............RelWithDebInfo Debug MinSizeRel Release
-    6. Create ASAN build ...........Disabled
-    7. Treat warnings as errors.....Disabled
-    P. Continue with these options
-    Q. Quit
-    * Extension cannot be installed due to
-      version of cmake or other software, or
-      incompatibility with other extensions
-
-    Enter choice [A-Z or AA-AF or 1-7]
-  ```
-
-- Bootstrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change
-advanced features.
-
 ### Building
 
 #### Build MiNiFi using Standalone CMake
@@ -544,16 +482,6 @@ The container can be run with a specific configuration by mounting the locally e
 ```
 $ docker run -v ~/Development/apache/nifi-minifi-cpp/conf/config.yml:/opt/minifi/minifi-current/conf/config.yml -v ~/Development/apache/nifi-minifi-cpp/conf/minifi.properties:/opt/minifi/minifi-current/conf/minifi.properties apache/nifi-minifi-cpp
 ```
-
-### Deploying
-MiNiFi C++ comes with a deployment script. This will build and package minifi. Additionally, a file named build_output will be
-created within the build directory that contains a manifest of build artifacts.
-
-    $ deploy.sh <build identifier>
-
-The build identifier will be carried with the deployed binary for the configuration you specify. By default all extensions will be built.
-
-On Windows it is suggested that MSI be used for installation.
 
 ### Cleaning
 Remove the build directory created above.
