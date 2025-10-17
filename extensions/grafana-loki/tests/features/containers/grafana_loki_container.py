@@ -14,13 +14,12 @@
 # limitations under the License.
 
 import logging
-from OpenSSL import crypto
 
 from minifi_test_framework.core.helpers import wait_for_condition, retry_check
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.core.ssl_utils import make_server_cert
+from minifi_test_framework.core.ssl_utils import make_server_cert, dump_cert, dump_key
 from docker.errors import ContainerError
 
 
@@ -30,20 +29,20 @@ class GrafanaLokiOptions:
         self.enable_multi_tenancy = enable_multi_tenancy
 
 
-class GrafanaLokiContainer(Container):
+class GrafanaLokiContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext, options: GrafanaLokiOptions):
         super().__init__("grafana/loki:3.2.1", f"grafana-loki-server-{test_context.scenario_id}", test_context.network)
         extra_ssl_settings = ""
         if options.enable_ssl:
             grafana_loki_cert, grafana_loki_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
 
-            root_ca_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)
+            root_ca_content = dump_cert(test_context.root_ca_cert)
             self.files.append(File("/etc/loki/root_ca.crt", root_ca_content, permissions=0o644))
 
-            grafana_loki_cert_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=grafana_loki_cert)
+            grafana_loki_cert_content = dump_cert(grafana_loki_cert)
             self.files.append(File("/etc/loki/cert.pem", grafana_loki_cert_content, permissions=0o644))
 
-            grafana_loki_key_content = crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=grafana_loki_key)
+            grafana_loki_key_content = dump_key(grafana_loki_key)
             self.files.append(File("/etc/loki/key.pem", grafana_loki_key_content, permissions=0o644))
 
             extra_ssl_settings = """

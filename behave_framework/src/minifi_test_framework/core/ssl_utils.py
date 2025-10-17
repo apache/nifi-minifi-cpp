@@ -13,149 +13,79 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 
-import time
-import logging
-import random
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from cryptography.x509 import Certificate, ExtendedKeyUsage
+from cryptography.x509.oid import NameOID
 
-from M2Crypto import X509, EVP, RSA, ASN1
-from OpenSSL import crypto
 
+def gen_cert() -> tuple[Certificate, RSAPrivateKey]:
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
-def gen_cert():
-    """
-    Generate TLS certificate request for testing
-    """
+    subject = issuer = x509.Name([x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"), x509.NameAttribute(NameOID.COMMON_NAME, u"minifi-listen"), ])
 
-    req, key = gen_req()
-    pub_key = req.get_pubkey()
-    subject = req.get_subject()
-    cert = X509.X509()
-    # noinspection PyTypeChecker
-    cert.set_serial_number(1)
-    cert.set_version(2)
-    cert.set_subject(subject)
-    t = int(time.time())
-    now = ASN1.ASN1_UTCTIME()
-    now.set_time(t)
-    now_plus_year = ASN1.ASN1_UTCTIME()
-    now_plus_year.set_time(t + 60 * 60 * 24 * 365)
-    cert.set_not_before(now)
-    cert.set_not_after(now_plus_year)
-    issuer = X509.X509_Name()
-    issuer.C = 'US'
-    issuer.CN = 'minifi-listen'
-    cert.set_issuer(issuer)
-    cert.set_pubkey(pub_key)
-    cert.sign(key, 'sha256')
+    cert = x509.CertificateBuilder().subject_name(subject).issuer_name(issuer).public_key(key.public_key()).serial_number(
+        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.UTC)).not_valid_after(
+        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=365)).sign(key, hashes.SHA256())
 
     return cert, key
 
 
-def rsa_gen_key_callback():
-    pass
+def make_self_signed_cert(common_name: str) -> tuple[Certificate, RSAPrivateKey]:
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+    subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name), ])
+
+    cert = x509.CertificateBuilder().subject_name(subject).issuer_name(issuer).public_key(key.public_key()).serial_number(
+        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.UTC)).not_valid_after(
+        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=3650)).add_extension(
+        x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False, ).add_extension(x509.BasicConstraints(ca=True, path_length=None),
+                                                                                                     critical=True, ).sign(key, hashes.SHA256())
+
+    return cert, key
 
 
-def gen_req():
-    """
-    Generate TLS certificate request for testing
-    """
+def _make_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey, extended_key_usage: ExtendedKeyUsage | None) -> tuple[
+        Certificate, RSAPrivateKey]:
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
-    logging.info('Generating test certificate request')
-    key = EVP.PKey()
-    req = X509.Request()
-    rsa = RSA.gen_key(1024, 65537, rsa_gen_key_callback)
-    key.assign_rsa(rsa)
-    req.set_pubkey(key)
-    name = req.get_subject()
-    name.C = 'US'
-    name.CN = 'minifi-listen'
-    req.sign(key, 'sha256')
+    subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name), ])
 
-    return req, key
-
-
-def make_self_signed_cert(common_name):
-    ca_key = crypto.PKey()
-    ca_key.generate_key(crypto.TYPE_RSA, 2048)
-
-    ca_cert = crypto.X509()
-    ca_cert.set_version(2)
-    ca_cert.set_serial_number(random.randint(50000000, 100000000))
-
-    ca_subj = ca_cert.get_subject()
-    ca_subj.commonName = common_name
-
-    ca_cert.add_extensions([
-        crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash", subject=ca_cert),
-    ])
-
-    ca_cert.add_extensions([
-        crypto.X509Extension(b"authorityKeyIdentifier", False, b"keyid:always", issuer=ca_cert),
-    ])
-
-    ca_cert.add_extensions([
-        crypto.X509Extension(b"basicConstraints", False, b"CA:TRUE"),
-        crypto.X509Extension(b"keyUsage", False, b"keyCertSign, cRLSign"),
-    ])
-
-    ca_cert.set_issuer(ca_subj)
-    ca_cert.set_pubkey(ca_key)
-
-    ca_cert.gmtime_adj_notBefore(0)
-    ca_cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
-
-    ca_cert.sign(ca_key, 'sha256')
-
-    return ca_cert, ca_key
-
-
-def _make_cert(common_name, ca_cert, ca_key, extended_key_usage=None):
-    key = crypto.PKey()
-    key.generate_key(crypto.TYPE_RSA, 2048)
-
-    cert = crypto.X509()
-    cert.set_version(2)
-    cert.set_serial_number(random.randint(50000000, 100000000))
-
-    client_subj = cert.get_subject()
-    client_subj.commonName = common_name
-
-    cert.add_extensions([
-        crypto.X509Extension(b"basicConstraints", False, b"CA:FALSE"),
-        crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash", subject=cert),
-    ])
-
-    extensions = [crypto.X509Extension(b"authorityKeyIdentifier", False, b"keyid:always", issuer=ca_cert),
-                  crypto.X509Extension(b"keyUsage", False, b"digitalSignature")]
+    builder = x509.CertificateBuilder().subject_name(subject).issuer_name(ca_cert.subject).public_key(key.public_key()).serial_number(
+        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.UTC)).not_valid_after(
+        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=3650)).add_extension(x509.BasicConstraints(ca=False, path_length=None),
+                                                                                           critical=True, ).add_extension(
+        x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False, ).add_extension(
+        x509.SubjectAlternativeName([x509.DNSName(common_name)]), critical=False, )
 
     if extended_key_usage:
-        extensions.append(crypto.X509Extension(b"extendedKeyUsage", False, extended_key_usage))
+        builder = builder.add_extension(x509.ExtendedKeyUsage(extended_key_usage), critical=False)
 
-    cert.add_extensions([
-        crypto.X509Extension(b"subjectAltName", False, b"DNS.1:" + common_name.encode())
-    ])
-
-    cert.add_extensions(extensions)
-
-    cert.set_issuer(ca_cert.get_subject())
-    cert.set_pubkey(key)
-
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
-
-    cert.sign(ca_key, 'sha256')
-
+    cert = builder.sign(ca_key, hashes.SHA256())
     return cert, key
 
 
-def make_client_cert(common_name, ca_cert, ca_key):
-    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, extended_key_usage=b"clientAuth")
+def make_client_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
+    return _make_cert(common_name, ca_cert, ca_key, x509.ExtendedKeyUsage([x509.OID_CLIENT_AUTH]))
 
 
-def make_server_cert(common_name, ca_cert, ca_key):
-    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, extended_key_usage=b"serverAuth")
+def make_server_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
+    return _make_cert(common_name, ca_cert, ca_key, x509.ExtendedKeyUsage(([x509.OID_SERVER_AUTH])))
 
 
-def make_cert_without_extended_usage(common_name, ca_cert, ca_key):
-    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, extended_key_usage=None)
+def make_cert_without_extended_usage(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
+    return _make_cert(common_name, ca_cert, ca_key, None)
+
+
+def dump_cert(cert: Certificate, encoding_type: serialization.Encoding = serialization.Encoding.PEM) -> bytes:
+    return cert.public_bytes(encoding_type)
+
+
+def dump_key(key: RSAPrivateKey, encoding_type: serialization.Encoding = serialization.Encoding.PEM) -> bytes:
+    return key.private_bytes(encoding=encoding_type, format=serialization.PrivateFormat.TraditionalOpenSSL,
+                             encryption_algorithm=serialization.NoEncryption())

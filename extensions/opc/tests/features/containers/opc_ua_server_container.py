@@ -14,12 +14,12 @@
 # limitations under the License.
 
 from typing import List, Optional
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class OPCUAServerContainer(Container):
+class OPCUAServerContainer(LinuxContainer):
     OPC_SERVER_IMAGE = "lordgamez/open62541:1.5.2"
 
     def __init__(self, test_context: MinifiTestContext, command: Optional[List[str]] = None):

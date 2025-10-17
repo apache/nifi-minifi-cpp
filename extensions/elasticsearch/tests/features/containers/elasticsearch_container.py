@@ -19,8 +19,7 @@ import os
 
 from elastic_base_container import ElasticBaseContainer
 from pathlib import Path
-from OpenSSL import crypto
-from minifi_test_framework.core.ssl_utils import make_server_cert, make_cert_without_extended_usage
+from minifi_test_framework.core.ssl_utils import make_server_cert, make_cert_without_extended_usage, dump_cert, dump_key
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
@@ -33,19 +32,19 @@ class ElasticsearchContainer(ElasticBaseContainer):
         http_cert, http_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
         transport_cert, transport_key = make_cert_without_extended_usage(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
 
-        root_ca_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)
+        root_ca_content = dump_cert(test_context.root_ca_cert)
         self.files.append(File("/usr/share/elasticsearch/config/certs/root_ca.crt", root_ca_content, permissions=0o644))
 
-        http_cert_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=http_cert)
+        http_cert_content = dump_cert(http_cert)
         self.files.append(File("/usr/share/elasticsearch/config/certs/elastic_http.crt", http_cert_content, permissions=0o644))
 
-        http_key_content = crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=http_key)
+        http_key_content = dump_key(http_key)
         self.files.append(File("/usr/share/elasticsearch/config/certs/elastic_http.key", http_key_content, permissions=0o644))
 
-        transport_cert_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=transport_cert)
+        transport_cert_content = dump_cert(transport_cert)
         self.files.append(File("/usr/share/elasticsearch/config/certs/elastic_transport.crt", transport_cert_content, permissions=0o644))
 
-        transport_key_content = crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=transport_key)
+        transport_key_content = dump_key(transport_key)
         self.files.append(File("/usr/share/elasticsearch/config/certs/elastic_transport.key", transport_key_content, permissions=0o644))
 
         features_dir = Path(__file__).resolve().parent.parent
