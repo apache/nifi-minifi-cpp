@@ -25,11 +25,7 @@
 #include "io/BaseStream.h"
 #include "core/logging/LoggerFactory.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 /**
  * Purpose: File Stream Base stream extension. This is intended to be a thread safe access to
@@ -96,8 +92,4 @@ class RocksDbStream : public io::BaseStreamImpl {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbStream>::getLogger();
 };
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::io

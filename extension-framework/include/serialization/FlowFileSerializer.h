@@ -23,10 +23,7 @@
 #include <functional>
 #include "minifi-cpp/io/StreamCallback.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 namespace io {
 
 class OutputStream;
@@ -53,7 +50,4 @@ class FlowFileSerializer {
   FlowFileReader reader_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

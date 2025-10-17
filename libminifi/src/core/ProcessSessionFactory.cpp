@@ -21,18 +21,10 @@
 #include "core/ProcessSessionFactory.h"
 #include <memory>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 std::shared_ptr<ProcessSession> ProcessSessionFactoryImpl::createSession() {
   return std::make_shared<ProcessSessionImpl>(process_context_);
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

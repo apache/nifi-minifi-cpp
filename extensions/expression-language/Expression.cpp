@@ -387,13 +387,13 @@ Value expr_getDelimitedField(const std::vector<Value> &args) {
 Value expr_startsWith(const std::vector<Value> &args) {
   const std::string &arg_0 = args[0].asString();
   const std::string &arg_1 = args[1].asString();
-  return Value(arg_0.substr(0, arg_1.length()) == arg_1);
+  return Value(arg_0.starts_with(arg_1));
 }
 
 Value expr_endsWith(const std::vector<Value> &args) {
   const std::string &arg_0 = args[0].asString();
   const std::string &arg_1 = args[1].asString();
-  return Value(arg_0.substr(arg_0.length() - arg_1.length()) == arg_1);
+  return Value(arg_0.ends_with(arg_1));
 }
 
 Value expr_contains(const std::vector<Value> &args) {
@@ -633,7 +633,6 @@ Value expr_format(const std::vector<Value> &args) {
   using std::chrono::milliseconds;
 
   date::sys_time<milliseconds> utc_time_point{milliseconds(args[0].asUnsignedLong())};
-  auto format_string = args[1].asString();
   auto zone = args.size() > 2 ? date::locate_zone(args[2].asString()) : date::current_zone();
 
   auto zoned_time_point = date::make_zoned(zone, utc_time_point);

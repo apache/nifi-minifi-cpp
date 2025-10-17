@@ -19,11 +19,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 // TryMoveCall calls an
 //  - unary function of a lvalue reference-type argument by passing a ref
@@ -53,8 +49,4 @@ struct TryMoveCall<FunType, T, std::void_t<decltype(std::declval<FunType>()(std:
     template<typename Fun>
     static auto call(Fun&& fun, T& elem) -> decltype(std::forward<Fun>(fun)(std::move(elem))) { return std::forward<Fun>(fun)(std::move(elem)); }
 };
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

@@ -22,7 +22,7 @@
 namespace org::apache::nifi::minifi::state::response {
 
 void RepositoryMetrics::addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo) {
-  return repository_metrics_source_store_.addRepository(repo);
+  repository_metrics_source_store_.addRepository(repo);
 }
 
 std::vector<SerializedResponseNode> RepositoryMetrics::serialize() {

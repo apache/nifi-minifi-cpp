@@ -28,7 +28,7 @@ WorkerThread::~WorkerThread() {
 
 void WorkerThread::run() noexcept {
   while (task_queue_.isRunning()) {
-    task_queue_.consumeWait([](std::packaged_task<void()>&& f) { f(); });
+    task_queue_.consumeWait([](std::packaged_task<void()>& f) { f(); });
   }
 }
 }  // namespace org::apache::nifi::minifi::utils::detail

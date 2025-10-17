@@ -24,11 +24,7 @@
 
 #include "rapidjson/document.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace wel {
+namespace org::apache::nifi::minifi::wel {
 
 /**
  * * !!WARNING!! The json document must not outlive the xml argument. For better performance,
@@ -62,14 +58,14 @@ rapidjson::Document toSimpleJSON(const pugi::xml_node& root);
  * Flattens most of the structure, i.e. removes intermediate
  * objects and lifts innermost string-valued keys to the root.
  * e.g. {System: {Provider: {Name: String}}} => {Name: String}
- * 
+ *
  * Moreover it also flattens each named data element where the
- * name does not conflict with already existing members 
+ * name does not conflict with already existing members
  * (e.g. a data with name "Guid" won't be flattened as it would
  * overwrite the existing "Guid" field).
- * 
+ *
  * e.g. {EventData: [{Name: "Test", Content: "X"}]} => {Test: "X"}
- * 
+ *
  * In order to mitigate data loss, it preserves the EventData
  * array in its entirety as well.
  * (otherwise a "Guid" data would be lost)
@@ -78,8 +74,4 @@ rapidjson::Document toFlattenedJSON(const pugi::xml_node& root);
 
 std::string jsonToString(const rapidjson::Document& doc);
 
-}  // namespace wel
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::wel

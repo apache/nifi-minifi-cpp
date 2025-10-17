@@ -139,7 +139,7 @@ class LogTestController {
                 std::chrono::milliseconds timeout = std::chrono::seconds(3),
                 std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const;
 
-  int countOccurrences(const std::string& pattern) const;
+  size_t countOccurrences(const std::string& pattern) const;
 
   void reset();
 

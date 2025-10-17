@@ -23,10 +23,7 @@
 #include "utils/crypto/EncryptionUtils.h"
 #include "utils/crypto/EncryptionProvider.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class Decryptor {
  public:
@@ -50,7 +47,4 @@ class Decryptor {
   const utils::crypto::EncryptionProvider provider_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

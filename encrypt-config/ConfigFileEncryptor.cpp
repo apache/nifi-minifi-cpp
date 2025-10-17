@@ -23,11 +23,7 @@
 
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
+namespace org::apache::nifi::minifi::encrypt_config {
 
 bool isEncrypted(const std::optional<std::string>& encryption_type) {
   return encryption_type && !encryption_type->empty() && *encryption_type  != "plaintext";
@@ -82,8 +78,4 @@ uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const Encrypt
   return num_properties_encrypted;
 }
 
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::encrypt_config

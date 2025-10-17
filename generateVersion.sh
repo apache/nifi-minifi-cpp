@@ -60,10 +60,7 @@ cat >"$out_dir/agent_version.cpp" <<EOF
 #include <vector>
 #include "minifi-cpp/agent/agent_version.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 const char* const AgentBuild::VERSION = "$version";
 const char* const AgentBuild::BUILD_IDENTIFIER = "$buildident";
@@ -91,9 +88,6 @@ cat <<EOF >> "$out_dir/agent_version.cpp"
   return extensions;
 }
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi
 
 EOF

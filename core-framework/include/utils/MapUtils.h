@@ -18,12 +18,7 @@
 
 #include <set>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace MapUtils {
+namespace org::apache::nifi::minifi::utils::MapUtils {
 
 /**
  * Return a set of keys from a map
@@ -37,9 +32,4 @@ std::set<T> getKeys(const Map<T, U>& m) {
   return keys;
 }
 
-} /* namespace MapUtils */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils::MapUtils

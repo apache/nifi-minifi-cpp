@@ -18,11 +18,7 @@
 
 #include "WriteBatch.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+namespace org::apache::nifi::minifi::internal {
 
 rocksdb::Status WriteBatch::Put(const rocksdb::Slice &key, const rocksdb::Slice &value) {
   return impl_.Put(column_, key, value);
@@ -36,8 +32,4 @@ rocksdb::Status WriteBatch::Merge(const rocksdb::Slice &key, const rocksdb::Slic
   return impl_.Merge(column_, key, value);
 }
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::internal

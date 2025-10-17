@@ -333,6 +333,7 @@ TEST_CASE("Collision", "[collision]") {
 
   std::vector<utils::Identifier> uuids(16 * 1024U);
   std::vector<std::thread> threads;
+  threads.reserve(16);
   for (size_t i = 0U; i < 16U; i++) {
     threads.emplace_back([&generator, &uuids, i](){
       for (size_t j = 0U; j < 1024U; j++) {

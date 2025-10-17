@@ -27,11 +27,7 @@
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
+namespace org::apache::nifi::minifi::aws {
 
 class AWSCredentialsProvider {
  public:
@@ -56,8 +52,4 @@ class AWSCredentialsProvider {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AWSCredentialsProvider>::getLogger()};
 };
 
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws

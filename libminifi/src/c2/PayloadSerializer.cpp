@@ -17,18 +17,10 @@
  */
 #include "c2/PayloadSerializer.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 PayloadSerializer::PayloadSerializer() = default;
 
 PayloadSerializer::~PayloadSerializer() = default;
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

@@ -24,10 +24,7 @@
 #include "io/OutputStream.h"
 #include "FlowFileSerializer.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class FlowFileV3Serializer : public FlowFileSerializer {
   static constexpr uint8_t MAGIC_HEADER[] = {'N', 'i', 'F', 'i', 'F', 'F', '3'};
@@ -44,7 +41,4 @@ class FlowFileV3Serializer : public FlowFileSerializer {
   int64_t serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) override;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

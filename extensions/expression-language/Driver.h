@@ -29,11 +29,7 @@
 #define YY_DECL int org::apache::nifi::minifi::expression::Driver::lex(org::apache::nifi::minifi::expression::Parser::semantic_type* yylval, \
                                                                        org::apache::nifi::minifi::expression::Parser::location_type* yylloc)
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace expression {
+namespace org::apache::nifi::minifi::expression {
 
 class Driver : public yyFlexLexer {
  public:
@@ -50,8 +46,4 @@ class Driver : public yyFlexLexer {
   Expression result;
 };
 
-} /* namespace expression */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::expression

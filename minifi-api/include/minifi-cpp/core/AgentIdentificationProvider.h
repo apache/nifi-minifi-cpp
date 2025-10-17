@@ -21,11 +21,7 @@
 #include <optional>
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Provides a single source of truth for the agent's class and identifier.
@@ -39,8 +35,4 @@ class AgentIdentificationProvider {
   virtual ~AgentIdentificationProvider() = default;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

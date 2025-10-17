@@ -28,13 +28,7 @@
 #include "spdlog/sinks/sink.h"
 #include "spdlog/details/log_msg.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
-namespace internal {
+namespace org::apache::nifi::minifi::core::logging::internal {
 
 WORD windowseventlog_sink::type_from_level(const spdlog::details::log_msg& msg) const {
   switch (static_cast<int>(msg.level)) {
@@ -82,12 +76,6 @@ windowseventlog_sink::~windowseventlog_sink() {
   }
 }
 
-}  // namespace internal
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::logging::internal
 
 #endif

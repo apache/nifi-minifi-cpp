@@ -25,12 +25,7 @@
 #include "minifi-cpp/Exception.h"
 #include "minifi-cpp/core/logging/Logger.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace crypto {
+namespace org::apache::nifi::minifi::utils::crypto {
 
 class CipherError : public Exception {
  public:
@@ -68,9 +63,4 @@ class Aes256EcbCipher {
   const Bytes encryption_key_;
 };
 
-}  // namespace crypto
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::crypto

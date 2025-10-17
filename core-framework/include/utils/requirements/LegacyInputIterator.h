@@ -23,11 +23,7 @@
 #include "LegacyIterator.h"
 #include "EqualityComparable.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
 struct assert_legacy_input_iterator : assert_legacy_iterator<T> {
@@ -41,8 +37,4 @@ struct assert_legacy_input_iterator : assert_legacy_iterator<T> {
   using _ = decltype(true || (std::declval<const T>() != std::declval<const T>()));
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

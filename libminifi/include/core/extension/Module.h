@@ -26,12 +26,7 @@
 #include "properties/Configure.h"
 #include "minifi-cpp/core/extension/Extension.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace extension {
+namespace org::apache::nifi::minifi::core::extension {
 
 /**
  * Represents an initializable component of the agent.
@@ -63,9 +58,4 @@ class Module {
   static std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace extension
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::extension

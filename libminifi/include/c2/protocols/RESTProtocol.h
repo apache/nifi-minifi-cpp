@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
-#define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -56,5 +55,3 @@ class RESTProtocol : public HeartbeatJsonSerializer {
 };
 
 }  // namespace org::apache::nifi::minifi::c2
-
-#endif  // LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_

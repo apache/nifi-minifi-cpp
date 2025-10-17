@@ -148,7 +148,7 @@ std::optional<std::smatch> LogTestController::matchesRegex(const std::string& re
   return found ? std::make_optional<std::smatch>(match) : std::nullopt;
 }
 
-int LogTestController::countOccurrences(const std::string& pattern) const {
+size_t LogTestController::countOccurrences(const std::string& pattern) const {
   return minifi::utils::string::countOccurrences(getLogs(), pattern).second;
 }
 

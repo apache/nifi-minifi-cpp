@@ -109,7 +109,7 @@ void ProcessGroup::addPort(std::unique_ptr<Port> port) {
 void ProcessGroup::addProcessGroup(std::unique_ptr<ProcessGroup> child) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  if (child_process_groups_.find(child) == child_process_groups_.end()) {
+  if (!child_process_groups_.contains(child)) {
     // We do not have the same child process group in this process group yet
     logger_->log_debug("Add child process group {} into process group {}", child->getName(), name_);
     child_process_groups_.emplace(std::move(child));

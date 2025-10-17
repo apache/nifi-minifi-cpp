@@ -26,11 +26,7 @@
 #include "utils/SmallString.h"
 #include "utils/Id.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 /**
  * Serializable instances provide base functionality to
@@ -118,8 +114,4 @@ class OutputStream : public virtual Stream {
   size_t write_str(const char* str, uint32_t len, bool widen);
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::io

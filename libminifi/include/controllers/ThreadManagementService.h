@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -81,5 +80,3 @@ class ThreadManagementServiceImpl : public core::controller::ControllerServiceIm
 };
 
 }  // namespace org::apache::nifi::minifi::controllers
-
-#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_

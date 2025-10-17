@@ -19,11 +19,7 @@
 #include "PDHCounters.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 DWORD PDHCounter::getDWFormat() const {
   return is_double_format_ ? PDH_FMT_DOUBLE : PDH_FMT_LARGE;
@@ -125,8 +121,4 @@ rapidjson::Value PDHCounterArray::getValue(const DWORD i) const {
   return value;
 }
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

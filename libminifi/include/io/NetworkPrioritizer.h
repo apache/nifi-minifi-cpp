@@ -15,19 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_NETWORKPRIORITIZER_H_
-#define LIBMINIFI_INCLUDE_IO_NETWORKPRIORITIZER_H_
+#pragma once
 
 #include <string>
 #include <iostream>
 #include <memory>
 #include <utility>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 class NetworkInterface;
 
@@ -105,10 +100,4 @@ class NetworkPrioritizerFactory {
   std::shared_ptr<NetworkPrioritizer> np_;
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_IO_NETWORKPRIORITIZER_H_
+}  // namespace org::apache::nifi::minifi::io

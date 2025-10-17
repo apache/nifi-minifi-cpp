@@ -54,10 +54,9 @@ Device::Device() {
 
   canonical_hostname_ = hostname.data();
 
-  std::stringstream ips;
   auto ipaddressess = getIpAddresses();
   for (const auto& ip : ipaddressess) {
-    if (ipaddressess.size() > 1 && (ip.find("127") == 0 || ip.find("192") == 0))
+    if (ipaddressess.size() > 1 && (ip.starts_with("127") || ip.starts_with("192")))
       continue;
     ip_ = ip;
     break;

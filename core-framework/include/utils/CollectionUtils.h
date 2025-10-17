@@ -20,11 +20,7 @@
 #include <algorithm>
 #include <utility>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 namespace internal {
 
@@ -52,8 +48,4 @@ bool haveCommonItem(const T& a, const U& b) {
   });
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

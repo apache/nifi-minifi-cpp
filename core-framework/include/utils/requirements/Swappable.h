@@ -21,11 +21,7 @@
 #include <utility>
 #include "utils/GeneralUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 namespace detail {
 
@@ -73,8 +69,4 @@ struct is_swappable<T,
       detail::is_referenceable<T>::value
     >::type> : is_swappable_with<T&, T&> {};
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

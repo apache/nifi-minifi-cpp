@@ -34,8 +34,8 @@ std::optional<ProcessStatData> ProcessStatData::parseProcessStatFile(std::istrea
   size_t comm_end = stat_stream_string.find_last_of(')');
   if (comm_start == std::string::npos  || comm_end == std::string::npos)
     return std::nullopt;
-  process_stat_data.comm_ = stat_stream_string.substr(comm_start+1, comm_end-comm_start-1);
-  stat_stream.seekg(comm_end+2);  // seek to the start of the next field (after the space that follows (<comm>))
+  process_stat_data.comm_ = stat_stream_string.substr(comm_start + 1, comm_end-comm_start - 1);
+  stat_stream.seekg(gsl::narrow<std::streampos>(comm_end + 2));  // seek to the start of the next field (after the space that follows (<comm>))
 
   stat_stream >> process_stat_data.state_ >> process_stat_data.ppid_ >> process_stat_data.pgrp_ >> process_stat_data.session_ >> process_stat_data.tty_nr_ >> process_stat_data.tpgid_
               >> process_stat_data.flags_ >> process_stat_data.minflt_ >> process_stat_data.cminflt_ >> process_stat_data.majflt_ >> process_stat_data.cmajflt_ >> process_stat_data.utime_

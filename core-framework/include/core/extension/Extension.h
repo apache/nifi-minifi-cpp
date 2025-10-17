@@ -23,12 +23,7 @@
 
 #include "minifi-cpp/core/extension/Extension.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace extension {
+namespace org::apache::nifi::minifi::core::extension {
 
 class ExtensionImpl;
 
@@ -96,9 +91,4 @@ class ExtensionInitializer {
     }                                 \
   })
 
-}  // namespace extension
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::extension

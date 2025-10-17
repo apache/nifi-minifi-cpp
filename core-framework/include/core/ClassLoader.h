@@ -37,7 +37,7 @@ std::unique_ptr<T> ClassLoader::instantiate(const std::string &class_name, const
 }
 
 template<class T>
-T *ClassLoader::instantiateRaw(const std::string &class_name, const std::string &name) {
+gsl::owner<T*> ClassLoader::instantiateRaw(const std::string &class_name, const std::string &name) {
   return dynamic_cast<T*>(instantiateRaw(class_name, name, [] (CoreComponent* obj) -> bool {
     return dynamic_cast<T*>(obj) != nullptr;
   }));

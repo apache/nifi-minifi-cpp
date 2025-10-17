@@ -34,13 +34,7 @@
 
 class LoggerTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
-namespace internal {
+namespace org::apache::nifi::minifi::core::logging::internal {
 
 class CompressionManager {
   friend class ::LoggerTestAccessor;
@@ -76,10 +70,4 @@ class CompressionManager {
   std::shared_ptr<LogCompressorSink> sink_;
 };
 
-}  // namespace internal
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::logging::internal

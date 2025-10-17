@@ -21,11 +21,7 @@
 #include <iterator>
 #include "LegacyInputIterator.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
 struct assert_legacy_forward_iterator : assert_legacy_input_iterator<T> {
@@ -39,8 +35,4 @@ struct assert_legacy_forward_iterator : assert_legacy_input_iterator<T> {
   static_assert(std::is_same<decltype(*std::declval<T>()++), typename std::iterator_traits<T>::reference>::value, "Expected a reference");
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

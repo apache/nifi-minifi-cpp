@@ -49,10 +49,7 @@ for %%i in (%extensions%) do (
 	echo #include ^<vector^>
 	echo #include "minifi-cpp/agent/agent_version.h"
 
-	echo namespace org {
-	echo namespace apache {
-	echo namespace nifi {
-	echo namespace minifi {
+	echo namespace org::apache::nifi::minifi {
 
 	echo const char* const AgentBuild::VERSION = "%version%";
 	echo const char* const AgentBuild::BUILD_IDENTIFIER = "%buildident%";
@@ -79,10 +76,7 @@ for %%i in (%extensions%) do (
   	echo   return extensions;
 	echo }
 
-	echo } /* namespace minifi */
-	echo } /* namespace nifi */
-	echo } /* namespace apache */
-	echo } /* namespace org */
+	echo }  // namespace org::apache::nifi::minifi
 ) >> "%out_dir%/agent_version.cpp"
 
  goto :EOF

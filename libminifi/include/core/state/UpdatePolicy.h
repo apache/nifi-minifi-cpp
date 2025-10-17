@@ -15,19 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_
+#pragma once
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <unordered_map>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
+namespace org::apache::nifi::minifi::state {
 
 enum UPDATE_POLICY {
   PERM_ALLOWED,
@@ -94,7 +89,7 @@ class UpdatePolicy {
 class UpdatePolicyBuilder {
  public:
   static std::unique_ptr<UpdatePolicyBuilder> newBuilder(bool enable_all = false) {
-    std::unique_ptr<UpdatePolicyBuilder> policy = std::unique_ptr<UpdatePolicyBuilder>( new UpdatePolicyBuilder(enable_all));
+    std::unique_ptr<UpdatePolicyBuilder> policy = std::unique_ptr<UpdatePolicyBuilder>( new UpdatePolicyBuilder(enable_all));  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
     return policy;
   }
 
@@ -107,7 +102,7 @@ class UpdatePolicyBuilder {
   }
 
   std::unique_ptr<UpdatePolicy> build() {
-    std::unique_ptr<UpdatePolicy> new_policy = std::unique_ptr<UpdatePolicy>(new UpdatePolicy(*(current_policy_.get())));
+    std::unique_ptr<UpdatePolicy> new_policy = std::unique_ptr<UpdatePolicy>(new UpdatePolicy(*(current_policy_.get())));  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
     return new_policy;
   }
 
@@ -122,10 +117,4 @@ class UpdatePolicyBuilder {
   std::shared_ptr<UpdatePolicy> current_policy_;
 };
 
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_UPDATEPOLICY_H_
+}  // namespace org::apache::nifi::minifi::state

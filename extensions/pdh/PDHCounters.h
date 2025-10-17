@@ -25,11 +25,7 @@
 #include "PerformanceDataCounter.h"
 #include <memory>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class PDHCounter : public PerformanceDataCounter {
  public:
@@ -92,8 +88,4 @@ class PDHCounterArray : public PDHCounter {
 };
 
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

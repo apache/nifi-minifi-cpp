@@ -23,11 +23,7 @@
 
 #include "minifi-cpp/utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 enum class IntervalSwitchState {
   LOWER,
@@ -67,8 +63,4 @@ class IntervalSwitch {
   IntervalSwitchState state_;
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

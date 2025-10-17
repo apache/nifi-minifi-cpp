@@ -111,7 +111,7 @@ TEST_CASE_METHOD(HttpStreamingCallbackTestsFixture, "HttpStreamingCallback empty
 
   std::string content = waitForCompletionAndGetContent();
 
-  REQUIRE(0U == content.length());
+  REQUIRE(content.empty());
 }
 
 TEST_CASE_METHOD(HttpStreamingCallbackTestsFixture, "HttpStreamingCallback one buffer", "[basic]") {

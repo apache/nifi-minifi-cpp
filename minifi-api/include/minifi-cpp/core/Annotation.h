@@ -21,12 +21,7 @@
 #include <cstdint>
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace annotation {
+namespace org::apache::nifi::minifi::core::annotation {
 
 enum class Input : uint8_t {
   /**
@@ -64,9 +59,4 @@ inline std::string toString(Input input_requirement) {
   return "ERROR_no_such_input_requirement";
 }
 
-}  // namespace annotation
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::annotation

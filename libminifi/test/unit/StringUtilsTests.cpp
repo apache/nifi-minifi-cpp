@@ -178,7 +178,7 @@ TEST_CASE("test string::testJoin", "[test string join]") {
 
 TEST_CASE("Test the join function with a projection", "[join][projection]") {
   std::vector<std::string> fruits = {"APPLE", "OrAnGe"};
-  CHECK(string::join(", ", fruits, [](auto fruit) { return string::toLower(fruit); }) == "apple, orange");
+  CHECK(string::join(", ", fruits, [](const auto& fruit) { return string::toLower(fruit); }) == "apple, orange");
 
   std::set numbers_set = {3, 2, 1};
   CHECK(string::join(", ", numbers_set, [](auto x) { return std::to_string(x); }) == "1, 2, 3");
@@ -523,15 +523,15 @@ TEST_CASE("string::replaceAll works correctly", "[replaceAll]") {
 }
 
 TEST_CASE("string::countOccurrences works correctly", "[countOccurrences]") {
-  REQUIRE(string::countOccurrences("", "a") == std::make_pair(size_t{0}, 0));
-  REQUIRE(string::countOccurrences("abc", "a") == std::make_pair(size_t{0}, 1));
-  REQUIRE(string::countOccurrences("abc", "b") == std::make_pair(size_t{1}, 1));
-  REQUIRE(string::countOccurrences("abc", "x") == std::make_pair(size_t{0}, 0));
-  REQUIRE(string::countOccurrences("banana", "a") == std::make_pair(size_t{5}, 3));
-  REQUIRE(string::countOccurrences("banana", "an") == std::make_pair(size_t{3}, 2));
-  REQUIRE(string::countOccurrences("aaaaaaaa", "aaa") == std::make_pair(size_t{3}, 2));  // overlapping occurrences are not counted
-  REQUIRE(string::countOccurrences("abc", "") == std::make_pair(size_t{3}, 4));  // "" occurs at the start, between chars, and at the end
-  REQUIRE(string::countOccurrences("", "") == std::make_pair(size_t{0}, 1));
+  REQUIRE(string::countOccurrences("", "a") == std::make_pair(size_t{0}, size_t{0}));
+  REQUIRE(string::countOccurrences("abc", "a") == std::make_pair(size_t{0}, size_t{1}));
+  REQUIRE(string::countOccurrences("abc", "b") == std::make_pair(size_t{1}, size_t{1}));
+  REQUIRE(string::countOccurrences("abc", "x") == std::make_pair(size_t{0}, size_t{0}));
+  REQUIRE(string::countOccurrences("banana", "a") == std::make_pair(size_t{5}, size_t{3}));
+  REQUIRE(string::countOccurrences("banana", "an") == std::make_pair(size_t{3}, size_t{2}));
+  REQUIRE(string::countOccurrences("aaaaaaaa", "aaa") == std::make_pair(size_t{3}, size_t{2}));  // overlapping occurrences are not counted
+  REQUIRE(string::countOccurrences("abc", "") == std::make_pair(size_t{3}, size_t{4}));  // "" occurs at the start, between chars, and at the end
+  REQUIRE(string::countOccurrences("", "") == std::make_pair(size_t{0}, size_t{1}));
 }
 
 TEST_CASE("string::removeFramingCharacters works correctly", "[removeFramingCharacters]") {

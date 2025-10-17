@@ -25,7 +25,9 @@
 using std::chrono::system_clock;
 using std::chrono::seconds;
 using org::apache::nifi::minifi::utils::Cron;
+#ifdef WIN32
 namespace timeutils = org::apache::nifi::minifi::utils::timeutils;
+#endif
 
 
 void checkNext(const std::string& expr, const date::zoned_time<seconds>& from, const date::zoned_time<seconds>& next) {

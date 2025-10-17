@@ -37,7 +37,6 @@ TEST_CASE("TestRegexUtils::single_match", "[regex1]") {
 }
 
 TEST_CASE("TestRegexUtils::invalid_construction", "[regex2]") {
-  std::string pat = "Speed limit 130 | Speed limit 80";
   std::string rgx1 = "Speed limit ([0-9]+)";
   std::string rgx2 = "[Invalid)A(F)";
   std::vector<Regex::Mode> mode = {Regex::Mode::ICASE};
