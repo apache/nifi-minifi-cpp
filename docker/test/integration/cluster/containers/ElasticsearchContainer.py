@@ -90,7 +90,7 @@ class ElasticsearchContainer(Container):
 
         logging.info('Creating and running Elasticsearch docker container...')
         self.client.containers.run(
-            image="elasticsearch:8.2.2",
+            image="elasticsearch:9.1.5",
             detach=True,
             name=self.name,
             environment=[
