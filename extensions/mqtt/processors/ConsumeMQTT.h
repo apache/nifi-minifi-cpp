@@ -82,14 +82,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue(MQTT_MAX_RECEIVE_MAXIMUM_STR)
       .build();
-  EXTENSIONAPI static constexpr auto RecordReader = core::PropertyDefinitionBuilder<>::createProperty("Record Reader")
-      .withDescription("The Record Reader to use for parsing received MQTT Messages into Records.")
-      .withAllowedTypes<minifi::core::RecordSetReader>()
-      .build();
-  EXTENSIONAPI static constexpr auto RecordWriter = core::PropertyDefinitionBuilder<>::createProperty("Record Writer")
-      .withDescription("The Record Writer to use for serializing Records before writing them to a FlowFile.")
-      .withAllowedTypes<minifi::core::RecordSetWriter>()
-      .build();
   EXTENSIONAPI static constexpr auto AddAttributesAsFields = core::PropertyDefinitionBuilder<>::createProperty("Add Attributes As Fields")
       .withDescription("If setting this property to true, default fields are going to be added in each record: _topic, _qos, _isDuplicate, _isRetained.")
       .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
@@ -104,8 +96,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       AttributeFromContentType,
       TopicAliasMaximum,
       ReceiveMaximum,
-      RecordReader,
-      RecordWriter,
       AddAttributesAsFields
   }), AbstractMQTTProcessor::AdvancedProperties);
 

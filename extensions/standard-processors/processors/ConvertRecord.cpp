@@ -20,17 +20,20 @@
 #include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 void ConvertRecord::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  record_set_reader_ = utils::parseControllerService<core::RecordSetReader>(context, RecordReader, getUUID());
-  record_set_writer_ = utils::parseControllerService<core::RecordSetWriter>(context, RecordWriter, getUUID());
+  record_converter_ = core::RecordConverter{
+    .record_set_reader = utils::parseControllerService<core::RecordSetReader>(context, RecordReader, getUUID()),
+    .record_set_writer = utils::parseControllerService<core::RecordSetWriter>(context, RecordWriter, getUUID())
+  };
   include_zero_record_flow_files_ = utils::parseBoolProperty(context, IncludeZeroRecordFlowFiles);
 }
 
 void ConvertRecord::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  gsl_Expects(record_set_reader_ && record_set_writer_);
+  gsl_Expects(record_converter_);
   const auto flow_file = session.get();
   if (!flow_file) {
     context.yield();
@@ -39,7 +42,7 @@ void ConvertRecord::onTrigger(core::ProcessContext& context, core::ProcessSessio
 
   nonstd::expected<core::RecordSet, std::error_code> record_set;
   session.read(flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) {
-    record_set = record_set_reader_->read(*input_stream);
+    record_set = record_converter_->record_set_reader->read(*input_stream);
     return gsl::narrow<int64_t>(input_stream->size());
   });
   if (!record_set) {
@@ -55,7 +58,7 @@ void ConvertRecord::onTrigger(core::ProcessContext& context, core::ProcessSessio
     return;
   }
 
-  record_set_writer_->write(*record_set, flow_file, session);
+  record_converter_->record_set_writer->write(*record_set, flow_file, session);
   flow_file->setAttribute(processors::ConvertRecord::RecordCountOutputAttribute.name, std::to_string(record_set->size()));
   session.transfer(flow_file, Success);
 }

@@ -39,12 +39,7 @@ void ConsumeMQTT::initialize() {
 
 void ConsumeMQTT::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) {
   AbstractMQTTProcessor::onSchedule(context, factory);
-  record_set_reader_ = utils::parseOptionalControllerService<core::RecordSetReader>(context, RecordReader, getUUID());
-  record_set_writer_ = utils::parseOptionalControllerService<core::RecordSetWriter>(context, RecordWriter, getUUID());
 
-  if ((record_set_reader_ == nullptr) != (record_set_writer_ == nullptr)) {
-    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "ConsumeMQTT requires both or neither Record Reader and Record Writer to be set");
-  }
   add_attributes_as_fields_ = utils::parseBoolProperty(context, AddAttributesAsFields);
 }
 
@@ -89,13 +84,13 @@ void ConsumeMQTT::addAttributesAsRecordFields(core::RecordSet& new_records, cons
 }
 
 void ConsumeMQTT::transferMessagesAsRecords(core::ProcessSession& session) {
-  gsl_Expects(record_set_reader_ && record_set_writer_);
+  gsl_Expects(record_converter_);
   auto msg_queue = getReceivedMqttMessages();
   core::RecordSet record_set;
   while (!msg_queue.empty()) {
     io::BufferStream buffer_stream;
     buffer_stream.write(reinterpret_cast<const uint8_t*>(msg_queue.front().contents->payload), gsl::narrow<size_t>(msg_queue.front().contents->payloadlen));
-    auto new_records_result = record_set_reader_->read(buffer_stream);
+    auto new_records_result = record_converter_->record_set_reader->read(buffer_stream);
     if (!new_records_result) {
       logger_->log_error("Failed to read records from MQTT message: {}", new_records_result.error());
       msg_queue.pop();
@@ -112,7 +107,7 @@ void ConsumeMQTT::transferMessagesAsRecords(core::ProcessSession& session) {
     return;
   }
   std::shared_ptr<core::FlowFile> flow_file = session.create();
-  record_set_writer_->write(record_set, flow_file, session);
+  record_converter_->record_set_writer->write(record_set, flow_file, session);
   session.putAttribute(*flow_file, RecordCountOutputAttribute.name, std::to_string(record_set.size()));
   session.putAttribute(*flow_file, BrokerOutputAttribute.name, uri_);
   session.transfer(flow_file, Success);
@@ -152,7 +147,7 @@ void ConsumeMQTT::transferMessagesAsFlowFiles(core::ProcessSession& session) {
 }
 
 void ConsumeMQTT::onTriggerImpl(core::ProcessContext&, core::ProcessSession& session) {
-  if (record_set_reader_) {
+  if (record_converter_) {
     transferMessagesAsRecords(session);
   } else {
     transferMessagesAsFlowFiles(session);

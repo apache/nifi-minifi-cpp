@@ -44,16 +44,6 @@ void PublishMQTT::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void PublishMQTT::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) {
-  AbstractMQTTProcessor::onSchedule(context, factory);
-  record_set_reader_ = utils::parseOptionalControllerService<core::RecordSetReader>(context, RecordReader, getUUID());
-  record_set_writer_ = utils::parseOptionalControllerService<core::RecordSetWriter>(context, RecordWriter, getUUID());
-
-  if ((record_set_reader_ == nullptr) != (record_set_writer_ == nullptr)) {
-    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "PublishMQTT requires both or neither Record Reader and Record Writer to be set");
-  }
-}
-
 void PublishMQTT::readProperties(core::ProcessContext& context) {
   if (!context.getProperty(Topic).has_value()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "PublishMQTT: Topic is required");
@@ -74,10 +64,10 @@ void PublishMQTT::onTriggerImpl(core::ProcessContext& context, core::ProcessSess
   }
 
   std::vector<std::shared_ptr<core::FlowFile>> flow_files;
-  if (record_set_reader_) {
+  if (record_converter_) {
     nonstd::expected<core::RecordSet, std::error_code> record_set;
     session.read(original_flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) {
-      record_set = record_set_reader_->read(*input_stream);
+      record_set = record_converter_->record_set_reader->read(*input_stream);
       return gsl::narrow<int64_t>(input_stream->size());
     });
 
@@ -95,7 +85,7 @@ void PublishMQTT::onTriggerImpl(core::ProcessContext& context, core::ProcessSess
       }
       std::vector<core::Record> records;
       records.emplace_back(std::move(record));
-      record_set_writer_->write(records, new_flow_file, session);
+      record_converter_->record_set_writer->write(records, new_flow_file, session);
       flow_files.push_back(std::move(new_flow_file));
     }
 

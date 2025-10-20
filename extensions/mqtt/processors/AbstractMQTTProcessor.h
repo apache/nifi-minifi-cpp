@@ -23,6 +23,7 @@
 #include <vector>
 #include <shared_mutex>
 #include <future>
+#include <optional>
 
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/ProcessorImpl.h"
@@ -32,8 +33,7 @@
 #include "core/logging/LoggerFactory.h"
 #include "utils/Enum.h"
 #include "MQTTAsync.h"
-#include "controllers/RecordSetReader.h"
-#include "controllers/RecordSetWriter.h"
+#include "minifi-cpp/controllers/RecordConverter.h"
 
 namespace org::apache::nifi::minifi::processors::mqtt {
 enum class MqttVersions {
@@ -168,6 +168,14 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
       .withDescription("Private key passphrase")
       .isSensitive(true)
       .build();
+  EXTENSIONAPI static constexpr auto RecordReader = core::PropertyDefinitionBuilder<>::createProperty("Record Reader")
+      .withDescription("The Record Reader to use for parsing received MQTT Messages into Records.")
+      .withAllowedTypes<minifi::core::RecordSetReader>()
+      .build();
+  EXTENSIONAPI static constexpr auto RecordWriter = core::PropertyDefinitionBuilder<>::createProperty("Record Writer")
+      .withDescription("The Record Writer to use for serializing Records before writing them to a FlowFile.")
+      .withAllowedTypes<minifi::core::RecordSetWriter>()
+      .build();
   EXTENSIONAPI static constexpr auto BasicProperties = std::to_array<core::PropertyReference>({
       BrokerURI,
       ClientID,
@@ -188,7 +196,9 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
       SecurityCA,
       SecurityCert,
       SecurityPrivateKey,
-      SecurityPrivateKeyPassword
+      SecurityPrivateKeyPassword,
+      RecordReader,
+      RecordWriter
   });
 
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
@@ -258,8 +268,7 @@ class AbstractMQTTProcessor : public core::ProcessorImpl {
   std::optional<std::chrono::seconds> maximum_session_expiry_interval_;
   std::optional<std::chrono::seconds> server_keep_alive_;
 
-  std::shared_ptr<core::RecordSetReader> record_set_reader_;
-  std::shared_ptr<core::RecordSetWriter> record_set_writer_;
+  std::optional<core::RecordConverter> record_converter_;
 
  private:
   using ConnectFinishedTask = std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>;

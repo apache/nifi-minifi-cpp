@@ -16,6 +16,8 @@
  */
 #pragma once
 
+#include <optional>
+
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -24,8 +26,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "minifi-cpp/core/logging/Logger.h"
-#include "minifi-cpp/controllers/RecordSetReader.h"
-#include "minifi-cpp/controllers/RecordSetWriter.h"
+#include "minifi-cpp/controllers/RecordConverter.h"
 #include "core/AbstractProcessor.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -87,8 +88,7 @@ class SplitRecord final : public core::AbstractProcessor<SplitRecord> {
  private:
   static nonstd::expected<std::size_t, std::string> readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file);
 
-  std::shared_ptr<core::RecordSetReader> record_set_reader_;
-  std::shared_ptr<core::RecordSetWriter> record_set_writer_;
+  std::optional<core::RecordConverter> record_converter_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

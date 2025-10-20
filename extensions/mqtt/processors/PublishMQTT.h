@@ -64,21 +64,11 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
       .withDescription("Content type of the message. MQTT 5.x only.")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto RecordReader = core::PropertyDefinitionBuilder<>::createProperty("Record Reader")
-      .withDescription("The Record Reader to use for parsing the incoming FlowFile into Records.")
-      .withAllowedTypes<minifi::core::RecordSetReader>()
-      .build();
-  EXTENSIONAPI static constexpr auto RecordWriter = core::PropertyDefinitionBuilder<>::createProperty("Record Writer")
-      .withDescription("The Record Writer to use for serializing Records before publishing them as an MQTT Message.")
-      .withAllowedTypes<minifi::core::RecordSetWriter>()
-      .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::to_array<core::PropertyReference>({
       Topic,
       Retain,
       MessageExpiryInterval,
-      ContentType,
-      RecordReader,
-      RecordWriter
+      ContentType
   }), AbstractMQTTProcessor::AdvancedProperties);
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are transferred to this relationship"};
@@ -92,7 +82,6 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
   void readProperties(core::ProcessContext& context) override;
   void onTriggerImpl(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
