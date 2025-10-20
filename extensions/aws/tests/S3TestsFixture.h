@@ -136,7 +136,8 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
     auto mock_s3_request_sender = std::make_unique<MockS3RequestSender>();
     this->mock_s3_request_sender_ptr = mock_s3_request_sender.get();
     auto uuid = utils::IdGenerator::getIdGenerator()->generate();
-    auto impl = std::unique_ptr<T>(new T(core::ProcessorMetadata{.uuid = uuid, .name = "S3Processor", .logger = core::logging::LoggerFactory<T>::getLogger(uuid)}, std::move(mock_s3_request_sender)));
+    auto impl = std::unique_ptr<T>(new T(core::ProcessorMetadata{  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+      .uuid = uuid, .name = "S3Processor", .logger = core::logging::LoggerFactory<T>::getLogger(uuid)}, std::move(mock_s3_request_sender)));
     auto s3_processor_unique_ptr = std::make_unique<core::Processor>("S3Processor", uuid, std::move(impl));
     this->s3_processor = s3_processor_unique_ptr.get();
 
