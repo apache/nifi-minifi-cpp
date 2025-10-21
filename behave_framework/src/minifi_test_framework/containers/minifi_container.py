@@ -23,8 +23,8 @@ from .container import Container
 
 
 class MinifiContainer(Container):
-    def __init__(self, image_name: str, scenario_id: str, network: Network):
-        super().__init__(image_name, f"minifi-{scenario_id}", network)
+    def __init__(self, image_name: str, container_name: str, scenario_id: str, network: Network):
+        super().__init__(image_name, f"{container_name}-{scenario_id}", network)
         self.flow_config_str: str = ""
         self.flow_definition = FlowDefinition()
         self.properties: dict[str, str] = {}
