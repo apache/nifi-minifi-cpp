@@ -16,7 +16,7 @@
 #
 
 class HostFile:
-    def __init__(self, path, host_path):
+    def __init__(self, path, host_path, mode="ro"):
         self.container_path = path
         self.host_path = host_path
-        self.mode = "ro"
+        self.mode = mode

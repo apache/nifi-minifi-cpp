@@ -680,17 +680,6 @@ def step_impl(context):
     context.test.acquire_container(context=context, name="postgresql-server", engine="postgresql-server")
 
 
-# OPC UA
-@given("an OPC UA server is set up")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="opcua-server", engine="opcua-server")
-
-
-@given("an OPC UA server is set up with access control")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="opcua-server", engine="opcua-server", command=["/opt/open62541/examples/access_control_server"])
-
-
 @when("the MiNiFi instance starts up")
 @when("both instances start up")
 @when("all instances start up")
@@ -941,11 +930,6 @@ def step_impl(context, log_message, seconds):
 @then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")
 def step_impl(context, regex, duration):
     context.test.check_minifi_log_matches_regex(regex, humanfriendly.parse_timespan(duration))
-
-
-@then("the OPC UA server logs contain the following message: \"{log_message}\" in less than {duration}")
-def step_impl(context, log_message, duration):
-    context.test.check_container_log_contents("opcua-server", log_message, humanfriendly.parse_timespan(duration))
 
 
 # MQTT

@@ -46,32 +46,32 @@ def step_impl(context: MinifiTestContext, processor_name: str):
     processor.add_property('Proxy Username', '')
     processor.add_property('Proxy Password', '')
 
-    context.minifi_container.flow_definition.add_processor(processor)
+    context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
 @step('a s3 server is set up in correspondence with the {processor_name}')
 @step('an s3 server is set up in correspondence with the {processor_name}')
 def step_impl(context: MinifiTestContext, processor_name: str):
-    context.containers.append(S3ServerContainer(context))
+    context.containers["s3-server"] = S3ServerContainer(context)
 
 
 @step('the object on the s3 server is "{object_data}"')
 def step_impl(context: MinifiTestContext, object_data: str):
-    s3_server_container = context.containers[0]
+    s3_server_container = context.containers["s3-server"]
     assert isinstance(s3_server_container, S3ServerContainer)
     assert s3_server_container.check_s3_server_object_data(object_data)
 
 
 @step('the object content type on the s3 server is "{content_type}" and the object metadata matches use metadata')
 def step_impl(context: MinifiTestContext, content_type: str):
-    s3_server_container = context.containers[0]
+    s3_server_container = context.containers["s3-server"]
     assert isinstance(s3_server_container, S3ServerContainer)
     assert s3_server_container.check_s3_server_object_metadata(content_type)
 
 
 @step("the object bucket on the s3 server is empty in less than 10 seconds")
 def step_impl(context):
-    s3_server_container = context.containers[0]
+    s3_server_container = context.containers["s3-server"]
     assert isinstance(s3_server_container, S3ServerContainer)
     assert wait_for_condition(
         condition=lambda: s3_server_container.is_s3_bucket_empty(),
@@ -80,7 +80,7 @@ def step_impl(context):
 
 @step("the object on the s3 server is present and matches the original hash")
 def step_impl(context):
-    s3_server_container = context.containers[0]
+    s3_server_container = context.containers["s3-server"]
 
     assert isinstance(s3_server_container, S3ServerContainer)
     assert s3_server_container.check_s3_server_object_hash(context.original_hash)
@@ -98,5 +98,5 @@ def step_impl(context):
     content = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(size))
     new_dir = Directory("/tmp/input")
     new_dir.files["input.txt"] = content
-    context.minifi_container.dirs.append(new_dir)
+    context.get_or_create_default_minifi_container().dirs.append(new_dir)
     context.original_hash = computeMD5hash(content)

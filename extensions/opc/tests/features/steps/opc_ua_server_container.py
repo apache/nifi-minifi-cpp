@@ -13,27 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import logging
-from .Container import Container
+from typing import List, Optional
+from minifi_test_framework.containers.container import Container
+from minifi_test_framework.core.helpers import wait_for_condition
+from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
 class OPCUAServerContainer(Container):
-    def __init__(self, feature_context, name, vols, network, image_store, command=None):
-        super().__init__(feature_context, name, 'opcua-server', vols, network, image_store, command)
-
-    def get_startup_finished_log_entry(self):
-        return "New DiscoveryUrl added: opc.tcp://"
+    def __init__(self, test_context: MinifiTestContext, command: Optional[List[str]] = None):
+        super().__init__("lordgamez/open62541:1.4.10", f"opcua-server-{test_context.scenario_id}", test_context.network, command=command)
 
     def deploy(self):
-        if not self.set_deployed():
-            return
-
-        logging.info('Creating and running OPC UA server docker container...')
-        self.client.containers.run(
-            "lordgamez/open62541:1.4.10",
-            detach=True,
-            name=self.name,
-            network=self.network.name,
-            entrypoint=self.command)
-        logging.info('Added container \'%s\'', self.name)
+        super().deploy()
+        finished_str = "New DiscoveryUrl added: opc.tcp://"
+        return wait_for_condition(
+            condition=lambda: finished_str in self.get_logs(),
+            timeout_seconds=15,
+            bail_condition=lambda: self.exited,
+            context=None)
