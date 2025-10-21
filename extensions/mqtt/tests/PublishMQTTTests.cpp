@@ -26,6 +26,7 @@
 #include "core/Resource.h"
 #include "controllers/XMLRecordSetWriter.h"
 #include "unit/ProcessorUtils.h"
+#include "sparkplug_b.pb.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -157,6 +158,43 @@ TEST_CASE_METHOD(PublishMQTTTestFixture, "Test scheduling failure if non-existen
     REQUIRE(test_controller_.plan->setProperty(publish_mqtt_processor_, minifi::processors::PublishMQTT::RecordWriter.name, "invalid_writer"));
     REQUIRE_THROWS_WITH(test_controller_.trigger(), Catch::Matchers::EndsWith("Controller service 'Record Writer' = 'invalid_writer' not found"));
   }
+}
+
+TEST_CASE_METHOD(PublishMQTTTestFixture, "Test sending SparkplugB message records", "[publishMQTTTest]") {
+  test_controller_.plan->addController("JsonTreeReader", "JsonTreeReader");
+  test_controller_.plan->addController("SparkplugBWriter", "SparkplugBWriter");
+  REQUIRE(publish_mqtt_processor_->setProperty(minifi::processors::PublishMQTT::Topic.name, "mytopic"));
+  REQUIRE(publish_mqtt_processor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI.name, "127.0.0.1:1883"));
+  REQUIRE(publish_mqtt_processor_->setProperty(minifi::processors::PublishMQTT::RecordReader.name, "JsonTreeReader"));
+  REQUIRE(publish_mqtt_processor_->setProperty(minifi::processors::PublishMQTT::RecordWriter.name, "SparkplugBWriter"));
+
+  const auto trigger_results = test_controller_.trigger(
+    R"([{"timestamp": 1752755515, "metrics": [{"name": "temperature", "int_value": 25, "datatype": 2}], "seq": 1, "uuid": "123e4567-e89b-12d3-a456-426614174000", "body": "testbody"},
+        {"timestamp": 1752755516, "metrics": [{"name": "temperature", "int_value": 31, "datatype": 2}], "seq": 2, "uuid": "423e4567-e89b-12d3-a456-426614174111", "body": "testbody2"}])");
+  CHECK(trigger_results.at(TestPublishMQTTProcessor::Success).size() == 2);
+  const auto flow_file_1 = trigger_results.at(TestPublishMQTTProcessor::Success).at(0);
+
+  auto string_content = test_controller_.plan->getContent(flow_file_1);
+  org::eclipse::tahu::protobuf::Payload payload;
+  payload.ParseFromArray(static_cast<void*>(string_content.data()), gsl::narrow<int>(string_content.size()));
+  CHECK(payload.timestamp() == 1752755515);
+  CHECK(payload.seq() == 1);
+  CHECK(payload.uuid() == "123e4567-e89b-12d3-a456-426614174000");
+  CHECK(payload.metrics_size() == 1);
+  CHECK(payload.metrics(0).name() == "temperature");
+  CHECK(payload.metrics(0).int_value() == 25);
+  CHECK(payload.body() == "testbody");
+
+  const auto flow_file_2 = trigger_results.at(TestPublishMQTTProcessor::Success).at(1);
+  string_content = test_controller_.plan->getContent(flow_file_2);
+  payload.ParseFromArray(static_cast<void*>(string_content.data()), gsl::narrow<int>(string_content.size()));
+  CHECK(payload.timestamp() == 1752755516);
+  CHECK(payload.seq() == 2);
+  CHECK(payload.uuid() == "423e4567-e89b-12d3-a456-426614174111");
+  CHECK(payload.metrics_size() == 1);
+  CHECK(payload.metrics(0).name() == "temperature");
+  CHECK(payload.metrics(0).int_value() == 31);
+  CHECK(payload.body() == "testbody2");
 }
 
 }  // namespace org::apache::nifi::minifi::test

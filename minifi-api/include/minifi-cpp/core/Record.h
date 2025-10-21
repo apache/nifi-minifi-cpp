@@ -43,6 +43,10 @@ class Record final {
     return fields_.emplace(std::move(key), std::move(field));
   }
 
+  [[nodiscard]] bool contains(const std::string& key) const {
+    return fields_.contains(key);
+  }
+
   [[nodiscard]] const RecordField& at(const std::string& key) const {
     return fields_.at(key);
   }
