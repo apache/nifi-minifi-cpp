@@ -129,8 +129,7 @@ void useProcessorClassDescription(Fn&& fn) {
         ProcessContext context_wrapper(context);
         ProcessSession session_wrapper(session);
         try {
-          static_cast<Class*>(self)->onTrigger(context_wrapper, session_wrapper);
-          return MINIFI_SUCCESS;
+          return static_cast<Class*>(self)->onTrigger(context_wrapper, session_wrapper);
         } catch (...) {
           return MINIFI_UNKNOWN_ERROR;
         }
@@ -138,8 +137,7 @@ void useProcessorClassDescription(Fn&& fn) {
       .onSchedule = [] (void* self, MinifiProcessContext context) -> MinifiStatus {
         ProcessContext context_wrapper(context);
         try {
-          static_cast<Class*>(self)->onSchedule(context_wrapper);
-          return MINIFI_SUCCESS;
+          return static_cast<Class*>(self)->onSchedule(context_wrapper);
         } catch (...) {
           return MINIFI_UNKNOWN_ERROR;
         }

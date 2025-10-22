@@ -65,24 +65,20 @@ utils::SmallString<36> ProcessorImpl::getUUIDStr() const {
   return getUUID().to_string();
 }
 
-void ProcessorImpl::onSchedule(ProcessContext& ctx) {
+MinifiStatus ProcessorImpl::onSchedule(ProcessContext& ctx) {
   try {
-    onScheduleImpl(ctx);
+    return onScheduleImpl(ctx);
   } catch (const std::exception& e) {
     logger_->log_error("{}", e.what());
-    throw;
-  } catch (...) {
     throw;
   }
 }
 
-void ProcessorImpl::onTrigger(ProcessContext& ctx, ProcessSession& session) {
+MinifiStatus ProcessorImpl::onTrigger(ProcessContext& ctx, ProcessSession& session) {
   try {
-    onTriggerImpl(ctx, session);
+    return onTriggerImpl(ctx, session);
   } catch (const std::exception& e) {
     logger_->log_error("{}", e.what());
-    throw;
-  } catch (...) {
     throw;
   }
 }

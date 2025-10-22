@@ -100,7 +100,7 @@ void ProcessSession::read(FlowFile& flow_file, const io::InputStreamCallback& ca
   }
 }
 
-void ProcessSession::setAttribute(FlowFile& ff, std::string_view key, std::string value) {
+void ProcessSession::setAttribute(FlowFile& ff, std::string_view key, std::string value) {  // NOLINT(performance-unnecessary-value-param)
   MinifiStringView value_ref = utils::toStringView(value);
   MinifiFlowFileSetAttribute(impl_, ff.getImpl(), utils::toStringView(key), &value_ref);
 }

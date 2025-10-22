@@ -320,11 +320,6 @@ void MinifiDestroyExtension(OWNED gsl::owner<MinifiExtension> extension) {
   delete extension_impl;
 }
 
-void MinifiProcessContextYield(MinifiProcessContext context) {
-  gsl_Assert(context != MINIFI_NULL);
-  reinterpret_cast<minifi::core::ProcessContext*>(context)->yield();
-}
-
 void MinifiProcessContextGetProcessorName(MinifiProcessContext context, void(*cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
   gsl_Assert(context != MINIFI_NULL);
   auto name = reinterpret_cast<minifi::core::ProcessContext*>(context)->getProcessorInfo().getName();

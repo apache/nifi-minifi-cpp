@@ -36,7 +36,6 @@ class ProcessContext {
   }
 
   bool hasNonEmptyProperty(std::string_view name) const;
-  void yield();
 
   std::string getProcessorName() const;
 

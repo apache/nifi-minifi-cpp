@@ -46,10 +46,6 @@ std::string ProcessContext::getProcessorName() const {
   return result;
 }
 
-void ProcessContext::yield() {
-  MinifiProcessContextYield(impl_);
-}
-
 
 
 }  // namespace org::apache::nifi::minifi::api::core
