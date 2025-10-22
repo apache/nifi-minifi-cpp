@@ -1,6 +1,6 @@
 from textwrap import dedent
 from minifi_test_framework.containers.container import Container
-from minifi_test_framework.containers.docker_container_builder import DockerContainerBuilder
+from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
 from minifi_test_framework.core.helpers import wait_for_condition
 
 
@@ -21,7 +21,7 @@ class PostgresContainer(Container):
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (6, 'BaNaNa');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
                 """.format(base_image='postgres:17.4'))
-        builder = DockerContainerBuilder(
+        builder = DockerImageBuilder(
             image_tag="minifi-postgres-server:latest",
             dockerfile_content=dockerfile
         )

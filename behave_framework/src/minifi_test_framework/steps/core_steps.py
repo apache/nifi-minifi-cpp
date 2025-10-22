@@ -37,7 +37,7 @@ def step_impl(context: MinifiTestContext):
 @when("the MiNiFi instance starts up")
 def step_impl(context):
     assert context.minifi_container.deploy()
-    logging.debug("All instances started up")
+    logging.debug("MiNiFi instance started up")
 
 
 @step('a directory at "{directory}" has a file with the size "{size}"')

@@ -15,7 +15,7 @@
 import os
 from textwrap import dedent
 
-from minifi_test_framework.containers.docker_container_builder import DockerContainerBuilder
+from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
 from minifi_test_framework.core.hooks import common_before_scenario
 from minifi_test_framework.core.hooks import common_after_scenario
 from minifi_test_framework.core.hooks import get_minifi_container_image
@@ -67,7 +67,7 @@ def before_all(context):
             USER minificpp
             """.format(base_image=get_minifi_container_image(),
                        install_sql_cmd=install_sql_cmd, so_location=so_location))
-    builder = DockerContainerBuilder(
+    builder = DockerImageBuilder(
         image_tag="apacheminificpp-sql:behave",
         dockerfile_content=dockerfile
     )

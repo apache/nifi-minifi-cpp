@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from minifi_test_framework.containers.docker_container_builder import DockerContainerBuilder
+from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
 from minifi_test_framework.core.hooks import common_before_scenario
 from minifi_test_framework.core.hooks import common_after_scenario
 
@@ -21,7 +21,7 @@ def before_all(context):
     dockerfile = """
     FROM python:3.13-slim-bookworm
     RUN pip install confluent-kafka"""
-    builder = DockerContainerBuilder(
+    builder = DockerImageBuilder(
         image_tag="minifi-kafka-helper:latest",
         dockerfile_content=dockerfile
     )

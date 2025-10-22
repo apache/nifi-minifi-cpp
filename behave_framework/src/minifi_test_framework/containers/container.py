@@ -23,7 +23,7 @@ from docker.models.networks import Network
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 
 import docker
 
@@ -48,31 +48,30 @@ class Container:
     def deploy(self) -> bool:
         self._temp_dir = tempfile.TemporaryDirectory()
 
-        if len(self.files) != 0 or len(self.dirs) != 0 or len(self.host_files) != 0:
-            for file in self.files:
-                temp_path = self._temp_dir.name + "/" + file.host_filename
-                with open(temp_path, "w") as temp_file:
-                    temp_file.write(file.content)
-                self.volumes[temp_path] = {
-                    "bind": file.path + "/" + file.host_filename,
-                    "mode": file.mode
-                }
-            for directory in self.dirs:
-                temp_path = self._temp_dir.name + directory.path
-                for file_name, content in directory.files.items():
-                    file_path = temp_path + "/" + file_name
-                    os.makedirs(temp_path, exist_ok=True)
-                    with open(file_path, "w") as temp_file:
-                        temp_file.write(content)
-                self.volumes[temp_path] = {
-                    "bind": directory.path,
-                    "mode": directory.mode
-                }
-            for host_file in self.host_files:
-                self.volumes[host_file.container_path] = {
-                    "bind": host_file.host_path,
-                    "mode": host_file.mode
-                }
+        for file in self.files:
+            temp_path = self._temp_dir.name + "/" + file.host_filename
+            with open(temp_path, "w") as temp_file:
+                temp_file.write(file.content)
+            self.volumes[temp_path] = {
+                "bind": file.path + "/" + file.host_filename,
+                "mode": file.mode
+            }
+        for directory in self.dirs:
+            temp_path = self._temp_dir.name + directory.path
+            for file_name, content in directory.files.items():
+                file_path = temp_path + "/" + file_name
+                os.makedirs(temp_path, exist_ok=True)
+                with open(file_path, "w") as temp_file:
+                    temp_file.write(content)
+            self.volumes[temp_path] = {
+                "bind": directory.path,
+                "mode": directory.mode
+            }
+        for host_file in self.host_files:
+            self.volumes[host_file.container_path] = {
+                "bind": host_file.host_path,
+                "mode": host_file.mode
+            }
 
         try:
             existing_container = self.client.containers.get(self.container_name)
@@ -81,7 +80,7 @@ class Container:
         except docker.errors.NotFound:
             pass
         try:
-            print(f"Creating and starting container '{self.container_name}'...")
+            logging.info(f"Creating and starting container '{self.container_name}'...")
             self.container = self.client.containers.run(
                 image=self.image_name,
                 name=self.container_name,
@@ -99,10 +98,10 @@ class Container:
         return True
 
     def clean_up(self):
-        if self.container is not None:
+        if self.container:
             self.container.remove(force=True)
 
-    def exec_run(self, command):
+    def exec_run(self, command) -> Tuple[int | None, str]:
         if self.container:
             (code, output) = self.container.exec_run(command)
             return code, output.decode("utf-8")

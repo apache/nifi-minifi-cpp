@@ -14,7 +14,7 @@
 # limitations under the License.
 from textwrap import dedent
 
-from minifi_test_framework.containers.docker_container_builder import DockerContainerBuilder
+from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
 from minifi_test_framework.core.hooks import common_before_scenario
 from minifi_test_framework.core.hooks import common_after_scenario
 from minifi_test_framework.core.hooks import get_minifi_container_image
@@ -29,7 +29,7 @@ def before_all(context: MinifiTestContext):
                 RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-0.5B-Instruct-GGUF/resolve/main/Qwen2-0.5B-Instruct-IQ3_M.gguf --directory-prefix={models_path}
         """.format(base_image=minifi_container_image, models_path='/tmp/models'))
 
-    builder = DockerContainerBuilder(
+    builder = DockerImageBuilder(
         image_tag="apacheminificpp:llama",
         dockerfile_content=dockerfile
     )
