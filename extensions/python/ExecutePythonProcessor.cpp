@@ -38,9 +38,15 @@ namespace org::apache::nifi::minifi::extensions::python::processors {
 
 void ExecutePythonProcessor::initialize() {
   initializeScript();
-  std::vector<core::PropertyReference> all_properties;
-  ranges::transform(python_properties_, std::back_inserter(all_properties), &core::Property::getReference);
-  setSupportedProperties(all_properties);
+  std::vector<core::Property> all_properties;
+  all_properties.reserve(Properties.size() + python_properties_.size());
+  for (auto& property : Properties) {
+    all_properties.emplace_back(property);
+  }
+  for (auto& python_property : python_properties_) {
+    all_properties.emplace_back(python_property);
+  }
+  setSupportedProperties(gsl::make_span(all_properties));
   setSupportedRelationships(Relationships);
   logger_->log_debug("Processor has been initialized.");
 }
@@ -68,10 +74,10 @@ std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships()
   return relationships;
 }
 
-void ExecutePythonProcessor::setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) {
+void ExecutePythonProcessor::forEachLogger(const std::function<void(std::shared_ptr<core::logging::Logger>)>& callback) {
   gsl_Expects(logger_ && python_logger_);
-  logger_->setLogCallback(callback);
-  python_logger_->setLogCallback(callback);
+  callback(logger_);
+  callback(python_logger_);
 }
 
 void ExecutePythonProcessor::initializeScript() {
