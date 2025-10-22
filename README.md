@@ -414,7 +414,6 @@ Since only glibc and libstdc++ is dynamically linked to MiNiFi, the binary built
 
 | Distro        | command     | Output File                                |
 |---------------|:------------|:-------------------------------------------|
-| centos 7      | make centos | nifi-minifi-cpp-centos-$VERSION.tar.gz     |
 | Rockylinux 8  | make rocky  | nifi-minifi-cpp-rockylinux-$VERSION.tar.gz |
 
 You can avoid the requirement of an up-to-date compiler when generating the build system by adding `-DDOCKER_BUILD_ONLY=ON` to the cmake command line. This disables all cmake targets except the docker build and test ones.

@@ -18,26 +18,24 @@
 import logging
 import os
 import tempfile
-from docker.models.images import Image
-from typing import Optional
 
 import docker
+from docker.models.images import Image
 
 
-class DockerContainerBuilder:
-    def __init__(self, image_tag: str, dockerfile_content: Optional[str] = None,
-                 build_context_path: Optional[str] = None):
+class DockerImageBuilder:
+    def __init__(self, image_tag: str, dockerfile_content: str | None = None, build_context_path: str | None = None):
         if not dockerfile_content and not build_context_path:
             raise ValueError("Either 'dockerfile_content' or 'build_context_path' must be provided.")
         if dockerfile_content and build_context_path:
             raise ValueError("Provide either 'dockerfile_content' or 'build_context_path', not both.")
 
         self.image_tag: str = image_tag
-        self.dockerfile_content: Optional[str] = dockerfile_content
-        self.build_context_path: Optional[str] = build_context_path
+        self.dockerfile_content: str | None = dockerfile_content
+        self.build_context_path: str | None = build_context_path
         self.client = docker.from_env()
-        self.image: Optional[Image] = None
-        self._temp_dir: Optional[tempfile.TemporaryDirectory] = None
+        self.image: Image | None = None
+        self._temp_dir: tempfile.TemporaryDirectory | None = None
 
     def build(self) -> Image:
         context_path = self.build_context_path
@@ -50,12 +48,7 @@ class DockerContainerBuilder:
 
         logging.info(f"Building Docker image '{self.image_tag}' from context '{context_path}'...")
         try:
-            self.image, build_logs = self.client.images.build(
-                path=context_path,
-                tag=self.image_tag,
-                rm=True,  # Remove intermediate containers
-                forcerm=True  # Always remove intermediate containers
-            )
+            self.image, build_logs = self.client.images.build(path=context_path, tag=self.image_tag, rm=True, forcerm=True)
             for log_line in build_logs:
                 logging.debug(log_line.get('stream', '').strip())
             logging.info(f"Successfully built image '{self.image_tag}' (ID: {self.image.short_id})")

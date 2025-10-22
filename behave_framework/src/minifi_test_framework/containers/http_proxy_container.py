@@ -16,7 +16,7 @@
 #
 
 from minifi_test_framework.containers.container import Container
-from minifi_test_framework.containers.docker_container_builder import DockerContainerBuilder
+from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from textwrap import dedent
@@ -36,7 +36,7 @@ class HttpProxy(Container):
                 """.format(base_image='ubuntu/squid:5.2-22.04_beta', proxy_username='admin', proxy_password='test101',
                            proxy_port='3128'))
 
-        builder = DockerContainerBuilder(
+        builder = DockerImageBuilder(
             image_tag="minifi-http-proxy:latest",
             dockerfile_content=dockerfile
         )
