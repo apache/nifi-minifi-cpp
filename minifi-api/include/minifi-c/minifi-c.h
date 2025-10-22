@@ -96,7 +96,8 @@ typedef enum MinifiStatus {
   MINIFI_NOT_SUPPORTED_PROPERTY = 2,
   MINIFI_DYNAMIC_PROPERTIES_NOT_SUPPORTED = 3,
   MINIFI_PROPERTY_NOT_SET = 4,
-  MINIFI_VALIDATION_FAILED = 5
+  MINIFI_VALIDATION_FAILED = 5,
+  MINIFI_PROCESSOR_YIELD = 6
 } MinifiStatus;
 
 typedef struct MinifiProperty {
@@ -189,7 +190,6 @@ void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription*);
 OWNED MinifiPublishedMetrics MinifiPublishedMetricsCreate(uint32_t count, const MinifiStringView*, const double*);
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext, MinifiStringView, MinifiFlowFile, void(*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx);
-void MinifiProcessContextYield(MinifiProcessContext);
 void MinifiProcessContextGetProcessorName(MinifiProcessContext, void(*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx);
 MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext, MinifiStringView);
 

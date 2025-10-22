@@ -6,7 +6,6 @@ EXPORTS
   MinifiRegisterProcessorClass
   MinifiPublishedMetricsCreate
   MinifiProcessContextGetProperty
-  MinifiProcessContextYield
   MinifiProcessContextGetProcessorName
   MinifiProcessContextHasNonEmptyProperty
   MinifiLoggerSetMaxLogSize

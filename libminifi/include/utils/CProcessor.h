@@ -23,6 +23,7 @@
 #include "core/ProcessorMetrics.h"
 #include "minifi-c/minifi-c.h"
 #include "minifi-cpp/agent/agent_docs.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/core/ProcessorApi.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
@@ -133,6 +134,10 @@ class CProcessor : public minifi::core::ProcessorApi {
   void onTrigger(minifi::core::ProcessContext& process_context, minifi::core::ProcessSession& process_session) override {
     std::optional<std::string> error;
     auto status = class_description_.callbacks.onTrigger(impl_, reinterpret_cast<MinifiProcessContext>(&process_context), reinterpret_cast<MinifiProcessSession>(&process_session));
+    if (status == MINIFI_PROCESSOR_YIELD) {
+      process_context.yield();
+      return;
+    }
     if (status != MINIFI_SUCCESS) {
       throw minifi::Exception(minifi::ExceptionType::PROCESSOR_EXCEPTION, "Error while triggering processor");
     }

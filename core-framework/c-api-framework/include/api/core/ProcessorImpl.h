@@ -32,7 +32,6 @@
 
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/DynamicProperty.h"
-// #include "minifi-cpp/core/ProcessorMetrics.h"
 #include "utils/gsl.h"
 #include "minifi-cpp/utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
@@ -71,9 +70,9 @@ class ProcessorImpl {
     return trigger_when_empty_;
   }
 
-  void onTrigger(ProcessContext&, ProcessSession&);
+  MinifiStatus onTrigger(ProcessContext&, ProcessSession&);
 
-  void onSchedule(ProcessContext&);
+  MinifiStatus onSchedule(ProcessContext&);
 
   virtual void onUnSchedule() {}
 
@@ -92,9 +91,9 @@ class ProcessorImpl {
   virtual PublishedMetrics calculateMetrics() const {return {};}
 
  protected:
-  virtual void onTriggerImpl(ProcessContext&, ProcessSession&) {}
+  virtual MinifiStatus onTriggerImpl(ProcessContext&, ProcessSession&) {return MINIFI_SUCCESS;}
 
-  virtual void onScheduleImpl(ProcessContext&) {}
+  virtual MinifiStatus onScheduleImpl(ProcessContext&) {return MINIFI_SUCCESS;}
 
   minifi::core::ProcessorMetadata metadata_;
 
