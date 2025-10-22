@@ -1,0 +1,11 @@
+diff -rupN a/src/aws-cpp-sdk-core/include/aws/core/utils/crypto/SecureRandom.h b/src/aws-cpp-sdk-core/include/aws/core/utils/crypto/SecureRandom.h
+--- a/src/aws-cpp-sdk-core/include/aws/core/utils/crypto/SecureRandom.h	2025-10-22 14:54:38.270948821 +0200
++++ b/src/aws-cpp-sdk-core/include/aws/core/utils/crypto/SecureRandom.h	2025-10-22 15:59:46.001684672 +0200
+@@ -6,6 +6,7 @@
+ #include <type_traits>
+ #include <memory>
+ #include <cassert>
++#include <cstdint>
+ 
+ namespace Aws
+ {
