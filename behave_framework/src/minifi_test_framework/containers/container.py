@@ -58,9 +58,9 @@ class Container:
             }
         for directory in self.dirs:
             temp_path = self._temp_dir.name + directory.path
+            os.makedirs(temp_path, exist_ok=True)
             for file_name, content in directory.files.items():
                 file_path = temp_path + "/" + file_name
-                os.makedirs(temp_path, exist_ok=True)
                 with open(file_path, "w") as temp_file:
                     temp_file.write(content)
             self.volumes[temp_path] = {
