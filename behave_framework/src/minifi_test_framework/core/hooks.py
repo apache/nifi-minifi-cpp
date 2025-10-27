@@ -16,8 +16,10 @@
 
 import logging
 import os
+
 from behave.model import Scenario
 from behave.runner import Context
+from behave.model import Step
 from minifi_test_framework.containers.minifi_container import MinifiContainer
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
@@ -50,6 +52,8 @@ def common_before_scenario(context: Context, scenario: Scenario):
     context.network = docker_client.networks.create(network_name)
     context.minifi_container = MinifiContainer(context.minifi_container_image, context.scenario_id, context.network)
     context.containers = []
+    for step in scenario.steps:
+        inject_scenario_id(context, step)
 
 
 def common_after_scenario(context: MinifiTestContext, scenario: Scenario):
@@ -57,3 +61,13 @@ def common_after_scenario(context: MinifiTestContext, scenario: Scenario):
         container.clean_up()
     context.minifi_container.clean_up()
     context.network.remove()
+
+
+def inject_scenario_id(context: MinifiTestContext, step: Step):
+    if "${scenario_id}" in step.name:
+        step.name = step.name.replace("${scenario_id}", context.scenario_id)
+    if step.table:
+        for row in step.table:
+            for i in range(len(row.cells)):
+                if "${scenario_id}" in row.cells[i]:
+                    row.cells[i] = row.cells[i].replace("${scenario_id}", context.scenario_id)
