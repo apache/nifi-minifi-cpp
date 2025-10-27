@@ -44,7 +44,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a PutS3Object processor set up to communicate with an s3 server
     And these processor properties are set
       | processor name  | property name  | property value                  |
-      | PutS3Object     | Proxy Host     | http-proxy-{scenario_id}        |
+      | PutS3Object     | Proxy Host     | http-proxy-${scenario_id}        |
       | PutS3Object     | Proxy Port     | 3128                            |
       | PutS3Object     | Proxy Username | admin                           |
       | PutS3Object     | Proxy Password | test101                         |
@@ -107,7 +107,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And these processor properties are set
       | processor name  | property name  | property value                  |
-      | DeleteS3Object  | Proxy Host     | http-proxy-{scenario_id}        |
+      | DeleteS3Object  | Proxy Host     | http-proxy-${scenario_id}        |
       | DeleteS3Object  | Proxy Port     | 3128                            |
       | DeleteS3Object  | Proxy Username | admin                           |
       | DeleteS3Object  | Proxy Password | test101                         |
@@ -161,7 +161,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a FetchS3Object processor set up to communicate with the same s3 server
     And these processor properties are set
       | processor name | property name  | property value                  |
-      | FetchS3Object  | Proxy Host     | http-proxy-{scenario_id}       |
+      | FetchS3Object  | Proxy Host     | http-proxy-${scenario_id}       |
       | FetchS3Object  | Proxy Port     | 3128                            |
       | FetchS3Object  | Proxy Username | admin                           |
       | FetchS3Object  | Proxy Password | test101                         |
@@ -208,7 +208,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     Given a ListS3 processor set up to communicate with the same s3 server
     And these processor properties are set
       | processor name | property name  | property value                  |
-      | ListS3         | Proxy Host     | http-proxy-{scenario_id}       |
+      | ListS3         | Proxy Host     | http-proxy-${scenario_id}       |
       | ListS3         | Proxy Port     | 3128                            |
       | ListS3         | Proxy Username | admin                           |
       | ListS3         | Proxy Password | test101                         |
@@ -248,7 +248,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "Multipart Part Size" property of the PutS3Object processor is set to "5 MB"
     And these processor properties are set
     | processor name  | property name  | property value           |
-    | PutS3Object     | Proxy Host     | http-proxy-{scenario_id} |
+    | PutS3Object     | Proxy Host     | http-proxy-${scenario_id} |
     | PutS3Object     | Proxy Port     | 3128                     |
     | PutS3Object     | Proxy Username | admin                    |
     | PutS3Object     | Proxy Password | test101                  |
