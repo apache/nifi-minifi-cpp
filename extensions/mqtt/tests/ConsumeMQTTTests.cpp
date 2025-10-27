@@ -82,11 +82,9 @@ class TestConsumeMQTTProcessor : public minifi::processors::ConsumeMQTT {
   explicit TestConsumeMQTTProcessor(minifi::core::ProcessorMetadata metadata)
       : minifi::processors::ConsumeMQTT(std::move(metadata)) {}
 
-  void initializeClient() override {
-  }
+  using ConsumeMQTT::enqueueReceivedMQTTMsg;
 
-  void enqueueReceivedMQTTMsg(SmartMessage message) {
-    minifi::processors::ConsumeMQTT::enqueueReceivedMQTTMsg(std::move(message));
+  void initializeClient() override {
   }
 
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override {
