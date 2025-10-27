@@ -39,7 +39,6 @@
 #include "range/v3/algorithm/any_of.hpp"
 #include "fmt/format.h"
 #include "minifi-cpp/Exception.h"
-#include "minifi-cpp/core/ProcessorMetrics.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -542,8 +541,8 @@ gsl::not_null<std::shared_ptr<ProcessorMetrics>> Processor::getMetrics() const {
   return metrics_;
 }
 
-std::shared_ptr<CustomProcessorMetrics> Processor::getCustomMetrics() const {
-  return impl_->getMetrics();
+std::shared_ptr<ProcessorMetricsExtension> Processor::getMetricsExtension() const {
+  return impl_->getMetricsExtension();
 }
 
 void Processor::restore(const std::shared_ptr<FlowFile>& file) {

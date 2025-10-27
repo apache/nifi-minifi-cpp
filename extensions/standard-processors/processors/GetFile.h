@@ -34,7 +34,7 @@
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/utils/Export.h"
-#include "minifi-cpp/core/CustomProcessorMetrics.h"
+#include "minifi-cpp/core/ProcessorMetricsExtension.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -52,7 +52,7 @@ struct GetFileRequest {
   std::filesystem::path inputDirectory;
 };
 
-class GetFileMetrics : public core::CustomProcessorMetrics {
+class GetFileMetrics : public core::ProcessorMetricsExtension {
  public:
   std::vector<state::response::SerializedResponseNode> serialize() override {
     std::vector<state::response::SerializedResponseNode> resp;
@@ -81,7 +81,7 @@ class GetFile : public core::ProcessorImpl {
  public:
   explicit GetFile(core::ProcessorMetadata metadata)
       : ProcessorImpl(metadata) {
-    metrics_ = std::make_shared<GetFileMetrics>();
+    metrics_extension_ = std::make_shared<GetFileMetrics>();
   }
   ~GetFile() override = default;
 

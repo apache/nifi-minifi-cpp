@@ -38,7 +38,7 @@
 #include "provenance/Provenance.h"
 #include "core/Relationship.h"
 #include "minifi-cpp/utils/gsl.h"
-#include "minifi-cpp/core/ProcessorMetrics.h"
+#include "core/ProcessorMetrics.h"
 #include "minifi-cpp/core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi::core::detail {

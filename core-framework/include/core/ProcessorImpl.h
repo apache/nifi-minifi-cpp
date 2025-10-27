@@ -33,7 +33,7 @@
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/DynamicProperty.h"
 #include "minifi-cpp/core/Scheduling.h"
-#include "minifi-cpp/core/CustomProcessorMetrics.h"
+#include "minifi-cpp/core/ProcessorMetricsExtension.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
@@ -117,8 +117,8 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   annotation::Input getInputRequirement() const override = 0;
 
-  std::shared_ptr<CustomProcessorMetrics> getMetrics() const override {
-    return metrics_;
+  std::shared_ptr<ProcessorMetricsExtension> getMetricsExtension() const override {
+    return metrics_extension_;
   }
 
   static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
@@ -141,7 +141,7 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   std::atomic<bool> trigger_when_empty_;
 
-  std::shared_ptr<CustomProcessorMetrics> metrics_;
+  std::shared_ptr<ProcessorMetricsExtension> metrics_extension_;
 
   std::shared_ptr<logging::Logger> logger_;
 

@@ -23,7 +23,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class CustomProcessorMetrics : public virtual state::PublishedMetricProvider {
+class ProcessorMetricsExtension : public state::PublishedMetricProvider {
  public:
   virtual std::vector<state::response::SerializedResponseNode> serialize() = 0;
 };

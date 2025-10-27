@@ -45,7 +45,6 @@ namespace org::apache::nifi::minifi::core {
 ProcessorImpl::ProcessorImpl(ProcessorMetadata metadata)
     : metadata_(std::move(metadata)),
       trigger_when_empty_(false),
-      metrics_(nullptr),
       logger_(metadata_.logger) {
   logger_->log_debug("Processor {} created with uuid {}", getName(), getUUIDStr());
 }

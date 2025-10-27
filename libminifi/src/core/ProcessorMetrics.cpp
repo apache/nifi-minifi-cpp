@@ -74,9 +74,9 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize
 
   resp.push_back(root_node);
 
-  if (auto custom_metrics = source_processor_.getCustomMetrics()) {
-    for (auto&& custom_child : custom_metrics->serialize()) {
-      resp[0].children.push_back(std::move(custom_child));
+  if (auto metrics_extension = source_processor_.getMetricsExtension()) {
+    for (auto&& extension_child : metrics_extension->serialize()) {
+      resp[0].children.push_back(std::move(extension_child));
     }
   }
 
@@ -108,10 +108,10 @@ std::vector<state::PublishedMetric> ProcessorMetrics::calculateMetrics() {
   }
 
   const auto common_labels = getCommonLabels();
-  if (auto custom_metrics = source_processor_.getCustomMetrics()) {
-    for (auto&& custom_node : custom_metrics->calculateMetrics()) {
-      custom_node.labels.insert(common_labels.begin(), common_labels.end());
-      metrics.push_back(std::move(custom_node));
+  if (auto metrics_extension = source_processor_.getMetricsExtension()) {
+    for (auto&& extension_node : metrics_extension->calculateMetrics()) {
+      extension_node.labels.insert(common_labels.begin(), common_labels.end());
+      metrics.push_back(std::move(extension_node));
     }
   }
 
