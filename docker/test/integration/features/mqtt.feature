@@ -90,8 +90,10 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the ConsumeMQTT processor is set to "<version>"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And a LogAttribute processor
     And "ConsumeMQTT" processor is a start node
     And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is connected to the LogAttribute
 
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
@@ -101,6 +103,12 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And a file with the content "test" is placed in "/tmp/input"
     And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
+    And the Minifi logs contain the following message: "key:mqtt.broker value:mqtt-broker-" in less than 60 seconds
+    And the Minifi logs contain the following message: "key:mqtt.topic value:testtopic" in less than 1 seconds
+    And the Minifi logs contain the following message: "key:mqtt.topic.segment.0 value:testtopic" in less than 1 seconds
+    And the Minifi logs contain the following message: "key:mqtt.qos value:0" in less than 1 seconds
+    And the Minifi logs contain the following message: "key:mqtt.isDuplicate value:false" in less than 1 seconds
+    And the Minifi logs contain the following message: "key:mqtt.isRetained value:false" in less than 1 seconds
 
     Examples: MQTT versions
     | version  |
@@ -505,3 +513,48 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And "publisher-client" flow is killed
     And the MQTT broker has a log line matching "Sending PUBLISH to consumer-client"
     And a flowfile with the content "last_will_message" is placed in the monitored directory in less than 60 seconds
+
+  Scenario: A MiNiFi instance uses record reader and writer to convert consumed message from an MQTT broker
+    Given a XMLReader controller service is set up
+    And a JsonRecordSetWriter controller service is set up with "Array" output grouping
+    And a ConsumeMQTT processor with the "Topic" property set to "test/my/topic"
+    And the "MQTT Version" property of the ConsumeMQTT processor is set to "3.x AUTO"
+    And the "Record Reader" property of the ConsumeMQTT processor is set to "XMLReader"
+    And the "Record Writer" property of the ConsumeMQTT processor is set to "JsonRecordSetWriter"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And a LogAttribute processor
+    And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And an MQTT broker is set up in correspondence with the ConsumeMQTT
+
+    When both instances start up
+    And a test message "<root><element>test</element></root>" is published to the MQTT broker on topic "test/my/topic"
+
+    Then the MQTT broker has a log line matching "Received SUBSCRIBE from consumer-client"
+    And a flowfile with the JSON content '[{"_isRetained": false, "_isDuplicate": false, "_qos": 0, "_topicSegments": ["test", "my", "topic"], "_topic": "test/my/topic", "element": "test"}]' is placed in the monitored directory in less than 60 seconds
+    And the Minifi logs contain the following message: "key:record.count value:1" in less than 60 seconds
+    And the Minifi logs contain the following message: "key:mqtt.broker value:mqtt-broker-" in less than 1 seconds
+
+  Scenario: A MiNiFi instance uses record reader and writer to convert and publish records to an MQTT broker
+    Given a JsonTreeReader controller service is set up
+    And a XMLRecordSetWriter controller service is set up
+    And the "Name of Record Tag" property of the XMLRecordSetWriter controller is set to "record"
+    And the "Name of Root Tag" property of the XMLRecordSetWriter controller is set to "root"
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content '[{"string": "test"}, {"int": 42}]' is present in '/tmp/input'
+    And a PublishMQTT processor set up to communicate with an MQTT broker instance
+    And the "MQTT Version" property of the PublishMQTT processor is set to "3.x AUTO"
+    And the "Record Reader" property of the PublishMQTT processor is set to "JsonTreeReader"
+    And the "Record Writer" property of the PublishMQTT processor is set to "XMLRecordSetWriter"
+    And a UpdateAttribute processor with the "filename" property set to "${UUID()}.xml"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+    And the "success" relationship of the PublishMQTT processor is connected to the UpdateAttribute
+    And the "success" relationship of the UpdateAttribute processor is connected to the PutFile
+    And an MQTT broker is set up in correspondence with the PublishMQTT
+
+    When both instances start up
+
+    Then two flowfiles with the contents '<?xml version="1.0"?><root><record><string>test</string></record></root>' and '<?xml version="1.0"?><root><record><int>42</int></record></root>' are placed in the monitored directory in less than 60 seconds
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(72 bytes\)"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(64 bytes\)"

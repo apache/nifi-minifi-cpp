@@ -19,13 +19,13 @@
 #include <memory>
 #include <string_view>
 #include <utility>
+#include <optional>
 
 #include "core/AbstractProcessor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
-#include "controllers/RecordSetReader.h"
-#include "controllers/RecordSetWriter.h"
+#include "minifi-cpp/controllers/RecordConverter.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -77,8 +77,7 @@ class ConvertRecord : public core::AbstractProcessor<ConvertRecord> {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  private:
-  std::shared_ptr<core::RecordSetReader> record_set_reader_;
-  std::shared_ptr<core::RecordSetWriter> record_set_writer_;
+  std::optional<core::RecordConverter> record_converter_;
   bool include_zero_record_flow_files_ = true;
 };
 

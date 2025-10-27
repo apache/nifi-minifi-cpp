@@ -16,7 +16,6 @@
  */
 #include "ConsumeMQTT.h"
 
-
 #include <cinttypes>
 #include <memory>
 #include <set>
@@ -26,15 +25,22 @@
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "io/BufferStream.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/ValueParser.h"
-#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 void ConsumeMQTT::initialize() {
   setSupportedProperties(Properties);
   setSupportedRelationships(Relationships);
+}
+
+void ConsumeMQTT::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) {
+  AbstractMQTTProcessor::onSchedule(context, factory);
+
+  add_attributes_as_fields_ = utils::parseBoolProperty(context, AddAttributesAsFields);
 }
 
 void ConsumeMQTT::enqueueReceivedMQTTMsg(SmartMessage message) {
@@ -58,8 +64,57 @@ void ConsumeMQTT::readProperties(core::ProcessContext& context) {
   receive_maximum_ = gsl::narrow<uint16_t>(utils::parseU64Property(context, ReceiveMaximum));
 }
 
-void ConsumeMQTT::onTriggerImpl(core::ProcessContext&, core::ProcessSession& session) {
-  std::queue<SmartMessage> msg_queue = getReceivedMqttMessages();
+void ConsumeMQTT::addAttributesAsRecordFields(core::RecordSet& new_records, const SmartMessage& message) const {
+  if (!add_attributes_as_fields_) {
+    return;
+  }
+
+  for (auto& record : new_records) {
+    record.emplace("_topic", core::RecordField(message.topic));
+    auto topic_segments = utils::string::split(message.topic, "/");
+    core::RecordArray topic_segments_array;
+    for (const auto& topic_segment : topic_segments) {
+      topic_segments_array.emplace_back(core::RecordField(topic_segment));
+    }
+    record.emplace("_topicSegments", core::RecordField(std::move(topic_segments_array)));
+    record.emplace("_qos", core::RecordField(message.contents->qos));
+    record.emplace("_isDuplicate", core::RecordField(message.contents->dup > 0));
+    record.emplace("_isRetained", core::RecordField(message.contents->retained > 0));
+  }
+}
+
+void ConsumeMQTT::transferMessagesAsRecords(core::ProcessSession& session) {
+  gsl_Expects(record_converter_);
+  auto msg_queue = getReceivedMqttMessages();
+  core::RecordSet record_set;
+  while (!msg_queue.empty()) {
+    io::BufferStream buffer_stream;
+    buffer_stream.write(reinterpret_cast<const uint8_t*>(msg_queue.front().contents->payload), gsl::narrow<size_t>(msg_queue.front().contents->payloadlen));
+    auto new_records_result = record_converter_->record_set_reader->read(buffer_stream);
+    if (!new_records_result) {
+      logger_->log_error("Failed to read records from MQTT message: {}", new_records_result.error());
+      msg_queue.pop();
+      continue;
+    }
+    auto& new_records = new_records_result.value();
+    addAttributesAsRecordFields(new_records, msg_queue.front());
+    record_set.reserve(record_set.size() + new_records.size());
+    record_set.insert(record_set.end(), std::make_move_iterator(new_records.begin()), std::make_move_iterator(new_records.end()));
+    msg_queue.pop();
+  }
+  if (record_set.empty()) {
+    logger_->log_debug("No records to write, skipping FlowFile creation");
+    return;
+  }
+  std::shared_ptr<core::FlowFile> flow_file = session.create();
+  record_converter_->record_set_writer->write(record_set, flow_file, session);
+  session.putAttribute(*flow_file, RecordCountOutputAttribute.name, std::to_string(record_set.size()));
+  session.putAttribute(*flow_file, BrokerOutputAttribute.name, uri_);
+  session.transfer(flow_file, Success);
+}
+
+void ConsumeMQTT::transferMessagesAsFlowFiles(core::ProcessSession& session) {
+  auto msg_queue = getReceivedMqttMessages();
   while (!msg_queue.empty()) {
     const auto& message = msg_queue.front();
     std::shared_ptr<core::FlowFile> flow_file = session.create();
@@ -76,11 +131,26 @@ void ConsumeMQTT::onTriggerImpl(core::ProcessContext&, core::ProcessSession& ses
       putUserPropertiesAsAttributes(message, flow_file, session);
       session.putAttribute(*flow_file, BrokerOutputAttribute.name, uri_);
       session.putAttribute(*flow_file, TopicOutputAttribute.name, message.topic);
+      auto topic_segments = utils::string::split(message.topic, "/");
+      for (size_t i = 0; i < topic_segments.size(); ++i) {
+        session.putAttribute(*flow_file, "mqtt.topic.segment." + std::to_string(i), topic_segments[i]);
+      }
+      session.putAttribute(*flow_file, QosOutputAttribute.name, std::to_string(message.contents->qos));
+      session.putAttribute(*flow_file, IsDuplicateOutputAttribute.name, message.contents->dup > 0 ? "true" : "false");
+      session.putAttribute(*flow_file, IsRetainedOutputAttribute.name, message.contents->retained > 0 ? "true" : "false");
       fillAttributeFromContentType(message, flow_file, session);
       logger_->log_debug("ConsumeMQTT processing success for the flow with UUID {} topic {}", flow_file->getUUIDStr(), message.topic);
       session.transfer(flow_file, Success);
     }
     msg_queue.pop();
+  }
+}
+
+void ConsumeMQTT::onTriggerImpl(core::ProcessContext&, core::ProcessSession& session) {
+  if (record_converter_) {
+    transferMessagesAsRecords(session);
+  } else {
+    transferMessagesAsFlowFiles(session);
   }
 }
 

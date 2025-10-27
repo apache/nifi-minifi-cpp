@@ -86,6 +86,9 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   void onTriggerImpl(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
+ protected:
+  virtual bool sendMessage(const std::vector<std::byte>& buffer, const std::string& topic, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file);
+
  private:
   /**
    * Counts unacknowledged QoS 1 and QoS 2 messages to respect broker's Receive Maximum
@@ -133,16 +136,6 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
    * Resolves content type from expression language
    */
   std::string getContentType(core::ProcessContext& context, const core::FlowFile* const flow_file) const;
-
-  /**
-   * Sends an MQTT message asynchronously
-   * @param buffer contents of the message
-   * @param topic topic of the message
-   * @param content_type Content Type for MQTT 5
-   * @param flow_file Flow File being processed
-   * @return success of message sending
-   */
-  bool sendMessage(const std::vector<std::byte>& buffer, const std::string& topic, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file);
 
   /**
    * Callback for asynchronous message sending

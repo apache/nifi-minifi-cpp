@@ -109,6 +109,20 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::Proc
   readProperties(context);
   checkProperties(context);
   initializeClient();
+
+  auto record_set_reader = utils::parseOptionalControllerService<core::RecordSetReader>(context, RecordReader, getUUID());
+  auto record_set_writer = utils::parseOptionalControllerService<core::RecordSetWriter>(context, RecordWriter, getUUID());
+
+  if ((record_set_reader == nullptr) != (record_set_writer == nullptr)) {
+    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "MQTT processor requires both or neither Record Reader and Record Writer to be set");
+  }
+
+  if (record_set_reader) {
+    record_converter_ = core::RecordConverter{
+      .record_set_reader = gsl::make_not_null(std::move(record_set_reader)),
+      .record_set_writer = gsl::make_not_null(std::move(record_set_writer)),
+    };
+  }
 }
 
 void AbstractMQTTProcessor::initializeClient() {

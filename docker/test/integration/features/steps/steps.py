@@ -25,6 +25,8 @@ from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
 from minifi.controllers.JsonTreeReader import JsonTreeReader
+from minifi.controllers.XMLReader import XMLReader
+from minifi.controllers.XMLRecordSetWriter import XMLRecordSetWriter
 from minifi.controllers.CouchbaseClusterService import CouchbaseClusterService
 from minifi.controllers.XMLReader import XMLReader
 
@@ -180,6 +182,12 @@ def step_impl(context, property_name, processor_name, property_value):
         processor.unset_property(property_name)
     else:
         processor.set_property(property_name, property_value)
+
+
+@given("the \"{property_name}\" property of the {controller_name} controller is set to \"{property_value}\"")
+def step_impl(context, property_name, controller_name, property_value):
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.get_controller(controller_name).set_property(property_name, property_value)
 
 
 @given("the \"{property_name}\" properties of the {processor_name_one} and {processor_name_two} processors are set to the same random guid")
@@ -430,18 +438,28 @@ def step_impl(context, processor_name):
 
 
 # Record set reader and writer
+@given("a JsonRecordSetWriter controller service is set up with \"{}\" output grouping in the \"{minifi_container_name}\" flow")
+def step_impl(context, output_grouping: str, minifi_container_name: str):
+    json_record_set_writer = JsonRecordSetWriter(name="JsonRecordSetWriter", output_grouping=output_grouping)
+    container = context.test.acquire_container(context=context, name=minifi_container_name)
+    container.add_controller(json_record_set_writer)
+
+
+@given("a JsonTreeReader controller service is set up in the \"{minifi_container_name}\" flow")
+def step_impl(context, minifi_container_name: str):
+    json_record_set_reader = JsonTreeReader("JsonTreeReader")
+    container = context.test.acquire_container(context=context, name=minifi_container_name)
+    container.add_controller(json_record_set_reader)
+
+
 @given("a JsonRecordSetWriter controller service is set up with \"{}\" output grouping")
 def step_impl(context, output_grouping: str):
-    json_record_set_writer = JsonRecordSetWriter(name="JsonRecordSetWriter", output_grouping=output_grouping)
-    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
-    container.add_controller(json_record_set_writer)
+    context.execute_steps(f"given a JsonRecordSetWriter controller service is set up with \"{output_grouping}\" output grouping in the \"minifi-cpp-flow\" flow")
 
 
 @given("a JsonTreeReader controller service is set up")
 def step_impl(context):
-    json_record_set_reader = JsonTreeReader("JsonTreeReader")
-    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
-    container.add_controller(json_record_set_reader)
+    context.execute_steps("given a JsonTreeReader controller service is set up in the \"minifi-cpp-flow\" flow")
 
 
 @given("a XMLReader controller service is set up")
@@ -449,6 +467,13 @@ def step_impl(context):
     xml_reader = XMLReader("XMLReader")
     container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
     container.add_controller(xml_reader)
+
+
+@given("a XMLRecordSetWriter controller service is set up")
+def step_impl(context):
+    xml_record_set_writer = XMLRecordSetWriter("XMLRecordSetWriter")
+    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
+    container.add_controller(xml_record_set_writer)
 
 
 # Kubernetes
@@ -775,6 +800,7 @@ def step_impl(context, content, duration):
 
 
 @then("two flowfiles with the contents \"{content_1}\" and \"{content_2}\" are placed in the monitored directory in less than {duration}")
+@then("two flowfiles with the contents '{content_1}' and '{content_2}' are placed in the monitored directory in less than {duration}")
 def step_impl(context, content_1, content_2, duration):
     context.test.check_for_multiple_files_generated(2, humanfriendly.parse_timespan(duration), [content_1, content_2])
 
@@ -931,6 +957,11 @@ def step_impl(context, log_pattern):
 @then("the MQTT broker has {log_count} log lines matching \"{log_pattern}\"")
 def step_impl(context, log_count, log_pattern):
     context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 60, count=int(log_count))
+
+
+@when("a test message \"{message}\" is published to the MQTT broker on topic \"{topic}\"")
+def step_impl(context, message, topic):
+    context.test.publish_test_mqtt_message(topic, message)
 
 
 @then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")

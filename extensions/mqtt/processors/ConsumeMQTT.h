@@ -42,7 +42,8 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   using AbstractMQTTProcessor::AbstractMQTTProcessor;
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
-      "The the payload of the MQTT message becomes content of a FlowFile";
+      "The the payload of the MQTT message becomes content of a FlowFile. If Record Reader and Record Writer are set, then the MQTT message specific attributes are not set in the flow file, "
+      "because different attributes can be set for different records. In this case if Add Attributes As Fields is set to true, the attributes will be added to each record as fields.";
 
   EXTENSIONAPI static constexpr auto Topic = core::PropertyDefinitionBuilder<>::createProperty("Topic")
       .withDescription("The topic to subscribe to.")
@@ -81,6 +82,11 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue(MQTT_MAX_RECEIVE_MAXIMUM_STR)
       .build();
+  EXTENSIONAPI static constexpr auto AddAttributesAsFields = core::PropertyDefinitionBuilder<>::createProperty("Add Attributes As Fields")
+      .withDescription("If setting this property to true, default fields are going to be added in each record: _topic, _qos, _isDuplicate, _isRetained.")
+      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
+      .withDefaultValue("true")
+      .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::to_array<core::PropertyReference>({
       Topic,
       CleanSession,
@@ -89,7 +95,8 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       QueueBufferMaxMessage,
       AttributeFromContentType,
       TopicAliasMaximum,
-      ReceiveMaximum
+      ReceiveMaximum,
+      AddAttributesAsFields
   }), AbstractMQTTProcessor::AdvancedProperties);
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are transferred to this relationship"};
@@ -97,7 +104,15 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
 
   EXTENSIONAPI static constexpr auto BrokerOutputAttribute = core::OutputAttributeDefinition<0>{"mqtt.broker", {}, "URI of the sending broker"};
   EXTENSIONAPI static constexpr auto TopicOutputAttribute = core::OutputAttributeDefinition<0>{"mqtt.topic", {}, "Topic of the message"};
-  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 2>{BrokerOutputAttribute, TopicOutputAttribute};
+  EXTENSIONAPI static constexpr auto TopicSegmentOutputAttribute = core::OutputAttributeDefinition<0>{"mqtt.topic.segment.n", {}, "The nth topic segment of the message"};
+  EXTENSIONAPI static constexpr auto QosOutputAttribute = core::OutputAttributeDefinition<0>{"mqtt.qos", {}, "The quality of service for this message."};
+  EXTENSIONAPI static constexpr auto IsDuplicateOutputAttribute = core::OutputAttributeDefinition<0>{"mqtt.isDuplicate", {},
+      "Whether or not this message might be a duplicate of one which has already been received."};
+  EXTENSIONAPI static constexpr auto IsRetainedOutputAttribute = core::OutputAttributeDefinition<0>{"mqtt.isRetained", {},
+      "Whether or not this message was from a current publisher, or was \"retained\" by the server as the last message published on the topic."};
+  EXTENSIONAPI static constexpr auto RecordCountOutputAttribute = core::OutputAttributeDefinition<0>{"record.count", {}, "The number of records received"};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::to_array<core::OutputAttributeReference>({BrokerOutputAttribute, TopicOutputAttribute, TopicSegmentOutputAttribute,
+      QosOutputAttribute, IsDuplicateOutputAttribute, IsRetainedOutputAttribute, RecordCountOutputAttribute});
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -109,6 +124,15 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void readProperties(core::ProcessContext& context) override;
   void onTriggerImpl(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
+
+ protected:
+    /**
+   * Enqueues received MQTT message into internal message queue.
+   * Called as a callback on a separate thread than onTrigger, as a reaction to message incoming.
+   * @param message message to put to queue
+   */
+  void enqueueReceivedMQTTMsg(SmartMessage message);
 
  private:
   class WriteCallback {
@@ -141,13 +165,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void onSubscriptionFailure(MQTTAsync_failureData* response);
   void onSubscriptionFailure5(MQTTAsync_failureData5* response);
   void onMessageReceived(SmartMessage smart_message) override;
-
-  /**
-   * Enqueues received MQTT message into internal message queue.
-   * Called as a callback on a separate thread than onTrigger, as a reaction to message incoming.
-   * @param message message to put to queue
-   */
-  void enqueueReceivedMQTTMsg(SmartMessage message);
 
   /**
    * Called in onTrigger to return the whole internal message queue
@@ -193,6 +210,10 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
 
   void setProcessorSpecificMqtt5ConnectOptions(MQTTProperties& connect_props) const override;
 
+  void transferMessagesAsRecords(core::ProcessSession& session);
+  void addAttributesAsRecordFields(core::RecordSet& new_records, const SmartMessage& message) const;
+  void transferMessagesAsFlowFiles(core::ProcessSession& session);
+
   std::string topic_;
   bool clean_session_ = true;
   bool clean_start_ = true;
@@ -205,6 +226,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   std::unordered_map<uint16_t, std::string> alias_to_topic_;
 
   moodycamel::ConcurrentQueue<SmartMessage> queue_;
+  bool add_attributes_as_fields_ = true;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -56,29 +56,62 @@ void PublishMQTT::readProperties(core::ProcessContext& context) {
 }
 
 void PublishMQTT::onTriggerImpl(core::ProcessContext& context, core::ProcessSession& session) {
-  std::shared_ptr<core::FlowFile> flow_file = session.get();
+  std::shared_ptr<core::FlowFile> original_flow_file = session.get();
 
-  if (!flow_file) {
+  if (!original_flow_file) {
     context.yield();
     return;
+  }
+
+  std::vector<std::shared_ptr<core::FlowFile>> flow_files;
+  if (record_converter_) {
+    nonstd::expected<core::RecordSet, std::error_code> record_set;
+    session.read(original_flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) {
+      record_set = record_converter_->record_set_reader->read(*input_stream);
+      return gsl::narrow<int64_t>(input_stream->size());
+    });
+
+    if (!record_set) {
+      logger_->log_error("Failed to read FlowFile [{}] as RecordSet, error: {}", original_flow_file->getUUIDStr(), record_set.error().message());
+      session.transfer(original_flow_file, Failure);
+      return;
+    }
+
+    for (auto&& record : *record_set) {
+      auto new_flow_file = session.create(original_flow_file.get());
+      if (!new_flow_file) {
+        logger_->log_error("Failed to create new FlowFile from record");
+        continue;
+      }
+      std::vector<core::Record> records;
+      records.emplace_back(std::move(record));
+      record_converter_->record_set_writer->write(records, new_flow_file, session);
+      flow_files.push_back(std::move(new_flow_file));
+    }
+
+    session.remove(original_flow_file);
+  } else {
+    flow_files.push_back(original_flow_file);
   }
 
   // broker's Receive Maximum can change after reconnect
   in_flight_message_counter_.setMax(broker_receive_maximum_.value_or(MQTT_MAX_RECEIVE_MAXIMUM));
 
-  const auto topic = getTopic(context, flow_file.get());
-  try {
-    const auto result = session.readBuffer(flow_file);
-    if (result.status < 0 || !sendMessage(result.buffer, topic, getContentType(context, flow_file.get()), flow_file)) {
-      logger_->log_error("Failed to send flow file [{}] to MQTT topic '{}' on broker {}", flow_file->getUUIDStr(), topic, uri_);
+  for (const auto& flow_file : flow_files) {
+    const auto topic = getTopic(context, flow_file.get());
+    try {
+      const auto result = session.readBuffer(flow_file);
+      if (result.status < 0 || !sendMessage(result.buffer, topic, getContentType(context, flow_file.get()), flow_file)) {
+        logger_->log_error("Failed to send flow file [{}] to MQTT topic '{}' on broker {}", flow_file->getUUIDStr(), topic, uri_);
+        session.transfer(flow_file, Failure);
+        return;
+      }
+      logger_->log_debug("Sent flow file [{}] with length {} to MQTT topic '{}' on broker {}", flow_file->getUUIDStr(), result.status, topic, uri_);
+      session.transfer(flow_file, Success);
+    } catch (const Exception& ex) {
+      logger_->log_error("Failed to send flow file [{}] to MQTT topic '{}' on broker {}, exception string: '{}'", flow_file->getUUIDStr(), topic, uri_, ex.what());
       session.transfer(flow_file, Failure);
-      return;
     }
-    logger_->log_debug("Sent flow file [{}] with length {} to MQTT topic '{}' on broker {}", flow_file->getUUIDStr(), result.status, topic, uri_);
-    session.transfer(flow_file, Success);
-  } catch (const Exception& ex) {
-    logger_->log_error("Failed to send flow file [{}] to MQTT topic '{}' on broker {}, exception string: '{}'", flow_file->getUUIDStr(), topic, uri_, ex.what());
-    session.transfer(flow_file, Failure);
   }
 }
 
