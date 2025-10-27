@@ -21,12 +21,15 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     set(PATCH_FILE3 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/bundle-openssl.patch")
     set(PATCH_FILE4 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/fix-finding-s2n.patch")
     set(PATCH_FILE5 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/fix-deprecated-literal-operator.patch")
+    set(PATCH_FILE6 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/cpp23-cstdint.patch")
     set(AWS_SDK_CPP_PATCH_COMMAND ${Bash_EXECUTABLE} -c "set -x &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE4}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE4}\") &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE5}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE5}\") ")
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE5}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE5}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE6}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE6}\") &&\
+    :")
 
     if (WIN32)
         set(LIBDIR "lib")
