@@ -111,9 +111,8 @@ class Container:
         if not self.container:
             return False
 
-        escaped_content = expected_content.replace("\"", "\\\"")
-
-        command = f"sh -c \"grep -l -F -- '{escaped_content}' {directory_path}/*\""
+        quoted_content = shlex.quote(expected_content)
+        command = "sh -c {}".format(shlex.quote(f"grep -l -F -- {quoted_content} {directory_path}/*"))
 
         exit_code, output = self.exec_run(command)
 
