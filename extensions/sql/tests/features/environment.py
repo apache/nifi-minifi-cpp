@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 from textwrap import dedent
 
@@ -22,7 +23,7 @@ from minifi_test_framework.core.hooks import get_minifi_container_image
 
 
 def before_all(context):
-    minifi_tag_prefix = os.environ['MINIFI_TAG_PREFIX']
+    minifi_tag_prefix = os.environ['MINIFI_TAG_PREFIX'] if 'MINIFI_TAG_PREFIX' in os.environ else ''
     if "rocky" in minifi_tag_prefix:
         install_sql_cmd = "dnf -y install postgresql-odbc"
         so_location = "psqlodbca.so"
