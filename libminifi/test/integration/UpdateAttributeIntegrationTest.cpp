@@ -19,9 +19,9 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include "core/ProcessContextImpl.h"
 #include "processors/LogAttribute.h"
 #include "integration/IntegrationBase.h"
-#include "ProcessContextExpr.h"
 #include "unit/TestBase.h"
 #include "unit/TestUtils.h"
 #include "unit/Catch.h"
@@ -35,7 +35,7 @@ class TestHarness : public IntegrationBase {
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::FlowController>();
     LogTestController::getInstance().setTrace<core::ProcessSession>();
-    LogTestController::getInstance().setTrace<core::ProcessContextExpr>();
+    LogTestController::getInstance().setTrace<core::ProcessContextImpl>();
     LogTestController::getInstance().setInfo<minifi::processors::LogAttribute>();
   }
 

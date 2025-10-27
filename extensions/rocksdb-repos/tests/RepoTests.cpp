@@ -23,6 +23,7 @@
 #include <optional>
 
 #include "core/Core.h"
+#include "core/ProcessContextImpl.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "core/RepositoryFactory.h"
 #include "minifi-cpp/FlowFileRecord.h"
@@ -41,7 +42,6 @@
 #include "core/repository/FileSystemRepository.h"
 #include "core/Processor.h"
 #include "Connection.h"
-#include "core/ProcessContext.h"
 #include "ResourceClaim.h"
 
 using namespace std::literals::chrono_literals;

@@ -19,7 +19,6 @@
 #include "GCPAttributes.h"
 #include "core/Resource.h"
 #include "unit/SingleProcessorTestController.h"
-#include "ProcessContextExpr.h"
 #include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"
 #include "google/cloud/storage/retry_policy.h"

@@ -27,7 +27,7 @@
 #include "utils/Enum.h"
 #include "utils/Id.h"
 #include "unit/TestUtils.h"
-#include "core/ProcessContext.h"
+#include "core/ProcessContextImpl.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace {
@@ -64,7 +64,7 @@ TEST_CASE("Parse enum property") {
     self.setSupportedProperties(std::to_array<core::PropertyReference>({prop}));
   };
   proc->initialize();
-  ProcessContextImpl context(*proc, nullptr, nullptr, nullptr, nullptr, nullptr);
+  core::ProcessContextImpl context(*proc, nullptr, nullptr, nullptr, nullptr, nullptr);
   SECTION("Valid") {
     REQUIRE(proc->setProperty(prop.name, "B"));
     const auto val = utils::parseEnumProperty<TestEnum>(context, prop);
@@ -135,7 +135,7 @@ TEST_CASE("Parse controller service property") {
   };
   processor->initialize();
   auto configuration = minifi::Configure::create();
-  ProcessContextImpl context(*processor, &test_controller_service_provider, nullptr, nullptr, configuration, nullptr);
+  core::ProcessContextImpl context(*processor, &test_controller_service_provider, nullptr, nullptr, configuration, nullptr);
 
   SECTION("Required controller service property") {
     SECTION("... is valid") {

@@ -32,13 +32,7 @@ set_cpp_version()
 
 include_directories(include)
 
-if(WIN32)
-    include_directories(opsys/win)
-    set(SOCKET_SOURCES "src/io/win/*.cpp")
-else()
-    include_directories(opsys/posix)
-    set(SOCKET_SOURCES "src/io/posix/*.cpp")
-endif()
+include(ExpressionLanguage)
 
 set(TLS_SOURCES "src/utils/tls/*.cpp" "src/io/tls/*.cpp")
 
@@ -50,7 +44,7 @@ file(GLOB SOURCES
     "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/flow/*.cpp"
     "src/core/json/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp" "src/core/extension/*.cpp"
     "src/serialization/*.cpp" "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp" "src/http/*.cpp"
-    "src/parameter-providers/*.cpp")
+    "src/parameter-providers/*.cpp" "src/expression-language/*.cpp")
 # manually add this as it might not yet be present when this executes
 list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/agent_version.cpp")
 
@@ -68,7 +62,12 @@ endif()
 file(GLOB PROCESSOR_SOURCES  "src/processors/*.cpp" )
 
 
-add_minifi_library(core-minifi SHARED ${SOURCES})
+add_minifi_library(core-minifi SHARED ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})
+target_include_directories(core-minifi SYSTEM PRIVATE ${EL_GENERATED_INCLUDE_DIR})
+if (BREW_FLEX_INCLUDE)
+    target_include_directories(core-minifi SYSTEM PRIVATE ${BREW_FLEX_INCLUDE})
+endif()
+
 target_compile_definitions(core-minifi PRIVATE "LIBMINIFI=1")
 if(WIN32)
     set_target_properties(core-minifi PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

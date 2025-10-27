@@ -32,7 +32,7 @@
 
 #include "utils/StringUtils.h"
 #include "utils/OsUtils.h"
-#include "expression/Expression.h"
+#include "expression-language/Expression.h"
 #include "utils/RegexUtils.h"
 #include "utils/TimeUtil.h"
 
@@ -62,7 +62,7 @@
 #include <unistd.h>
 #endif
 
-#include "Driver.h"
+#include "expression-language/Driver.h"
 
 #include "core/logging/LoggerFactory.h"
 

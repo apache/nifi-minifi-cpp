@@ -19,7 +19,7 @@
 
 #include <string>
 #include <map>
-#include "expression/Expression.h"
+#include "expression-language/Expression.h"
 
 #undef yyFlexLexer
 #include <FlexLexer.h>

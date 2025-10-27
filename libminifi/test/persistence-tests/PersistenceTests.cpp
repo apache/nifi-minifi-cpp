@@ -22,6 +22,7 @@
 #include <thread>
 
 #include "core/Core.h"
+#include "core/ProcessContextImpl.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "core/RepositoryFactory.h"
 #include "FlowFileRecord.h"
@@ -38,7 +39,6 @@
 #include "core/repository/FileSystemRepository.h"
 #include "core/ProcessorImpl.h"
 #include "Connection.h"
-#include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
 
 using ConnectionImpl = minifi::ConnectionImpl;

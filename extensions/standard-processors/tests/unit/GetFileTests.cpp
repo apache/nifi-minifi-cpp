@@ -29,7 +29,7 @@
 #include "unit/TestUtils.h"
 #include "unit/ProvenanceTestHelper.h"
 #ifdef WIN32
-#include "impl/expression/Expression.h"
+#include "expression-language/Expression.h"
 #endif
 
 using namespace std::literals::chrono_literals;

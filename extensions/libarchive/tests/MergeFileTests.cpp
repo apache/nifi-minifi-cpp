@@ -28,7 +28,7 @@
 #include "core/Relationship.h"
 #include "core/Core.h"
 #include "core/Processor.h"
-#include "core/ProcessContext.h"
+#include "core/ProcessContextImpl.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "FlowController.h"

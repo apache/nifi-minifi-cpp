@@ -26,7 +26,7 @@
 #include "utils/FifoExecutor.h"
 #include "utils/file/AssetManager.h"
 #include "core/ConfigurationFactory.h"
-#include "core/ProcessContext.h"
+#include "core/ProcessContextImpl.h"
 
 namespace org::apache::nifi::minifi::test {
 

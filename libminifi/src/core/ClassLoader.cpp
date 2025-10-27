@@ -168,7 +168,7 @@ std::optional<std::string> ClassLoaderImpl::getGroupForClass(const std::string &
 
 std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
-  // allow subsequent classes to override functionality (like ProcessContextBuilder)
+  // allow subsequent classes to override functionality
   for (auto& child_loader : class_loaders_) {
     if (auto result = child_loader.second.instantiate(class_name, name, filter)) {
       return result;
@@ -186,7 +186,7 @@ std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &c
 
 std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
-  // allow subsequent classes to override functionality (like ProcessContextBuilder)
+  // allow subsequent classes to override functionality
   for (auto& child_loader : class_loaders_) {
     if (auto result = child_loader.second.instantiate(class_name, uuid, filter)) {
       return result;
@@ -204,7 +204,7 @@ std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &c
 
 std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &class_name, const std::string &name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
-  // allow subsequent classes to override functionality (like ProcessContextBuilder)
+  // allow subsequent classes to override functionality
   for (auto& child_loader : class_loaders_) {
     if (auto result = child_loader.second.instantiate(class_name, name, uuid, filter)) {
       return result;
@@ -222,7 +222,7 @@ std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &c
 
 gsl::owner<CoreComponent*> ClassLoaderImpl::instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
-  // allow subsequent classes to override functionality (like ProcessContextBuilder)
+  // allow subsequent classes to override functionality
   for (auto& child_loader : class_loaders_) {
     if (gsl::owner<CoreComponent*> result = child_loader.second.instantiateRaw(class_name, name, filter)) {
       return result;

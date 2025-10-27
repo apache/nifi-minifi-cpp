@@ -38,7 +38,6 @@ foreach(testfile ${SQL_TESTS})
     target_link_libraries(${testfilename} minifi-sql-mocks)
     target_link_libraries(${testfilename} minifi-sql)
     target_link_libraries(${testfilename} minifi-standard-processors)
-    target_link_libraries(${testfilename} minifi-expression-language-extensions)
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 
     math(EXPR SQL_TEST_COUNT "${SQL_TEST_COUNT}+1")

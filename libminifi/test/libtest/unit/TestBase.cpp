@@ -25,7 +25,7 @@
 #include <utility>
 
 #include "core/Processor.h"
-#include "minifi-cpp/core/ProcessContextBuilder.h"
+#include "core/ProcessContextImpl.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/state/nodes/FlowInformation.h"
@@ -39,7 +39,7 @@
 #include "LogUtils.h"
 #include "utils/GeneralUtils.h"
 #include "Connection.h"
-#include "core/ProcessContext.h"
+#include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
 #include "ResourceClaim.h"
 
@@ -286,11 +286,7 @@ minifi::core::Processor* TestPlan::addProcessor(std::unique_ptr<minifi::core::Pr
     }
     relationships_.push_back(std::move(connection));
   }
-  std::shared_ptr<minifi::core::ProcessContextBuilder> contextBuilder =
-    minifi::core::ClassLoader::getDefaultClassLoader().instantiate<minifi::core::ProcessContextBuilder>("ProcessContextBuilder", "ProcessContextBuilder");
-  contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_services_provider_.get())
-    ->withProvenanceRepository(prov_repo_)->withConfiguration(configuration_);
-  auto context = contextBuilder->build(*processor);
+  auto context = std::make_shared<minifi::core::ProcessContextImpl>(*processor, controller_services_provider_.get(), prov_repo_, flow_repo_, configuration_, content_repo_);
   processor_contexts_.push_back(context);
   processor_queue_.push_back(processor.get());
   auto raw_ptr = processor.get();

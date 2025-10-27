@@ -29,7 +29,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/ProcessContext.h"
+#include "core/ProcessContextImpl.h"
 #include "core/state/UpdateController.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"

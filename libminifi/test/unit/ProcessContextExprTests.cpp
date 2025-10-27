@@ -18,9 +18,8 @@
 #include <memory>
 #include <string>
 
-#include "minifi-cpp/core/ProcessContext.h"
+#include "core/ProcessContextImpl.h"
 #include "core/Resource.h"
-#include "ProcessContextExpr.h"
 #include "core/ProcessorImpl.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -62,7 +61,7 @@ TEST_CASE("ProcessContextExpr can update existing processor properties", "[setPr
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
   [[maybe_unused]] minifi::core::Processor* dummy_processor = test_plan->addProcessor("DummyProcessContextExprProcessor", "dummy_processor");
   std::shared_ptr<minifi::core::ProcessContext> context = [test_plan] { test_plan->runNextProcessor(); return test_plan->getCurrentContext(); }();
-  REQUIRE(dynamic_pointer_cast<minifi::core::ProcessContextExpr>(context) != nullptr);
+  REQUIRE(dynamic_pointer_cast<minifi::core::ProcessContextImpl>(context) != nullptr);
 
   SECTION("Set and get simple property") {
     SECTION("Using a Property reference parameter") {
@@ -107,7 +106,7 @@ TEST_CASE("ProcessContextExpr can use expression language in dynamic properties"
   std::ignore = test_plan->addProcessor("DummyProcessor", "dummy_processor");
   test_plan->runNextProcessor();
   const auto context = test_plan->getCurrentContext();
-  REQUIRE(dynamic_pointer_cast<core::ProcessContextExpr>(context) != nullptr);
+  REQUIRE(dynamic_pointer_cast<core::ProcessContextImpl>(context) != nullptr);
 
   core::FlowFileImpl flow_file;
   flow_file.setAttribute("attr_a", "myAttributeValue");
@@ -136,7 +135,7 @@ TEST_CASE("ProcessContextExpr is mutex guarded properly") {
   std::ignore = test_plan->addProcessor("DummyProcessor", "dummy_processor");
   test_plan->runNextProcessor();
   const auto context = test_plan->getCurrentContext();
-  REQUIRE(dynamic_pointer_cast<core::ProcessContextExpr>(context) != nullptr);
+  REQUIRE(dynamic_pointer_cast<core::ProcessContextImpl>(context) != nullptr);
 
   auto play_with_context = [=]() {
     for (auto i = 0; i < 100; ++i) {
