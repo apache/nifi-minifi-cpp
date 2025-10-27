@@ -213,7 +213,7 @@ class Container:
 
         if exit_code != 0:
             logging.error(f"Error running command '{count_command}': {output}")
-            return False
+            return -1
 
         try:
             return int(output.strip())
