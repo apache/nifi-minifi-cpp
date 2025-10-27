@@ -179,7 +179,7 @@ mkdir -p "$TMPDIR"
 export TEMP="$TMPDIR/temp"
 export LOGS="$TMPDIR/logs"
 
-BEHAVE_OPTS=(--show-progress-bar --logging-level DEBUG --parallel-processes "${_arg_parallel_processes}" --parallel-scheme feature -o "${PWD}/behavex_output_modular" -t "${_arg_tags_to_run}")
+BEHAVE_OPTS=(--show-progress-bar --logging-level INFO --parallel-processes "${_arg_parallel_processes}" --parallel-scheme feature -o "${PWD}/behavex_output_modular" -t "${_arg_tags_to_run}")
 if ! test -z "${_arg_tags_to_exclude}"
 then
   IFS=','
