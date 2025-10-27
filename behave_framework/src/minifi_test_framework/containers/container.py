@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
+import json
 import logging
 import os
 import shlex
@@ -263,3 +263,37 @@ class Container:
         for line in logs.splitlines():
             logging.info(line)
         return False
+
+    def verify_path_with_json_content(self, directory_path: str, expected_str: str) -> bool:
+        if not self.container:
+            return False
+
+        count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
+        exit_code, output = self.exec_run(count_command)
+
+        if exit_code != 0:
+            logging.error(f"Error running command '{count_command}': {output}")
+            return False
+
+        try:
+            file_count = int(output.strip())
+        except (ValueError, IndexError):
+            logging.error(f"Error parsing output '{output}' from command '{count_command}'")
+            return False
+
+        if file_count != 1:
+            logging.error(f"{directory_path} has too many or too few ({file_count}) files")
+            return False
+
+        content_command = f"sh -c 'cat {directory_path}/*'"
+        exit_code, output = self.exec_run(content_command)
+
+        if exit_code != 0:
+            logging.error(f"Error running command '{content_command}': {output}")
+            return False
+
+        actual_content = output.strip()
+        actual_json = json.loads(actual_content)
+        expected_json = json.loads(expected_str)
+
+        return actual_json == expected_json
