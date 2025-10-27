@@ -37,7 +37,9 @@ struct PyProcessContext {
   static int init(PyProcessContext* self, PyObject* args, PyObject* kwds);
 
   static PyObject* getProperty(PyProcessContext* self, PyObject* args);
+  static PyObject* getRawProperty(PyProcessContext* self, PyObject* args);
   static PyObject* getDynamicProperty(PyProcessContext* self, PyObject* args);
+  static PyObject* getRawDynamicProperty(PyProcessContext* self, PyObject* args);
   static PyObject* getDynamicPropertyKeys(PyProcessContext* self, PyObject* args);
   static PyObject* getStateManager(PyProcessContext* self, PyObject* args);
   static PyObject* getControllerService(PyProcessContext* self, PyObject* args);

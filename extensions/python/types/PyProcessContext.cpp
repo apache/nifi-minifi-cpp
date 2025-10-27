@@ -30,7 +30,9 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 static PyMethodDef PyProcessContext_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"getProperty", (PyCFunction) PyProcessContext::getProperty, METH_VARARGS, nullptr},
+    {"getRawProperty", (PyCFunction) PyProcessContext::getRawProperty, METH_VARARGS, nullptr},
     {"getDynamicProperty", (PyCFunction) PyProcessContext::getDynamicProperty, METH_VARARGS, nullptr},
+    {"getRawDynamicProperty", (PyCFunction) PyProcessContext::getRawDynamicProperty, METH_VARARGS, nullptr},
     {"getDynamicPropertyKeys", (PyCFunction) PyProcessContext::getDynamicPropertyKeys, METH_VARARGS, nullptr},
     {"getStateManager", (PyCFunction) PyProcessContext::getStateManager, METH_VARARGS, nullptr},
     {"getControllerService", (PyCFunction) PyProcessContext::getControllerService, METH_VARARGS, nullptr},
@@ -102,6 +104,25 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
   Py_RETURN_NONE;
 }
 
+PyObject* PyProcessContext::getRawProperty(PyProcessContext* self, PyObject* args) {
+  auto context = self->process_context_;
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  const char* property_name = nullptr;
+  if (!PyArg_ParseTuple(args, "s", &property_name)) {
+    return nullptr;
+  }
+
+  std::string property_str{property_name};
+  if (const auto property_value = context->getRawProperty(property_str)) {
+    return object::returnReference(*property_value);
+  }
+  Py_RETURN_NONE;
+}
+
 PyObject* PyProcessContext::getDynamicProperty(PyProcessContext* self, PyObject* args) {
   auto context = self->process_context_;
   if (!context) {
@@ -129,6 +150,25 @@ PyObject* PyProcessContext::getDynamicProperty(PyProcessContext* self, PyObject*
   }
 
   if (const auto property_value = context->getDynamicProperty(property_name, flow_file.get())) {
+    return object::returnReference(*property_value);
+  }
+  Py_RETURN_NONE;
+}
+
+PyObject* PyProcessContext::getRawDynamicProperty(PyProcessContext* self, PyObject* args) {
+  auto context = self->process_context_;
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  const char* property_name = nullptr;
+  if (!PyArg_ParseTuple(args, "s", &property_name)) {
+    return nullptr;
+  }
+
+  std::string property_str{property_name};
+  if (const auto property_value = context->getRawDynamicProperty(property_str)) {
     return object::returnReference(*property_value);
   }
   Py_RETURN_NONE;
