@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@CORE
+@CORE @WIP
 Feature: Minifi C++ can act as a syslog listener
 
   Scenario: A syslog client can send messages to Minifi over UDP
@@ -27,9 +27,10 @@ Feature: Minifi C++ can act as a syslog listener
     And the "Replacement Value" property of the ReplaceText processor is set to "${syslog.timestamp}	${syslog.priority}	${reverseDnsLookup(${syslog.sender}, 100)}	${syslog.msg}"
     And the "success" relationship of the ListenSyslog processor is connected to the ReplaceText
     And the "success" relationship of the ReplaceText processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then at least one file in "/tmp/output" content match the following regex: "^((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)\t13\t.*\tsample_log$" in less than 10 seconds
+    Then at least one file in "/tmp/output" content match the following regex: "^((([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?))(Z|[\+-][0-9]{2}:[0-9]{2})?)\t13\t.*\tsample_log$" in less than 10 seconds
 
   Scenario: A syslog client can send messages to Minifi over TCP
     Given a ListenSyslog processor
@@ -38,6 +39,7 @@ Feature: Minifi C++ can act as a syslog listener
     And the "Parse Messages" property of the ListenSyslog processor is set to "true"
     And a Syslog client with TCP protocol is setup to send logs to minifi
     And the "success" relationship of the ListenSyslog processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
 
     When both instances start up
     Then there are at least 1 files is in the "/tmp/output" directory in less than 10 seconds
