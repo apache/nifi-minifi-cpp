@@ -107,14 +107,17 @@ class Container:
             return code, output.decode("utf-8")
         return None, "Container not running."
 
-    def directory_exists(self, directory_path: str) -> bool:
+    def not_empty_dir_exists(self, directory_path: str) -> bool:
         if not self.container:
             return False
-        dir_exists_exit_code, dir_exisits_output = self.exec_run("sh -c {}".format(shlex.quote(f"test -d {directory_path}")))
-        return dir_exists_exit_code == 0
+        dir_exists_exit_code, dir_exists_output = self.exec_run("sh -c {}".format(shlex.quote(f"test -d {directory_path}")))
+        if dir_exists_exit_code != 0:
+            return False
+        dir_not_empty_ec, dir_not_empty_output = self.exec_run("sh -c {}".format(shlex.quote(f'[ "$(ls -A {directory_path})" ]')))
+        return dir_not_empty_ec == 0
 
     def directory_contains_file_with_content(self, directory_path: str, expected_content: str) -> bool:
-        if not self.container or not self.directory_exists(directory_path):
+        if not self.container or not self.not_empty_dir_exists(directory_path):
             return False
 
         quoted_content = shlex.quote(expected_content)
@@ -125,7 +128,7 @@ class Container:
         return exit_code == 0
 
     def directory_contains_file_with_regex(self, directory_path: str, regex_str: str) -> bool:
-        if not self.container or not self.directory_exists(directory_path):
+        if not self.container or not self.not_empty_dir_exists(directory_path):
             return False
 
         safe_dir_path = shlex.quote(directory_path)
@@ -157,7 +160,7 @@ class Container:
         return file_count == 1
 
     def directory_has_single_file_with_content(self, directory_path: str, expected_content: str) -> bool:
-        if not self.container or not self.directory_exists(directory_path):
+        if not self.container or not self.not_empty_dir_exists(directory_path):
             return False
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
@@ -213,7 +216,7 @@ class Container:
         return self.container.stats(stream=False)
 
     def get_number_of_files(self, directory_path: str) -> int:
-        if not self.container or not self.directory_exists(directory_path):
+        if not self.container or not self.not_empty_dir_exists(directory_path):
             return -1
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
@@ -230,7 +233,7 @@ class Container:
             return -1
 
     def verify_file_contents(self, directory_path: str, expected_contents: list[str]) -> bool:
-        if not self.container or not self.directory_exists(directory_path):
+        if not self.container or not self.not_empty_dir_exists(directory_path):
             return False
 
         safe_dir_path = shlex.quote(directory_path)
@@ -272,7 +275,7 @@ class Container:
         return False
 
     def verify_path_with_json_content(self, directory_path: str, expected_str: str) -> bool:
-        if not self.container or not self.directory_exists(directory_path):
+        if not self.container or not self.not_empty_dir_exists(directory_path):
             return False
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
