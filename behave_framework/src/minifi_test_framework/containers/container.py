@@ -19,13 +19,14 @@ import logging
 import os
 import shlex
 import tempfile
-from docker.models.networks import Network
-from minifi_test_framework.containers.directory import Directory
-from minifi_test_framework.containers.file import File
-from minifi_test_framework.containers.host_file import HostFile
 from typing import Dict, Any, List, Tuple
 
 import docker
+from docker.models.networks import Network
+
+from minifi_test_framework.containers.directory import Directory
+from minifi_test_framework.containers.file import File
+from minifi_test_framework.containers.host_file import HostFile
 
 
 class Container:
@@ -52,10 +53,7 @@ class Container:
             temp_path = os.path.join(self._temp_dir.name, file.host_filename)
             with open(temp_path, "w") as temp_file:
                 temp_file.write(file.content)
-            self.volumes[temp_path] = {
-                "bind": os.path.join(file.path, file.host_filename),
-                "mode": file.mode
-            }
+            self.volumes[temp_path] = {"bind": os.path.join(file.path, file.host_filename), "mode": file.mode}
         for directory in self.dirs:
             temp_path = self._temp_dir.name + directory.path
             os.makedirs(temp_path, exist_ok=True)
@@ -63,15 +61,9 @@ class Container:
                 file_path = os.path.join(temp_path, file_name)
                 with open(file_path, "w") as temp_file:
                     temp_file.write(content)
-            self.volumes[temp_path] = {
-                "bind": directory.path,
-                "mode": directory.mode
-            }
+            self.volumes[temp_path] = {"bind": directory.path, "mode": directory.mode}
         for host_file in self.host_files:
-            self.volumes[host_file.container_path] = {
-                "bind": host_file.host_path,
-                "mode": host_file.mode
-            }
+            self.volumes[host_file.container_path] = {"bind": host_file.host_path, "mode": host_file.mode}
 
         try:
             existing_container = self.client.containers.get(self.container_name)
@@ -82,16 +74,9 @@ class Container:
         try:
             logging.info(f"Creating and starting container '{self.container_name}'...")
             self.container = self.client.containers.run(
-                image=self.image_name,
-                name=self.container_name,
-                ports=self.ports,
-                environment=self.environment,
-                volumes=self.volumes,
-                network=self.network.name,
-                command=self.command,
-                user=self.user,
-                detach=True  # Always run in the background
-            )
+                image=self.image_name, name=self.container_name, ports=self.ports,
+                environment=self.environment, volumes=self.volumes, network=self.network.name,
+                command=self.command, user=self.user, detach=True)
         except Exception as e:
             logging.error(f"Error starting container: {e}")
             raise
@@ -110,10 +95,12 @@ class Container:
     def not_empty_dir_exists(self, directory_path: str) -> bool:
         if not self.container:
             return False
-        dir_exists_exit_code, dir_exists_output = self.exec_run("sh -c {}".format(shlex.quote(f"test -d {directory_path}")))
+        dir_exists_exit_code, dir_exists_output = self.exec_run(
+            "sh -c {}".format(shlex.quote(f"test -d {directory_path}")))
         if dir_exists_exit_code != 0:
             return False
-        dir_not_empty_ec, dir_not_empty_output = self.exec_run("sh -c {}".format(shlex.quote(f'[ "$(ls -A {directory_path})" ]')))
+        dir_not_empty_ec, dir_not_empty_output = self.exec_run(
+            "sh -c {}".format(shlex.quote(f'[ "$(ls -A {directory_path})" ]')))
         return dir_not_empty_ec == 0
 
     def directory_contains_file_with_content(self, directory_path: str, expected_content: str) -> bool:
@@ -134,10 +121,8 @@ class Container:
         safe_dir_path = shlex.quote(directory_path)
         safe_regex_str = shlex.quote(regex_str)
 
-        command = (
-            f"find {safe_dir_path} -maxdepth 1 -type f -print0 | "
-            f"xargs -0 -r grep -l -E -- {safe_regex_str}"
-        )
+        command = (f"find {safe_dir_path} -maxdepth 1 -type f -print0 | "
+                   f"xargs -0 -r grep -l -E -- {safe_regex_str}")
 
         exit_code, output = self.exec_run(f"sh -c \"{command}\"")
 

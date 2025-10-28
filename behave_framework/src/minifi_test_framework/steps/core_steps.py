@@ -15,11 +15,13 @@
 #  limitations under the License.
 #
 
-import humanfriendly
 import logging
 import random
 import string
+
+import humanfriendly
 from behave import when, step
+
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext

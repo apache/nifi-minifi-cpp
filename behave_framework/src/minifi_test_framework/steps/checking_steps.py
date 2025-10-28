@@ -16,9 +16,11 @@
 #
 
 
-import humanfriendly
 import time
+
+import humanfriendly
 from behave import then, step
+
 from minifi_test_framework.containers.http_proxy_container import HttpProxy
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext

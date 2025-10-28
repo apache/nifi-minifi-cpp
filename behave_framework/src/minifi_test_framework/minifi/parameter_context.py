@@ -16,8 +16,9 @@
 #
 
 import uuid
-from minifi_test_framework.minifi.parameter import Parameter
 from typing import List
+
+from minifi_test_framework.minifi.parameter import Parameter
 
 
 class ParameterContext:

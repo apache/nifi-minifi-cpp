@@ -15,11 +15,12 @@
 #  limitations under the License.
 #
 
-from docker.models.networks import Network
-from minifi_test_framework.containers.file import File
-from minifi_test_framework.minifi.flow_definition import FlowDefinition
 from typing import Dict
 
+from docker.models.networks import Network
+
+from minifi_test_framework.containers.file import File
+from minifi_test_framework.minifi.flow_definition import FlowDefinition
 from .container import Container
 
 

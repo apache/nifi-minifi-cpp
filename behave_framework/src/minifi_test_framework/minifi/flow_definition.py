@@ -15,8 +15,9 @@
 #  limitations under the License.
 #
 
-import yaml
 from typing import List
+
+import yaml
 
 from .connection import Connection
 from .controller_service import ControllerService
