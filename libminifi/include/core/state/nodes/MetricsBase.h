@@ -31,9 +31,9 @@
 namespace org::apache::nifi::minifi::state::response {
 
 class ResponseNodeSource {
-  public:
-    virtual ~ResponseNodeSource() = default;
-    virtual SharedResponseNode getResponseNode() = 0;
+ public:
+  virtual ~ResponseNodeSource() = default;
+  virtual SharedResponseNode getResponseNode() = 0;
 };
 
 class DeviceInformation : public ResponseNodeImpl {
