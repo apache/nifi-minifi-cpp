@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@CORE @WIP
+@CORE
 Feature: Minifi C++ can act as a syslog listener
 
   Scenario: A syslog client can send messages to Minifi over UDP
