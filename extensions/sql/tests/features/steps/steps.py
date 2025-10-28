@@ -43,8 +43,8 @@ def step_impl(context):
     context.containers["postgres-server"] = PostgresContainer(context)
 
 
-@then('the query "{query}" returns {rows} rows in less than {timeout_str} on the PostgreSQL server')
-def step_impl(context, query: str, rows: str, timeout_str: str):
+@then('the query "{query}" returns {rows:d} rows in less than {timeout_str} on the PostgreSQL server')
+def step_impl(context, query: str, rows: int, timeout_str: str):
     timeout_seconds = humanfriendly.parse_timespan(timeout_str)
     postgres_container = context.containers["postgres-server"]
     assert isinstance(postgres_container, PostgresContainer)

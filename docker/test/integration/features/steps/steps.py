@@ -906,7 +906,7 @@ def step_impl(context, blob_and_snapshot_count, timeout_seconds):
 
 # SQL
 @then("the query \"{query}\" returns {number_of_rows:d} rows in less than {timeout_seconds:d} seconds on the PostgreSQL server")
-def step_impl(context, query, number_of_rows, timeout_seconds):
+def step_impl(context, query: str, number_of_rows: int, timeout_seconds: int):
     context.test.check_query_results(context.test.get_container_name_with_postfix("postgresql-server"), query, number_of_rows, timeout_seconds)
 
 

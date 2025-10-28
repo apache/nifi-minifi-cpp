@@ -40,6 +40,8 @@ def inject_scenario_id(context: MinifiTestContext, step):
     if getattr(step, "table", None):
         for row in step.table:
             row.cells = [cell.replace("${scenario_id}", context.scenario_id) if "${scenario_id}" in cell else cell for cell in row.cells]
+    if hasattr(step, "text") and step.text and "${scenario_id}" in step.text:
+        step.text = step.text.replace("${scenario_id}", context.scenario_id)
 
 
 def common_before_scenario(context: Context, scenario: Scenario):
