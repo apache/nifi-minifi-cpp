@@ -17,13 +17,13 @@
 import logging
 import os
 
+import docker
 from behave.model import Scenario
-from behave.runner import Context
 from behave.model import Step
+from behave.runner import Context
+
 from minifi_test_framework.containers.minifi_container import MinifiContainer
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-
-import docker
 
 
 def get_minifi_container_image():

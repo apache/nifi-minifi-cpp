@@ -16,6 +16,7 @@
 #
 
 from behave import given, step
+
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.http_proxy_container import HttpProxy
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
