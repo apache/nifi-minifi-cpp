@@ -32,7 +32,7 @@ def step_impl(context, query: str, rows: str, timeout_str: str):
     postgres_container = context.containers[0]
     assert isinstance(postgres_container, PostgresContainer)
     assert wait_for_condition(
-        condition=lambda: postgres_container.check_query_results(query, rows),
+        condition=lambda: postgres_container.check_query_results(query, int(rows)),
         timeout_seconds=timeout_seconds,
         bail_condition=lambda: postgres_container.exited,
         context=context)
