@@ -20,9 +20,8 @@
 #include <algorithm>
 
 #include "core/logging/LoggerConfiguration.h"
-#include "core/extension/Executable.h"
+#include "core/extension/Extension.h"
 #include "utils/file/FilePattern.h"
-#include "core/extension/DynamicLibrary.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "core/extension/Utils.h"
 #include "properties/Configuration.h"
@@ -30,94 +29,56 @@
 
 namespace org::apache::nifi::minifi::core::extension {
 
-const std::shared_ptr<logging::Logger> ExtensionManagerImpl::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
+ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): logger_(logging::LoggerFactory<ExtensionManager>::getLogger()) {
+  logger_->log_trace("Initializing extensions");
+  if (!config) {
+    logger_->log_error("Missing configuration");
+    return;
+  }
+  const std::string pattern = [&] {
+    /**
+     * Comma separated list of path patterns. Patterns prepended with "!" result in the exclusion
+     * of the extensions matching that pattern, unless some subsequent pattern re-enables it.
+     */
+    if (const auto opt_pattern = config->get(minifi::Configuration::nifi_extension_path)) {
+      return *opt_pattern;
+    };
 
-ExtensionManagerImpl::ExtensionManagerImpl()
-    : modules_([] {
-        std::vector<std::unique_ptr<Module>> modules;
-        modules.push_back(std::make_unique<Executable>());
-        return modules;
-      }()),
-      active_module_(modules_[0].get()) {
-}
+    auto default_extension_path = utils::getDefaultExtensionsPattern();
+    logger_->log_warn("No extension path is provided in properties, using default: '{}'", default_extension_path);
+    return std::string(default_extension_path);
+  }();
 
-ExtensionManagerImpl& ExtensionManagerImpl::get() {
-  static ExtensionManagerImpl instance;
-  return instance;
-}
-
-ExtensionManager& ExtensionManager::get() {
-  return ExtensionManagerImpl::get();
-}
-
-bool ExtensionManagerImpl::initialize(const std::shared_ptr<Configure>& config) {
-  static bool initialized = ([&] {
-    logger_->log_trace("Initializing extensions");
-    // initialize executable
-    active_module_->initialize(config);
-    if (!config) {
-      logger_->log_error("Missing configuration");
-      return;
+  auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
+    logger_->log_error("Error in subpattern '{}': {}", subpattern, error_msg);
+  }));
+  for (const auto& candidate : candidates) {
+    auto library = internal::asDynamicLibrary(candidate);
+    if (!library) {
+      continue;
     }
-    const std::string pattern = [&] {
-      /**
-       * Comma separated list of path patterns. Patterns prepended with "!" result in the exclusion
-       * of the extensions matching that pattern, unless some subsequent pattern re-enables it.
-       */
-      if (const auto opt_pattern = config->get(minifi::Configuration::nifi_extension_path)) {
-        return *opt_pattern;
-      };
-
-      auto default_extension_path = utils::getDefaultExtensionsPattern();
-      logger_->log_warn("No extension path is provided in properties, using default: '{}'", default_extension_path);
-      return std::string(default_extension_path);
-    }();
-
-    auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
-      logger_->log_error("Error in subpattern '{}': {}", subpattern, error_msg);
-    }));
-    for (const auto& candidate : candidates) {
-      auto library = internal::asDynamicLibrary(candidate);
-      if (!library) {
+    if (!library->verify(logger_)) {
+      logger_->log_warn("Skipping library '{}' at '{}': failed verification, different build?",
+          library->name, library->getFullPath());
+      continue;
+    }
+    auto extension = std::make_unique<Extension>(library->name, library->getFullPath());
+    if (!extension->load()) {
+      // error already logged by method
+      continue;
+    }
+    // some shared libraries might need to be loaded into the global namespace exposing
+    // their definitions (e.g. python script extension)
+    if (extension->findSymbol("LOAD_MODULE_AS_GLOBAL")) {
+      // reload library as global
+      if (!extension->load(true)) {
         continue;
-      }
-      if (!library->verify(logger_)) {
-        logger_->log_warn("Skipping library '{}' at '{}': failed verification, different build?",
-            library->name, library->getFullPath());
-        continue;
-      }
-      auto module = std::make_unique<DynamicLibrary>(library->name, library->getFullPath());
-      active_module_ = module.get();
-      if (!module->load()) {
-        // error already logged by method
-        continue;
-      }
-      // some modules (shared libraries) might need to be loaded into the global namespace exposing
-      // their definitions (e.g. python script extension)
-      if (module->findSymbol("LOAD_MODULE_AS_GLOBAL")) {
-        // reload library as global
-        if (!module->load(true)) {
-          continue;
-        }
-      }
-      if (!module->initialize(config)) {
-        logger_->log_error("Failed to initialize module '{}' at '{}'", library->name, library->getFullPath());
-      } else {
-        modules_.push_back(std::move(module));
       }
     }
-  }(), true);
-  return initialized;
-}
-
-void ExtensionManagerImpl::registerExtension(Extension& extension) {
-  active_module_->registerExtension(extension);
-}
-
-void ExtensionManagerImpl::unregisterExtension(Extension& extension) {
-  for (const auto& module : modules_) {
-    if (module->unregisterExtension(extension)) {
-      return;
+    if (!extension->initialize(config)) {
+      logger_->log_error("Failed to initialize extension '{}' at '{}'", library->name, library->getFullPath());
+    } else {
+      extensions_.push_back(std::move(extension));
     }
   }
 }

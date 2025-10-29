@@ -333,7 +333,7 @@ int main(int argc, char **argv) {
 
     minifi::fips::initializeFipsMode(configure, *locations, logger);
 
-    minifi::core::extension::ExtensionManagerImpl::get().initialize(configure);
+    minifi::core::extension::ExtensionManager extension_manager(configure);
 
     if (const auto maybe_exit_code = dumpDocsIfRequested(argument_parser, configure)) { return *maybe_exit_code; }
     if (const auto maybe_exit_code = writeSchemaIfRequested(argument_parser, configure)) { return *maybe_exit_code; }

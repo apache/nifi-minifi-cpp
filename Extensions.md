@@ -33,19 +33,21 @@ REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
 Some extensions (e.g. `OpenCVExtension`) require initialization before use.
-You need to create `init` and `deinit` functions and register them using `REGISTER_EXTENSION`.
+You need to define an `InitExtension` function to be called.
 
 ```C++
-static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
-  return org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
+extern "C" std::optional<ExtensionInfo> init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
+  org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
+  return ExtensionInfo{
+    .name = "OpenCVExtension",
+    .version = "1.0.0",
+    .deinit = [] (void* /*ctx*/) {
+      // pass
+    },
+    .ctx = nullptr
+  };
 }
-
-static void deinit() {}
-
-REGISTER_EXTENSION("OpenCVExtension", init, deinit);
 ```
-
-If you don't use `REGISTER_EXTENSION`, the registered resources still become available, so make sure to register the extension if you need special initialization.
 
 # Loading extensions
 

@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/extension/Extension.h"
+#include "minifi-cpp/core/extension/ExtensionInfo.h"
 #include "PythonCreator.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "PythonBindings.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -26,17 +27,16 @@ static minifi::extensions::python::PythonCreator& getPythonCreator() {
   return instance;
 }
 
-static bool init(const std::shared_ptr<minifi::Configure>& config) {
-  getPythonCreator().configure(config);
-  return true;
-}
-
-static void deinit() {
-  // TODO(adebreceni): deinitialization is not implemented
-}
-
 // request this module (shared library) to be opened into the global namespace, exposing
 // the symbols of the python library
 extern "C" const int LOAD_MODULE_AS_GLOBAL = 1;
 
-REGISTER_EXTENSION("PythonExtension", init, deinit);
+extern "C" std::optional<minifi::core::extension::ExtensionInfo> InitExtension(const std::shared_ptr<minifi::Configure>& config) {
+  getPythonCreator().configure(config);
+  return minifi::core::extension::ExtensionInfo{
+    .name = "PythonExtension",
+    .version = minifi::AgentBuild::VERSION,
+    .deinit = nullptr,
+    .ctx = nullptr
+  };
+}

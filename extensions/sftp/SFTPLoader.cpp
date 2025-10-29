@@ -16,23 +16,33 @@
  * limitations under the License.
  */
 
-#include "core/extension/Extension.h"
+#include "minifi-cpp/core/extension/ExtensionInfo.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "minifi-cpp/properties/Configure.h"
 #include "client/SFTPClient.h"
 
-static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
-  if (libssh2_init(0) != 0) {
-    return false;
-  }
-  if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
-    libssh2_exit();
-    return false;
-  }
-  return true;
-}
+namespace minifi = org::apache::nifi::minifi;
 
 static void deinit() {
   curl_global_cleanup();
   libssh2_exit();
 }
 
-REGISTER_EXTENSION("SFTPExtension", init, deinit);
+extern "C" std::optional<minifi::core::extension::ExtensionInfo> InitExtension(const std::shared_ptr<minifi::Configure>& config) {
+  if (libssh2_init(0) != 0) {
+    return std::nullopt;
+  }
+  if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
+    libssh2_exit();
+    return std::nullopt;
+  }
+  return minifi::core::extension::ExtensionInfo{
+    .name = "SFTPExtension",
+    .version = minifi::AgentBuild::VERSION,
+    .deinit = [] (void* /*ctx*/) {
+      curl_global_cleanup();
+      libssh2_exit();
+    },
+    .ctx = nullptr
+  };
+}

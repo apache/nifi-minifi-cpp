@@ -22,7 +22,9 @@
 #include <array>
 #include "utils/StringUtils.h"
 #include "core/logging/LoggerFactory.h"
-#include "core/extension/Extension.h"
+#include "minifi-cpp/core/extension/ExtensionInfo.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "minifi-cpp/properties/Configure.h"
 
 #if defined(WIN32)
 static_assert(false, "The Python library loader should only be used on Linux or macOS.");
@@ -95,11 +97,12 @@ class PythonLibLoader {
   std::shared_ptr<minifi::core::logging::Logger> logger_ = minifi::core::logging::LoggerFactory<PythonLibLoader>::getLogger();
 };
 
-static bool init([[maybe_unused]] const std::shared_ptr<minifi::Configure>& config) {
+extern "C" std::optional<minifi::core::extension::ExtensionInfo> InitExtension(const std::shared_ptr<minifi::Configure>& config) {
   static PythonLibLoader python_lib_loader(config);
-  return true;
+  return minifi::core::extension::ExtensionInfo{
+    .name = "PythonLibLoaderExtension",
+    .version = minifi::AgentBuild::VERSION,
+    .deinit = nullptr,
+    .ctx = nullptr
+  };
 }
-
-static void deinit() {}
-
-REGISTER_EXTENSION("PythonLibLoaderExtension", init, deinit);

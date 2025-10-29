@@ -170,7 +170,7 @@ class MyPyProc5(FlowFileTransform):
   controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*");
 #endif
 
-  core::extension::ExtensionManagerImpl::get().initialize(controller.configuration_);
+  core::extension::ExtensionManager extension_manager(controller.configuration_);
 
   controller.setupFlow();
 

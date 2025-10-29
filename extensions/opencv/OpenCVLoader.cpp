@@ -15,18 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/extension/Extension.h"
+#include "minifi-cpp/core/extension/ExtensionInfo.h"
+#include "minifi-cpp/properties/Configure.h"
 #include "utils/Environment.h"
+#include "minifi-cpp/agent/agent_version.h"
 
-static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
+namespace minifi = org::apache::nifi::minifi;
+
+extern "C" std::optional<minifi::core::extension::ExtensionInfo> InitExtension(const std::shared_ptr<minifi::Configure>& config) {
   // By default in OpenCV, ffmpeg capture is hardcoded to use TCP and this is a workaround
   // also if UDP timeout, ffmpeg will retry with TCP
   // Note:
   // 1. OpenCV community are trying to find a better approach than setenv.
   // 2. The command will not overwrite value if "OPENCV_FFMPEG_CAPTURE_OPTIONS" already exists.
-  return org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
+  const auto success = org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
+  if (!success) {
+    return std::nullopt;
+  }
+  return minifi::core::extension::ExtensionInfo{
+    .name = "OpenCVExtension",
+    .version = minifi::AgentBuild::VERSION,
+    .deinit = nullptr,
+    .ctx = nullptr
+  };
 }
-
-static void deinit() {}
-
-REGISTER_EXTENSION("OpenCVExtension", init, deinit);

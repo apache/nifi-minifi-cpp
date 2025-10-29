@@ -1,4 +1,5 @@
 /**
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,45 +18,15 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
-#include <vector>
-
-#include "minifi-cpp/core/logging/Logger.h"
-#include "minifi-cpp/utils/gsl.h"
-#include "properties/Configure.h"
-#include "minifi-cpp/core/extension/Extension.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
-/**
- * Represents an initializable component of the agent.
- */
-class Module {
-  friend class ExtensionManagerImpl;
-
- protected:
-  explicit Module(std::string name);
-
- public:
-  virtual ~Module();
-
-  std::string getName() const;
-
-  void registerExtension(Extension& extension);
-  bool unregisterExtension(Extension& extension);
-
- private:
-  bool initialize(const std::shared_ptr<Configure>& config);
-
- protected:
-  std::string name_;
-
-  std::mutex mtx_;
-  bool initialized_{false};
-  std::vector<Extension*> extensions_;
-
-  static std::shared_ptr<logging::Logger> logger_;
+struct ExtensionInfo {
+  std::string name;
+  std::string version;
+  void(*deinit)(void* ctx);
+  void* ctx;
 };
 
 }  // namespace org::apache::nifi::minifi::core::extension
