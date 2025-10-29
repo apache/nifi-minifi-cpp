@@ -1,3 +1,4 @@
+import logging
 from textwrap import dedent
 from minifi_test_framework.containers.container import Container
 from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
@@ -12,11 +13,11 @@ class PostgresContainer(Container):
                 RUN echo "#!/bin/bash" > /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "set -e" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
-                    echo "    CREATE TABLE test_table (int_col INTEGER, text_col TEXT);" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    CREATE TABLE test_table (int_col INTEGER, text_col TEXT, UNIQUE (int_col, text_col));" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table (int_col, text_col) VALUES (1, 'apple');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table (int_col, text_col) VALUES (2, 'banana');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table (int_col, text_col) VALUES (3, 'pear');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
-                    echo "    CREATE TABLE test_table2 (int_col INTEGER, \\"tExT_Col\\" TEXT);" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    CREATE TABLE test_table2 (int_col INTEGER, \\"tExT_Col\\" TEXT, UNIQUE (int_col, \\"tExT_Col\\"));" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (5, 'ApPlE');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (6, 'BaNaNa');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
@@ -39,6 +40,7 @@ class PostgresContainer(Container):
             bail_condition=lambda: self.exited,
             context=None)
 
-    def check_query_results(self, query, number_of_rows):
+    def check_query_results(self, query: str, number_of_rows: int) -> bool:
         (code, output) = self.exec_run(["psql", "-U", "postgres", "-c", query])
-        return code == 0 and str(number_of_rows) + " rows" in output
+        logging.debug(f"check_query_results: {query} -> {output}")
+        return code == 0 and (str(number_of_rows) + (" row" if number_of_rows == 1 else " rows")) in output

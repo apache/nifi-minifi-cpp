@@ -162,6 +162,13 @@ def step_impl(context: MinifiTestContext, processor_name: str):
     processor.scheduling_strategy = "EVENT_DRIVEN"
 
 
+@step("{processor_name} is TIMER_DRIVEN with {scheduling_period} scheduling period")
+def step_impl(context: MinifiTestContext, processor_name: str, scheduling_period: int):
+    processor = context.minifi_container.flow_definition.get_processor(processor_name)
+    processor.scheduling_strategy = "TIMER_DRIVEN"
+    processor.scheduling_period = scheduling_period
+
+
 @given("a {service_name} controller service is set up")
 @given("an {service_name} controller service is set up")
 def step_impl(context: MinifiTestContext, service_name: str):

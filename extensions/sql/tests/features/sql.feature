@@ -27,6 +27,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "success" relationship of the UpdateAttribute processor is connected to the PutSQL
     And an ODBCService is setup up for PutSQL with the name "ODBCService"
     And PutSQL's success relationship is auto-terminated
+    And PutSQL's failure relationship is auto-terminated
     And a PostgreSQL server is set up
     When all instances start up
     Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 60 seconds on the PostgreSQL server
