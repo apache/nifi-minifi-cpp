@@ -19,6 +19,8 @@
 #pragma once
 
 #include <string>
+#include <optional>
+#include "minifi-cpp/properties/Configure.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
@@ -28,5 +30,7 @@ struct ExtensionInfo {
   void(*deinit)(void* ctx);
   void* ctx;
 };
+
+using ExtensionInitializer = std::optional<minifi::core::extension::ExtensionInfo>(*)(const std::shared_ptr<minifi::Configure>& config);
 
 }  // namespace org::apache::nifi::minifi::core::extension

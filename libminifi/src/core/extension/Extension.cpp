@@ -91,11 +91,11 @@ Extension::~Extension() {
   unload();
 }
 
-bool Extension::initialize(std::shared_ptr<minifi::Configure> configure) {
+bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) {
   logger_->log_trace("Initializing extension '{}'", name_);
-  if (auto* init = findSymbol("InitExtension")) {
+  if (void* init = findSymbol("InitExtension")) {
     logger_->log_error("Found custom initializer for '{}'", name_);
-    info_ = (*static_cast<std::optional<ExtensionInfo>(**)(std::shared_ptr<minifi::Configure>)>(init))(configure);
+    info_ = (*static_cast<ExtensionInitializer*>(init))(configure);
     if (!info_) {
       logger_->log_error("Failed to initialize extension '{}'", name_);
       return false;

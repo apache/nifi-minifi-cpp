@@ -41,7 +41,7 @@ class Extension {
 
   ~Extension();
 
-  bool initialize(std::shared_ptr<minifi::Configure> configure);
+  bool initialize(const std::shared_ptr<minifi::Configure>& configure);
 
  private:
 #ifdef WIN32
