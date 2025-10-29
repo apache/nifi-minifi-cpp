@@ -36,9 +36,9 @@ Some extensions (e.g. `OpenCVExtension`) require initialization before use.
 You need to define an `InitExtension` function to be called.
 
 ```C++
-extern "C" std::optional<ExtensionInfo> init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
+extern "C" std::optional<org::apache::nifi:minifi::core::extension::ExtensionInfo> InitExtension(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
   org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
-  return ExtensionInfo{
+  return org::apache::nifi:minifi::core::extension::ExtensionInfo{
     .name = "OpenCVExtension",
     .version = "1.0.0",
     .deinit = [] (void* /*ctx*/) {
