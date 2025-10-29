@@ -29,45 +29,45 @@
 namespace org::apache::nifi::minifi::core::extension {
 
 class Extension {
-  friend class ExtensionManager;
+ friend class ExtensionManager;
 
-  public:
-    Extension(std::string name, std::filesystem::path library_path);
+ public:
+  Extension(std::string name, std::filesystem::path library_path);
 
-    Extension(const Extension&) = delete;
-    Extension(Extension&&) = delete;
-    Extension& operator=(const Extension&) = delete;
-    Extension& operator=(Extension&&) = delete;
+  Extension(const Extension&) = delete;
+  Extension(Extension&&) = delete;
+  Extension& operator=(const Extension&) = delete;
+  Extension& operator=(Extension&&) = delete;
 
-    ~Extension();
+  ~Extension();
 
-    bool initialize(std::shared_ptr<minifi::Configure> configure);
+  bool initialize(std::shared_ptr<minifi::Configure> configure);
 
-  private:
+ private:
 #ifdef WIN32
-    std::map<void*, std::string> resource_mapping_;
+  std::map<void*, std::string> resource_mapping_;
 
-    std::string error_str_;
-    std::string current_error_;
+  std::string error_str_;
+  std::string current_error_;
 
-    void store_error();
-    void* dlsym(void* handle, const char* name);
-    const char* dlerror();
-    void* dlopen(const char* file, int mode);
-    int dlclose(void* handle);
+  void store_error();
+  void* dlsym(void* handle, const char* name);
+  const char* dlerror();
+  void* dlopen(const char* file, int mode);
+  int dlclose(void* handle);
 #endif
 
-    bool load(bool global = false);
-    bool unload();
-    void* findSymbol(const char* name);
+  bool load(bool global = false);
+  bool unload();
+  void* findSymbol(const char* name);
 
-    std::string name_;
-    std::filesystem::path library_path_;
-    gsl::owner<void*> handle_ = nullptr;
+  std::string name_;
+  std::filesystem::path library_path_;
+  gsl::owner<void*> handle_ = nullptr;
 
-    std::optional<ExtensionInfo> info_;
+  std::optional<ExtensionInfo> info_;
 
-    const std::shared_ptr<logging::Logger> logger_;
+  const std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::extension
