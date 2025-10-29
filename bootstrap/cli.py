@@ -72,6 +72,7 @@ def main_menu(minifi_options: MinifiOptions, package_manager: PackageManager):
     done = False
     while not done:
         main_menu_options = {
+            # All menu options' functions return True if the bootstrap should exit after execution
             f"Build dir: {minifi_options.build_dir}": build_dir_menu,
             f"Build type: {minifi_options.build_type.value}": build_type_menu,
             "Build options": build_options_menu,
@@ -181,6 +182,7 @@ def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageMan
     done = False
     while not done:
         step_by_step_options = {
+            # All menu options' functions return True if the bootstrap should exit after execution
             f"Build dir: {minifi_options.build_dir}": build_dir_menu,
             "Install dependencies": install_dependencies,
             "Run cmake": run_cmake,
