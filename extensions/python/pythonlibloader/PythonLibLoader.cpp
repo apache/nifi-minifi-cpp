@@ -97,7 +97,7 @@ class PythonLibLoader {
   std::shared_ptr<minifi::core::logging::Logger> logger_ = minifi::core::logging::LoggerFactory<PythonLibLoader>::getLogger();
 };
 
-extern "C" std::optional<minifi::core::extension::ExtensionInfo> InitExtension(const std::shared_ptr<minifi::Configure>& config) {
+extern "C" std::optional<minifi::core::extension::ExtensionInfo> (*InitExtension)(const std::shared_ptr<minifi::Configure>& config) = [] (const std::shared_ptr<minifi::Configure>& config) -> std::optional<minifi::core::extension::ExtensionInfo> {
   static PythonLibLoader python_lib_loader(config);
   return minifi::core::extension::ExtensionInfo{
     .name = "PythonLibLoaderExtension",
@@ -105,4 +105,4 @@ extern "C" std::optional<minifi::core::extension::ExtensionInfo> InitExtension(c
     .deinit = nullptr,
     .ctx = nullptr
   };
-}
+};

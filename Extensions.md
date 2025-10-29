@@ -33,20 +33,21 @@ REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
 Some extensions (e.g. `OpenCVExtension`) require initialization before use.
-You need to define an `InitExtension` function to be called.
+You need to define an `InitExtension` function pointer to be called.
 
 ```C++
-extern "C" std::optional<org::apache::nifi:minifi::core::extension::ExtensionInfo> InitExtension(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
-  org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
-  return org::apache::nifi:minifi::core::extension::ExtensionInfo{
+extern "C" std::optional<minifi::core::extension::ExtensionInfo> (*InitExtension)(const std::shared_ptr<minifi::Configure>& config) = [] (const std::shared_ptr<minifi::Configure>& config) -> std::optional<minifi::core::extension::ExtensionInfo> {
+  const auto success = org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
+  if (!success) {
+    return std::nullopt;
+  }
+  return minifi::core::extension::ExtensionInfo{
     .name = "OpenCVExtension",
-    .version = "1.0.0",
-    .deinit = [] (void* /*ctx*/) {
-      // pass
-    },
+    .version = minifi::AgentBuild::VERSION,
+    .deinit = nullptr,
     .ctx = nullptr
   };
-}
+};
 ```
 
 # Loading extensions

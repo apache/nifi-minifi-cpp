@@ -28,7 +28,7 @@ static void deinit() {
   libssh2_exit();
 }
 
-extern "C" std::optional<minifi::core::extension::ExtensionInfo> InitExtension(const std::shared_ptr<minifi::Configure>& config) {
+extern "C" std::optional<minifi::core::extension::ExtensionInfo> (*InitExtension)(const std::shared_ptr<minifi::Configure>& config) = [] (const std::shared_ptr<minifi::Configure>& config) -> std::optional<minifi::core::extension::ExtensionInfo> {
   if (libssh2_init(0) != 0) {
     return std::nullopt;
   }
@@ -45,4 +45,4 @@ extern "C" std::optional<minifi::core::extension::ExtensionInfo> InitExtension(c
     },
     .ctx = nullptr
   };
-}
+};
