@@ -241,10 +241,17 @@ class StoppingHeartbeatHandler : public HeartbeatHandler {
  public:
   explicit StoppingHeartbeatHandler(std::shared_ptr<minifi::Configure> configuration) : HeartbeatHandler(std::move(configuration)) {}
 
-  bool handlePost(CivetServer *, struct mg_connection *conn) override;
+  void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *conn) override {
+    HeartbeatHandler::handleHeartbeat(root, conn);
+    sendStartStopOperation(conn);
+  }
+
+ protected:
+  void sendStartStopOperation(struct mg_connection *conn);
 
  private:
-  static void sendStopOperation(struct mg_connection *conn);
+  std::mutex post_count_mutex_;
+  uint32_t post_count_{0};
 };
 
 class C2FlowProvider : public ServerAwareHandler {

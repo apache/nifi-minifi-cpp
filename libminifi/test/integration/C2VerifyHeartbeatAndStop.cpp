@@ -38,15 +38,21 @@ class VerifyC2Heartbeat : public VerifyC2Base {
   }
 
   void runAssertions() override {
-    using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+    REQUIRE(utils::verifyLogLinePresenceInPollTime(20s,
         "Received Ack from Server",
-        "C2Agent] [debug] Stopping component 2438e3c8-015a-1000-79ca-83af40ec1991",
-        "C2Agent] [debug] Stopping component FlowController"));
+        "C2Agent] [debug] Stopping processor 2438e3c8-015a-1000-79ca-83af40ec1991",
+        "C2Agent] [debug] Stopping all processors",
+        "C2Agent] [debug] Starting processor 2438e3c8-015a-1000-79ca-83af40ec1991",
+        "C2Agent] [debug] Starting all processors",
+        "C2Agent] [debug] Stopping processor 2438e3c8-015a-1000-79ca-83af40ec1992",
+        "C2Agent] [debug] Starting processor 2438e3c8-015a-1000-79ca-83af40ec1992"));
+    CHECK(utils::countLogOccurrencesUntil("C2Agent] [debug] Stopping all processors", 2, 10s, 100ms));
+    CHECK(utils::countLogOccurrencesUntil("C2Agent] [debug] Starting all processors", 2, 10s, 100ms));
   }
 
   void configureFullHeartbeat() override {
     configuration->set(minifi::Configuration::nifi_c2_full_heartbeat, "true");
+    configuration->set(minifi::Configuration::nifi_c2_agent_heartbeat_period, "100");
   }
 };
 
