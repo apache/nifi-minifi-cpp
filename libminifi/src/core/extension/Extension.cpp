@@ -102,7 +102,7 @@ bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) 
       return false;
     }
   } else {
-    logger_->log_error("No custom initializer for '{}'", name_);
+    logger_->log_debug("No custom initializer for '{}'", name_);
   }
   return true;
 }
