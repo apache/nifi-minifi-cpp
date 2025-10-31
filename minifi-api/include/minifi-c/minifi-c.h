@@ -40,8 +40,8 @@ typedef struct MinifiExtensionCreateInfo {
   void* user_data;
 } MinifiExtensionCreateInfo;
 
-MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo*);
-void MinifiConfigureGet(MinifiConfig*, MinifiStringView, void(*cb)(void* user_data, MinifiStringView value), void* user_data);
+MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info);
+void MinifiConfigureGet(MinifiConfig* config, MinifiStringView key, void(*cb)(void* user_data, MinifiStringView value), void* user_data);
 
 #ifdef __cplusplus
 }  // extern "C"

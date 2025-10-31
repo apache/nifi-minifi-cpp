@@ -25,7 +25,7 @@
 namespace org::apache::nifi::minifi::utils {
 
 inline MinifiStringView toStringView(std::string_view str) {
-  return MinifiStringView{.data = str.data(), .length = gsl::narrow<size_t>(str.length())};
+  return MinifiStringView{.data = str.data(), .length = str.length()};
 }
 
 using ConfigReader = std::function<std::optional<std::string>(std::string_view key)>;
