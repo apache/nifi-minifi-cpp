@@ -18,7 +18,7 @@
 #
 
 file(GLOB EXECUTESCRIPT_PYTHON_TESTS "TestExecuteScriptProcessorWithPythonScript.cpp" "PythonScriptEngineTests.cpp")
-file(GLOB EXECUTEPYTHONPROCESSOR_UNIT_TESTS "ExecutePythonProcessorTests.cpp" "PythonManifestTests.cpp")
+file(GLOB EXECUTEPYTHONPROCESSOR_UNIT_TESTS "ExecutePythonProcessorTests.cpp")
 file(GLOB PY_SOURCES  "python/*.cpp")
 include(GenericPython)
 
@@ -50,6 +50,13 @@ FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}"  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 ENDFOREACH()
+
+add_minifi_executable(PythonManifestTests "PythonManifestTests.cpp")
+add_dependencies(PythonManifestTests minifi-python-script-extension minifi-script-extension minifi-standard-processors)
+target_link_libraries(PythonManifestTests Catch2WithMain)
+createTests(PythonManifestTests)
+MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
+add_test(NAME "PythonManifestTests" COMMAND "PythonManifestTests"  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 copyTestResources(${CMAKE_SOURCE_DIR}/extensions/python/pythonprocessors/nifiapi ${CMAKE_BINARY_DIR}/bin/resources/minifi-python/nifiapi)
 copyTestResources(${CMAKE_CURRENT_SOURCE_DIR}/test_python_scripts/ ${CMAKE_BINARY_DIR}/bin/resources/test_python_scripts/)

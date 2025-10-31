@@ -41,6 +41,8 @@
 #include "utils/file/FilePattern.h"
 #include "utils/file/FileUtils.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
+#include "minifi-c/minifi-c.h"
+#include "utils/minifi-c-utils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -93,17 +95,23 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
     registered_classes_.clear();
   }
 
-  void configure(const std::shared_ptr<Configure> &configuration) override {
-    std::optional<std::string> pathListings = configuration ? configuration->get(minifi::Configuration::nifi_python_processor_dir) : std::nullopt;
+  void configure(const std::shared_ptr<Configure>& configuration) override {
+    configure([&] (std::string_view key) -> std::optional<std::string> {
+      return configuration->get(std::string{key});
+    });
+  }
+
+  void configure(minifi::utils::ConfigReader config_reader) {
+    std::optional<std::string> pathListings = config_reader(minifi::Configuration::nifi_python_processor_dir);
     if (!pathListings) {
       return;
     }
     configure({pathListings.value()});
 
-    PythonDependencyInstaller dependency_installer(configuration);
+    PythonDependencyInstaller dependency_installer(config_reader);
     dependency_installer.installDependencies(classpaths_);
 
-    auto python_lib_path = getPythonLibPath(configuration);
+    auto python_lib_path = getPythonLibPath(config_reader);
     for (const auto &path : classpaths_) {
       const auto script_name = path.stem();
       const auto package = getPackage(pathListings.value(), path.string());
@@ -212,9 +220,9 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
     return python_package;
   }
 
-  std::filesystem::path getPythonLibPath(const std::shared_ptr<Configure>& configuration) {
+  std::filesystem::path getPythonLibPath(minifi::utils::ConfigReader config_reader) {
     const std::string pattern = [&] {
-      if (const auto opt_pattern = configuration->get(Configuration::nifi_extension_path)) {
+      if (const auto opt_pattern = config_reader(Configuration::nifi_extension_path)) {
         return *opt_pattern;
       };
       const auto default_extension_path = utils::getDefaultExtensionsPattern();

@@ -16,28 +16,31 @@
  * limitations under the License.
  */
 
-#include "minifi-cpp/core/extension/ExtensionInfo.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "minifi-cpp/properties/Configure.h"
 #include "client/SFTPClient.h"
+#include "minifi-c/minifi-c.h"
+#include "utils/minifi-c-utils.h"
+#include "core/Resource.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" minifi::core::extension::ExtensionInitializer InitExtension = [] (const std::shared_ptr<minifi::Configure>& /*config*/) -> std::optional<minifi::core::extension::ExtensionInfo> {
+extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
   if (libssh2_init(0) != 0) {
-    return std::nullopt;
+    return nullptr;
   }
   if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
     libssh2_exit();
-    return std::nullopt;
+    return nullptr;
   }
-  return minifi::core::extension::ExtensionInfo{
-    .name = "SFTPExtension",
-    .version = minifi::AgentBuild::VERSION,
-    .deinit = [] (void* /*ctx*/) {
+  MinifiExtensionCreateInfo ext_create_info{
+    .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
+    .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
+    .deinit = [] (void* /*user_data*/) {
       curl_global_cleanup();
       libssh2_exit();
     },
-    .ctx = nullptr
+    .user_data = nullptr
   };
-};
+  return MinifiCreateExtension(&ext_create_info);
+}

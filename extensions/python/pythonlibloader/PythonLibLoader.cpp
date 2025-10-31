@@ -22,9 +22,10 @@
 #include <array>
 #include "utils/StringUtils.h"
 #include "core/logging/LoggerFactory.h"
-#include "minifi-cpp/core/extension/ExtensionInfo.h"
 #include "minifi-cpp/agent/agent_version.h"
-#include "minifi-cpp/properties/Configure.h"
+#include "minifi-c/minifi-c.h"
+#include "utils/minifi-c-utils.h"
+#include "core/Resource.h"
 
 #if defined(WIN32)
 static_assert(false, "The Python library loader should only be used on Linux or macOS.");
@@ -34,9 +35,9 @@ namespace minifi = org::apache::nifi::minifi;
 
 class PythonLibLoader {
  public:
-  explicit PythonLibLoader(const std::shared_ptr<minifi::Configure>& config) {
+  explicit PythonLibLoader(minifi::utils::ConfigReader config_reader) {
     std::string python_command = "python3";
-    if (auto python_binary = config->get(minifi::Configure::nifi_python_env_setup_binary)) {
+    if (auto python_binary = config_reader(minifi::Configure::nifi_python_env_setup_binary)) {
       python_command = python_binary.value();
     }
 #if defined(__APPLE__)
@@ -97,12 +98,19 @@ class PythonLibLoader {
   std::shared_ptr<minifi::core::logging::Logger> logger_ = minifi::core::logging::LoggerFactory<PythonLibLoader>::getLogger();
 };
 
-extern "C" minifi::core::extension::ExtensionInitializer InitExtension = [] (const std::shared_ptr<minifi::Configure>& config) -> std::optional<minifi::core::extension::ExtensionInfo> {
-  static PythonLibLoader python_lib_loader(config);
-  return minifi::core::extension::ExtensionInfo{
-    .name = "PythonLibLoaderExtension",
-    .version = minifi::AgentBuild::VERSION,
+extern "C" MinifiExtension* InitExtension(MinifiConfig* config) {
+  static PythonLibLoader python_lib_loader([&] (std::string_view key) -> std::optional<std::string> {
+    std::optional<std::string> result;
+    MinifiConfigureGet(config, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
+      *static_cast<std::optional<std::string>*>(user_data) = std::string{value.data, value.length};
+    }, &result);
+    return result;
+  });
+  MinifiExtensionCreateInfo ext_create_info{
+    .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
+    .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
-    .ctx = nullptr
+    .user_data = nullptr
   };
-};
+  return MinifiCreateExtension(&ext_create_info);
+}

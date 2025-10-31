@@ -36,6 +36,7 @@
 #include "core/extension/Extension.h"
 #include "utils/GeneralUtils.h"
 #include "core/logging/LoggerFactory.h"
+#include "minifi-c/minifi-c.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
@@ -86,7 +87,7 @@ void* Extension::findSymbol(const char *name) {
 
 Extension::~Extension() {
   if (info_ && info_->deinit) {
-    info_->deinit(info_->ctx);
+    info_->deinit(info_->user_data);
   }
   unload();
 }
@@ -95,7 +96,7 @@ bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) 
   logger_->log_trace("Initializing extension '{}'", name_);
   if (void* init = findSymbol("InitExtension")) {
     logger_->log_error("Found custom initializer for '{}'", name_);
-    info_ = (*static_cast<ExtensionInitializer*>(init))(configure);
+    info_.reset(reinterpret_cast<Info*>(reinterpret_cast<MinifiExtension*(*)(MinifiConfig*)>(init)(reinterpret_cast<MinifiConfig*>(configure.get()))));
     if (!info_) {
       logger_->log_error("Failed to initialize extension '{}'", name_);
       return false;

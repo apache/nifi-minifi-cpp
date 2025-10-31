@@ -25,18 +25,19 @@
 #include "types/Types.h"
 #include "utils/OptionalUtils.h"
 #include "utils/ConfigurationUtils.h"
+#include "utils/minifi-c-utils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
 namespace {
 
-std::string getPythonBinary(const std::shared_ptr<Configure> &configuration) {
+std::string getPythonBinary(minifi::utils::ConfigReader config_reader) {
 #if WIN32
   std::string python_binary = "python";
 #else
   std::string python_binary = "python3";
 #endif
-  if (auto binary = configuration->get(minifi::Configuration::nifi_python_env_setup_binary)) {
+  if (auto binary = config_reader(minifi::Configuration::nifi_python_env_setup_binary)) {
     python_binary = *binary;
   }
   return python_binary;
@@ -92,16 +93,16 @@ CommandResult executeProcess(const std::string& command) {
 
 }  // namespace
 
-PythonDependencyInstaller::PythonDependencyInstaller(const std::shared_ptr<Configure> &configuration) {
-  python_binary_ = getPythonBinary(configuration);
-  install_python_packages_automatically_ = (configuration->get(Configuration::nifi_python_install_packages_automatically) | utils::andThen(&utils::string::toBool)).value_or(false);
-  if (auto path = configuration->get(minifi::Configuration::nifi_python_virtualenv_directory)) {
+PythonDependencyInstaller::PythonDependencyInstaller(minifi::utils::ConfigReader config_reader) {
+  python_binary_ = getPythonBinary(config_reader);
+  install_python_packages_automatically_ = (config_reader(Configuration::nifi_python_install_packages_automatically) | utils::andThen(&utils::string::toBool)).value_or(false);
+  if (auto path = config_reader(minifi::Configuration::nifi_python_virtualenv_directory)) {
     virtualenv_path_ = *path;
     logger_->log_debug("Python virtualenv path was specified at: {}", virtualenv_path_.string());
   } else {
     logger_->log_debug("No valid python virtualenv path was specified");
   }
-  if (auto python_processor_dir = configuration->get(minifi::Configuration::nifi_python_processor_dir)) {
+  if (auto python_processor_dir = config_reader(minifi::Configuration::nifi_python_processor_dir)) {
     python_processor_dir_ = *python_processor_dir;
     logger_->log_debug("Python processor dir was specified at: {}", python_processor_dir_.string());
   } else {

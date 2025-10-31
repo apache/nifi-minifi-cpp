@@ -22,7 +22,6 @@
 #include <string>
 #include <filesystem>
 
-#include "minifi-cpp/core/extension/ExtensionInfo.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/properties/Configure.h"
 
@@ -32,6 +31,13 @@ class Extension {
  friend class ExtensionManager;
 
  public:
+  struct Info {
+    std::string name;
+    std::string version;
+    void(*deinit)(void* user_data);
+    void* user_data;
+  };
+
   Extension(std::string name, std::filesystem::path library_path);
 
   Extension(const Extension&) = delete;
@@ -65,7 +71,7 @@ class Extension {
   std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
 
-  std::optional<ExtensionInfo> info_;
+  std::unique_ptr<Info> info_;
 
   const std::shared_ptr<logging::Logger> logger_;
 };

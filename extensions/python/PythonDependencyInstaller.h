@@ -22,13 +22,13 @@
 
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
-#include "minifi-cpp/properties/Configure.h"
+#include "utils/minifi-c-utils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
 class PythonDependencyInstaller {
  public:
-  explicit PythonDependencyInstaller(const std::shared_ptr<Configure> &configuration);
+  explicit PythonDependencyInstaller(minifi::utils::ConfigReader config_reader);
   void installDependencies(const std::vector<std::filesystem::path>& classpaths) const;
 
  private:
