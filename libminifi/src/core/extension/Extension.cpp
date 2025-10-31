@@ -95,7 +95,7 @@ Extension::~Extension() {
 bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) {
   logger_->log_trace("Initializing extension '{}'", name_);
   if (void* init = findSymbol("InitExtension")) {
-    logger_->log_error("Found custom initializer for '{}'", name_);
+    logger_->log_debug("Found custom initializer for '{}'", name_);
     info_.reset(reinterpret_cast<Info*>(reinterpret_cast<MinifiExtension*(*)(MinifiConfig*)>(init)(reinterpret_cast<MinifiConfig*>(configure.get()))));
     if (!info_) {
       logger_->log_error("Failed to initialize extension '{}'", name_);
