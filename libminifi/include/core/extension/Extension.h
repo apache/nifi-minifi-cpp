@@ -28,7 +28,7 @@
 namespace org::apache::nifi::minifi::core::extension {
 
 class Extension {
- friend class ExtensionManager;
+  friend class ExtensionManager;
 
  public:
   struct Info {

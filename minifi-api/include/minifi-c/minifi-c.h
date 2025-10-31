@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef MINIFI_C_API_H_
-#define MINIFI_C_API_H_
+#ifndef MINIFI_API_INCLUDE_MINIFI_C_MINIFI_C_H_
+#define MINIFI_API_INCLUDE_MINIFI_C_MINIFI_C_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,4 +47,4 @@ void MinifiConfigureGet(MinifiConfig*, MinifiStringView, void(*cb)(void* user_da
 }  // extern "C"
 #endif  // __cplusplus
 
-#endif  // MINIFI_C_API_H_
+#endif  // MINIFI_API_INCLUDE_MINIFI_C_MINIFI_C_H_
