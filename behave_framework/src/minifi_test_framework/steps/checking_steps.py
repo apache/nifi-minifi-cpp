@@ -140,5 +140,5 @@ def step_impl(context: MinifiTestContext, directory: str, timeout: str, contents
 def step_impl(context: MinifiTestContext, content: str, directory: str, duration: str):
     timeout_in_seconds = humanfriendly.parse_timespan(duration)
     assert wait_for_condition(
-        condition=lambda: context.minifi_container.verify_path_with_json_content(directory, content),
-        timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.minifi_container.exited, context=context)
+        condition=lambda: context.get_default_minifi_container().verify_path_with_json_content(directory, content),
+        timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_default_minifi_container().exited, context=context)

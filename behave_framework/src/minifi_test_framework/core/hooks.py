@@ -17,6 +17,7 @@
 import logging
 import os
 import docker
+import types
 
 from behave.model import Scenario
 from behave.model import Step
@@ -82,13 +83,3 @@ def common_after_scenario(context: MinifiTestContext, scenario: Scenario):
     for container in context.containers.values():
         container.clean_up()
     context.network.remove()
-
-
-def inject_scenario_id(context: MinifiTestContext, step: Step):
-    if "${scenario_id}" in step.name:
-        step.name = step.name.replace("${scenario_id}", context.scenario_id)
-    if step.table:
-        for row in step.table:
-            for i in range(len(row.cells)):
-                if "${scenario_id}" in row.cells[i]:
-                    row.cells[i] = row.cells[i].replace("${scenario_id}", context.scenario_id)

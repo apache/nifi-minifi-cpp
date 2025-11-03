@@ -18,6 +18,7 @@
 import logging
 import random
 import string
+import os
 
 import humanfriendly
 from behave import when, step, given
