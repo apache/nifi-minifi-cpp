@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 namespace {
 
-std::string getPythonBinary(minifi::utils::ConfigReader config_reader) {
+std::string getPythonBinary(const minifi::utils::ConfigReader& config_reader) {
 #if WIN32
   std::string python_binary = "python";
 #else
@@ -93,7 +93,7 @@ CommandResult executeProcess(const std::string& command) {
 
 }  // namespace
 
-PythonDependencyInstaller::PythonDependencyInstaller(minifi::utils::ConfigReader config_reader) {
+PythonDependencyInstaller::PythonDependencyInstaller(const minifi::utils::ConfigReader& config_reader) {
   python_binary_ = getPythonBinary(config_reader);
   install_python_packages_automatically_ = (config_reader(Configuration::nifi_python_install_packages_automatically) | utils::andThen(&utils::string::toBool)).value_or(false);
   if (auto path = config_reader(minifi::Configuration::nifi_python_virtualenv_directory)) {

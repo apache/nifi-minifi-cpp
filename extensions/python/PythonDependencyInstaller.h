@@ -28,7 +28,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 class PythonDependencyInstaller {
  public:
-  explicit PythonDependencyInstaller(minifi::utils::ConfigReader config_reader);
+  explicit PythonDependencyInstaller(const minifi::utils::ConfigReader& config_reader);
   void installDependencies(const std::vector<std::filesystem::path>& classpaths) const;
 
  private:

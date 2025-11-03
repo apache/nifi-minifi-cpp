@@ -35,7 +35,7 @@ namespace minifi = org::apache::nifi::minifi;
 
 class PythonLibLoader {
  public:
-  explicit PythonLibLoader(minifi::utils::ConfigReader config_reader) {
+  explicit PythonLibLoader(const minifi::utils::ConfigReader& config_reader) {
     std::string python_command = "python3";
     if (auto python_binary = config_reader(minifi::Configure::nifi_python_env_setup_binary)) {
       python_command = python_binary.value();

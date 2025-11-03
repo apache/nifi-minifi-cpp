@@ -101,7 +101,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
     });
   }
 
-  void configure(minifi::utils::ConfigReader config_reader) {
+  void configure(const minifi::utils::ConfigReader& config_reader) {
     std::optional<std::string> pathListings = config_reader(minifi::Configuration::nifi_python_processor_dir);
     if (!pathListings) {
       return;
@@ -220,7 +220,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
     return python_package;
   }
 
-  std::filesystem::path getPythonLibPath(minifi::utils::ConfigReader config_reader) {
+  std::filesystem::path getPythonLibPath(const minifi::utils::ConfigReader& config_reader) {
     const std::string pattern = [&] {
       if (const auto opt_pattern = config_reader(Configuration::nifi_extension_path)) {
         return *opt_pattern;
