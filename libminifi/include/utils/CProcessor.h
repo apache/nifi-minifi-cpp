@@ -83,7 +83,7 @@ class CProcessor : public minifi::core::ProcessorApi {
     auto uuid_str = metadata.uuid.to_string();
     c_metadata.uuid = MinifiStringView{.data = uuid_str.data(), .length = gsl::narrow<uint32_t>(uuid_str.length())};
     c_metadata.name = MinifiStringView{.data = metadata.name.data(), .length = gsl::narrow<uint32_t>(metadata.name.length())};
-    c_metadata.logger = reinterpret_cast<MinifiLogger>(&metadata_.logger);
+    c_metadata.logger = reinterpret_cast<MinifiLogger*>(&metadata_.logger);
     impl_ = class_description_.callbacks.create(c_metadata);
   }
   CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata, OWNED void* impl)
@@ -100,7 +100,7 @@ class CProcessor : public minifi::core::ProcessorApi {
   }
 
   void restore(const std::shared_ptr<minifi::core::FlowFile>& file) override {
-    class_description_.callbacks.restore(impl_, reinterpret_cast<OWNED MinifiFlowFile>(new std::shared_ptr<minifi::core::FlowFile>(file)));
+    class_description_.callbacks.restore(impl_, reinterpret_cast<OWNED MinifiFlowFile*>(new std::shared_ptr<minifi::core::FlowFile>(file)));
   }
 
   bool supportsDynamicProperties() const override {
@@ -133,20 +133,20 @@ class CProcessor : public minifi::core::ProcessorApi {
 
   void onTrigger(minifi::core::ProcessContext& process_context, minifi::core::ProcessSession& process_session) override {
     std::optional<std::string> error;
-    auto status = class_description_.callbacks.onTrigger(impl_, reinterpret_cast<MinifiProcessContext>(&process_context), reinterpret_cast<MinifiProcessSession>(&process_session));
-    if (status == MINIFI_PROCESSOR_YIELD) {
+    auto status = class_description_.callbacks.onTrigger(impl_, reinterpret_cast<MinifiProcessContext*>(&process_context), reinterpret_cast<MinifiProcessSession*>(&process_session));
+    if (status == MINIFI_STATUS_PROCESSOR_YIELD) {
       process_context.yield();
       return;
     }
-    if (status != MINIFI_SUCCESS) {
+    if (status != MINIFI_STATUS_SUCCESS) {
       throw minifi::Exception(minifi::ExceptionType::PROCESSOR_EXCEPTION, "Error while triggering processor");
     }
   }
 
   void onSchedule(minifi::core::ProcessContext& process_context, minifi::core::ProcessSessionFactory& /*process_session_factory*/) override {
     std::optional<std::string> error;
-    auto status = class_description_.callbacks.onSchedule(impl_, reinterpret_cast<MinifiProcessContext>(&process_context));
-    if (status != MINIFI_SUCCESS) {
+    auto status = class_description_.callbacks.onSchedule(impl_, reinterpret_cast<MinifiProcessContext*>(&process_context));
+    if (status != MINIFI_STATUS_SUCCESS) {
       throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Error while scheduling processor");
     }
   }
@@ -169,9 +169,7 @@ class CProcessor : public minifi::core::ProcessorApi {
 
   std::vector<minifi::state::PublishedMetric> getCustomMetrics() const;
 
-  void forEachLogger(const std::function<void(std::shared_ptr<minifi::core::logging::Logger>)>&) override {
-    // pass
-  }
+  void forEachLogger(const std::function<void(std::shared_ptr<minifi::core::logging::Logger>)>&) override {}
 
   std::string getName() const {
     return metadata_.name;

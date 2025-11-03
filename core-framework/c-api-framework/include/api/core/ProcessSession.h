@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::api::core {
 
 class ProcessSession {
  public:
-  explicit ProcessSession(MinifiProcessSession impl): impl_(impl) {}
+  explicit ProcessSession(MinifiProcessSession* impl): impl_(impl) {}
 
   std::shared_ptr<FlowFile> create(const FlowFile* parent = nullptr);
   std::shared_ptr<FlowFile> get();
@@ -47,7 +47,7 @@ class ProcessSession {
   std::vector<std::byte> readBuffer(FlowFile& flow_file);
 
  private:
-  MinifiProcessSession impl_;
+  MinifiProcessSession* impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::api::core

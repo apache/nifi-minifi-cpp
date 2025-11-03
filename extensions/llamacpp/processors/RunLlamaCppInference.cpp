@@ -56,7 +56,7 @@ MinifiStatus RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& con
     llama_ctx_ = std::make_unique<DefaultLlamaContext>(model_path_, llama_sampler_params, llama_ctx_params);
   }
 
-  return MINIFI_SUCCESS;
+  return MINIFI_STATUS_SUCCESS;
 }
 
 void RunLlamaCppInference::increaseTokensIn(uint64_t token_count) {
@@ -70,7 +70,7 @@ void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
 MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   auto flow_file = session.get();
   if (!flow_file) {
-    return MINIFI_PROCESSOR_YIELD;
+    return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
   auto prompt = context.getProperty(Prompt, flow_file.get()).value_or("");
@@ -87,7 +87,7 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
   if (input_data_and_prompt.empty()) {
     logger_->log_error("Input data and prompt are empty");
     session.transfer(flow_file, Failure);
-    return MINIFI_SUCCESS;
+    return MINIFI_STATUS_SUCCESS;
   }
 
   auto input = [&] {
@@ -103,7 +103,7 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
   if (!input) {
     logger_->log_error("Inference failed with while applying template");
     session.transfer(flow_file, Failure);
-    return MINIFI_SUCCESS;
+    return MINIFI_STATUS_SUCCESS;
   }
 
   logger_->log_debug("AI model input: {}", *input);
@@ -120,7 +120,7 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
   if (!generation_result) {
     logger_->log_error("Inference failed with generation error: '{}'", generation_result.error());
     session.transfer(flow_file, Failure);
-    return MINIFI_SUCCESS;
+    return MINIFI_STATUS_SUCCESS;
   }
 
   increaseTokensIn(generation_result->num_tokens_in);
@@ -136,7 +136,7 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
   session.writeBuffer(flow_file, text);
   session.transfer(flow_file, Success);
 
-  return MINIFI_SUCCESS;
+  return MINIFI_STATUS_SUCCESS;
 }
 
 void RunLlamaCppInference::onUnSchedule() {

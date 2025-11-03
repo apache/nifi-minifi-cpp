@@ -33,7 +33,7 @@
 #include "minifi-c.h"
 #include "utils/Enum.h"
 #include "utils/GeneralUtils.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/SmallString.h"
 #include "minifi-cpp/core/logging/Logger.h"
 
@@ -41,7 +41,7 @@ namespace org::apache::nifi::minifi::api::core::logging {
 
 class Logger : public minifi::core::logging::Logger {
  public:
-  explicit Logger(MinifiLogger impl): impl_(impl) {}
+  explicit Logger(MinifiLogger* impl): impl_(impl) {}
 
   void set_max_log_size(int size) override;
   std::optional<std::string> get_id() override;
@@ -51,7 +51,7 @@ class Logger : public minifi::core::logging::Logger {
   int getMaxLogSize() override;
 
  private:
-  MinifiLogger impl_;
+  MinifiLogger* impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::api::core::logging

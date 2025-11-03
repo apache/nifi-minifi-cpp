@@ -166,31 +166,5 @@ std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& context, 
   }
   return result.value();
 }
-//
-// template<typename ControllerServiceType>
-// std::optional<std::shared_ptr<ControllerServiceType>> parseOptionalControllerService(const core::ProcessContext& context,
-//     const core::PropertyReference& prop,
-//     const utils::Identifier& processor_uuid) {
-//   const auto controller_service_name = context.getProperty(prop.name);
-//   if (!controller_service_name) {
-//     return std::nullopt;
-//   }
-//
-//   const std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(*controller_service_name, processor_uuid);
-//   if (!service) {
-//     return std::nullopt;
-//   }
-//
-//   auto typed_controller_service = std::dynamic_pointer_cast<ControllerServiceType>(service);
-//   if (!typed_controller_service) {
-//     return std::nullopt;
-//   }
-//
-//   return typed_controller_service;
-// }
-//
-// template<typename ControllerServiceType>
-// std::shared_ptr<ControllerServiceType> parseControllerService(const core::ProcessContext& context, const core::PropertyReference& prop, const utils::Identifier& processor_uuid) {
-//   return parseOptionalControllerService<ControllerServiceType>(context, prop, processor_uuid) | utils::orThrow("Required Controller Service");
-// }
+
 }  // namespace org::apache::nifi::minifi::api::utils

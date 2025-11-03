@@ -32,7 +32,7 @@
 
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/DynamicProperty.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "minifi-cpp/utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
@@ -91,9 +91,9 @@ class ProcessorImpl {
   virtual PublishedMetrics calculateMetrics() const {return {};}
 
  protected:
-  virtual MinifiStatus onTriggerImpl(ProcessContext&, ProcessSession&) {return MINIFI_SUCCESS;}
+  virtual MinifiStatus onTriggerImpl(ProcessContext&, ProcessSession&) {return MINIFI_STATUS_SUCCESS;}
 
-  virtual MinifiStatus onScheduleImpl(ProcessContext&) {return MINIFI_SUCCESS;}
+  virtual MinifiStatus onScheduleImpl(ProcessContext&) {return MINIFI_STATUS_SUCCESS;}
 
   minifi::core::ProcessorMetadata metadata_;
 
