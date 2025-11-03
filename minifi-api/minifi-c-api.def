@@ -1,9 +1,7 @@
 LIBRARY core-minifi.dll
 EXPORTS
   MinifiCreateExtension
-  MinifiDestroyExtension
   MinifiGetStandardValidator
-  MinifiRegisterProcessorClass
   MinifiPublishedMetricsCreate
   MinifiProcessContextGetProperty
   MinifiProcessContextGetProcessorName
@@ -16,7 +14,6 @@ EXPORTS
   MinifiLoggerGetMaxLogSize
   MinifiProcessSessionGet
   MinifiProcessSessionCreate
-  MinifiDestroyFlowFile
   MinifiProcessSessionTransfer
   MinifiProcessSessionRemove
   MinifiProcessSessionRead

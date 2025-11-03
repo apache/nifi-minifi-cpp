@@ -81,12 +81,6 @@ typedef struct MinifiConfig MinifiConfig;
 typedef struct MinifiExtension MinifiExtension;
 typedef struct MinifiPublishedMetrics MinifiPublishedMetrics;
 
-typedef struct MinifiExtensionCreateInfo {
-  MinifiStringView name;
-  MinifiBool(*initialize)(void*, MinifiConfig*);
-  void* user_data;
-} MinifiExtensionCreateInfo;
-
 typedef enum MinifiStatus {
   MINIFI_STATUS_SUCCESS = 0,
   MINIFI_STATUS_UNKNOWN_ERROR = 1,
@@ -147,7 +141,6 @@ typedef struct MinifiProcessorCallbacks {
 } MinifiProcessorCallbacks;
 
 typedef struct MinifiProcessorClassDescription {
-  MinifiStringView module_name;
   MinifiStringView full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::GenerateFlowFile'
   MinifiStringView description;
   uint32_t class_properties_count;
@@ -177,11 +170,18 @@ typedef enum MinifiStandardPropertyValidator {
   MINIFI_PORT_VALIDATOR = 7
 } MinifiStandardPropertyValidator;
 
-OWNED MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo*);
-void MinifiDestroyExtension(OWNED MinifiExtension*);
+typedef struct MinifiExtensionCreateInfo {
+  MinifiStringView name;
+  MinifiStringView version;
+  void(*deinit)(void*);
+  void* user_data;
+  uint32_t processors_count;
+  const MinifiProcessorClassDescription* processors_ptr;
+} MinifiExtensionCreateInfo;
+
+MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo*);
 
 const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardPropertyValidator);
-void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription*);
 
 OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(uint32_t count, const MinifiStringView*, const double*);
 
@@ -198,13 +198,14 @@ int32_t MinifiLoggerGetMaxLogSize(MinifiLogger*);
 
 OWNED MinifiFlowFile* MinifiProcessSessionGet(MinifiProcessSession*);
 OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession*, MinifiFlowFile*);
-void MinifiDestroyFlowFile(OWNED MinifiFlowFile*);
-void MinifiProcessSessionTransfer(MinifiProcessSession*, MinifiFlowFile*, MinifiStringView);
-void MinifiProcessSessionRemove(MinifiProcessSession*, MinifiFlowFile*);
+
+void MinifiProcessSessionTransfer(MinifiProcessSession*, OWNED MinifiFlowFile*, MinifiStringView);
+void MinifiProcessSessionRemove(MinifiProcessSession*, OWNED MinifiFlowFile*);
+
 MinifiStatus MinifiProcessSessionRead(MinifiProcessSession*, MinifiFlowFile*, int64_t(*cb)(void* user_ctx, MinifiInputStream*), void* user_ctx);
 MinifiStatus MinifiProcessSessionWrite(MinifiProcessSession*, MinifiFlowFile*, int64_t(*cb)(void* user_ctx, MinifiOutputStream*), void* user_ctx);
 
-void MinifiConfigureGet(MinifiConfig*, MinifiStringView, void(*cb)(void*, MinifiStringView), void*);
+void MinifiConfigGet(MinifiConfig*, MinifiStringView, void(*cb)(void*, MinifiStringView), void*);
 
 uint64_t MinifiInputStreamSize(MinifiInputStream*);
 

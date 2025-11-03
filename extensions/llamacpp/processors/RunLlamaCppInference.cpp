@@ -73,9 +73,9 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
     return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
-  auto prompt = context.getProperty(Prompt, flow_file.get()).value_or("");
+  auto prompt = context.getProperty(Prompt, &flow_file).value_or("");
 
-  auto read_result = session.readBuffer(*flow_file);
+  auto read_result = session.readBuffer(flow_file);
   std::string input_data_and_prompt;
   if (!read_result.empty()) {
     input_data_and_prompt.append("Input data (or flow file content):\n");
@@ -86,7 +86,7 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
 
   if (input_data_and_prompt.empty()) {
     logger_->log_error("Input data and prompt are empty");
-    session.transfer(flow_file, Failure);
+    session.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
@@ -102,7 +102,7 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
 
   if (!input) {
     logger_->log_error("Inference failed with while applying template");
-    session.transfer(flow_file, Failure);
+    session.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
@@ -119,7 +119,7 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
 
   if (!generation_result) {
     logger_->log_error("Inference failed with generation error: '{}'", generation_result.error());
-    session.transfer(flow_file, Failure);
+    session.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
@@ -130,11 +130,11 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
   logger_->log_debug("AI model inference time: {} ms", elapsed_time);
   logger_->log_debug("AI model output: {}", text);
 
-  session.setAttribute(*flow_file, LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
-  session.setAttribute(*flow_file, LlamaCppTokensPerSecond.name, fmt::format("{:.2f}", generation_result->tokens_per_second));
+  session.setAttribute(flow_file, LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
+  session.setAttribute(flow_file, LlamaCppTokensPerSecond.name, fmt::format("{:.2f}", generation_result->tokens_per_second));
 
   session.writeBuffer(flow_file, text);
-  session.transfer(flow_file, Success);
+  session.transfer(std::move(flow_file), Success);
 
   return MINIFI_STATUS_SUCCESS;
 }
@@ -143,8 +143,4 @@ void RunLlamaCppInference::onUnSchedule() {
   llama_ctx_.reset();
 }
 
-REGISTER_PROCESSOR(RunLlamaCppInference);
-
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors
-
-extern const char* const MINIFI_API_VERSION_TAG_var = MINIFI_API_VERSION_TAG;

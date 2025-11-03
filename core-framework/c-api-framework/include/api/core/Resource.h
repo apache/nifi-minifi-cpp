@@ -37,17 +37,8 @@
 
 namespace org::apache::nifi::minifi::api::core {
 
-#define MKSOC(x) #x
-#define MAKESTRING(x) MKSOC(x)
-
 template<typename Class, typename Fn>
 void useProcessorClassDescription(Fn&& fn) {
-#ifdef MODULE_NAME
-    std::string_view module_name = MAKESTRING(MODULE_NAME);
-#else
-    std::string_view module_name = "minifi-system";
-#endif
-
   std::vector<std::vector<MinifiStringView>> string_vector_cache;
 
   const auto full_name = minifi::core::className<Class>();
@@ -88,8 +79,7 @@ void useProcessorClassDescription(Fn&& fn) {
     relationships_cache.push_back(std::move(rel_cache));
   }
 
-  MinifiProcessorClassDescription proc_description{
-    .module_name = utils::toStringView(module_name),
+  MinifiProcessorClassDescription description{
     .full_name = utils::toStringView(full_name),
     .description = utils::toStringView(Class::Description),
     .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
@@ -158,36 +148,7 @@ void useProcessorClassDescription(Fn&& fn) {
     }
   };
 
-  std::forward<Fn&&>(fn)(&proc_description);
+  fn(description);
 }
-
-template<typename Class>
-class StaticClassType {
- public:
-  explicit StaticClassType(std::string class_name)
-      : name_(std::move(class_name)) {
-    useProcessorClassDescription<Class>([] (const MinifiProcessorClassDescription* proc_description) {
-      MinifiRegisterProcessorClass(proc_description);
-    });
-  }
-
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdangling-reference"
-#endif
-  static const StaticClassType& get(const std::string& name) {
-    static const StaticClassType instance(name);
-    return instance;
-  }
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic pop
-#endif
-
- private:
-  std::string name_;
-};
-
-#define REGISTER_PROCESSOR(CLASSNAME) \
-        static const auto& CLASSNAME##_registrar = api::core::StaticClassType<CLASSNAME>::get(#CLASSNAME)
 
 }  // namespace org::apache::nifi::minifi::api::core

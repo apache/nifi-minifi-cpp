@@ -27,7 +27,7 @@
 namespace org::apache::nifi::minifi::api::utils {
 
 inline MinifiStringView toStringView(std::string_view str) {
-  return MinifiStringView{.data = str.data(), .length = gsl::narrow<uint32_t>(str.length())};
+  return MinifiStringView{.data = str.data(), .length = str.length()};
 }
 
 template<typename T>

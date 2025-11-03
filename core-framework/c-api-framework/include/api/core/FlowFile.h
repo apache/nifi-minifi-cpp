@@ -23,15 +23,14 @@
 
 namespace org::apache::nifi::minifi::api::core {
 
-class FlowFile {
- public:
-  explicit FlowFile(gsl::owner<MinifiFlowFile*> impl): impl_(impl, MinifiDestroyFlowFile) {}
-
-  [[nodiscard]]
-  MinifiFlowFile* getImpl() const {return impl_.get();}
-
- private:
-  std::unique_ptr<MinifiFlowFile, std::decay_t<decltype(MinifiDestroyFlowFile)>> impl_;
+struct EnsureMovedFromDeleter {
+  void operator()(MinifiFlowFile* ff) {
+    if (ff) {
+      throw std::logic_error("Each flowfile should be either transferred or removed");
+    }
+  }
 };
+
+using FlowFile = std::unique_ptr<MinifiFlowFile, EnsureMovedFromDeleter>;
 
 }  // namespace org::apache::nifi::minifi::api::core
