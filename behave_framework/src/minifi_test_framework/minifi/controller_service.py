@@ -16,7 +16,6 @@
 #
 
 import uuid
-from typing import Dict
 
 
 class ControllerService:
@@ -25,7 +24,7 @@ class ControllerService:
         self.id: str = str(uuid.uuid4())
         self.name = service_name
 
-        self.properties: Dict[str, str] = {}
+        self.properties: dict[str, str] = {}
 
     def add_property(self, property_name: str, property_value: str):
         self.properties[property_name] = property_value

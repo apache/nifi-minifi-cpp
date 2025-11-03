@@ -19,7 +19,6 @@ import logging
 import os
 import shlex
 import tempfile
-from typing import Dict, Any, List, Tuple
 
 import docker
 from docker.models.networks import Network
@@ -37,14 +36,14 @@ class Container:
         self.user: str = "0:0"
         self.client = docker.from_env()
         self.container = None
-        self.files: List[File] = []
-        self.dirs: List[Directory] = []
-        self.host_files: List[HostFile] = []
+        self.files: list[File] = []
+        self.dirs: list[Directory] = []
+        self.host_files: list[HostFile] = []
         self.volumes = {}
         self.command = None
         self._temp_dir = None
         self.ports = None
-        self.environment: List[str] = []
+        self.environment: list[str] = []
 
     def deploy(self) -> bool:
         self._temp_dir = tempfile.TemporaryDirectory()
@@ -86,7 +85,7 @@ class Container:
         if self.container:
             self.container.remove(force=True)
 
-    def exec_run(self, command) -> Tuple[int | None, str]:
+    def exec_run(self, command) -> tuple[int | None, str]:
         if self.container:
             (code, output) = self.container.exec_run(command)
             return code, output.decode("utf-8")
@@ -195,10 +194,6 @@ class Container:
             return False
         except Exception:
             return False
-
-    def _get_stats(self) -> Dict[str, Any]:
-        self.container.reload()
-        return self.container.stats(stream=False)
 
     def get_number_of_files(self, directory_path: str) -> int:
         if not self.container or not self.not_empty_dir_exists(directory_path):
