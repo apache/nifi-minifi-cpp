@@ -1,7 +1,4 @@
 /**
- * @file Processor.cpp
- * Processor class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -36,7 +33,6 @@ namespace org::apache::nifi::minifi::api::core {
 ProcessorImpl::ProcessorImpl(minifi::core::ProcessorMetadata metadata)
     : metadata_(std::move(metadata)),
       trigger_when_empty_(false),
-      // metrics_(std::make_shared<ProcessorMetricsImpl>(*this)),
       logger_(metadata_.logger) {
   logger_->log_debug("Processor {} created with uuid {}", getName(), getUUIDStr());
 }

@@ -17,31 +17,21 @@
  */
 #pragma once
 
-#include <array>
-#include <string_view>
+#include <memory>
 #include "minifi-c.h"
-#include "minifi-cpp/core/SpecialFlowAttribute.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
 class FlowFile {
  public:
-  explicit FlowFile(OWNED MinifiFlowFile impl): impl_(impl) {}
-
-  FlowFile(FlowFile&& other) = delete;
-  FlowFile(const FlowFile& other) = delete;
-  FlowFile& operator=(FlowFile&& other) = delete;
-  FlowFile& operator=(const FlowFile& other) = delete;
-
-  ~FlowFile() {
-    MinifiDestroyFlowFile(impl_);
-  }
+  explicit FlowFile(gsl::owner<MinifiFlowFile*> impl): impl_(impl, MinifiDestroyFlowFile) {}
 
   [[nodiscard]]
-  MinifiFlowFile getImpl() const {return impl_;}
+  MinifiFlowFile* getImpl() const {return impl_.get();}
 
  private:
-  OWNED MinifiFlowFile impl_;
+  std::unique_ptr<MinifiFlowFile, std::decay_t<decltype(MinifiDestroyFlowFile)>> impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::api::core

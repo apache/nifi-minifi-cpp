@@ -119,33 +119,33 @@ void useProcessorClassDescription(Fn&& fn) {
       .isWorkAvailable = [] (void* self) -> MinifiBool {
         return static_cast<Class*>(self)->isWorkAvailable() ? MINIFI_TRUE : MINIFI_FALSE;
       },
-      .restore = [] (void* self, OWNED MinifiFlowFile ff) -> void {
+      .restore = [] (void* self, OWNED MinifiFlowFile* ff) -> void {
         static_cast<Class*>(self)->restore(std::make_shared<FlowFile>(ff));
       },
       .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
         return static_cast<Class*>(self)->getTriggerWhenEmpty() ? MINIFI_TRUE : MINIFI_FALSE;
       },
-      .onTrigger = [] (void* self, MinifiProcessContext context, MinifiProcessSession session) -> MinifiStatus {
+      .onTrigger = [] (void* self, MinifiProcessContext* context, MinifiProcessSession* session) -> MinifiStatus {
         ProcessContext context_wrapper(context);
         ProcessSession session_wrapper(session);
         try {
           return static_cast<Class*>(self)->onTrigger(context_wrapper, session_wrapper);
         } catch (...) {
-          return MINIFI_UNKNOWN_ERROR;
+          return MINIFI_STATUS_UNKNOWN_ERROR;
         }
       },
-      .onSchedule = [] (void* self, MinifiProcessContext context) -> MinifiStatus {
+      .onSchedule = [] (void* self, MinifiProcessContext* context) -> MinifiStatus {
         ProcessContext context_wrapper(context);
         try {
           return static_cast<Class*>(self)->onSchedule(context_wrapper);
         } catch (...) {
-          return MINIFI_UNKNOWN_ERROR;
+          return MINIFI_STATUS_UNKNOWN_ERROR;
         }
       },
       .onUnSchedule = [] (void* self) -> void {
         static_cast<Class*>(self)->onUnSchedule();
       },
-      .calculateMetrics = [] (void* self) -> OWNED MinifiPublishedMetrics {
+      .calculateMetrics = [] (void* self) -> OWNED MinifiPublishedMetrics* {
         auto metrics = static_cast<Class*>(self)->calculateMetrics();
         std::vector<MinifiStringView> names;
         std::vector<double> values;

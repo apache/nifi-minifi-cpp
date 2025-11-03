@@ -19,7 +19,7 @@
 #include "minifi-c.h"
 #include <string_view>
 #include "minifi-cpp/core/Annotation.h"
-#include "utils/gsl.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "core/ClassName.h"
 #include "utils/StringUtils.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
@@ -67,16 +67,20 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
       for (auto& allowed_value : prop.allowed_values) {
         sv_cache.emplace_back(toStringView(allowed_value));
       }
-      const size_t allowed_types_begin = sv_cache.size();
-      for (auto& allowed_type : prop.allowed_types) {
-        sv_cache.emplace_back(toStringView(allowed_type));
-      }
-      const std::optional<size_t> default_value_begin = [&] () -> std::optional<size_t> {
-        if (prop.default_value) {
-          sv_cache.emplace_back(toStringView(*prop.default_value));
-          return sv_cache.size() - 1;
+      const std::optional<size_t> allowed_types_begin = [&] () -> std::optional<size_t> {
+        if (prop.allowed_types.empty()) {
+          return std::nullopt;
         }
-        return std::nullopt;
+        gsl_Expects(prop.allowed_types.size() == 1);
+        sv_cache.emplace_back(toStringView(prop.allowed_types[0]));
+        return sv_cache.size() - 1;
+      }();
+      const std::optional<size_t> default_value_begin = [&] () -> std::optional<size_t> {
+        if (!prop.default_value) {
+          return std::nullopt;
+        }
+        sv_cache.emplace_back(toStringView(*prop.default_value));
+        return sv_cache.size() - 1;
       }();
       properties.push_back(MinifiProperty{
         .name = toStringView(prop.name),
@@ -95,8 +99,7 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
         .allowed_values_ptr = sv_cache.data() + allowed_values_begin,
         .validator = MinifiGetStandardValidator(toStandardPropertyValidator(prop.validator)),
 
-        .types_count = gsl::narrow<uint32_t>(prop.allowed_types.size()),
-        .types_ptr = sv_cache.data() + allowed_types_begin,
+        .type = allowed_types_begin ? sv_cache.data() + allowed_types_begin.value() : nullptr,
         .supports_expression_language = prop.supports_expression_language ? MINIFI_TRUE : MINIFI_FALSE
       });
       cache.emplace_back(std::move(sv_cache));

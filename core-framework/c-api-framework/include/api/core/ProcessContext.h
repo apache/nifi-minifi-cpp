@@ -28,7 +28,7 @@ namespace org::apache::nifi::minifi::api::core {
 
 class ProcessContext {
  public:
-  explicit ProcessContext(MinifiProcessContext impl): impl_(impl) {}
+  explicit ProcessContext(MinifiProcessContext* impl): impl_(impl) {}
 
   nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const;
   nonstd::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
@@ -40,7 +40,7 @@ class ProcessContext {
   std::string getProcessorName() const;
 
  private:
-  MinifiProcessContext impl_;
+  MinifiProcessContext* impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::api::core

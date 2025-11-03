@@ -21,6 +21,11 @@
 
 namespace org::apache::nifi::minifi::api::core {
 
-using PublishedMetrics = std::vector<std::pair<std::string, double>>;
+struct PublishedMetric {
+  std::string name;
+  double value;
+};
+
+using PublishedMetrics = std::vector<PublishedMetric>;
 
 }  // namespace org::apache::nifi::minifi::api::core

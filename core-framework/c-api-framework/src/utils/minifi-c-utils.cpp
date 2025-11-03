@@ -22,10 +22,10 @@ namespace org::apache::nifi::minifi::api::utils {
 
 std::error_code make_error_code(MinifiStatus status) {
   switch (status) {
-    case MINIFI_NOT_SUPPORTED_PROPERTY: return make_error_code(minifi::core::PropertyErrorCode::NotSupportedProperty);
-    case MINIFI_DYNAMIC_PROPERTIES_NOT_SUPPORTED: return make_error_code(minifi::core::PropertyErrorCode::DynamicPropertiesNotSupported);
-    case MINIFI_PROPERTY_NOT_SET: return make_error_code(minifi::core::PropertyErrorCode::PropertyNotSet);
-    case MINIFI_VALIDATION_FAILED: return make_error_code(minifi::core::PropertyErrorCode::ValidationFailed);
+    case MINIFI_STATUS_NOT_SUPPORTED_PROPERTY: return make_error_code(minifi::core::PropertyErrorCode::NotSupportedProperty);
+    case MINIFI_STATUS_DYNAMIC_PROPERTIES_NOT_SUPPORTED: return make_error_code(minifi::core::PropertyErrorCode::DynamicPropertiesNotSupported);
+    case MINIFI_STATUS_PROPERTY_NOT_SET: return make_error_code(minifi::core::PropertyErrorCode::PropertyNotSet);
+    case MINIFI_STATUS_VALIDATION_FAILED: return make_error_code(minifi::core::PropertyErrorCode::ValidationFailed);
     default: return std::error_code{};
   }
 }
