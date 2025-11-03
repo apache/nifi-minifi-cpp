@@ -66,7 +66,7 @@ class Container:
                     temp_file.write(content)
             self.volumes[temp_path] = {"bind": directory.path, "mode": directory.mode}
         for host_file in self.host_files:
-            self.volumes[host_file.host_path] = { "bind": host_file.container_path, "mode": host_file.mode }
+            self.volumes[host_file.host_path] = {"bind": host_file.container_path, "mode": host_file.mode}
 
         try:
             existing_container = self.client.containers.get(self.container_name)
@@ -130,7 +130,7 @@ class Container:
         command = (f"find {safe_dir_path} -maxdepth 1 -type f -print0 | "
                    f"xargs -0 -r grep -l -E -- {safe_regex_str}")
 
-        exit_code, _ = self.exec_run(f"sh -c \"{command}\"")
+        exit_code, output = self.exec_run(f"sh -c \"{command}\"")
 
         if exit_code != 0:
             logging.warning(f"directory_contains_file_with_regex {output}")

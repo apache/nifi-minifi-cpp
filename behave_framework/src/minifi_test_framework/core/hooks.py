@@ -21,7 +21,6 @@ import docker
 import types
 
 from behave.model import Scenario
-from behave.model import Step
 from behave.runner import Context
 
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
