@@ -18,7 +18,6 @@
 #include <chrono>
 
 #include "ProcessSessionFactory.h"
-#include "core/ProcessContext.h"
 #include "unit/Catch.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/TestBase.h"

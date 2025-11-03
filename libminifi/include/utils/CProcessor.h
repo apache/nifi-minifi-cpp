@@ -32,25 +32,10 @@ namespace org::apache::nifi::minifi::utils {
 
 class CProcessor;
 
-class CProcessorMetricsWrapper : public minifi::core::ProcessorMetricsImpl {
+class CProcessorMetricsWrapper : public minifi::core::ProcessorMetricsExtension {
  public:
-  class CProcessorInfoProvider : public ProcessorMetricsImpl::ProcessorInfoProvider {
-   public:
-    explicit CProcessorInfoProvider(const CProcessor& source_processor): source_processor_(source_processor) {}
-
-    std::string getProcessorType() const override;
-    std::string getName() const override;
-    minifi::utils::SmallString<36> getUUIDStr() const override;
-
-    ~CProcessorInfoProvider() override = default;
-
-   private:
-    const CProcessor& source_processor_;
-  };
-
   explicit CProcessorMetricsWrapper(const CProcessor& source_processor)
-      : minifi::core::ProcessorMetricsImpl(std::make_unique<CProcessorInfoProvider>(source_processor)),
-        source_processor_(source_processor) {
+      : source_processor_(source_processor) {
   }
 
   std::vector<minifi::state::response::SerializedResponseNode> serialize() override;
@@ -77,7 +62,7 @@ class CProcessor : public minifi::core::ProcessorApi {
  public:
   CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata)
       : class_description_(std::move(class_description)),
-        metrics_(std::make_shared<CProcessorMetricsWrapper>(*this)) {
+        metrics_extension_(std::make_shared<CProcessorMetricsWrapper>(*this)) {
     metadata_ = metadata;
     MinifiProcessorMetadata c_metadata;
     auto uuid_str = metadata.uuid.to_string();
@@ -90,7 +75,7 @@ class CProcessor : public minifi::core::ProcessorApi {
       : class_description_(std::move(class_description)),
         impl_(impl),
         metadata_(metadata),
-        metrics_(std::make_shared<CProcessorMetricsWrapper>(*this)) {}
+        metrics_extension_(std::make_shared<CProcessorMetricsWrapper>(*this)) {}
   ~CProcessor() override {
     class_description_.callbacks.destroy(impl_);
   }
@@ -163,8 +148,8 @@ class CProcessor : public minifi::core::ProcessorApi {
     return class_description_.input_requirement;
   }
 
-  gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetrics>> getMetrics() const override {
-    return metrics_;
+  std::shared_ptr<minifi::core::ProcessorMetricsExtension> getMetricsExtension() const override {
+    return metrics_extension_;
   }
 
   std::vector<minifi::state::PublishedMetric> getCustomMetrics() const;
@@ -183,7 +168,7 @@ class CProcessor : public minifi::core::ProcessorApi {
   CProcessorClassDescription class_description_;
   OWNED void* impl_;
   minifi::core::ProcessorMetadata metadata_;
-  gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetrics>> metrics_;
+  gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetricsExtension>> metrics_extension_;
 };
 
 void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_description, const std::function<void(ClassDescription, CProcessorClassDescription)>& fn);

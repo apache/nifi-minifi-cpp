@@ -34,19 +34,8 @@ std::vector<minifi::state::PublishedMetric> CProcessor::getCustomMetrics() const
   return toPublishedMetrics(class_description_.callbacks.calculateMetrics(impl_));
 }
 
-std::string CProcessorMetricsWrapper::CProcessorInfoProvider::getProcessorType() const {
-  return source_processor_.getProcessorType();
-}
-std::string CProcessorMetricsWrapper::CProcessorInfoProvider::getName() const {
-  return source_processor_.getName();
-}
-minifi::utils::SmallString<36> CProcessorMetricsWrapper::CProcessorInfoProvider::getUUIDStr() const {
-  return source_processor_.getUUID().to_string();
-}
-
 std::vector<minifi::state::response::SerializedResponseNode> CProcessorMetricsWrapper::serialize() {
-  auto nodes = ProcessorMetricsImpl::serialize();
-  gsl_Assert(!nodes.empty());
+  std::vector<minifi::state::response::SerializedResponseNode> nodes;
   for (auto& custom_node : source_processor_.getCustomMetrics()) {
     size_t transformed_name_length = 0;
     bool should_uppercase_next_letter = true;
@@ -61,18 +50,13 @@ std::vector<minifi::state::response::SerializedResponseNode> CProcessorMetricsWr
       }
     }
     custom_node.name.resize(transformed_name_length);
-    nodes[0].children.push_back(minifi::state::response::SerializedResponseNode{.name = std::move(custom_node.name), .value = static_cast<uint64_t>(custom_node.value)});
+    nodes.push_back(minifi::state::response::SerializedResponseNode{.name = std::move(custom_node.name), .value = static_cast<uint64_t>(custom_node.value)});
   }
   return nodes;
 }
 
 std::vector<minifi::state::PublishedMetric> CProcessorMetricsWrapper::calculateMetrics() {
-  auto nodes = ProcessorMetricsImpl::calculateMetrics();
-  for (auto& custom_node : source_processor_.getCustomMetrics()) {
-    custom_node.labels = getCommonLabels();
-    nodes.push_back(std::move(custom_node));
-  }
-  return nodes;
+  return source_processor_.getCustomMetrics();
 }
 
 }  // namespace org::apache::nifi::minifi::utils
