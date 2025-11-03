@@ -43,7 +43,7 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize
   std::vector<state::response::SerializedResponseNode> resp;
 
   state::response::SerializedResponseNode root_node {
-    .name = source_processor_->getUUIDStr(),
+    .name = source_processor_.getUUIDStr(),
     .children = {
       {.name = "OnTriggerInvocations", .value = static_cast<uint32_t>(invocations())},
       {.name = "AverageOnTriggerRunTime", .value = static_cast<uint64_t>(getAverageOnTriggerRuntime().count())},
@@ -103,7 +103,7 @@ std::vector<state::PublishedMetric> ProcessorMetrics::calculateMetrics() {
     std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
     for (const auto& [relationship, count] : transferred_relationships_) {
       metrics.push_back({"transferred_to_" + relationship, static_cast<double>(count),
-        {{"metric_class", getName()}, {"processor_name", source_processor_->getName()}, {"processor_uuid", source_processor_->getUUIDStr()}}});
+        {{"metric_class", getName()}, {"processor_name", source_processor_.getName()}, {"processor_uuid", source_processor_.getUUIDStr()}}});
     }
   }
 

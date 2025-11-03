@@ -47,9 +47,7 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
  public:
   explicit RunLlamaCppInference(core::ProcessorMetadata metadata, LlamaContextProvider llama_context_provider = {})
       : api::core::ProcessorImpl(metadata),
-        llama_context_provider_(std::move(llama_context_provider)) {
-    metrics_ = gsl::make_not_null(std::make_shared<RunLlamaCppInferenceMetrics>());
-  }
+        llama_context_provider_(std::move(llama_context_provider)) {}
   ~RunLlamaCppInference() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "LlamaCpp processor to use llama.cpp library for running language model inference. "
