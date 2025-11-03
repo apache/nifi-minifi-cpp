@@ -52,7 +52,7 @@ FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
 ENDFOREACH()
 
 add_minifi_executable(PythonManifestTests "PythonManifestTests.cpp")
-add_dependencies(PythonManifestTests minifi-python-script-extension minifi-script-extension minifi-standard-processors)
+add_dependencies(PythonManifestTests minifi-python-lib-loader-extension minifi-python-script-extension minifi-script-extension minifi-standard-processors)
 target_link_libraries(PythonManifestTests Catch2WithMain)
 createTests(PythonManifestTests)
 MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
