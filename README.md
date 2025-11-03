@@ -403,11 +403,28 @@ $ make docker-minimal
 ```
 
 #### Executing integration tests with your docker image
-You can execute system integration tests using the docker image built locally on a docker daemon running locally. The image shall contain every extension tested in the test suite for all scenarios to be executed (currently that includes AWS, Azure, Kafka, MQTT, SQL extensions).
-```
-~/Development/code/apache/nifi-minifi-cpp/build
-$ make docker-verify
-```
+You can execute system integration tests using a minifi docker image.</br>
+Currently, there are two types of docker integration tests:
+##### Monolith legacy tests (features locates in docker/test/integration/features)
+(we are in the process of migrating these)
+  ```
+  ~/Development/code/apache/nifi-minifi-cpp/build
+  $ make docker-verify
+  ```
+##### Modular tests located near the tested extension (e.g. extensions/aws/tests/features)
+  ```
+  ~/Development/code/apache/nifi-minifi-cpp/build
+  $ make docker-verify-modular
+  ```
+You can also run these tests individually. You need to install the minifi behave framework and call behavex.
+This will use the apacheminificpp:behave docker image
+  ```
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install -e behave_framework
+  cd extensions/aws/tests
+  behavex
+  ```
 
 ### Building For Other Distros
 Since only glibc and libstdc++ is dynamically linked to MiNiFi, the binary built with RHEL devtoolset should be distro-agnostic, and work on any relatively modern distro.
