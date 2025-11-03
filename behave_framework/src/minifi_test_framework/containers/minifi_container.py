@@ -15,8 +15,6 @@
 #  limitations under the License.
 #
 
-from typing import Dict
-
 from docker.models.networks import Network
 
 from minifi_test_framework.containers.file import File
@@ -29,8 +27,8 @@ class MinifiContainer(Container):
         super().__init__(image_name, f"minifi-{scenario_id}", network)
         self.flow_config_str: str = ""
         self.flow_definition = FlowDefinition()
-        self.properties: Dict[str, str] = {}
-        self.log_properties: Dict[str, str] = {}
+        self.properties: dict[str, str] = {}
+        self.log_properties: dict[str, str] = {}
 
         self.is_fhs = 'MINIFI_INSTALLATION_TYPE=FHS' in str(self.client.images.get(image_name).history())
 

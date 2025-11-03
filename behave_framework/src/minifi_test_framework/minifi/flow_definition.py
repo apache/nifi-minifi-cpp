@@ -15,8 +15,6 @@
 #  limitations under the License.
 #
 
-from typing import List
-
 import yaml
 
 from .connection import Connection
@@ -29,11 +27,11 @@ from .processor import Processor
 class FlowDefinition:
     def __init__(self, flow_name: str = "MiNiFi Flow"):
         self.flow_name = flow_name
-        self.processors: List[Processor] = []
-        self.controller_services: List[ControllerService] = []
-        self.funnels: List[Funnel] = []
-        self.connections: List[Connection] = []
-        self.parameter_contexts: List[ParameterContext] = []
+        self.processors: list[Processor] = []
+        self.controller_services: list[ControllerService] = []
+        self.funnels: list[Funnel] = []
+        self.connections: list[Connection] = []
+        self.parameter_contexts: list[ParameterContext] = []
 
     def add_processor(self, processor: Processor):
         self.processors.append(processor)

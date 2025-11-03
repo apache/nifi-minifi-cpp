@@ -16,7 +16,6 @@
 #
 
 import uuid
-from typing import Dict, List
 
 
 class Processor:
@@ -27,8 +26,8 @@ class Processor:
         self.name = proc_name
         self.scheduling_strategy: str = scheduling_strategy
         self.scheduling_period: str = scheduling_period
-        self.properties: Dict[str, str] = {}
-        self.auto_terminated_relationships: List[str] = []
+        self.properties: dict[str, str] = {}
+        self.auto_terminated_relationships: list[str] = []
 
     def add_property(self, property_name: str, property_value: str):
         self.properties[property_name] = property_value
