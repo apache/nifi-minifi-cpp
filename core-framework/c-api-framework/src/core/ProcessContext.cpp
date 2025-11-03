@@ -23,7 +23,7 @@ namespace org::apache::nifi::minifi::api::core {
 
 nonstd::expected<std::string, std::error_code> ProcessContext::getProperty(std::string_view name, const FlowFile* flow_file) const {
   std::optional<std::string> value;
-  MinifiStatus status = MinifiProcessContextGetProperty(impl_, utils::toStringView(name), flow_file ? flow_file->getImpl() : MINIFI_NULL,
+  MinifiStatus status = MinifiProcessContextGetProperty(impl_, utils::toStringView(name), flow_file ? flow_file->get() : MINIFI_NULL,
     [] (void* data, MinifiStringView result) {
       (*static_cast<std::optional<std::string>*>(data)) = std::string(result.data, result.length);
     }, &value);

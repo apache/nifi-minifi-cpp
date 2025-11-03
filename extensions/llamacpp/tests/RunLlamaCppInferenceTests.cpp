@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::api::test::utils {
 template<typename T, typename ...Args>
 std::unique_ptr<minifi::core::Processor> make_custom_processor(minifi::core::ProcessorMetadata metadata, Args&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
   std::unique_ptr<minifi::core::ProcessorApi> processor_impl;
-  core::useProcessorClassDescription<T>([&] (MinifiProcessorClassDescription* description) {
+  core::useProcessorClassDescription<T>([&] (const MinifiProcessorClassDescription& description) {
     minifi::utils::useCProcessorClassDescription(description, [&] (const auto&, auto c_description) {
       processor_impl = std::make_unique<minifi::utils::CProcessor>(std::move(c_description), metadata, new T(metadata, std::forward<Args>(args)...));
     });

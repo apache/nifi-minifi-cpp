@@ -105,7 +105,7 @@ macro(register_c_api_extension extension-name extension-display-name extension-g
     get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
     set_property(GLOBAL APPEND PROPERTY EXTENSION-OPTIONS ${extension-name})
     target_compile_definitions(${extension-name}
-            PRIVATE "MODULE_NAME=${extension-name}")
+            PRIVATE "EXTENSION_NAME=${extension-name}" "EXTENSION_VERSION=${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
     set_target_properties(${extension-name} PROPERTIES
             ENABLE_EXPORTS True
             POSITION_INDEPENDENT_CODE ON)

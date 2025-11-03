@@ -34,7 +34,7 @@
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/state/PublishedMetricProvider.h"
 #include "minifi-cpp/Exception.h"
-#include "minifi-cpp/core/extension/ExtensionManager.h"
+#include "core/extension/ExtensionManager.h"
 #include "utils/PropertyErrors.h"
 #include "minifi-cpp/agent/build_description.h"
 #include "utils/CProcessor.h"
@@ -145,95 +145,67 @@ class CProcessorFactory : public minifi::core::ProcessorFactory {
   minifi::utils::CProcessorClassDescription class_description_;
 };
 
-class CExtension : public minifi::core::extension::Extension {
- public:
-  CExtension(std::string name, MinifiBool(*initializer)(void*, MinifiConfig*), void* user_data): name_(std::move(name)), initializer_(initializer), user_data_(user_data) {}
-  bool initialize(const minifi::core::extension::ExtensionConfig& config) override {
-    gsl_Assert(initializer_);
-    return static_cast<bool>(initializer_(user_data_, reinterpret_cast<MinifiConfig*>(config.get())));
-  }
-
-  [[nodiscard]] const std::string& getName() const override {
-    return name_;
-  }
-
- private:
-  std::string name_;
-  MinifiBool(*initializer_)(void*, MinifiConfig*);
-  void* user_data_;
-};
-
 }  // namespace
 
 namespace org::apache::nifi::minifi::utils {
 
-MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info) {
-  gsl_Assert(extension_create_info);
-  return reinterpret_cast<MinifiExtension*>(new org::apache::nifi::minifi::core::extension::Extension::Info{
-    .name = toString(extension_create_info->name),
-    .version = toString(extension_create_info->version),
-    .deinit = extension_create_info->deinit,
-    .user_data = extension_create_info->user_data
-  });
-}
-
-void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_description, const std::function<void(minifi::ClassDescription, minifi::utils::CProcessorClassDescription)>& fn) {
+void useCProcessorClassDescription(const MinifiProcessorClassDescription& class_description, const std::function<void(minifi::ClassDescription, minifi::utils::CProcessorClassDescription)>& fn) {
   std::vector<minifi::core::Property> properties;
-  properties.reserve(class_description->class_properties_count);
-  for (size_t i = 0; i < class_description->class_properties_count; ++i) {
-    properties.push_back(createProperty(&class_description->class_properties_ptr[i]));
+  properties.reserve(class_description.class_properties_count);
+  for (size_t i = 0; i < class_description.class_properties_count; ++i) {
+    properties.push_back(createProperty(&class_description.class_properties_ptr[i]));
   }
   std::vector<minifi::core::DynamicProperty> dynamic_properties;
-  dynamic_properties.reserve(class_description->dynamic_properties_count);
-  for (size_t i = 0; i < class_description->dynamic_properties_count; ++i) {
+  dynamic_properties.reserve(class_description.dynamic_properties_count);
+  for (size_t i = 0; i < class_description.dynamic_properties_count; ++i) {
     dynamic_properties.push_back(minifi::core::DynamicProperty{
-      .name = toStringView(class_description->dynamic_properties_ptr[i].name),
-      .value = toStringView(class_description->dynamic_properties_ptr[i].value),
-      .description = toStringView(class_description->dynamic_properties_ptr[i].description),
-      .supports_expression_language = static_cast<bool>(class_description->dynamic_properties_ptr[i].supports_expression_language)
+      .name = toStringView(class_description.dynamic_properties_ptr[i].name),
+      .value = toStringView(class_description.dynamic_properties_ptr[i].value),
+      .description = toStringView(class_description.dynamic_properties_ptr[i].description),
+      .supports_expression_language = static_cast<bool>(class_description.dynamic_properties_ptr[i].supports_expression_language)
     });
   }
   std::vector<minifi::core::Relationship> relationships;
-  relationships.reserve(class_description->class_relationships_count);
-  for (size_t i = 0; i < class_description->class_relationships_count; ++i) {
+  relationships.reserve(class_description.class_relationships_count);
+  for (size_t i = 0; i < class_description.class_relationships_count; ++i) {
     relationships.push_back(minifi::core::Relationship{
-      toString(class_description->class_relationships_ptr[i].name),
-      toString(class_description->class_relationships_ptr[i].description)
+      toString(class_description.class_relationships_ptr[i].name),
+      toString(class_description.class_relationships_ptr[i].description)
     });
   }
   std::vector<std::vector<minifi::core::RelationshipDefinition>> output_attribute_relationships;
   std::vector<minifi::core::OutputAttributeReference> output_attributes;
-  for (size_t i = 0; i < class_description->output_attributes_count; ++i) {
+  for (size_t i = 0; i < class_description.output_attributes_count; ++i) {
     minifi::core::OutputAttributeReference ref{minifi::core::OutputAttributeDefinition{"", {}, ""}};
-    ref.name = toStringView(class_description->output_attributes_ptr[i].name);
-    ref.description = toStringView(class_description->output_attributes_ptr[i].description);
+    ref.name = toStringView(class_description.output_attributes_ptr[i].name);
+    ref.description = toStringView(class_description.output_attributes_ptr[i].description);
     output_attribute_relationships.push_back({});
-    for (size_t j = 0; j < class_description->output_attributes_ptr[i].relationships_count; ++j) {
+    for (size_t j = 0; j < class_description.output_attributes_ptr[i].relationships_count; ++j) {
       output_attribute_relationships.back().push_back(minifi::core::RelationshipDefinition{
-        .name = toStringView(class_description->output_attributes_ptr[i].relationships_ptr[j].name),
-        .description = toStringView(class_description->output_attributes_ptr[i].relationships_ptr[j].description)
+        .name = toStringView(class_description.output_attributes_ptr[i].relationships_ptr[j].name),
+        .description = toStringView(class_description.output_attributes_ptr[i].relationships_ptr[j].description)
       });
     }
     ref.relationships = std::span(output_attribute_relationships.back());
     output_attributes.push_back(ref);
   }
 
-  auto name_segments = minifi::utils::string::split(toStringView(class_description->full_name), "::");
+  auto name_segments = minifi::utils::string::split(toStringView(class_description.full_name), "::");
   gsl_Assert(!name_segments.empty());
 
   minifi::ClassDescription description{
     .type_ = minifi::ResourceType::Processor,
     .short_name_ = name_segments.back(),
     .full_name_ = minifi::utils::string::join(".", name_segments),
-    .description_ = toString(class_description->description),
+    .description_ = toString(class_description.description),
     .class_properties_ = properties,
     .dynamic_properties_ = dynamic_properties,
     .class_relationships_ = relationships,
     .output_attributes_ = output_attributes,
-    .supports_dynamic_properties_ = static_cast<bool>(class_description->supports_dynamic_properties),
-    .supports_dynamic_relationships_ = static_cast<bool>(class_description->supports_dynamic_relationships),
-    .inputRequirement_ = minifi::core::annotation::toString(toInputRequirement(class_description->input_requirement)),
-    .isSingleThreaded_ = static_cast<bool>(class_description->is_single_threaded),
+    .supports_dynamic_properties_ = static_cast<bool>(class_description.supports_dynamic_properties),
+    .supports_dynamic_relationships_ = static_cast<bool>(class_description.supports_dynamic_relationships),
+    .inputRequirement_ = minifi::core::annotation::toString(toInputRequirement(class_description.input_requirement)),
+    .isSingleThreaded_ = static_cast<bool>(class_description.is_single_threaded),
   };
 
   minifi::utils::CProcessorClassDescription c_class_description{
@@ -242,10 +214,10 @@ void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_
     .class_relationships = relationships,
     .supports_dynamic_properties = description.supports_dynamic_properties_,
     .supports_dynamic_relationships = description.supports_dynamic_relationships_,
-    .input_requirement = toInputRequirement(class_description->input_requirement),
+    .input_requirement = toInputRequirement(class_description.input_requirement),
     .is_single_threaded = description.isSingleThreaded_,
 
-    .callbacks = class_description->callbacks
+    .callbacks = class_description.callbacks
   };
 
   fn(description, c_class_description);
@@ -269,22 +241,28 @@ const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardProperty
   }
 }
 
-void MinifiRegisterProcessorClass(const MinifiProcessorClassDescription* class_description) {
-  gsl_Expects(class_description);
-
-  auto module_name = toString(class_description->module_name);
+MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info) {
+  gsl_Assert(extension_create_info);
+  auto extension_name = toString(extension_create_info->name);
   minifi::BundleDetails bundle{
-    .artifact = module_name,
-    .group = module_name,
-    .version = "1.0.0"
+    .artifact = extension_name,
+    .group = "org.apache.nifi.minifi",
+    .version = toString(extension_create_info->version)
   };
+  for (size_t proc_idx = 0; proc_idx < extension_create_info->processors_count; ++proc_idx) {
+    minifi::utils::useCProcessorClassDescription(extension_create_info->processors_ptr[proc_idx], [&] (const auto& description, const auto& c_class_description) {
+      minifi::ExternalBuildDescription::addExternalComponent(bundle, description);
 
-  minifi::utils::useCProcessorClassDescription(class_description, [&] (const auto& description, const auto& c_class_description) {
-    minifi::ExternalBuildDescription::addExternalComponent(bundle, description);
-
-    minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(module_name).registerClass(
-      c_class_description.name,
-      std::make_unique<CProcessorFactory>(module_name, toString(class_description->full_name), c_class_description));
+      minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_name).registerClass(
+        c_class_description.name,
+        std::make_unique<CProcessorFactory>(extension_name, toString(extension_create_info->processors_ptr[proc_idx].full_name), c_class_description));
+    });
+  }
+  return reinterpret_cast<MinifiExtension*>(new org::apache::nifi::minifi::core::extension::Extension::Info{
+    .name = toString(extension_create_info->name),
+    .version = toString(extension_create_info->version),
+    .deinit = extension_create_info->deinit,
+    .user_data = extension_create_info->user_data
   });
 }
 
@@ -304,19 +282,6 @@ MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, Mini
     case minifi::core::PropertyErrorCode::ValidationFailed: return MINIFI_STATUS_VALIDATION_FAILED;
     default: return MINIFI_STATUS_UNKNOWN_ERROR;
   }
-}
-
-OWNED MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info) {
-  gsl_Assert(extension_create_info);
-  auto* extension = new CExtension(toString(extension_create_info->name), extension_create_info->initialize, extension_create_info->user_data);
-  minifi::core::extension::ExtensionManager::get().registerExtension(*extension);
-  return reinterpret_cast<OWNED MinifiExtension*>(extension);
-}
-void MinifiDestroyExtension(OWNED gsl::owner<MinifiExtension*> extension) {
-  gsl_Assert(extension != MINIFI_NULL);
-  auto extension_impl = reinterpret_cast<gsl::owner<CExtension*>>(extension);
-  minifi::core::extension::ExtensionManager::get().unregisterExtension(*extension_impl);
-  delete extension_impl;
 }
 
 void MinifiProcessContextGetProcessorName(MinifiProcessContext* context, void(*cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {

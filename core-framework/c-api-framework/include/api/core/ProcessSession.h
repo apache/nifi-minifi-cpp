@@ -31,19 +31,20 @@ class ProcessSession {
  public:
   explicit ProcessSession(MinifiProcessSession* impl): impl_(impl) {}
 
-  std::shared_ptr<FlowFile> create(const FlowFile* parent = nullptr);
-  std::shared_ptr<FlowFile> get();
-  void transfer(const std::shared_ptr<FlowFile>& ff, const minifi::core::Relationship& relationship);
-  void write(FlowFile &flow, const io::OutputStreamCallback& callback);
-  void read(FlowFile &flow, const io::InputStreamCallback& callback);
+  FlowFile create(const FlowFile* parent = nullptr);
+  FlowFile get();
+  void transfer(FlowFile ff, const minifi::core::Relationship& relationship);
+  void remove(FlowFile ff);
+  void write(FlowFile& flow, const io::OutputStreamCallback& callback);
+  void read(FlowFile& flow, const io::InputStreamCallback& callback);
 
   void setAttribute(FlowFile& ff, std::string_view key, std::string value);
   void removeAttribute(FlowFile& ff, std::string_view key);
   std::optional<std::string> getAttribute(FlowFile& ff, std::string_view key);
   std::map<std::string, std::string> getAttributes(FlowFile& ff);
 
-  void writeBuffer(const std::shared_ptr<FlowFile>& flow_file, std::span<const char> buffer);
-  void writeBuffer(const std::shared_ptr<FlowFile>& flow_file, std::span<const std::byte> buffer);
+  void writeBuffer(FlowFile& flow_file, std::span<const char> buffer);
+  void writeBuffer(FlowFile& flow_file, std::span<const std::byte> buffer);
   std::vector<std::byte> readBuffer(FlowFile& flow_file);
 
  private:

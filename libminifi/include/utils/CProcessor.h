@@ -171,6 +171,6 @@ class CProcessor : public minifi::core::ProcessorApi {
   gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetricsExtension>> metrics_extension_;
 };
 
-void useCProcessorClassDescription(const MinifiProcessorClassDescription* class_description, const std::function<void(ClassDescription, CProcessorClassDescription)>& fn);
+void useCProcessorClassDescription(const MinifiProcessorClassDescription& class_description, const std::function<void(ClassDescription, CProcessorClassDescription)>& fn);
 
 }  // namespace org::apache::nifi::minifi::utils
