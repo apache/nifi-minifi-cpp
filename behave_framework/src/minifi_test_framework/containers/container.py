@@ -29,7 +29,7 @@ from minifi_test_framework.containers.host_file import HostFile
 
 
 class Container:
-    def __init__(self, image_name: str, container_name: str, network: Network, command: Optional[str] = None):
+    def __init__(self, image_name: str, container_name: str, network: Network, command: str | None = None):
         self.image_name: str = image_name
         self.container_name: str = container_name
         self.network: Network = network

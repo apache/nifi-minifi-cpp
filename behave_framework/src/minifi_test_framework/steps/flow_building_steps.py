@@ -203,7 +203,7 @@ def step_impl(context: MinifiTestContext, processor_name: str):
 
 @step("{processor_name} is TIMER_DRIVEN with {scheduling_period} scheduling period")
 def step_impl(context: MinifiTestContext, processor_name: str, scheduling_period: int):
-    processor = context.minifi_container.flow_definition.get_processor(processor_name)
+    processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
     processor.scheduling_strategy = "TIMER_DRIVEN"
     processor.scheduling_period = scheduling_period
 
