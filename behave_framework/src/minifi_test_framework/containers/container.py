@@ -19,6 +19,7 @@ import logging
 import os
 import shlex
 import tempfile
+import tarfile
 
 import docker
 from docker.models.networks import Network
@@ -53,15 +54,23 @@ class Container:
 
         for file in self.files:
             temp_path = os.path.join(self._temp_dir.name, file.host_filename)
-            with open(temp_path, "w") as temp_file:
+            write_mode = "w"
+            if isinstance(file.content, bytes):
+                write_mode = "wb"
+            with open(temp_path, write_mode) as temp_file:
                 temp_file.write(file.content)
+            if file.permissions:
+                os.chmod(temp_path, file.permissions)
             self.volumes[temp_path] = {"bind": os.path.join(file.path, file.host_filename), "mode": file.mode}
         for directory in self.dirs:
             temp_path = self._temp_dir.name + directory.path
             os.makedirs(temp_path, exist_ok=True)
             for file_name, content in directory.files.items():
                 file_path = os.path.join(temp_path, file_name)
-                with open(file_path, "w") as temp_file:
+                write_mode = "w"
+                if isinstance(content, bytes):
+                    write_mode = "wb"
+                with open(file_path, write_mode) as temp_file:
                     temp_file.write(content)
             self.volumes[temp_path] = {"bind": directory.path, "mode": directory.mode}
         for host_file in self.host_files:
@@ -83,6 +92,22 @@ class Container:
             logging.error(f"Error starting container: {e}")
             raise
         return True
+
+    def start(self):
+        if self.container:
+            self.container.start()
+
+    def stop(self):
+        if self.container:
+            self.container.stop()
+
+    def kill(self):
+        if self.container:
+            self.container.kill()
+
+    def restart(self):
+        if self.container:
+            self.container.restart()
 
     def clean_up(self):
         if self.container:
@@ -203,6 +228,7 @@ class Container:
 
     def get_number_of_files(self, directory_path: str) -> int:
         if not self.container or not self.not_empty_dir_exists(directory_path):
+            logging.warning(f"Container not running or directory does not exist: {directory_path}")
             return -1
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
@@ -213,13 +239,15 @@ class Container:
             return -1
 
         try:
-            return int(output.strip())
+            file_count = int(output.strip())
+            logging.debug(f"Number of files in '{directory_path}': {file_count}")
+            return file_count
         except (ValueError, IndexError):
             logging.error(f"Error parsing output '{output}' from command '{count_command}'")
             return -1
 
-    def verify_file_contents(self, directory_path: str, expected_contents: list[str]) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+    def _verify_file_contents_in_running_container(self, directory_path: str, expected_contents: list[str]) -> bool:
+        if not self.not_empty_dir_exists(directory_path):
             return False
 
         safe_dir_path = shlex.quote(directory_path)
@@ -252,6 +280,47 @@ class Container:
             actual_file_contents.append(content)
 
         return sorted(actual_file_contents) == sorted(expected_contents)
+
+    def _verify_file_contents_in_stopped_container(self, directory_path: str, expected_contents: list[str]) -> bool:
+        if not self.container:
+            return False
+
+        temp_dir = tempfile.TemporaryDirectory()
+
+        try:
+            bits, _ = self.container.get_archive(directory_path)
+            temp_tar_path = os.path.join(temp_dir.name, "archive.tar")
+            with open(temp_tar_path, 'wb') as f:
+                for chunk in bits:
+                    f.write(chunk)
+
+            with tarfile.open(temp_tar_path) as tar:
+                tar.extractall(path=temp_dir.name)
+        except Exception as e:
+            logging.error(f"Error extracting files from container: {e}")
+            return False
+
+        extracted_dir_path = os.path.join(temp_dir.name, os.path.basename(directory_path.strip('/')))
+        actual_file_contents = []
+        try:
+            for entry in os.scandir(extracted_dir_path):
+                if entry.is_file():
+                    with open(entry.path, 'r') as f:
+                        actual_file_contents.append(f.read())
+        except Exception as e:
+            logging.error(f"Error reading extracted files: {e}")
+            return False
+
+        return sorted(actual_file_contents) == sorted(expected_contents)
+
+    def verify_file_contents(self, directory_path: str, expected_contents: list[str]) -> bool:
+        if not self.container:
+            return False
+
+        if self.container.status == "running":
+            return self._verify_file_contents_in_running_container(directory_path, expected_contents)
+
+        return self._verify_file_contents_in_stopped_container(directory_path, expected_contents)
 
     def log_app_output(self) -> bool:
         logs = self.get_logs()

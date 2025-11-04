@@ -64,11 +64,6 @@ class MiNiFi_integration_test:
     def acquire_transient_minifi(self, context, name, engine='minifi-cpp'):
         return self.cluster.acquire_transient_minifi(context=context, name=name, engine=engine)
 
-    def start_kafka_broker(self, context):
-        self.cluster.acquire_container(context=context, name='kafka-broker', engine='kafka-broker')
-        self.cluster.deploy_container(name='kafka-broker')
-        assert self.cluster.wait_for_container_startup_to_finish('kafka-broker') or self.cluster.log_app_output()
-
     def start_splunk(self, context):
         self.cluster.acquire_container(context=context, name='splunk', engine='splunk')
         self.cluster.deploy_container(name='splunk')
@@ -322,9 +317,6 @@ class MiNiFi_integration_test:
 
     def check_azure_storage_server_data(self, azure_container_name, object_data):
         assert self.cluster.check_azure_storage_server_data(azure_container_name, object_data) or self.cluster.log_app_output()
-
-    def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name, count):
-        assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name, count) or self.cluster.log_app_output()
 
     def check_splunk_event(self, splunk_container_name, query):
         assert self.cluster.check_splunk_event(splunk_container_name, query) or self.cluster.log_app_output()

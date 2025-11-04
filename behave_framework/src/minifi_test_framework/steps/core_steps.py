@@ -66,3 +66,13 @@ def step_impl(context: MinifiTestContext, filename: str, container_path: str, co
 @given('a host resource file "{filename}" is bound to the "{container_path}" path in the MiNiFi container')
 def step_impl(context: MinifiTestContext, filename: str, container_path: str):
     context.execute_steps(f"given a host resource file \"{filename}\" is bound to the \"{container_path}\" path in the MiNiFi container \"{DEFAULT_MINIFI_CONTAINER_NAME}\"")
+
+
+@when("MiNiFi is stopped")
+def step_impl(context):
+    context.get_or_create_default_minifi_container().stop()
+
+
+@when("MiNiFi is restarted")
+def step_impl(context):
+    context.get_or_create_default_minifi_container().restart()
