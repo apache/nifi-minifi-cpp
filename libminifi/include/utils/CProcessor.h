@@ -71,7 +71,7 @@ class CProcessor : public minifi::core::ProcessorApi {
     c_metadata.logger = reinterpret_cast<MinifiLogger*>(&metadata_.logger);
     impl_ = class_description_.callbacks.create(c_metadata);
   }
-  CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata, OWNED void* impl)
+  CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata, gsl::owner<void*> impl)
       : class_description_(std::move(class_description)),
         impl_(impl),
         metadata_(metadata),
@@ -85,7 +85,7 @@ class CProcessor : public minifi::core::ProcessorApi {
   }
 
   void restore(const std::shared_ptr<minifi::core::FlowFile>& file) override {
-    class_description_.callbacks.restore(impl_, reinterpret_cast<OWNED MinifiFlowFile*>(new std::shared_ptr<minifi::core::FlowFile>(file)));
+    class_description_.callbacks.restore(impl_, reinterpret_cast<MINIFI_OWNED MinifiFlowFile*>(new std::shared_ptr<minifi::core::FlowFile>(file)));
   }
 
   bool supportsDynamicProperties() const override {
@@ -166,7 +166,7 @@ class CProcessor : public minifi::core::ProcessorApi {
 
  private:
   CProcessorClassDescription class_description_;
-  OWNED void* impl_;
+  gsl::owner<void*> impl_;
   minifi::core::ProcessorMetadata metadata_;
   gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetricsExtension>> metrics_extension_;
 };

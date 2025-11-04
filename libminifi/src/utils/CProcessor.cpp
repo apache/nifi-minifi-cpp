@@ -21,7 +21,7 @@ namespace org::apache::nifi::minifi::utils {
 
 namespace {
 
-std::vector<minifi::state::PublishedMetric> toPublishedMetrics(OWNED MinifiPublishedMetrics* metrics) {
+std::vector<minifi::state::PublishedMetric> toPublishedMetrics(gsl::owner<MinifiPublishedMetrics*> metrics) {
   return *std::unique_ptr<std::vector<minifi::state::PublishedMetric>>(reinterpret_cast<std::vector<minifi::state::PublishedMetric>*>(metrics));
 }
 
