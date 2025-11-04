@@ -34,6 +34,7 @@ class VerifyC2Heartbeat : public VerifyC2Base {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTProtocol>();
+    LogTestController::getInstance().setDebug<minifi::FlowController>();
     VerifyC2Base::testSetup();
   }
 
@@ -45,7 +46,9 @@ class VerifyC2Heartbeat : public VerifyC2Base {
         "C2Agent] [debug] Starting processor 2438e3c8-015a-1000-79ca-83af40ec1991",
         "C2Agent] [debug] Starting all processors",
         "C2Agent] [debug] Stopping processor 2438e3c8-015a-1000-79ca-83af40ec1992",
-        "C2Agent] [debug] Starting processor 2438e3c8-015a-1000-79ca-83af40ec1992"));
+        "C2Agent] [debug] Starting processor 2438e3c8-015a-1000-79ca-83af40ec1992",
+        "[error] Could not get execute requested callback for component \"9998e3c8-015a-1000-79ca-83af40ec1999\", because component was not found",
+        "[warning] Processor start/stop request missing 'processorId' argument"));
     CHECK(utils::countLogOccurrencesUntil("C2Agent] [debug] Stopping all processors", 2, 10s, 100ms));
     CHECK(utils::countLogOccurrencesUntil("C2Agent] [debug] Starting all processors", 2, 10s, 100ms));
   }

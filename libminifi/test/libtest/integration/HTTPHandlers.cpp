@@ -468,6 +468,9 @@ void StoppingHeartbeatHandler::sendStartStopOperation(struct mg_connection *conn
   } else if (post_count_ == 3) {
     requested_operation = R"({ "identifier" : 47, "operation" : "START", "operand" : "PROCESSOR", "args" : { "processorId" : "2438e3c8-015a-1000-79ca-83af40ec1992" } }, )"
         R"({ "identifier" : 48, "operation" : "START", "operand" : "FLOW" })";
+  } else {
+    requested_operation = R"({ "identifier" : 49, "operation" : "STOP", "operand" : "PROCESSOR", "args" : { "processorId" : "9998e3c8-015a-1000-79ca-83af40ec1999" } }, )"
+        R"({ "identifier" : 50, "operation" : "STOP", "operand" : "PROCESSOR" })";
   }
 
   std::string resp = R"({"operation" : "heartbeat", "requested_operations" : [ )" + requested_operation + " ]}";
