@@ -457,21 +457,17 @@ void StoppingHeartbeatHandler::sendStartStopOperation(struct mg_connection *conn
   std::lock_guard<std::mutex> lock(post_count_mutex_);
   std::string requested_operation;
   if (post_count_ == 0) {
-    requested_operation = R"({ "operationid" : 41, "operation" : "stop", "operand" : "2438e3c8-015a-1000-79ca-83af40ec1991" })";
+    requested_operation = R"({ "operationid" : 41, "operation" : "stop", "operand" : "2438e3c8-015a-1000-79ca-83af40ec1991" }, )"
+        R"({ "operationid" : 42, "operation" : "stop", "operand" : "FlowController" })";
   } else if (post_count_ == 1) {
-    requested_operation = R"({ "operationid" : 42, "operation" : "stop", "operand" : "FlowController"  })";
+    requested_operation = R"({ "operationid" : 43, "operation" : "start", "operand" : "2438e3c8-015a-1000-79ca-83af40ec1991" }, )"
+        R"({ "operationid" : 44, "operation" : "start", "operand" : "FlowController" })";
   } else if (post_count_ == 2) {
-    requested_operation = R"({ "operationid" : 43, "operation" : "start", "operand" : "2438e3c8-015a-1000-79ca-83af40ec1991" })";
+    requested_operation = R"({ "identifier" : 45, "operation" : "STOP", "operand" : "PROCESSOR", "args" : { "processorId" : "2438e3c8-015a-1000-79ca-83af40ec1992" } }, )"
+        R"({ "identifier" : 46, "operation" : "STOP", "operand" : "FLOW" })";
   } else if (post_count_ == 3) {
-    requested_operation = R"({ "operationid" : 44, "operation" : "start", "operand" : "FlowController"  })";
-  } else if (post_count_ == 4) {
-    requested_operation = R"({ "identifier" : 45, "operation" : "STOP", "operand" : "PROCESSOR", "args" : { "processorId" : "2438e3c8-015a-1000-79ca-83af40ec1992" } })";
-  } else if (post_count_ == 5) {
-    requested_operation = R"({ "identifier" : 46, "operation" : "STOP", "operand" : "FLOW" })";
-  } else if (post_count_ == 6) {
-    requested_operation = R"({ "identifier" : 47, "operation" : "START", "operand" : "PROCESSOR", "args" : { "processorId" : "2438e3c8-015a-1000-79ca-83af40ec1992" } })";
-  } else if (post_count_ == 7) {
-    requested_operation = R"({ "identifier" : 48, "operation" : "START", "operand" : "FLOW" })";
+    requested_operation = R"({ "identifier" : 47, "operation" : "START", "operand" : "PROCESSOR", "args" : { "processorId" : "2438e3c8-015a-1000-79ca-83af40ec1992" } }, )"
+        R"({ "identifier" : 48, "operation" : "START", "operand" : "FLOW" })";
   }
 
   std::string resp = R"({"operation" : "heartbeat", "requested_operations" : [ )" + requested_operation + " ]}";

@@ -871,16 +871,14 @@ void C2Agent::handle_start_stop(const C2ContentResponse& resp) {
     });
   };
 
-  if (lowered_response_name == "flow" || lowered_response_name == "processor") {
-    if (lowered_response_name == "flow") {
-      executeStartStopOnComponent("FlowController");
+  if (lowered_response_name == "flow") {
+    executeStartStopOnComponent("FlowController");
+  } else if (lowered_response_name == "processor") {
+    auto processor_id = resp.getStringArgument("processorId");
+    if (processor_id) {
+      executeStartStopOnComponent(processor_id.value());
     } else {
-      auto processor_id = resp.getStringArgument("processorId");
-      if (processor_id) {
-        executeStartStopOnComponent(processor_id.value());
-      } else {
-        logger_->log_warn("Processor start/stop request missing 'processorId' argument");
-      }
+      logger_->log_warn("Processor start/stop request missing 'processorId' argument");
     }
   } else {
     executeStartStopOnComponent(resp.name);
