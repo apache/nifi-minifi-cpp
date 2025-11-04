@@ -40,7 +40,9 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
       curl_global_cleanup();
       libssh2_exit();
     },
-    .user_data = nullptr
+    .user_data = nullptr,
+    .processors_count = 0,
+    .processors_ptr = nullptr
   };
   return MinifiCreateExtension(&ext_create_info);
 }

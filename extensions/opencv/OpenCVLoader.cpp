@@ -38,7 +38,9 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
-    .user_data = nullptr
+    .user_data = nullptr,
+    .processors_count = 0,
+    .processors_ptr = nullptr
   };
   return MinifiCreateExtension(&ext_create_info);
 }
