@@ -34,7 +34,7 @@ extern "C" {
 #define MINIFI_API_VERSION STRINGIFY(MINIFI_API_MAJOR_VERSION) "." STRINGIFY(MINIFI_API_MINOR_VERSION) "." STRINGIFY(MINIFI_API_PATCH_VERSION)
 #define MINIFI_API_VERSION_TAG "MINIFI_API_VERSION=[" MINIFI_API_VERSION "]"
 #define MINIFI_NULL 0
-#define OWNED
+#define MINIFI_OWNED
 
 typedef uint32_t MinifiBool;
 #define MINIFI_TRUE MinifiBool(1)
@@ -129,15 +129,15 @@ typedef struct MinifiProcessorMetadata {
 } MinifiProcessorMetadata;
 
 typedef struct MinifiProcessorCallbacks {
-  OWNED void*(*create)(MinifiProcessorMetadata);
-  void(*destroy)(OWNED void*);
+  MINIFI_OWNED void*(*create)(MinifiProcessorMetadata);
+  void(*destroy)(MINIFI_OWNED void*);
   MinifiBool(*isWorkAvailable)(void*);
-  void(*restore)(void*, OWNED MinifiFlowFile*);
+  void(*restore)(void*, MINIFI_OWNED MinifiFlowFile*);
   MinifiBool(*getTriggerWhenEmpty)(void*);
   MinifiStatus(*onTrigger)(void*, MinifiProcessContext*, MinifiProcessSession*);
   MinifiStatus(*onSchedule)(void*, MinifiProcessContext*);
   void(*onUnSchedule)(void*);
-  OWNED MinifiPublishedMetrics*(*calculateMetrics)(void*);
+  MINIFI_OWNED MinifiPublishedMetrics*(*calculateMetrics)(void*);
 } MinifiProcessorCallbacks;
 
 typedef struct MinifiProcessorClassDescription {
@@ -183,7 +183,7 @@ MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo*);
 
 const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardPropertyValidator);
 
-OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(uint32_t count, const MinifiStringView*, const double*);
+MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(uint32_t count, const MinifiStringView*, const double*);
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext*, MinifiStringView, MinifiFlowFile*, void(*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx);
 void MinifiProcessContextGetProcessorName(MinifiProcessContext*, void(*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx);
@@ -196,11 +196,11 @@ MinifiBool MinifiLoggerShouldLog(MinifiLogger*, MinifiLogLevel);
 MinifiLogLevel MinifiLoggerLevel(MinifiLogger*);
 int32_t MinifiLoggerGetMaxLogSize(MinifiLogger*);
 
-OWNED MinifiFlowFile* MinifiProcessSessionGet(MinifiProcessSession*);
-OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession*, MinifiFlowFile*);
+MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionGet(MinifiProcessSession*);
+MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession*, MinifiFlowFile*);
 
-void MinifiProcessSessionTransfer(MinifiProcessSession*, OWNED MinifiFlowFile*, MinifiStringView);
-void MinifiProcessSessionRemove(MinifiProcessSession*, OWNED MinifiFlowFile*);
+void MinifiProcessSessionTransfer(MinifiProcessSession*, MINIFI_OWNED MinifiFlowFile*, MinifiStringView);
+void MinifiProcessSessionRemove(MinifiProcessSession*, MINIFI_OWNED MinifiFlowFile*);
 
 MinifiStatus MinifiProcessSessionRead(MinifiProcessSession*, MinifiFlowFile*, int64_t(*cb)(void* user_ctx, MinifiInputStream*), void* user_ctx);
 MinifiStatus MinifiProcessSessionWrite(MinifiProcessSession*, MinifiFlowFile*, int64_t(*cb)(void* user_ctx, MinifiOutputStream*), void* user_ctx);

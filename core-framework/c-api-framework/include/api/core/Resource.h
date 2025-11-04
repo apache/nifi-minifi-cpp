@@ -96,20 +96,20 @@ void useProcessorClassDescription(Fn&& fn) {
     .is_single_threaded = Class::IsSingleThreaded ? MINIFI_TRUE : MINIFI_FALSE,
 
     .callbacks = MinifiProcessorCallbacks{
-      .create = [] (MinifiProcessorMetadata metadata) -> OWNED void* {
+      .create = [] (MinifiProcessorMetadata metadata) -> MINIFI_OWNED void* {
         return new Class{minifi::core::ProcessorMetadata{
           .uuid = minifi::utils::Identifier::parse(std::string{metadata.uuid.data, metadata.uuid.length}).value(),
           .name = std::string{metadata.name.data, metadata.name.length},
           .logger = std::make_shared<logging::Logger>(metadata.logger)
         }};
       },
-      .destroy = [] (OWNED void* self) -> void {
+      .destroy = [] (MINIFI_OWNED void* self) -> void {
         delete static_cast<Class*>(self);
       },
       .isWorkAvailable = [] (void* self) -> MinifiBool {
         return static_cast<Class*>(self)->isWorkAvailable() ? MINIFI_TRUE : MINIFI_FALSE;
       },
-      .restore = [] (void* self, OWNED MinifiFlowFile* ff) -> void {
+      .restore = [] (void* self, MINIFI_OWNED MinifiFlowFile* ff) -> void {
         static_cast<Class*>(self)->restore(std::make_shared<FlowFile>(ff));
       },
       .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
@@ -135,7 +135,7 @@ void useProcessorClassDescription(Fn&& fn) {
       .onUnSchedule = [] (void* self) -> void {
         static_cast<Class*>(self)->onUnSchedule();
       },
-      .calculateMetrics = [] (void* self) -> OWNED MinifiPublishedMetrics* {
+      .calculateMetrics = [] (void* self) -> MINIFI_OWNED MinifiPublishedMetrics* {
         auto metrics = static_cast<Class*>(self)->calculateMetrics();
         std::vector<MinifiStringView> names;
         std::vector<double> values;
