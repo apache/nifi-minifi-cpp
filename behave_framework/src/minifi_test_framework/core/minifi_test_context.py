@@ -15,11 +15,16 @@
 #  limitations under the License.
 #
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from behave.runner import Context
 from docker.models.networks import Network
 
 from minifi_test_framework.containers.container import Container
-from minifi_test_framework.containers.minifi_container import MinifiContainer
+from OpenSSL import crypto
+
+if TYPE_CHECKING:
+    from minifi_test_framework.containers.minifi_container import MinifiContainer
 
 DEFAULT_MINIFI_CONTAINER_NAME = "minifi-primary"
 
@@ -30,10 +35,13 @@ class MinifiTestContext(Context):
     network: Network
     minifi_container_image: str
     resource_dir: str | None
+    root_ca_key: crypto.PKey
+    root_ca_cert: crypto.X509
 
     def get_or_create_minifi_container(self, container_name: str) -> MinifiContainer:
         if container_name not in self.containers:
-            self.containers[container_name] = MinifiContainer(self.minifi_container_image, container_name, self.scenario_id, self.network)
+            from minifi_test_framework.containers.minifi_container import MinifiContainer
+            self.containers[container_name] = MinifiContainer(container_name, self)
         return self.containers[container_name]
 
     def get_or_create_default_minifi_container(self) -> MinifiContainer:

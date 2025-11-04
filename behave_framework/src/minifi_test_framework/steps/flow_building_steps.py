@@ -15,6 +15,7 @@
 #  limitations under the License.
 #
 
+import logging
 from behave import given, step
 
 from minifi_test_framework.containers.directory import Directory
@@ -77,7 +78,10 @@ def step_impl(context: MinifiTestContext, processor_type: str):
 @step('the "{property_name}" property of the {processor_name} processor is set to "{property_value}"')
 def step_impl(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str):
     processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
-    processor.add_property(property_name, property_value)
+    if property_value == "(not set)":
+        processor.remove_property(property_name)
+    else:
+        processor.add_property(property_name, property_value)
 
 
 @step('a Funnel with the name "{funnel_name}" is set up')
@@ -220,3 +224,30 @@ def step_impl(context: MinifiTestContext, service_name: str, property_name: str,
     controller_service = ControllerService(class_name=service_name, service_name=service_name)
     controller_service.add_property(property_name, property_value)
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
+
+
+@given("the \"{property_name}\" property of the {processor_name} processor is set to match the attribute \"{attribute_key}\" to \"{attribute_value}\"")
+def step_impl(context: MinifiTestContext, property_name: str, processor_name: str, attribute_key: str, attribute_value: str):
+    processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
+    if attribute_value == "(not set)":
+        # Ignore filtering
+        processor.add_property(property_name, "true")
+        return
+    filtering = "${" + attribute_key + ":equals('" + attribute_value + "')}"
+    logging.info("Filter: \"%s\"", filtering)
+    logging.info("Key: \"%s\", value: \"%s\"", attribute_key, attribute_value)
+    processor.add_property(property_name, filtering)
+
+
+# TLS
+@given("an ssl context service is set up for {processor_name}")
+@given("an ssl context service with a manual CA cert file is set up for {processor_name}")
+def step_impl(context, processor_name):
+    controller_service = ControllerService(class_name="SSLContextService", service_name="SSLContextService")
+    controller_service.add_property("Client Certificate", "/tmp/resources/minifi_client.crt")
+    controller_service.add_property("Private Key", "/tmp/resources/minifi_client.key")
+    controller_service.add_property("CA Certificate", "/tmp/resources/root_ca.crt")
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
+
+    processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
+    processor.add_property('SSL Context Service', 'SSLContextService')

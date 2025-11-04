@@ -16,34 +16,43 @@
 #
 
 import logging
-from docker.models.networks import Network
+from OpenSSL import crypto
 
+from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.minifi.flow_definition import FlowDefinition
+from minifi_test_framework.core.ssl_utils import make_cert_without_extended_usage
 from .container import Container
 
 
 class MinifiContainer(Container):
-    def __init__(self, image_name: str, container_name: str, scenario_id: str, network: Network):
-        super().__init__(image_name, f"{container_name}-{scenario_id}", network)
+    def __init__(self, container_name: str, test_context: MinifiTestContext):
+        super().__init__(test_context.minifi_container_image, f"{container_name}-{test_context.scenario_id}", test_context.network)
         self.flow_config_str: str = ""
         self.flow_definition = FlowDefinition()
         self.properties: dict[str, str] = {}
         self.log_properties: dict[str, str] = {}
 
-        self.is_fhs = 'MINIFI_INSTALLATION_TYPE=FHS' in str(self.client.images.get(image_name).history())
+        minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=self.container_name, ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
+        self.files.append(File("/tmp/resources/root_ca.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)))
+        self.files.append(File("/tmp/resources/minifi_client.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=minifi_client_cert)))
+        self.files.append(File("/tmp/resources/minifi_client.key", crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=minifi_client_key)))
+
+        self.is_fhs = 'MINIFI_INSTALLATION_TYPE=FHS' in str(self.client.images.get(test_context.minifi_container_image).history())
 
         self._fill_default_properties()
         self._fill_default_log_properties()
 
     def deploy(self) -> bool:
+        flow_config = self.flow_definition.to_yaml()
+        logging.info(f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
         if self.is_fhs:
-            self.files.append(File("/etc/nifi-minifi-cpp/config.yml", self.flow_definition.to_yaml()))
+            self.files.append(File("/etc/nifi-minifi-cpp/config.yml", flow_config))
             self.files.append(File("/etc/nifi-minifi-cpp/minifi.properties", self._get_properties_file_content()))
             self.files.append(
                 File("/etc/nifi-minifi-cpp/minifi-log.properties", self._get_log_properties_file_content()))
         else:
-            self.files.append(File("/opt/minifi/minifi-current/conf/config.yml", self.flow_definition.to_yaml()))
+            self.files.append(File("/opt/minifi/minifi-current/conf/config.yml", flow_config))
             self.files.append(
                 File("/opt/minifi/minifi-current/conf/minifi.properties", self._get_properties_file_content()))
             self.files.append(File("/opt/minifi/minifi-current/conf/minifi-log.properties",

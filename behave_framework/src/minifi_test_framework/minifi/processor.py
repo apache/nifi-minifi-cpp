@@ -32,6 +32,10 @@ class Processor:
     def add_property(self, property_name: str, property_value: str):
         self.properties[property_name] = property_value
 
+    def remove_property(self, property_name: str):
+        if property_name in self.properties:
+            del self.properties[property_name]
+
     def __repr__(self):
         return f"({self.class_name}, {self.name}, {self.properties})"
 
