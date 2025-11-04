@@ -128,7 +128,6 @@ def step_impl(context, processor_type, minifi_container_name):
 @given("a {processor_type} processor set up to communicate with an s3 server")
 @given("a {processor_type} processor set up to communicate with the same s3 server")
 @given("a {processor_type} processor set up to communicate with an Azure blob storage")
-@given("a {processor_type} processor set up to communicate with a kafka broker instance")
 @given("a {processor_type} processor set up to communicate with an MQTT broker instance")
 @given("a {processor_type} processor set up to communicate with the Splunk HEC instance")
 @given("a {processor_type} processor set up to communicate with the kinesis server")

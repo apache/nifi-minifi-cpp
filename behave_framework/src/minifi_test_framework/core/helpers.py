@@ -31,6 +31,15 @@ def log_due_to_failure(context: MinifiTestContext | None):
             container.log_app_output()
 
 
+def check_condition_after_wait(condition: Callable[[], bool], context: MinifiTestContext | None, wait_time: int) -> bool:
+    time.sleep(wait_time)
+    if not condition():
+        logging.warning("Condition not met after wait")
+        log_due_to_failure(context)
+        return False
+    return True
+
+
 def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, bail_condition: Callable[[], bool],
                        context: MinifiTestContext | None) -> bool:
     if bail_condition():
@@ -50,8 +59,8 @@ def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, ba
             sleep_time = min(1.0, remaining_time)
             if sleep_time > 0:
                 time.sleep(sleep_time)
-    except (Exception,):
-        logging.warning("Exception while waiting for condition")
+    except Exception as ex:
+        logging.warning("Exception while waiting for condition: %s", ex)
         log_due_to_failure(context)
         return False
     logging.warning("Timed out after %d seconds while waiting for condition", timeout_seconds)

@@ -23,6 +23,7 @@ import types
 from behave.model import Scenario
 from behave.runner import Context
 
+from minifi_test_framework.core.ssl_utils import make_self_signed_cert
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
@@ -74,6 +75,7 @@ def common_before_scenario(context: Context, scenario: Scenario):
     context.network = docker_client.networks.create(network_name)
     context.containers = {}
     context.resource_dir = None
+    context.root_ca_cert, context.root_ca_key = make_self_signed_cert("root CA")
 
     for step in scenario.steps:
         inject_scenario_id(context, step)
