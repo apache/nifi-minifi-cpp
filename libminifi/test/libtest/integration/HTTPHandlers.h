@@ -249,7 +249,7 @@ class StoppingHeartbeatHandler : public HeartbeatHandler {
   void sendStartStopOperation(struct mg_connection *conn);
 
  private:
-  std::mutex post_count_mutex_;
+  std::mutex start_stop_send_mutex_;
   uint32_t post_count_{0};
 };
 

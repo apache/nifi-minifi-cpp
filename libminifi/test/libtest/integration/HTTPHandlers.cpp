@@ -454,7 +454,7 @@ void HeartbeatHandler::verifySupportedOperations(const rapidjson::Document& root
 }
 
 void StoppingHeartbeatHandler::sendStartStopOperation(struct mg_connection *conn) {
-  std::lock_guard<std::mutex> lock(post_count_mutex_);
+  std::lock_guard<std::mutex> lock(start_stop_send_mutex_);
   std::string requested_operation;
   if (post_count_ == 0) {
     requested_operation = R"({ "operationid" : 41, "operation" : "stop", "operand" : "2438e3c8-015a-1000-79ca-83af40ec1991" }, )"
