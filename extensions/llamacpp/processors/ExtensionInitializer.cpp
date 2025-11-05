@@ -24,44 +24,18 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-namespace {
-
-template<typename ...Args>
-struct ForEachProcessorDescription;
-
-template<>
-struct ForEachProcessorDescription<> {
-  template<typename Fn>
-  void operator()(Fn&& fn, std::vector<MinifiProcessorClassDescription> descriptions = {}) {
-    fn(std::move(descriptions));
-  }
-};
-
-template<typename Arg1, typename ...Args>
-struct ForEachProcessorDescription<Arg1, Args...> {
-  template<typename Fn>
-  void operator()(Fn&& fn, std::vector<MinifiProcessorClassDescription> descriptions = {}) {
-    minifi::api::core::useProcessorClassDescription<Arg1>([&] (const MinifiProcessorClassDescription& description) {
-      descriptions.push_back(description);
-      ForEachProcessorDescription<Args...>{}(fn, std::move(descriptions));
-    });
-  }
-};
-
-}  // namespace
-
 extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
   MinifiExtension* extension = nullptr;
-  ForEachProcessorDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>{}([&] (std::vector<MinifiProcessorClassDescription> processors) {
+  minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDescription& description) {
     MinifiExtensionCreateInfo ext_create_info{
       .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
       .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
       .deinit = nullptr,
       .user_data = nullptr,
-      .processors_count = gsl::narrow<uint32_t>(processors.size()),
-      .processors_ptr = processors.data(),
+      .processors_count = 1,
+      .processors_ptr = &description,
     };
-    return MinifiCreateExtension(&ext_create_info);
+    extension = MinifiCreateExtension(&ext_create_info);
   });
   return extension;
 }
