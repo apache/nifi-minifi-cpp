@@ -22,6 +22,58 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
   Background:
     Given the content of "/tmp/output" is monitored
 
+  Scenario Outline: ConsumeKafka parses and uses kafka topics and topic name formats
+    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    And the "Topic Names" property of the ConsumeKafka processor is set to "<topic names>"
+    And the "Topic Name Format" property of the ConsumeKafka processor is set to "<topic name format>"
+    And the "Offset Reset" property of the ConsumeKafka processor is set to "earliest"
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
+
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
+    And the kafka broker is started
+    And the topic "ConsumeKafkaTest" is initialized on the kafka broker
+
+    When a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
+    And all other processes start up
+    And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic
+
+    Then two flowfiles with the contents "<message 1>" and "<message 2>" are placed in the monitored directory in less than 90 seconds
+
+    Examples: Topic names and formats to test
+      | message 1            | message 2           | topic names              | topic name format |
+      | Ulysses              | James Joyce         | ConsumeKafkaTest         | (not set)         |
+      | The Great Gatsby     | F. Scott Fitzgerald | ConsumeKafkaTest         | Names             |
+      | War and Peace        | Lev Tolstoy         | a,b,c,ConsumeKafkaTest,d | Names             |
+      | Nineteen Eighty Four | George Orwell       | ConsumeKafkaTest         | Patterns          |
+      | Hamlet               | William Shakespeare | Cons[emu]*KafkaTest      | Patterns          |
+
+  Scenario Outline: ConsumeKafka key attribute is encoded according to the "Key Attribute Encoding" property
+    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    And the "Key Attribute Encoding" property of the ConsumeKafka processor is set to "<key attribute encoding>"
+    And a RouteOnAttribute processor in the "kafka-consumer-flow" flow
+    And a LogAttribute processor in the "kafka-consumer-flow" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And the "success" property of the RouteOnAttribute processor is set to match <key attribute encoding> encoded kafka message key "consume_kafka_test_key"
+
+    And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
+    And the "success" relationship of the LogAttribute processor is connected to the RouteOnAttribute
+    And the "success" relationship of the RouteOnAttribute processor is connected to the PutFile
+
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
+
+    When all instances start up
+    And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic with key "consume_kafka_test_key"
+    And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic with key "consume_kafka_test_key"
+
+    Then two flowfiles with the contents "<message 1>" and "<message 2>" are placed in the monitored directory in less than 45 seconds
+
+    Examples: Key attribute encoding values
+      | message 1            | message 2                     | key attribute encoding |
+      | The Odyssey          | Ὅμηρος                        | (not set)              |
+      | Lolita               | Владимир Владимирович Набоков | UTF-8                  |
+      | Crime and Punishment | Фёдор Михайлович Достоевский  | Hex                    |
+
   Scenario Outline: ConsumeKafka transactional behaviour is supported
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And the "Topic Names" property of the ConsumeKafka processor is set to "ConsumeKafkaTest"
