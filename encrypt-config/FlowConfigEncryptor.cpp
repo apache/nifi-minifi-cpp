@@ -190,7 +190,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
       utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{*keys.old_key}} :
       utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{keys.encryption_key}};
 
-  core::extension::ExtensionManagerImpl::get().initialize(configure);
+  core::extension::ExtensionManager extension_manager(configure);
 
   core::flow::AdaptiveConfiguration adaptive_configuration{core::ConfigurationContext{
       .flow_file_repo = nullptr,

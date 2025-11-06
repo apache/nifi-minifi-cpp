@@ -24,6 +24,8 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "Catch.h"
+#include "core/extension/Extension.h"
+#include "core/extension/ExtensionManager.h"
 
 TestControllerWithFlow::TestControllerWithFlow(const char* yamlConfigContent, bool setup_flow) {
   LogTestController::getInstance().setTrace<minifi::Connection>();
@@ -34,6 +36,9 @@ TestControllerWithFlow::TestControllerWithFlow(const char* yamlConfigContent, bo
   LogTestController::getInstance().setTrace<minifi::TimerDrivenSchedulingAgent>();
   LogTestController::getInstance().setTrace<minifi::EventDrivenSchedulingAgent>();
   LogTestController::getInstance().setTrace<minifi::FlowController>();
+  LogTestController::getInstance().setTrace<minifi::core::extension::ExtensionManager>();
+  LogTestController::getInstance().setTrace<minifi::core::extension::Extension>();
+  LogTestController::getInstance().setTrace<minifi::core::ClassLoader>();
 
   home_ = createTempDirectory();
 

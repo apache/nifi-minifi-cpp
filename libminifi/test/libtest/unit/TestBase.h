@@ -439,16 +439,15 @@ static bool disableAwsMetadata = [] {
 }();
 
 #if defined(LOAD_EXTENSIONS) && !defined(CUSTOM_EXTENSION_INIT)
-static bool extensionInitializer = [] {
+static std::unique_ptr<core::extension::ExtensionManager> extensionInitializer = [] {
   LogTestController::getInstance().setTrace<core::extension::ExtensionManager>();
-  LogTestController::getInstance().setTrace<core::extension::Module>();
+  LogTestController::getInstance().setTrace<core::extension::Extension>();
   auto config = minifi::Configure::create();
 #ifdef EXTENSION_LIST
   config->set(minifi::Configuration::nifi_extension_path, EXTENSION_LIST);
 #else
   config->set(minifi::Configuration::nifi_extension_path, "*minifi-*");
 #endif
-  core::extension::ExtensionManagerImpl::get().initialize(config);
-  return true;
+  return std::make_unique<core::extension::ExtensionManager>(config);
 }();
 #endif

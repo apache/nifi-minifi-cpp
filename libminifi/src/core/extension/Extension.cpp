@@ -33,20 +33,20 @@
 #define RTLD_LOCAL  (1 << 2)
 #endif
 
-#include "core/extension/DynamicLibrary.h"
+#include "core/extension/Extension.h"
 #include "utils/GeneralUtils.h"
 #include "core/logging/LoggerFactory.h"
+#include "minifi-c/minifi-c.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
-const std::shared_ptr<logging::Logger> DynamicLibrary::logger_ = logging::LoggerFactory<DynamicLibrary>::getLogger();
-
-DynamicLibrary::DynamicLibrary(std::string name, std::filesystem::path library_path)
-  : Module(std::move(name)),
-    library_path_(std::move(library_path)) {
+Extension::Extension(std::string name, std::filesystem::path library_path)
+  : name_(std::move(name)),
+    library_path_(std::move(library_path)),
+    logger_(logging::LoggerFactory<Extension>::getLogger()) {
 }
 
-bool DynamicLibrary::load(bool global) {
+bool Extension::load(bool global) {
   dlerror();
   if (global) {
     handle_ = dlopen(library_path_.string().c_str(), RTLD_NOW | RTLD_GLOBAL);  // NOLINT(cppcoreguidelines-owning-memory)
@@ -62,7 +62,7 @@ bool DynamicLibrary::load(bool global) {
   }
 }
 
-bool DynamicLibrary::unload() {
+bool Extension::unload() {
   logger_->log_trace("Unloading library '{}' at '{}'", name_, library_path_);
   if (!handle_) {
     logger_->log_error("Extension does not have a handle_ '{}' at '{}'", name_, library_path_);
@@ -78,18 +78,40 @@ bool DynamicLibrary::unload() {
   return true;
 }
 
-void* DynamicLibrary::findSymbol(const char *name) {
+void* Extension::findSymbol(const char *name) {
   if (!handle_) {
     throw std::logic_error("Dynamic library has not been loaded");
   }
   return dlsym(handle_, name);
 }
 
-DynamicLibrary::~DynamicLibrary() = default;
+Extension::~Extension() {
+  if (info_ && info_->deinit) {
+    info_->deinit(info_->user_data);
+  }
+  unload();
+}
+
+bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) {
+  logger_->log_trace("Initializing extension '{}'", name_);
+  if (void* init_symbol_ptr = findSymbol("InitExtension")) {
+    logger_->log_debug("Found custom initializer for '{}'", name_);
+    auto init_fn = reinterpret_cast<MinifiExtension*(*)(MinifiConfig*)>(init_symbol_ptr);
+    auto config_handle = reinterpret_cast<MinifiConfig*>(configure.get());
+    info_.reset(reinterpret_cast<Info*>(init_fn(config_handle)));
+    if (!info_) {
+      logger_->log_error("Failed to initialize extension '{}'", name_);
+      return false;
+    }
+  } else {
+    logger_->log_debug("No custom initializer for '{}'", name_);
+  }
+  return true;
+}
 
 #ifdef WIN32
 
-void DynamicLibrary::store_error() {
+void Extension::store_error() {
   auto error = GetLastError();
 
   if (error == 0) {
@@ -100,7 +122,7 @@ void DynamicLibrary::store_error() {
   current_error_ = std::system_category().message(error);
 }
 
-void* DynamicLibrary::dlsym(void* handle, const char* name) {
+void* Extension::dlsym(void* handle, const char* name) {
   FARPROC symbol;
 
   symbol = GetProcAddress((HMODULE)handle, name);
@@ -122,7 +144,7 @@ void* DynamicLibrary::dlsym(void* handle, const char* name) {
   return reinterpret_cast<void*>(symbol);
 }
 
-const char* DynamicLibrary::dlerror() {
+const char* Extension::dlerror() {
   error_str_ = current_error_;
 
   current_error_ = "";
@@ -130,7 +152,7 @@ const char* DynamicLibrary::dlerror() {
   return error_str_.c_str();
 }
 
-void* DynamicLibrary::dlopen(const char* file, int mode) {
+void* Extension::dlopen(const char* file, int mode) {
   HMODULE object;
   uint32_t uMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   if (nullptr == file) {
@@ -177,7 +199,7 @@ void* DynamicLibrary::dlopen(const char* file, int mode) {
   return reinterpret_cast<void*>(object);
 }
 
-int DynamicLibrary::dlclose(void* handle) {
+int Extension::dlclose(void* handle) {
   BOOL ret;
 
   current_error_ = "";

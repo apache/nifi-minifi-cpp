@@ -14,19 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include "Extension.h"
+#include "minifi-c/minifi-c.h"
+#include <string_view>
+#include <optional>
+#include <functional>
+#include "minifi-cpp/utils/gsl.h"
 
-namespace org::apache::nifi::minifi::core::extension {
+namespace org::apache::nifi::minifi::utils {
 
-class ExtensionManager {
- public:
-  static ExtensionManager& get();
+inline MinifiStringView toStringView(std::string_view str) {
+  return MinifiStringView{.data = str.data(), .length = str.length()};
+}
 
-  virtual void registerExtension(Extension& extension) = 0;
-  virtual void unregisterExtension(Extension& extension) = 0;
-};
+using ConfigReader = std::function<std::optional<std::string>(std::string_view key)>;
 
-}  // namespace org::apache::nifi::minifi::core::extension
+}  // namespace org::apache::nifi::minifi::utils

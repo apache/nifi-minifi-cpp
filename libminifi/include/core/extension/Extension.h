@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -22,16 +22,32 @@
 #include <string>
 #include <filesystem>
 
-#include "Module.h"
+#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/properties/Configure.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
-class DynamicLibrary : public Module {
-  friend class ExtensionManagerImpl;
+class Extension {
+  friend class ExtensionManager;
 
  public:
-  DynamicLibrary(std::string name, std::filesystem::path library_path);
-  ~DynamicLibrary() override;
+  struct Info {
+    std::string name;
+    std::string version;
+    void(*deinit)(void* user_data);
+    void* user_data;
+  };
+
+  Extension(std::string name, std::filesystem::path library_path);
+
+  Extension(const Extension&) = delete;
+  Extension(Extension&&) = delete;
+  Extension& operator=(const Extension&) = delete;
+  Extension& operator=(Extension&&) = delete;
+
+  ~Extension();
+
+  bool initialize(const std::shared_ptr<minifi::Configure>& configure);
 
  private:
 #ifdef WIN32
@@ -51,10 +67,13 @@ class DynamicLibrary : public Module {
   bool unload();
   void* findSymbol(const char* name);
 
+  std::string name_;
   std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
 
-  static const std::shared_ptr<logging::Logger> logger_;
+  std::unique_ptr<Info> info_;
+
+  const std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::extension
