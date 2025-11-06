@@ -35,7 +35,7 @@ class LightWeightC2Handler : public StoppingHeartbeatHandler {
     : StoppingHeartbeatHandler(std::move(configuration)) {
   }
 
-  void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) override {
+  void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *conn) override {
     std::lock_guard<std::mutex> lock(call_mutex_);
     if (calls_ == 0) {
       verifyJsonHasAgentManifest(root);
@@ -44,6 +44,7 @@ class LightWeightC2Handler : public StoppingHeartbeatHandler {
       REQUIRE(!root["agentInfo"].HasMember("agentManifest"));
     }
     calls_++;
+    sendStartStopOperation(conn);
   }
 
  private:
@@ -62,14 +63,23 @@ class VerifyLightWeightC2Heartbeat : public VerifyC2Base {
   }
 
   void runAssertions() override {
-    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+    REQUIRE(utils::verifyLogLinePresenceInPollTime(20s,
         "Received Ack from Server",
-        "C2Agent] [debug] Stopping component 2438e3c8-015a-1000-79ca-83af40ec1991",
-        "C2Agent] [debug] Stopping component FlowController"));
+        "C2Agent] [debug] Stopping processor 2438e3c8-015a-1000-79ca-83af40ec1991",
+        "C2Agent] [debug] Stopping all processors",
+        "C2Agent] [debug] Starting processor 2438e3c8-015a-1000-79ca-83af40ec1991",
+        "C2Agent] [debug] Starting all processors",
+        "C2Agent] [debug] Stopping processor 2438e3c8-015a-1000-79ca-83af40ec1992",
+        "C2Agent] [debug] Starting processor 2438e3c8-015a-1000-79ca-83af40ec1992",
+        "[error] Could not get execute requested callback for component \"9998e3c8-015a-1000-79ca-83af40ec1999\", because component was not found",
+        "[warning] Processor start/stop request missing 'processorId' argument"));
+    CHECK(utils::countLogOccurrencesUntil("C2Agent] [debug] Stopping all processors", 2, 10s, 100ms));
+    CHECK(utils::countLogOccurrencesUntil("C2Agent] [debug] Starting all processors", 2, 10s, 100ms));
   }
 
   void configureFullHeartbeat() override {
     configuration->set(minifi::Configuration::nifi_c2_full_heartbeat, "false");
+    configuration->set(minifi::Configuration::nifi_c2_agent_heartbeat_period, "100");
   }
 };
 

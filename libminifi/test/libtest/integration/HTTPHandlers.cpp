@@ -453,18 +453,32 @@ void HeartbeatHandler::verifySupportedOperations(const rapidjson::Document& root
   REQUIRE(operations == std::set<std::string>(magic_enum::enum_names<minifi::c2::Operation>().begin(), magic_enum::enum_names<minifi::c2::Operation>().end()));
 }
 
-bool StoppingHeartbeatHandler::handlePost(CivetServer *, struct mg_connection *conn) {
-  verify(conn);
-  sendStopOperation(conn);
-  return true;
-}
-void StoppingHeartbeatHandler::sendStopOperation(struct mg_connection *conn) {
-  std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"2438e3c8-015a-1000-79ca-83af40ec1991\"  }, "
-      "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
+void StoppingHeartbeatHandler::sendStartStopOperation(struct mg_connection *conn) {
+  std::lock_guard<std::mutex> lock(start_stop_send_mutex_);
+  std::string requested_operation;
+  if (post_count_ == 0) {
+    requested_operation = R"({ "operationid" : 41, "operation" : "stop", "operand" : "2438e3c8-015a-1000-79ca-83af40ec1991" }, )"
+        R"({ "operationid" : 42, "operation" : "stop", "operand" : "FlowController" })";
+  } else if (post_count_ == 1) {
+    requested_operation = R"({ "operationid" : 43, "operation" : "start", "operand" : "2438e3c8-015a-1000-79ca-83af40ec1991" }, )"
+        R"({ "operationid" : 44, "operation" : "start", "operand" : "FlowController" })";
+  } else if (post_count_ == 2) {
+    requested_operation = R"({ "identifier" : 45, "operation" : "STOP", "operand" : "PROCESSOR", "args" : { "processorId" : "2438e3c8-015a-1000-79ca-83af40ec1992" } }, )"
+        R"({ "identifier" : 46, "operation" : "STOP", "operand" : "FLOW" })";
+  } else if (post_count_ == 3) {
+    requested_operation = R"({ "identifier" : 47, "operation" : "START", "operand" : "PROCESSOR", "args" : { "processorId" : "2438e3c8-015a-1000-79ca-83af40ec1992" } }, )"
+        R"({ "identifier" : 48, "operation" : "START", "operand" : "FLOW" })";
+  } else {
+    requested_operation = R"({ "identifier" : 49, "operation" : "STOP", "operand" : "PROCESSOR", "args" : { "processorId" : "9998e3c8-015a-1000-79ca-83af40ec1999" } }, )"
+        R"({ "identifier" : 50, "operation" : "STOP", "operand" : "PROCESSOR" })";
+  }
+
+  std::string resp = R"({"operation" : "heartbeat", "requested_operations" : [ )" + requested_operation + " ]}";
   mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
             "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
             resp.length());
   mg_printf(conn, "%s", resp.c_str());
+  ++post_count_;
 }
 
 bool C2FlowProvider::handleGet(CivetServer* /*server*/, struct mg_connection *conn) {

@@ -342,27 +342,8 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
     }
       break;
     case Operation::start:
-    case Operation::stop: {
-      if (resp.name == "C2" || resp.name == "c2") {
-        (void)raise(SIGTERM);
-      }
-
-      // stop all referenced components.
-      update_sink_->executeOnComponent(resp.name, [this, &resp] (state::StateController& component) {
-        logger_->log_debug("Stopping component {}", resp.name);
-        if (resp.op == Operation::stop) {
-          component.stop();
-        } else {
-          component.start();
-        }
-      });
-
-      if (!resp.ident.empty()) {
-        C2Payload response(Operation::acknowledge, resp.ident, true);
-        enqueue_c2_response(std::move(response));
-      }
-    }
-      //
+    case Operation::stop:
+      handle_start_stop(resp);
       break;
     case Operation::pause:
       if (pause_handler_ != nullptr) {
@@ -869,6 +850,44 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
 
   C2Payload response(Operation::acknowledge, state::UpdateState::FULLY_APPLIED, resp.ident, true);
   enqueue_c2_response(std::move(response));
+}
+
+void C2Agent::handle_start_stop(const C2ContentResponse& resp) {
+  const auto lowered_response_name = utils::string::toLower(resp.name);
+  if (lowered_response_name == "c2") {
+    std::ignore = raise(SIGTERM);
+  }
+
+  auto executeStartStopOnComponent = [this, &resp](const std::string& component_name) {
+    update_sink_->executeOnComponent(component_name, [this, &resp, &component_name] (state::StateController& component) {
+      const std::string component_message = component_name == "FlowController" ? "all processors" : "processor " + component_name;
+      if (resp.op == Operation::stop) {
+        logger_->log_debug("Stopping {}", component_message);
+        component.stop();
+      } else {
+        logger_->log_debug("Starting {}", component_message);
+        component.start();
+      }
+    });
+  };
+
+  if (lowered_response_name == "flow") {
+    executeStartStopOnComponent("FlowController");
+  } else if (lowered_response_name == "processor") {
+    auto processor_id = resp.getStringArgument("processorId");
+    if (processor_id) {
+      executeStartStopOnComponent(processor_id.value());
+    } else {
+      logger_->log_warn("Processor start/stop request missing 'processorId' argument");
+    }
+  } else {
+    executeStartStopOnComponent(resp.name);
+  }
+
+  if (!resp.ident.empty()) {
+    C2Payload response(Operation::acknowledge, resp.ident, true);
+    enqueue_c2_response(std::move(response));
+  }
 }
 
 utils::TaskRescheduleInfo C2Agent::produce() {

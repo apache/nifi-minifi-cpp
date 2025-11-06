@@ -133,6 +133,7 @@ class C2Agent : public state::UpdateController {
   void handle_describe(const C2ContentResponse &resp);
 
   void handle_sync(const C2ContentResponse &resp);
+  void handle_start_stop(const C2ContentResponse& resp);
 
 
   enum class UpdateResult {
