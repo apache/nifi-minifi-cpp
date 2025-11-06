@@ -30,7 +30,7 @@ Feature: Minifi C++ can act as a syslog listener
     And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then at least one file in "/tmp/output" content match the following regex: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.*13.*sample_log$" in less than 1000 seconds
+    Then at least one file in "/tmp/output" content match the following regex: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.*13.*sample_log$" in less than 10 seconds
 
   Scenario: A syslog client can send messages to Minifi over TCP
     Given a ListenSyslog processor
