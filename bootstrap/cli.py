@@ -72,6 +72,7 @@ def main_menu(minifi_options: MinifiOptions, package_manager: PackageManager):
     done = False
     while not done:
         main_menu_options = {
+            # All menu options' functions return True if the bootstrap should exit after execution
             f"Build dir: {minifi_options.build_dir}": build_dir_menu,
             f"Build type: {minifi_options.build_type.value}": build_type_menu,
             "Build options": build_options_menu,
@@ -90,6 +91,8 @@ def main_menu(minifi_options: MinifiOptions, package_manager: PackageManager):
         ]
 
         main_menu_prompt = inquirer.prompt(questions)
+        if main_menu_prompt is None:
+            break
         done = main_menu_options[main_menu_prompt["sub_menu"]](minifi_options, package_manager)
 
 
@@ -103,6 +106,8 @@ def build_type_menu(minifi_options: MinifiOptions, _package_manager: PackageMana
     ]
 
     answers = inquirer.prompt(questions)
+    if answers is None:
+        return True
     minifi_options.build_type.value = answers["build_type"]
     minifi_options.save_option_state()
     return False
@@ -115,7 +120,10 @@ def build_dir_menu(minifi_options: MinifiOptions, _package_manager: PackageManag
                       default=minifi_options.build_dir
                       ),
     ]
-    minifi_options.build_dir = inquirer.prompt(questions)["build_dir"]
+    answers = inquirer.prompt(questions)
+    if answers is None:
+        return True
+    minifi_options.build_dir = answers["build_dir"]
     minifi_options.save_option_state()
     return False
 
@@ -133,6 +141,8 @@ def extension_options_menu(minifi_options: MinifiOptions, _package_manager: Pack
     ]
 
     answers = inquirer.prompt(questions)
+    if answers is None:
+        return True
     for extension_option in minifi_options.extension_options.values():
         if extension_option.name in answers["options"]:
             extension_option.value = "ON"
@@ -156,6 +166,8 @@ def build_options_menu(minifi_options: MinifiOptions, _package_manager: PackageM
     ]
 
     answers = inquirer.prompt(questions)
+    if answers is None:
+        return True
     for build_option in minifi_options.build_options.values():
         if build_option.name in answers["options"]:
             build_option.value = "ON"
@@ -170,6 +182,7 @@ def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageMan
     done = False
     while not done:
         step_by_step_options = {
+            # All menu options' functions return True if the bootstrap should exit after execution
             f"Build dir: {minifi_options.build_dir}": build_dir_menu,
             "Install dependencies": install_dependencies,
             "Run cmake": run_cmake,
@@ -187,6 +200,8 @@ def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageMan
         ]
 
         step_by_step_prompt = inquirer.prompt(questions)
+        if step_by_step_prompt is None:
+            return True
         step_by_step_options[step_by_step_prompt["selection"]](minifi_options, package_manager)
         done = step_by_step_prompt['selection'] == 'Back'
     return False
