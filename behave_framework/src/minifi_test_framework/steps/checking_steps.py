@@ -154,12 +154,21 @@ def step_impl(context: MinifiTestContext, directory: str, timeout: str, contents
                               context=context)
 
 
-@then("a flowfile with the JSON content \"{content}\" is placed in {directory} in less than {duration}")
-@then("a flowfile with the JSON content '{content}' is placed in {directory} in less than {duration}")
+@then("a file with the JSON content \"{content}\" is placed in the \"{directory}\" directory in less than {duration}")
+@then("a file with the JSON content '{content}' is placed in the '{directory}' directory in less than {duration}")
 def step_impl(context: MinifiTestContext, content: str, directory: str, duration: str):
     timeout_in_seconds = humanfriendly.parse_timespan(duration)
     assert wait_for_condition(
         condition=lambda: context.get_default_minifi_container().verify_path_with_json_content(directory, content),
+        timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_default_minifi_container().exited, context=context)
+
+
+@then("at least one file with the JSON content \"{content}\" is placed in the \"{directory}\" directory in less than {duration}")
+@then("at least one file with the JSON content '{content}' is placed in the '{directory}' directory in less than {duration}")
+def step_impl(context: MinifiTestContext, content: str, directory: str, duration: str):
+    timeout_in_seconds = humanfriendly.parse_timespan(duration)
+    assert wait_for_condition(
+        condition=lambda: context.get_default_minifi_container().directory_contains_file_with_json_content(directory, content),
         timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_default_minifi_container().exited, context=context)
 
 
@@ -186,3 +195,11 @@ def step_impl(context, directory, duration, contents):
 @then('exactly these files are in the "{directory}" directory in less than {duration}: ""')
 def step_impl(context, directory, duration):
     context.execute_steps(f'then no files are placed in the "{directory}" directory in {duration} of running time')
+
+
+@then("at least one empty file is placed in the \"{directory}\" directory in less than {duration}")
+def step_impl(context, directory, duration):
+    timeout_in_seconds = humanfriendly.parse_timespan(duration)
+    assert wait_for_condition(
+        condition=lambda: context.get_default_minifi_container().directory_contains_empty_file(directory),
+        timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_default_minifi_container().exited, context=context)
