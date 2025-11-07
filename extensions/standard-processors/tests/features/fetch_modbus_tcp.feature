@@ -17,15 +17,14 @@
 @CORE
 Feature: Minifi C++ can act as a modbus tcp master
 
-  Background:
-    Given the content of "/tmp/output" is monitored
-
   Scenario: MiNiFi can fetch data from a modbus slave
     Given a FetchModbusTcp processor
-    And a JsonRecordSetWriter controller service is set up with "One Line Per Object" output grouping
+    And a JsonRecordSetWriter controller service is set up and the "Output Grouping" property set to "One Line Per Object"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
     And the "Unit Identifier" property of the FetchModbusTcp processor is set to "255"
     And the "Record Set Writer" property of the FetchModbusTcp processor is set to "JsonRecordSetWriter"
+    And the "Hostname" property of the FetchModbusTcp processor is set to "diag-slave-tcp-${scenario_id}"
     And there is an accessible PLC with modbus enabled
     And PLC register has been set with h@52=123 command
     And PLC register has been set with h@5678/f=1.75 command
@@ -40,6 +39,7 @@ Feature: Minifi C++ can act as a modbus tcp master
     And the "foo" property of the FetchModbusTcp processor is set to "holding-register:52"
     And the "bar" property of the FetchModbusTcp processor is set to "405678:REAL"
     And the "baz" property of the FetchModbusTcp processor is set to "4x4444:CHAR[6]"
+    And PutFile's success relationship is auto-terminated
 
-    When both instances start up
-    Then a flowfile with the JSON content "{"foo":123,"bar":1.75,"baz":["M", "i", "N", "i", "F", "i"]}" is placed in the monitored directory in less than 10 seconds
+    When the MiNiFi instance starts up
+    Then at least one file with the JSON content "{"foo":123,"bar":1.75,"baz":["M", "i", "N", "i", "F", "i"]}" is placed in the "/tmp/output" directory in less than 10 seconds
