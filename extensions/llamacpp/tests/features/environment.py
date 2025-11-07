@@ -20,6 +20,9 @@ from minifi_test_framework.core.hooks import common_after_scenario
 from minifi_test_framework.core.hooks import get_minifi_container_image
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
+# These hooks are executed by behave before and after each scenario
+# The common_before_scenario and common_after_scenario must be called for proper setup and tear down
+
 
 def before_all(context: MinifiTestContext):
     minifi_container_image = get_minifi_container_image()
