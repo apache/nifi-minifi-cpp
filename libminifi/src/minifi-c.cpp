@@ -272,7 +272,7 @@ MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, Mini
   auto result = reinterpret_cast<minifi::core::ProcessContext*>(context)->getProperty(toStringView(property_name),
       flow_file != MINIFI_NULL ? reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flow_file)->get() : nullptr);
   if (result) {
-    result_cb(user_ctx, MinifiStringView{.data = result.value().data(), .length = gsl::narrow<uint32_t>(result.value().length())});
+    result_cb(user_ctx, MinifiStringView{.data = result.value().data(), .length = result.value().length()});
     return MINIFI_STATUS_SUCCESS;
   }
   switch (static_cast<minifi::core::PropertyErrorCode>(result.error().value())) {
@@ -287,7 +287,7 @@ MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, Mini
 void MinifiProcessContextGetProcessorName(MinifiProcessContext* context, void(*cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
   gsl_Assert(context != MINIFI_NULL);
   auto name = reinterpret_cast<minifi::core::ProcessContext*>(context)->getProcessorInfo().getName();
-  cb(user_ctx, MinifiStringView{.data = name.data(), .length = gsl::narrow<uint32_t>(name.length())});
+  cb(user_ctx, MinifiStringView{.data = name.data(), .length = name.length()});
 }
 
 MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext* context, MinifiStringView property_name) {
@@ -301,7 +301,7 @@ void MinifiConfigGet(MinifiConfig* configure, MinifiStringView key, void(*cb)(vo
   if (value) {
     cb(user_ctx, MinifiStringView{
       .data = value->data(),
-      .length = gsl::narrow<uint32_t>(value->length())
+      .length = value->length()
     });
   }
 }
@@ -309,17 +309,6 @@ void MinifiConfigGet(MinifiConfig* configure, MinifiStringView key, void(*cb)(vo
 void MinifiLoggerSetMaxLogSize(MinifiLogger* logger, int32_t max_size) {
   gsl_Assert(logger != MINIFI_NULL);
   (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->set_max_log_size(max_size);
-}
-
-void MinifiLoggerGetId(MinifiLogger* logger, void(*cb)(void* user_ctx, MinifiStringView id), void* user_ctx) {
-  gsl_Assert(logger != MINIFI_NULL);
-  auto id = (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->get_id();
-  if (id) {
-    cb(user_ctx, MinifiStringView{
-      .data = id->data(),
-      .length = gsl::narrow<uint32_t>(id->length())
-    });
-  }
 }
 
 void MinifiLoggerLogString(MinifiLogger* logger, MinifiLogLevel level, MinifiStringView msg) {
@@ -332,32 +321,13 @@ MinifiBool MinifiLoggerShouldLog(MinifiLogger* logger, MinifiLogLevel level) {
   return (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->should_log(toLogLevel(level));
 }
 
-MinifiLogLevel MinifiLoggerLevel(MinifiLogger* logger) {
-  gsl_Assert(logger != MINIFI_NULL);
-  switch ((*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->level()) {
-    case minifi::core::logging::LOG_LEVEL::trace: return MINIFI_TRACE;
-    case minifi::core::logging::LOG_LEVEL::debug: return MINIFI_DEBUG;
-    case minifi::core::logging::LOG_LEVEL::info: return MINIFI_INFO;
-    case minifi::core::logging::LOG_LEVEL::warn: return MINIFI_WARNING;
-    case minifi::core::logging::LOG_LEVEL::err: return MINIFI_ERROR;
-    case minifi::core::logging::LOG_LEVEL::critical: return MINIFI_CRITICAL;
-    case minifi::core::logging::LOG_LEVEL::off: return MINIFI_OFF;
-  }
-  gsl_FailFast();
-}
-
-MINIFI_OWNED gsl::owner<MinifiPublishedMetrics*> MinifiPublishedMetricsCreate(const uint32_t count, const MinifiStringView* names, const double* values) {
+MINIFI_OWNED gsl::owner<MinifiPublishedMetrics*> MinifiPublishedMetricsCreate(const size_t count, const MinifiStringView* names, const double* values) {
   const gsl::owner<std::vector<minifi::state::PublishedMetric>*> metrics = new std::vector<minifi::state::PublishedMetric>();  // NOLINT(modernize-use-auto)
   metrics->reserve(count);
-  for (uint32_t i = 0; i < count; i++) {
+  for (size_t i = 0; i < count; i++) {
     metrics->emplace_back(minifi::state::PublishedMetric{toString(names[i]), values[i], {}});
   }
   return reinterpret_cast<MinifiPublishedMetrics*>(metrics);
-}
-
-int32_t MinifiLoggerGetMaxLogSize(MinifiLogger* logger) {
-  gsl_Assert(logger != MINIFI_NULL);
-  return (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->getMaxLogSize();
 }
 
 MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionGet(MinifiProcessSession* session) {
@@ -414,19 +384,19 @@ MinifiStatus MinifiProcessSessionWrite(MinifiProcessSession* session, MinifiFlow
   }
 }
 
-uint64_t MinifiInputStreamSize(MinifiInputStream* stream) {
+size_t MinifiInputStreamSize(MinifiInputStream* stream) {
   gsl_Assert(stream != MINIFI_NULL);
-  return gsl::narrow<uint64_t>(reinterpret_cast<minifi::io::InputStream*>(stream)->size());
+  return reinterpret_cast<minifi::io::InputStream*>(stream)->size();
 }
 
-int64_t MinifiInputStreamRead(MinifiInputStream* stream, char* data, uint64_t size) {
+int64_t MinifiInputStreamRead(MinifiInputStream* stream, char* buffer, size_t size) {
   gsl_Assert(stream != MINIFI_NULL);
-  return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::InputStream*>(stream)->read(std::span(reinterpret_cast<std::byte*>(data), size)));
+  return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::InputStream*>(stream)->read(std::span(reinterpret_cast<std::byte*>(buffer), size)));
 }
 
-int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, const char* data, uint64_t size) {
+int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, MinifiStringView data) {
   gsl_Assert(stream != MINIFI_NULL);
-  return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::OutputStream*>(stream)->write(std::span(reinterpret_cast<const std::byte*>(data), size)));
+  return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::OutputStream*>(stream)->write(as_bytes(std::span(toStringView(data)))));
 }
 
 void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiStringView str), void* user_ctx) {
@@ -441,7 +411,7 @@ void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiS
       default: return "Unknown error";
     }
   }();
-  cb(user_ctx, MinifiStringView{.data = message.data(), .length = gsl::narrow<uint32_t>(message.size())});
+  cb(user_ctx, MinifiStringView{.data = message.data(), .length = message.size()});
 }
 
 void MinifiFlowFileSetAttribute(MinifiProcessSession* session, MinifiFlowFile* ff, MinifiStringView key, const MinifiStringView* value) {
@@ -461,7 +431,7 @@ MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowF
   if (!value.has_value()) {
     return MINIFI_FALSE;
   }
-  cb(user_ctx, MinifiStringView{.data = value->data(), .length = gsl::narrow<uint32_t>(value->size())});
+  cb(user_ctx, MinifiStringView{.data = value->data(), .length = value->size()});
   return MINIFI_TRUE;
 }
 
@@ -469,7 +439,7 @@ void MinifiFlowFileGetAttributes(MinifiProcessSession* session, MinifiFlowFile* 
   gsl_Assert(session != MINIFI_NULL);
   gsl_Assert(ff != MINIFI_NULL);
   for (auto& [key, value] : (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff))->getAttributes()) {
-    cb(user_ctx, MinifiStringView{.data = key.data(), .length = gsl::narrow<uint32_t>(key.size())}, MinifiStringView{.data = value.data(), .length = gsl::narrow<uint32_t>(value.size())});
+    cb(user_ctx, MinifiStringView{.data = key.data(), .length = key.size()}, MinifiStringView{.data = value.data(), .length = value.size()});
   }
 }
 

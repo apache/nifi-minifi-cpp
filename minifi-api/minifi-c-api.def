@@ -7,11 +7,8 @@ EXPORTS
   MinifiProcessContextGetProcessorName
   MinifiProcessContextHasNonEmptyProperty
   MinifiLoggerSetMaxLogSize
-  MinifiLoggerGetId
   MinifiLoggerLogString
   MinifiLoggerShouldLog
-  MinifiLoggerLevel
-  MinifiLoggerGetMaxLogSize
   MinifiProcessSessionGet
   MinifiProcessSessionCreate
   MinifiProcessSessionTransfer
