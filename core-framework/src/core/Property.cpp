@@ -72,10 +72,6 @@ namespace {
 inline std::vector<std::string> createStrings(std::span<const std::string_view> string_views) {
   return ranges::views::transform(string_views, [](const auto& string_view) { return std::string{string_view}; }) | ranges::to<std::vector>;
 }
-
-inline std::vector<std::pair<std::string, std::string>> createStrings(std::span<const std::pair<std::string_view, std::string_view>> pairs_of_string_views) {
-  return ranges::views::transform(pairs_of_string_views, [](const auto& pair_of_string_views) { return std::pair<std::string, std::string>(pair_of_string_views); }) | ranges::to<std::vector>;
-}
 }  // namespace
 
 Property::Property(const PropertyReference& compile_time_property)
