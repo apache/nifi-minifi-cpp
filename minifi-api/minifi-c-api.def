@@ -9,6 +9,7 @@ EXPORTS
   MinifiLoggerSetMaxLogSize
   MinifiLoggerLogString
   MinifiLoggerShouldLog
+  MinifiLoggerLevel
   MinifiProcessSessionGet
   MinifiProcessSessionCreate
   MinifiProcessSessionTransfer

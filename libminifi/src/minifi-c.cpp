@@ -62,13 +62,13 @@ minifi::core::annotation::Input toInputRequirement(MinifiInputRequirement req) {
 
 minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel lvl) {
   switch (lvl) {
-    case MINIFI_TRACE: return minifi::core::logging::trace;
-    case MINIFI_DEBUG: return minifi::core::logging::debug;
-    case MINIFI_INFO: return minifi::core::logging::info;
-    case MINIFI_WARNING: return minifi::core::logging::warn;
-    case MINIFI_ERROR: return minifi::core::logging::err;
-    case MINIFI_CRITICAL: return minifi::core::logging::critical;
-    case MINIFI_OFF: return minifi::core::logging::off;
+    case MINIFI_LOG_LEVEL_TRACE: return minifi::core::logging::trace;
+    case MINIFI_LOG_LEVEL_DEBUG: return minifi::core::logging::debug;
+    case MINIFI_LOG_LEVEL_INFO: return minifi::core::logging::info;
+    case MINIFI_LOG_LEVEL_WARNING: return minifi::core::logging::warn;
+    case MINIFI_LOG_LEVEL_ERROR: return minifi::core::logging::err;
+    case MINIFI_LOG_LEVEL_CRITICAL: return minifi::core::logging::critical;
+    case MINIFI_LOG_LEVEL_OFF: return minifi::core::logging::off;
   }
   gsl_FailFast();
 }
@@ -319,6 +319,20 @@ void MinifiLoggerLogString(MinifiLogger* logger, MinifiLogLevel level, MinifiStr
 MinifiBool MinifiLoggerShouldLog(MinifiLogger* logger, MinifiLogLevel level) {
   gsl_Assert(logger != MINIFI_NULL);
   return (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->should_log(toLogLevel(level));
+}
+
+MinifiLogLevel MinifiLoggerLevel(MinifiLogger* logger) {
+  gsl_Assert(logger != MINIFI_NULL);
+  switch ((*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->level()) {
+    case minifi::core::logging::LOG_LEVEL::trace: return MINIFI_LOG_LEVEL_TRACE;
+    case minifi::core::logging::LOG_LEVEL::debug: return MINIFI_LOG_LEVEL_DEBUG;
+    case minifi::core::logging::LOG_LEVEL::info: return MINIFI_LOG_LEVEL_INFO;
+    case minifi::core::logging::LOG_LEVEL::warn: return MINIFI_LOG_LEVEL_WARNING;
+    case minifi::core::logging::LOG_LEVEL::err: return MINIFI_LOG_LEVEL_ERROR;
+    case minifi::core::logging::LOG_LEVEL::critical: return MINIFI_LOG_LEVEL_CRITICAL;
+    case minifi::core::logging::LOG_LEVEL::off: return MINIFI_LOG_LEVEL_OFF;
+  }
+  gsl_FailFast();
 }
 
 MINIFI_OWNED gsl::owner<MinifiPublishedMetrics*> MinifiPublishedMetricsCreate(const size_t count, const MinifiStringView* names, const double* values) {

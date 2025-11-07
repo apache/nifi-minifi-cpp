@@ -34,7 +34,7 @@ extern "C" {
 #define MINIFI_API_PATCH_VERSION 0
 #define MINIFI_API_VERSION STRINGIFY(MINIFI_API_MAJOR_VERSION) "." STRINGIFY(MINIFI_API_MINOR_VERSION) "." STRINGIFY(MINIFI_API_PATCH_VERSION)
 #define MINIFI_API_VERSION_TAG "MINIFI_API_VERSION=[" MINIFI_API_VERSION "]"
-#define MINIFI_NULL 0
+#define MINIFI_NULL nullptr
 #define MINIFI_OWNED
 
 typedef bool MinifiBool;
@@ -114,13 +114,13 @@ typedef struct MinifiProperty {
 } MinifiProperty;
 
 typedef enum MinifiLogLevel {
-  MINIFI_TRACE = 0,
-  MINIFI_DEBUG = 1,
-  MINIFI_INFO = 2,
-  MINIFI_WARNING = 3,
-  MINIFI_ERROR = 4,
-  MINIFI_CRITICAL = 5,
-  MINIFI_OFF = 6
+  MINIFI_LOG_LEVEL_TRACE = 0,
+  MINIFI_LOG_LEVEL_DEBUG = 1,
+  MINIFI_LOG_LEVEL_INFO = 2,
+  MINIFI_LOG_LEVEL_WARNING = 3,
+  MINIFI_LOG_LEVEL_ERROR = 4,
+  MINIFI_LOG_LEVEL_CRITICAL = 5,
+  MINIFI_LOG_LEVEL_OFF = 6
 } MinifiLogLevel;
 
 typedef struct MinifiProcessorMetadata {
@@ -193,6 +193,7 @@ MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext* context
 void MinifiLoggerSetMaxLogSize(MinifiLogger*, int32_t);
 void MinifiLoggerLogString(MinifiLogger*, MinifiLogLevel, MinifiStringView);
 MinifiBool MinifiLoggerShouldLog(MinifiLogger*, MinifiLogLevel);
+MinifiLogLevel MinifiLoggerLevel(MinifiLogger*);
 
 MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionGet(MinifiProcessSession*);
 MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession* session, MinifiFlowFile* parent_flowfile);

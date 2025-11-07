@@ -58,19 +58,12 @@ class DummyProcessorDescriptor : public core::ProcessorDescriptor {
 class DummyLogger : public core::logging::Logger {
  public:
   void set_max_log_size(int /*size*/) override {}
-  std::optional<std::string> get_id() override {
-    return std::nullopt;
-  }
   void log_string(core::logging::LOG_LEVEL /*level*/, std::string /*str*/) override {}
   bool should_log(core::logging::LOG_LEVEL /*level*/) override {
     return false;
   }
   [[nodiscard]] core::logging::LOG_LEVEL level() const override {
     return core::logging::LOG_LEVEL::off;
-  }
-
-  int getMaxLogSize() override {
-    return 0;
   }
 
   ~DummyLogger() override = default;
