@@ -207,7 +207,7 @@ void MinifiConfigGet(MinifiConfig* config, MinifiStringView config_key, void(*cb
 size_t MinifiInputStreamSize(MinifiInputStream*);
 
 int64_t MinifiInputStreamRead(MinifiInputStream* stream, char* buffer, size_t size);
-int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, MinifiStringView data);
+int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, const char* data, size_t size);
 
 void MinifiStatusToString(MinifiStatus, void(*cb)(void* user_ctx, MinifiStringView str), void* user_ctx);
 
