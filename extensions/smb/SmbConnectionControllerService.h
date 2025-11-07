@@ -53,12 +53,10 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   EXTENSIONAPI static constexpr auto Username  = core::PropertyDefinitionBuilder<>::createProperty("Username")
       .withDescription("The username used for authentication. If no username is set then anonymous authentication is attempted.")
       .isRequired(false)
-      .withDependentProperties({"Password"})
       .build();
   EXTENSIONAPI static constexpr auto Password  = core::PropertyDefinitionBuilder<>::createProperty("Password")
       .withDescription("The password used for authentication. Required if Username is set.")
       .isRequired(false)
-      .withDependentProperties({"Username"})
       .isSensitive(true)
       .build();
 

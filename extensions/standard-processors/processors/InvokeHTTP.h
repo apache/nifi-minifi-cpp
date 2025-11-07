@@ -172,11 +172,10 @@ class InvokeHTTP : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto AttributesToSend = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Send")
       .withDescription("Regular expression that defines which attributes to send as HTTP headers in the request. If not defined, no attributes are sent as headers.")
       .build();
-  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0>::createProperty("SSL Context Service")
       .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
       .isRequired(false)
       .withAllowedTypes<controllers::SSLContextServiceInterface>()
-      .withExclusiveOfProperties({{{"Remote URL", "^http:.*$"}}})
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
       .withDescription("The fully qualified hostname or IP address of the proxy server")

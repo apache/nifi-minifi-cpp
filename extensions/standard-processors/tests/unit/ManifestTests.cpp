@@ -74,7 +74,7 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
   const auto &prop_descriptors = processor_with_properties.children[0];
   REQUIRE_FALSE(prop_descriptors.children.empty());
   const auto &prop_0 = prop_descriptors.children[0];
-  REQUIRE(prop_0.children.size() >= 7);
+  REQUIRE(prop_0.children.size() >= 6);
   CHECK("required" == prop_0.children[3].name);
   CHECK("sensitive" == prop_0.children[4].name);
   CHECK("expressionLanguageScope" == prop_0.children[5].name);
@@ -138,7 +138,7 @@ TEST_CASE("Test Dependent", "[dependent]") {
   const auto &prop_descriptors = proc_0.children[0];
   REQUIRE(prop_descriptors.children.size() >= 3);
   const auto &prop_0 = prop_descriptors.children[1];
-  REQUIRE(prop_0.children.size() >= 7);
+  REQUIRE(prop_0.children.size() >= 6);
   CHECK("required" == prop_0.children[3].name);
   CHECK("sensitive" == prop_0.children[4].name);
   CHECK("expressionLanguageScope" == prop_0.children[5].name);

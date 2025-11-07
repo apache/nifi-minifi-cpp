@@ -1055,42 +1055,6 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
       }
     }
   }
-
-  // Validate dependent properties
-  for (const auto & [property_name, property] : component_properties) {
-    const auto &dep_props = property.getDependentProperties();
-
-    const auto property_value = property.getValue();
-    if (!property_value) {
-      continue;
-    }
-
-    for (const auto &dep_prop_key : dep_props) {
-      if (auto dep_prop_value = component_properties.at(dep_prop_key).getValue(); !dep_prop_value) {
-        std::string reason = utils::string::join_pack("property '", property.getName(),
-            "' depends on property '", dep_prop_key, "' which is not set");
-        raiseComponentError(component_name, section, reason);
-      }
-    }
-  }
-
-  // Validate mutually-exclusive properties
-  for (const auto& [prop_name, prop] : component_properties) {
-    const auto& excl_props = prop.getExclusiveOfProperties();
-
-    if (!prop.getValue()) {
-      continue;
-    }
-
-    for (const auto &[excl_prop_key, excl_prop_regex] : excl_props) {
-      utils::Regex excl_expr(excl_prop_regex);
-      if (utils::regexMatch(component_properties.at(excl_prop_key).getValue().value_or(""), excl_expr)) {
-        std::string reason = utils::string::join_pack("property '", prop.getName(),
-            "' must not be set when the value of property '", excl_prop_key, "' matches '", excl_prop_regex, "'");
-        raiseComponentError(component_name, section, reason);
-      }
-    }
-  }
 }
 
 void StructuredConfiguration::raiseComponentError(const std::string &component_name, const std::string &section, const std::string &reason) const {
