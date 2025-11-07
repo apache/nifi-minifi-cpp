@@ -49,7 +49,18 @@ bool LoggerBase::should_log(LOG_LEVEL level) {
   return delegate_->should_log(mapToSpdLogLevel(level));
 }
 
+std::string LoggerBase::trimToMaxSizeAndAddId(std::string my_string) {
+  auto max_log_size = getMaxLogSize();
+  if (max_log_size >= 0 && my_string.size() > gsl::narrow<size_t>(max_log_size))
+    my_string = my_string.substr(0, max_log_size);
+  if (auto id = get_id()) {
+    my_string += *id;
+  }
+  return my_string;
+}
+
 void LoggerBase::log_string(LOG_LEVEL level, std::string str) {
+  str = trimToMaxSizeAndAddId(std::move(str));
   if (log_callback_) {
     log_callback_(level, str);
   }

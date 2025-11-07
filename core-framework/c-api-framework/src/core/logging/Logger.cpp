@@ -34,31 +34,10 @@ MinifiLogLevel toCLogLevel(minifi::core::logging::LOG_LEVEL lvl) {
   gsl_FailFast();
 }
 
-minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel lvl) {
-  switch (lvl) {
-    case MINIFI_TRACE: return minifi::core::logging::trace;
-    case MINIFI_DEBUG: return minifi::core::logging::debug;
-    case MINIFI_INFO: return minifi::core::logging::info;
-    case MINIFI_WARNING: return minifi::core::logging::warn;
-    case MINIFI_ERROR: return minifi::core::logging::err;
-    case MINIFI_CRITICAL: return minifi::core::logging::critical;
-    case MINIFI_OFF: return minifi::core::logging::off;
-  }
-  gsl_FailFast();
-}
-
 }  // namespace
 
 void Logger::set_max_log_size(int size) {
   MinifiLoggerSetMaxLogSize(impl_, size);
-}
-
-std::optional<std::string> Logger::get_id() {
-  std::optional<std::string> result;
-  MinifiLoggerGetId(impl_, [] (void* data, MinifiStringView id) {
-    (*(std::optional<std::string>*)data) = std::string_view{id.data, id.length};
-  }, &result);
-  return result;
 }
 
 void Logger::log_string(minifi::core::logging::LOG_LEVEL level, std::string str) {
@@ -67,14 +46,6 @@ void Logger::log_string(minifi::core::logging::LOG_LEVEL level, std::string str)
 
 bool Logger::should_log(minifi::core::logging::LOG_LEVEL level) {
   return MinifiLoggerShouldLog(impl_, toCLogLevel(level));
-}
-
-[[nodiscard]] minifi::core::logging::LOG_LEVEL Logger::level() const {
-  return toLogLevel(MinifiLoggerLevel(impl_));
-}
-
-int Logger::getMaxLogSize() {
-  return MinifiLoggerGetMaxLogSize(impl_);
 }
 
 
