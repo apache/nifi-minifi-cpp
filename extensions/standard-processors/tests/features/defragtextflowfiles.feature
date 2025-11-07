@@ -15,8 +15,6 @@
 
 @CORE
 Feature: DefragmentText can defragment fragmented data from TailFile
-  Background:
-    Given the content of "/tmp/output" is monitored
 
   Scenario Outline: DefragmentText correctly merges split messages from TailFile multiple file tail-mode
     Given a TailFile processor with the name "MultiTail" and the "File to Tail" property set to "test_file_.*\.log"
@@ -28,18 +26,20 @@ Feature: DefragmentText can defragment fragmented data from TailFile
     And a file with filename "test_file_two.log" and content "<input_two>" is present in "/tmp/input"
     And a DefragmentText processor with the "Pattern" property set to "<pattern>"
     And the "Pattern Location" property of the DefragmentText processor is set to "<pattern location>"
+    And DefragmentText is EVENT_DRIVEN
     And a PutFile processor with the name "SuccessPut" and the "Directory" property set to "/tmp/output"
+    And SuccessPut is EVENT_DRIVEN
     And the "success" relationship of the MultiTail processor is connected to the DefragmentText
     And the "success" relationship of the DefragmentText processor is connected to the SuccessPut
-
+    And SuccessPut's success relationship is auto-terminated
 
     When all instances start up
-    Then flowfiles with these contents are placed in the monitored directory in less than 60 seconds: "<success_flow_files>"
+    Then files with contents "<success_flow_files>" are placed in the "/tmp/output" directory in less than 60 seconds
 
     Examples:
       | input_one                                    | input_two                                        | pattern       | pattern location | success_flow_files                                                          |
       | <1>cat%dog%mouse%<2>apple%banana%<3>English% | <1>Katze%Hund%Maus%<2>Apfel%Banane%<3>Deutsch%   | <[0-9]+>      | Start of Message | <1>cat%dog%mouse%,<1>Katze%Hund%Maus%,<2>apple%banana%,<2>Apfel%Banane%       |
-      | <1>cat%dog%mouse%<2>apple%banana%<3>English% | <1>Katze%Hund%Maus%<2>Apfel%Banane%<3>Deutsch%   | <[0-9]+>      | End of Message   | <1>,cat%dog%mouse%<2>,Katze%Hund%Maus%<2>,apple%banana%<3>,Apfel%Banane%<3>   |
+      | <1>cat%dog%mouse%<2>apple%banana%<3>English% | <1>Katze%Hund%Maus%<2>Apfel%Banane%<3>Deutsch%   | <[0-9]+>      | End of Message   | <1>,<1>,cat%dog%mouse%<2>,Katze%Hund%Maus%<2>,apple%banana%<3>,Apfel%Banane%<3>   |
 
   Scenario Outline: DefragmentText correctly merges split messages from multiple TailFile
     Given a TailFile processor with the name "TailOne" and the "File to Tail" property set to "/tmp/input/test_file_one.log"
@@ -48,24 +48,25 @@ Feature: DefragmentText can defragment fragmented data from TailFile
     And a TailFile processor with the name "TailTwo" and the "File to Tail" property set to "/tmp/input/test_file_two.log"
     And the "Initial Start Position" property of the TailTwo processor is set to "Beginning of File"
     And the "Input Delimiter" property of the TailTwo processor is set to "%"
-    And "TailTwo" processor is a start node
     And a file with filename "test_file_one.log" and content "<input_one>" is present in "/tmp/input"
     And a file with filename "test_file_two.log" and content "<input_two>" is present in "/tmp/input"
     And a DefragmentText processor with the "Pattern" property set to "<pattern>"
     And the "Pattern Location" property of the DefragmentText processor is set to "<pattern location>"
+    And DefragmentText is EVENT_DRIVEN
     And a PutFile processor with the name "SuccessPut" and the "Directory" property set to "/tmp/output"
+    And SuccessPut is EVENT_DRIVEN
     And the "success" relationship of the TailOne processor is connected to the DefragmentText
     And the "success" relationship of the TailTwo processor is connected to the DefragmentText
     And the "success" relationship of the DefragmentText processor is connected to the SuccessPut
-
+    And SuccessPut's success relationship is auto-terminated
 
     When all instances start up
-    Then flowfiles with these contents are placed in the monitored directory in less than 60 seconds: "<success_flow_files>"
+    Then files with contents "<success_flow_files>" are placed in the "/tmp/output" directory in less than 60 seconds
 
     Examples:
       | input_one                                    | input_two                                        | pattern       | pattern location | success_flow_files                                                          |
       | <1>cat%dog%mouse%<2>apple%banana%<3>English% | <1>Katze%Hund%Maus%<2>Apfel%Banane%<3>Deutsch%   | <[0-9]+>      | Start of Message | <1>cat%dog%mouse%,<1>Katze%Hund%Maus%,<2>apple%banana%,<2>Apfel%Banane%       |
-      | <1>cat%dog%mouse%<2>apple%banana%<3>English% | <1>Katze%Hund%Maus%<2>Apfel%Banane%<3>Deutsch%   | <[0-9]+>      | End of Message   | <1>,cat%dog%mouse%<2>,Katze%Hund%Maus%<2>,apple%banana%<3>,Apfel%Banane%<3>   |
+      | <1>cat%dog%mouse%<2>apple%banana%<3>English% | <1>Katze%Hund%Maus%<2>Apfel%Banane%<3>Deutsch%   | <[0-9]+>      | End of Message   | <1>,<1>,cat%dog%mouse%<2>,Katze%Hund%Maus%<2>,apple%banana%<3>,Apfel%Banane%<3>   |
 
   Scenario Outline: DefragmentText merges split messages from a single TailFile
     Given a TailFile processor with the "File to Tail" property set to "/tmp/input/test_file.log"
@@ -74,13 +75,15 @@ Feature: DefragmentText can defragment fragmented data from TailFile
     And a file with filename "test_file.log" and content "<input>" is present in "/tmp/input"
     And a DefragmentText processor with the "Pattern" property set to "<pattern>"
     And the "Pattern Location" property of the DefragmentText processor is set to "<pattern location>"
+    And DefragmentText is EVENT_DRIVEN
     And a PutFile processor with the name "SuccessPut" and the "Directory" property set to "/tmp/output"
+    And SuccessPut is EVENT_DRIVEN
     And the "success" relationship of the TailFile processor is connected to the DefragmentText
     And the "success" relationship of the DefragmentText processor is connected to the SuccessPut
-
+    And SuccessPut's success relationship is auto-terminated
 
     When all instances start up
-    Then flowfiles with these contents are placed in the monitored directory in less than 30 seconds: "<success_flow_files>"
+    Then files with contents "<success_flow_files>" are placed in the "/tmp/output" directory in less than 30 seconds
 
     Examples:
       | input                                                        | pattern       | pattern location |  success_flow_files                                   |

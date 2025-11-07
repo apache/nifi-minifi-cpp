@@ -66,6 +66,9 @@ class MinifiContainer(Container):
     def set_log_property(self, key: str, value: str):
         self.log_properties[key] = value
 
+    def enable_openssl_fips_mode(self):
+        self.properties["nifi.openssl.fips.support.enable"] = "true"
+
     def _fill_default_properties(self):
         if self.is_fhs:
             self.properties["nifi.flow.configuration.file"] = "/etc/nifi-minifi-cpp/config.yml"

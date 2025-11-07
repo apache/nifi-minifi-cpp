@@ -1297,18 +1297,6 @@ def step_impl(context, parameter_context_name):
     container.set_parameter_context_name(parameter_context_name)
 
 
-# Modbus
-@given(u'there is an accessible PLC with modbus enabled')
-def step_impl(context):
-    context.test.acquire_container(context=context, name="diag-slave-tcp", engine="diag-slave-tcp")
-    context.test.start('diag-slave-tcp')
-
-
-@given(u'PLC register has been set with {modbus_cmd} command')
-def step_impl(context, modbus_cmd):
-    context.test.set_value_on_plc_with_modbus(context.test.get_container_name_with_postfix('diag-slave-tcp'), modbus_cmd)
-
-
 # Couchbase
 @when(u'a Couchbase server is started')
 def step_impl(context):

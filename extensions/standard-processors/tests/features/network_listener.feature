@@ -12,15 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ..core.Processor import Processor
 
+@CORE
+Feature: Minifi C++ can act as a network listener
 
-class FetchModbusTcp(Processor):
-    def __init__(self, context):
-        super(FetchModbusTcp, self).__init__(
-            context=context,
-            clazz='FetchModbusTcp',
-            properties={
-                'Hostname': f'diag-slave-tcp-{context.feature_id}',
-            },
-            auto_terminate=["success", "failure"])
+  Scenario: A TCP client can send messages to Minifi
+    Given a ListenTCP processor
+    And the "Listening Port" property of the ListenTCP processor is set to "10254"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
+    And a TCP client is set up to send a test TCP message to minifi
+    And the "success" relationship of the ListenTCP processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
+
+    When all instances start up
+    Then at least one file with the content "test_tcp_message" is placed in the "/tmp/output" directory in less than 20 seconds

@@ -23,6 +23,8 @@ from minifi_test_framework.steps import core_steps            # noqa: F401
 from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from syslog_container import SyslogContainer
+from diag_slave_container import DiagSlave
+from tcp_client_container import TcpClientContainer
 
 
 @step("a Syslog client with TCP protocol is setup to send logs to minifi")
@@ -33,3 +35,19 @@ def step_impl(context: MinifiTestContext):
 @step("a Syslog client with UDP protocol is setup to send logs to minifi")
 def step_impl(context):
     context.containers["syslog-udp"] = SyslogContainer("udp", context)
+
+
+@step(u'there is an accessible PLC with modbus enabled')
+def step_impl(context):
+    modbus_container = context.containers["diag-slave-tcp"] = DiagSlave(context)
+    assert modbus_container.deploy()
+
+
+@step(u'PLC register has been set with {modbus_cmd} command')
+def step_impl(context, modbus_cmd):
+    assert context.containers["diag-slave-tcp"].set_value_on_plc_with_modbus(modbus_cmd) or context.containers["diag-slave-tcp"].log_app_output()
+
+
+@step('a TCP client is set up to send a test TCP message to minifi')
+def step_impl(context):
+    context.containers["tcp-client"] = TcpClientContainer(context)
