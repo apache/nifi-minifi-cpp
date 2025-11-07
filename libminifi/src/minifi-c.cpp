@@ -394,9 +394,9 @@ int64_t MinifiInputStreamRead(MinifiInputStream* stream, char* buffer, size_t si
   return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::InputStream*>(stream)->read(std::span(reinterpret_cast<std::byte*>(buffer), size)));
 }
 
-int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, MinifiStringView data) {
+int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, const char* data, size_t size) {
   gsl_Assert(stream != MINIFI_NULL);
-  return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::OutputStream*>(stream)->write(as_bytes(std::span(toStringView(data)))));
+  return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::OutputStream*>(stream)->write(as_bytes(std::span(data, size))));
 }
 
 void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiStringView str), void* user_ctx) {

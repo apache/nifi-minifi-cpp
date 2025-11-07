@@ -32,7 +32,7 @@ class MinifiOutputStreamWrapper : public io::OutputStreamImpl {
   explicit MinifiOutputStreamWrapper(MinifiOutputStream* impl): impl_(impl) {}
 
   size_t write(const uint8_t *value, size_t len) override {
-    return MinifiOutputStreamWrite(impl_, MinifiStringView{.data = reinterpret_cast<const char*>(value), .length = len});
+    return MinifiOutputStreamWrite(impl_, reinterpret_cast<const char*>(value), len);
   }
 
   void close() override {gsl_FailFast();}
