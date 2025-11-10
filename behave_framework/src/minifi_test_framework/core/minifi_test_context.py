@@ -21,9 +21,28 @@ from docker.models.networks import Network
 from minifi_test_framework.containers.container import Container
 from minifi_test_framework.containers.minifi_container import MinifiContainer
 
+DEFAULT_MINIFI_CONTAINER_NAME = "minifi-primary"
+
 
 class MinifiTestContext(Context):
-    minifi_container: MinifiContainer
-    containers: list[Container]
+    containers: dict[str, Container]
     scenario_id: str
     network: Network
+    minifi_container_image: str
+    resource_dir: str | None
+
+    def get_or_create_minifi_container(self, container_name: str) -> MinifiContainer:
+        if container_name not in self.containers:
+            self.containers[container_name] = MinifiContainer(self.minifi_container_image, container_name, self.scenario_id, self.network)
+        return self.containers[container_name]
+
+    def get_or_create_default_minifi_container(self) -> MinifiContainer:
+        return self.get_or_create_minifi_container(DEFAULT_MINIFI_CONTAINER_NAME)
+
+    def get_minifi_container(self, container_name: str) -> MinifiContainer:
+        if container_name not in self.containers:
+            raise KeyError(f"MiNiFi container '{container_name}' does not exist in the test context.")
+        return self.containers[container_name]
+
+    def get_default_minifi_container(self) -> MinifiContainer:
+        return self.get_minifi_container(DEFAULT_MINIFI_CONTAINER_NAME)

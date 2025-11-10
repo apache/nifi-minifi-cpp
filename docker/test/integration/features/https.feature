@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@CORE
+@ENABLE_CIVET
 Feature: Transfer data from and to MiNiFi using HTTPS
 
   Background:

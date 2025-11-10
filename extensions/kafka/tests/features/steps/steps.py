@@ -20,12 +20,12 @@ def step_impl(context: MinifiTestContext, processor_name: str):
     processor.add_property('Connection String', 'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint={hostname}:10000/devstoreaccount1;QueueEndpoint={hostname}:10001/devstoreaccount1;'.format(hostname=hostname))
     processor.add_property('Blob', 'test-blob')
     processor.add_property('Create Container', 'true')
-    context.minifi_container.flow_definition.add_processor(processor)
+    context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
 @step("a Kafka server is set up")
 def step_impl(context):
-    context.containers.append(KafkaServer(context))
+    context.containers["kafka-server"] = KafkaServer(context)
 
 
 @step("ConsumeKafka processor is set up to communicate with that server")
@@ -41,33 +41,33 @@ def step_impl(context):
     consume_kafka.add_property("Message Header Encoding", "UTF-8")
     consume_kafka.add_property("Max Poll Time", "4 sec")
     consume_kafka.add_property("Session Timeout", "6 sec")
-    context.minifi_container.flow_definition.add_processor(consume_kafka)
+    context.get_or_create_default_minifi_container().flow_definition.add_processor(consume_kafka)
 
 
 @step("the Kafka server is started")
 def step_impl(context: MinifiTestContext):
-    kafka_server_container = context.containers[0]
+    kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
     assert kafka_server_container.deploy()
 
 
 @step('the topic "{topic_name}" is initialized on the kafka broker')
 def step_impl(context: MinifiTestContext, topic_name: str):
-    kafka_server_container = context.containers[0]
+    kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
     kafka_server_container.create_topic(topic_name=topic_name)
 
 
 @when('a message with content "{message}" is published to the "{topic_name}" topic')
 def step_impl(context: MinifiTestContext, message: str, topic_name: str):
-    kafka_server_container = context.containers[0]
+    kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
     kafka_server_container.produce_message(topic_name=topic_name, message=message)
 
 
 @step('a message with content "{message}" is published to the "{topic_name}" topic with key "{key}"')
 def step_impl(context: MinifiTestContext, message: str, topic_name: str, key: str):
-    kafka_server_container = context.containers[0]
+    kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
     kafka_server_container.produce_message_with_key(topic_name=topic_name, message=message, message_key=key)
 
@@ -81,5 +81,5 @@ def set_property_to_match_message_key(context, property_name, processor_name, ke
     else:
         encoded_key = message_key.encode(key_attribute_encoding)
     filtering = "${kafka.key:equals('" + encoded_key.decode("utf-8") + "')}"
-    processor = context.minifi_container.flow_definition.get_processor(processor_name)
+    processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
     processor.add_property(property_name, filtering)

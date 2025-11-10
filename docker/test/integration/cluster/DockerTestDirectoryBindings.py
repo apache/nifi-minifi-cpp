@@ -55,7 +55,6 @@ class DockerTestDirectoryBindings:
         # Add resources
         test_dir = os.environ['TEST_DIRECTORY']  # Based on DockerVerify.sh
         shutil.copytree(test_dir + "/resources/python", self.data_directories[self.feature_id]["resources_dir"] + "/python")
-        shutil.copytree(test_dir + "/resources/opcua", self.data_directories[self.feature_id]["resources_dir"] + "/opcua")
         shutil.copytree(test_dir + "/resources/lua", self.data_directories[self.feature_id]["resources_dir"] + "/lua")
         shutil.copytree(test_dir + "/resources/minifi", self.data_directories[self.feature_id]["minifi_config_dir"], dirs_exist_ok=True)
         shutil.copytree(test_dir + "/resources/minifi-controller", self.data_directories[self.feature_id]["resources_dir"] + "/minifi-controller")
