@@ -98,11 +98,6 @@ typedef struct MinifiProperty {
   MinifiStringView description;
   MinifiBool is_required;
   MinifiBool is_sensitive;
-  size_t dependent_properties_count;
-  const MinifiStringView* dependent_properties_ptr;
-  size_t exclusive_of_properties_count;
-  const MinifiStringView* exclusive_of_property_names_ptr;
-  const MinifiStringView* exclusive_of_property_values_ptr;
 
   const MinifiStringView* default_value;
   size_t allowed_values_count;

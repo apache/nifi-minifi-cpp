@@ -84,16 +84,6 @@ minifi::core::Property createProperty(const MinifiProperty* property_description
   if (property_description->type) {
     allowed_types.push_back(toStringView(*property_description->type));
   }
-  std::vector<std::string_view> dependent_properties;
-  dependent_properties.reserve(property_description->dependent_properties_count);
-  for (size_t i = 0; i < property_description->dependent_properties_count; ++i) {
-    dependent_properties.push_back(toStringView(property_description->dependent_properties_ptr[i]));
-  }
-  std::vector<std::pair<std::string_view, std::string_view>> exclusive_of_properties;
-  exclusive_of_properties.reserve(property_description->exclusive_of_properties_count);
-  for (size_t i = 0; i < property_description->exclusive_of_properties_count; ++i) {
-    exclusive_of_properties.push_back({toStringView(property_description->exclusive_of_property_names_ptr[i]), toStringView(property_description->exclusive_of_property_values_ptr[i])});
-  }
   std::optional<std::string_view> default_value;
   if (property_description->default_value) {
     default_value = toStringView(*property_description->default_value);
@@ -106,8 +96,6 @@ minifi::core::Property createProperty(const MinifiProperty* property_description
     static_cast<bool>(property_description->is_sensitive),
     std::span(allowed_values),
     std::span(allowed_types),
-    std::span(dependent_properties),
-    std::span(exclusive_of_properties),
     default_value,
     gsl::make_not_null(reinterpret_cast<const minifi::core::PropertyValidator*>(property_description->validator)),
     static_cast<bool>(property_description->supports_expression_language)

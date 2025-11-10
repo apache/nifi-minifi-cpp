@@ -51,18 +51,6 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
   std::vector<MinifiProperty> properties;
     for (auto& prop : props) {
       std::vector<MinifiStringView> sv_cache;
-      const size_t dependent_properties_begin = 0;
-      for (auto& dep_prop : prop.dependent_properties) {
-        sv_cache.emplace_back(toStringView(dep_prop));
-      }
-      const size_t exclusive_of_property_names_begin = sv_cache.size();
-      for (auto& excl_of_prop : prop.exclusive_of_properties) {
-        sv_cache.emplace_back(toStringView(excl_of_prop.first));
-      }
-      const size_t exclusive_of_property_values_begin = sv_cache.size();
-      for (auto& excl_of_prop : prop.exclusive_of_properties) {
-        sv_cache.emplace_back(toStringView(excl_of_prop.second));
-      }
       const size_t allowed_values_begin = sv_cache.size();
       for (auto& allowed_value : prop.allowed_values) {
         sv_cache.emplace_back(toStringView(allowed_value));
@@ -86,13 +74,8 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
         .name = toStringView(prop.name),
         .display_name = toStringView(prop.display_name),
         .description = toStringView(prop.description),
-        .is_required = prop.is_required ? MINIFI_TRUE : MINIFI_FALSE,
-        .is_sensitive = prop.is_sensitive ? MINIFI_TRUE : MINIFI_FALSE,
-        .dependent_properties_count = gsl::narrow<uint32_t>(prop.dependent_properties.size()),
-        .dependent_properties_ptr = sv_cache.data() + dependent_properties_begin,
-        .exclusive_of_properties_count = gsl::narrow<uint32_t>(prop.exclusive_of_properties.size()),
-        .exclusive_of_property_names_ptr = sv_cache.data() + exclusive_of_property_names_begin,
-        .exclusive_of_property_values_ptr = sv_cache.data() + exclusive_of_property_values_begin,
+        .is_required = prop.is_required,
+        .is_sensitive = prop.is_sensitive,
 
         .default_value = default_value_begin ? sv_cache.data() + default_value_begin.value() : nullptr,
         .allowed_values_count = gsl::narrow<uint32_t>(prop.allowed_values.size()),
@@ -100,7 +83,7 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
         .validator = MinifiGetStandardValidator(toStandardPropertyValidator(prop.validator)),
 
         .type = allowed_types_begin ? sv_cache.data() + allowed_types_begin.value() : nullptr,
-        .supports_expression_language = prop.supports_expression_language ? MINIFI_TRUE : MINIFI_FALSE
+        .supports_expression_language = prop.supports_expression_language
       });
       cache.emplace_back(std::move(sv_cache));
     }
