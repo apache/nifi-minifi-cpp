@@ -19,17 +19,11 @@
 #pragma once
 
 #ifdef WIN32
-  #ifdef LIBMINIFI
-    #define MINIFIAPI __declspec(dllexport)
-  #else
-    #define MINIFIAPI __declspec(dllimport)
-  #endif
-  #ifdef MODULE_NAME
+  #ifdef EXTENSION_NAME
     #define EXTENSIONAPI __declspec(dllexport)
   #else
     #define EXTENSIONAPI __declspec(dllimport)
   #endif
 #else
-  #define MINIFIAPI
   #define EXTENSIONAPI
 #endif
