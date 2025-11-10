@@ -57,11 +57,10 @@ class PutSmb final : public core::ProcessorImpl {
       .withDefaultValue(magic_enum::enum_name(FileExistsResolutionStrategy::fail))
       .withAllowedValues(magic_enum::enum_names<FileExistsResolutionStrategy>())
       .build();
-  EXTENSIONAPI static constexpr auto CreateMissingDirectories = core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("Create Missing Directories")
+  EXTENSIONAPI static constexpr auto CreateMissingDirectories = core::PropertyDefinitionBuilder<0>::createProperty("Create Missing Directories")
       .withDescription("If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.")
       .withDefaultValue("true")
       .isRequired(true)
-      .withDependentProperties({Directory.name})
       .build();
 
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({ ConnectionControllerService, Directory, ConflictResolution, CreateMissingDirectories});

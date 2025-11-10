@@ -53,18 +53,6 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
       SerializedResponseNode props{.name = "propertyDescriptors"};
       for (auto&& prop : group.class_properties_) {
         SerializedResponseNode child = {.name = prop.getName()};
-        SerializedResponseNode descriptorDependentProperties{.name = "dependentProperties"};
-        for (const auto &propName : prop.getDependentProperties()) {
-          SerializedResponseNode descriptorDependentProperty{.name = propName};
-          descriptorDependentProperties.children.push_back(descriptorDependentProperty);
-        }
-
-        SerializedResponseNode descriptorExclusiveOfProperties{.name = "exclusiveOfProperties"};
-
-        for (const auto &exclusiveProp : prop.getExclusiveOfProperties()) {
-          SerializedResponseNode descriptorExclusiveOfProperty{.name = exclusiveProp.first, .value = exclusiveProp.second};
-          descriptorExclusiveOfProperties.children.push_back(descriptorExclusiveOfProperty);
-        }
 
         const auto &allowed_types = prop.getAllowedTypes();
         if (!allowed_types.empty()) {
@@ -98,8 +86,6 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
         if (const auto default_value = prop.getDefaultValue()) {
           child.children.push_back({.name = "defaultValue", .value = *default_value});  // NOLINT(cppcoreguidelines-slicing)
         }
-        child.children.push_back(descriptorDependentProperties);
-        child.children.push_back(descriptorExclusiveOfProperties);
 
         if (!prop.getAllowedValues().empty()) {
           SerializedResponseNode allowedValues{.name = "allowableValues", .array = true};

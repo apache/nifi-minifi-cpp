@@ -34,8 +34,7 @@ namespace org::apache::nifi::minifi::core {
 
 class Property final {
  public:
-  Property(std::string name, std::string description, const std::string &value, bool is_required, std::vector<std::string> dependent_properties,
-      std::vector<std::pair<std::string, std::string>> exclusive_of_properties);
+  Property(std::string name, std::string description, const std::string &value, bool is_required);
 
   Property(std::string name, std::string description, const std::string &value);
 
@@ -70,11 +69,9 @@ class Property final {
   bool getRequired() const;
   bool isSensitive() const;
   bool supportsExpressionLanguage() const;
-  std::vector<std::string> getDependentProperties() const;
-  std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
   std::vector<std::string> getValues();
   PropertyReference getReference() const {
-    return PropertyReference(name_, display_name_, description_, is_required_, is_sensitive_, {}, {}, {}, {}, default_value_, validator_, supports_el_);
+    return PropertyReference(name_, display_name_, description_, is_required_, is_sensitive_, {}, {}, default_value_, validator_, supports_el_);
   }
 
   void setSupportsExpressionLanguage(bool supportEl);
@@ -91,8 +88,6 @@ class Property final {
   std::string description_;
   bool is_required_;
   bool is_sensitive_ = false;
-  std::vector<std::string> dependent_properties_;
-  std::vector<std::pair<std::string, std::string>> exclusive_of_properties_;
   bool is_collection_;
 
   std::optional<std::string> default_value_ = std::nullopt;

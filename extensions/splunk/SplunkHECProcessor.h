@@ -55,10 +55,9 @@ class SplunkHECProcessor : public core::ProcessorImpl {
       .withDescription("Identifier of the used request channel.")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0>::createProperty("SSL Context Service")
       .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
       .isRequired(false)
-      .withExclusiveOfProperties({{{"Hostname", "^http:.*$"}}})
       .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
