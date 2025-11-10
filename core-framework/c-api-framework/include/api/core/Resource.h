@@ -50,7 +50,7 @@ void useProcessorClassDescription(Fn&& fn) {
       .name = utils::toStringView(prop.name),
       .value = utils::toStringView(prop.value),
       .description = utils::toStringView(prop.description),
-      .supports_expression_language = prop.supports_expression_language ? MINIFI_TRUE : MINIFI_FALSE
+      .supports_expression_language = prop.supports_expression_language
     });
   }
   std::vector<MinifiRelationship> relationships;
