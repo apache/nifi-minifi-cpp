@@ -30,8 +30,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And PutFile's success relationship is auto-terminated
 
     And an Azure storage server is set up
-
-    When all instances start up
+    When the MiNiFi instance starts up
 
     Then there is a single file with "#test_data$123$#" content in the "/tmp/output" directory in less than 20 seconds
     And the object on the Azure storage server is "#test_data$123$#"
@@ -42,9 +41,9 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "Blob" property of the DeleteAzureBlobStorage processor is set to "test"
     And the "success" relationship of the GenerateFlowFile processor is connected to the DeleteAzureBlobStorage
     And an Azure storage server is set up
-
-    When all instances start up
     And test blob "test" is created on Azure blob storage
+
+    When the MiNiFi instance starts up
 
     Then the Azure blob storage becomes empty in 30 seconds
 
@@ -54,11 +53,11 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "Blob" property of the DeleteAzureBlobStorage processor is set to "test"
     And the "Delete Snapshots Option" property of the DeleteAzureBlobStorage processor is set to "Include Snapshots"
     And the "success" relationship of the GenerateFlowFile processor is connected to the DeleteAzureBlobStorage
+    And DeleteAzureBlobStorage's success relationship is auto-terminated
     And an Azure storage server is set up
-
-    When all instances start up
     And test blob "test" is created on Azure blob storage with a snapshot
 
+    When the MiNiFi instance starts up
     Then the Azure blob storage becomes empty in 30 seconds
 
   Scenario: A MiNiFi instance can delete blob snapshots from Azure blob storage
@@ -67,11 +66,11 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "Blob" property of the DeleteAzureBlobStorage processor is set to "test"
     And the "Delete Snapshots Option" property of the DeleteAzureBlobStorage processor is set to "Delete Snapshots Only"
     And the "success" relationship of the GenerateFlowFile processor is connected to the DeleteAzureBlobStorage
+    And DeleteAzureBlobStorage's success relationship is auto-terminated
     And an Azure storage server is set up
-
-    When all instances start up
     And test blob "test" is created on Azure blob storage with a snapshot
 
+    When the MiNiFi instance starts up
     Then the blob and snapshot count becomes 1 in 30 seconds
 
   Scenario: A MiNiFi instance can fetch a blob from Azure blob storage
@@ -88,19 +87,20 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And PutFile's success relationship is auto-terminated
     And an Azure storage server is set up
 
-    When all instances start up
-    And test blob "test" with the content "#test_data$123$#" is created on Azure blob storage
+    When the MiNiFi instance starts up
+    And test blob "test" with the content "#test_data_123$#" is created on Azure blob storage
 
-    Then there is a single file with "data$" content in the "/tmp/output" directory in less than 20 seconds
+    Then there is a single file with "data_" content in the "/tmp/output" directory in less than 20 seconds
 
   Scenario: A MiNiFi instance can list a container on Azure blob storage
     Given a ListAzureBlobStorage processor set up to communicate with an Azure blob storage
     And the "Prefix" property of the ListAzureBlobStorage processor is set to "test"
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "success" relationship of the ListAzureBlobStorage processor is connected to the LogAttribute
+    And LogAttribute's success relationship is auto-terminated
     And an Azure storage server is set up
 
-    When all instances start up
+    When the MiNiFi instance starts up
     And test blob "test_1" with the content "data_1" is created on Azure blob storage
     And test blob "test_2" with the content "data_2" is created on Azure blob storage
     And test blob "other_test" with the content "data_3" is created on Azure blob storage

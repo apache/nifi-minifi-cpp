@@ -17,31 +17,29 @@
 
 import logging
 
+from docker.errors import ContainerError
 from minifi_test_framework.containers.container import Container
+from minifi_test_framework.core.helpers import run_cmd_in_docker_image
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from azure.storage.blob import BlobServiceClient
-from azure.core.exceptions import ResourceExistsError
 
 
 class AzureServerContainer(Container):
-    AZURE_CONNECTION_STRING = \
-        ("DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;"
-         "BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;")
-
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__("mcr.microsoft.com/azure-storage/azurite:3.35.0", f"azure-storage-server-{test_context.scenario_id}", test_context.network)
-        self.blob_service_client = BlobServiceClient.from_connection_string(AzureServerContainer.AZURE_CONNECTION_STRING)
-        self.ports = {'10000/tcp': 10000, '10001/tcp': 10001}
+        super().__init__("mcr.microsoft.com/azure-storage/azurite:3.35.0",
+                         f"azure-storage-server-{test_context.scenario_id}",
+                         test_context.network)
+        azure_storage_hostname = f"azure-storage-server-{test_context.scenario_id}"
+        self.azure_connection_string = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;" \
+                                       f"BlobEndpoint=http://{azure_storage_hostname}:10000/devstoreaccount1;QueueEndpoint=http://{azure_storage_hostname}:10001/devstoreaccount1;"
 
     def deploy(self):
         super().deploy()
         finished_str = "Azurite Queue service is successfully listening at"
-        return wait_for_condition(
-            condition=lambda: finished_str in self.get_logs(),
-            timeout_seconds=15,
-            bail_condition=lambda: self.exited,
-            context=None)
+        return wait_for_condition(condition=lambda: finished_str in self.get_logs(),
+                                  timeout_seconds=15,
+                                  bail_condition=lambda: self.exited,
+                                  context=None)
 
     def check_azure_storage_server_data(self, test_data):
         (code, output) = self.exec_run(["find", "/data/__blobstorage__", "-type", "f"])
@@ -51,22 +49,52 @@ class AzureServerContainer(Container):
         (code, file_data) = self.exec_run(["cat", data_file])
         return code == 0 and test_data in file_data
 
-    def add_test_blob(self, blob_name, content="", with_snapshot=False) -> bool:
+    def add_test_blob(self, blob_name, content="test_data", with_snapshot=False) -> bool:
+        cmd_create = (f'az storage container create --name "test-container" '
+                      f'--connection-string "{self.azure_connection_string}"')
         try:
-            self.blob_service_client.create_container("test-container")
-        except ResourceExistsError:
-            logging.debug('test-container already exists')
+            run_cmd_in_docker_image("mcr.microsoft.com/azure-cli", cmd_create, self.network.name)
+        except ContainerError as e:
+            logging.error(e)
+            return False
 
-        blob_client = self.blob_service_client.get_blob_client(container="test-container", blob=blob_name)
-        blob_client.upload_blob(content)
+        cmd_upload = (f'az storage blob upload --container-name "test-container" '
+                      f'--name "{blob_name}" --data "{content}" '
+                      f'--connection-string "{self.azure_connection_string}"')
+        try:
+            run_cmd_in_docker_image("mcr.microsoft.com/azure-cli", cmd_upload, self.network.name)
+        except ContainerError as e:
+            logging.error(e)
+            return False
 
         if with_snapshot:
-            blob_client.create_snapshot()
+            cmd_snapshot = (f'az storage blob snapshot --container-name "test-container" '
+                            f'--name "{blob_name}" '
+                            f'--connection-string "{self.azure_connection_string}"')
+            try:
+                run_cmd_in_docker_image("mcr.microsoft.com/azure-cli", cmd_snapshot, self.network.name)
+            except ContainerError as e:
+                logging.error(e)
+                return False
+
         return True
 
     def __get_blob_and_snapshot_count(self):
-        container_client = self.blob_service_client.get_container_client("test-container")
-        return len(list(container_client.list_blobs(include=['deleted'])))
+        cmd = (f'az storage blob list --container-name "test-container" '
+               f'--include deleted --query "length(@)" --output tsv '
+               f'--connection-string "{self.azure_connection_string}"')
+
+        try:
+            output = run_cmd_in_docker_image("mcr.microsoft.com/azure-cli", cmd, self.network.name)
+        except ContainerError as e:
+            logging.error(e)
+            return 0
+
+        try:
+            return int(output.strip())
+        except (ValueError, TypeError):
+            logging.error(f"{output} Not an int")
+            return 0
 
     def check_azure_blob_and_snapshot_count(self, blob_and_snapshot_count):
         return self.__get_blob_and_snapshot_count() == blob_and_snapshot_count

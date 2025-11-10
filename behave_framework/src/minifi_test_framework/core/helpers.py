@@ -21,6 +21,7 @@ import logging
 import time
 from collections.abc import Callable
 
+import docker
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
@@ -58,3 +59,15 @@ def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, ba
     logging.warning("Timed out after %d seconds while waiting for condition", timeout_seconds)
     log_due_to_failure(context)
     return False
+
+
+def run_cmd_in_docker_image(image_name: str, cmd: str, network: str) -> str:
+    client = docker.from_env()
+    output = client.containers.run(image=image_name,
+                                   command=["/bin/sh", "-c", cmd],
+                                   remove=True,
+                                   stdout=True,
+                                   stderr=True,
+                                   network=network,
+                                   detach=False)
+    return output.decode("utf-8")
