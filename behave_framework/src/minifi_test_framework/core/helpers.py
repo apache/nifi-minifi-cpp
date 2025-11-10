@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import logging
 import time
+import functools
 from collections.abc import Callable
 
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
@@ -55,8 +56,7 @@ def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, ba
                 log_due_to_failure(context)
                 return False
             remaining_time = timeout_seconds - (time.monotonic() - start_time)
-            target_sleep = 1.0 if timeout_seconds < 30 else 10.0
-            sleep_time = min(target_sleep, remaining_time)
+            sleep_time = min(1.0, remaining_time)
             if sleep_time > 0:
                 time.sleep(sleep_time)
     except Exception as ex:
@@ -66,3 +66,16 @@ def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, ba
     logging.warning("Timed out after %d seconds while waiting for condition", timeout_seconds)
     log_due_to_failure(context)
     return False
+
+
+def retry_check(max_tries=5, retry_interval=1):
+    def retry_check_func(func):
+        @functools.wraps(func)
+        def retry_wrapper(*args, **kwargs):
+            for _ in range(max_tries):
+                if func(*args, **kwargs):
+                    return True
+                time.sleep(retry_interval)
+            return False
+        return retry_wrapper
+    return retry_check_func
