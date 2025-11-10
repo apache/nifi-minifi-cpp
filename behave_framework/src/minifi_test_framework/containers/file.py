@@ -16,8 +16,9 @@
 #
 
 class File:
-    def __init__(self, path, host_filename, content):
+    def __init__(self, path, host_filename, content: str | bytes, mode="rw", permissions=None):
         self.path = path
         self.host_filename = host_filename
         self.content = content
-        self.mode = "rw"
+        self.mode = mode
+        self.permissions = permissions
