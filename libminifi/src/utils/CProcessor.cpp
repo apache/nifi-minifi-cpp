@@ -19,19 +19,12 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-namespace {
-
-std::vector<minifi::state::PublishedMetric> toPublishedMetrics(gsl::owner<MinifiPublishedMetrics*> metrics) {
-  return *std::unique_ptr<std::vector<minifi::state::PublishedMetric>>(reinterpret_cast<std::vector<minifi::state::PublishedMetric>*>(metrics));
-}
-
-}  // namespace
-
 std::vector<minifi::state::PublishedMetric> CProcessor::getCustomMetrics() const {
   if (class_description_.callbacks.calculateMetrics == nullptr) {
     return {};
   }
-  return toPublishedMetrics(class_description_.callbacks.calculateMetrics(impl_));
+  std::unique_ptr<std::vector<minifi::state::PublishedMetric>> metrics{reinterpret_cast<std::vector<minifi::state::PublishedMetric>*>(class_description_.callbacks.calculateMetrics(impl_))};
+  return *metrics;
 }
 
 std::vector<minifi::state::response::SerializedResponseNode> CProcessorMetricsWrapper::serialize() {

@@ -266,11 +266,11 @@ MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extensio
   });
 }
 
-MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flow_file,
+MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flowfile,
     void (*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
   gsl_Assert(context != MINIFI_NULL);
   auto result = reinterpret_cast<minifi::core::ProcessContext*>(context)->getProperty(toStringView(property_name),
-      flow_file != MINIFI_NULL ? reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flow_file)->get() : nullptr);
+      flowfile != MINIFI_NULL ? reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile)->get() : nullptr);
   if (result) {
     result_cb(user_ctx, MinifiStringView{.data = result.value().data(), .length = result.value().length()});
     return MINIFI_STATUS_SUCCESS;
@@ -292,7 +292,7 @@ void MinifiProcessContextGetProcessorName(MinifiProcessContext* context, void(*c
 
 MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext* context, MinifiStringView property_name) {
   gsl_Assert(context != MINIFI_NULL);
-  return reinterpret_cast<minifi::core::ProcessContext*>(context)->hasNonEmptyProperty(toString(property_name)) ? MINIFI_TRUE : MINIFI_FALSE;
+  return reinterpret_cast<minifi::core::ProcessContext*>(context)->hasNonEmptyProperty(toString(property_name));
 }
 
 void MinifiConfigGet(MinifiConfig* configure, MinifiStringView key, void(*cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
@@ -335,11 +335,11 @@ MinifiLogLevel MinifiLoggerLevel(MinifiLogger* logger) {
   gsl_FailFast();
 }
 
-MINIFI_OWNED gsl::owner<MinifiPublishedMetrics*> MinifiPublishedMetricsCreate(const size_t count, const MinifiStringView* names, const double* values) {
+MINIFI_OWNED gsl::owner<MinifiPublishedMetrics*> MinifiPublishedMetricsCreate(const size_t count, const MinifiStringView* metric_names, const double* metric_values) {
   const gsl::owner<std::vector<minifi::state::PublishedMetric>*> metrics = new std::vector<minifi::state::PublishedMetric>();  // NOLINT(modernize-use-auto)
   metrics->reserve(count);
   for (size_t i = 0; i < count; i++) {
-    metrics->emplace_back(minifi::state::PublishedMetric{toString(names[i]), values[i], {}});
+    metrics->emplace_back(minifi::state::PublishedMetric{toString(metric_names[i]), metric_values[i], {}});
   }
   return reinterpret_cast<MinifiPublishedMetrics*>(metrics);
 }
@@ -362,21 +362,21 @@ MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession* se
   return MINIFI_NULL;
 }
 
-void MinifiProcessSessionTransfer(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* ff, MinifiStringView rel) {
-  gsl_Assert(ff != MINIFI_NULL);
-  reinterpret_cast<minifi::core::ProcessSession*>(session)->transfer(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), minifi::core::Relationship{toString(rel), ""});
+void MinifiProcessSessionTransfer(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile, MinifiStringView rel) {
+  gsl_Assert(flowfile !=  MINIFI_NULL);
+  reinterpret_cast<minifi::core::ProcessSession*>(session)->transfer(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile), minifi::core::Relationship{toString(rel), ""});
 }
 
-void MinifiProcessSessionRemove(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* ff) {
-  gsl_Assert(ff != MINIFI_NULL);
-  reinterpret_cast<minifi::core::ProcessSession*>(session)->remove(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff));
+void MinifiProcessSessionRemove(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile) {
+  gsl_Assert(flowfile != MINIFI_NULL);
+  reinterpret_cast<minifi::core::ProcessSession*>(session)->remove(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile));
 }
 
-MinifiStatus MinifiProcessSessionRead(MinifiProcessSession* session, MinifiFlowFile* ff, int64_t(*cb)(void* user_ctx, MinifiInputStream*), void* user_ctx) {
+MinifiStatus MinifiProcessSessionRead(MinifiProcessSession* session, MinifiFlowFile* flowfile, int64_t(*cb)(void* user_ctx, MinifiInputStream*), void* user_ctx) {
   gsl_Assert(session != MINIFI_NULL);
-  gsl_Assert(ff != MINIFI_NULL);
+  gsl_Assert(flowfile != MINIFI_NULL);
   try {
-    reinterpret_cast<minifi::core::ProcessSession*>(session)->read(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), [&] (auto& input_stream) -> int64_t {
+    reinterpret_cast<minifi::core::ProcessSession*>(session)->read(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile), [&] (auto& input_stream) -> int64_t {
       return cb(user_ctx, reinterpret_cast<MinifiInputStream*>(input_stream.get()));
     });
     return MINIFI_STATUS_SUCCESS;
@@ -428,20 +428,20 @@ void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiS
   cb(user_ctx, MinifiStringView{.data = message.data(), .length = message.size()});
 }
 
-void MinifiFlowFileSetAttribute(MinifiProcessSession* session, MinifiFlowFile* ff, MinifiStringView key, const MinifiStringView* value) {
+void MinifiFlowFileSetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name, const MinifiStringView* attribute_value) {
   gsl_Assert(session != MINIFI_NULL);
-  gsl_Assert(ff != MINIFI_NULL);
-  if (value == nullptr) {
-    reinterpret_cast<minifi::core::ProcessSession*>(session)->removeAttribute(**reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), toString(key));
+  gsl_Assert(flowfile != MINIFI_NULL);
+  if (attribute_value == nullptr) {
+    reinterpret_cast<minifi::core::ProcessSession*>(session)->removeAttribute(**reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile), toString(attribute_name));
   } else {
-    reinterpret_cast<minifi::core::ProcessSession*>(session)->putAttribute(**reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), toString(key), toString(*value));
+    reinterpret_cast<minifi::core::ProcessSession*>(session)->putAttribute(**reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile), toString(attribute_name), toString(*attribute_value));
   }
 }
 
-MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowFile* ff, MinifiStringView key, void(*cb)(void* user_ctx, MinifiStringView), void* user_ctx) {
+MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name, void(*cb)(void* user_ctx, MinifiStringView attribute_value), void* user_ctx) {
   gsl_Assert(session != MINIFI_NULL);
-  gsl_Assert(ff != MINIFI_NULL);
-  auto value = (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff))->getAttribute(toString(key));
+  gsl_Assert(flowfile != MINIFI_NULL);
+  auto value = (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile))->getAttribute(toString(attribute_name));
   if (!value.has_value()) {
     return MINIFI_FALSE;
   }
@@ -449,10 +449,10 @@ MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowF
   return MINIFI_TRUE;
 }
 
-void MinifiFlowFileGetAttributes(MinifiProcessSession* session, MinifiFlowFile* ff, void(*cb)(void* user_ctx, MinifiStringView, MinifiStringView), void* user_ctx) {
+void MinifiFlowFileGetAttributes(MinifiProcessSession* session, MinifiFlowFile* flowfile, void(*cb)(void* user_ctx, MinifiStringView attribute_name, MinifiStringView attribute_value), void* user_ctx) {
   gsl_Assert(session != MINIFI_NULL);
-  gsl_Assert(ff != MINIFI_NULL);
-  for (auto& [key, value] : (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff))->getAttributes()) {
+  gsl_Assert(flowfile != MINIFI_NULL);
+  for (auto& [key, value] : (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile))->getAttributes()) {
     cb(user_ctx, MinifiStringView{.data = key.data(), .length = key.size()}, MinifiStringView{.data = value.data(), .length = value.size()});
   }
 }
