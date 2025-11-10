@@ -85,11 +85,6 @@ class MiNiFi_integration_test:
         self.cluster.deploy_container('minifi-c2-server')
         assert self.cluster.wait_for_container_startup_to_finish('minifi-c2-server') or self.cluster.log_app_output()
 
-    def start_couchbase_server(self, context):
-        self.cluster.acquire_container(context=context, name='couchbase-server', engine='couchbase-server')
-        self.cluster.deploy_container('couchbase-server')
-        assert self.cluster.wait_for_container_startup_to_finish('couchbase-server') or self.cluster.log_app_output()
-
     def start_nifi(self, context):
         self.cluster.acquire_container(context=context, name='nifi', engine='nifi')
         self.cluster.deploy_container('nifi')
@@ -506,9 +501,6 @@ class MiNiFi_integration_test:
 
     def enable_ssl_in_nifi(self):
         self.cluster.enable_ssl_in_nifi()
-
-    def check_is_data_present_on_couchbase(self, doc_id: str, bucket_name: str, expected_data: str, expected_data_type: str):
-        assert self.cluster.is_data_present_in_couchbase(doc_id, bucket_name, expected_data, expected_data_type)
 
     def publish_test_mqtt_message(self, topic, message):
         self.cluster.publish_test_mqtt_message(topic, message)
