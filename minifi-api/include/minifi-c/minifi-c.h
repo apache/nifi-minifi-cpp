@@ -184,7 +184,7 @@ MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo*);
 
 const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardPropertyValidator);
 
-MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, const MinifiStringView* metric_name, const double* metric_value);
+MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, const MinifiStringView* metric_names, const double* metric_values);
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flowfile, void(*cb)(void* user_ctx, MinifiStringView property_value), void* user_ctx);
 void MinifiProcessContextGetProcessorName(MinifiProcessContext* context, void(*cb)(void* user_ctx, MinifiStringView processor_name), void* user_ctx);
