@@ -26,8 +26,6 @@ from .containers.HttpProxyContainer import HttpProxyContainer
 from .containers.PostgreSQLServerContainer import PostgreSQLServerContainer
 from .containers.MqttBrokerContainer import MqttBrokerContainer
 from .containers.SplunkContainer import SplunkContainer
-from .containers.ElasticsearchContainer import ElasticsearchContainer
-from .containers.OpensearchContainer import OpensearchContainer
 from .containers.SyslogUdpClientContainer import SyslogUdpClientContainer
 from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
 from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
@@ -179,22 +177,6 @@ class ContainerStore:
                                                               network=self.network,
                                                               image_store=self.image_store,
                                                               command=command))
-        elif engine == 'elasticsearch':
-            return self.containers.setdefault(container_name,
-                                              ElasticsearchContainer(feature_context=feature_context,
-                                                                     name=container_name,
-                                                                     vols=self.vols,
-                                                                     network=self.network,
-                                                                     image_store=self.image_store,
-                                                                     command=command))
-        elif engine == 'opensearch':
-            return self.containers.setdefault(container_name,
-                                              OpensearchContainer(feature_context=feature_context,
-                                                                  name=container_name,
-                                                                  vols=self.vols,
-                                                                  network=self.network,
-                                                                  image_store=self.image_store,
-                                                                  command=command))
         elif engine == "syslog-udp-client":
             return self.containers.setdefault(container_name,
                                               SyslogUdpClientContainer(
