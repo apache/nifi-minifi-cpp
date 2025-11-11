@@ -26,7 +26,7 @@
 #include "core/ProcessContextImpl.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "core/RepositoryFactory.h"
-#include "minifi-cpp/FlowFileRecord.h"
+#include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
 #include "ProvenanceRepository.h"
 #include "properties/Configure.h"
@@ -35,7 +35,6 @@
 #include "unit/Catch.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "unit/TestUtils.h"
-#include "core/repository/VolatileFlowFileRepository.h"
 #include "core/repository/VolatileProvenanceRepository.h"
 #include "DatabaseContentRepository.h"
 #include "catch2/generators/catch_generators.hpp"
@@ -537,7 +536,6 @@ TEST_CASE("FlowFileRepository synchronously pushes existing flow files") {
 TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepositorySize]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceRepository>();
-  LogTestController::getInstance().setDebug<core::repository::VolatileFlowFileRepository>();
   LogTestController::getInstance().setDebug<core::repository::VolatileProvenanceRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
@@ -554,12 +552,6 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
   SECTION("ProvenanceRepository") {
     repository = std::make_shared<minifi::provenance::ProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
     expected_rocksdb_stats = true;
-  }
-
-  SECTION("VolatileFlowFileRepository") {
-    repository = std::make_shared<core::repository::VolatileFlowFileRepository>("ff", dir.string(), 0ms, 10, 1ms);
-    expected_is_full = true;
-    expected_max_repo_size = 7;
   }
 
   SECTION("VolatileProvenanceRepository") {
@@ -643,8 +635,7 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
   const auto content_repo_dir = testController.createTempDirectory();
   const auto configuration = std::make_shared<minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_dir.string());
-  std::string content = "content";
-  configuration->set(minifi::Configure::nifi_volatile_repository_options_content_max_bytes, std::to_string(content.size()));
+  const std::string content = "content";
 
   std::shared_ptr<core::ContentRepository> content_repo;
   auto expected_is_full = false;
@@ -655,7 +646,7 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
   }
 
   SECTION("VolatileContentRepository") {
-    content_repo = std::make_shared<core::repository::VolatileContentRepository>("content");
+    content_repo = std::make_shared<core::repository::VolatileContentRepository>(content);
     expected_is_full = false;
     expected_max_repo_size = std::numeric_limits<uint64_t>::max();
   }
@@ -707,7 +698,6 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
 TEST_CASE("Flow file repositories can be stopped", "[TestRepoIsRunning]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceRepository>();
-  LogTestController::getInstance().setDebug<core::repository::VolatileFlowFileRepository>();
   LogTestController::getInstance().setDebug<core::repository::VolatileProvenanceRepository>();
   TestController testController;
   const auto dir = testController.createTempDirectory();
@@ -719,10 +709,6 @@ TEST_CASE("Flow file repositories can be stopped", "[TestRepoIsRunning]") {
 
   SECTION("ProvenanceRepository") {
     repository = std::make_shared<minifi::provenance::ProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
-  }
-
-  SECTION("VolatileFlowFileRepository") {
-    repository = std::make_shared<core::repository::VolatileFlowFileRepository>("ff", dir.string(), 0ms, 10, 1ms);
   }
 
   SECTION("VolatileProvenanceRepository") {

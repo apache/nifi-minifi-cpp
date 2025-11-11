@@ -26,6 +26,7 @@
 #include "unit/Catch.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "minifi-cpp/utils/gsl.h"
+#include "FlowFileRecord.h"
 
 namespace org::apache::nifi::minifi::test {
 

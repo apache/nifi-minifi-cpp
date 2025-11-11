@@ -28,7 +28,6 @@
 #include <utility>
 #include <vector>
 #include "core/repository/VolatileContentRepository.h"
-#include "core/repository/VolatileFlowFileRepository.h"
 #include "core/Processor.h"
 #include "core/ThreadedRepository.h"
 #include "FlowController.h"
@@ -128,22 +127,6 @@ class TestRepository : public TestRepositoryBase<org::apache::nifi::minifi::core
 
   uint64_t getRepositoryEntryCount() const override {
     return 0;
-  }
-};
-
-class TestVolatileRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::repository::VolatileFlowFileRepository> {
- public:
-  bool start() override {
-    return true;
-  }
-
-  bool stop() override {
-    return true;
-  }
-
-  void setFull() {
-    repo_data_.current_size = repo_data_.max_size;
-    repo_data_.current_entry_count = repo_data_.max_count;
   }
 };
 
