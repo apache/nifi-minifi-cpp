@@ -61,13 +61,17 @@ def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, ba
     return False
 
 
-def run_cmd_in_docker_image(image_name: str, cmd: str, network: str) -> str:
+def run_cmd_in_docker_image(image_name: str, cmd: str | list, network: str) -> str:
     client = docker.from_env()
     output = client.containers.run(image=image_name,
-                                   command=["/bin/sh", "-c", cmd],
+                                   command=cmd,
                                    remove=True,
                                    stdout=True,
                                    stderr=True,
                                    network=network,
                                    detach=False)
     return output.decode("utf-8")
+
+
+def run_shell_cmd_in_docker_image(image_name: str, cmd: str, network: str) -> str:
+    return run_cmd_in_docker_image(image_name, ["/bin/sh", "-c", cmd], network)
