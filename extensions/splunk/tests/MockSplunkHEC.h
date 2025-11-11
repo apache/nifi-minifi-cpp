@@ -130,8 +130,7 @@ class AckIndexerHandler : public MockSplunkHandler {
 
  protected:
   bool handlePostImpl(struct mg_connection* conn) override {
-    std::vector<char> data;
-    data.reserve(2048);
+    auto data = std::vector<char>(2048);
     mg_read(conn, data.data(), 2048);
     rapidjson::Document post_data;
 

@@ -135,7 +135,7 @@ class LogTestController {
       std::chrono::milliseconds timeout = std::chrono::seconds(3),
       std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200));
 
-  std::optional<std::smatch> matchesRegex(const std::string &regex_str,
+  std::optional<std::vector<std::string>> matchesRegex(const std::string &regex_str,
                 std::chrono::milliseconds timeout = std::chrono::seconds(3),
                 std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const;
 
