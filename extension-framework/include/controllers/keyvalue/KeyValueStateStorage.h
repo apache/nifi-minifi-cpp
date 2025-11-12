@@ -21,7 +21,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/StateManager.h"
@@ -30,9 +30,9 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-class KeyValueStateStorage : public core::StateStorageImpl, public core::controller::ControllerServiceImpl {
+class KeyValueStateStorage : public core::StateStorageImpl, public core::controller::ControllerServiceBase {
  public:
-  explicit KeyValueStateStorage(const std::string& name, const utils::Identifier& uuid = {});
+  using ControllerServiceBase::ControllerServiceBase;
 
   static core::StateManager::State deserialize(const std::string& serialized);
   static std::string serialize(const core::StateManager::State& kvs);
@@ -40,17 +40,6 @@ class KeyValueStateStorage : public core::StateStorageImpl, public core::control
   using core::StateStorageImpl::getStateManager;
   std::unique_ptr<core::StateManager> getStateManager(const utils::Identifier& uuid) override;
   std::unordered_map<utils::Identifier, core::StateManager::State> getAllStates() override;
-
-  void yield() override {
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
 
   virtual bool set(const std::string& key, const std::string& value) = 0;
   virtual bool get(const std::string& key, std::string& value) = 0;
@@ -62,8 +51,6 @@ class KeyValueStateStorage : public core::StateStorageImpl, public core::control
 
  private:
   bool getAll(std::unordered_map<utils::Identifier, std::string>& kvs);
-
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<KeyValueStateStorage>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

@@ -35,7 +35,7 @@ std::tuple<AzureStorageProcessorBase::GetCredentialsFromControllerResult, std::o
     return std::make_tuple(GetCredentialsFromControllerResult::CONTROLLER_NAME_EMPTY, std::nullopt);
   }
 
-  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(service_name, getUUID());
+  std::shared_ptr<core::controller::ControllerServiceInterface> service = context.getControllerService(service_name, getUUID());
   if (nullptr == service) {
     logger_->log_error("Azure Storage credentials service with name: '{}' could not be found", service_name);
     return std::make_tuple(GetCredentialsFromControllerResult::CONTROLLER_NAME_INVALID, std::nullopt);

@@ -26,7 +26,7 @@ namespace org::apache::nifi::minifi::standard {
 
 class XMLReader final : public core::RecordSetReaderImpl {
  public:
-  explicit XMLReader(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetReaderImpl(name, uuid) {}
+  using RecordSetReaderImpl::RecordSetReaderImpl;
 
   XMLReader(XMLReader&&) = delete;
   XMLReader(const XMLReader&) = delete;
@@ -67,7 +67,6 @@ class XMLReader final : public core::RecordSetReaderImpl {
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr auto ImplementsApis = std::array{ RecordSetReader::ProvidesApi };
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   nonstd::expected<core::RecordSet, std::error_code> read(io::InputStream& input_stream) override;
 
@@ -75,9 +74,6 @@ class XMLReader final : public core::RecordSetReaderImpl {
     setSupportedProperties(Properties);
   }
   void onEnable() override;
-  void yield() override {}
-  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
-  bool isWorkAvailable() override { return false; }
 
  private:
   void writeRecordField(core::RecordObject& record_object, const std::string& name, const std::string& value, bool write_pcdata_node = false) const;
@@ -90,7 +86,6 @@ class XMLReader final : public core::RecordSetReaderImpl {
   bool parse_xml_attributes_ = false;
   std::string attribute_prefix_;
   bool expect_records_as_array_ = false;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<XMLReader>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::standard

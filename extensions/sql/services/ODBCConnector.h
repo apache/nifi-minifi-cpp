@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 
 #include "DatabaseService.h"
 #include "data/SociConnectors.h"
@@ -36,26 +36,13 @@ namespace org::apache::nifi::minifi::sql::controllers {
  */
 class ODBCService final : public DatabaseService {
  public:
-  explicit ODBCService(const std::string_view name, const utils::Identifier &uuid = {})
-    : DatabaseService(name, uuid) {
-    DatabaseService::initialize();
-  }
-
-  explicit ODBCService(const std::string_view name, const std::shared_ptr<Configure> &configuration)
-      : DatabaseService(name) {
-    ControllerServiceImpl::setConfiguration(configuration);
-    DatabaseService::initialize();
-  }
+  using DatabaseService::DatabaseService;
 
   EXTENSIONAPI static constexpr const char* Description = "Controller service that provides ODBC database connection";
   EXTENSIONAPI static constexpr auto Properties = DatabaseService::Properties;
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   std::unique_ptr<sql::Connection> getConnection() const override;
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ODBCService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::sql::controllers

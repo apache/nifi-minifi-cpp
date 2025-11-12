@@ -21,32 +21,33 @@
 #include "controllers/XMLReader.h"
 #include "unit/Catch.h"
 #include "unit/TestBase.h"
+#include "unit/ControllerServiceUtils.h"
 
 namespace org::apache::nifi::minifi::standard::test {
 
 class XMLReaderTestFixture {
  public:
-  XMLReaderTestFixture() : xml_reader_("XMLReader") {
+  XMLReaderTestFixture() : xml_reader_(minifi::test::utils::make_controller_service<XMLReader>("XMLReader")) {
     LogTestController::getInstance().clear();
     LogTestController::getInstance().setTrace<XMLReader>();
   }
 
   auto readRecordsFromXml(const std::string& xml_input, const std::unordered_map<std::string_view, std::string_view>& properties = {}) {
     initializeTestObject(xml_input, properties);
-    return xml_reader_.read(buffer_stream_);
+    return xml_reader_->getImplementation<XMLReader>()->read(buffer_stream_);
   }
 
  private:
   void initializeTestObject(const std::string& xml_input, const std::unordered_map<std::string_view, std::string_view>& properties = {}) {
-    xml_reader_.initialize();
+    xml_reader_->initialize();
     for (const auto& [key, value] : properties) {
-      REQUIRE(xml_reader_.setProperty(key, std::string{value}));
+      REQUIRE(xml_reader_->setProperty(key, std::string{value}));
     }
-    xml_reader_.onEnable();
+    xml_reader_->onEnable();
     buffer_stream_.write(reinterpret_cast<const uint8_t*>(xml_input.data()), xml_input.size());
   }
 
-  XMLReader xml_reader_;
+  std::unique_ptr<core::controller::ControllerService> xml_reader_;
   io::BufferStream buffer_stream_;
 };
 

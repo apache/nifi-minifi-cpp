@@ -25,7 +25,7 @@
 
 #include "utils/StringUtils.h"
 #include "io/validation.h"
-#include "minifi-cpp/core/controller/ControllerService.h"
+#include "minifi-cpp/core/controller/ControllerServiceInterface.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::controllers {
  * Purpose: Thread management service provides a contextual awareness across
  * thread pools that enables us to deliver QOS to an agent.
  */
-class ThreadManagementService : public virtual core::controller::ControllerService {
+class ThreadManagementService : public virtual core::controller::ControllerServiceInterface {
  public:
   /**
    * Helps to determine if the number of tasks will increase the pools above their threshold.

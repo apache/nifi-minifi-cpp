@@ -54,7 +54,7 @@ TEST_CASE("PutSmb conflict resolution test") {
 
   auto temp_directory = controller.createTempDirectory();
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
-  auto mock_smb_connection_controller_service = std::dynamic_pointer_cast<MockSmbConnectionControllerService>(smb_connection_node->getControllerServiceImplementation());
+  auto mock_smb_connection_controller_service = smb_connection_node->getControllerServiceImplementation<MockSmbConnectionControllerService>();
   REQUIRE(mock_smb_connection_controller_service);
   mock_smb_connection_controller_service->setPath(temp_directory);
 
@@ -139,7 +139,7 @@ TEST_CASE("PutSmb create missing dirs test") {
 
   auto temp_directory = controller.createTempDirectory();
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
-  auto mock_smb_connection_controller_service = std::dynamic_pointer_cast<MockSmbConnectionControllerService>(smb_connection_node->getControllerServiceImplementation());
+  auto mock_smb_connection_controller_service = smb_connection_node->getControllerServiceImplementation<MockSmbConnectionControllerService>();
   REQUIRE(mock_smb_connection_controller_service);
   mock_smb_connection_controller_service->setPath(temp_directory);
 

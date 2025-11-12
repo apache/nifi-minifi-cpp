@@ -1,6 +1,5 @@
 /**
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -17,30 +16,20 @@
  */
 #pragma once
 
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include "minifi-cpp/core/Core.h"
-#include "minifi-cpp/core/ConfigurableComponent.h"
-#include "minifi-cpp/core/logging/Logger.h"
+#include "ControllerServiceInterface.h"
+#include "ControllerServiceContext.h"
+#include "ControllerServiceDescriptor.h"
 #include "minifi-cpp/properties/Configure.h"
-#include "ControllerService.h"
-#include "io/validation.h"
-#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ControllerServiceNode : public virtual CoreComponent, public virtual ConfigurableComponent {
- public:
-  virtual std::shared_ptr<ControllerService> getControllerServiceImplementation() = 0;
-  virtual const ControllerService* getControllerServiceImplementation() const = 0;
-  virtual const std::vector<ControllerServiceNode*>& getLinkedControllerServices() const = 0;
-  virtual bool canEnable() = 0;
-  virtual bool enabled() = 0;
-  virtual bool enable() = 0;
-  virtual bool disable() = 0;
+class ControllerServiceApi : public ControllerServiceInterface {
+  public:
+    virtual ~ControllerServiceApi() = default;
+
+    virtual void initialize(ControllerServiceDescriptor& descriptor) = 0;
+    virtual void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceInterface>>& linked_services) = 0;
+    virtual void notifyStop() = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

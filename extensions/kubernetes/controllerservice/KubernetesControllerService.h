@@ -56,7 +56,6 @@ class KubernetesControllerService : public AttributeProviderServiceImpl {
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() final;
   void onEnable() override;

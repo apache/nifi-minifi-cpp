@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,40 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include <memory>
 #include <string>
+#include <memory>
 #include <utility>
-#include <vector>
-
-#include "minifi-cpp/properties/Configure.h"
-#include "minifi-cpp/core/ConfigurableComponent.h"
-#include "minifi-cpp/core/Connectable.h"
+#include "core/ClassName.h"
+#include "minifi-cpp/core/controller/ControllerServiceFactory.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-enum ControllerServiceState {
-  DISABLED,
-  DISABLING,
-  ENABLING,
-  ENABLED
-};
-
-/**
- * Controller Service base class that contains some pure virtual methods.
- *
- * Design: OnEnable is executed when the controller service is being enabled.
- * Note that keeping state here must be protected  in this function.
- */
-class ControllerService : public virtual ConfigurableComponent, public virtual Connectable {
+template<class T>
+class ControllerServiceFactoryImpl : public ControllerServiceFactory {
  public:
-  virtual void setConfiguration(const std::shared_ptr<Configure> &configuration) = 0;
-  virtual ControllerServiceState getState() const = 0;
-  virtual void onEnable() = 0;
-  virtual void notifyStop() = 0;
-  virtual void setState(ControllerServiceState state) = 0;
-  virtual void setLinkedControllerServices(const std::vector<std::shared_ptr<controller::ControllerService>> &services) = 0;
+  ControllerServiceFactoryImpl()
+      : class_name_(core::className<T>()) {
+  }
+
+  explicit ControllerServiceFactoryImpl(std::string group_name)
+      : group_name_(std::move(group_name)),
+        class_name_(core::className<T>()) {
+  }
+
+  std::string getGroupName() const override {
+    return group_name_;
+  }
+
+  std::unique_ptr<ControllerServiceApi> create(ControllerServiceMetadata metadata) override {
+    return std::make_unique<T>(metadata);
+  }
+
+  std::string getClassName() const override {
+    return std::string{class_name_};
+  }
+
+ protected:
+  std::string group_name_;
+  std::string_view class_name_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

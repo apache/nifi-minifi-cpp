@@ -30,6 +30,7 @@
 #include "utils/OptionalUtils.h"
 #include "utils/Macro.h"
 #include "core/ProcessorFactoryImpl.h"
+#include "core/controller/ControllerServiceFactoryImpl.h"
 #include "core/ObjectFactory.h"
 #include "minifi-cpp/agent/agent_version.h"
 
@@ -60,6 +61,11 @@ class StaticClassType {
     if constexpr (Type == ResourceType::Processor) {
       for (const auto& construction_name : construction_names_) {
         auto factory = std::unique_ptr<ProcessorFactory>(new ProcessorFactoryImpl<Class>(module_name));
+        getClassLoader().registerClass(construction_name, std::move(factory));
+      }
+    } else if constexpr (Type == ResourceType::ControllerService) {
+      for (const auto& construction_name : construction_names_) {
+        auto factory = std::unique_ptr<controller::ControllerServiceFactory>(new controller::ControllerServiceFactoryImpl<Class>(module_name));
         getClassLoader().registerClass(construction_name, std::move(factory));
       }
     } else {

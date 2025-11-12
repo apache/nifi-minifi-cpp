@@ -30,6 +30,7 @@
 
 #include "minifi-cpp/Exception.h"
 #include "controllers/SSLContextService.h"
+#include "core/controller/ControllerService.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/Processor.h"
 #include "minifi-cpp/core/logging/Logger.h"
@@ -136,14 +137,13 @@ void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::Pro
     context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
   }
 
-  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(*context_name, getUUID());
+  std::shared_ptr<core::controller::ControllerServiceInterface> service = context.getControllerService(*context_name, getUUID());
   if (nullptr != service) {
     ssl_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(service);
   } else {
     std::string secureStr;
     if (configure_->get(Configure::nifi_remote_input_secure, secureStr) && utils::string::toBool(secureStr).value_or(false)) {
-      ssl_service_ = std::make_shared<minifi::controllers::SSLContextService>(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
-      ssl_service_->onEnable();
+      ssl_service_ = controllers::SSLContextService::createAndEnable(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
     }
   }
 

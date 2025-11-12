@@ -23,7 +23,7 @@
 #include "unit/Catch.h"
 #include "controllerservices/AWSCredentialsService.h"
 #include "unit/TestUtils.h"
-#include "minifi-cpp/core/controller/ControllerServiceNode.h"
+#include "core/controller/ControllerServiceNode.h"
 
 class AWSCredentialsServiceTestAccessor {
  public:
@@ -64,7 +64,7 @@ TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test expired credentials ar
   plan->setProperty(aws_credentials_service, minifi::aws::controllers::AWSCredentialsService::SecretKey, "secret");
   aws_credentials_service->enable();
   assert(aws_credentials_service->getControllerServiceImplementation() != nullptr);
-  auto aws_credentials_impl = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(aws_credentials_service->getControllerServiceImplementation());
+  auto aws_credentials_impl = aws_credentials_service->getControllerServiceImplementation<minifi::aws::controllers::AWSCredentialsService>();
 
   // Check intial credentials
   REQUIRE(aws_credentials_impl->getAWSCredentials());
@@ -85,7 +85,7 @@ TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test credentials from defau
   plan->setProperty(aws_credentials_service, minifi::aws::controllers::AWSCredentialsService::UseDefaultCredentials, "true");
   aws_credentials_service->enable();
   assert(aws_credentials_service->getControllerServiceImplementation() != nullptr);
-  auto aws_credentials_impl = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(aws_credentials_service->getControllerServiceImplementation());
+  auto aws_credentials_impl = aws_credentials_service->getControllerServiceImplementation<minifi::aws::controllers::AWSCredentialsService>();
 
   // Check intial credentials
   REQUIRE(aws_credentials_impl->getAWSCredentials());

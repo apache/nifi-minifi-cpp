@@ -28,16 +28,12 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-RocksDbStateStorage::RocksDbStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : KeyValueStateStorage(name, uuid) {
-}
-
 RocksDbStateStorage::~RocksDbStateStorage() {
   auto_persistor_.stop();
 }
 
 void RocksDbStateStorage::initialize() {
-  ControllerServiceImpl::initialize();
+  ControllerServiceBase::initialize();
   setSupportedProperties(Properties);
 }
 

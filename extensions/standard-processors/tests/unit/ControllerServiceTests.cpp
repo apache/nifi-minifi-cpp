@@ -38,7 +38,7 @@ TEST_CASE("Test ControllerServicesMap", "[cs1]") {
   core::controller::ControllerServiceNodeMap map;
   REQUIRE(map.getAllControllerServices().empty());
 
-  std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
+  auto service = std::make_shared<core::controller::ControllerService>("", utils::Identifier{}, std::make_unique<MockControllerService>());
   auto testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, "ID", std::make_shared<minifi::ConfigureImpl>());
 
   map.put("ID", testNode);
@@ -67,7 +67,7 @@ TEST_CASE("Test StandardControllerServiceNode nullPtr", "[cs1]") {
 }
 
 std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(const std::string& id) {
-  std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
+  auto service = std::make_shared<core::controller::ControllerService>("", utils::Identifier{}, std::make_unique<MockControllerService>());
   auto testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, id, std::make_shared<minifi::ConfigureImpl>());
 
   return testNode;

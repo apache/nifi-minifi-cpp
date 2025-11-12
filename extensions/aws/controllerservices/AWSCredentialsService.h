@@ -26,7 +26,7 @@
 #include "aws/core/auth/AWSCredentials.h"
 
 #include "utils/AWSInitializer.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -37,15 +37,9 @@ class AWSCredentialsServiceTestAccessor;
 
 namespace org::apache::nifi::minifi::aws::controllers {
 
-class AWSCredentialsService : public core::controller::ControllerServiceImpl {
+class AWSCredentialsService : public core::controller::ControllerServiceBase {
  public:
-  explicit AWSCredentialsService(std::string_view name, const minifi::utils::Identifier &uuid = {})
-      : ControllerServiceImpl(name, uuid) {
-  }
-
-  explicit AWSCredentialsService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerServiceImpl(name) {
-  }
+  using ControllerServiceBase::ControllerServiceBase;
 
   EXTENSIONAPI static constexpr const char* Description = "Manages the Amazon Web Services (AWS) credentials for an AWS account. This allows for multiple "
       "AWS credential services to be defined. This also allows for multiple AWS related processors to reference this single "
@@ -76,20 +70,8 @@ class AWSCredentialsService : public core::controller::ControllerServiceImpl {
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
-
-  void yield() override {
-  };
-
-  bool isWorkAvailable() override {
-    return false;
-  };
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
 
   void onEnable() override;
 

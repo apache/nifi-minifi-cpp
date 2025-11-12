@@ -24,7 +24,7 @@
 
 #include "utils/StringUtils.h"
 #include "io/validation.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/controllers/ThreadManagementService.h"
 
@@ -34,15 +34,15 @@ namespace org::apache::nifi::minifi::controllers {
  * Purpose: Thread management service provides a contextual awareness across
  * thread pools that enables us to deliver QOS to an agent.
  */
-class ThreadManagementServiceImpl : public core::controller::ControllerServiceImpl, public virtual ThreadManagementService {
+class ThreadManagementServiceImpl : public core::controller::ControllerServiceBase, public virtual ThreadManagementService {
  public:
   explicit ThreadManagementServiceImpl(std::string_view name, const utils::Identifier &uuid = {})
-      : ControllerServiceImpl(name, uuid),
+      : ControllerServiceBase(name, uuid),
         logger_(core::logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
 
   explicit ThreadManagementServiceImpl(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerServiceImpl(name),
+      : ControllerServiceBase(name),
         logger_(core::logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
 
@@ -55,7 +55,7 @@ class ThreadManagementServiceImpl : public core::controller::ControllerServiceIm
   }
 
   void initialize() override {
-    ControllerServiceImpl::initialize();
+    ControllerServiceBase::initialize();
   }
 
   void yield() override {

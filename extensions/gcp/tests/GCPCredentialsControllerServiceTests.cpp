@@ -21,7 +21,7 @@
 #include "../controllerservices/GCPCredentialsControllerService.h"
 #include "core/Resource.h"
 #include "core/Processor.h"
-#include "minifi-cpp/core/controller/ControllerServiceNode.h"
+#include "core/controller/ControllerServiceNode.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stream.h"
 #include "rapidjson/writer.h"
@@ -77,7 +77,7 @@ class GCPCredentialsTests : public ::testing::Test {
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_ = test_controller_.createPlan();
   std::shared_ptr<minifi::core::controller::ControllerServiceNode> gcp_credentials_node_ = plan_->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
-  std::shared_ptr<GCPCredentialsControllerService> gcp_credentials_ = std::dynamic_pointer_cast<GCPCredentialsControllerService>(gcp_credentials_node_->getControllerServiceImplementation());
+  std::shared_ptr<GCPCredentialsControllerService> gcp_credentials_ = gcp_credentials_node_->getControllerServiceImplementation<GCPCredentialsControllerService>();
 };
 
 TEST_F(GCPCredentialsTests, DefaultGCPCredentialsWithoutEnv) {

@@ -146,8 +146,7 @@ void ControllerSocketProtocol::initialize() {
   std::shared_ptr<minifi::controllers::SSLContextServiceInterface> secure_context;
   std::string secure_str;
   if (configuration_->get(Configure::nifi_remote_input_secure, secure_str) && org::apache::nifi::minifi::utils::string::toBool(secure_str).value_or(false)) {
-    secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration_);
-    secure_context->onEnable();
+    secure_context = controllers::SSLContextService::createAndEnable("ControllerSocketProtocolSSL", configuration_);
   }
 
   std::string limit_str;

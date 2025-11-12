@@ -73,8 +73,7 @@ class VolatileMapStateStorageTestFixture {
     REQUIRE(key_value_store_service_node != nullptr);
     key_value_store_service_node->enable();
 
-    controller = std::dynamic_pointer_cast<minifi::controllers::KeyValueStateStorage>(
-            key_value_store_service_node->getControllerServiceImplementation());
+    controller = key_value_store_service_node->getControllerServiceImplementation<minifi::controllers::KeyValueStateStorage>();
     REQUIRE(controller != nullptr);
   }
 

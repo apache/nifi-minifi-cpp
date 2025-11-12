@@ -46,7 +46,7 @@ void KubernetesControllerService::initialize() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (initialized_) { return; }
 
-  ControllerServiceImpl::initialize();
+  ControllerServiceBase::initialize();
   setSupportedProperties(Properties);
   initialized_ = true;
 }

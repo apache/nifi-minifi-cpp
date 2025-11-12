@@ -173,8 +173,8 @@ void ResponseNodeLoaderImpl::initializeAgentNode(const SharedResponseNode& respo
   auto agent_node = dynamic_cast<state::response::AgentNode*>(response_node.get());
   if (agent_node != nullptr && controller_ != nullptr) {
     if (auto service = controller_->getControllerService(c2::UPDATE_NAME)) {
-      if (auto update_service = std::dynamic_pointer_cast<controllers::UpdatePolicyControllerService>(service)) {
-        agent_node->setUpdatePolicyController(update_service.get());
+      if (auto* update_service = dynamic_cast<controllers::UpdatePolicyControllerService*>(&*service->getImplementation())) {
+        agent_node->setUpdatePolicyController(update_service);
       } else {
         logger_->log_warn("Found controller service with name '{}', but it is not an UpdatePolicyControllerService", c2::UPDATE_NAME);
       }
@@ -312,8 +312,8 @@ state::response::NodeReporter::ReportedNode ResponseNodeLoaderImpl::getAgentMani
   state::response::AgentInformation agentInfo("agentInfo");
   if (controller_) {
     if (auto service = controller_->getControllerService(c2::UPDATE_NAME)) {
-      if (auto update_service = std::dynamic_pointer_cast<controllers::UpdatePolicyControllerService>(service)) {
-        agentInfo.setUpdatePolicyController(update_service.get());
+      if (auto* update_service = dynamic_cast<controllers::UpdatePolicyControllerService*>(&*service->getImplementation())) {
+        agentInfo.setUpdatePolicyController(update_service);
       } else {
         logger_->log_warn("Found controller service with name '{}', but it is not an UpdatePolicyControllerService", c2::UPDATE_NAME);
       }

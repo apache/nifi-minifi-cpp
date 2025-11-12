@@ -39,7 +39,7 @@ class RocksDbStateStorage : public KeyValueStateStorage {
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.state.storage.local.encryption.key";
   static constexpr const char* ENCRYPTION_KEY_NAME_OLD = "nifi.state.management.provider.local.encryption.key";
 
-  explicit RocksDbStateStorage(const std::string& name, const utils::Identifier& uuid = {});
+  using KeyValueStateStorage::KeyValueStateStorage;
 
   ~RocksDbStateStorage() override;
 
@@ -69,7 +69,6 @@ class RocksDbStateStorage : public KeyValueStateStorage {
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
   void onEnable() override;
@@ -94,8 +93,6 @@ class RocksDbStateStorage : public KeyValueStateStorage {
   rocksdb::WriteOptions default_write_options;
   AutoPersistor auto_persistor_;
   bool verify_checksums_in_rocksdb_reads_ = false;
-
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbStateStorage>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

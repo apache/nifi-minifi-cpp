@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,19 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "core/controller/ControllerServiceNode.h"
 #include <memory>
-#include <vector>
+#include <string>
+#include "minifi-cpp/utils/Id.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerService> ControllerServiceNode::getControllerServiceImplementation() const {
-  return controller_service_;
-}
-
-const std::vector<ControllerServiceNode*>& ControllerServiceNode::getLinkedControllerServices() const {
-  return linked_controller_services_;
-}
+struct ControllerServiceMetadata {
+  utils::Identifier uuid;
+  std::string name;
+  std::shared_ptr<logging::Logger> logger;
+};
 
 }  // namespace org::apache::nifi::minifi::core::controller

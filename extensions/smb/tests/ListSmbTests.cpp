@@ -57,7 +57,7 @@ TEST_CASE("ListSmb tests") {
   const auto list_smb = controller.getProcessor();
 
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
-  auto mock_smb_connection_controller_service = std::dynamic_pointer_cast<MockSmbConnectionControllerService>(smb_connection_node->getControllerServiceImplementation());
+  auto mock_smb_connection_controller_service = smb_connection_node->getControllerServiceImplementation<MockSmbConnectionControllerService>();
   REQUIRE(mock_smb_connection_controller_service);
   mock_smb_connection_controller_service->setPath(controller.createTempDirectory());
 

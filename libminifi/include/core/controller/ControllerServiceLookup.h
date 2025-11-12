@@ -22,7 +22,7 @@
 #include <map>
 #include "minifi-cpp/core/Core.h"
 #include "minifi-cpp/core/ConfigurableComponent.h"
-#include "ControllerService.h"
+#include "core/controller/ControllerService.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
@@ -54,26 +54,6 @@ class ControllerServiceLookup {
    * @return controller service reference.
    */
   virtual std::shared_ptr<ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const = 0;
-
-  /**
-   * Detects if controller service is enabled.
-   * @param identifier reference string for controller service.
-   * @return true if controller service is enabled.
-   */
-  virtual bool isControllerServiceEnabled(const std::string &identifier) = 0;
-
-  /**
-   * Detects if controller service is being enabled.
-   * @param identifier reference string for controller service.
-   * @return true if controller service is enabled.
-   */
-  virtual bool isControllerServiceEnabling(const std::string &identifier) = 0;
-
-  /**
-   * Gets the controller service name for the provided reference identifier
-   * @param identifier reference string for the controller service.
-   */
-  virtual const std::string getControllerServiceName(const std::string &identifier) const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

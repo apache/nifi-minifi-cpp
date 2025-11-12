@@ -25,7 +25,7 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerService> ControllerServiceProviderImpl::getControllerService(const std::string &identifier) const {
+std::shared_ptr<ControllerService> ControllerServiceProvider::getControllerService(const std::string &identifier) const {
   auto service = controller_map_->get(identifier);
   if (service != nullptr) {
     return service->getControllerServiceImplementation();
@@ -34,7 +34,7 @@ std::shared_ptr<ControllerService> ControllerServiceProviderImpl::getControllerS
   }
 }
 
-std::shared_ptr<ControllerService> ControllerServiceProviderImpl::getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const {
+std::shared_ptr<ControllerService> ControllerServiceProvider::getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const {
   auto service = controller_map_->get(identifier, processor_uuid);
   if (service != nullptr) {
     return service->getControllerServiceImplementation();
@@ -43,7 +43,7 @@ std::shared_ptr<ControllerService> ControllerServiceProviderImpl::getControllerS
   }
 }
 
-void ControllerServiceProviderImpl::putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node, ProcessGroup* process_group) {
+void ControllerServiceProvider::putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node, ProcessGroup* process_group) {
   gsl_Expects(controller_map_);
   controller_map_->put(identifier, controller_service_node);
   controller_map_->put(identifier, process_group);
