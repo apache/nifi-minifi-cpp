@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::core {
 class VariableRegistry {
  public:
   virtual ~VariableRegistry() = default;
-  [[nodiscard]] virtual std::optional<std::string> getConfigurationProperty(std::string_view) const = 0;
+  [[nodiscard]] virtual std::optional<std::string> getConfigurationProperty(std::string_view key) const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core
