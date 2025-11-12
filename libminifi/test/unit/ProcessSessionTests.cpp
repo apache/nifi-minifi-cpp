@@ -25,7 +25,6 @@
 #include "unit/Catch.h"
 #include "unit/ContentRepositoryDependentTests.h"
 #include "core/Processor.h"
-#include "core/repository/VolatileFlowFileRepository.h"
 #include "unit/TestUtils.h"
 #include "core/repository/FileSystemRepository.h"
 
@@ -127,48 +126,4 @@ TEST_CASE("ProcessSession::append should append to the flowfile and set its size
 TEST_CASE("ProcessSession::read can read zero length flowfiles without crash", "[zerolengthread]") {
   ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::VolatileContentRepository>());
   ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::FileSystemRepository>());
-}
-
-struct VolatileFlowFileRepositoryTestAccessor {
-  METHOD_ACCESSOR(flush);
-};
-
-class TestVolatileFlowFileRepository : public core::repository::VolatileFlowFileRepository {
- public:
-  explicit TestVolatileFlowFileRepository(const std::string& name) : core::repository::VolatileFlowFileRepository(name) {}
-
-  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) override {
-    auto flush_on_exit = gsl::finally([&] {VolatileFlowFileRepositoryTestAccessor::call_flush(*this);});
-    return VolatileFlowFileRepository::MultiPut(data);
-  }
-};
-
-TEST_CASE("ProcessSession::commit avoids dangling ResourceClaims when using VolatileFlowFileRepository", "[incrementbefore]") {
-  TempDirectory tmp_dir;
-  auto configuration = std::make_shared<minifi::ConfigureImpl>();
-  configuration->set(minifi::Configure::nifi_volatile_repository_options_flowfile_max_count, "2");
-  auto ff_repo = std::make_shared<TestVolatileFlowFileRepository>("flowfile");
-  Fixture fixture({
-    .configuration = std::move(configuration),
-    .flow_file_repo = ff_repo
-  });
-  auto& session = fixture.processSession();
-
-  const auto flow_file_1 = session.create();
-  const auto flow_file_2 = session.create();
-  const auto flow_file_3 = session.create();
-  session.transfer(flow_file_1, Success);
-  session.transfer(flow_file_2, Success);
-  session.transfer(flow_file_3, Success);
-  session.commit();
-
-  // flow_files are owned by the shared_ptr on the stack and the ff_repo
-  // but the first one has been evicted from the ff_repo
-  REQUIRE(flow_file_1->getResourceClaim()->getFlowFileRecordOwnedCount() == 1);
-  REQUIRE(flow_file_2->getResourceClaim()->getFlowFileRecordOwnedCount() == 2);
-  REQUIRE(flow_file_3->getResourceClaim()->getFlowFileRecordOwnedCount() == 2);
-
-  REQUIRE(flow_file_1->getResourceClaim()->exists());
-  REQUIRE(flow_file_2->getResourceClaim()->exists());
-  REQUIRE(flow_file_3->getResourceClaim()->exists());
 }

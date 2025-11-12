@@ -62,7 +62,6 @@
 #include "core/RepositoryFactory.h"
 #include "core/extension/ExtensionManager.h"
 #include "core/repository/VolatileContentRepository.h"
-#include "core/repository/VolatileFlowFileRepository.h"
 #include "core/state/MetricsPublisherStore.h"
 #include "properties/Decryptor.h"
 #include "utils/Environment.h"
@@ -71,6 +70,7 @@
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
 #include "range/v3/algorithm/min_element.hpp"
+#include "core/Repository.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
       logger->log_error("Content repository failed to initialize, exiting..");
       std::exit(1);
     }
-    const bool is_flow_repo_non_persistent = flow_repo->isNoop() || std::dynamic_pointer_cast<core::repository::VolatileFlowFileRepository>(flow_repo) != nullptr;
+    const bool is_flow_repo_non_persistent = flow_repo->isNoop();
     const bool is_content_repo_non_persistent = std::dynamic_pointer_cast<core::repository::VolatileContentRepository>(content_repo) != nullptr;
     if (is_flow_repo_non_persistent != is_content_repo_non_persistent) {
       logger->log_error("Both or neither of flowfile and content repositories must be persistent! Exiting..");

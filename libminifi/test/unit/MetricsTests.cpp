@@ -170,47 +170,6 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
   }
 }
 
-TEST_CASE("VolatileRepositorymetricsCanBeFull", "[c2m4]") {
-  minifi::state::response::RepositoryMetrics metrics;
-
-  REQUIRE("RepositoryMetrics" == metrics.getName());
-
-  auto repo = std::make_shared<TestVolatileRepository>();
-
-  metrics.addRepository(repo);
-  {
-    REQUIRE(1 == metrics.serialize().size());
-
-    minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
-
-    REQUIRE("repo_name" == resp.name);
-    REQUIRE(5 == resp.children.size());
-
-    checkSerializedValue(resp.children, "running", "false");
-    checkSerializedValue(resp.children, "full", "false");
-    checkSerializedValue(resp.children, "size", "0");
-    checkSerializedValue(resp.children, "maxSize", std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)));
-    checkSerializedValue(resp.children, "entryCount", "0");
-  }
-
-  repo->setFull();
-
-  {
-    REQUIRE(1 == metrics.serialize().size());
-
-    minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
-
-    REQUIRE("repo_name" == resp.name);
-    REQUIRE(5 == resp.children.size());
-
-    checkSerializedValue(resp.children, "running", "false");
-    checkSerializedValue(resp.children, "full", "true");
-    checkSerializedValue(resp.children, "size", std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)));
-    checkSerializedValue(resp.children, "maxSize", std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)));
-    checkSerializedValue(resp.children, "entryCount", "10000");
-  }
-}
-
 TEST_CASE("Test on trigger runtime processor metrics", "[ProcessorMetrics]") {
   auto dummy_processor = minifi::test::utils::make_processor<DummyProcessor>("dummy");
   minifi::core::ProcessorMetrics metrics(*dummy_processor);

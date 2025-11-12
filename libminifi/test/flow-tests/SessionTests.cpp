@@ -20,7 +20,6 @@
 #include <string>
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "../../extensions/rocksdb-repos/FlowFileRepository.h"
 #include "repository/FileSystemRepository.h"

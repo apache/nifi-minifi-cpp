@@ -25,7 +25,7 @@
 #include "core/repository/AtomicRepoEntries.h"
 #include "core/repository/VolatileProvenanceRepository.h"
 #include "core/RepositoryFactory.h"
-#include "minifi-cpp/FlowFileRecord.h"
+#include "FlowFileRecord.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
