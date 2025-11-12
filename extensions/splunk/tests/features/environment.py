@@ -13,19 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import platform
 
-from ..core.Processor import Processor
+from minifi_test_framework.core.hooks import common_before_scenario
+from minifi_test_framework.core.hooks import common_after_scenario
 
 
-class PutSplunkHTTP(Processor):
-    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
-        super(PutSplunkHTTP, self).__init__(
-            context=context,
-            clazz='PutSplunkHTTP',
-            properties={
-                'Hostname': 'splunk',
-                'Port': '8088',
-                'Token': 'Splunk 176fae97-f59d-4f08-939a-aa6a543f2485'  # Token of the default splunk_hec_token HTTP Event Collector in the Splunk container image
-            },
-            auto_terminate=['success', 'failure'],
-            schedule=schedule)
+def before_feature(context, feature):
+    if "x86_x64_only" in feature.tags:
+        is_x86 = platform.machine() in ("i386", "AMD64", "x86_64")
+        if not is_x86:
+            feature.skip("This feature is only x86/x64 compatible")
+
+
+def before_scenario(context, scenario):
+    common_before_scenario(context, scenario)
+
+
+def after_scenario(context, scenario):
+    common_after_scenario(context, scenario)

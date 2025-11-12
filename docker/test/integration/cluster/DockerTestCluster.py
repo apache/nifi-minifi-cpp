@@ -31,7 +31,6 @@ from .checkers.AzureChecker import AzureChecker
 from .checkers.GcsChecker import GcsChecker
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
-from .checkers.SplunkChecker import SplunkChecker
 from .checkers.GrafanaLokiChecker import GrafanaLokiChecker
 from .checkers.ModbusChecker import ModbusChecker
 from .checkers.MqttHelper import MqttHelper
@@ -48,7 +47,6 @@ class DockerTestCluster:
         self.azure_checker = AzureChecker(self.container_communicator)
         self.gcs_checker = GcsChecker(self.container_communicator)
         self.postgres_checker = PostgresChecker(self.container_communicator)
-        self.splunk_checker = SplunkChecker(self.container_communicator)
         self.prometheus_checker = PrometheusChecker()
         self.grafana_loki_checker = GrafanaLokiChecker()
         self.minifi_controller_executor = MinifiControllerExecutor(self.container_communicator)
@@ -235,22 +233,6 @@ class DockerTestCluster:
 
     def check_azure_blob_storage_is_empty(self, timeout_seconds):
         return self.azure_checker.check_azure_blob_storage_is_empty(timeout_seconds)
-
-    def check_splunk_event(self, container_name, query):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.splunk_checker.check_splunk_event(container_name, query)
-
-    def check_splunk_event_with_attributes(self, container_name, query, attributes):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.splunk_checker.check_splunk_event_with_attributes(container_name, query, attributes)
-
-    def enable_splunk_hec_indexer(self, container_name, hec_name):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.splunk_checker.enable_splunk_hec_indexer(container_name, hec_name)
-
-    def enable_splunk_hec_ssl(self, container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.splunk_checker.enable_splunk_hec_ssl(container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem)
 
     def check_google_cloud_storage(self, gcs_container_name, content):
         gcs_container_name = self.container_store.get_container_name_with_postfix(gcs_container_name)

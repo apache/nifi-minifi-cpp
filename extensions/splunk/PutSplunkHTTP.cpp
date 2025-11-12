@@ -66,31 +66,52 @@ std::optional<std::string> getContentType(core::ProcessContext& context, const c
   return context.getProperty(PutSplunkHTTP::ContentType) | utils::toOptional() | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
 }
 
-bool setAttributesFromClientResponse(core::FlowFile& flow_file, http::HTTPClient& client) {
+bool setAttributesFromClientResponse(core::FlowFile& flow_file, http::HTTPClient& client, const std::shared_ptr<core::logging::Logger>& logger) {
   rapidjson::Document response_json;
   rapidjson::ParseResult parse_result = response_json.Parse<rapidjson::kParseStopWhenDoneFlag>(client.getResponseBody().data());
   bool result = true;
-  if (parse_result.IsError())
+  if (parse_result.IsError()) {
+    logger->log_error("Failed to parse Splunk HEC response JSON");
     return false;
+  }
 
-  if (response_json.HasMember("code") && response_json["code"].IsInt())
-    flow_file.setAttribute(SPLUNK_RESPONSE_CODE, std::to_string(response_json["code"].GetInt()));
-  else
+  if (response_json.HasMember("code") && response_json["code"].IsInt()) {
+    auto code = response_json["code"].GetInt();
+    flow_file.setAttribute(SPLUNK_RESPONSE_CODE, std::to_string(code));
+    if (code != 0) {
+      logger->log_error("Splunk HEC returned error code: {}", code);
+      result = false;
+    }
+  } else {
+    logger->log_error("Splunk HEC response JSON does not contain a valid 'code' field");
     result = false;
+  }
 
-  if (response_json.HasMember("ackId") && response_json["ackId"].IsUint64())
+  if (response_json.HasMember("ackId") && response_json["ackId"].IsUint64()) {
     flow_file.setAttribute(SPLUNK_ACK_ID, std::to_string(response_json["ackId"].GetUint64()));
-  else
+  } else {
+    logger->log_error("Splunk HEC response JSON does not contain a valid 'ackId' field");
     result = false;
+  }
 
   return result;
 }
 
-bool enrichFlowFileWithAttributes(core::FlowFile& flow_file, http::HTTPClient& client) {
+bool enrichFlowFileWithAttributes(core::FlowFile& flow_file, http::HTTPClient& client, const std::shared_ptr<core::logging::Logger>& logger) {
   flow_file.setAttribute(SPLUNK_STATUS_CODE, std::to_string(client.getResponseCode()));
   flow_file.setAttribute(SPLUNK_RESPONSE_TIME, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
-  return setAttributesFromClientResponse(flow_file, client) && client.getResponseCode() == 200;
+  auto result = true;
+  if (client.getResponseCode() != 200) {
+    logger->log_error("Received failure response code from Splunk HEC: {}", client.getResponseCode());
+    result = false;
+  }
+
+  if (!setAttributesFromClientResponse(flow_file, client, logger)) {
+    return false;
+  }
+
+  return result;
 }
 
 void setFlowFileAsPayload(core::ProcessSession& session,
@@ -142,8 +163,11 @@ void PutSplunkHTTP::onTrigger(core::ProcessContext& context, core::ProcessSessio
   setFlowFileAsPayload(session, context, *client, flow_file);
 
   bool success = false;
-  if (client->submit())
-    success = enrichFlowFileWithAttributes(*flow_file, *client);
+  if (client->submit()) {
+    success = enrichFlowFileWithAttributes(*flow_file, *client, logger_);
+  } else {
+    logger_->log_error("Failed to submit HTTP request to Splunk HEC");
+  }
 
   session.transfer(flow_file, success ? Success : Failure);
 }
