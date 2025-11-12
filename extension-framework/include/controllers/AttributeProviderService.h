@@ -21,18 +21,14 @@
 #include <unordered_map>
 #include <vector>
 
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "minifi-cpp/controllers/AttributeProviderService.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-class AttributeProviderServiceImpl : public core::controller::ControllerServiceImpl, public virtual AttributeProviderService {
+class AttributeProviderServiceImpl : public core::controller::ControllerServiceBase, public virtual AttributeProviderService {
  public:
-  using ControllerServiceImpl::ControllerServiceImpl;
-
-  void yield() override {}
-  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
-  bool isWorkAvailable() override { return false; }
+  using ControllerServiceBase::ControllerServiceBase;
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

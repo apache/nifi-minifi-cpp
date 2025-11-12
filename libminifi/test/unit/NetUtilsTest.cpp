@@ -64,7 +64,7 @@ TEST_CASE("utils::net::getSslContext") {
   auto plan = controller.createPlan();
 
   auto ssl_context_node = plan->addController("SSLContextService", "ssl_context_service");
-  auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(ssl_context_node->getControllerServiceImplementation());
+  auto ssl_context_service = ssl_context_node->getControllerServiceImplementation();
 
   const std::filesystem::path cert_dir = minifi::utils::file::FileUtils::get_executable_dir() / "resources";
 
@@ -94,7 +94,7 @@ TEST_CASE("utils::net::getSslContext") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::CACertificate.name, (cert_dir / "alice_by_A_with_key.pem").string()));
   }
   REQUIRE_NOTHROW(plan->finalize());
-  auto ssl_context = utils::net::getSslContext(*ssl_context_service);
+  auto ssl_context = utils::net::getSslContext(*ssl_context_service->getImplementation<minifi::controllers::SSLContextServiceInterface>());
   asio::error_code verification_error;
   CHECK_FALSE(ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error));
   CHECK_FALSE(verification_error);
@@ -105,7 +105,7 @@ TEST_CASE("utils::net::getSslContext passphrase problems") {
   auto plan = controller.createPlan();
 
   auto ssl_context_node = plan->addController("SSLContextService", "ssl_context_service");
-  auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(ssl_context_node->getControllerServiceImplementation());
+  auto ssl_context_service = ssl_context_node->getControllerServiceImplementation();
 
   const std::filesystem::path cert_dir = minifi::utils::file::FileUtils::get_executable_dir() / "resources";
 
@@ -117,7 +117,7 @@ TEST_CASE("utils::net::getSslContext passphrase problems") {
 
   SECTION("Missing passphrase") {
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service->getImplementation<minifi::controllers::SSLContextServiceInterface>()),
         std::runtime_error,
         ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
@@ -125,7 +125,7 @@ TEST_CASE("utils::net::getSslContext passphrase problems") {
   SECTION("Invalid passphrase") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::Passphrase.name, "not_the_correct_passphrase"));
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service->getImplementation<minifi::controllers::SSLContextServiceInterface>()),
         std::runtime_error,
         ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
@@ -133,7 +133,7 @@ TEST_CASE("utils::net::getSslContext passphrase problems") {
   SECTION("Invalid passphrase file") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::Passphrase.name, (cert_dir / "alice_by_B.pem").string()));
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service),
+    REQUIRE_THROWS_MATCHES(utils::net::getSslContext(*ssl_context_service->getImplementation<minifi::controllers::SSLContextServiceInterface>()),
         std::runtime_error,
         ExceptionSubStringMatcher<std::runtime_error>({"use_private_key_file: bad decrypt (Provider routines)"}));
   }
@@ -144,7 +144,7 @@ TEST_CASE("utils::net::getSslContext missing CA") {
   auto plan = controller.createPlan();
 
   auto ssl_context_node = plan->addController("SSLContextService", "ssl_context_service");
-  auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(ssl_context_node->getControllerServiceImplementation());
+  auto ssl_context_service = ssl_context_node->getControllerServiceImplementation();
 
   const std::filesystem::path cert_dir = minifi::utils::file::FileUtils::get_executable_dir() / "resources";
 
@@ -152,7 +152,7 @@ TEST_CASE("utils::net::getSslContext missing CA") {
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::PrivateKey.name, (cert_dir / "alice.key").string()));
 
   REQUIRE_NOTHROW(plan->finalize());
-  auto ssl_context = utils::net::getSslContext(*ssl_context_service);
+  auto ssl_context = utils::net::getSslContext(*ssl_context_service->getImplementation<minifi::controllers::SSLContextServiceInterface>());
   asio::error_code verification_error;
   CHECK_FALSE(ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error));
   CHECK_FALSE(verification_error);

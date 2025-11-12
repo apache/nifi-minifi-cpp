@@ -20,7 +20,7 @@
 #include <string>
 #include <utility>
 
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/ProcessorImpl.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -35,26 +35,20 @@ std::mutex control_mutex;
 std::atomic<bool> subprocess_controller_service_found_correctly{false};
 std::atomic<bool> subprocess_controller_service_not_found_correctly{false};
 
-class MockControllerService : public minifi::core::controller::ControllerServiceImpl {
+class MockControllerService : public minifi::core::controller::ControllerServiceBase {
  public:
-  explicit MockControllerService(std::string_view name, const minifi::utils::Identifier &uuid)
-      : ControllerServiceImpl(name, uuid) {
-  }
-
-  explicit MockControllerService(std::string_view name)
-      : ControllerServiceImpl(name) {
-  }
-  MockControllerService() = default;
+  using ControllerServiceBase::ControllerServiceBase;
+  MockControllerService()
+    : ControllerServiceBase({.uuid = utils::Identifier{}, .name = "MockControllerService", .logger = logging::LoggerFactory<MockControllerService>::getLogger()}) {}
 
   ~MockControllerService() override = default;
 
   static constexpr const char* Description = "An example service";
   static constexpr auto Properties = std::array<minifi::core::PropertyReference, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override {
-    minifi::core::controller::ControllerServiceImpl::initialize();
+    minifi::core::controller::ControllerServiceBase::initialize();
     enable();
   }
 
@@ -64,17 +58,6 @@ class MockControllerService : public minifi::core::controller::ControllerService
 
   virtual void enable() {
     str = "pushitrealgood";
-  }
-
-  void yield() override {
-  }
-
-  bool isRunning() const override {
-    return true;
-  }
-
-  bool isWorkAvailable() override {
-    return true;
   }
 
  protected:
@@ -117,7 +100,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
     }
     std::string linked_service = context.getProperty("linkedService").value_or("");
     if (!IsNullOrEmpty(linked_service)) {
-      std::shared_ptr<minifi::core::controller::ControllerService> service = context.getControllerService(linked_service, getUUID());
+      std::shared_ptr<minifi::core::controller::ControllerServiceInterface> service = context.getControllerService(linked_service, getUUID());
       std::lock_guard<std::mutex> lock(control_mutex);
       REQUIRE(nullptr != service);
       REQUIRE("pushitrealgood" == std::dynamic_pointer_cast<MockControllerService>(service)->doSomething());
