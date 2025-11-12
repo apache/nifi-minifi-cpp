@@ -24,6 +24,7 @@
 #include "range/v3/action/sort.hpp"
 #include "range/v3/action/unique.hpp"
 #include "core/Processor.h"
+#include "core/controller/ControllerService.h"
 #include "core/ObjectFactory.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -42,6 +43,8 @@ class ClassLoaderImpl : public ClassLoader {
   void registerClass(const std::string &clazz, std::unique_ptr<ObjectFactory> factory) override;
 
   void registerClass(const std::string &clazz, std::unique_ptr<ProcessorFactory> factory) override;
+
+  void registerClass(const std::string &clazz, std::unique_ptr<controller::ControllerServiceFactory> factory) override;
 
   void unregisterClass(const std::string& clazz) override;
 
@@ -136,10 +139,50 @@ class ProcessorFactoryWrapper : public ObjectFactoryImpl {
  private:
   std::unique_ptr<ProcessorFactory> factory_;
 };
+
+class ControllerServiceFactoryWrapper : public ObjectFactoryImpl {
+ public:
+  explicit ControllerServiceFactoryWrapper(std::unique_ptr<controller::ControllerServiceFactory> factory)
+    : ObjectFactoryImpl(factory->getGroupName()),
+      factory_(std::move(factory)) {}
+
+  [[nodiscard]] std::unique_ptr<CoreComponent> create(const std::string &name) override {
+    return std::unique_ptr<CoreComponent>{createRaw(name)};
+  }
+
+  [[nodiscard]] std::unique_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
+    return std::unique_ptr<CoreComponent>{createRaw(name, uuid)};
+  }
+
+  [[nodiscard]] gsl::owner<CoreComponent*> createRaw(const std::string &name) override {
+    return createRaw(name, utils::IdGenerator::getIdGenerator()->generate());
+  }
+
+  [[nodiscard]] gsl::owner<CoreComponent*> createRaw(const std::string &name, const utils::Identifier &uuid) override {
+    auto logger = logging::LoggerFactoryBase::getAliasedLogger(getClassName(), uuid);
+    return new controller::ControllerService(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)}));
+  }
+
+  [[nodiscard]] std::string getGroupName() const override {
+    return factory_->getGroupName();
+  }
+
+  [[nodiscard]] std::string getClassName() override {
+    return factory_->getClassName();
+  }
+
+ private:
+  std::unique_ptr<controller::ControllerServiceFactory> factory_;
+};
+
 }  // namespace
 
 void ClassLoaderImpl::registerClass(const std::string &clazz, std::unique_ptr<ProcessorFactory> factory) {
   registerClass(clazz, std::make_unique<ProcessorFactoryWrapper>(std::move(factory)));
+}
+
+void ClassLoaderImpl::registerClass(const std::string &clazz, std::unique_ptr<controller::ControllerServiceFactory> factory) {
+  registerClass(clazz, std::make_unique<ControllerServiceFactoryWrapper>(std::move(factory)));
 }
 
 void ClassLoaderImpl::unregisterClass(const std::string& clazz) {

@@ -110,8 +110,7 @@ class PersistentStateStorageTestsFixture {
     REQUIRE(persistable_key_value_store_service_node != nullptr);
     persistable_key_value_store_service_node->enable();
 
-    controller = std::dynamic_pointer_cast<minifi::controllers::KeyValueStateStorage>(
-        persistable_key_value_store_service_node->getControllerServiceImplementation());
+    controller = persistable_key_value_store_service_node->getControllerServiceImplementation<minifi::controllers::KeyValueStateStorage>();
     REQUIRE(controller != nullptr);
   }
 

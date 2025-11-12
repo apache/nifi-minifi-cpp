@@ -18,6 +18,7 @@
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
+#include "core/controller/ControllerService.h"
 #endif
 
 #ifdef WIN32
@@ -37,6 +38,7 @@
 
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerFactory.h"
 #include "io/validation.h"
@@ -72,71 +74,11 @@ class SSLContext {
  * Justification: Abstracts SSL support out of processors into a
  * configurable controller service.
  */
-class SSLContextService : public core::controller::ControllerServiceImpl, public SSLContextServiceInterface {
+class SSLContextService : public core::controller::ControllerServiceBase, public SSLContextServiceInterface {
  public:
-  explicit SSLContextService(std::string_view name, const utils::Identifier &uuid = {})
-      : ControllerServiceImpl(name, uuid),
-        initialized_(false),
-        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
-  }
+  using ControllerServiceBase::ControllerServiceBase;
 
-  explicit SSLContextService(std::string_view name, const std::shared_ptr<Configure> &configuration)
-      : ControllerServiceImpl(name),
-        initialized_(false),
-        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
-    ControllerServiceImpl::setConfiguration(configuration);
-    SSLContextService::initialize();
-    auto setPropertyAndHandleError = [this](std::string_view property_name, std::string value) {
-      auto result = ControllerServiceImpl::setProperty(property_name, std::move(value));
-      if (!result) {
-        logger_->log_error("Failed to set property {}: {}", property_name, result.error().message());
-      }
-    };
-
-    // set the properties based on the configuration
-    std::string value;
-    if (configuration_->get(Configure::nifi_security_client_certificate, value)) {
-      setPropertyAndHandleError(ClientCertificate.name, std::move(value));
-    }
-
-    if (configuration_->get(Configure::nifi_security_client_private_key, value)) {
-      setPropertyAndHandleError(PrivateKey.name, std::move(value));
-    }
-
-    if (configuration_->get(Configure::nifi_security_client_pass_phrase, value)) {
-      setPropertyAndHandleError(Passphrase.name, std::move(value));
-    }
-
-    if (configuration_->get(Configure::nifi_security_client_ca_certificate, value)) {
-      setPropertyAndHandleError(CACertificate.name, std::move(value));
-    }
-
-    if (configuration_->get(Configure::nifi_security_use_system_cert_store, value)) {
-      setPropertyAndHandleError(UseSystemCertStore.name, std::move(value));
-    }
-
-#ifdef WIN32
-    if (configuration_->get(Configure::nifi_security_windows_cert_store_location, value)) {
-      setPropertyAndHandleError(CertStoreLocation.name, std::move(value));
-    }
-
-    if (configuration_->get(Configure::nifi_security_windows_server_cert_store, value)) {
-      setPropertyAndHandleError(ServerCertStore.name, std::move(value));
-    }
-
-    if (configuration_->get(Configure::nifi_security_windows_client_cert_store, value)) {
-      setPropertyAndHandleError(ClientCertStore.name, std::move(value));
-    }
-
-    if (configuration_->get(Configure::nifi_security_windows_client_cert_cn, value)) {
-      setPropertyAndHandleError(ClientCertCN.name, std::move(value));
-    }
-
-    if (configuration_->get(Configure::nifi_security_windows_client_cert_key_usage, value)) {
-      setPropertyAndHandleError(ClientCertKeyUsage.name, std::move(value));
-    }
-#endif  // WIN32
-  }
+  static std::shared_ptr<SSLContextService> createAndEnable(std::string_view name, const std::shared_ptr<Configure> &configuration);
 
   static constexpr auto ImplementsApis = std::array{ SSLContextServiceInterface::ProvidesApi };
 
@@ -148,17 +90,6 @@ class SSLContextService : public core::controller::ControllerServiceImpl, public
   const std::string& getPassphrase() const override;
   const std::filesystem::path& getPrivateKeyFile() const override;
   const std::filesystem::path& getCACertificate() const override;
-
-  void yield() override {
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
 
   void setMinTlsVersion(long min_version) override {  // NOLINT(runtime/int) long due to SSL lib API
     minimum_tls_version_ = min_version;
@@ -242,13 +173,12 @@ class SSLContextService : public core::controller::ControllerServiceImpl, public
                                              });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
  protected:
   virtual void initializeProperties();
 
   mutable std::mutex initialization_mutex_;
-  bool initialized_;
+  bool initialized_{false};
   std::filesystem::path certificate_;
   std::filesystem::path private_key_;
   std::string passphrase_;
@@ -296,8 +226,6 @@ class SSLContextService : public core::controller::ControllerServiceImpl, public
   long maximum_tls_version_ = -1;  // NOLINT(runtime/int) long due to SSL lib API
 
   void verifyCertificateExpiration();
-
-  std::shared_ptr<core::logging::Logger> logger_;
 };  // NOLINT the linter gets confused by the '{'s inside #ifdef's
 
 }  // namespace org::apache::nifi::minifi::controllers

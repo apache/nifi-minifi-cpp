@@ -97,7 +97,7 @@ std::vector<SensitiveItem> listSensitiveItems(const minifi::core::ProcessGroup &
   std::unordered_set<minifi::utils::Identifier> processed_controller_services;
   for (const auto* controller_service_node : process_group.getAllControllerServices()) {
     gsl_Expects(controller_service_node);
-    const auto* controller_service = controller_service_node->getControllerServiceImplementation();
+    const auto controller_service = controller_service_node->getControllerServiceImplementation();
     gsl_Expects(controller_service);
     if (processed_controller_services.contains(controller_service->getUUID())) {
       continue;
