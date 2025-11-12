@@ -39,8 +39,7 @@
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Repository.h"
 #include "minifi-cpp/core/StateStorage.h"
-#include "minifi-cpp/core/controller/ControllerServiceLookup.h"
-#include "minifi-cpp/core/controller/ControllerServiceProvider.h"
+#include "core/controller/ControllerServiceProvider.h"
 #include "minifi-cpp/core/repository/FileSystemRepository.h"
 #include "expression-language/Expression.h"
 
@@ -102,12 +101,12 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
   // controller services
 
-  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override {
+  std::shared_ptr<core::controller::ControllerServiceInterface> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override {
     auto controller_service = controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier, processor_uuid);
     if (!controller_service || controller_service->getState() != core::controller::ControllerServiceState::ENABLED) {
       return nullptr;
     }
-    return controller_service;
+    return {controller_service, controller_service->getImplementation()};
   }
 
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";
@@ -123,7 +122,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
     /* See if we have already created a default provider */
     core::controller::ControllerServiceNode* node = controller_service_provider->getControllerServiceNode(DefaultStateStorageName);
-    if (node != nullptr) { return std::dynamic_pointer_cast<core::StateStorage>(node->getControllerServiceImplementation()); }
+    if (node != nullptr) { return node->getControllerServiceImplementation<StateStorage>(); }
 
     /* Try to get configuration options for default provider */
     std::string always_persist;
@@ -146,7 +145,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
         if (!storage->setProperty(extraProperty.first, extraProperty.second)) { return nullptr; }
       }
       if (!new_node->enable()) { return nullptr; }
-      return std::dynamic_pointer_cast<core::StateStorage>(storage);
+      return {storage, storage->getImplementation<core::StateStorage>()};
     };
 
     std::string preferredType;
@@ -184,7 +183,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
         logger->log_error("Failed to find the StateStorage {} defined by {}", requestedStateStorageName, minifi::Configure::nifi_state_storage_local);
         return nullptr;
       }
-      return std::dynamic_pointer_cast<core::StateStorage>(node->getControllerServiceImplementation());
+      return node->getControllerServiceImplementation<core::StateStorage>();
     } else {
       auto state_storage = getOrCreateDefaultStateStorage(controller_service_provider, configuration);
       if (state_storage == nullptr) { logger->log_error("Failed to create default StateStorage"); }

@@ -115,7 +115,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
     REQUIRE(ssl_client_node != nullptr);
     ssl_client_node->enable();
     REQUIRE(ssl_client_node->getControllerServiceImplementation() != nullptr);
-    ssl_client = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(ssl_client_node->getControllerServiceImplementation());
+    ssl_client = ssl_client_node->getControllerServiceImplementation<minifi::controllers::SSLContextServiceInterface>();
   }
   REQUIRE(!ssl_client->getCACertificate().empty());
   // now let's disable one of the controller services.

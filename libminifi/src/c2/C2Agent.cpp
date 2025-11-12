@@ -87,8 +87,8 @@ void C2Agent::initialize(core::controller::ControllerServiceProvider *controller
 
   if (nullptr != controller_) {
     if (auto service = controller_->getControllerService(UPDATE_NAME)) {
-      if (auto update_service = std::dynamic_pointer_cast<controllers::UpdatePolicyControllerService>(service)) {
-        update_service_ = update_service;
+      if (auto* update_service = dynamic_cast<controllers::UpdatePolicyControllerService*>(&*service->getImplementation())) {
+        update_service_ = {service, update_service};
       } else {
         logger_->log_warn("Found controller service with name '{}', but it is not an UpdatePolicyControllerService", c2::UPDATE_NAME);
       }
