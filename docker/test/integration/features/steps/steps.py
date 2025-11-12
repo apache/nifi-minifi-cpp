@@ -15,7 +15,6 @@
 
 from filesystem_validation.FileSystemObserver import FileSystemObserver
 from minifi.core.RemoteProcessGroup import RemoteProcessGroup
-from ssl_utils.SSL_cert_utils import make_server_cert
 from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
@@ -36,7 +35,6 @@ import logging
 import time
 import uuid
 import humanfriendly
-import OpenSSL.crypto
 
 import os
 
@@ -127,7 +125,6 @@ def step_impl(context, processor_type, minifi_container_name):
 @given("a {processor_type} processor set up to communicate with the same s3 server")
 @given("a {processor_type} processor set up to communicate with an Azure blob storage")
 @given("a {processor_type} processor set up to communicate with an MQTT broker instance")
-@given("a {processor_type} processor set up to communicate with the Splunk HEC instance")
 @given("a {processor_type} processor set up to communicate with the kinesis server")
 def step_impl(context, processor_type):
     __create_processor(context, processor_type, processor_type, None, None, "minifi-cpp-flow")
@@ -557,33 +554,10 @@ def setUpSslContextServiceForRPG(context, rpg_name: str):
     rpg.add_property("SSL Context Service", ssl_context_service.name)
 
 
-# splunk hec
-@given("a Splunk HEC is set up and running")
-def step_impl(context):
-    context.test.start_splunk(context)
-
-
 # TCP client
 @given('a TCP client is set up to send a test TCP message to minifi')
 def step_impl(context):
     context.test.acquire_container(context=context, name="tcp-client", engine="tcp-client")
-
-
-@given("SSL is enabled for the Splunk HEC and the SSL context service is set up for PutSplunkHTTP and QuerySplunkIndexingStatus")
-def step_impl(context):
-    minifi_crt_file = '/tmp/resources/minifi_client.crt'
-    minifi_key_file = '/tmp/resources/minifi_client.key'
-    root_ca_crt_file = '/tmp/resources/root_ca.crt'
-    ssl_context_service = SSLContextService(name='SSLContextService', cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
-
-    splunk_cert, splunk_key = make_server_cert(context.test.get_container_name_with_postfix("splunk"), context.root_ca_cert, context.root_ca_key)
-    put_splunk_http = context.test.get_node_by_name("PutSplunkHTTP")
-    put_splunk_http.controller_services.append(ssl_context_service)
-    put_splunk_http.set_property("SSL Context Service", ssl_context_service.name)
-    query_splunk_indexing_status = context.test.get_node_by_name("QuerySplunkIndexingStatus")
-    query_splunk_indexing_status.controller_services.append(ssl_context_service)
-    query_splunk_indexing_status.set_property("SSL Context Service", ssl_context_service.name)
-    context.test.enable_splunk_hec_ssl('splunk', OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, splunk_cert), OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, splunk_key), OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, context.root_ca_cert))
 
 
 @given(u'the {processor_one} processor is set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
@@ -909,18 +883,6 @@ def step_imp(context, content):
 @then("the test bucket of Google Cloud Storage is empty")
 def step_impl(context):
     context.test.check_empty_gcs_bucket("fake-gcs-server")
-
-
-# Splunk
-@then('an event is registered in Splunk HEC with the content \"{content}\"')
-def step_imp(context, content):
-    context.test.check_splunk_event("splunk", content)
-
-
-@then('an event is registered in Splunk HEC with the content \"{content}\" with \"{source}\" set as source and \"{source_type}\" set as sourcetype and \"{host}\" set as host')
-def step_imp(context, content, source, source_type, host):
-    attr = {"source": source, "sourcetype": source_type, "host": host}
-    context.test.check_splunk_event_with_attributes("splunk", content, attr)
 
 
 # Prometheus

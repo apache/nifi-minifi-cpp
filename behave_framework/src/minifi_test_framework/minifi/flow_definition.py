@@ -39,6 +39,9 @@ class FlowDefinition:
     def get_processor(self, processor_name: str) -> Processor | None:
         return next((proc for proc in self.processors if proc.name == processor_name), None)
 
+    def get_controller_service(self, controller_service_name: str) -> ControllerService | None:
+        return next((controller for controller in self.controller_services if controller.name == controller_service_name), None)
+
     def get_parameter_context(self, parameter_context_name: str) -> ParameterContext | None:
         return next((parameter_context for parameter_context in self.parameter_contexts if
                      parameter_context.name == parameter_context_name), None)
