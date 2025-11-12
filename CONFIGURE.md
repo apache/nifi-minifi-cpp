@@ -613,10 +613,10 @@ Apache MiNiFi C++ uses three repositories similarly to Apache NiFi:
 
 The underlying implementation to use for these repositories can be configured in the minifi.properties file.
 
-The Flow File Repository can be configured with the `nifi.flowfile.repository.class.name` property. If not specified, it uses the `FlowFileRepository` class by default, which stores the flow file metadata in a RocksDB database. Alternatively it can be configured to use a `VolatileFlowFileRepository` which is equivalent of the `NoOpRepository` for not keeping any state, flow files are only stored in memory while being transferred between processors.
+The Flow File Repository can be configured with the `nifi.flowfile.repository.class.name` property. If not specified, it uses the `FlowFileRepository` class by default, which stores the flow file metadata in a RocksDB database. Alternatively it can be configured to use a `NoOpRepository` for not keeping any state, flow files are only stored in memory while being transferred between processors.
 
     # in minifi.properties
-    nifi.flowfile.repository.class.name=VolatileFlowFileRepository  # Equivalent of NoOpRepository
+    nifi.flowfile.repository.class.name=NoOpRepository  # VolatileFlowFileRepository can also be used which is an alias for NoOpRepository
 
 The Content Repository can be configured with the `nifi.content.repository.class.name` property. If not specified, it uses the `DatabaseContentRepository` class by default, which persists the content in a RocksDB database. `DatabaseContentRepository` is also the default value specified in the minifi.properties file. Alternatively it can be configured to use a `VolatileContentRepository` that keeps the state in memory (so the state gets lost upon restart), or the `FileSystemRepository` to keep the state in regular files.
 
@@ -640,7 +640,7 @@ As stated before each of the repositories can be configured to be volatile (stat
 
     # in minifi.properties
     # For Volatile Repositories:
-    nifi.flowfile.repository.class.name=VolatileFlowFileRepository  # Equivalent of NoOpRepository
+    nifi.flowfile.repository.class.name=VolatileFlowFileRepository  # alias for NoOpRepository in case of flowfile repository
     nifi.provenance.repository.class.name=VolatileProvenanceRepository
     nifi.content.repository.class.name=VolatileContentRepository
 
