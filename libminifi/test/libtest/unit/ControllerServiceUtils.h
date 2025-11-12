@@ -1,5 +1,5 @@
 /**
- *
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,19 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "core/controller/ControllerServiceNode.h"
 #include <memory>
-#include <vector>
+#include <string_view>
 
-namespace org::apache::nifi::minifi::core::controller {
+#include "core/controller/ControllerService.h"
 
-std::shared_ptr<ControllerService> ControllerServiceNode::getControllerServiceImplementation() const {
-  return controller_service_;
+namespace org::apache::nifi::minifi::test::utils {
+
+template<typename T>
+std::unique_ptr<core::controller::ControllerService> make_controller_service(std::string_view name, std::optional<minifi::utils::Identifier> uuid = std::nullopt) {
+  if (!uuid) {
+    uuid = minifi::utils::IdGenerator::getIdGenerator()->generate();
+  }
+  auto processor_impl = std::make_unique<T>(core::controller::ControllerServiceMetadata{
+      .uuid = uuid.value(),
+      .name = std::string{name},
+      .logger = minifi::core::logging::LoggerFactory<T>::getLogger(uuid.value())
+  });
+  return std::make_unique<core::controller::ControllerService>(name, uuid.value(), std::move(processor_impl));
 }
 
-const std::vector<ControllerServiceNode*>& ControllerServiceNode::getLinkedControllerServices() const {
-  return linked_controller_services_;
-}
-
-}  // namespace org::apache::nifi::minifi::core::controller
+}  // namespace org::apache::nifi::minifi::test::utils

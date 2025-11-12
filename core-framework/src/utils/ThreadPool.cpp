@@ -22,12 +22,12 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::utils {
 
-ThreadPool::ThreadPool(int max_worker_threads, core::controller::ControllerServiceLookup* controller_service_provider, std::string name)
+ThreadPool::ThreadPool(int max_worker_threads, ControllerServiceProvider controller_service_provider, std::string name)
     : thread_reduction_count_(0),
       max_worker_threads_(max_worker_threads),
       current_workers_(0),
       running_(false),
-      controller_service_provider_(controller_service_provider),
+      controller_service_provider_(std::move(controller_service_provider)),
       name_(std::move(name)),
       logger_(core::logging::LoggerFactory<ThreadPool>::getLogger()) {
 }
@@ -152,7 +152,7 @@ void ThreadPool::manageWorkers() {
           continue;
         }
         if (thread_manager_->isAboveMax(current_workers_)) {
-          auto max = thread_manager_->getMaxConcurrentTasks();
+          auto max = 1; // thread_manager_->getMaxConcurrentTasks();
           auto differential = current_workers_ - max;
           thread_reduction_count_ += differential;
         } else if (thread_manager_->shouldReduce()) {
@@ -188,7 +188,7 @@ std::shared_ptr<controllers::ThreadManagementService> ThreadPool::createThreadMa
   if (!controller_service_provider_) {
     return nullptr;
   }
-  auto service = controller_service_provider_->getControllerService("ThreadPoolManager");
+  auto service = controller_service_provider_("ThreadPoolManager");
   if (!service) {
     logger_->log_info("Could not find a ThreadPoolManager service");
     return nullptr;

@@ -16,21 +16,23 @@
  */
 #pragma once
 
-#include "minifi-cpp/core/controller/ControllerService.h"
+#include "minifi-cpp/core/controller/ControllerServiceInterface.h"
 #include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/Record.h"
 #include "utils/Enum.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "minifi-cpp/io/InputStream.h"
+#include "minifi-cpp/agent/agent_version.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class RecordSetReader : public virtual controller::ControllerService {
+class RecordSetReader : public virtual controller::ControllerServiceInterface {
  public:
   static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.core.RecordSetReader",
+    .version = "1.0.0"
   };
 
   virtual nonstd::expected<RecordSet, std::error_code> read(io::InputStream& input_stream) = 0;
