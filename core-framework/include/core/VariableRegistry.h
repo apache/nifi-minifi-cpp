@@ -17,12 +17,16 @@
  */
 #pragma once
 
-#include <memory>
-#include <string>
 #include <map>
-#include "minifi-cpp/properties/Configure.h"
-#include "utils/StringUtils.h"
+#include <memory>
+#include <ranges>
+#include <string>
+
 #include "minifi-cpp/core/VariableRegistry.h"
+#include "minifi-cpp/properties/Configure.h"
+#include "utils/OptionalUtils.h"
+#include "utils/StringUtils.h"
+#include "range/v3/algorithm/contains.hpp"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -40,53 +44,37 @@ class VariableRegistryImpl : public virtual VariableRegistry {
 
   ~VariableRegistryImpl() override = default;
 
-  bool getConfigurationProperty(const std::string &property, std::string &value) const override {
-    auto prop = variable_registry_.find(property);
-    if (prop != variable_registry_.end()) {
-      value = prop->second;
-      return true;
+  [[nodiscard]] std::optional<std::string> getConfigurationProperty(const std::string_view key) const override {
+    const auto it = variable_registry_.find(key);
+    if (it == variable_registry_.end()) {
+      return std::nullopt;
     }
-    return false;
+    return it->second;
   }
 
  protected:
   void loadVariableRegistry() {
-    std::string registry_values;
+    gsl_Assert(configuration_);
+    auto options = configuration_->get("minifi.variable.registry.whitelist")
+        .transform([](std::string&& list) { return utils::string::split(std::move(list), ","); })
+        .value_or(configuration_->getConfiguredKeys());
 
-    auto options = configuration_->getConfiguredKeys();
-    std::string white_list_opt = "minifi.variable.registry.whitelist", white_list;
-    std::string black_list_opt = "minifi.variable.registry.blacklist", black_list;
+    const auto black_listed_options = configuration_->get("minifi.variable.registry.blacklist")
+        .transform([](std::string&& list) { return utils::string::split(std::move(list), ","); });
 
-    // only allow those in the white liset
-    if (configuration_->get(white_list_opt, white_list)) {
-      options = utils::string::split(white_list, ",");
-    }
+    auto not_password = [](const std::string& s) { return !s.contains("password"); };
+    auto not_blacklisted = [&black_listed_options](const std::string& s) { return !(black_listed_options && ranges::contains(*black_listed_options, s)); };
 
-    for (const auto &opt : options) {
-      if (opt.find("password") != std::string::npos)
-        options.erase(std::remove(options.begin(), options.end(), opt), options.end());
-    }
-
-    // even if a white list is configured, remove the black listed fields
-
-    if (configuration_->get(black_list_opt, black_list)) {
-      auto bl_opts = utils::string::split(black_list, ",");
-      for (const auto &opt : bl_opts) {
-        options.erase(std::remove(options.begin(), options.end(), opt), options.end());
-      }
-    }
-
-    for (const auto &opt : options) {
-      std::string value;
-      if (configuration_->get(opt, value)) {
-        variable_registry_[opt] = value;
+    for (const auto& option : options | std::views::filter(not_password) | std::views::filter(not_blacklisted)) {
+      if (const auto val = configuration_->get(option)) {
+        variable_registry_[option] = *val;
       }
     }
   }
 
-  std::map<std::string, std::string> variable_registry_;
+  std::map<std::string, std::string, std::less<>> variable_registry_;
 
-  std::shared_ptr<minifi::Configure> configuration_;
+  std::shared_ptr<Configure> configuration_;
 };
 
 }  // namespace org::apache::nifi::minifi::core
