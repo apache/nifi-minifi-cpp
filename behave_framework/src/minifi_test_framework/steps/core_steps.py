@@ -18,6 +18,7 @@
 import logging
 import random
 import string
+import os
 
 import humanfriendly
 from behave import when, step
@@ -53,4 +54,4 @@ def step_impl(context: MinifiTestContext, directory: str, size: str):
 @step('a file with filename "{file_name}" and content "{content}" is present in "{path}"')
 def step_impl(context: MinifiTestContext, file_name: str, content: str, path: str):
     new_content = content.replace("\\n", "\n")
-    context.minifi_container.files.append(File(path, file_name, new_content))
+    context.minifi_container.files.append(File(os.path.join(path, file_name), new_content))

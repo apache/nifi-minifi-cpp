@@ -37,15 +37,15 @@ class MinifiContainer(Container):
 
     def deploy(self) -> bool:
         if self.is_fhs:
-            self.files.append(File("/etc/nifi-minifi-cpp", "config.yml", self.flow_definition.to_yaml()))
-            self.files.append(File("/etc/nifi-minifi-cpp", "minifi.properties", self._get_properties_file_content()))
+            self.files.append(File("/etc/nifi-minifi-cpp/config.yml", self.flow_definition.to_yaml()))
+            self.files.append(File("/etc/nifi-minifi-cpp/minifi.properties", self._get_properties_file_content()))
             self.files.append(
-                File("/etc/nifi-minifi-cpp", "minifi-log.properties", self._get_log_properties_file_content()))
+                File("/etc/nifi-minifi-cpp/minifi-log.properties", self._get_log_properties_file_content()))
         else:
-            self.files.append(File("/opt/minifi/minifi-current/conf", "config.yml", self.flow_definition.to_yaml()))
+            self.files.append(File("/opt/minifi/minifi-current/conf/config.yml", self.flow_definition.to_yaml()))
             self.files.append(
-                File("/opt/minifi/minifi-current/conf", "minifi.properties", self._get_properties_file_content()))
-            self.files.append(File("/opt/minifi/minifi-current/conf", "minifi-log.properties",
+                File("/opt/minifi/minifi-current/conf/minifi.properties", self._get_properties_file_content()))
+            self.files.append(File("/opt/minifi/minifi-current/conf/minifi-log.properties",
                                    self._get_log_properties_file_content()))
 
         return super().deploy()

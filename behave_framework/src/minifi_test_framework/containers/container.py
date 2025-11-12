@@ -49,10 +49,11 @@ class Container:
         self._temp_dir = tempfile.TemporaryDirectory()
 
         for file in self.files:
-            temp_path = os.path.join(self._temp_dir.name, file.host_filename)
+            file_name = os.path.basename(file.path)
+            temp_path = os.path.join(self._temp_dir.name, file_name)
             with open(temp_path, "w") as temp_file:
                 temp_file.write(file.content)
-            self.volumes[temp_path] = {"bind": os.path.join(file.path, file.host_filename), "mode": file.mode}
+            self.volumes[temp_path] = {"bind": file.path, "mode": file.mode}
         for directory in self.dirs:
             temp_path = self._temp_dir.name + directory.path
             os.makedirs(temp_path, exist_ok=True)
