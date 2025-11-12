@@ -34,6 +34,7 @@
 #include "expression-language/Expression.h"
 #include "minifi-cpp/core/FlowFile.h"
 #include "minifi-cpp/utils/gsl.h"
+#include "core/VariableRegistry.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "catch2/catch_approx.hpp"
@@ -1653,4 +1654,29 @@ TEST_CASE("resolve_user_id_test", "[resolve_user_id tests]") {
   flow_file_a->addAttribute("attribute_sid", "");
   REQUIRE(expr(expression::Parameters{flow_file_a.get()}).asString().empty());
 }
+}
+
+TEST_CASE("variable registry test") {
+  const std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
+  configuration->set("foo", "foo_val");
+  configuration->set("minifi.variable.registry.blacklist", "foo");
+  configuration->set("bar", "bar_val");
+  configuration->set("baz", "baz_val");
+  const auto variable_registry = minifi::core::VariableRegistryImpl(configuration);
+  const auto flow_file = std::make_shared<core::FlowFileImpl>();
+  flow_file->setAttribute("baz", "ff_baz");
+
+  {
+    const auto foo_expr = expression::compile("${foo}");
+    CHECK(foo_expr(expression::Parameters{&variable_registry, flow_file.get()}).asString().empty());
+  }
+
+  {
+    const auto bar_expr = expression::compile("${bar}");
+    CHECK(bar_expr(expression::Parameters{&variable_registry, flow_file.get()}).asString() == "bar_val");
+  }
+  {
+    const auto baz_expr = expression::compile("${baz}");
+    CHECK(baz_expr(expression::Parameters{&variable_registry, flow_file.get()}).asString() == "ff_baz");
+  }
 }
