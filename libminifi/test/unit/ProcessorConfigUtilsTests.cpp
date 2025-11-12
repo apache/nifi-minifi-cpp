@@ -17,9 +17,9 @@
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/controller/ControllerServiceProvider.h"
-#include "minifi-cpp/core/controller/ControllerServiceNode.h"
+#include "core/controller/ControllerServiceNode.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -28,6 +28,7 @@
 #include "utils/Id.h"
 #include "unit/TestUtils.h"
 #include "core/ProcessContextImpl.h"
+#include "unit/ControllerServiceUtils.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace {
@@ -91,26 +92,24 @@ TEST_CASE("Parse enum property") {
 }
 
 namespace {
-class TestControllerService : public controller::ControllerServiceImpl {
+class TestControllerService : public controller::ControllerServiceBase {
  public:
-  using ControllerServiceImpl::ControllerServiceImpl;
-  bool supportsDynamicProperties() const override { return false;  }
-  void yield() override {}
-  bool isRunning() const override { return false; }
-  bool isWorkAvailable() override { return false; }
+  using ControllerServiceBase::ControllerServiceBase;
 };
 
-const auto test_controller_service = []() {
-  auto service = std::make_shared<TestControllerService>("test-controller-service", utils::IdGenerator::getIdGenerator()->generate());
+const std::shared_ptr test_controller_service = []() {
+  auto service = minifi::test::utils::make_controller_service<TestControllerService>("test-controller-service", utils::IdGenerator::getIdGenerator()->generate());
   service->initialize();
+  service->onEnable();
+  service->setState(minifi::core::controller::ControllerServiceState::ENABLED);
   return service;
 }();
 
 class WrongTestControllerService : public TestControllerService {};
 
-class TestControllerServiceProvider : public controller::ControllerServiceProviderImpl {
+class TestControllerServiceProvider : public controller::ControllerServiceProvider {
  public:
-  using ControllerServiceProviderImpl::ControllerServiceProviderImpl;
+  using ControllerServiceProvider::ControllerServiceProvider;
   std::shared_ptr<controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&) override { return nullptr; }
   void clearControllerServices() override {}
   void enableAllControllerServices() override {}
@@ -141,7 +140,7 @@ TEST_CASE("Parse controller service property") {
     SECTION("... is valid") {
       REQUIRE(processor->setProperty(property.name, "TestControllerService"));
       const auto value = utils::parseControllerService<TestControllerService>(context, property, processor->getUUID());
-      CHECK(value == test_controller_service);
+      CHECK(value.get() == test_controller_service->getImplementation<TestControllerService>());
     }
     SECTION("... is missing") {
       CHECK_THROWS(utils::parseControllerService<TestControllerService>(context, property, processor->getUUID()));
@@ -164,7 +163,7 @@ TEST_CASE("Parse controller service property") {
     SECTION("... is valid") {
       REQUIRE(processor->setProperty(property.name, "TestControllerService"));
       const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());;
-      CHECK(value == test_controller_service);
+      CHECK(value.get() == test_controller_service->getImplementation<TestControllerService>());
     }
     SECTION("... is missing") {
       const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());;

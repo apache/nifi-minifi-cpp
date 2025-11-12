@@ -38,7 +38,6 @@
 #include "utils/file/FileSystem.h"
 #include "utils/file/FileUtils.h"
 #include "http/BaseHTTPClient.h"
-#include "io/NetworkPrioritizer.h"
 #include "io/FileStream.h"
 #include "core/ClassLoader.h"
 #include "minifi-cpp/core/ThreadedRepository.h"
@@ -257,9 +256,6 @@ void FlowController::load(bool reload) {
   if (running_) {
     stop();
   }
-  if (reload) {
-    io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
-  }
 
   {
     std::scoped_lock<UpdateState> update_lock(updating_);
@@ -280,7 +276,12 @@ void FlowController::load(bool reload) {
   if (!thread_pool_.isRunning() || reload) {
     thread_pool_.shutdown();
     thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 5));
-    thread_pool_.setControllerServiceProvider(this);
+    thread_pool_.setControllerServiceProvider([this] (std::string_view name) -> std::shared_ptr<core::controller::ControllerServiceInterface> {
+      if (auto service = this->getControllerService(std::string{name})) {
+        return {service, service->getImplementation()};
+      }
+      return {};
+    });
     thread_pool_.start();
   }
 

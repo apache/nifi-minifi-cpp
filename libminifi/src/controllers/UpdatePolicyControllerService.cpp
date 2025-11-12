@@ -39,17 +39,6 @@ void UpdatePolicyControllerService::initialize() {
   setSupportedProperties(Properties);
 }
 
-void UpdatePolicyControllerService::yield() {
-}
-
-bool UpdatePolicyControllerService::isRunning() const {
-  return getState() == core::controller::ControllerServiceState::ENABLED;
-}
-
-bool UpdatePolicyControllerService::isWorkAvailable() {
-  return false;
-}
-
 void UpdatePolicyControllerService::onEnable() {
   const bool enable_all = (getProperty(AllowAllProperties.name) | utils::andThen(parsing::parseBool)).value_or(false);
   persist_updates_ = (getProperty(PersistUpdates.name) | utils::andThen(parsing::parseBool)).value_or(false);
