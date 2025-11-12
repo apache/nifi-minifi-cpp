@@ -38,7 +38,6 @@
 #include "Monitors.h"
 #include "core/expect.h"
 #include "minifi-cpp/controllers/ThreadManagementService.h"
-#include "minifi-cpp/core/controller/ControllerServiceLookup.h"
 #include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::utils {
@@ -137,8 +136,10 @@ class WorkerThread {
  */
 class ThreadPool {
  public:
+  using ControllerServiceProvider = std::function<std::shared_ptr<core::controller::ControllerServiceInterface>(std::string_view)>;
+
   ThreadPool(int max_worker_threads = 2,
-             core::controller::ControllerServiceLookup* controller_service_provider = nullptr, std::string name = "NamelessPool");
+             ControllerServiceProvider controller_service_provider = nullptr, std::string name = "NamelessPool");
 
   ThreadPool(const ThreadPool &other) = delete;
   ThreadPool& operator=(const ThreadPool &other) = delete;
@@ -231,7 +232,7 @@ class ThreadPool {
       start();
   }
 
-  void setControllerServiceProvider(core::controller::ControllerServiceLookup* controller_service_provider) {
+  void setControllerServiceProvider(ControllerServiceProvider controller_service_provider) {
     std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
     bool was_running = running_;
     if (was_running) {
@@ -272,7 +273,7 @@ class ThreadPool {
   std::thread manager_thread_;
   std::thread delayed_scheduler_thread_;
   std::atomic<bool> running_;
-  core::controller::ControllerServiceLookup* controller_service_provider_;
+  ControllerServiceProvider controller_service_provider_;
   std::shared_ptr<controllers::ThreadManagementService> thread_manager_;
   ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
   ConditionConcurrentQueue<Worker> worker_queue_;

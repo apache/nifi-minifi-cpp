@@ -44,7 +44,7 @@ TEST_CASE("ListSmb and FetchSmb work together") {
   plan->addConnection(fetch_smb, FetchSmb::Failure, read_from_failure_relationship);
 
   auto smb_connection_node = plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
-  auto mock_smb_connection_controller_service = std::dynamic_pointer_cast<MockSmbConnectionControllerService>(smb_connection_node->getControllerServiceImplementation());
+  auto mock_smb_connection_controller_service = smb_connection_node->getControllerServiceImplementation<MockSmbConnectionControllerService>();
   REQUIRE(mock_smb_connection_controller_service);
 
   plan->setProperty(list_smb, ListSmb::ConnectionControllerService, "smb_connection_controller_service");

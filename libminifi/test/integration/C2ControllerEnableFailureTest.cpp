@@ -23,7 +23,7 @@
 #include "integration/HTTPHandlers.h"
 #include "unit/Catch.h"
 #include "core/Processor.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 
@@ -31,9 +31,9 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-class DummyController : public core::controller::ControllerServiceImpl {
+class DummyController : public core::controller::ControllerServiceBase {
  public:
-  explicit DummyController(std::string_view name, const minifi::utils::Identifier &uuid = {}) : ControllerServiceImpl(name, uuid) {}
+  using ControllerServiceBase::ControllerServiceBase;
 
   static constexpr const char* Description = "Dummy Controller";
 
@@ -43,21 +43,9 @@ class DummyController : public core::controller::ControllerServiceImpl {
 
   static constexpr auto Properties = std::to_array<core::PropertyReference>({DummyControllerProperty});
   static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override {
     setSupportedProperties(Properties);
-  }
-
-  void yield() override {
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 
   void onEnable() override {
@@ -66,9 +54,6 @@ class DummyController : public core::controller::ControllerServiceImpl {
       throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing dummy property");
     }
   }
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DummyController>::getLogger(uuid_);
 };
 
 REGISTER_RESOURCE(DummyController, ControllerService);
