@@ -35,7 +35,6 @@ from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.SplunkChecker import SplunkChecker
 from .checkers.GrafanaLokiChecker import GrafanaLokiChecker
 from .checkers.ModbusChecker import ModbusChecker
-from .checkers.CouchbaseChecker import CouchbaseChecker
 from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage, retry_check
 
 
@@ -55,7 +54,6 @@ class DockerTestCluster:
         self.grafana_loki_checker = GrafanaLokiChecker()
         self.minifi_controller_executor = MinifiControllerExecutor(self.container_communicator)
         self.modbus_checker = ModbusChecker(self.container_communicator)
-        self.couchbase_checker = CouchbaseChecker()
 
     def cleanup(self):
         self.container_store.cleanup()
@@ -444,6 +442,3 @@ class DockerTestCluster:
 
     def enable_ssl_in_nifi(self):
         self.container_store.enable_ssl_in_nifi()
-
-    def is_data_present_in_couchbase(self, doc_id: str, bucket_name: str, expected_data: str, expected_data_type: str):
-        return self.couchbase_checker.is_data_present_in_couchbase(doc_id, bucket_name, expected_data, expected_data_type)
