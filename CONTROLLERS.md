@@ -249,7 +249,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Provides a set of configurations for different MiNiFi C++ components to use a proxy server.
+Provides a set of configurations for different MiNiFi C++ components to use a proxy server. Currently these properties can only be used for HTTP proxy configuration, not other protocols are supported at this time.
 
 ### Properties
 
