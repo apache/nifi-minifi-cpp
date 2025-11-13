@@ -21,7 +21,6 @@ from .containers.NifiContainer import NiFiOptions
 from .containers.KinesisServerContainer import KinesisServerContainer
 from .containers.S3ServerContainer import S3ServerContainer
 from .containers.AzureStorageServerContainer import AzureStorageServerContainer
-from .containers.FakeGcsServerContainer import FakeGcsServerContainer
 from .containers.HttpProxyContainer import HttpProxyContainer
 from .containers.PostgreSQLServerContainer import PostgreSQLServerContainer
 from .containers.MqttBrokerContainer import MqttBrokerContainer
@@ -144,14 +143,6 @@ class ContainerStore:
                                                                           network=self.network,
                                                                           image_store=self.image_store,
                                                                           command=command))
-        elif engine == 'fake-gcs-server':
-            return self.containers.setdefault(container_name,
-                                              FakeGcsServerContainer(feature_context=feature_context,
-                                                                     name=container_name,
-                                                                     vols=self.vols,
-                                                                     network=self.network,
-                                                                     image_store=self.image_store,
-                                                                     command=command))
         elif engine == 'postgresql-server':
             return self.containers.setdefault(container_name,
                                               PostgreSQLServerContainer(feature_context=feature_context,
