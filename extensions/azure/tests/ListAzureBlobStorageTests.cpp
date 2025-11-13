@@ -349,4 +349,29 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Do not list same files the s
   REQUIRE_FALSE(LogTestController::getInstance().contains("key:azure", 0s, 0ms));
 }
 
+TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files through a proxy", "[ListAzureBlobStorage]") {
+  setDefaultCredentials();
+  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName, CONTAINER_NAME);
+  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX);
+  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::none));
+
+  auto proxy_configuration_service = plan_->addController("ProxyConfigurationService", "ProxyConfigurationService");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "host");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+  plan_->setProperty(list_azure_blob_storage_, "Proxy Configuration Service", "ProxyConfigurationService");
+
+  test_controller_.runSession(plan_, true);
+  auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
+  REQUIRE(passed_params.proxy_configuration);
+  REQUIRE(passed_params.proxy_configuration->proxy_host == "host");
+  REQUIRE(passed_params.proxy_configuration->proxy_port);
+  REQUIRE(*passed_params.proxy_configuration->proxy_port == 1234);
+  REQUIRE(passed_params.proxy_configuration->proxy_user);
+  REQUIRE(*passed_params.proxy_configuration->proxy_user == "username");
+  REQUIRE(passed_params.proxy_configuration->proxy_password);
+  REQUIRE(*passed_params.proxy_configuration->proxy_password == "password");
+}
+
 }  // namespace

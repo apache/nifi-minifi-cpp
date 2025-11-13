@@ -329,4 +329,28 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Fetch full file fails", "[a
   REQUIRE(failed_contents[0] == TEST_DATA);
 }
 
+TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test Azure blob fetch using proxy", "[azureBlobStorageFetch]") {
+  auto proxy_configuration_service = plan_->addController("ProxyConfigurationService", "ProxyConfigurationService");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "host");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+  plan_->setProperty(azure_blob_storage_processor_, "Proxy Configuration Service", "ProxyConfigurationService");
+
+  plan_->setProperty(azure_blob_storage_processor_, "Container Name", "test.container");
+  plan_->setProperty(azure_blob_storage_processor_, "Blob", "test.blob");
+  setDefaultCredentials();
+  test_controller_.runSession(plan_, true);
+  auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
+  REQUIRE(passed_params.proxy_configuration);
+  REQUIRE(passed_params.proxy_configuration->proxy_host == "host");
+  REQUIRE(passed_params.proxy_configuration->proxy_port);
+  REQUIRE(*passed_params.proxy_configuration->proxy_port == 1234);
+  REQUIRE(passed_params.proxy_configuration->proxy_user);
+  REQUIRE(*passed_params.proxy_configuration->proxy_user == "username");
+  REQUIRE(passed_params.proxy_configuration->proxy_password);
+  REQUIRE(*passed_params.proxy_configuration->proxy_password == "password");
+  CHECK(getFailedFlowFileContents().empty());
+}
+
 }  // namespace
