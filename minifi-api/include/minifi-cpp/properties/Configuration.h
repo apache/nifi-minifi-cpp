@@ -194,6 +194,10 @@ class Configuration : public virtual Properties {
 
   static constexpr const char *nifi_openssl_fips_support_enable = "nifi.openssl.fips.support.enable";
 
+  // minifi variable registry options
+  static constexpr const char *minifi_variable_registry_whitelist = "minifi.variable.registry.whitelist";
+  static constexpr const char *minifi_variable_registry_blacklist = "minifi.variable.registry.blacklist";
+
   MINIFIAPI static const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyValidator*>> CONFIGURATION_PROPERTIES;
   MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
 

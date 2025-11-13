@@ -149,7 +149,10 @@ const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyVal
   {Configuration::nifi_python_virtualenv_directory, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
   {Configuration::nifi_python_env_setup_binary, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
   {Configuration::nifi_python_install_packages_automatically, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},
-  {Configuration::nifi_openssl_fips_support_enable, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)}
+  {Configuration::nifi_openssl_fips_support_enable, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},
+  {Configuration::minifi_variable_registry_whitelist, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
+  {Configuration::minifi_variable_registry_blacklist, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)}
+
 };
 
 const std::array<const char*, 2> Configuration::DEFAULT_SENSITIVE_PROPERTIES = {Configuration::nifi_security_client_pass_phrase,

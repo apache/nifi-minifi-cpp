@@ -55,11 +55,11 @@ class VariableRegistryImpl : public virtual VariableRegistry {
  protected:
   void loadVariableRegistry() {
     gsl_Assert(configuration_);
-    auto options = configuration_->get("minifi.variable.registry.whitelist")
+    auto options = configuration_->get(Configuration::minifi_variable_registry_whitelist)
         .transform([](std::string&& list) { return utils::string::split(std::move(list), ","); })
         .value_or(configuration_->getConfiguredKeys());
 
-    const auto black_listed_options = configuration_->get("minifi.variable.registry.blacklist")
+    const auto black_listed_options = configuration_->get(Configuration::minifi_variable_registry_blacklist)
         .transform([](std::string&& list) { return utils::string::split(std::move(list), ","); });
 
     auto not_password = [](const std::string& s) { return !s.contains("password"); };
