@@ -12,20 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from minifi_test_framework.core.hooks import common_before_scenario
+from minifi_test_framework.core.hooks import common_after_scenario
 
 
-from ..core.Processor import Processor
+def before_scenario(context, scenario):
+    common_before_scenario(context, scenario)
 
 
-class PostElasticsearch(Processor):
-    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
-        super(PostElasticsearch, self).__init__(
-            context=context,
-            clazz='PostElasticsearch',
-            properties={
-                'Hosts': f'https://elasticsearch-{context.feature_id}:9200',
-                'Index': 'test',
-                'Identifier': '${filename}'
-            },
-            auto_terminate=['success', 'failure', 'error'],
-            schedule=schedule)
+def after_scenario(context, scenario):
+    common_after_scenario(context, scenario)
