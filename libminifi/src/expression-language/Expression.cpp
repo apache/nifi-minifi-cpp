@@ -92,16 +92,17 @@ Expression make_dynamic(const std::function<Value(const Parameters &params, cons
 
 Expression make_dynamic_attr(const std::string &attribute_id) {
   return make_dynamic([attribute_id](const Parameters &params, const std::vector<Expression>& /*sub_exprs*/) -> Value {
-    std::string result;
-    const auto cur_flow_file = params.flow_file;
-    if (cur_flow_file && cur_flow_file->getAttribute(attribute_id, result)) {
-      return Value(result);
-    } else {
-      auto registry = params.registry_;
-      if (registry && registry->getConfigurationProperty(attribute_id , result)) {
-        return Value(result);
+    if (params.flow_file) {
+      if (auto result = params.flow_file->getAttribute(attribute_id)) {
+        return Value(std::move(*result));
       }
     }
+    if (params.registry_) {
+      if (auto result = params.registry_->getConfigurationProperty(attribute_id)) {
+        return Value(std::move(*result));
+      }
+    }
+
     return {};
   });
 }
