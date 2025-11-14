@@ -53,30 +53,27 @@ void useProcessorClassDescription(Fn&& fn) {
       .supports_expression_language = prop.supports_expression_language
     });
   }
-  std::vector<MinifiRelationship> relationships;
+  std::vector<MinifiRelationshipDefinition> relationships;
   for (auto& rel : Class::Relationships) {
-    relationships.push_back(MinifiRelationship{
+    relationships.push_back(MinifiRelationshipDefinition{
       .name = utils::toStringView(rel.name),
       .description = utils::toStringView(rel.description)
     });
   }
-  std::vector<std::vector<MinifiRelationship>> relationships_cache;
-  std::vector<MinifiOutputAttribute> output_attributes;
+  std::vector<std::vector<MinifiStringView>> attribute_relationships_cache;
+  std::vector<MinifiOutputAttributeDefinition> output_attributes;
   for (auto& attr : Class::OutputAttributes) {
-    std::vector<MinifiRelationship> rel_cache;
+    std::vector<MinifiStringView> rel_cache;
     for (auto& rel : attr.relationships) {
-      rel_cache.push_back(MinifiRelationship{
-        .name = utils::toStringView(rel.name),
-        .description = utils::toStringView(rel.description)
-      });
+      rel_cache.push_back(utils::toStringView(rel.name));
     }
-    output_attributes.push_back(MinifiOutputAttribute {
+    output_attributes.push_back(MinifiOutputAttributeDefinition {
       .name = utils::toStringView(attr.name),
       .relationships_count = gsl::narrow<uint32_t>(attr.relationships.size()),
       .relationships_ptr = rel_cache.data(),
       .description = utils::toStringView(attr.description)
     });
-    relationships_cache.push_back(std::move(rel_cache));
+    attribute_relationships_cache.push_back(std::move(rel_cache));
   }
 
   MinifiProcessorClassDescription description{
@@ -90,10 +87,10 @@ void useProcessorClassDescription(Fn&& fn) {
     .class_relationships_ptr = relationships.data(),
     .output_attributes_count = gsl::narrow<uint32_t>(output_attributes.size()),
     .output_attributes_ptr = output_attributes.data(),
-    .supports_dynamic_properties = Class::SupportsDynamicProperties ? MINIFI_TRUE : MINIFI_FALSE,
-    .supports_dynamic_relationships = Class::SupportsDynamicRelationships ? MINIFI_TRUE : MINIFI_FALSE,
+    .supports_dynamic_properties = Class::SupportsDynamicProperties,
+    .supports_dynamic_relationships = Class::SupportsDynamicRelationships,
     .input_requirement = utils::toInputRequirement(Class::InputRequirement),
-    .is_single_threaded = Class::IsSingleThreaded ? MINIFI_TRUE : MINIFI_FALSE,
+    .is_single_threaded = Class::IsSingleThreaded,
 
     .callbacks = MinifiProcessorCallbacks{
       .create = [] (MinifiProcessorMetadata metadata) -> MINIFI_OWNED void* {
@@ -107,13 +104,13 @@ void useProcessorClassDescription(Fn&& fn) {
         delete static_cast<Class*>(self);
       },
       .isWorkAvailable = [] (void* self) -> MinifiBool {
-        return static_cast<Class*>(self)->isWorkAvailable() ? MINIFI_TRUE : MINIFI_FALSE;
+        return static_cast<Class*>(self)->isWorkAvailable();
       },
       .restore = [] (void* self, MINIFI_OWNED MinifiFlowFile* ff) -> void {
         static_cast<Class*>(self)->restore(std::make_shared<FlowFile>(ff));
       },
       .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
-        return static_cast<Class*>(self)->getTriggerWhenEmpty() ? MINIFI_TRUE : MINIFI_FALSE;
+        return static_cast<Class*>(self)->getTriggerWhenEmpty();
       },
       .onTrigger = [] (void* self, MinifiProcessContext* context, MinifiProcessSession* session) -> MinifiStatus {
         ProcessContext context_wrapper(context);
