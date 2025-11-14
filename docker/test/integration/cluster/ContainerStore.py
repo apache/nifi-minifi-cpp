@@ -25,7 +25,6 @@ from .containers.FakeGcsServerContainer import FakeGcsServerContainer
 from .containers.HttpProxyContainer import HttpProxyContainer
 from .containers.PostgreSQLServerContainer import PostgreSQLServerContainer
 from .containers.MqttBrokerContainer import MqttBrokerContainer
-from .containers.SplunkContainer import SplunkContainer
 from .containers.SyslogUdpClientContainer import SyslogUdpClientContainer
 from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
 from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
@@ -169,14 +168,6 @@ class ContainerStore:
                                                                   network=self.network,
                                                                   image_store=self.image_store,
                                                                   command=command))
-        elif engine == 'splunk':
-            return self.containers.setdefault(container_name,
-                                              SplunkContainer(feature_context=feature_context,
-                                                              name=container_name,
-                                                              vols=self.vols,
-                                                              network=self.network,
-                                                              image_store=self.image_store,
-                                                              command=command))
         elif engine == "syslog-udp-client":
             return self.containers.setdefault(container_name,
                                               SyslogUdpClientContainer(

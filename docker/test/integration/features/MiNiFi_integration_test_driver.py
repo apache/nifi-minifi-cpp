@@ -64,12 +64,6 @@ class MiNiFi_integration_test:
     def acquire_transient_minifi(self, context, name, engine='minifi-cpp'):
         return self.cluster.acquire_transient_minifi(context=context, name=name, engine=engine)
 
-    def start_splunk(self, context):
-        self.cluster.acquire_container(context=context, name='splunk', engine='splunk')
-        self.cluster.deploy_container(name='splunk')
-        assert self.cluster.wait_for_container_startup_to_finish('splunk') or self.cluster.log_app_output()
-        assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token') or self.cluster.log_app_output()
-
     def start_minifi_c2_server(self, context):
         self.cluster.acquire_container(context=context, name="minifi-c2-server", engine="minifi-c2-server")
         self.cluster.deploy_container('minifi-c2-server')
@@ -303,12 +297,6 @@ class MiNiFi_integration_test:
     def check_azure_storage_server_data(self, azure_container_name, object_data):
         assert self.cluster.check_azure_storage_server_data(azure_container_name, object_data) or self.cluster.log_app_output()
 
-    def check_splunk_event(self, splunk_container_name, query):
-        assert self.cluster.check_splunk_event(splunk_container_name, query) or self.cluster.log_app_output()
-
-    def check_splunk_event_with_attributes(self, splunk_container_name, query, attributes):
-        assert self.cluster.check_splunk_event_with_attributes(splunk_container_name, query, attributes) or self.cluster.log_app_output()
-
     def check_google_cloud_storage(self, gcs_container_name, content):
         assert self.cluster.check_google_cloud_storage(gcs_container_name, content) or self.cluster.log_app_output()
 
@@ -383,9 +371,6 @@ class MiNiFi_integration_test:
 
     def enable_prometheus_with_ssl_in_minifi(self):
         self.cluster.enable_prometheus_with_ssl_in_minifi()
-
-    def enable_splunk_hec_ssl(self, container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem):
-        self.cluster.enable_splunk_hec_ssl(container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem)
 
     def enable_sql_in_minifi(self):
         self.cluster.enable_sql_in_minifi()
