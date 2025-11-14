@@ -32,7 +32,7 @@ from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 def step_impl(context: MinifiTestContext):
     for container in context.containers:
         assert container.deploy()
-    assert context.minifi_container.deploy() or context.minifi_container.get_logs()
+    assert context.minifi_container.deploy() or context.minifi_container.log_app_output()
     logging.debug("All instances started up")
 
 
