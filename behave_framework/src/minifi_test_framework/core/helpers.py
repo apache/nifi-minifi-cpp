@@ -48,8 +48,7 @@ def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, ba
                 log_due_to_failure(context)
                 return False
             remaining_time = timeout_seconds - (time.monotonic() - start_time)
-            target_sleep = 1.0 if timeout_seconds < 30 else 10.0
-            sleep_time = min(target_sleep, remaining_time)
+            sleep_time = min(1.0, remaining_time)
             if sleep_time > 0:
                 time.sleep(sleep_time)
     except (Exception,):
