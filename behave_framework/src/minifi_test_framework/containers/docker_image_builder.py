@@ -24,7 +24,7 @@ from docker.models.images import Image
 
 
 class DockerImageBuilder:
-    def __init__(self, image_tag: str, dockerfile_content: str | None = None, build_context_path: str | None = None):
+    def __init__(self, image_tag: str, dockerfile_content: str | None = None, files_on_context: dict[str, bytes] | None = None, build_context_path: str | None = None):
         if not dockerfile_content and not build_context_path:
             raise ValueError("Either 'dockerfile_content' or 'build_context_path' must be provided.")
         if dockerfile_content and build_context_path:
@@ -32,6 +32,7 @@ class DockerImageBuilder:
 
         self.image_tag: str = image_tag
         self.dockerfile_content: str | None = dockerfile_content
+        self.files_on_context: dict[str, str] | None = files_on_context
         self.build_context_path: str | None = build_context_path
         self.client = docker.from_env()
         self.image: Image | None = None
@@ -45,6 +46,12 @@ class DockerImageBuilder:
             dockerfile_path = os.path.join(context_path, 'Dockerfile')
             with open(dockerfile_path, 'w') as f:
                 f.write(self.dockerfile_content)
+
+            if self.files_on_context:
+                for filename, content in self.files_on_context.items():
+                    file_path = os.path.join(context_path, filename)
+                    with open(file_path, 'wb') as f:
+                        f.write(content)
 
         logging.info(f"Building Docker image '{self.image_tag}' from context '{context_path}'...")
         try:
