@@ -1,14 +1,17 @@
 name: "MiNiFi-CPP Verify Package"
 
 on:
-  schedule:
-    - cron: '0 0 * * 0'
   workflow_dispatch:
     inputs:
       enable_fips:
         type: boolean
         description: Enable FIPS mode (some tests override this)
         default: false
+      artifacts_workflow_id:
+        type: string
+        description: The id of the create-release-artifacts workflow to download artifacts from
+        required: true
+
 
 env:
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
@@ -16,75 +19,43 @@ env:
     -DENABLE_ELASTICSEARCH=OFF -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DDOCKER_BUILD_ONLY=ON
 
 jobs:
-  build-packages:
-    if: (github.event_name == 'schedule' && github.repository == 'apache/nifi-minifi-cpp') || (github.event_name != 'schedule')
-    name: "Build package (${{ matrix.platform.arch }})"
-    runs-on: ${{ matrix.platform.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    timeout-minutes: 180
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [
-          { arch: "x86_64", tar-artifact: "minifi-x86_64-tar", rpm-artifact: "minifi-x86_64-rpm" },
-          { arch: "aarch64", tar-artifact: "minifi-aarch64-tar", rpm-artifact: "minifi-aarch64-rpm" }
-        ]
-
-    steps:
-      - id: checkout
-        uses: actions/checkout@v4
-
-      - id: install_deps
-        run: |
-          sudo apt update
-          sudo apt install -y cmake
-
-      - id: build
-        run: |
-          mkdir build && cd build && cmake ${DOCKER_CMAKE_FLAGS} .. && make rocky
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform.tar-artifact }}
-          path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform.rpm-artifact }}
-          path: build/nifi-minifi-cpp-*.rpm
-
   docker-tests:
     name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
     runs-on: ${{ matrix.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 240
-    needs: build-packages
     strategy:
       fail-fast: false
       matrix:
         arch: [x86_64, aarch64]
         platform: [
-          { name: "Rocky Linux 8", id: "rocky8", build_cmd: "make rocky8_from_rocky_package", verify_cmd: "make docker-verify-rocky8" },
           { name: "Rocky Linux 9", id: "rocky9", build_cmd: "make rocky9_from_rocky_package", verify_cmd: "make docker-verify-rocky9" },
-          { name: "Rocky Linux 8 from RPM", id: "rocky8-rpm", build_cmd: "make rocky8_from_rpm_package", verify_cmd: "make docker-verify-rocky8-rpm" },
+          { name: "Rocky Linux 10", id: "rocky10", build_cmd: "make rocky10_from_rocky_package", verify_cmd: "make docker-verify-rocky10" },
           { name: "Rocky Linux 9 from RPM", id: "rocky9-rpm", build_cmd: "make rocky9_from_rpm_package", verify_cmd: "make docker-verify-rocky9-rpm" },
+          { name: "Rocky Linux 10 from RPM", id: "rocky10-rpm", build_cmd: "make rocky10_from_rpm_package", verify_cmd: "make docker-verify-rocky10-rpm" },
           { name: "Ubuntu 22.04", id: "ubuntu_jammy", build_cmd: "make jammy_from_rocky_package", verify_cmd: "make docker-verify-jammy" },
           { name: "Ubuntu 24.04", id: "ubuntu_noble", build_cmd: "make noble_from_rocky_package", verify_cmd: "make docker-verify-noble" },
-          { name: "Debian 11", id: "debian_bullseye", build_cmd: "make bullseye_from_rocky_package", verify_cmd: "make docker-verify-bullseye" },
           { name: "Debian 12", id: "debian_bookworm", build_cmd: "make bookworm_from_rocky_package", verify_cmd: "make docker-verify-bookworm" },
+          { name: "Debian 13", id: "debian_trixie", build_cmd: "make trixie_from_rocky_package", verify_cmd: "make docker-verify-trixie" },
         ]
-
+    permissions:
+      contents: read
     steps:
       - id: checkout
         uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v4
         with:
+          run-id: ${{ inputs.artifacts_workflow_id }}
           name: minifi-${{ matrix.arch }}-tar
           path: build
+          github-token: ${{ github.token }}
 
       - uses: actions/download-artifact@v4
         with:
+          run-id: ${{ inputs.artifacts_workflow_id }}
           name: minifi-${{ matrix.arch }}-rpm
           path: build
+          github-token: ${{ github.token }}
 
       - id: install_deps
         run: |
@@ -116,3 +87,69 @@ jobs:
         with:
           name: ${{ matrix.platform.id }}_${{ matrix.arch }}_behavex_output${{ inputs.enable_fips && '_fips' || '' }}
           path: build/behavex_output
+
+  docker-test-modular:
+    name: "${{ matrix.platform.name }} (${{ matrix.arch }}) Modular"
+    runs-on: ${{ matrix.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+        platform: [
+          { name: "Rocky Linux 9 modular", id: "rocky9", build_cmd: "make rocky9_from_rocky_package", verify_cmd: "make docker-verify-rocky9-modular" },
+          { name: "Rocky Linux 10 modular", id: "rocky10", build_cmd: "make rocky10_from_rocky_package", verify_cmd: "make docker-verify-rocky10-modular" },
+          { name: "Rocky Linux 9 from RPM modular", id: "rocky9-rpm", build_cmd: "make rocky9_from_rpm_package", verify_cmd: "make docker-verify-rocky9-rpm-modular" },
+          { name: "Rocky Linux 10 from RPM modular", id: "rocky10-rpm", build_cmd: "make rocky10_from_rpm_package", verify_cmd: "make docker-verify-rocky10-rpm-modular" },
+          { name: "Ubuntu 22.04 modular", id: "ubuntu_jammy", build_cmd: "make jammy_from_rocky_package", verify_cmd: "make docker-verify-jammy-modular" },
+          { name: "Ubuntu 24.04 modular", id: "ubuntu_noble", build_cmd: "make noble_from_rocky_package", verify_cmd: "make docker-verify-noble-modular" },
+          { name: "Debian 12 modular", id: "debian_bookworm", build_cmd: "make bookworm_from_rocky_package", verify_cmd: "make docker-verify-bookworm-modular" },
+          { name: "Debian 13 modular", id: "debian_trixie", build_cmd: "make trixie_from_rocky_package", verify_cmd: "make docker-verify-trixie-modular" },
+        ]
+    permissions:
+      contents: read
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.artifacts_workflow_id }}
+          name: minifi-${{ matrix.arch }}-tar
+          path: build
+          github-token: ${{ github.token }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.artifacts_workflow_id }}
+          name: minifi-${{ matrix.arch }}-rpm
+          path: build
+          github-token: ${{ github.token }}
+
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+
+      - run: |
+          cd build && cmake ${DOCKER_CMAKE_FLAGS} ..
+          VERIFY_CMD="${{ matrix.platform.verify_cmd }}"
+          ${{ matrix.platform.build_cmd }} && $VERIFY_CMD
+
+      - name: Test Reporter
+        if: always()
+        uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
+        with:
+          name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
+          path: build/behavex_output_modular/behave/*.xml
+          reporter: java-junit
+          output-to: 'step-summary'
+          list-tests: 'failed'
+          list-suites: 'failed'
+
+      - name: Upload artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.id }}_${{ matrix.arch }}_behavex_output_modular${{ inputs.enable_fips && '_fips' || '' }}
+          path: build/behavex_output_modular

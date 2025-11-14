@@ -150,7 +150,7 @@ class ImageStore:
         parse_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}}" {minifi_python_dir}/nifi_python_processors/ParseDocument.py && \\'.format(minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path)
         chunk_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}}" {minifi_python_dir}/nifi_python_processors/ChunkDocument.py && \\'.format(minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path)
         if python_option == PythonWithDependenciesOptions.SYSTEM_INSTALLED_PACKAGES:
-            if not MinifiContainer.MINIFI_TAG_PREFIX or "bookworm" in MinifiContainer.MINIFI_TAG_PREFIX or "noble" in MinifiContainer.MINIFI_TAG_PREFIX:
+            if not MinifiContainer.MINIFI_TAG_PREFIX or "bookworm" in MinifiContainer.MINIFI_TAG_PREFIX or "noble" in MinifiContainer.MINIFI_TAG_PREFIX or "trixie" in MinifiContainer.MINIFI_TAG_PREFIX:
                 additional_cmd = "RUN pip3 install --break-system-packages 'langchain<=0.17.0'"
             else:
                 additional_cmd = "RUN pip3 install 'langchain<=0.17.0'"

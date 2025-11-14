@@ -34,7 +34,7 @@ Feature: Splitting JSON content using SplitJson processor
     And at least one flowfile with the content "Dave" is placed in the monitored directory in less than 0 seconds
     And at least one flowfile with the content "null" is placed in the monitored directory in less than 0 seconds
     And at least one flowfile with the content "{"company": {"departments": [{"name": "Engineering", "employees": ["Alice", "Bob"]}, {"name": "Marketing", "employees": "Dave"}, {"name": "Sales", "employees": null}]}}" is placed in the monitored directory in less than 0 seconds
-    And the Minifi logs contain the following message: "key:fragment.count value:3" in less than 0 seconds
+    And the Minifi logs contain the following message: "key:fragment.count value:3" in less than 3 seconds
     And the Minifi logs contain the following message: "key:fragment.index value:0" in less than 0 seconds
     And the Minifi logs contain the following message: "key:fragment.index value:1" in less than 0 seconds
     And the Minifi logs contain the following message: "key:fragment.index value:2" in less than 0 seconds

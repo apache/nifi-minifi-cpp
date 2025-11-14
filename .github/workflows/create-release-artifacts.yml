@@ -1,0 +1,42 @@
+name: "Create Release Artifacts"
+
+on: [workflow_dispatch]
+env:
+  CMAKE_FLAGS: -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DDOCKER_BUILD_ONLY=ON
+
+jobs:
+  build-linux-artifacts:
+    if: (github.event_name == 'schedule' && github.repository == 'apache/nifi-minifi-cpp') || (github.event_name != 'schedule')
+    name: "Build package (${{ matrix.platform.arch }})"
+    runs-on: ${{ matrix.platform.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [
+          { arch: "x86_64", tar-artifact: "minifi-x86_64-tar", rpm-artifact: "minifi-x86_64-rpm" },
+          { arch: "aarch64", tar-artifact: "minifi-aarch64-tar", rpm-artifact: "minifi-aarch64-rpm" }
+        ]
+
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y cmake
+
+      - id: build
+        run: |
+          mkdir build && cd build && cmake ${CMAKE_FLAGS} .. && make rocky
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.tar-artifact }}
+          path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.rpm-artifact }}
+          path: build/nifi-minifi-cpp-*.rpm

@@ -151,7 +151,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
 
     And the "Max Poll Records" property of the ConsumeKafka processor is set to "<max poll records>"
     And the scheduling period of the ConsumeKafka processor is set to "<scheduling period>"
-    And the scheduling period of the LogAttribute processor is set to "<scheduling period>"
+    And the scheduling period of the LogAttribute processor is set to "1 sec"
     And the "FlowFiles To Log" property of the LogAttribute processor is set to "<max poll records>"
 
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute

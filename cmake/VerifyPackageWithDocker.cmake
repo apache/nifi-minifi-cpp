@@ -34,27 +34,36 @@ function(ADD_PACKAGE_VERIFY TAG_PREFIX)
             docker-verify-${TAG_PREFIX}
             COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} --parallel_processes=${DOCKER_VERIFY_THREADS})
     add_custom_target(
+            docker-verify-${TAG_PREFIX}-modular
+            COMMAND ${CMAKE_SOURCE_DIR}/docker/RunBehaveTests.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} --parallel_processes=${DOCKER_VERIFY_THREADS})
+    add_custom_target(
             docker-verify-${TAG_PREFIX}-fips
             COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} --parallel_processes=${DOCKER_VERIFY_THREADS} --fips)
 endfunction()
 
 
-CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(rockylinux:8 rocky8 "dnf install -y wget python3.12-devel python3.12-pip gcc gcc-c++")
-CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(rockylinux:9 rocky9 "dnf install -y wget python3-devel python3-pip gcc gcc-c++")
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(rockylinux:8 rocky8 "dnf install -y wget python3.12-devel python3.12-pip gcc gcc-c++ findutils")
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(rockylinux:9 rocky9 "dnf install -y wget python3-devel python3-pip gcc gcc-c++ findutils")
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(rockylinux/rockylinux:10 rocky10 "dnf install -y wget python3-devel python3-pip gcc gcc-c++ findutils")
 CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(ubuntu:jammy jammy "apt update \\&\\& apt install -y wget python3-dev python3-venv python3-pip")
 CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(ubuntu:noble noble "apt update \\&\\& apt install -y wget python3-dev python3-venv python3-pip")
 CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(debian:bookworm bookworm "apt update \\&\\& apt install -y wget python3-dev python3-venv python3-pip")
 CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(debian:bullseye bullseye "apt update \\&\\& apt install -y wget python3-dev python3-venv python3-pip")
+CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE(debian:trixie trixie "apt update \\&\\& apt install -y wget python3-dev python3-venv python3-pip")
 CREATE_DOCKER_TARGET_FROM_RPM_PACKAGE(rockylinux:8 rocky8 "dnf install -y wget python3.12-devel python3.12-pip gcc gcc-c++")
 CREATE_DOCKER_TARGET_FROM_RPM_PACKAGE(rockylinux:9 rocky9 "dnf install -y wget python3-devel python3-pip gcc gcc-c++")
+CREATE_DOCKER_TARGET_FROM_RPM_PACKAGE(rockylinux/rockylinux:10 rocky10 "dnf install -y wget python3-devel python3-pip gcc gcc-c++")
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
     ADD_PACKAGE_VERIFY(rocky8)
     ADD_PACKAGE_VERIFY(rocky9)
+    ADD_PACKAGE_VERIFY(rocky10)
     ADD_PACKAGE_VERIFY(jammy)
     ADD_PACKAGE_VERIFY(noble)
     ADD_PACKAGE_VERIFY(bookworm)
     ADD_PACKAGE_VERIFY(bullseye)
+    ADD_PACKAGE_VERIFY(trixie)
     ADD_PACKAGE_VERIFY(rocky8-rpm)
     ADD_PACKAGE_VERIFY(rocky9-rpm)
+    ADD_PACKAGE_VERIFY(rocky10-rpm)
 endif()

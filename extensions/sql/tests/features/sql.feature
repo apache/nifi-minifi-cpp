@@ -18,9 +18,6 @@ Feature: Executing SQL operations from MiNiFi-C++
   As a user of MiNiFi
   I need to have ExecuteSQL, QueryDatabaseTable and PutSQL processors
 
-  Background:
-    Given the content of "/tmp/output" is monitored
-
   Scenario: A MiNiFi instance can insert data to test table with PutSQL processor
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a UpdateAttribute processor with the "sql.args.1.value" property set to "42"
@@ -29,13 +26,14 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the PutSQL
     And an ODBCService is setup up for PutSQL with the name "ODBCService"
+    And PutSQL's success relationship is auto-terminated
+    And PutSQL's failure relationship is auto-terminated
     And a PostgreSQL server is set up
     When all instances start up
     Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 60 seconds on the PostgreSQL server
 
   Scenario: A MiNiFi instance can query to test table with ExecuteSQL processor
-    Given a MiNiFi CPP server with yaml config
-    And a GenerateFlowFile processor with the "File Size" property set to "0B"
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a UpdateAttribute processor with the "sql.args.1.value" property set to "apple"
     And the "sql.args.2.value" property of the UpdateAttribute processor is set to "banana"
     And a ExecuteSQL processor with the "SQL select query" property set to "SELECT * FROM test_table WHERE text_col = ? OR text_col = ? ORDER BY int_col DESC"
@@ -47,7 +45,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for ExecuteSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then at least one flowfile with the content '[{"int_col":2,"text_col":"banana"},{"int_col":1,"text_col":"apple"}]' is placed in the monitored directory in less than 60 seconds
+    Then at least one file with the content "[{"int_col":2,"text_col":"banana"},{"int_col":1,"text_col":"apple"}]" is placed in the "/tmp/output" directory in less than 10 seconds
 
   Scenario: A MiNiFi instance can query to test table containing mixed case column names with ExecuteSQL processor
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
@@ -63,7 +61,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for ExecuteSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then at least one flowfile with the content '[{"int_col":6,"tExT_Col":"BaNaNa"},{"int_col":5,"tExT_Col":"ApPlE"}]' is placed in the monitored directory in less than 60 seconds
+    Then at least one file with the content "[{"int_col":6,"tExT_Col":"BaNaNa"},{"int_col":5,"tExT_Col":"ApPlE"}]" is placed in the "/tmp/output" directory in less than 10 seconds
 
   Scenario: A MiNiFi instance can query to test table with QueryDatabaseTable processor
     Given a QueryDatabaseTable processor with the "Table Name" property set to "test_table"
@@ -75,7 +73,8 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then at least one flowfile with the content '[{"text_col":"apple"}]' is placed in the monitored directory in less than 60 seconds
+    Then at least one file with the content "[{"text_col":"apple"}]" is placed in the "/tmp/output" directory in less than 10 seconds
+
 
   Scenario: A MiNiFi instance can query to test table containing mixed case column names with QueryDatabaseTable processor
     Given a QueryDatabaseTable processor with the "Table Name" property set to "test_table2"
@@ -87,4 +86,4 @@ Feature: Executing SQL operations from MiNiFi-C++
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
-    Then at least one flowfile with the content '[{"tExT_Col":"ApPlE"}]' is placed in the monitored directory in less than 60 seconds
+    Then at least one file with the content "[{"tExT_Col":"ApPlE"}]" is placed in the "/tmp/output" directory in less than 10 seconds
