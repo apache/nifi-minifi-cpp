@@ -1,0 +1,10 @@
+server {
+  listen 3030;
+  server_name default_server;
+
+  location / {
+    proxy_pass http://${FORWARD_HOST}:${FORWARD_PORT};
+    auth_basic "Administrator’s Area";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+  }
+}
