@@ -21,7 +21,7 @@
 #include <string_view>
 #include <memory>
 
-#include "Logger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/Core.h"
 
 namespace org::apache::nifi::minifi::core::logging {

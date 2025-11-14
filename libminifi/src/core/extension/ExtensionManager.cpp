@@ -57,11 +57,14 @@ ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): lo
     if (!library) {
       continue;
     }
-    if (!library->verify(logger_)) {
+    const auto library_type = library->verify(logger_);
+    if (library_type == internal::Invalid) {
       logger_->log_warn("Skipping library '{}' at '{}': failed verification, different build?",
           library->name, library->getFullPath());
       continue;
     }
+
+    logger_->log_trace("Verified library {} at {} as {} extension", library->name, library->getFullPath(), magic_enum::enum_name(library_type));
     auto extension = std::make_unique<Extension>(library->name, library->getFullPath());
     if (!extension->load()) {
       // error already logged by method

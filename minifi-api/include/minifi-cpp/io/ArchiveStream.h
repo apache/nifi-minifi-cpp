@@ -21,8 +21,8 @@
 #include <memory>
 #include <string>
 
-#include "OutputStream.h"
-#include "InputStream.h"
+#include "io/OutputStream.h"
+#include "io/InputStream.h"
 #include "core/Core.h"
 #include "minifi-cpp/core/logging/Logger.h"
 

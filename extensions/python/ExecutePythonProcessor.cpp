@@ -38,9 +38,8 @@ namespace org::apache::nifi::minifi::extensions::python::processors {
 
 void ExecutePythonProcessor::initialize() {
   initializeScript();
-  std::vector<core::PropertyReference> all_properties;
-  ranges::transform(python_properties_, std::back_inserter(all_properties), &core::Property::getReference);
-  setSupportedProperties(all_properties);
+  // only include supported properties that are defined in the python processor
+  setSupportedProperties(gsl::make_span(python_properties_));
   setSupportedRelationships(Relationships);
   logger_->log_debug("Processor has been initialized.");
 }
@@ -68,10 +67,10 @@ std::vector<core::Relationship> ExecutePythonProcessor::getPythonRelationships()
   return relationships;
 }
 
-void ExecutePythonProcessor::setLoggerCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string& message)>& callback) {
+void ExecutePythonProcessor::forEachLogger(const std::function<void(std::shared_ptr<core::logging::Logger>)>& callback) {
   gsl_Expects(logger_ && python_logger_);
-  logger_->setLogCallback(callback);
-  python_logger_->setLogCallback(callback);
+  callback(logger_);
+  callback(python_logger_);
 }
 
 void ExecutePythonProcessor::initializeScript() {

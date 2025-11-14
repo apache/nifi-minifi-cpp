@@ -30,6 +30,7 @@
 #include "minifi-cpp/Connection.h"
 #include "core/Connectable.h"
 #include "core/logging/LoggerFactory.h"
+#include "core/logging/LoggerBase.h"
 #include "minifi-cpp/core/ProcessorConfig.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
@@ -376,6 +377,10 @@ class ProcessorDescriptorImpl : public ProcessorDescriptor {
     impl_->setSupportedProperties(properties);
   }
 
+  void setSupportedProperties(std::span<const Property> properties) override {
+    impl_->setSupportedProperties(properties);
+  }
+
  private:
   Processor* impl_;
 };
@@ -497,7 +502,9 @@ void Processor::setLogBulletinLevel(logging::LOG_LEVEL level) {
 }
 
 void Processor::setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) {
-  impl_->setLoggerCallback(callback);
+  impl_->forEachLogger([&] (const std::shared_ptr<logging::Logger>& logger) {
+    std::dynamic_pointer_cast<logging::LoggerBase>(logger)->setLogCallback(callback);
+  });
 }
 
 std::chrono::steady_clock::time_point Processor::getYieldExpirationTime() const {

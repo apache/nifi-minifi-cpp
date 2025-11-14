@@ -16,87 +16,78 @@
  */
 
 #include "RunLlamaCppInference.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
-#include "core/Resource.h"
-#include "minifi-cpp/Exception.h"
+#include "api/core/ProcessContext.h"
+#include "api/core/ProcessSession.h"
+#include "api/core/Resource.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 #include "LlamaContext.h"
-#include "utils/ProcessorConfigUtils.h"
+#include "api/utils/ProcessorConfigUtils.h"
 #include "DefaultLlamaContext.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
-void RunLlamaCppInference::initialize() {
-  setSupportedProperties(Properties);
-  setSupportedRelationships(Relationships);
-}
-
-void RunLlamaCppInference::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+MinifiStatus RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& context) {
   model_path_.clear();
-  model_path_ = utils::parseProperty(context, ModelPath);
+  model_path_ = api::utils::parseProperty(context, ModelPath);
   system_prompt_ = context.getProperty(SystemPrompt).value_or("");
 
   LlamaSamplerParams llama_sampler_params;
-  llama_sampler_params.temperature = utils::parseOptionalFloatProperty(context, Temperature);
-  if (auto top_k = utils::parseOptionalI64Property(context, TopK)) {
+  llama_sampler_params.temperature = api::utils::parseOptionalFloatProperty(context, Temperature);
+  if (auto top_k = api::utils::parseOptionalI64Property(context, TopK)) {
     llama_sampler_params.top_k = gsl::narrow<int32_t>(*top_k);
   }
-  llama_sampler_params.top_p = utils::parseOptionalFloatProperty(context, TopP);
-  llama_sampler_params.min_p = utils::parseOptionalFloatProperty(context, MinP);
-  llama_sampler_params.min_keep = utils::parseU64Property(context, MinKeep);
+  llama_sampler_params.top_p = api::utils::parseOptionalFloatProperty(context, TopP);
+  llama_sampler_params.min_p = api::utils::parseOptionalFloatProperty(context, MinP);
+  llama_sampler_params.min_keep = api::utils::parseU64Property(context, MinKeep);
 
   LlamaContextParams llama_ctx_params;
-  llama_ctx_params.n_ctx = gsl::narrow<uint32_t>(utils::parseU64Property(context, TextContextSize));
-  llama_ctx_params.n_batch = gsl::narrow<uint32_t>(utils::parseU64Property(context, LogicalMaximumBatchSize));
-  llama_ctx_params.n_ubatch = gsl::narrow<uint32_t>(utils::parseU64Property(context, PhysicalMaximumBatchSize));
-  llama_ctx_params.n_seq_max = gsl::narrow<uint32_t>(utils::parseU64Property(context, MaxNumberOfSequences));
-  llama_ctx_params.n_threads = gsl::narrow<int32_t>(utils::parseI64Property(context, ThreadsForGeneration));
-  llama_ctx_params.n_threads_batch = gsl::narrow<int32_t>(utils::parseI64Property(context, ThreadsForBatchProcessing));
+  llama_ctx_params.n_ctx = gsl::narrow<uint32_t>(api::utils::parseU64Property(context, TextContextSize));
+  llama_ctx_params.n_batch = gsl::narrow<uint32_t>(api::utils::parseU64Property(context, LogicalMaximumBatchSize));
+  llama_ctx_params.n_ubatch = gsl::narrow<uint32_t>(api::utils::parseU64Property(context, PhysicalMaximumBatchSize));
+  llama_ctx_params.n_seq_max = gsl::narrow<uint32_t>(api::utils::parseU64Property(context, MaxNumberOfSequences));
+  llama_ctx_params.n_threads = gsl::narrow<int32_t>(api::utils::parseI64Property(context, ThreadsForGeneration));
+  llama_ctx_params.n_threads_batch = gsl::narrow<int32_t>(api::utils::parseI64Property(context, ThreadsForBatchProcessing));
 
   if (llama_context_provider_) {
     llama_ctx_ = llama_context_provider_(model_path_, llama_sampler_params, llama_ctx_params);
   } else {
     llama_ctx_ = std::make_unique<DefaultLlamaContext>(model_path_, llama_sampler_params, llama_ctx_params);
   }
+
+  return MINIFI_STATUS_SUCCESS;
 }
 
 void RunLlamaCppInference::increaseTokensIn(uint64_t token_count) {
-  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_extension_.get());
-  gsl_Assert(llamacpp_metrics);
-  llamacpp_metrics->tokens_in += token_count;
+  metrics_.tokens_in += token_count;
 }
 
 void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
-  auto* const llamacpp_metrics = dynamic_cast<RunLlamaCppInferenceMetrics*>(metrics_extension_.get());
-  gsl_Assert(llamacpp_metrics);
-  llamacpp_metrics->tokens_out += token_count;
+  metrics_.tokens_out += token_count;
 }
 
-void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   auto flow_file = session.get();
   if (!flow_file) {
-    context.yield();
-    return;
+    return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
-  auto prompt = context.getProperty(Prompt, flow_file.get()).value_or("");
+  auto prompt = context.getProperty(Prompt, &flow_file).value_or("");
 
   auto read_result = session.readBuffer(flow_file);
   std::string input_data_and_prompt;
-  if (!read_result.buffer.empty()) {
+  if (!read_result.empty()) {
     input_data_and_prompt.append("Input data (or flow file content):\n");
-    input_data_and_prompt.append({reinterpret_cast<const char*>(read_result.buffer.data()), read_result.buffer.size()});
+    input_data_and_prompt.append({reinterpret_cast<const char*>(read_result.data()), read_result.size()});
     input_data_and_prompt.append("\n\n");
   }
   input_data_and_prompt.append(prompt);
 
   if (input_data_and_prompt.empty()) {
     logger_->log_error("Input data and prompt are empty");
-    session.transfer(flow_file, Failure);
-    return;
+    session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
   }
 
   auto input = [&] {
@@ -111,8 +102,8 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
 
   if (!input) {
     logger_->log_error("Inference failed with while applying template");
-    session.transfer(flow_file, Failure);
-    return;
+    session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
   }
 
   logger_->log_debug("AI model input: {}", *input);
@@ -128,8 +119,8 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
 
   if (!generation_result) {
     logger_->log_error("Inference failed with generation error: '{}'", generation_result.error());
-    session.transfer(flow_file, Failure);
-    return;
+    session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
   }
 
   increaseTokensIn(generation_result->num_tokens_in);
@@ -139,17 +130,17 @@ void RunLlamaCppInference::onTrigger(core::ProcessContext& context, core::Proces
   logger_->log_debug("AI model inference time: {} ms", elapsed_time);
   logger_->log_debug("AI model output: {}", text);
 
-  flow_file->setAttribute(LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
-  flow_file->setAttribute(LlamaCppTokensPerSecond.name, fmt::format("{:.2f}", generation_result->tokens_per_second));
+  session.setAttribute(flow_file, LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
+  session.setAttribute(flow_file, LlamaCppTokensPerSecond.name, fmt::format("{:.2f}", generation_result->tokens_per_second));
 
   session.writeBuffer(flow_file, text);
-  session.transfer(flow_file, Success);
+  session.transfer(std::move(flow_file), Success);
+
+  return MINIFI_STATUS_SUCCESS;
 }
 
-void RunLlamaCppInference::notifyStop() {
+void RunLlamaCppInference::onUnSchedule() {
   llama_ctx_.reset();
 }
-
-REGISTER_RESOURCE(RunLlamaCppInference, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::processors

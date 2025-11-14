@@ -120,17 +120,21 @@ class LoggerBase : public Logger {
     max_log_size_ = size;
   }
 
+  virtual std::optional<std::string> get_id() = 0;
   bool should_log(LOG_LEVEL level) override;
   void log_string(LOG_LEVEL level, std::string str) override;
   LOG_LEVEL level() const override;
-  void setLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback) override;
+  void setLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback);
+
+ private:
+  std::string trimToMaxSizeAndAddId(std::string my_string);
 
  protected:
   LoggerBase(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller);
 
   LoggerBase(std::shared_ptr<spdlog::logger> delegate); // NOLINT
 
-  int getMaxLogSize() override {
+  int getMaxLogSize() {
     return max_log_size_.load();
   }
 

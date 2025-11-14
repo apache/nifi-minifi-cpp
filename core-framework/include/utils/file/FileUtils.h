@@ -433,6 +433,7 @@ inline std::string get_content(const std::filesystem::path& file_name) {
 
 bool contains(const std::filesystem::path& file_path, std::string_view text_to_search);
 
+std::optional<std::string> find(const std::filesystem::path& file_path, std::string_view prefix, size_t max_length);
 
 inline std::optional<std::string> get_file_owner(const std::filesystem::path& file_path) {
 #ifndef WIN32

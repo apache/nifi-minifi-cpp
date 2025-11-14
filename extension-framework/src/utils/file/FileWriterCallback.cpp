@@ -16,7 +16,10 @@
  */
 
 #include "utils/file/FileWriterCallback.h"
+
 #include <fstream>
+
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::utils {
 
