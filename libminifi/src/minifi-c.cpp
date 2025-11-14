@@ -163,16 +163,16 @@ void useCProcessorClassDescription(const MinifiProcessorClassDescription& class_
   }
   std::vector<std::vector<minifi::core::RelationshipDefinition>> output_attribute_relationships;
   std::vector<minifi::core::OutputAttributeReference> output_attributes;
-  for (size_t i = 0; i < class_description.output_attributes_count; ++i) {
+  for (size_t attribute_idx = 0; attribute_idx < class_description.output_attributes_count; ++attribute_idx) {
     minifi::core::OutputAttributeReference ref{minifi::core::OutputAttributeDefinition{"", {}, ""}};
-    ref.name = toStringView(class_description.output_attributes_ptr[i].name);
-    ref.description = toStringView(class_description.output_attributes_ptr[i].description);
+    ref.name = toStringView(class_description.output_attributes_ptr[attribute_idx].name);
+    ref.description = toStringView(class_description.output_attributes_ptr[attribute_idx].description);
     output_attribute_relationships.push_back({});
-    for (size_t j = 0; j < class_description.output_attributes_ptr[i].relationships_count; ++j) {
-      output_attribute_relationships.back().push_back(minifi::core::RelationshipDefinition{
-        .name = toStringView(class_description.output_attributes_ptr[i].relationships_ptr[j].name),
-        .description = toStringView(class_description.output_attributes_ptr[i].relationships_ptr[j].description)
-      });
+    for (size_t rel_idx = 0; rel_idx < class_description.output_attributes_ptr[attribute_idx].relationships_count; ++rel_idx) {
+      auto output_attribute_rel_name = toStringView(class_description.output_attributes_ptr[attribute_idx].relationships_ptr[rel_idx]);
+      auto rel_it = std::find(relationships.begin(), relationships.end(), minifi::core::Relationship{std::string{output_attribute_rel_name}, ""});
+      gsl_Assert(rel_it != relationships.end());
+      output_attribute_relationships.back().push_back(rel_it->getDefinition());
     }
     ref.relationships = std::span(output_attribute_relationships.back());
     output_attributes.push_back(ref);
@@ -350,9 +350,9 @@ MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession* se
   return MINIFI_NULL;
 }
 
-void MinifiProcessSessionTransfer(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile, MinifiStringView rel) {
+void MinifiProcessSessionTransfer(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile, MinifiStringView relationship_name) {
   gsl_Assert(flowfile !=  MINIFI_NULL);
-  reinterpret_cast<minifi::core::ProcessSession*>(session)->transfer(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile), minifi::core::Relationship{toString(rel), ""});
+  reinterpret_cast<minifi::core::ProcessSession*>(session)->transfer(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile), minifi::core::Relationship{toString(relationship_name), ""});
 }
 
 void MinifiProcessSessionRemove(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile) {
@@ -431,10 +431,10 @@ MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowF
   gsl_Assert(flowfile != MINIFI_NULL);
   auto value = (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile))->getAttribute(toString(attribute_name));
   if (!value.has_value()) {
-    return MINIFI_FALSE;
+    return false;
   }
   cb(user_ctx, MinifiStringView{.data = value->data(), .length = value->size()});
-  return MINIFI_TRUE;
+  return true;
 }
 
 void MinifiFlowFileGetAttributes(MinifiProcessSession* session, MinifiFlowFile* flowfile, void(*cb)(void* user_ctx, MinifiStringView attribute_name, MinifiStringView attribute_value), void* user_ctx) {

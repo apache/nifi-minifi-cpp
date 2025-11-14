@@ -24,22 +24,22 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
+#if __STDC_VERSION__ < 202311l
+#  include <stdbool.h>
+#endif  // < C23
 
-#define STRINGIFY_HELPER(X) #X
-#define STRINGIFY(X) STRINGIFY_HELPER(X)
+#define MINIFI_PRIVATE_STRINGIFY_HELPER(X) #X
+#define MINIFI_PRIVATE_STRINGIFY(X) MINIFI_PRIVATE_STRINGIFY_HELPER(X)
 
 #define MINIFI_API_MAJOR_VERSION 0
 #define MINIFI_API_MINOR_VERSION 1
 #define MINIFI_API_PATCH_VERSION 0
-#define MINIFI_API_VERSION STRINGIFY(MINIFI_API_MAJOR_VERSION) "." STRINGIFY(MINIFI_API_MINOR_VERSION) "." STRINGIFY(MINIFI_API_PATCH_VERSION)
+#define MINIFI_API_VERSION MINIFI_PRIVATE_STRINGIFY(MINIFI_API_MAJOR_VERSION) "." MINIFI_PRIVATE_STRINGIFY(MINIFI_API_MINOR_VERSION) "." MINIFI_PRIVATE_STRINGIFY(MINIFI_API_PATCH_VERSION)
 #define MINIFI_API_VERSION_TAG "MINIFI_API_VERSION=[" MINIFI_API_VERSION "]"
 #define MINIFI_NULL nullptr
 #define MINIFI_OWNED
 
 typedef bool MinifiBool;
-#define MINIFI_TRUE true
-#define MINIFI_FALSE false
 
 typedef enum MinifiInputRequirement {
   MINIFI_INPUT_REQUIRED = 0,
@@ -47,22 +47,29 @@ typedef enum MinifiInputRequirement {
   MINIFI_INPUT_FORBIDDEN = 2
 } MinifiInputRequirement;
 
+/// Represents a non-owning read-only view to a sized, not necessarily null-terminated string.
+/// invariant: [data, data + length) is a valid range
 typedef struct MinifiStringView {
+  /// nullable, non-owning pointer to the beginning of a continuous character sequence
   const char* data;
+  /// the length of the buffer pointed-to by data
   size_t length;
 } MinifiStringView;
 
-typedef struct MinifiRelationship {
+/// Represents an output relationship of a processor, part of the processor metadata
+typedef struct MinifiRelationshipDefinition {
+  /// Name, processors use this to transfer flow files to the connections connected to this relationship using MinifiProcessSessionTransfer.
   MinifiStringView name;
+  /// Human-readable description of what flow files get routed to this relationship. Included in C2 manifest and generated processor docs.
   MinifiStringView description;
-} MinifiRelationship;
+} MinifiRelationshipDefinition;
 
-typedef struct MinifiOutputAttribute {
+typedef struct MinifiOutputAttributeDefinition {
   MinifiStringView name;
   size_t relationships_count;
-  const MinifiRelationship* relationships_ptr;
+  const MinifiStringView* relationships_ptr;
   MinifiStringView description;
-} MinifiOutputAttribute;
+} MinifiOutputAttributeDefinition;
 
 typedef struct MinifiDynamicProperty {
   MinifiStringView name;
@@ -144,9 +151,9 @@ typedef struct MinifiProcessorClassDescription {
   size_t dynamic_properties_count;
   const MinifiDynamicProperty* dynamic_properties_ptr;
   size_t class_relationships_count;
-  const MinifiRelationship* class_relationships_ptr;
+  const MinifiRelationshipDefinition* class_relationships_ptr;
   size_t output_attributes_count;
-  const MinifiOutputAttribute* output_attributes_ptr;
+  const MinifiOutputAttributeDefinition* output_attributes_ptr;
   MinifiBool supports_dynamic_properties;
   MinifiBool supports_dynamic_relationships;
   MinifiInputRequirement input_requirement;
@@ -193,7 +200,7 @@ MinifiLogLevel MinifiLoggerLevel(MinifiLogger*);
 MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionGet(MinifiProcessSession*);
 MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession* session, MinifiFlowFile* parent_flowfile);
 
-void MinifiProcessSessionTransfer(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile, MinifiStringView relationship);
+void MinifiProcessSessionTransfer(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile, MinifiStringView relationship_name);
 void MinifiProcessSessionRemove(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile);
 
 MinifiStatus MinifiProcessSessionRead(MinifiProcessSession*, MinifiFlowFile*, int64_t(*cb)(void* user_ctx, MinifiInputStream*), void* user_ctx);
