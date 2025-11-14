@@ -38,15 +38,8 @@ namespace org::apache::nifi::minifi::extensions::python::processors {
 
 void ExecutePythonProcessor::initialize() {
   initializeScript();
-  std::vector<core::Property> all_properties;
-  all_properties.reserve(Properties.size() + python_properties_.size());
-  for (auto& property : Properties) {
-    all_properties.emplace_back(property);
-  }
-  for (auto& python_property : python_properties_) {
-    all_properties.emplace_back(python_property);
-  }
-  setSupportedProperties(gsl::make_span(all_properties));
+  // only include supported properties that are defined in the python processor
+  setSupportedProperties(gsl::make_span(python_properties_));
   setSupportedRelationships(Relationships);
   logger_->log_debug("Processor has been initialized.");
 }

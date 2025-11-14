@@ -23,21 +23,7 @@
 #include "unit/TestBase.h"
 #include "utils/CProcessor.h"
 #include "unit/TestUtils.h"
-
-namespace org::apache::nifi::minifi::api::test::utils {
-
-template<typename T, typename ...Args>
-std::unique_ptr<minifi::core::Processor> make_custom_processor(minifi::core::ProcessorMetadata metadata, Args&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-  std::unique_ptr<minifi::core::ProcessorApi> processor_impl;
-  core::useProcessorClassDescription<T>([&] (const MinifiProcessorClassDescription& description) {
-    minifi::utils::useCProcessorClassDescription(description, [&] (const auto&, auto c_description) {
-      processor_impl = std::make_unique<minifi::utils::CProcessor>(std::move(c_description), metadata, new T(metadata, std::forward<Args>(args)...));
-    });
-  });
-  return std::make_unique<minifi::core::Processor>(metadata.name, metadata.uuid, std::move(processor_impl));
-}
-
-}  // namespace org::apache::nifi::minifi::api::test::utils
+#include "unit/ProcessorUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::test {
 
@@ -96,7 +82,7 @@ TEST_CASE("Prompt is generated correctly with default parameters") {
   std::filesystem::path test_model_path;
   processors::LlamaSamplerParams test_sampler_params;
   processors::LlamaContextParams test_context_params;
-  minifi::test::SingleProcessorTestController controller(minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path& model_path, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
       test_model_path = model_path;
@@ -142,7 +128,7 @@ TEST_CASE("Prompt is generated correctly with custom parameters") {
   std::filesystem::path test_model_path;
   processors::LlamaSamplerParams test_sampler_params;
   processors::LlamaContextParams test_context_params;
-  minifi::test::SingleProcessorTestController controller(minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path& model_path, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
       test_model_path = model_path;
@@ -194,7 +180,7 @@ TEST_CASE("Prompt is generated correctly with custom parameters") {
 TEST_CASE("Empty flow file does not include input data in prompt") {
   auto mock_llama_context = std::make_unique<MockLlamaContext>();
   auto mock_llama_context_ptr = mock_llama_context.get();
-  minifi::test::SingleProcessorTestController controller(minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
@@ -218,7 +204,7 @@ TEST_CASE("Empty flow file does not include input data in prompt") {
 }
 
 TEST_CASE("Invalid values for optional double type properties throw exception") {
-  minifi::test::SingleProcessorTestController controller(minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
@@ -248,7 +234,7 @@ TEST_CASE("Invalid values for optional double type properties throw exception") 
 //
 TEST_CASE("Top K property empty and invalid values are handled properly") {
   std::optional<int32_t> test_top_k = 0;
-  minifi::test::SingleProcessorTestController controller(minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams&) {
       test_top_k = sampler_params.top_k;
@@ -281,7 +267,7 @@ TEST_CASE("Error handling during generation and applying template") {
     mock_llama_context->setApplyTemplateFailure();
   }
 
-  minifi::test::SingleProcessorTestController controller(minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
@@ -299,7 +285,7 @@ TEST_CASE("Error handling during generation and applying template") {
 }
 
 TEST_CASE("Route flow file to failure when prompt and input data is empty") {
-  minifi::test::SingleProcessorTestController controller(minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
@@ -319,7 +305,7 @@ TEST_CASE("Route flow file to failure when prompt and input data is empty") {
 TEST_CASE("System prompt is optional") {
   auto mock_llama_context = std::make_unique<MockLlamaContext>();
   auto mock_llama_context_ptr = mock_llama_context.get();
-  minifi::test::SingleProcessorTestController controller(minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
@@ -341,7 +327,7 @@ TEST_CASE("System prompt is optional") {
 }
 
 TEST_CASE("Test output metrics") {
-  auto processor = minifi::api::test::utils::make_custom_processor<processors::RunLlamaCppInference>(
+  auto processor = minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
     [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
