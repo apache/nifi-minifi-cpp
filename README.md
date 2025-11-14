@@ -457,8 +457,22 @@ The performance tests can similarly be enabled. To execute them and see their ou
 $ ctest --verbose -L performance
 ```
 
+
 ### Configuring
-The 'conf' directory in the installation root contains a template config.yml document, minifi.properties, and minifi-log.properties. Please see our [Configuration document](CONFIGURE.md) for details on how to configure agents.
+The 'conf' directory in the installation root contains all configuration files.
+
+The files conf/minifi.properties, conf/minifi-log.properties and conf/minifi-uid.properties contain key-value pair configuration settings;
+these are the default settings supplied by the latest MiNiFi version. If you would like to modify these, you should create a corresponding
+.d directory (e.g. conf/minifi.properties.d) and put your settings in a new file inside this directory. These files are read and applied
+in lexicographic order, after the default settings file.
+The Windows installer creates a conf/minifi.properties.d/10_installer_properties file, which contains C2 connection settings.
+If C2 is enabled and settings are added/modified from the C2 server, these will be saved in conf/minifi.properties.d/90_c2_properties.
+
+The conf/config.yml file contains the flow definition (i.e. the layout of processors, controller services etc). When you start MiNiFi for
+the first time, the flow will be fetched from the C2 server (if available), or a file containing an empty flow will be created by MiNiFi.
+
+Please see our [Configuration document](CONFIGURE.md) for details on how to configure agents.
+
 
 ### Installing as a service
 

@@ -155,9 +155,9 @@ TEST_CASE("C2PropertiesUpdateTests", "[c2test]") {
     logger2->log_debug("DummyClass2::before");
     logger3->log_debug("DummyClass3::before");
 
-    REQUIRE(!log_test_controller->contains("DummyClass1::before", 0s));
-    REQUIRE(!log_test_controller->contains("DummyClass2::before", 0s));
-    REQUIRE(!log_test_controller->contains("DummyClass3::before", 0s));
+    CHECK(!log_test_controller->contains("DummyClass1::before", 0s));
+    CHECK(!log_test_controller->contains("DummyClass2::before", 0s));
+    CHECK(!log_test_controller->contains("DummyClass3::before", 0s));
   }
 
   // On msvc, the passed lambda can't capture a reference to the object under construction, so we need to late-init harness.
@@ -194,23 +194,25 @@ TEST_CASE("C2PropertiesUpdateTests", "[c2test]") {
       logger2->log_debug("DummyClass2::after");  // this should still not log
       logger3->log_debug("DummyClass3::after");
     }
-    REQUIRE(log_test_controller->contains("DummyClass1::after", 0s));
-    REQUIRE(!log_test_controller->contains("DummyClass2::after", 0s));
-    REQUIRE(log_test_controller->contains("DummyClass3::after", 0s));
+    CHECK(log_test_controller->contains("DummyClass1::after", 0s));
+    CHECK_FALSE(log_test_controller->contains("DummyClass2::after", 0s));
+    CHECK(log_test_controller->contains("DummyClass3::after", 0s));
 
     {
-      minifi::PropertiesFile minifi_properties(std::ifstream{home_dir / "conf/minifi.properties"});
-      REQUIRE(!minifi_properties.hasValue("nifi.dummy.property"));
-      REQUIRE(minifi_properties.getValue("nifi.property.one") == "bush");
-      REQUIRE(minifi_properties.getValue("nifi.property.two") == "ring");
-      REQUIRE(!minifi_properties.hasValue(minifi::Configuration::nifi_c2_rest_heartbeat_minimize_updates));
-      REQUIRE(minifi_properties.getValue(minifi::Configuration::minifi_disk_space_watchdog_enable) == "true");
+      const std::shared_ptr<minifi::Configure> minifi_properties = std::make_shared<minifi::ConfigureImpl>();
+      minifi_properties->loadConfigureFile(home_dir / "conf" / "minifi.properties");
+      CHECK_FALSE(minifi_properties->get("nifi.dummy.property"));
+      CHECK(minifi_properties->get("nifi.property.one") == "bush");
+      CHECK(minifi_properties->get("nifi.property.two") == "ring");
+      CHECK_FALSE(minifi_properties->get(minifi::Configuration::nifi_c2_rest_heartbeat_minimize_updates));
+      CHECK(minifi_properties->get(minifi::Configuration::minifi_disk_space_watchdog_enable) == "true");
     }
 
     {
-      minifi::PropertiesFile minifi_log_properties(std::ifstream{home_dir / "conf/minifi-log.properties"});
-      REQUIRE(!minifi_log_properties.hasValue("logger.org::apache::nifi::minifi::test::dummy"));
-      REQUIRE(minifi_log_properties.getValue("logger.org::apache::nifi::minifi::test::DummyClass1") == "DEBUG,ostream");
+      const std::shared_ptr<minifi::Configure> minifi_log_properties = std::make_shared<minifi::ConfigureImpl>();
+      minifi_log_properties->loadConfigureFile(home_dir / "conf" / "minifi-log.properties");
+      CHECK_FALSE(minifi_log_properties->get("logger.org::apache::nifi::minifi::test::dummy"));
+      CHECK(minifi_log_properties->get("logger.org::apache::nifi::minifi::test::DummyClass1") == "DEBUG,ostream");
     }
   });
 

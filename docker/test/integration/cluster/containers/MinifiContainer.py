@@ -238,9 +238,6 @@ class MinifiContainer(FlowContainer):
         else:
             image = 'apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION
 
-        if self.options.use_flow_config_from_url:
-            self.command = ["/bin/sh", "-c", "rm " + MinifiContainer.MINIFI_LOCATIONS.config_path + " && " + MinifiContainer.MINIFI_LOCATIONS.run_minifi_cmd]
-
         ports = {}
         if self.options.enable_prometheus or self.options.enable_prometheus_with_ssl:
             ports = {'9936/tcp': 9936}
