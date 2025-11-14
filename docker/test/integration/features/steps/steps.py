@@ -1052,43 +1052,6 @@ def step_impl(context):
     context.execute_steps(f"then debug bundle can be retrieved through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
-# Grafana Loki
-@given("a Grafana Loki server is set up")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="grafana-loki-server", engine="grafana-loki-server")
-
-
-@given("a Grafana Loki server with SSL is set up")
-def step_impl(context):
-    context.test.enable_ssl_in_grafana_loki()
-    context.test.acquire_container(context=context, name="grafana-loki-server", engine="grafana-loki-server")
-
-
-@given("a Grafana Loki server is set up with multi-tenancy enabled")
-def step_impl(context):
-    context.test.enable_multi_tenancy_in_grafana_loki()
-    context.test.acquire_container(context=context, name="grafana-loki-server", engine="grafana-loki-server")
-
-
-@then("\"{lines}\" lines are published to the Grafana Loki server in less than {timeout_seconds:d} seconds")
-@then("\"{lines}\" line is published to the Grafana Loki server in less than {timeout_seconds:d} seconds")
-def step_impl(context, lines: str, timeout_seconds: int):
-    context.test.check_lines_on_grafana_loki(lines.split(";"), timeout_seconds, False)
-
-
-@then("\"{lines}\" lines are published to the \"{tenant_id}\" tenant on the Grafana Loki server in less than {timeout_seconds:d} seconds")
-@then("\"{lines}\" line is published to the \"{tenant_id}\" tenant on the Grafana Loki server in less than {timeout_seconds:d} seconds")
-def step_impl(context, lines: str, tenant_id: str, timeout_seconds: int):
-    context.test.check_lines_on_grafana_loki(lines.split(";"), timeout_seconds, False, tenant_id)
-
-
-@then("\"{lines}\" lines are published using SSL to the Grafana Loki server in less than {timeout_seconds:d} seconds")
-@then("\"{lines}\" line is published using SSL to the Grafana Loki server in less than {timeout_seconds:d} seconds")
-def step_impl(context, lines: str, timeout_seconds: int):
-    context.test.check_lines_on_grafana_loki(lines.split(";"), timeout_seconds, True)
-
-
-@given(u'a SSL context service is set up for Grafana Loki processor \"{processor_name}\"')
 @given(u'a SSL context service is set up for the following processor: \"{processor_name}\"')
 def step_impl(context, processor_name: str):
     setUpSslContextServiceForProcessor(context, processor_name)
@@ -1097,12 +1060,6 @@ def step_impl(context, processor_name: str):
 @given(u'a SSL context service is set up for the following remote process group: \"{remote_process_group}\"')
 def step_impl(context, remote_process_group: str):
     setUpSslContextServiceForRPG(context, remote_process_group)
-
-
-# Nginx reverse proxy
-@given(u'a reverse proxy is set up to forward requests to the Grafana Loki server')
-def step_impl(context):
-    context.test.acquire_container(context=context, name="reverse-proxy", engine="reverse-proxy")
 
 
 # Python

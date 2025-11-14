@@ -204,4 +204,5 @@ exec \
     "${docker_dir}/../extensions/couchbase/tests/features" \
     "${docker_dir}/../extensions/elasticsearch/tests/features" \
     "${docker_dir}/../extensions/splunk/tests/features" \
-    "${docker_dir}/../extensions/gcp/tests/features"
+    "${docker_dir}/../extensions/gcp/tests/features" \
+    "${docker_dir}/../extensions/grafana-loki/tests/features"
