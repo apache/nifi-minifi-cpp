@@ -22,12 +22,11 @@
 #include <vector>
 
 #include "minifi-cpp/core/Annotation.h"
+#include "minifi-cpp/core/ControllerServiceApi.h"
 #include "minifi-cpp/core/DynamicProperty.h"
-#include "minifi-cpp/core/OutputAttributeDefinition.h"
-#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
+#include "minifi-cpp/core/OutputAttribute.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Relationship.h"
-#include "minifi-cpp/core/RelationshipDefinition.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -41,10 +40,10 @@ struct ClassDescription {
   std::string full_name_{};
   std::string description_{};
   std::vector<core::Property> class_properties_{};
-  std::span<const core::DynamicProperty> dynamic_properties_{};
+  std::vector<core::DynamicProperty> dynamic_properties_{};
   std::vector<core::Relationship> class_relationships_{};
-  std::span<const core::OutputAttributeReference> output_attributes_{};
-  std::span<const core::ControllerServiceApiDefinition> api_implementations{};
+  std::vector<core::OutputAttribute> output_attributes_{};
+  std::vector<core::ControllerServiceApi> api_implementations{};
   bool supports_dynamic_properties_ = false;
   bool supports_dynamic_relationships_ = false;
   std::string inputRequirement_{};

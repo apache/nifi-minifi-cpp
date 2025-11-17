@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "minifi-cpp/core/Annotation.h"
-#include "minifi-cpp/core/DynamicProperty.h"
+#include "minifi-cpp/core/DynamicPropertyDefinition.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "minifi-cpp/utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
@@ -78,7 +78,7 @@ class ProcessorImpl {
 
   virtual bool isWorkAvailable();
 
-  static constexpr auto DynamicProperties = std::array<minifi::core::DynamicProperty, 0>{};
+  static constexpr auto DynamicProperties = std::array<minifi::core::DynamicPropertyDefinition, 0>{};
 
   static constexpr auto OutputAttributes = std::array<minifi::core::OutputAttributeReference, 0>{};
 

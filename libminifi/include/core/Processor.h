@@ -35,7 +35,7 @@
 #include "minifi-cpp/core/Property.h"
 #include "core/Core.h"
 #include "minifi-cpp/core/Annotation.h"
-#include "minifi-cpp/core/DynamicProperty.h"
+#include "minifi-cpp/core/DynamicPropertyDefinition.h"
 #include "minifi-cpp/core/Scheduling.h"
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "core/ProcessorMetrics.h"
@@ -123,7 +123,7 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback);
   void restore(const std::shared_ptr<FlowFile>& file) override;
 
-  static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
+  static constexpr auto DynamicProperties = std::array<DynamicPropertyDefinition, 0>{};
 
   static constexpr auto OutputAttributes = std::array<OutputAttributeReference, 0>{};
 

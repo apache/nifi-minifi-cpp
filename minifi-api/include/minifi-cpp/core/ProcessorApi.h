@@ -19,14 +19,9 @@
 #include <memory>
 #include <string>
 
-#include "ConfigurableComponent.h"
 #include "Property.h"
-#include "minifi-cpp/core/DynamicProperty.h"
-#include "Core.h"
 #include "minifi-cpp/core/Annotation.h"
-#include "Scheduling.h"
-#include "minifi-cpp/core/state/nodes/MetricsBase.h"
-#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/ProcessorMetricsExtension.h"
 

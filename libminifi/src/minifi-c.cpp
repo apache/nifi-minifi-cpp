@@ -92,13 +92,13 @@ minifi::core::Property createProperty(const MinifiProperty* property_description
     toStringView(property_description->name),
     toStringView(property_description->display_name),
     toStringView(property_description->description),
-    static_cast<bool>(property_description->is_required),
-    static_cast<bool>(property_description->is_sensitive),
+    property_description->is_required,
+    property_description->is_sensitive,
     std::span(allowed_values),
     std::span(allowed_types),
     default_value,
     gsl::make_not_null(reinterpret_cast<const minifi::core::PropertyValidator*>(property_description->validator)),
-    static_cast<bool>(property_description->supports_expression_language)
+    property_description->supports_expression_language
   }};
 }
 
@@ -146,11 +146,11 @@ void useCProcessorClassDescription(const MinifiProcessorClassDescription& class_
   std::vector<minifi::core::DynamicProperty> dynamic_properties;
   dynamic_properties.reserve(class_description.dynamic_properties_count);
   for (size_t i = 0; i < class_description.dynamic_properties_count; ++i) {
-    dynamic_properties.push_back(minifi::core::DynamicProperty{
+    dynamic_properties.push_back(minifi::core::DynamicPropertyDefinition{
       .name = toStringView(class_description.dynamic_properties_ptr[i].name),
       .value = toStringView(class_description.dynamic_properties_ptr[i].value),
       .description = toStringView(class_description.dynamic_properties_ptr[i].description),
-      .supports_expression_language = static_cast<bool>(class_description.dynamic_properties_ptr[i].supports_expression_language)
+      .supports_expression_language = class_description.dynamic_properties_ptr[i].supports_expression_language
     });
   }
   std::vector<minifi::core::Relationship> relationships;
@@ -161,21 +161,18 @@ void useCProcessorClassDescription(const MinifiProcessorClassDescription& class_
       toString(class_description.class_relationships_ptr[i].description)
     });
   }
-  std::vector<std::vector<minifi::core::RelationshipDefinition>> output_attribute_relationships;
-  std::vector<minifi::core::OutputAttributeReference> output_attributes;
+  std::vector<minifi::core::OutputAttribute> output_attributes;
   for (size_t attribute_idx = 0; attribute_idx < class_description.output_attributes_count; ++attribute_idx) {
-    minifi::core::OutputAttributeReference ref{minifi::core::OutputAttributeDefinition{"", {}, ""}};
-    ref.name = toStringView(class_description.output_attributes_ptr[attribute_idx].name);
-    ref.description = toStringView(class_description.output_attributes_ptr[attribute_idx].description);
-    output_attribute_relationships.push_back({});
+    minifi::core::OutputAttribute output_attribute{};
+    output_attribute.name = toString(class_description.output_attributes_ptr[attribute_idx].name);
+    output_attribute.description = toString(class_description.output_attributes_ptr[attribute_idx].description);
     for (size_t rel_idx = 0; rel_idx < class_description.output_attributes_ptr[attribute_idx].relationships_count; ++rel_idx) {
       auto output_attribute_rel_name = toStringView(class_description.output_attributes_ptr[attribute_idx].relationships_ptr[rel_idx]);
       auto rel_it = std::find(relationships.begin(), relationships.end(), minifi::core::Relationship{std::string{output_attribute_rel_name}, ""});
       gsl_Assert(rel_it != relationships.end());
-      output_attribute_relationships.back().push_back(rel_it->getDefinition());
+      output_attribute.relationships.push_back(*rel_it);
     }
-    ref.relationships = std::span(output_attribute_relationships.back());
-    output_attributes.push_back(ref);
+    output_attributes.push_back(output_attribute);
   }
 
   auto name_segments = minifi::utils::string::split(toStringView(class_description.full_name), "::");
@@ -190,10 +187,10 @@ void useCProcessorClassDescription(const MinifiProcessorClassDescription& class_
     .dynamic_properties_ = dynamic_properties,
     .class_relationships_ = relationships,
     .output_attributes_ = output_attributes,
-    .supports_dynamic_properties_ = static_cast<bool>(class_description.supports_dynamic_properties),
-    .supports_dynamic_relationships_ = static_cast<bool>(class_description.supports_dynamic_relationships),
+    .supports_dynamic_properties_ = class_description.supports_dynamic_properties,
+    .supports_dynamic_relationships_ = class_description.supports_dynamic_relationships,
     .inputRequirement_ = minifi::core::annotation::toString(toInputRequirement(class_description.input_requirement)),
-    .isSingleThreaded_ = static_cast<bool>(class_description.is_single_threaded),
+    .isSingleThreaded_ = class_description.is_single_threaded,
   };
 
   minifi::utils::CProcessorClassDescription c_class_description{

@@ -80,8 +80,8 @@ std::string formatDescription(const minifi::core::DynamicProperty& dynamic_prope
   return formatDescription(dynamic_property.description, false, dynamic_property.supports_expression_language);
 }
 
-std::string formatListOfRelationships(std::span<const minifi::core::RelationshipDefinition> relationships) {
-  return minifi::utils::string::join(", ", relationships, [](const auto& relationship) { return relationship.name; });
+std::string formatListOfRelationships(std::span<const minifi::core::Relationship> relationships) {
+  return minifi::utils::string::join(", ", relationships, [](const auto& relationship) { return relationship.getName(); });
 }
 
 inline constexpr std::string_view APACHE_LICENSE = R"license(<!--
