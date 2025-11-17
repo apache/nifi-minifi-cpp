@@ -34,7 +34,9 @@
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/join.hpp"
 #include "range/v3/view/transform.hpp"
+#include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
 
 namespace {
 
@@ -42,33 +44,24 @@ namespace minifi = org::apache::nifi::minifi;
 
 std::string formatName(std::string_view name_view, bool is_required) {
   std::string name{name_view};
-  if (is_required) {
-    return "**" + name + "**";
-  } else {
-    return name;
-  }
+  if (is_required) { return "**" + name + "**"; }
+  return name;
 }
 
 std::string formatAllowedValues(const minifi::core::Property& property) {
-  if (property.getValidator().getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+  if (property.getValidator().getEquivalentNifiStandardValidatorName() ==
+      minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
     return "true<br/>false";
-  } else {
-    const auto allowed_values = property.getAllowedValues();
-    return allowed_values
-        | ranges::views::join(std::string_view{"<br/>"})
-        | ranges::to<std::string>();
   }
+  const auto allowed_values = property.getAllowedValues();
+  return allowed_values | ranges::views::join(std::string_view{"<br/>"}) | ranges::to<std::string>();
 }
 
 std::string formatDescription(std::string_view description_view, bool is_sensitive = false, bool supports_expression_language = false) {
   std::string description{description_view};
   minifi::utils::string::replaceAll(description, "\n", "<br/>");
-  if (is_sensitive) {
-    description += "<br/>**Sensitive Property: true**";
-  }
-  if (supports_expression_language) {
-    description += "<br/>**Supports Expression Language: true**";
-  }
+  if (is_sensitive) { description += "<br/>**Sensitive Property: true**"; }
+  if (supports_expression_language) { description += "<br/>**Supports Expression Language: true**"; }
   return description;
 }
 
@@ -103,7 +96,7 @@ void writeHeader(std::ostream& docs, const std::vector<std::pair<std::string, mi
   docs << APACHE_LICENSE;
 
   docs << "\n\n## Table of Contents\n\n";
-  for (const auto& [name, documentation] : class_descriptions) {
+  for (const auto& [name, documentation]: class_descriptions) {
     docs << "- [" << name << "](#" << name << ")\n";
   }
 }
@@ -122,13 +115,11 @@ void writeProperties(std::ostream& docs, const minifi::ClassDescription& documen
   docs << "\n\nIn the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. "
        << "The table also indicates any default values, and whether a property supports the NiFi Expression Language.";
   minifi::docs::Table properties{{"Name", "Default Value", "Allowable Values", "Description"}};
-  for (const auto &property : documentation.class_properties_) {
-    properties.addRow({
-        formatName(property.getName(), property.getRequired()),
+  for (const auto& property: documentation.class_properties_) {
+    properties.addRow({formatName(property.getName(), property.getRequired()),
         property.getDefaultValue().value_or(""),
         formatAllowedValues(property),
-        formatDescription(property)
-    });
+        formatDescription(property)});
   }
   docs << "\n\n" << properties.toString();
 }
@@ -138,12 +129,8 @@ void writeDynamicProperties(std::ostream& docs, const minifi::ClassDescription& 
 
   docs << "\n### Dynamic Properties\n\n";
   minifi::docs::Table dynamic_properties{{"Name", "Value", "Description"}};
-  for (const auto &dynamic_property : documentation.dynamic_properties_) {
-    dynamic_properties.addRow({
-        formatName(dynamic_property.name, false),
-        std::string(dynamic_property.value),
-        formatDescription(dynamic_property)
-    });
+  for (const auto& dynamic_property: documentation.dynamic_properties_) {
+    dynamic_properties.addRow({formatName(dynamic_property.name, false), std::string(dynamic_property.value), formatDescription(dynamic_property)});
   }
   docs << dynamic_properties.toString();
 }
@@ -151,7 +138,7 @@ void writeDynamicProperties(std::ostream& docs, const minifi::ClassDescription& 
 void writeRelationships(std::ostream& docs, const minifi::ClassDescription& documentation) {
   docs << "\n### Relationships\n\n";
   minifi::docs::Table relationships{{"Name", "Description"}};
-  for (const auto &rel : documentation.class_relationships_) {
+  for (const auto& rel: documentation.class_relationships_) {
     relationships.addRow({rel.getName(), formatDescription(rel.getDescription())});
   }
   docs << relationships.toString();
@@ -162,9 +149,8 @@ void writeOutputAttributes(std::ostream& docs, const minifi::ClassDescription& d
 
   docs << "\n### Output Attributes";
   minifi::docs::Table output_attributes{{"Attribute", "Relationship", "Description"}};
-  for (const auto &output_attribute : documentation.output_attributes_) {
-    output_attributes.addRow({
-        std::string(output_attribute.name),
+  for (const auto& output_attribute: documentation.output_attributes_) {
+    output_attributes.addRow({std::string(output_attribute.name),
         formatListOfRelationships(output_attribute.relationships),
         formatDescription(output_attribute.description)});
   }
@@ -177,58 +163,149 @@ std::string extractClassName(const std::string& full_class_name) {
 
 std::string lowercaseFirst(const std::pair<std::string, minifi::ClassDescription>& key_value) {
   return minifi::utils::string::toLower(key_value.first);
+}
+
+void writeProcessor(std::ostream& os, const std::string_view name, const minifi::ClassDescription& documentation) {
+  writeName(os, name);
+  writeDescription(os, documentation);
+  writeProperties(os, documentation);
+  writeDynamicProperties(os, documentation);
+  writeRelationships(os, documentation);
+  writeOutputAttributes(os, documentation);
+}
+
+void writeControllerService(std::ostream& os, const std::string_view name, const minifi::ClassDescription& documentation) {
+  writeName(os, name);
+  writeDescription(os, documentation);
+  writeProperties(os, documentation);
+}
+
+void writeParameterProvider(std::ostream& os, const std::string_view name, const minifi::ClassDescription& documentation) {
+  writeName(os, name);
+  writeDescription(os, documentation);
+  writeProperties(os, documentation);
+}
+
+class MonolithDocumentation {
+ public:
+  explicit MonolithDocumentation() {
+    for (const auto& [bundle_id, component]: minifi::ClassDescriptionRegistry::getClassDescriptions()) {
+      addComponents(component);
+    }
+    sort();
+  }
+
+  void write(const std::filesystem::path& docs_dir) {
+    std::ofstream controllers_md(docs_dir / "CONTROLLERS.md");
+    writeControllers(controllers_md);
+
+    std::ofstream processors_md(docs_dir / "PROCESSORS.md");
+    writeProcessors(processors_md);
+
+    std::ofstream parameter_providers_md(docs_dir / "PARAMETER_PROVIDERS.md");
+    writeParameterProviders(parameter_providers_md);
+  }
+
+ private:
+  void addComponents(const minifi::Components& components) {
+    for (const auto& controller_service_description: components.controller_services) {
+      controller_services.emplace_back(extractClassName(controller_service_description.full_name_), controller_service_description);
+    }
+    for (const auto& processor_description: components.processors) {
+      processors.emplace_back(extractClassName(processor_description.full_name_), processor_description);
+    }
+    for (const auto& parameter_provider_description: components.parameter_providers) {
+      parameter_providers.emplace_back(extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
+    }
+  }
+
+  void sort() {
+    std::ranges::sort(controller_services, std::less(), lowercaseFirst);
+    std::ranges::sort(processors, std::less(), lowercaseFirst);
+    std::ranges::sort(parameter_providers, std::less(), lowercaseFirst);
+  }
+
+  void writeControllers(std::ostream& os) {
+    writeHeader(os, controller_services);
+    for (const auto& [name, documentation]: controller_services) {
+      writeControllerService(os, name, documentation);
+    }
+  }
+
+  void writeProcessors(std::ostream& os) {
+    writeHeader(os, processors);
+    for (const auto& [name, documentation]: processors) {
+      writeProcessor(os, name, documentation);
+    }
+  }
+
+  void writeParameterProviders(std::ostream& os) {
+    writeHeader(os, parameter_providers);
+    for (const auto& [name, documentation]: parameter_providers) {
+      writeParameterProvider(os, name, documentation);
+    }
+  }
+
+  std::vector<std::pair<std::string, minifi::ClassDescription>> controller_services;
+  std::vector<std::pair<std::string, minifi::ClassDescription>> processors;
+  std::vector<std::pair<std::string, minifi::ClassDescription>> parameter_providers;
 };
 
+class ModularDocumentation {
+ public:
+  static void write(const std::filesystem::path& docs_dir) {
+    for (const auto& [bundle_id, component]: minifi::ClassDescriptionRegistry::getClassDescriptions()) {
+      writeModule(docs_dir, bundle_id.name, component);
+    }
+  }
+
+ private:
+  static void writeComponentParts(std::ostream& os, const std::vector<minifi::ClassDescription>& class_descriptions, const std::string_view h3) {
+    if (!class_descriptions.empty()) {
+      os << fmt::format("### {}\n\n", h3);
+      for (const auto& class_description: class_descriptions) {
+        const auto name = extractClassName(class_description.full_name_);
+        os << "- [" << name << "](#" << name << ")\n";
+      }
+    }
+  }
+
+  static void writeToC(std::ostream& os, const minifi::Components& components) {
+    os << "\n\n## Table of Contents\n\n";
+    writeComponentParts(os, components.processors, "Processors");
+    writeComponentParts(os, components.controller_services, "Controller Services");
+    writeComponentParts(os, components.parameter_providers, "Parameter Providers");
+  }
+
+  static void writeModule(const std::filesystem::path& docs_dir, const std::string_view module_name, const minifi::Components& components) {
+    minifi::utils::file::create_dir(docs_dir / "modules");
+    std::ofstream os(docs_dir / "modules" / (std::string(module_name) + ".md"));
+    os << APACHE_LICENSE;
+
+    writeToC(os, components);
+
+    for (const auto& processor: components.processors) {
+      writeProcessor(os, extractClassName(processor.full_name_), processor);
+    }
+
+    for (const auto& controller_service: components.controller_services) {
+      writeControllerService(os, extractClassName(controller_service.full_name_), controller_service);
+    }
+
+    for (const auto& parameter_provider_description: components.parameter_providers) {
+      writeParameterProvider(os, extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
+    }
+  }
+};
 }  // namespace
 
 namespace org::apache::nifi::minifi::docs {
 
 void AgentDocs::generate(const std::filesystem::path& docs_dir) {
-  std::vector<std::pair<std::string, minifi::ClassDescription>> controller_services;
-  std::vector<std::pair<std::string, minifi::ClassDescription>> processors;
-  std::vector<std::pair<std::string, minifi::ClassDescription>> parameter_providers;
+  MonolithDocumentation monolith_docs;
+  monolith_docs.write(docs_dir);
 
-  for (const auto& [bundle_id, components]: ClassDescriptionRegistry::getClassDescriptions()) {
-    for (const auto &controller_service_description : components.controller_services) {
-      controller_services.emplace_back(extractClassName(controller_service_description.full_name_), controller_service_description);
-    }
-    for (const auto &processor_description : components.processors) {
-      processors.emplace_back(extractClassName(processor_description.full_name_), processor_description);
-    }
-    for (const auto& parameter_provider_description : components.parameter_providers) {
-      parameter_providers.emplace_back(extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
-    }
-  }
-  std::ranges::sort(controller_services, std::less(), lowercaseFirst);
-  std::ranges::sort(processors, std::less(), lowercaseFirst);
-  std::ranges::sort(parameter_providers, std::less(), lowercaseFirst);
-
-  std::ofstream controllers_md(docs_dir / "CONTROLLERS.md");
-  writeHeader(controllers_md, controller_services);
-  for (const auto& [name, documentation] : controller_services) {
-    writeName(controllers_md, name);
-    writeDescription(controllers_md, documentation);
-    writeProperties(controllers_md, documentation);
-  }
-
-  std::ofstream processors_md(docs_dir / "PROCESSORS.md");
-  writeHeader(processors_md, processors);
-  for (const auto& [name, documentation] : processors) {
-    writeName(processors_md, name);
-    writeDescription(processors_md, documentation);
-    writeProperties(processors_md, documentation);
-    writeDynamicProperties(processors_md, documentation);
-    writeRelationships(processors_md, documentation);
-    writeOutputAttributes(processors_md, documentation);
-  }
-
-  std::ofstream parameter_providers_md(docs_dir / "PARAMETER_PROVIDERS.md");
-  writeHeader(parameter_providers_md, parameter_providers);
-  for (const auto& [name, documentation] : parameter_providers) {
-    writeName(parameter_providers_md, name);
-    writeDescription(parameter_providers_md, documentation);
-    writeProperties(parameter_providers_md, documentation);
-  }
+  ModularDocumentation::write(docs_dir);
 }
 
 }  // namespace org::apache::nifi::minifi::docs
