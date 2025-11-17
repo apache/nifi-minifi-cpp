@@ -16,30 +16,21 @@
  */
 #pragma once
 
-#include <algorithm>
 #include <atomic>
-#include <chrono>
 #include <condition_variable>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <string_view>
-#include <unordered_set>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
-#include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/DynamicPropertyDefinition.h"
-#include "minifi-cpp/utils/gsl.h"
 #include "minifi-cpp/utils/Id.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
 #include "FlowFile.h"
-#include "utils/StringUtils.h"
 #include "PublishedMetrics.h"
 #include "logging/Logger.h"
+#include "utils/SmallString.h"
 
 namespace org::apache::nifi::minifi::api {
 

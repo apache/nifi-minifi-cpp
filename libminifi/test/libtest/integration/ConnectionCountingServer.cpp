@@ -18,6 +18,7 @@
 #include "ConnectionCountingServer.h"
 
 #include <cinttypes>
+#include <cassert>
 
 #include "utils/Id.h"
 

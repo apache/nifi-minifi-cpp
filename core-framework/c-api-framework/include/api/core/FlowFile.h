@@ -19,7 +19,6 @@
 
 #include <memory>
 #include "minifi-c.h"
-#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::api::core {
 

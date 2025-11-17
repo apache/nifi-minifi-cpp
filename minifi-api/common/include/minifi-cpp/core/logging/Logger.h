@@ -19,20 +19,13 @@
 
 #include <string>
 #include <mutex>
-#include <memory>
-#include <optional>
-#include <sstream>
 #include <utility>
-#include <iostream>
 #include <vector>
 #include <algorithm>
 
 #include "minifi-cpp/utils/gsl.h"
-#include "utils/Enum.h"
 #include "utils/GeneralUtils.h"
-#include "fmt/chrono.h"
 #include "fmt/std.h"
-#include "fmt/ostream.h"
 
 namespace org::apache::nifi::minifi::core::logging {
 

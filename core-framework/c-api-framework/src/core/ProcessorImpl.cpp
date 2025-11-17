@@ -16,7 +16,6 @@
  */
 #include "api/core/ProcessorImpl.h"
 
-#include <ctime>
 #include <cctype>
 
 #include <memory>

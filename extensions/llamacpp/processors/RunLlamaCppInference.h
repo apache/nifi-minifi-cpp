@@ -24,6 +24,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "LlamaContext.h"
 #include "api/utils/Export.h"
+#include "minifi-cpp/core/Annotation.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
