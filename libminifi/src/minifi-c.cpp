@@ -36,7 +36,6 @@
 #include "minifi-cpp/Exception.h"
 #include "core/extension/ExtensionManager.h"
 #include "utils/PropertyErrors.h"
-#include "minifi-cpp/agent/build_description.h"
 #include "utils/CProcessor.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -229,18 +228,17 @@ extern "C" {
 MinifiExtension* MinifiCreateExtension(MinifiStringView /*api_version*/, const MinifiExtensionCreateInfo* extension_create_info) {
   gsl_Assert(extension_create_info);
   auto extension_name = toString(extension_create_info->name);
-  minifi::BundleDetails bundle{
-    .artifact = extension_name,
-    .group = "org.apache.nifi.minifi",
+  minifi::BundleIdentifier bundle{
+    .name = extension_name,
     .version = toString(extension_create_info->version)
   };
+  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[bundle];
   for (size_t proc_idx = 0; proc_idx < extension_create_info->processors_count; ++proc_idx) {
     minifi::utils::useCProcessorClassDescription(extension_create_info->processors_ptr[proc_idx], [&] (const auto& description, const auto& c_class_description) {
-      minifi::ExternalBuildDescription::addExternalComponent(bundle, description);
-
       minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_name).registerClass(
         c_class_description.name,
         std::make_unique<CProcessorFactory>(extension_name, toString(extension_create_info->processors_ptr[proc_idx].full_name), c_class_description));
+      bundle_components.processors.emplace_back(description);
     });
   }
   return reinterpret_cast<MinifiExtension*>(new org::apache::nifi::minifi::core::extension::Extension::Info{

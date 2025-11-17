@@ -26,12 +26,9 @@ set compiler_version=%5
 set compiler_version=%compiler_version:"=%
 set flags=%6
 set flags=%flags:"=%
-set extensions=%7
-set extensions=%extensions:"=%
-set extensions=%extensions:\=%
-set buildident=%8
+set buildident=%7
 set buildident=%buildident:"=%
-set buildrev=%9
+set buildrev=%8
 set buildrev=%buildrev:"=%
 
 
@@ -39,14 +36,8 @@ call :GetUnixTime builddate
 
 
 set /a count=0
-for %%i in (%extensions%) do (
-    set /a count+=1
-    set "extension!count!=%%i"
-)
 
 (
-    echo #include ^<string^>
-	echo #include ^<vector^>
 	echo #include "minifi-cpp/agent/agent_version.h"
 
 	echo namespace org::apache::nifi::minifi {
@@ -58,25 +49,9 @@ for %%i in (%extensions%) do (
 	echo const char* const AgentBuild::COMPILER = "%compiler%";
 	echo const char* const AgentBuild::COMPILER_VERSION = "%compiler_version%";
 	echo const char* const AgentBuild::COMPILER_FLAGS = R"(%flags%)";
-	echo std^:^:vector^<std^:^:string^> AgentBuild::getExtensions^(^) {
-  	echo 	static std^:^:vector^<std^:^:string^> extensions;
-  	echo 	if ^(extensions.empty^(^)^){
-	) > "%out_dir%/agent_version.cpp"
-
-	for /l %%i in (1,1,%count%) do (
-	   (
-				echo extensions.push_back^("!extension%%i!"^);
-		)>> "%out_dir%/agent_version.cpp"
-	)
-
-
-(
-	echo 	 extensions.push_back^("minifi-system"^);
-	echo   }
-  	echo   return extensions;
-	echo }
 
 	echo }  // namespace org::apache::nifi::minifi
+
 ) >> "%out_dir%/agent_version.cpp"
 
  goto :EOF

@@ -114,23 +114,13 @@ void sigHandler(int signal) {
   }
 }
 
-void dumpDocs(const std::shared_ptr<minifi::Configure>& configuration, const std::string& dir) {
-  const auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
-  if (nullptr != pythoncreator) {
-    pythoncreator->configure(configuration);
-  }
-
+void dumpDocs(const std::string& dir) {
   minifi::docs::AgentDocs docsCreator;
 
   docsCreator.generate(dir);
 }
 
-void writeJsonSchema(const std::shared_ptr<minifi::Configure>& configuration, std::ostream& out) {
-  const auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
-  if (nullptr != pythoncreator) {
-    pythoncreator->configure(configuration);
-  }
-
+void writeJsonSchema(std::ostream& out) {
   out << minifi::docs::generateJsonSchema() << '\n';
 }
 
@@ -158,7 +148,7 @@ void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, c
   }
 
   std::cout << "Dumping docs to " << docs_params[0] << std::endl;
-  dumpDocs(configure, docs_params[0]);
+  dumpDocs(docs_params[0]);
   return 0;
 }
 
@@ -168,7 +158,7 @@ void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, c
   }
   const auto& schema_path = parser.get("--schema");
   if (schema_path == "-") {
-    writeJsonSchema(configure, std::cout);
+    writeJsonSchema(std::cout);
     return 0;
   }
 
@@ -180,7 +170,7 @@ void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, c
                 << "\n";
       return 1;
     }
-    writeJsonSchema(configure, schema_file);
+    writeJsonSchema(schema_file);
   }
   return 0;
 }

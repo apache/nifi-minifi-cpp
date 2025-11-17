@@ -32,7 +32,6 @@
 #include "core/Resource.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/agent/agent_version.h"
-#include "minifi-cpp/agent/build_description.h"
 #include "range/v3/algorithm.hpp"
 #include "range/v3/view/filter.hpp"
 #include "utils/Environment.h"
@@ -159,10 +158,9 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
     }
     DummyProcessorDescriptor descriptor;
     processor->core::ProcessorImpl::initialize(descriptor);
-    minifi::BundleDetails details;
-    details.artifact = path.filename().string();
+    minifi::BundleIdentifier details;
+    details.name = path.filename().string();
     details.version = processor->getVersion() && !processor->getVersion()->empty() ? *processor->getVersion() : minifi::AgentBuild::VERSION;
-    details.group = "python";
 
     minifi::ClassDescription description{
       .type_ = ResourceType::Processor,
@@ -175,7 +173,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
       .inputRequirement_ = toString(processor->getInputRequirement()),
       .isSingleThreaded_ = processor->isSingleThreaded()};
 
-    minifi::ExternalBuildDescription::addExternalComponent(details, description);
+    minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[details].processors.push_back(description);
   }
 
   void configure(const std::vector<std::string> &pythonFiles) {

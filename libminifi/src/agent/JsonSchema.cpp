@@ -17,21 +17,21 @@
 
 #include "agent/JsonSchema.h"
 
+#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "RemoteProcessGroupPort.h"
+#include "minifi-cpp/agent/agent_docs.h"
 #include "minifi-cpp/agent/agent_version.h"
-#include "agent/build_description.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/filter.hpp"
+#include "range/v3/view/join.hpp"
+#include "range/v3/view/transform.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
-#include "RemoteProcessGroupPort.h"
-#include "minifi-cpp/utils/gsl.h"
-
-#include "range/v3/view/filter.hpp"
-#include "range/v3/view/transform.hpp"
-#include "range/v3/view/join.hpp"
-#include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::docs {
 
@@ -441,26 +441,11 @@ std::string generateJsonSchema() {
     controller_services.push_back(std::move(schema).str());
   };
 
-  const auto& descriptions = AgentDocs::getClassDescriptions();
-  for (const std::string& group : AgentBuild::getExtensions()) {
-    auto it = descriptions.find(group);
-    if (it == descriptions.end()) {
-      continue;
-    }
-    for (const auto& proc : it->second.processors_) {
+  for (const auto& components: minifi::ClassDescriptionRegistry::getClassDescriptions() | std::views::values) {
+    for (const auto& proc : components.processors) {
       putProcSchema(proc);
     }
-    for (const auto& service : it->second.controller_services_) {
-      putControllerService(service);
-    }
-  }
-
-  for (const auto& bundle : ExternalBuildDescription::getExternalGroups()) {
-    auto description = ExternalBuildDescription::getClassDescriptions(bundle.artifact);
-    for (const auto& proc : description.processors_) {
-      putProcSchema(proc);
-    }
-    for (const auto& service : description.controller_services_) {
+    for (const auto& service : components.controller_services) {
       putControllerService(service);
     }
   }

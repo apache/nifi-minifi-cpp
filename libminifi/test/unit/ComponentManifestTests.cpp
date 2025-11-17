@@ -85,8 +85,9 @@ REGISTER_RESOURCE(ExampleProcessor, Processor);
 }  // namespace test::apple
 
 TEST_CASE("Manifest indicates property type requirement") {
-  minifi::state::response::ComponentManifest manifest("minifi-system");
-  auto nodes = manifest.serialize();
+  const auto system_bundle_id = minifi::BundleIdentifier{.name = "minifi-system", .version = minifi::AgentBuild::VERSION};
+  const auto system_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(system_bundle_id);
+  auto nodes = minifi::state::response::serializeComponentManifest(system_components);
   REQUIRE(nodes.size() == 1);
   REQUIRE(nodes.at(0).name == "componentManifest");
 
@@ -118,8 +119,9 @@ TEST_CASE("Manifest indicates property type requirement") {
 TEST_CASE("Processors do not get instantiated during manifest creation") {
   LogTestController::getInstance().setDebug<core::Processor>();
 
-  minifi::state::response::ComponentManifest manifest("minifi-system");
-  manifest.serialize();
+  const auto system_bundle_id = minifi::BundleIdentifier{.name = "minifi-system", .version = minifi::AgentBuild::VERSION};
+  const auto system_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(system_bundle_id);
+  minifi::state::response::serializeComponentManifest(system_components);
 
   CHECK_FALSE(LogTestController::getInstance().contains("Processor ExampleProcessor created"));
 }

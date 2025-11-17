@@ -19,21 +19,21 @@
 
 #include <algorithm>
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "TableFormatter.h"
+#include "agent/agent_docs.h"
+#include "core/Core.h"
+#include "core/Relationship.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "range/v3/algorithm/lexicographical_compare.hpp"
 #include "range/v3/range/conversion.hpp"
-#include "range/v3/view/transform.hpp"
 #include "range/v3/view/join.hpp"
-
-#include "agent/agent_docs.h"
-#include "minifi-cpp/agent/agent_version.h"
-#include "core/Core.h"
-#include "minifi-cpp/core/PropertyValidator.h"
-#include "core/Relationship.h"
-#include "TableFormatter.h"
+#include "range/v3/view/transform.hpp"
 #include "utils/StringUtils.h"
 
 namespace {
@@ -187,15 +187,15 @@ void AgentDocs::generate(const std::filesystem::path& docs_dir) {
   std::vector<std::pair<std::string, minifi::ClassDescription>> controller_services;
   std::vector<std::pair<std::string, minifi::ClassDescription>> processors;
   std::vector<std::pair<std::string, minifi::ClassDescription>> parameter_providers;
-  for (const auto &group : minifi::AgentBuild::getExtensions()) {
-    struct Components descriptions = build_description_.getClassDescriptions(group);
-    for (const auto &controller_service_description : descriptions.controller_services_) {
+
+  for (const auto& components: minifi::ClassDescriptionRegistry::getClassDescriptions() | std::views::values) {
+    for (const auto &controller_service_description : components.controller_services) {
       controller_services.emplace_back(extractClassName(controller_service_description.full_name_), controller_service_description);
     }
-    for (const auto &processor_description : descriptions.processors_) {
+    for (const auto &processor_description : components.processors) {
       processors.emplace_back(extractClassName(processor_description.full_name_), processor_description);
     }
-    for (const auto& parameter_provider_description : descriptions.parameter_providers_) {
+    for (const auto& parameter_provider_description : components.parameter_providers) {
       parameter_providers.emplace_back(extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
     }
   }
