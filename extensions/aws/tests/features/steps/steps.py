@@ -18,7 +18,7 @@ import random
 import string
 
 import humanfriendly
-from behave import step
+from behave import step, then
 
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.steps import checking_steps        # noqa: F401
@@ -27,9 +27,10 @@ from minifi_test_framework.steps import core_steps            # noqa: F401
 from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.minifi.processor import Processor
-from minifi_test_framework.core.helpers import wait_for_condition
+from minifi_test_framework.core.helpers import wait_for_condition, log_due_to_failure
 
 from s3_server_container import S3ServerContainer
+from kinesis_server_container import KinesisServerContainer
 
 
 @step('a {processor_name} processor set up to communicate with an s3 server')
@@ -100,3 +101,13 @@ def step_impl(context):
     new_dir.files["input.txt"] = content
     context.get_or_create_default_minifi_container().dirs.append(new_dir)
     context.original_hash = computeMD5hash(content)
+
+
+@step("a kinesis server is set up in correspondence with the PutKinesisStream")
+def step_impl(context):
+    context.containers["kinesis-server"] = KinesisServerContainer(context)
+
+
+@then("there is a record on the kinesis server with \"{record_data}\"")
+def step_impl(context, record_data):
+    assert context.containers["kinesis-server"].check_kinesis_server_record_data(record_data) or log_due_to_failure(context)
