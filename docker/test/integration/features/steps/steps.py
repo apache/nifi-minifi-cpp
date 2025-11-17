@@ -120,11 +120,8 @@ def step_impl(context, processor_type, minifi_container_name):
 
 
 @given("a {processor_type} processor")
-@given("a {processor_type} processor set up to communicate with an s3 server")
-@given("a {processor_type} processor set up to communicate with the same s3 server")
 @given("a {processor_type} processor set up to communicate with an Azure blob storage")
 @given("a {processor_type} processor set up to communicate with an MQTT broker instance")
-@given("a {processor_type} processor set up to communicate with the kinesis server")
 def step_impl(context, processor_type):
     __create_processor(context, processor_type, processor_type, None, None, "minifi-cpp-flow")
 
@@ -499,18 +496,6 @@ def step_impl(context):
     context.test.start('mqtt-broker')
 
 
-# s3 setup
-@given("a s3 server is set up in correspondence with the PutS3Object")
-@given("a s3 server is set up in correspondence with the DeleteS3Object")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="s3-server", engine="s3-server")
-
-
-@given("a kinesis server is set up in correspondence with the PutKinesisStream")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="kinesis-server", engine="kinesis-server")
-
-
 # azure storage setup
 @given("an Azure storage server is set up")
 def step_impl(context):
@@ -728,31 +713,6 @@ def step_impl(context, duration):
 @then("no errors were generated on the http-proxy regarding \"{url}\"")
 def step_impl(context, url):
     context.test.check_http_proxy_access('http-proxy', url)
-
-
-@then("there is a record on the kinesis server with \"{record_data}\"")
-def step_impl(context, record_data):
-    context.test.check_kinesis_server_record_data("kinesis-server", record_data)
-
-
-@then("the object on the s3 server is \"{object_data}\"")
-def step_impl(context, object_data):
-    context.test.check_s3_server_object_data("s3-server", object_data)
-
-
-@then("the object on the s3 server is present and matches the original hash")
-def step_impl(context):
-    context.test.check_s3_server_large_object_data("s3-server")
-
-
-@then("the object content type on the s3 server is \"{content_type}\" and the object metadata matches use metadata")
-def step_impl(context, content_type):
-    context.test.check_s3_server_object_metadata("s3-server", content_type)
-
-
-@then("the object bucket on the s3 server is empty")
-def step_impl(context):
-    context.test.check_empty_s3_bucket("s3-server")
 
 
 # Azure

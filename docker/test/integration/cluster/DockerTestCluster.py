@@ -25,7 +25,6 @@ from .LogSource import LogSource
 from .ContainerStore import ContainerStore
 from .DockerCommunicator import DockerCommunicator
 from .MinifiControllerExecutor import MinifiControllerExecutor
-from .checkers.AwsChecker import AwsChecker
 from .checkers.AzureChecker import AzureChecker
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
@@ -40,7 +39,6 @@ class DockerTestCluster:
         self.vols = {}
         self.container_communicator = DockerCommunicator()
         self.container_store = ContainerStore(self.container_communicator.create_docker_network(feature_id), context.image_store, context.kubernetes_proxy, feature_id=feature_id)
-        self.aws_checker = AwsChecker(self.container_communicator)
         self.azure_checker = AzureChecker(self.container_communicator)
         self.postgres_checker = PostgresChecker(self.container_communicator)
         self.prometheus_checker = PrometheusChecker()
@@ -189,26 +187,6 @@ class DockerTestCluster:
             and ((output.count("TCP_DENIED") != 0
                  and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
                  or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output)
-
-    def check_kinesis_server_record_data(self, container_name, record_data):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.aws_checker.check_kinesis_server_record_data(container_name, record_data)
-
-    def check_s3_server_object_data(self, container_name, test_data):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.aws_checker.check_s3_server_object_data(container_name, test_data)
-
-    def check_s3_server_object_hash(self, container_name: str, expected_file_hash: str):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.aws_checker.check_s3_server_object_hash(container_name, expected_file_hash)
-
-    def check_s3_server_object_metadata(self, container_name, content_type="application/octet-stream", metadata=dict()):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.aws_checker.check_s3_server_object_metadata(container_name, content_type, metadata)
-
-    def is_s3_bucket_empty(self, container_name):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.aws_checker.is_s3_bucket_empty(container_name)
 
     def check_azure_storage_server_data(self, container_name, test_data):
         container_name = self.container_store.get_container_name_with_postfix(container_name)
