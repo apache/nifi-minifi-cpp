@@ -275,21 +275,6 @@ class MiNiFi_integration_test:
         assert not self.cluster.segfault_happened() or self.cluster.log_app_output()
         assert validator.validate() or self.cluster.log_app_output()
 
-    def check_kinesis_server_record_data(self, kinesis_container_name, record_data):
-        assert self.cluster.check_kinesis_server_record_data(kinesis_container_name, record_data) or self.cluster.log_app_output()
-
-    def check_s3_server_object_data(self, s3_container_name, object_data):
-        assert self.cluster.check_s3_server_object_data(s3_container_name, object_data) or self.cluster.log_app_output()
-
-    def check_s3_server_large_object_data(self, s3_container_name: str):
-        assert self.cluster.check_s3_server_object_hash(s3_container_name, self.test_file_hash) or self.cluster.log_app_output()
-
-    def check_s3_server_object_metadata(self, s3_container_name, content_type):
-        assert self.cluster.check_s3_server_object_metadata(s3_container_name, content_type) or self.cluster.log_app_output()
-
-    def check_empty_s3_bucket(self, s3_container_name):
-        assert self.cluster.is_s3_bucket_empty(s3_container_name) or self.cluster.log_app_output()
-
     def check_http_proxy_access(self, http_proxy_container_name, url):
         assert self.cluster.check_http_proxy_access(http_proxy_container_name, url) or self.cluster.log_app_output()
 
