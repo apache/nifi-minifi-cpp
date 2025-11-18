@@ -29,9 +29,13 @@ class Processor:
         self.penalization_period: str = penalization_period
         self.properties: dict[str, str] = {}
         self.auto_terminated_relationships: list[str] = []
+        self.max_concurrent_tasks: int | None = None
 
     def add_property(self, property_name: str, property_value: str):
         self.properties[property_name] = property_value
+
+    def set_max_concurrent_tasks(self, max_concurrent_tasks: int):
+        self.max_concurrent_tasks = max_concurrent_tasks
 
     def remove_property(self, property_name: str):
         if property_name in self.properties:
@@ -51,6 +55,8 @@ class Processor:
         }
         if self.auto_terminated_relationships:
             data['auto-terminated relationships list'] = self.auto_terminated_relationships
+        if self.max_concurrent_tasks is not None:
+            data['max concurrent tasks'] = self.max_concurrent_tasks
 
         # The YAML format capitalizes 'Properties'
         data['Properties'] = self.properties

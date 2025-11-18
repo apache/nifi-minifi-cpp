@@ -84,6 +84,13 @@ def step_impl(context: MinifiTestContext, message: str, duration: str):
                               context=context)
 
 
+@then("the Minifi logs contain the following message: \"{log_message}\" {count:d} times after {duration}")
+def step_impl(context, log_message, count, duration):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    time.sleep(duration_seconds)
+    assert context.get_default_minifi_container().get_logs().count(log_message) == count or context.get_default_minifi_container().log_app_output()
+
+
 @then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")
 def step_impl(context, regex, duration):
     duration_seconds = humanfriendly.parse_timespan(duration)
