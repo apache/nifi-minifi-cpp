@@ -49,7 +49,7 @@ class LogPublisherTestFixture {
   LogPublisherTestFixture& operator=(const LogPublisherTestFixture&) = delete;
 
   ~LogPublisherTestFixture() {
-    publisher_.reset();
+    publisher_.reset();  // explicit because LogTestController should outlive the thread in publisher_
     minifi::utils::file::delete_dir(provenance_repo_->getDirectory());
     minifi::utils::file::delete_dir(flow_file_repo_->getDirectory());
     LogTestController::getInstance().reset();
