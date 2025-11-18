@@ -23,7 +23,6 @@
 #include "core/RepositoryFactory.h"
 #include "core/extension/ExtensionManager.h"
 #include "core/flow/AdaptiveConfiguration.h"
-#include "core/repository/VolatileContentRepository.h"
 #include "utils/Id.h"
 #include "utils/file/FileSystem.h"
 

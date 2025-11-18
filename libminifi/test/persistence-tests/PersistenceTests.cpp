@@ -33,7 +33,6 @@
 #include "unit/Catch.h"
 #include "catch2/matchers/catch_matchers_string.hpp"
 #include "../../extensions/libarchive/MergeContent.h"
-#include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "unit/TestUtils.h"
 #include "core/repository/FileSystemRepository.h"

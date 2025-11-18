@@ -33,6 +33,7 @@
 #include "catch2/generators/catch_generators.hpp"
 #include "io/ZlibStream.h"
 #include "Connection.h"
+#include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::test {
 
