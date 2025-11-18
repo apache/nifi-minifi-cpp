@@ -67,7 +67,7 @@ class AttributesToJSONTestFixture {
   static void assertJSONAttributesFromLog(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {
     auto match = LogTestController::getInstance().matchesRegex("key:JSONAttributes value:(.*)");
     REQUIRE(match);
-    assertAttributes(expected_attributes, (*match)[1].str());
+    assertAttributes(expected_attributes, (*match)[1]);
   }
 
   void assertJSONAttributesFromFile(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {

@@ -151,15 +151,14 @@ la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *
 }
 
 int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io::OutputStream>& stream) const {
+  UnfocusArchiveEntryWriteData data;
+  data.stream = stream;
   auto output_archive = archive_write_unique_ptr{archive_write_new()};
   int64_t nlen = 0;
 
   archive_write_set_format(output_archive.get(), _archiveMetadata->archiveFormat);
 
-  UnfocusArchiveEntryWriteData data;
-  data.stream = stream;
-
-  archive_write_open(output_archive.get(), &data, ok_cb, write_cb, ok_cb);
+  archive_write_open(output_archive.get(), &data, nullptr, write_cb, nullptr);  // data must outlive the archive because it writes during free
 
   // Iterate entries & write from tmp file to archive
   std::array<char, BUFFER_SIZE> buf{};

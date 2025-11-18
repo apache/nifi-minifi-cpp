@@ -126,27 +126,27 @@ bool LogTestController::contains(const std::function<std::string()>& log_string_
   return found;
 }
 
-std::optional<std::smatch> LogTestController::matchesRegex(const std::string& regex_str, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
+std::optional<std::vector<std::string>> LogTestController::matchesRegex(const std::string& regex_str, const std::chrono::milliseconds timeout, const std::chrono::milliseconds sleep_interval) const {
   if (regex_str.empty()) {
     return std::nullopt;
   }
-  auto start = std::chrono::steady_clock::now();
-  bool found = false;
-  bool timed_out = false;
-  std::regex matcher_regex(regex_str);
-  std::smatch match;
-  do {
-    std::string str = getLogs();
-    found = std::regex_search(str, match, matcher_regex);
-    auto now = std::chrono::steady_clock::now();
-    timed_out = (now - start > timeout);
-    if (!found && !timed_out) {
-      std::this_thread::sleep_for(sleep_interval);
+  const auto start = std::chrono::steady_clock::now();
+  const std::regex matcher_regex(regex_str);
+  while (true) {
+    const std::string logs = getLogs();
+    if (std::smatch match; std::regex_search(logs, match, matcher_regex)) {
+      std::vector<std::string> results;
+      results.reserve(match.size());
+      for (const auto& sub_match : match) {
+        results.push_back(sub_match.str());
+      }
+      return std::make_optional(std::move(results));
     }
-  } while (!found && !timed_out);
-
-  logger_->log_info("{} {} in log output.", found ? "Successfully matched regex" : "Failed to match regex", regex_str);
-  return found ? std::make_optional<std::smatch>(match) : std::nullopt;
+    if (std::chrono::steady_clock::now() - start > timeout) {
+      return std::nullopt;
+    }
+    std::this_thread::sleep_for(sleep_interval);
+  }
 }
 
 size_t LogTestController::countOccurrences(const std::string& pattern) const {

@@ -64,12 +64,11 @@ void NumberedMethodResponder::saveConnectionId(struct mg_connection* conn) {
 
 bool ReverseBodyPostHandler::handlePost(CivetServer* /*server*/, struct mg_connection* conn) {
   saveConnectionId(conn);
-  std::vector<char> request_body;
-  request_body.reserve(2048);
-  size_t read_size = mg_read(conn, request_body.data(), 2048);
+  auto request_body = std::vector<char>(2048);
+  const size_t read_size = mg_read(conn, request_body.data(), 2048);
   assert(read_size < 2048);
   std::string response_body{request_body.begin(), request_body.begin() + gsl::narrow<std::vector<char>::difference_type>(read_size)};
-  std::reverse(std::begin(response_body), std::end(response_body));
+  std::ranges::reverse(response_body);
   mg_printf(conn, "HTTP/1.1 200 OK\r\n");
   mg_printf(conn, "Content-length: %zu\r\n", read_size);
   mg_printf(conn, "\r\n");
