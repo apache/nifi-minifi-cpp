@@ -441,7 +441,7 @@ std::string generateJsonSchema() {
     controller_services.push_back(std::move(schema).str());
   };
 
-  for (const auto& components: minifi::ClassDescriptionRegistry::getClassDescriptions() | std::views::values) {
+  for (const auto& [bundle_id, components]: ClassDescriptionRegistry::getClassDescriptions()) {
     for (const auto& proc : components.processors) {
       putProcSchema(proc);
     }

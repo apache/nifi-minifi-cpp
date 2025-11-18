@@ -188,7 +188,7 @@ void AgentDocs::generate(const std::filesystem::path& docs_dir) {
   std::vector<std::pair<std::string, minifi::ClassDescription>> processors;
   std::vector<std::pair<std::string, minifi::ClassDescription>> parameter_providers;
 
-  for (const auto& components: minifi::ClassDescriptionRegistry::getClassDescriptions() | std::views::values) {
+  for (const auto& [bundle_id, components]: ClassDescriptionRegistry::getClassDescriptions()) {
     for (const auto &controller_service_description : components.controller_services) {
       controller_services.emplace_back(extractClassName(controller_service_description.full_name_), controller_service_description);
     }
