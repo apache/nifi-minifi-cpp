@@ -1038,10 +1038,12 @@ void ProcessSessionImpl::persistFlowFilesBeforeTransfer(
     std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile> > >& transactionMap,
     const std::map<utils::Identifier, FlowFileUpdate>& modifiedFlowFiles) {
 
-  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
-
   auto flowFileRepo = process_context_->getFlowFileRepository();
-  auto contentRepo = process_context_->getContentRepository();
+  if (flowFileRepo->isNoop()) {
+    return;
+  }
+
+  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
 
   enum class Type {
     Dropped, Transferred

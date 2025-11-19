@@ -15,6 +15,7 @@
 #  limitations under the License.
 #
 
+import logging
 from docker.models.networks import Network
 
 from minifi_test_framework.containers.file import File
@@ -82,3 +83,11 @@ class MinifiContainer(Container):
     def _get_log_properties_file_content(self):
         lines = (f"{key}={value}" for key, value in self.log_properties.items())
         return "\n".join(lines)
+
+    def get_memory_usage(self) -> int | None:
+        exit_code, output = self.exec_run(["awk", "/VmRSS/ { printf \"%d\\n\", $2 }", "/proc/1/status"])
+        if exit_code != 0:
+            return None
+        memory_usage_in_bytes = int(output.strip()) * 1024
+        logging.info(f"MiNiFi memory usage: {memory_usage_in_bytes} bytes")
+        return memory_usage_in_bytes

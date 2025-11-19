@@ -19,6 +19,7 @@ import logging
 import random
 import string
 import os
+import time
 
 import humanfriendly
 from behave import when, step
@@ -55,3 +56,9 @@ def step_impl(context: MinifiTestContext, directory: str, size: str):
 def step_impl(context: MinifiTestContext, file_name: str, content: str, path: str):
     new_content = content.replace("\\n", "\n")
     context.minifi_container.files.append(File(os.path.join(path, file_name), new_content))
+
+
+@step("after {duration} have passed")
+@step("after {duration} has passed")
+def step_impl(context, duration):
+    time.sleep(humanfriendly.parse_timespan(duration))
