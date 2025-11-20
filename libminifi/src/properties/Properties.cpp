@@ -172,6 +172,19 @@ auto getExtraPropertiesFileNames(const std::filesystem::path& extra_properties_f
   std::ranges::sort(extra_properties_file_names);
   return extra_properties_file_names;
 }
+
+void updateChangedPropertiesInPropertiesFile(minifi::PropertiesFile& current_content, const auto& properties) {
+  for (const auto& prop : properties) {
+    if (!prop.second.need_to_persist_new_value) {
+      continue;
+    }
+    if (current_content.hasValue(prop.first)) {
+      current_content.update(prop.first, prop.second.persisted_value);
+    } else {
+      current_content.append(prop.first, prop.second.persisted_value);
+    }
+  }
+}
 }  // namespace
 
 std::filesystem::path PropertiesImpl::extra_properties_files_dir_name() const {
@@ -265,17 +278,9 @@ bool PropertiesImpl::commitChanges() {
     return false;
   }
   PropertiesFile current_content{file};
-  for (const auto& prop : properties_) {
-    if (!prop.second.need_to_persist_new_value) {
-      continue;
-    }
-    if (current_content.hasValue(prop.first)) {
-      current_content.update(prop.first, prop.second.persisted_value);
-    } else {
-      current_content.append(prop.first, prop.second.persisted_value);
-    }
-  }
   file.close();
+
+  updateChangedPropertiesInPropertiesFile(current_content, properties_);
 
   auto new_file = output_file;
   new_file += ".new";
