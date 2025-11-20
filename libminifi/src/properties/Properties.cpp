@@ -158,6 +158,20 @@ void fixValidatedProperty(const std::string& property_name,
     needs_to_persist_new_value = false;
   }
 }
+
+auto getExtraPropertiesFileNames(const std::filesystem::path& extra_properties_files_dir, const std::shared_ptr<core::logging::Logger>& logger) {
+  std::vector<std::filesystem::path> extra_properties_file_names;
+  if (utils::file::exists(extra_properties_files_dir) && utils::file::is_directory(extra_properties_files_dir)) {
+    utils::file::list_dir(extra_properties_files_dir, [&](const std::filesystem::path&, const std::filesystem::path& file_name) {
+      if (!file_name.string().ends_with(".bak")) {
+        extra_properties_file_names.push_back(file_name);
+      }
+      return true;
+    }, logger, /* recursive = */ false);
+  }
+  std::ranges::sort(extra_properties_file_names);
+  return extra_properties_file_names;
+}
 }  // namespace
 
 std::filesystem::path PropertiesImpl::extra_properties_files_dir_name() const {
@@ -188,18 +202,8 @@ void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuratio
   }
 
   properties_files_ = { base_properties_file_ };
-
   const auto extra_properties_files_dir = extra_properties_files_dir_name();
-  std::vector<std::filesystem::path> extra_properties_file_names;
-  if (utils::file::exists(extra_properties_files_dir) && utils::file::is_directory(extra_properties_files_dir)) {
-    utils::file::list_dir(extra_properties_files_dir, [&](const std::filesystem::path&, const std::filesystem::path& file_name) {
-      if (!file_name.string().ends_with(".bak")) {
-        extra_properties_file_names.push_back(file_name);
-      }
-      return true;
-    }, logger_, /* recursive = */ false);
-  }
-  std::ranges::sort(extra_properties_file_names);
+  const auto extra_properties_file_names = getExtraPropertiesFileNames(extra_properties_files_dir, logger_);
   for (const auto& file_name : extra_properties_file_names) {
     properties_files_.push_back(extra_properties_files_dir / file_name);
   }
@@ -214,23 +218,27 @@ void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuratio
   properties_.clear();
   dirty_ = false;
   for (const auto& properties_file : properties_files_) {
-    std::ifstream file(properties_file, std::ifstream::in);
-    if (!file.good()) {
-      logger_->log_error("load configure file failed {}", properties_file);
-      continue;
-    }
-    for (const auto& line : PropertiesFile{file}) {
-      auto key = line.getKey();
-      auto persisted_value = line.getValue();
-      auto value = utils::string::replaceEnvironmentVariables(persisted_value);
-      bool need_to_persist_new_value = false;
-      fixValidatedProperty(std::string(prefix) + key, persisted_value, value, need_to_persist_new_value, *logger_);
-      dirty_ = dirty_ || need_to_persist_new_value;
-      properties_[key] = {persisted_value, value, need_to_persist_new_value};
-    }
+    setPropertiesFromFile(properties_file, prefix);
   }
 
   checksum_calculator_.setFileLocations(properties_files_);
+}
+
+void PropertiesImpl::setPropertiesFromFile(const std::filesystem::path& properties_file, std::string_view prefix) {
+  std::ifstream file(properties_file, std::ifstream::in);
+  if (!file.good()) {
+    logger_->log_error("load configure file failed {}", properties_file);
+    return;
+  }
+  for (const auto& line : PropertiesFile{file}) {
+    auto key = line.getKey();
+    auto persisted_value = line.getValue();
+    auto value = utils::string::replaceEnvironmentVariables(persisted_value);
+    bool need_to_persist_new_value = false;
+    fixValidatedProperty(std::string(prefix) + key, persisted_value, value, need_to_persist_new_value, *logger_);
+    dirty_ = dirty_ || need_to_persist_new_value;
+    properties_[key] = {persisted_value, value, need_to_persist_new_value};
+  }
 }
 
 std::filesystem::path PropertiesImpl::getFilePath() const {
