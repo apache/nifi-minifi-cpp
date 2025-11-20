@@ -146,6 +146,16 @@ cannot, however, use `${file name:equals(${uuid})}`, because this results in
 file and name being interpreted as different tokens, rather than a single
 token, filename.
 
+### Variable Registry
+
+You can also access custom properties that are defined in the `minifi.properties` configuration file.
+
+#### Refining access
+If `minifi.variable.registry.whitelist` is defined in the properties file (as a comma separated list), only these explicitly listed properties will be available.
+You can also restrict access via `minifi.variable.registry.blacklist` (also a comma separated list) any property listed here won't be accessible.
+Furthermore, any property with `password` in its name will be inaccessible.
+
+
 ## Supported Features
 
 ### Boolean Logic

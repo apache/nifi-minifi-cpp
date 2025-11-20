@@ -100,6 +100,37 @@ TEST_CASE("ProcessContextExpr can update existing processor properties", "[setPr
   }
 }
 
+TEST_CASE("Expression language via variable registry") {
+  const std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
+  configuration->set("foo", "foo_val");
+  configuration->set("bar", "bar_val");
+  configuration->set("minifi.variable.registry.blacklist", "foo");
+
+  TestController test_controller;
+  std::shared_ptr<TestPlan> test_plan = test_controller.createPlan(configuration);
+
+  [[maybe_unused]] minifi::core::Processor* dummy_processor = test_plan->addProcessor("DummyProcessContextExprProcessor", "dummy_processor");
+  std::shared_ptr<minifi::core::ProcessContext> context = [test_plan] { test_plan->runNextProcessor(); return test_plan->getCurrentContext(); }();
+  REQUIRE(dynamic_pointer_cast<minifi::core::ProcessContextImpl>(context) != nullptr);
+
+  {
+    REQUIRE(context->setProperty(minifi::DummyProcessContextExprProcessor::ExpressionLanguageProperty, "${bar}"));
+    CHECK(context->getProperty(minifi::DummyProcessContextExprProcessor::ExpressionLanguageProperty, nullptr) == "bar_val");
+  }
+  {
+    REQUIRE(context->setProperty(minifi::DummyProcessContextExprProcessor::ExpressionLanguageProperty, "${foo}"));
+    CHECK(context->getProperty(minifi::DummyProcessContextExprProcessor::ExpressionLanguageProperty, nullptr) == "");
+  }
+  {
+    REQUIRE(context->setProperty(minifi::DummyProcessContextExprProcessor::SimpleProperty, "${bar}"));
+    CHECK(context->getProperty(minifi::DummyProcessContextExprProcessor::SimpleProperty, nullptr) == "${bar}");
+  }
+  {
+    REQUIRE(context->setProperty(minifi::DummyProcessContextExprProcessor::SimpleProperty, "${foo}"));
+    CHECK(context->getProperty(minifi::DummyProcessContextExprProcessor::SimpleProperty, nullptr) == "${foo}");
+  }
+}
+
 TEST_CASE("ProcessContextExpr can use expression language in dynamic properties", "[getDynamicProperty][getDynamicProperties]") {
   TestController test_controller;
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
