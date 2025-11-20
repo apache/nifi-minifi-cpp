@@ -43,14 +43,14 @@ void useProcessorClassDescription(Fn&& fn) {
 
   const auto full_name = minifi::core::className<Class>();
 
-  std::vector<MinifiProperty> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
-  std::vector<MinifiDynamicProperty> dynamic_properties;
+  std::vector<MinifiPropertyDefinition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
+  std::vector<MinifiDynamicPropertyDefinition> dynamic_properties;
   for (auto& prop : Class::DynamicProperties) {
-    dynamic_properties.push_back(MinifiDynamicProperty {
+    gsl_Assert(prop.supports_expression_language && "Currently all dynamic properties support expression language");
+    dynamic_properties.push_back(MinifiDynamicPropertyDefinition {
       .name = utils::toStringView(prop.name),
       .value = utils::toStringView(prop.value),
-      .description = utils::toStringView(prop.description),
-      .supports_expression_language = prop.supports_expression_language
+      .description = utils::toStringView(prop.description)
     });
   }
   std::vector<MinifiRelationshipDefinition> relationships;
@@ -76,7 +76,7 @@ void useProcessorClassDescription(Fn&& fn) {
     attribute_relationships_cache.push_back(std::move(rel_cache));
   }
 
-  MinifiProcessorClassDescription description{
+  MinifiProcessorClassDefinition description{
     .full_name = utils::toStringView(full_name),
     .description = utils::toStringView(Class::Description),
     .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),

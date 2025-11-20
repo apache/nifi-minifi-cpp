@@ -48,7 +48,7 @@ std::unique_ptr<core::Processor> make_custom_processor(Args&&... args) {
 template<typename T, typename ...Args>
 std::unique_ptr<minifi::core::Processor> make_custom_c_processor(minifi::core::ProcessorMetadata metadata, Args&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
   std::unique_ptr<minifi::core::ProcessorApi> processor_impl;
-  minifi::api::core::useProcessorClassDescription<T>([&] (const MinifiProcessorClassDescription& description) {
+  minifi::api::core::useProcessorClassDescription<T>([&] (const MinifiProcessorClassDefinition& description) {
     minifi::utils::useCProcessorClassDescription(description, [&] (const auto&, auto c_description) {
       processor_impl = std::make_unique<minifi::utils::CProcessor>(std::move(c_description), metadata, new T(metadata, std::forward<Args>(args)...));
     });

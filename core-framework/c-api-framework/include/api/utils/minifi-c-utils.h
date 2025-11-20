@@ -47,8 +47,8 @@ inline MinifiInputRequirement toInputRequirement(minifi::core::annotation::Input
   gsl_FailFast();
 }
 
-inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::PropertyReference> props, std::vector<std::vector<MinifiStringView>>& cache) {
-  std::vector<MinifiProperty> properties;
+inline std::vector<MinifiPropertyDefinition> toProperties(std::span<const minifi::core::PropertyReference> props, std::vector<std::vector<MinifiStringView>>& cache) {
+  std::vector<MinifiPropertyDefinition> properties;
     for (auto& prop : props) {
       std::vector<MinifiStringView> sv_cache;
       const size_t allowed_values_begin = sv_cache.size();
@@ -70,7 +70,7 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
         sv_cache.emplace_back(toStringView(*prop.default_value));
         return sv_cache.size() - 1;
       }();
-      properties.push_back(MinifiProperty{
+      properties.push_back(MinifiPropertyDefinition{
         .name = toStringView(prop.name),
         .display_name = toStringView(prop.display_name),
         .description = toStringView(prop.description),

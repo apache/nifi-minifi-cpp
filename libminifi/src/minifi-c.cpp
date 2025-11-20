@@ -73,7 +73,7 @@ minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel lvl) {
   gsl_FailFast();
 }
 
-minifi::core::Property createProperty(const MinifiProperty* property_description) {
+minifi::core::Property createProperty(const MinifiPropertyDefinition* property_description) {
   gsl_Expects(property_description);
   std::vector<std::string_view> allowed_values;
   allowed_values.reserve(property_description->allowed_values_count);
@@ -137,7 +137,7 @@ class CProcessorFactory : public minifi::core::ProcessorFactory {
 
 namespace org::apache::nifi::minifi::utils {
 
-void useCProcessorClassDescription(const MinifiProcessorClassDescription& class_description, const std::function<void(minifi::ClassDescription, minifi::utils::CProcessorClassDescription)>& fn) {
+void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_description, const std::function<void(minifi::ClassDescription, minifi::utils::CProcessorClassDescription)>& fn) {
   std::vector<minifi::core::Property> properties;
   properties.reserve(class_description.class_properties_count);
   for (size_t i = 0; i < class_description.class_properties_count; ++i) {
@@ -150,7 +150,7 @@ void useCProcessorClassDescription(const MinifiProcessorClassDescription& class_
       .name = toStringView(class_description.dynamic_properties_ptr[i].name),
       .value = toStringView(class_description.dynamic_properties_ptr[i].value),
       .description = toStringView(class_description.dynamic_properties_ptr[i].description),
-      .supports_expression_language = class_description.dynamic_properties_ptr[i].supports_expression_language
+      .supports_expression_language = true
     });
   }
   std::vector<minifi::core::Relationship> relationships;

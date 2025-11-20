@@ -71,12 +71,11 @@ typedef struct MinifiOutputAttributeDefinition {
   MinifiStringView description;
 } MinifiOutputAttributeDefinition;
 
-typedef struct MinifiDynamicProperty {
+typedef struct MinifiDynamicPropertyDefinition {
   MinifiStringView name;
   MinifiStringView value;
   MinifiStringView description;
-  MinifiBool supports_expression_language;
-} MinifiDynamicProperty;
+} MinifiDynamicPropertyDefinition;
 
 typedef struct MinifiPropertyValidator MinifiPropertyValidator;
 typedef struct MinifiFlowFile MinifiFlowFile;
@@ -99,7 +98,7 @@ typedef enum MinifiStatus {
   MINIFI_STATUS_PROCESSOR_YIELD = 6
 } MinifiStatus;
 
-typedef struct MinifiProperty {
+typedef struct MinifiPropertyDefinition {
   MinifiStringView name;
   MinifiStringView display_name;
   MinifiStringView description;
@@ -113,7 +112,7 @@ typedef struct MinifiProperty {
 
   const MinifiStringView* type;
   MinifiBool supports_expression_language;
-} MinifiProperty;
+} MinifiPropertyDefinition;
 
 typedef enum MinifiLogLevel {
   MINIFI_LOG_LEVEL_TRACE = 0,
@@ -143,13 +142,13 @@ typedef struct MinifiProcessorCallbacks {
   MINIFI_OWNED MinifiPublishedMetrics*(*calculateMetrics)(void*);
 } MinifiProcessorCallbacks;
 
-typedef struct MinifiProcessorClassDescription {
+typedef struct MinifiProcessorClassDefinition {
   MinifiStringView full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::GenerateFlowFile'
   MinifiStringView description;
   size_t class_properties_count;
-  const MinifiProperty* class_properties_ptr;
+  const MinifiPropertyDefinition* class_properties_ptr;
   size_t dynamic_properties_count;
-  const MinifiDynamicProperty* dynamic_properties_ptr;
+  const MinifiDynamicPropertyDefinition* dynamic_properties_ptr;
   size_t class_relationships_count;
   const MinifiRelationshipDefinition* class_relationships_ptr;
   size_t output_attributes_count;
@@ -160,7 +159,7 @@ typedef struct MinifiProcessorClassDescription {
   MinifiBool is_single_threaded;
 
   MinifiProcessorCallbacks callbacks;
-} MinifiProcessorClassDescription;
+} MinifiProcessorClassDefinition;
 
 typedef enum MinifiStandardPropertyValidator {
   MINIFI_ALWAYS_VALID_VALIDATOR = 0,
@@ -179,7 +178,7 @@ typedef struct MinifiExtensionCreateInfo {
   void(*deinit)(void* user_data);
   void* user_data;
   size_t processors_count;
-  const MinifiProcessorClassDescription* processors_ptr;
+  const MinifiProcessorClassDefinition* processors_ptr;
 } MinifiExtensionCreateInfo;
 
 MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo*);
