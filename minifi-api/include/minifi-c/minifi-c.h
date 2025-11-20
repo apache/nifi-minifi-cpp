@@ -75,6 +75,7 @@ typedef struct MinifiDynamicPropertyDefinition {
   MinifiStringView name;
   MinifiStringView value;
   MinifiStringView description;
+  MinifiBool supports_expression_language;
 } MinifiDynamicPropertyDefinition;
 
 typedef struct MinifiPropertyValidator MinifiPropertyValidator;

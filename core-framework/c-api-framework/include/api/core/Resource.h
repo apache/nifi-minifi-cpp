@@ -46,11 +46,11 @@ void useProcessorClassDescription(Fn&& fn) {
   std::vector<MinifiPropertyDefinition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
   std::vector<MinifiDynamicPropertyDefinition> dynamic_properties;
   for (auto& prop : Class::DynamicProperties) {
-    gsl_Assert(prop.supports_expression_language && "Currently all dynamic properties support expression language");
     dynamic_properties.push_back(MinifiDynamicPropertyDefinition {
       .name = utils::toStringView(prop.name),
       .value = utils::toStringView(prop.value),
-      .description = utils::toStringView(prop.description)
+      .description = utils::toStringView(prop.description),
+      .supports_expression_language = prop.supports_expression_language
     });
   }
   std::vector<MinifiRelationshipDefinition> relationships;

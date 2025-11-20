@@ -150,7 +150,7 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
       .name = toStringView(class_description.dynamic_properties_ptr[i].name),
       .value = toStringView(class_description.dynamic_properties_ptr[i].value),
       .description = toStringView(class_description.dynamic_properties_ptr[i].description),
-      .supports_expression_language = true
+      .supports_expression_language = class_description.dynamic_properties_ptr[i].supports_expression_language
     });
   }
   std::vector<minifi::core::Relationship> relationships;
