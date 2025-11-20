@@ -1039,6 +1039,9 @@ void ProcessSessionImpl::persistFlowFilesBeforeTransfer(
     const std::map<utils::Identifier, FlowFileUpdate>& modifiedFlowFiles) {
 
   auto flowFileRepo = process_context_->getFlowFileRepository();
+
+  // In case of a noop repository we do not persist anything, flow files are only stored in memory, so we do not need to adjust the owned count
+  // Otherwise the increase of the owned count would result in memory leaks, as the count is not decreased later in the noop repository
   if (flowFileRepo->isNoop()) {
     return;
   }
