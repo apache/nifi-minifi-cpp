@@ -30,7 +30,7 @@ from minifi_test_framework.containers.host_file import HostFile
 
 
 class Container:
-    def __init__(self, image_name: str, container_name: str, network: Network, command: str | None = None):
+    def __init__(self, image_name: str, container_name: str, network: Network, command: str | None = None, entrypoint: str | None = None):
         self.image_name: str = image_name
         self.container_name: str = container_name
         self.network: Network = network
@@ -42,6 +42,7 @@ class Container:
         self.host_files: list[HostFile] = []
         self.volumes = {}
         self.command: str | None = command
+        self.entrypoint: str | None = entrypoint
         self._temp_dir: tempfile.TemporaryDirectory | None = None
         self.ports: dict[str, int] | None = None
         self.environment: list[str] = []
@@ -91,7 +92,7 @@ class Container:
             self.container = self.client.containers.run(
                 image=self.image_name, name=self.container_name, ports=self.ports,
                 environment=self.environment, volumes=self.volumes, network=self.network.name,
-                command=self.command, user=self.user, detach=True)
+                command=self.command, entrypoint=self.entrypoint, user=self.user, detach=True)
         except Exception as e:
             logging.error(f"Error starting container: {e}")
             raise
@@ -427,6 +428,28 @@ class Container:
                 logging.warning(f"File content does not match expected JSON: {file_content}")
             except json.JSONDecodeError:
                 logging.error("Error decoding JSON content from file.")
+                continue
+
+        return False
+
+    def directory_contains_file_with_minimum_size(self, directory_path: str, expected_size: int) -> bool:
+        if not self.container or not self.nonempty_dir_exists(directory_path):
+            return False
+
+        command = "sh -c {}".format(shlex.quote(f"find {directory_path} -maxdepth 1 -type f -exec stat -c %s {{}} \\;"))
+
+        exit_code, output = self.exec_run(command)
+        if exit_code != 0:
+            logging.error(f"Error running command to get file sizes: {output}")
+            return False
+        sizes = output.strip().split('\n')
+        for size_str in sizes:
+            try:
+                size = int(size_str)
+                if size >= expected_size:
+                    return True
+            except ValueError:
+                logging.error(f"Error parsing size '{size_str}' as integer for file size comparison.")
                 continue
 
         return False

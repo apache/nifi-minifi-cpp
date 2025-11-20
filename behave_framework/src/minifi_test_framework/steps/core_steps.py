@@ -25,6 +25,8 @@ import uuid
 import humanfriendly
 from behave import when, step, given
 
+from minifi_test_framework.containers.http_proxy_container import HttpProxy
+from minifi_test_framework.containers.nifi_container import NifiContainer
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
@@ -100,3 +102,13 @@ def step_impl(context: MinifiTestContext):
 @given("OpenSSL FIPS mode is enabled in MiNiFi")
 def step_impl(context):
     context.get_or_create_default_minifi_container().enable_openssl_fips_mode()
+
+
+@step("the http proxy server is set up")
+def step_impl(context):
+    context.containers["http-proxy"] = HttpProxy(context)
+
+
+@step("a NiFi container is set up")
+def step_impl(context):
+    context.containers["nifi"] = NifiContainer(context)

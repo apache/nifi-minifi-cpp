@@ -105,11 +105,16 @@ def step_impl(context: MinifiTestContext, url: str):
     assert http_proxy_container.check_http_proxy_access(url) or http_proxy_container.log_app_output()
 
 
+@then('in the "{container}" container no files are placed in the "{directory}" directory in {duration} of running time')
+def step_impl(context, container, directory, duration):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    assert check_condition_after_wait(condition=lambda: context.get_minifi_container(container).get_number_of_files(directory) == 0,
+                                      context=context, wait_time=duration_seconds)
+
+
 @then('no files are placed in the "{directory}" directory in {duration} of running time')
 def step_impl(context, directory, duration):
-    duration_seconds = humanfriendly.parse_timespan(duration)
-    assert check_condition_after_wait(condition=lambda: context.get_default_minifi_container().get_number_of_files(directory) == 0,
-                                      context=context, wait_time=duration_seconds)
+    context.execute_steps(f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container no files are placed in the "{directory}" directory in {duration} of running time')
 
 
 @then('{num:d} files are placed in the "{directory}" directory in less than {duration}')
@@ -221,3 +226,31 @@ def step_impl(context, directory, duration):
     assert wait_for_condition(
         condition=lambda: context.get_default_minifi_container().directory_contains_empty_file(directory),
         timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_default_minifi_container().exited, context=context)
+
+
+@then("in the \"{container_name}\" container at least one empty file is placed in the \"{directory}\" directory in less than {duration}")
+def step_impl(context, container_name, directory, duration):
+    timeout_in_seconds = humanfriendly.parse_timespan(duration)
+    if container_name == "nifi":
+        assert wait_for_condition(
+            condition=lambda: context.containers["nifi"].directory_contains_empty_file(directory),
+            timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_minifi_container(container_name).exited, context=context)
+        return
+    assert wait_for_condition(
+        condition=lambda: context.get_minifi_container(container_name).directory_contains_empty_file(directory),
+        timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_minifi_container(container_name).exited, context=context)
+
+
+@then("in the \"{container_name}\" container at least one file with minimum size of \"{size}\" is placed in the \"{directory}\" directory in less than {duration}")
+def step_impl(context, container_name: str, directory: str, size: str, duration: str):
+    timeout_in_seconds = humanfriendly.parse_timespan(duration)
+    size_in_bytes = humanfriendly.parse_size(size)
+    assert wait_for_condition(
+        condition=lambda: context.get_minifi_container(container_name).directory_contains_file_with_minimum_size(directory, size_in_bytes),
+        timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_minifi_container(container_name).exited, context=context)
+
+
+@then("at least one file with minimum size of \"{size}\" is placed in the \"{directory}\" directory in less than {duration}")
+def step_impl(context, directory: str, size: str, duration: str):
+    context.execute_steps(
+        f'Then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container at least one file with minimum size of "{size}" is placed in the "{directory}" directory in less than {duration}')
