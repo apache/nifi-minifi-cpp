@@ -19,6 +19,7 @@ import logging
 import random
 import string
 import os
+import time
 
 import humanfriendly
 from behave import when, step, given
@@ -66,3 +67,9 @@ def step_impl(context: MinifiTestContext, filename: str, container_path: str, co
 @given('a host resource file "{filename}" is bound to the "{container_path}" path in the MiNiFi container')
 def step_impl(context: MinifiTestContext, filename: str, container_path: str):
     context.execute_steps(f"given a host resource file \"{filename}\" is bound to the \"{container_path}\" path in the MiNiFi container \"{DEFAULT_MINIFI_CONTAINER_NAME}\"")
+
+
+@step("after {duration} have passed")
+@step("after {duration} has passed")
+def step_impl(context, duration):
+    time.sleep(humanfriendly.parse_timespan(duration))

@@ -1038,10 +1038,15 @@ void ProcessSessionImpl::persistFlowFilesBeforeTransfer(
     std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile> > >& transactionMap,
     const std::map<utils::Identifier, FlowFileUpdate>& modifiedFlowFiles) {
 
-  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
-
   auto flowFileRepo = process_context_->getFlowFileRepository();
-  auto contentRepo = process_context_->getContentRepository();
+
+  // In case of a noop repository we do not persist anything, flow files are only stored in memory, so we do not need to adjust the owned count
+  // Otherwise the increase of the owned count would result in memory leaks, as the count is not decreased later in the noop repository
+  if (flowFileRepo->isNoop()) {
+    return;
+  }
+
+  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
 
   enum class Type {
     Dropped, Transferred

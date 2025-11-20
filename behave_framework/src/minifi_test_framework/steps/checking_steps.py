@@ -142,3 +142,13 @@ def step_impl(context: MinifiTestContext, content: str, directory: str, duration
     assert wait_for_condition(
         condition=lambda: context.get_default_minifi_container().verify_path_with_json_content(directory, content),
         timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_default_minifi_container().exited, context=context)
+
+
+@then('MiNiFi\'s memory usage does not increase by more than {max_increase} after {duration}')
+def step_impl(context: MinifiTestContext, max_increase: str, duration: str):
+    time_in_seconds = humanfriendly.parse_timespan(duration)
+    max_increase_in_bytes = humanfriendly.parse_size(max_increase)
+    initial_memory_usage = context.get_default_minifi_container().get_memory_usage()
+    time.sleep(time_in_seconds)
+    final_memory_usage = context.get_default_minifi_container().get_memory_usage()
+    assert final_memory_usage - initial_memory_usage <= max_increase_in_bytes
