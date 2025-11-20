@@ -20,7 +20,6 @@ import uuid
 from behave import given, step
 
 from minifi_test_framework.containers.directory import Directory
-from minifi_test_framework.containers.http_proxy_container import HttpProxy
 from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
 from minifi_test_framework.minifi.connection import Connection
 from minifi_test_framework.minifi.controller_service import ControllerService
@@ -61,6 +60,9 @@ def step_impl(context: MinifiTestContext, processor_type: str, property_name: st
 def step_impl(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str, minifi_container_name: str):
     processor = Processor(processor_type, processor_type)
     processor.add_property(property_name, property_value)
+    if minifi_container_name == "nifi":
+        context.containers["nifi"].flow_definition.add_processor(processor)
+        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
 
@@ -73,6 +75,9 @@ def step_impl(context: MinifiTestContext, processor_type: str, processor_name: s
 @given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
 def step_impl(context: MinifiTestContext, processor_type: str, minifi_container_name: str):
     processor = Processor(processor_type, processor_type)
+    if minifi_container_name == "nifi":
+        context.containers["nifi"].flow_definition.add_processor(processor)
+        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
 
@@ -81,13 +86,23 @@ def step_impl(context: MinifiTestContext, processor_type: str):
     context.execute_steps(f'given a {processor_type} processor in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 
-@step('the "{property_name}" property of the {processor_name} processor is set to "{property_value}"')
-def step_impl(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str):
-    processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
+@given('the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the "{minifi_container_name}" flow')
+def step_impl(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str, minifi_container_name: str):
+    processor = None
+    if minifi_container_name == "nifi":
+        processor = context.containers["nifi"].flow_definition.get_processor(processor_name)
+    else:
+        processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name)
     if property_value == "(not set)":
         processor.remove_property(property_name)
     else:
         processor.add_property(property_name, property_value)
+
+
+@given('the "{property_name}" property of the {processor_name} processor is set to "{property_value}"')
+def step_impl(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str):
+    context.execute_steps(
+        f'given the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 
 @step('the "{property_name}" property of the {controller_name} controller service is set to "{property_value}"')
@@ -107,6 +122,9 @@ def step_impl(context: MinifiTestContext, funnel_name: str):
 @step('in the "{minifi_container_name}" flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
 def step_impl(context: MinifiTestContext, relationship_name: str, source: str, target: str, minifi_container_name: str):
     connection = Connection(source_name=source, source_relationship=relationship_name, target_name=target)
+    if minifi_container_name == "nifi":
+        context.containers["nifi"].flow_definition.add_connection(connection)
+        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_connection(connection)
 
 
@@ -123,6 +141,9 @@ def step_impl(context: MinifiTestContext, funnel_name: str, target: str):
 
 @step("{processor_name}'s {relationship} relationship is auto-terminated in the \"{minifi_container_name}\" flow")
 def step_impl(context: MinifiTestContext, processor_name: str, relationship: str, minifi_container_name: str):
+    if minifi_container_name == "nifi":
+        context.containers["nifi"].flow_definition.get_processor(processor_name).auto_terminated_relationships.append(relationship)
+        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name).auto_terminated_relationships.append(
         relationship)
 
@@ -135,6 +156,14 @@ def step_impl(context: MinifiTestContext, processor_name: str, relationship: str
 @given("a transient MiNiFi flow is set up")
 def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().command = ["/bin/sh", "-c", "timeout 10s ./bin/minifi.sh run && sleep 100"]
+
+
+@step('the scheduling period of the {processor_name} processor is set to "{duration_str}" in the "{minifi_container_name}" flow')
+def step_impl(context: MinifiTestContext, processor_name: str, duration_str: str, minifi_container_name: str):
+    if minifi_container_name == "nifi":
+        context.containers["nifi"].flow_definition.get_processor(processor_name).scheduling_period = duration_str
+        return
+    context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name).scheduling_period = duration_str
 
 
 @step('the scheduling period of the {processor_name} processor is set to "{duration_str}"')
@@ -189,11 +218,6 @@ def step_impl(context: MinifiTestContext):
     for row in context.table:
         processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(row["processor name"])
         processor.add_property(row["property name"], row["property value"])
-
-
-@step("the http proxy server is set up")
-def step_impl(context):
-    context.containers["http-proxy"] = HttpProxy(context)
 
 
 @step("the processors are connected up as described here")
@@ -270,14 +294,17 @@ def step_impl(context, property_name, processor_name_one, processor_name_two):
 
 
 # TLS
-def add_ssl_context_service_for_minifi(context: MinifiTestContext, cert_name: str):
+def add_ssl_context_service_for_minifi(context: MinifiTestContext, cert_name: str, use_system_cert_store: bool = False):
     ssl_context_service = context.get_or_create_default_minifi_container().flow_definition.get_controller_service("SSLContextService")
     if ssl_context_service is not None:
         return
     controller_service = ControllerService(class_name="SSLContextService", service_name="SSLContextService")
     controller_service.add_property("Client Certificate", f"/tmp/resources/{cert_name}.crt")
     controller_service.add_property("Private Key", f"/tmp/resources/{cert_name}.key")
-    controller_service.add_property("CA Certificate", "/tmp/resources/root_ca.crt")
+    if use_system_cert_store:
+        controller_service.add_property("Use System Cert Store", "true")
+    else:
+        controller_service.add_property("CA Certificate", "/tmp/resources/root_ca.crt")
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
@@ -290,5 +317,12 @@ def step_impl(context: MinifiTestContext):
 @given("an ssl context service with a manual CA cert file is set up for {processor_name}")
 def step_impl(context, processor_name):
     add_ssl_context_service_for_minifi(context, "minifi_client")
+    processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
+    processor.add_property('SSL Context Service', 'SSLContextService')
+
+
+@given("an ssl context service using the system CA cert store is set up for {processor_name}")
+def step_impl(context: MinifiTestContext, processor_name):
+    add_ssl_context_service_for_minifi(context, "minifi_client", use_system_cert_store=True)
     processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
     processor.add_property('SSL Context Service', 'SSLContextService')
