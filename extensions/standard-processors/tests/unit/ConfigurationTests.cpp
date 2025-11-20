@@ -23,12 +23,11 @@
 #include "utils/Environment.h"
 
 namespace {
-bool fileContentsMatch(const std::filesystem::path& file_name, const std::unordered_set<std::string>& expected_contents) {
+bool settingsInFileAreAsExpected(const std::filesystem::path& file_name, const std::unordered_set<std::string>& expected_contents) {
   std::unordered_set<std::string> actual_contents;
   std::ifstream file{file_name};
   if (file.is_open()) {
-    std::string line;
-    while (std::getline(file, line)) {
+    for (std::string line; std::getline(file, line); ) {
       actual_contents.insert(line);
     }
   }
@@ -90,7 +89,7 @@ TEST_CASE("Configuration can fix misconfigured timeperiod<->integer validated pr
 
   {
     CHECK(properties_file_time_after_creation == std::filesystem::last_write_time(original_properties_path));
-    CHECK(fileContentsMatch(original_properties_path, {"nifi.c2.agent.heartbeat.period=1min", "nifi.administrative.yield.duration=30000"}));
+    CHECK(settingsInFileAreAsExpected(original_properties_path, {"nifi.c2.agent.heartbeat.period=1min", "nifi.administrative.yield.duration=30000"}));
   }
 
   CHECK(configure->commitChanges());
@@ -98,7 +97,7 @@ TEST_CASE("Configuration can fix misconfigured timeperiod<->integer validated pr
   {
     CHECK(properties_file_time_after_creation == std::filesystem::last_write_time(original_properties_path));
     CHECK(properties_file_time_after_creation <= std::filesystem::last_write_time(updated_properties_path));
-    CHECK(fileContentsMatch(updated_properties_path, {"nifi.c2.agent.heartbeat.period=60000", "nifi.administrative.yield.duration=30000 ms"}));
+    CHECK(settingsInFileAreAsExpected(updated_properties_path, {"nifi.c2.agent.heartbeat.period=60000", "nifi.administrative.yield.duration=30000 ms"}));
   }
 
   const std::shared_ptr<minifi::Configure> configure_reread = std::make_shared<minifi::ConfigureImpl>();
@@ -128,7 +127,7 @@ TEST_CASE("Configuration can fix misconfigured datasize<->integer validated prop
 
   {
     CHECK(properties_file_time_after_creation == std::filesystem::last_write_time(original_properties_path));
-    CHECK(fileContentsMatch(original_properties_path, {"appender.rolling.max_file_size=6000"}));
+    CHECK(settingsInFileAreAsExpected(original_properties_path, {"appender.rolling.max_file_size=6000"}));
   }
 
   CHECK(configure->commitChanges());
@@ -136,7 +135,7 @@ TEST_CASE("Configuration can fix misconfigured datasize<->integer validated prop
   {
     CHECK(properties_file_time_after_creation == std::filesystem::last_write_time(original_properties_path));
     CHECK(properties_file_time_after_creation <= std::filesystem::last_write_time(updated_properties_path));
-    CHECK(fileContentsMatch(updated_properties_path, {"appender.rolling.max_file_size=6000 B"}));
+    CHECK(settingsInFileAreAsExpected(updated_properties_path, {"appender.rolling.max_file_size=6000 B"}));
   }
 
   const std::shared_ptr<minifi::Configure> configure_reread = std::make_shared<minifi::ConfigureImpl>();
@@ -167,7 +166,7 @@ TEST_CASE("Configuration can fix misconfigured validated properties within envir
 
   {
     CHECK(properties_file_time_after_creation == std::filesystem::last_write_time(original_properties_path));
-    CHECK(fileContentsMatch(original_properties_path, {"compression.cached.log.max.size=${SOME_VARIABLE}", "compression.compressed.log.max.size=3000"}));
+    CHECK(settingsInFileAreAsExpected(original_properties_path, {"compression.cached.log.max.size=${SOME_VARIABLE}", "compression.compressed.log.max.size=3000"}));
   }
 
   CHECK(configure->commitChanges());
@@ -175,7 +174,7 @@ TEST_CASE("Configuration can fix misconfigured validated properties within envir
   {
     CHECK(properties_file_time_after_creation == std::filesystem::last_write_time(original_properties_path));
     CHECK(properties_file_time_after_creation <= std::filesystem::last_write_time(updated_properties_path));
-    CHECK(fileContentsMatch(updated_properties_path, {"compression.compressed.log.max.size=3000 B"}));
+    CHECK(settingsInFileAreAsExpected(updated_properties_path, {"compression.compressed.log.max.size=3000 B"}));
   }
 
   const std::shared_ptr<minifi::Configure> configure_reread = std::make_shared<minifi::ConfigureImpl>();
@@ -212,7 +211,7 @@ TEST_CASE("Committing changes to a configuration creates a backup file") {
 
   configure->set("number.of.lions", "8");
   CHECK(configure->commitChanges());
-  CHECK(fileContentsMatch(updated_properties_path, {"number.of.lions=8"}));
+  CHECK(settingsInFileAreAsExpected(updated_properties_path, {"number.of.lions=8"}));
   CHECK_FALSE(std::filesystem::exists(backup_properties_path));
 
   const std::shared_ptr<minifi::Configure> configure_2 = std::make_shared<minifi::ConfigureImpl>();
@@ -223,8 +222,8 @@ TEST_CASE("Committing changes to a configuration creates a backup file") {
 
   configure->set("number.of.giraffes", "29");
   CHECK(configure->commitChanges());
-  CHECK(fileContentsMatch(updated_properties_path, {"number.of.lions=8", "number.of.giraffes=29"}));
-  CHECK(fileContentsMatch(backup_properties_path, {"number.of.lions=8"}));
+  CHECK(settingsInFileAreAsExpected(updated_properties_path, {"number.of.lions=8", "number.of.giraffes=29"}));
+  CHECK(settingsInFileAreAsExpected(backup_properties_path, {"number.of.lions=8"}));
 
   const std::shared_ptr<minifi::Configure> configure_3 = std::make_shared<minifi::ConfigureImpl>();
   configure_3->loadConfigureFile(original_properties_path);
