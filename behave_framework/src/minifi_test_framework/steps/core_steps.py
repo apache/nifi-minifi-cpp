@@ -21,24 +21,24 @@ import string
 import os
 
 import humanfriendly
-from behave import when, step
+from behave import when, step, given
+
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
 
 
 @when("both instances start up")
 @when("all instances start up")
 def step_impl(context: MinifiTestContext):
-    for container in context.containers:
-        assert container.deploy()
-    assert context.minifi_container.deploy() or context.minifi_container.log_app_output()
+    for container in context.containers.values():
+        assert container.deploy() or container.log_app_output()
     logging.debug("All instances started up")
 
 
 @when("the MiNiFi instance starts up")
 def step_impl(context):
-    assert context.minifi_container.deploy()
+    assert context.get_or_create_default_minifi_container().deploy()
     logging.debug("MiNiFi instance started up")
 
 
@@ -48,10 +48,21 @@ def step_impl(context: MinifiTestContext, directory: str, size: str):
     content = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(size))
     new_dir = Directory(directory)
     new_dir.files["input.txt"] = content
-    context.minifi_container.dirs.append(new_dir)
+    context.get_or_create_default_minifi_container().dirs.append(new_dir)
 
 
 @step('a file with filename "{file_name}" and content "{content}" is present in "{path}"')
 def step_impl(context: MinifiTestContext, file_name: str, content: str, path: str):
     new_content = content.replace("\\n", "\n")
-    context.minifi_container.files.append(File(os.path.join(path, file_name), new_content))
+    context.get_or_create_default_minifi_container().files.append(File(os.path.join(path, file_name), new_content))
+
+
+@given('a host resource file "{filename}" is bound to the "{container_path}" path in the MiNiFi container "{container_name}"')
+def step_impl(context: MinifiTestContext, filename: str, container_path: str, container_name: str):
+    path = os.path.join(context.resource_dir, filename)
+    context.get_or_create_minifi_container(container_name).add_host_file(path, container_path)
+
+
+@given('a host resource file "{filename}" is bound to the "{container_path}" path in the MiNiFi container')
+def step_impl(context: MinifiTestContext, filename: str, container_path: str):
+    context.execute_steps(f"given a host resource file \"{filename}\" is bound to the \"{container_path}\" path in the MiNiFi container \"{DEFAULT_MINIFI_CONTAINER_NAME}\"")

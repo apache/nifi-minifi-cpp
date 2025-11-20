@@ -198,4 +198,5 @@ exec \
     "${docker_dir}/../extensions/aws/tests/features" \
     "${docker_dir}/../extensions/azure/tests/features" \
     "${docker_dir}/../extensions/sql/tests/features" \
-    "${docker_dir}/../extensions/llamacpp/tests/features"
+    "${docker_dir}/../extensions/llamacpp/tests/features" \
+    "${docker_dir}/../extensions/opc/tests/features"

@@ -27,9 +27,8 @@ from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 def log_due_to_failure(context: MinifiTestContext | None):
     if context is not None:
-        for container in context.containers:
+        for container in context.containers.values():
             container.log_app_output()
-        context.minifi_container.log_app_output()
 
 
 def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, bail_condition: Callable[[], bool],

@@ -29,21 +29,24 @@ from minifi_test_framework.containers.host_file import HostFile
 
 
 class Container:
-    def __init__(self, image_name: str, container_name: str, network: Network):
+    def __init__(self, image_name: str, container_name: str, network: Network, command: str | None = None):
         self.image_name: str = image_name
         self.container_name: str = container_name
         self.network: Network = network
         self.user: str = "0:0"
-        self.client = docker.from_env()
+        self.client: docker.DockerClient = docker.from_env()
         self.container = None
         self.files: list[File] = []
         self.dirs: list[Directory] = []
         self.host_files: list[HostFile] = []
         self.volumes = {}
-        self.command = None
-        self._temp_dir = None
-        self.ports = None
+        self.command: str | None = command
+        self._temp_dir: tempfile.TemporaryDirectory | None = None
+        self.ports: dict[str, int] | None = None
         self.environment: list[str] = []
+
+    def add_host_file(self, host_path: str, container_path: str, mode: str = "ro"):
+        self.host_files.append(HostFile(container_path, host_path, mode))
 
     def deploy(self) -> bool:
         self._temp_dir = tempfile.TemporaryDirectory()
@@ -63,7 +66,7 @@ class Container:
                     temp_file.write(content)
             self.volumes[temp_path] = {"bind": directory.path, "mode": directory.mode}
         for host_file in self.host_files:
-            self.volumes[host_file.container_path] = {"bind": host_file.host_path, "mode": host_file.mode}
+            self.volumes[host_file.host_path] = {"bind": host_file.container_path, "mode": host_file.mode}
 
         try:
             existing_container = self.client.containers.get(self.container_name)
@@ -84,7 +87,10 @@ class Container:
 
     def clean_up(self):
         if self.container:
-            self.container.remove(force=True)
+            try:
+                self.container.remove(force=True)
+            except Exception as e:
+                logging.error(f"Error cleaning up container '{self.container_name}': {e}")
 
     def exec_run(self, command) -> tuple[int | None, str]:
         if self.container:
@@ -110,7 +116,7 @@ class Container:
         quoted_content = shlex.quote(expected_content)
         command = "sh -c {}".format(shlex.quote(f"grep -l -F -- {quoted_content} {directory_path}/*"))
 
-        exit_code, output = self.exec_run(command)
+        exit_code, _ = self.exec_run(command)
 
         return exit_code == 0
 
