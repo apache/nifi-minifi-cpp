@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "minifi-c/minifi-c.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 #include "PythonCreator.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "PythonBindings.h"

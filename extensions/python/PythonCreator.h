@@ -41,8 +41,7 @@
 #include "utils/file/FilePattern.h"
 #include "utils/file/FileUtils.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
-#include "minifi-c/minifi-c.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

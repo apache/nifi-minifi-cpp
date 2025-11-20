@@ -20,7 +20,7 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "client/SFTPClient.h"
 #include "minifi-c/minifi-c.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 #include "core/Resource.h"
 
 namespace minifi = org::apache::nifi::minifi;

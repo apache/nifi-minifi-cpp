@@ -54,7 +54,7 @@ void Logger::set_max_log_size(int size) {
 }
 
 void Logger::log_string(minifi::core::logging::LOG_LEVEL level, std::string str) {
-  MinifiLoggerLogString(impl_, toCLogLevel(level), MinifiStringView{.data = str.data(), .length = gsl::narrow_cast<uint32_t>(str.length())});
+  MinifiLoggerLogString(impl_, toCLogLevel(level), MinifiStringView{.data = str.data(), .length = str.length()});
 }
 
 bool Logger::should_log(minifi::core::logging::LOG_LEVEL level) {

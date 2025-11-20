@@ -19,7 +19,7 @@
 #include "utils/Environment.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "minifi-c/minifi-c.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 #include "core/Resource.h"
 
 namespace minifi = org::apache::nifi::minifi;

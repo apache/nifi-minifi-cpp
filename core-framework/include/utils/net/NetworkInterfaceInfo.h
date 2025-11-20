@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <unordered_map>
+#include <functional>
 #include <optional>
 #include "minifi-cpp/core/logging/Logger.h"
 

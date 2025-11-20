@@ -58,7 +58,7 @@ bool ProcessorImpl::isWorkAvailable() {
 }
 
 void ProcessorImpl::restore(const std::shared_ptr<FlowFile>& /*file*/) {
-  gsl_Assert("Not implemented");
+  gsl_Assert(false && "Not implemented");
 }
 
 std::string ProcessorImpl::getName() const {

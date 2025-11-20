@@ -176,7 +176,7 @@ typedef enum MinifiStandardPropertyValidator {
 typedef struct MinifiExtensionCreateInfo {
   MinifiStringView name;
   MinifiStringView version;
-  void(*deinit)(void*);
+  void(*deinit)(void* user_data);
   void* user_data;
   size_t processors_count;
   const MinifiProcessorClassDescription* processors_ptr;

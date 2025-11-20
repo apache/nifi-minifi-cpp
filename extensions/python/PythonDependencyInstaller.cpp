@@ -25,7 +25,7 @@
 #include "types/Types.h"
 #include "utils/OptionalUtils.h"
 #include "utils/ConfigurationUtils.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 

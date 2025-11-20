@@ -78,7 +78,7 @@ inline std::vector<MinifiProperty> toProperties(std::span<const minifi::core::Pr
         .is_sensitive = prop.is_sensitive,
 
         .default_value = default_value_begin ? sv_cache.data() + default_value_begin.value() : nullptr,
-        .allowed_values_count = gsl::narrow<uint32_t>(prop.allowed_values.size()),
+        .allowed_values_count = prop.allowed_values.size(),
         .allowed_values_ptr = sv_cache.data() + allowed_values_begin,
         .validator = MinifiGetStandardValidator(toStandardPropertyValidator(prop.validator)),
 

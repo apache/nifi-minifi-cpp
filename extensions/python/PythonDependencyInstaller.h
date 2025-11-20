@@ -22,7 +22,7 @@
 
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
