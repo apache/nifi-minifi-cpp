@@ -1,6 +1,0 @@
-splunk:
-  hec:
-    enable: True
-    ssl: False
-    port: 8088
-    token: 176fae97-f59d-4f08-939a-aa6a543f2485
