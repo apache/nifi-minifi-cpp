@@ -28,7 +28,6 @@ from .DockerCommunicator import DockerCommunicator
 from .MinifiControllerExecutor import MinifiControllerExecutor
 from .checkers.AwsChecker import AwsChecker
 from .checkers.AzureChecker import AzureChecker
-from .checkers.ElasticSearchChecker import ElasticSearchChecker
 from .checkers.GcsChecker import GcsChecker
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
@@ -47,7 +46,6 @@ class DockerTestCluster:
         self.container_store = ContainerStore(self.container_communicator.create_docker_network(feature_id), context.image_store, context.kubernetes_proxy, feature_id=feature_id)
         self.aws_checker = AwsChecker(self.container_communicator)
         self.azure_checker = AzureChecker(self.container_communicator)
-        self.elastic_search_checker = ElasticSearchChecker(self.container_communicator)
         self.gcs_checker = GcsChecker(self.container_communicator)
         self.postgres_checker = PostgresChecker(self.container_communicator)
         self.splunk_checker = SplunkChecker(self.container_communicator)
@@ -261,26 +259,6 @@ class DockerTestCluster:
     def is_gcs_bucket_empty(self, container_name):
         container_name = self.container_store.get_container_name_with_postfix(container_name)
         return self.gcs_checker.is_gcs_bucket_empty(container_name)
-
-    def is_elasticsearch_empty(self, container_name):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.elastic_search_checker.is_elasticsearch_empty(container_name)
-
-    def create_doc_elasticsearch(self, container_name, index_name, doc_id):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.elastic_search_checker.create_doc_elasticsearch(container_name, index_name, doc_id)
-
-    def check_elastic_field_value(self, container_name, index_name, doc_id, field_name, field_value):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.elastic_search_checker.check_elastic_field_value(container_name, index_name, doc_id, field_name, field_value)
-
-    def elastic_generate_apikey(self, elastic_container_name):
-        elastic_container_name = self.container_store.get_container_name_with_postfix(elastic_container_name)
-        return self.elastic_search_checker.elastic_generate_apikey(elastic_container_name)
-
-    def add_elastic_user_to_opensearch(self, container_name):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.elastic_search_checker.add_elastic_user_to_opensearch(container_name)
 
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
         postgresql_container_name = self.container_store.get_container_name_with_postfix(postgresql_container_name)
