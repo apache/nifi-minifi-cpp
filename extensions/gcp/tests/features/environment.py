@@ -12,17 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ..core.Processor import Processor
+from minifi_test_framework.core.hooks import common_before_scenario
+from minifi_test_framework.core.hooks import common_after_scenario
 
 
-class PutGCSObject(Processor):
-    def __init__(self, context):
-        super(PutGCSObject, self).__init__(
-            context=context,
-            clazz='PutGCSObject',
-            properties={
-                'Bucket': 'test-bucket',
-                'Endpoint Override URL': f'fake-gcs-server-{context.feature_id}:4443',
-                'Number of retries': 2
-            },
-            auto_terminate=["success", "failure"])
+def before_scenario(context, scenario):
+    common_before_scenario(context, scenario)
+
+
+def after_scenario(context, scenario):
+    common_after_scenario(context, scenario)

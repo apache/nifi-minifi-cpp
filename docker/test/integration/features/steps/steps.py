@@ -18,7 +18,6 @@ from minifi.core.RemoteProcessGroup import RemoteProcessGroup
 from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
-from minifi.controllers.GCPCredentialsControllerService import GCPCredentialsControllerService
 from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
@@ -525,14 +524,6 @@ def step_impl(context, protocol):
     context.test.acquire_container(context=context, name=client_name, engine=client_name)
 
 
-# google cloud storage setup
-@given("a Google Cloud storage server is set up")
-@given("a Google Cloud storage server is set up with some test data")
-@given('a Google Cloud storage server is set up and a single object with contents "preloaded data" is present')
-def step_impl(context):
-    context.test.acquire_container(context=context, name="fake-gcs-server", engine="fake-gcs-server")
-
-
 def setUpSslContextServiceForProcessor(context, processor_name: str):
     minifi_crt_file = '/tmp/resources/minifi_client.crt'
     minifi_key_file = '/tmp/resources/minifi_client.key'
@@ -558,31 +549,6 @@ def setUpSslContextServiceForRPG(context, rpg_name: str):
 @given('a TCP client is set up to send a test TCP message to minifi')
 def step_impl(context):
     context.test.acquire_container(context=context, name="tcp-client", engine="tcp-client")
-
-
-@given(u'the {processor_one} processor is set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
-def step_impl(context, processor_one):
-    gcp_controller_service = GCPCredentialsControllerService(credentials_location="Use Anonymous credentials")
-    p1 = context.test.get_node_by_name(processor_one)
-    p1.controller_services.append(gcp_controller_service)
-    p1.set_property("GCP Credentials Provider Service", gcp_controller_service.name)
-    processor = context.test.get_node_by_name(processor_one)
-    processor.set_property("Endpoint Override URL", f"fake-gcs-server-{context.feature_id}:4443")
-
-
-@given(u'the {processor_one} and the {processor_two} processors are set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
-def step_impl(context, processor_one, processor_two):
-    gcp_controller_service = GCPCredentialsControllerService(credentials_location="Use Anonymous credentials")
-    p1 = context.test.get_node_by_name(processor_one)
-    p2 = context.test.get_node_by_name(processor_two)
-    p1.controller_services.append(gcp_controller_service)
-    p1.set_property("GCP Credentials Provider Service", gcp_controller_service.name)
-    p2.controller_services.append(gcp_controller_service)
-    p2.set_property("GCP Credentials Provider Service", gcp_controller_service.name)
-    processor_one = context.test.get_node_by_name(processor_one)
-    processor_one.set_property("Endpoint Override URL", f"fake-gcs-server-{context.feature_id}:4443")
-    processor_two = context.test.get_node_by_name(processor_two)
-    processor_two.set_property("Endpoint Override URL", f"fake-gcs-server-{context.feature_id}:4443")
 
 
 # SQL
@@ -872,17 +838,6 @@ def step_impl(context, message, topic):
 @then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")
 def step_impl(context, minifi_container_name, log_pattern, duration):
     context.test.check_container_log_matches_regex(minifi_container_name, log_pattern, humanfriendly.parse_timespan(duration), count=1)
-
-
-# Google Cloud Storage
-@then('an object with the content \"{content}\" is present in the Google Cloud storage')
-def step_imp(context, content):
-    context.test.check_google_cloud_storage("fake-gcs-server", content)
-
-
-@then("the test bucket of Google Cloud Storage is empty")
-def step_impl(context):
-    context.test.check_empty_gcs_bucket("fake-gcs-server")
 
 
 # Prometheus
