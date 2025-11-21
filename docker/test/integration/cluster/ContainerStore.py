@@ -29,9 +29,6 @@ from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
 from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
 from .containers.PrometheusContainer import PrometheusContainer
 from .containers.MinifiC2ServerContainer import MinifiC2ServerContainer
-from .containers.GrafanaLokiContainer import GrafanaLokiContainer
-from .containers.GrafanaLokiContainer import GrafanaLokiOptions
-from .containers.ReverseProxyContainer import ReverseProxyContainer
 from .FeatureContext import FeatureContext
 
 
@@ -39,7 +36,6 @@ class ContainerStore:
     def __init__(self, network, image_store, kubernetes_proxy, feature_id):
         self.feature_id = feature_id
         self.minifi_options = MinifiOptions()
-        self.grafana_loki_options = GrafanaLokiOptions()
         self.containers = {}
         self.data_directories = {}
         self.network = network
@@ -212,23 +208,6 @@ class ContainerStore:
                                                                       image_store=self.image_store,
                                                                       command=command,
                                                                       ssl=True))
-        elif engine == "grafana-loki-server":
-            return self.containers.setdefault(container_name,
-                                              GrafanaLokiContainer(feature_context=feature_context,
-                                                                   name=container_name,
-                                                                   vols=self.vols,
-                                                                   network=self.network,
-                                                                   image_store=self.image_store,
-                                                                   options=self.grafana_loki_options,
-                                                                   command=command))
-        elif engine == "reverse-proxy":
-            return self.containers.setdefault(container_name,
-                                              ReverseProxyContainer(feature_context=feature_context,
-                                                                    name=container_name,
-                                                                    vols=self.vols,
-                                                                    network=self.network,
-                                                                    image_store=self.image_store,
-                                                                    command=command))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
@@ -344,12 +323,6 @@ class ContainerStore:
 
     def get_container_names(self, engine=None):
         return [key for key in self.containers.keys() if not engine or self.containers[key].get_engine() == engine]
-
-    def enable_ssl_in_grafana_loki(self):
-        self.grafana_loki_options.enable_ssl = True
-
-    def enable_multi_tenancy_in_grafana_loki(self):
-        self.grafana_loki_options.enable_multi_tenancy = True
 
     def enable_ssl_in_nifi(self):
         self.nifi_options.use_ssl = True
