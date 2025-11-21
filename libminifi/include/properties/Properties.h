@@ -126,7 +126,7 @@ class PropertiesImpl : public virtual Properties {
 
  private:
   std::filesystem::path extra_properties_files_dir_name() const;
-  void setPropertiesFromFile(const std::filesystem::path& configuration_file, std::string_view prefix);
+  void setPropertiesFromFile(const std::filesystem::path& properties_file, std::string_view prefix);
 
   std::map<std::string, PropertyValue> properties_;
   bool dirty_{false};
