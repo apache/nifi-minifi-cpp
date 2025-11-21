@@ -35,10 +35,6 @@ class S3ServerContainer(Container):
             bail_condition=lambda: self.exited,
             context=None)
 
-    def check_kinesis_server_record_data(self, container_name, record_data):
-        (code, output) = self.exec_run(["node", "/app/consumer/consumer.js", record_data])
-        return code == 0
-
     def check_s3_server_object_data(self, test_data):
         (code, output) = self.exec_run(["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
         if code != 0:
