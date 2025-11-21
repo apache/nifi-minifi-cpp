@@ -20,6 +20,7 @@ import random
 import string
 import os
 import time
+import uuid
 
 import humanfriendly
 from behave import when, step, given
@@ -58,6 +59,17 @@ def step_impl(context: MinifiTestContext, file_name: str, content: str, path: st
     context.get_or_create_default_minifi_container().files.append(File(os.path.join(path, file_name), new_content))
 
 
+@step('a file with the content "{content}" is present in "{path}"')
+def step_impl(context: MinifiTestContext, content: str, path: str):
+    new_content = content.replace("\\n", "\n")
+    context.get_or_create_default_minifi_container().files.append(File(os.path.join(path, str(uuid.uuid4())), new_content))
+
+
+@given("an empty file is present in \"{path}\"")
+def step_impl(context, path):
+    context.get_or_create_default_minifi_container().files.append(File(os.path.join(path, str(uuid.uuid4())), ""))
+
+
 @given('a host resource file "{filename}" is bound to the "{container_path}" path in the MiNiFi container "{container_name}"')
 def step_impl(context: MinifiTestContext, filename: str, container_path: str, container_name: str):
     path = os.path.join(context.resource_dir, filename)
@@ -83,3 +95,8 @@ def step_impl(context: MinifiTestContext):
 @when("MiNiFi is restarted")
 def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().restart()
+
+
+@given("OpenSSL FIPS mode is enabled in MiNiFi")
+def step_impl(context):
+    context.get_or_create_default_minifi_container().enable_openssl_fips_mode()

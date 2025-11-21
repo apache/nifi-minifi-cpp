@@ -31,13 +31,11 @@ from .containers.OpensearchContainer import OpensearchContainer
 from .containers.SyslogUdpClientContainer import SyslogUdpClientContainer
 from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
 from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
-from .containers.TcpClientContainer import TcpClientContainer
 from .containers.PrometheusContainer import PrometheusContainer
 from .containers.MinifiC2ServerContainer import MinifiC2ServerContainer
 from .containers.GrafanaLokiContainer import GrafanaLokiContainer
 from .containers.GrafanaLokiContainer import GrafanaLokiOptions
 from .containers.ReverseProxyContainer import ReverseProxyContainer
-from .containers.DiagSlave import DiagSlave
 from .containers.CouchbaseServerContainer import CouchbaseServerContainer
 from .FeatureContext import FeatureContext
 
@@ -216,14 +214,6 @@ class ContainerStore:
                                                   network=self.network,
                                                   image_store=self.image_store,
                                                   command=command))
-        elif engine == "tcp-client":
-            return self.containers.setdefault(container_name,
-                                              TcpClientContainer(feature_context=feature_context,
-                                                                 name=container_name,
-                                                                 vols=self.vols,
-                                                                 network=self.network,
-                                                                 image_store=self.image_store,
-                                                                 command=command))
         elif engine == "prometheus":
             return self.containers.setdefault(container_name,
                                               PrometheusContainer(feature_context=feature_context,
@@ -276,14 +266,6 @@ class ContainerStore:
                                                                     network=self.network,
                                                                     image_store=self.image_store,
                                                                     command=command))
-        elif engine == "diag-slave-tcp":
-            return self.containers.setdefault(container_name,
-                                              DiagSlave(feature_context=feature_context,
-                                                        name=container_name,
-                                                        vols=self.vols,
-                                                        network=self.network,
-                                                        image_store=self.image_store,
-                                                        command=command))
         elif engine == "couchbase-server":
             return self.containers.setdefault(container_name,
                                               CouchbaseServerContainer(feature_context=feature_context,
