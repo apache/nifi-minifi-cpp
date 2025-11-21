@@ -27,7 +27,6 @@ from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
 from minifi.controllers.JsonTreeReader import JsonTreeReader
 from minifi.controllers.XMLReader import XMLReader
 from minifi.controllers.XMLRecordSetWriter import XMLRecordSetWriter
-from minifi.controllers.CouchbaseClusterService import CouchbaseClusterService
 from minifi.controllers.XMLReader import XMLReader
 
 from behave import given, then, when
@@ -1295,54 +1294,6 @@ def step_impl(context, parameter_context_name, parameter_name, parameter_value):
 def step_impl(context, parameter_context_name):
     container = context.test.acquire_container(context=context, name='minifi-cpp-flow', engine='minifi-cpp')
     container.set_parameter_context_name(parameter_context_name)
-
-
-# Couchbase
-@when(u'a Couchbase server is started')
-def step_impl(context):
-    context.test.start_couchbase_server(context)
-
-
-@given("a CouchbaseClusterService is setup up with the name \"{service_name}\"")
-def step_impl(context, service_name):
-    couchbase_cluster_controller_service = CouchbaseClusterService(
-        name=service_name,
-        connection_string="couchbase://{server_hostname}".format(server_hostname=context.test.get_container_name_with_postfix("couchbase-server")))
-    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
-    container.add_controller(couchbase_cluster_controller_service)
-
-
-@given("a CouchbaseClusterService is set up up with SSL connection with the name \"{service_name}\"")
-def step_impl(context, service_name):
-    ssl_context_service = SSLContextService(name="SSLContextService",
-                                            ca_cert='/tmp/resources/root_ca.crt')
-    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
-    container.add_controller(ssl_context_service)
-    couchbase_cluster_controller_service = CouchbaseClusterService(
-        name=service_name,
-        connection_string="couchbases://{server_hostname}".format(server_hostname=context.test.get_container_name_with_postfix("couchbase-server")),
-        ssl_context_service=ssl_context_service)
-    container.add_controller(couchbase_cluster_controller_service)
-
-
-@then("a document with id \"{doc_id}\" in bucket \"{bucket_name}\" is present with data '{data}' of type \"{data_type}\" in Couchbase")
-def step_impl(context, doc_id: str, bucket_name: str, data: str, data_type: str):
-    context.test.check_is_data_present_on_couchbase(doc_id, bucket_name, data, data_type)
-
-
-@given("a CouchbaseClusterService is setup up using mTLS authentication with the name \"{service_name}\"")
-def step_impl(context, service_name):
-    ssl_context_service = SSLContextService(name="SSLContextService",
-                                            cert='/tmp/resources/clientuser.crt',
-                                            key='/tmp/resources/clientuser.key',
-                                            ca_cert='/tmp/resources/root_ca.crt')
-    container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
-    container.add_controller(ssl_context_service)
-    couchbase_cluster_controller_service = CouchbaseClusterService(
-        name=service_name,
-        connection_string="couchbases://{server_hostname}".format(server_hostname=context.test.get_container_name_with_postfix("couchbase-server")),
-        ssl_context_service=ssl_context_service)
-    container.add_controller(couchbase_cluster_controller_service)
 
 
 @given("a LlamaCpp model is present on the MiNiFi host")
