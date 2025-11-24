@@ -29,6 +29,7 @@ FOREACH(testfile ${LLAMACPP_TESTS})
     target_link_libraries(${testfilename} Catch2WithMain)
     target_link_libraries(${testfilename} minifi-llamacpp)
     target_link_libraries(${testfilename} minifi-standard-processors)
+    target_link_libraries(${testfilename} libminifi-c-unittest)
     target_compile_definitions("${testfilename}" PRIVATE TZ_DATA_DIR="${CMAKE_BINARY_DIR}/tzdata")
 
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")

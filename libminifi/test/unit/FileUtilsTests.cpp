@@ -553,3 +553,14 @@ TEST_CASE("file_clock to system_clock conversion tests") {
     CHECK(file_time_t1-file_time_from_t0 < 10ms);
   }
 }
+
+TEST_CASE("FileUtils::findSubstringWithPrefix", "[TestFindSubstringWithPrefix]") {
+  std::stringstream ss;
+  ss << "garbage tag=1.2.3garbage tag=5.6.7";
+  SECTION("Exists") {
+    CHECK(utils::file::findSubstringWithPrefix(ss, "tag=", 9) == "tag=1.2.3");
+  }
+  SECTION("Does not exist") {
+    CHECK(utils::file::findSubstringWithPrefix(ss, "notag=", 9) == std::nullopt);
+  }
+}

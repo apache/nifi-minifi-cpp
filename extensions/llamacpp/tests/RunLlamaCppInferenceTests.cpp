@@ -23,7 +23,7 @@
 #include "unit/TestBase.h"
 #include "utils/CProcessor.h"
 #include "unit/TestUtils.h"
-#include "unit/ProcessorUtils.h"
+#include "CProcessorTestUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::test {
 
@@ -231,7 +231,7 @@ TEST_CASE("Invalid values for optional double type properties throw exception") 
   CHECK(minifi::test::utils::verifyLogLinePresenceInPollTime(1s,
       fmt::format("Expected parsable float from RunLlamaCppInference::{}, but got GeneralParsingError (Parsing Error:0)", property_name)));
 }
-//
+
 TEST_CASE("Top K property empty and invalid values are handled properly") {
   std::optional<int32_t> test_top_k = 0;
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(

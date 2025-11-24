@@ -388,8 +388,8 @@ TEST_CASE("Data transfer speed parsing") {
   CHECK(processors::invoke_http::parseDataTransferSpeed("10 kB/s") == 10_KiB);
   CHECK(processors::invoke_http::parseDataTransferSpeed("20 MB/s") == 20_MiB);
   CHECK(processors::invoke_http::parseDataTransferSpeed("19 TB/s") == 19_TiB);
-  CHECK(processors::invoke_http::parseDataTransferSpeed("1KBinvalidsuffix").error().message() == "GeneralParsingError");
-  CHECK(processors::invoke_http::parseDataTransferSpeed("1KB").error().message() == "GeneralParsingError");
+  CHECK(processors::invoke_http::parseDataTransferSpeed("1KBinvalidsuffix") == nonstd::make_unexpected(make_error_code(core::ParsingErrorCode::GeneralParsingError)));
+  CHECK(processors::invoke_http::parseDataTransferSpeed("1KB") == nonstd::make_unexpected(make_error_code(core::ParsingErrorCode::GeneralParsingError)));
 }
 
 TEST_CASE("InvokeHTTP: invalid characters are removed from outgoing HTTP headers", "[InvokeHTTP][http][attribute][header][sanitize]") {

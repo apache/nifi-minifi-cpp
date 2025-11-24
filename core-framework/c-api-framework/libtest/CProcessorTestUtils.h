@@ -1,5 +1,5 @@
 /**
- *
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,28 +19,20 @@
 
 #include "core/Processor.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
+#include "api/core/Resource.h"
+#include "utils/CProcessor.h"
 
 namespace org::apache::nifi::minifi::test::utils {
 
-template<typename T>
-std::unique_ptr<core::Processor> make_processor(std::string_view name, std::optional<minifi::utils::Identifier> uuid = std::nullopt) {
-  if (!uuid) {
-    uuid = minifi::utils::IdGenerator::getIdGenerator()->generate();
-  }
-  auto processor_impl = std::make_unique<T>(core::ProcessorMetadata{
-      .uuid = uuid.value(),
-      .name = std::string{name},
-      .logger = minifi::core::logging::LoggerFactory<T>::getLogger(uuid.value())
-  });
-  return std::make_unique<core::Processor>(name, uuid.value(), std::move(processor_impl));
-}
-
 template<typename T, typename ...Args>
-std::unique_ptr<core::Processor> make_custom_processor(Args&&... args) {
-  auto processor_impl = std::make_unique<T>(std::forward<Args>(args)...);
-  auto name = processor_impl->getName();
-  auto uuid = processor_impl->getUUID();
-  return std::make_unique<core::Processor>(name, uuid, std::move(processor_impl));
+std::unique_ptr<minifi::core::Processor> make_custom_c_processor(minifi::core::ProcessorMetadata metadata, Args&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
+  std::unique_ptr<minifi::core::ProcessorApi> processor_impl;
+  minifi::api::core::useProcessorClassDescription<T>([&] (const MinifiProcessorClassDefinition& description) {
+    minifi::utils::useCProcessorClassDescription(description, [&] (const auto&, auto c_description) {
+      processor_impl = std::make_unique<minifi::utils::CProcessor>(std::move(c_description), metadata, new T(metadata, std::forward<Args>(args)...));
+    });
+  });
+  return std::make_unique<minifi::core::Processor>(metadata.name, metadata.uuid, std::move(processor_impl));
 }
 
 }  // namespace org::apache::nifi::minifi::test::utils

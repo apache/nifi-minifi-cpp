@@ -30,20 +30,10 @@ std::vector<minifi::state::PublishedMetric> CProcessor::getCustomMetrics() const
 std::vector<minifi::state::response::SerializedResponseNode> CProcessorMetricsWrapper::serialize() {
   std::vector<minifi::state::response::SerializedResponseNode> nodes;
   for (auto& custom_node : source_processor_.getCustomMetrics()) {
-    size_t transformed_name_length = 0;
-    bool should_uppercase_next_letter = true;
-    for (size_t i = 0; i < custom_node.name.size(); i++) {
-      if (should_uppercase_next_letter) {
-        custom_node.name[transformed_name_length++] = static_cast<char>(std::toupper(static_cast<unsigned char>(custom_node.name[i])));
-        should_uppercase_next_letter = false;
-      } else if (custom_node.name[i] == '_') {
-        should_uppercase_next_letter = true;
-      } else {
-        custom_node.name[transformed_name_length++] = custom_node.name[i];
-      }
-    }
-    custom_node.name.resize(transformed_name_length);
-    nodes.push_back(minifi::state::response::SerializedResponseNode{.name = std::move(custom_node.name), .value = static_cast<uint64_t>(custom_node.value)});
+    nodes.push_back(minifi::state::response::SerializedResponseNode{
+      .name = utils::string::snakeCaseToPascalCase(custom_node.name),
+      .value = static_cast<uint64_t>(custom_node.value)
+    });
   }
   return nodes;
 }

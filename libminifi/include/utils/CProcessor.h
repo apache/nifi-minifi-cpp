@@ -66,8 +66,8 @@ class CProcessor : public minifi::core::ProcessorApi {
     metadata_ = metadata;
     MinifiProcessorMetadata c_metadata;
     auto uuid_str = metadata.uuid.to_string();
-    c_metadata.uuid = MinifiStringView{.data = uuid_str.data(), .length = gsl::narrow<uint32_t>(uuid_str.length())};
-    c_metadata.name = MinifiStringView{.data = metadata.name.data(), .length = gsl::narrow<uint32_t>(metadata.name.length())};
+    c_metadata.uuid = MinifiStringView{.data = uuid_str.data(), .length = uuid_str.length()};
+    c_metadata.name = MinifiStringView{.data = metadata.name.data(), .length = metadata.name.length()};
     c_metadata.logger = reinterpret_cast<MinifiLogger*>(&metadata_.logger);
     impl_ = class_description_.callbacks.create(c_metadata);
   }

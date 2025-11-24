@@ -39,7 +39,7 @@ namespace org::apache::nifi::minifi::core::extension::internal {
     throw std::runtime_error{"File not found: " + path.string()};
   }
   const std::string_view api_tag_prefix = "MINIFI_API_VERSION=[";
-  if (auto version = utils::file::find(path, api_tag_prefix, api_tag_prefix.size() + 20)) {
+  if (auto version = utils::file::findSubstringWithPrefix(path, api_tag_prefix, api_tag_prefix.size() + 20)) {
     utils::SVMatch match;
     if (!utils::regexSearch(version.value(), match, utils::Regex{R"(MINIFI_API_VERSION=\[([0-9]+)\.([0-9]+)\.([0-9]+)\])"})) {
       logger->log_error("Found api version in invalid format: '{}'", version.value());
