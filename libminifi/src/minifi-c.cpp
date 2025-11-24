@@ -226,7 +226,7 @@ const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardProperty
   }
 }
 
-MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info) {
+MinifiExtension* MinifiCreateExtension(MinifiStringView /*api_version*/, const MinifiExtensionCreateInfo* extension_create_info) {
   gsl_Assert(extension_create_info);
   auto extension_name = toString(extension_create_info->name);
   minifi::BundleDetails bundle{

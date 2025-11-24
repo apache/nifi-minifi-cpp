@@ -182,7 +182,7 @@ typedef struct MinifiExtensionCreateInfo {
   const MinifiProcessorClassDefinition* processors_ptr;
 } MinifiExtensionCreateInfo;
 
-MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo*);
+MinifiExtension* MinifiCreateExtension(MinifiStringView api_version, const MinifiExtensionCreateInfo*);
 
 const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardPropertyValidator);
 

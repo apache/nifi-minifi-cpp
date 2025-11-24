@@ -35,7 +35,7 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
       .processors_count = 1,
       .processors_ptr = &description,
     };
-    extension = MinifiCreateExtension(&ext_create_info);
+    extension = MinifiCreateExtension(minifi::api::utils::toStringView(MINIFI_API_VERSION), &ext_create_info);
   });
   return extension;
 }
