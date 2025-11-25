@@ -104,7 +104,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
   SECTION("RocksDB repository") {
     repo = std::make_shared<TestRocksDbRepository>();
-    expected_metric_count = 7;
+    expected_metric_count = 9;
   }
 
 
@@ -125,6 +125,8 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     if (expected_metric_count > 5) {
       checkSerializedValue(resp.children, "rocksDbTableReadersSize", "100");
       checkSerializedValue(resp.children, "rocksDbAllMemoryTablesSize", "200");
+      checkSerializedValue(resp.children, "rocksDbBlockCacheUsage", "85");
+      checkSerializedValue(resp.children, "rocksDbBlockCachePinnedUsage", "50");
     }
   }
 

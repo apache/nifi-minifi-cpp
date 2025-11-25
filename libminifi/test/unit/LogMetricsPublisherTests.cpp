@@ -71,9 +71,8 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Logging interval property is mandator
   }
   SECTION("Logging interval is set to 2 seconds") {
     configuration_->set(minifi::Configuration::nifi_metrics_publisher_log_metrics_logging_interval, "2s");
-    using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
     publisher_->initialize(configuration_, response_node_loader_);
-    REQUIRE(verifyLogLinePresenceInPollTime(5s, "Metric logging interval is set to 2000ms"));
+    REQUIRE(utils::verifyLogLinePresenceInPollTime(5s, "Metric logging interval is set to 2000ms"));
   }
 }
 
@@ -86,8 +85,49 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify empty metrics if no valid metr
   }
   publisher_->initialize(configuration_, response_node_loader_);
   publisher_->loadMetricNodes();
-  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, "LogMetricsPublisher is configured without any valid metrics!"));
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(5s, "LogMetricsPublisher is configured without any valid metrics!"));
+}
+
+std::string expectedRepositoryMetricsRegex(std::string level) {
+  std::string regex_pattern =
+      // 1. Log Header & Opening
+      R"(\[[\d\-\s\:\.]+\]\s*\[[^\]]+\]\s*\[)" + std::move(level) + R"(\]\s*\{\s*)" +
+      R"(\"LogMetrics\":\s*\{\s*)" +
+
+      // 2. (skips other nodes, stops if a \n[ starts (other log line))
+      R"((?:(?!\n\[)[\s\S])*?)" +
+
+      // 3. RepositoryMetrics Node
+      R"(\"RepositoryMetrics\":\s*\{\s*)" +
+
+      // 4. Provenance Repository
+      R"(\"provenancerepository\":\s*\{\s*)" +
+      R"(\"running\":\s*\"false\",\s*)" +
+      R"(\"full\":\s*\"false\",\s*)" +
+      R"(\"size\":\s*\"0\",\s*)" +
+      R"(\s*\"maxSize\":\s*\"0\",\s*)" +
+      R"(\"entryCount\":\s*\"0\",\s*)" +
+      R"(\"rocksDbTableReadersSize\":\s*\"0\",\s*)" +
+      R"(\"rocksDbAllMemoryTablesSize\":\s*\"2048\",\s*)" +
+      R"(\"rocksDbBlockCacheUsage\":\s*\"\d+\",\s*)" +
+      R"(\"rocksDbBlockCachePinnedUsage\":\s*\"\d+\"\s*)" +
+      R"(\},\s*)" +
+
+      // 5. FlowFile Repository
+      R"(\"flowfilerepository\":\s*\{\s*)" +
+      R"(\"running\":\s*\"false\",\s*)" +
+      R"(\"full\":\s*\"false\",\s*)" +
+      R"(\"size\":\s*\"0\",\s*)" +
+      R"(\"maxSize\":\s*\"0\",\s*)" +
+      R"(\"entryCount\":\s*\"0\",\s*)" +
+      R"(\"rocksDbTableReadersSize\":\s*\"0\",\s*)" +
+      R"(\"rocksDbAllMemoryTablesSize\":\s*\"2048\",\s*)" +
+      R"(\"rocksDbBlockCacheUsage\":\s*\"\d+\",\s*)" +
+      R"(\"rocksDbBlockCachePinnedUsage\":\s*\"\d+\"\s*)" +
+
+      // 6. Final Closures
+      R"(\}\s*\}\s*\}\s*\})";
+  return regex_pattern;
 }
 
 TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs", "[LogMetricsPublisher]") {
@@ -96,34 +136,13 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs"
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics,DeviceInfoNode");
   publisher_->initialize(configuration_, response_node_loader_);
   publisher_->loadMetricNodes();
-  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   std::string expected_log_1 = R"([info] {
     "LogMetrics": {)";
-  std::string expected_log_2 = R"("RepositoryMetrics": {
-            "provenancerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0",
-                "maxSize": "0",
-                "entryCount": "0",
-                "rocksDbTableReadersSize": "0",
-                "rocksDbAllMemoryTablesSize": "2048"
-            },
-            "flowfilerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0",
-                "maxSize": "0",
-                "entryCount": "0",
-                "rocksDbTableReadersSize": "0",
-                "rocksDbAllMemoryTablesSize": "2048"
-            }
-        })";
   std::string expected_log_3 = R"("deviceInfo": {
             "identifier":)";
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log_1));
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log_2));
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log_3));
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(5s, expected_log_1));
+  REQUIRE(utils::verifyLogMatchesRegexInPollTime(5s, expectedRepositoryMetricsRegex("info")));
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(5s, expected_log_3));
 }
 
 TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", "[LogMetricsPublisher]") {
@@ -132,42 +151,18 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", 
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics");
   publisher_->initialize(configuration_, response_node_loader_);
   publisher_->loadMetricNodes();
-  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-  std::string expected_log = R"([info] {
-    "LogMetrics": {
-        "RepositoryMetrics": {
-            "provenancerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0",
-                "maxSize": "0",
-                "entryCount": "0",
-                "rocksDbTableReadersSize": "0",
-                "rocksDbAllMemoryTablesSize": "2048"
-            },
-            "flowfilerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0",
-                "maxSize": "0",
-                "entryCount": "0",
-                "rocksDbTableReadersSize": "0",
-                "rocksDbAllMemoryTablesSize": "2048"
-            }
-        }
-    }
-})";
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log));
+
+  REQUIRE(utils::verifyLogMatchesRegexInPollTime(5s, expectedRepositoryMetricsRegex("info")));
   publisher_->clearMetricNodes();
   LogTestController::getInstance().reset();
   LogTestController::getInstance().setTrace<minifi::state::LogMetricsPublisher>();
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "DeviceInfoNode");
   publisher_->loadMetricNodes();
-  expected_log = R"([info] {
+  std::string expected_log = R"([info] {
     "LogMetrics": {
         "deviceInfo": {
             "identifier":)";
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log));
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(5s, expected_log));
 }
 
 TEST_CASE_METHOD(LogPublisherTestFixture, "Verify generic and publisher specific metric properties", "[LogMetricsPublisher]") {
@@ -185,32 +180,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify generic and publisher specific
   }
   publisher_->initialize(configuration_, response_node_loader_);
   publisher_->loadMetricNodes();
-  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-  std::string expected_log = R"([info] {
-    "LogMetrics": {
-        "RepositoryMetrics": {
-            "provenancerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0",
-                "maxSize": "0",
-                "entryCount": "0",
-                "rocksDbTableReadersSize": "0",
-                "rocksDbAllMemoryTablesSize": "2048"
-            },
-            "flowfilerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0",
-                "maxSize": "0",
-                "entryCount": "0",
-                "rocksDbTableReadersSize": "0",
-                "rocksDbAllMemoryTablesSize": "2048"
-            }
-        }
-    }
-})";
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log));
+  REQUIRE(utils::verifyLogMatchesRegexInPollTime(5s, expectedRepositoryMetricsRegex("info")));
 }
 
 TEST_CASE_METHOD(LogPublisherTestFixture, "Verify changing log level property for logging", "[LogMetricsPublisher]") {
@@ -220,32 +190,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify changing log level property fo
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics");
   publisher_->initialize(configuration_, response_node_loader_);
   publisher_->loadMetricNodes();
-  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-  std::string expected_log = R"([debug] {
-    "LogMetrics": {
-        "RepositoryMetrics": {
-            "provenancerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0",
-                "maxSize": "0",
-                "entryCount": "0",
-                "rocksDbTableReadersSize": "0",
-                "rocksDbAllMemoryTablesSize": "2048"
-            },
-            "flowfilerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0",
-                "maxSize": "0",
-                "entryCount": "0",
-                "rocksDbTableReadersSize": "0",
-                "rocksDbAllMemoryTablesSize": "2048"
-            }
-        }
-    }
-})";
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log));
+  REQUIRE(utils::verifyLogMatchesRegexInPollTime(5s, expectedRepositoryMetricsRegex("debug")));
 }
 
 }  // namespace org::apache::nifi::minifi::test

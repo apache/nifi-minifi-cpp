@@ -127,6 +127,12 @@ bool verifyLogLineVariantPresenceInPollTime(const std::chrono::duration<Rep, Per
   return verifyEventHappenedInPollTime(wait_duration, check);
 }
 
+template<class Rep, class Period>
+bool verifyLogMatchesRegexInPollTime(const std::chrono::duration<Rep, Period>& wait_duration, const std::string& regex) {
+  auto check = [&regex] { return LogTestController::getInstance().matchesRegex(regex); };
+  return verifyEventHappenedInPollTime(wait_duration, check);
+}
+
 namespace internal {
 struct JsonContext {
   const JsonContext *parent{nullptr};

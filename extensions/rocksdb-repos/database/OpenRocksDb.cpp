@@ -137,20 +137,44 @@ std::optional<uint64_t> OpenRocksDb::getApproximateSizes() const {
 
 minifi::core::RepositoryMetricsSource::RocksDbStats OpenRocksDb::getStats() {
   minifi::core::RepositoryMetricsSource::RocksDbStats stats;
-  std::string table_readers;
-  GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
-  try {
-    stats.table_readers_size = std::stoull(table_readers);
-  } catch (const std::exception&) {
-    logger_->log_warn("Could not retrieve valid 'rocksdb.estimate-table-readers-mem' property value from rocksdb content repository!");
+  {
+    std::string table_readers;
+    GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
+    try {
+      stats.table_readers_size = std::stoull(table_readers);
+    } catch (const std::exception&) {
+      logger_->log_warn("Could not retrieve valid 'rocksdb.estimate-table-readers-mem' property value from rocksdb content repository!");
+    }
   }
 
-  std::string all_memtables;
-  GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
-  try {
-    stats.all_memory_tables_size = std::stoull(all_memtables);
-  } catch (const std::exception&) {
-    logger_->log_warn("Could not retrieve valid 'rocksdb.cur-size-all-mem-tables' property value from rocksdb content repository!");
+  {
+    std::string all_memtables;
+    GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
+    try {
+      stats.all_memory_tables_size = std::stoull(all_memtables);
+    } catch (const std::exception&) {
+      logger_->log_warn("Could not retrieve valid 'rocksdb.cur-size-all-mem-tables' property value from rocksdb content repository!");
+    }
+  }
+
+  {
+    std::string block_cache_usage;
+    GetProperty("rocksdb.block-cache-usage", &block_cache_usage);
+    try {
+      stats.block_cache_usage = std::stoull(block_cache_usage);
+    } catch (const std::exception&) {
+      logger_->log_warn("Could not retrieve valid 'rocksdb.block-cache-usage' property value from rocksdb content repository!");
+    }
+  }
+
+  {
+    std::string block_cache_pinned_usage;
+    GetProperty("rocksdb.block-cache-pinned-usage", &block_cache_pinned_usage);
+    try {
+      stats.block_cache_pinned_usage = std::stoull(block_cache_pinned_usage);
+    } catch (const std::exception&) {
+      logger_->log_warn("Could not retrieve valid 'rocksdb.block-cache-pinned-usage' property value from rocksdb content repository!");
+    }
   }
 
   return stats;
