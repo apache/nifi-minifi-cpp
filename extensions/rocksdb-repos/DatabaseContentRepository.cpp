@@ -58,20 +58,37 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
 
   setCompactionPeriod(configuration);
 
-  auto set_db_opts = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+  const auto cache_size = configuration->get(Configure::nifi_dbcontent_optimize_for_small_db_cache_size)
+    | utils::andThen([](const auto& cache_size_str) -> std::optional<uint64_t> {
+      return parsing::parseDataSize(cache_size_str) | utils::toOptional();
+    });
+
+  std::shared_ptr<rocksdb::Cache> cache = nullptr;
+  if (cache_size) {
+    cache = rocksdb::NewLRUCache(*cache_size);
+  }
+
+  auto set_db_opts = [encrypted_env, &cache] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     minifi::internal::setCommonRocksDbOptions(db_opts);
     if (encrypted_env) {
       db_opts.set(&rocksdb::DBOptions::env, encrypted_env.get(), EncryptionEq{});
     } else {
       db_opts.set(&rocksdb::DBOptions::env, rocksdb::Env::Default());
     }
+    if (cache) {
+      db_opts.call(&rocksdb::DBOptions::OptimizeForSmallDb, &cache);
+    }
   };
-  auto set_cf_opts = [&configuration] (rocksdb::ColumnFamilyOptions& cf_opts) {
+  auto set_cf_opts = [&configuration, &cache] (rocksdb::ColumnFamilyOptions& cf_opts) {
     cf_opts.OptimizeForPointLookup(4);
     cf_opts.merge_operator = std::make_shared<StringAppender>();
     cf_opts.max_successive_merges = 0;
     if (auto compression_type = minifi::internal::readConfiguredCompressionType(configuration, Configure::nifi_content_repository_rocksdb_compression)) {
       cf_opts.compression = *compression_type;
+    }
+    if (cache) {
+      cf_opts.OptimizeForSmallDb(&cache);
+      cf_opts.compression_opts.max_dict_bytes = 0;
     }
   };
   db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_,
