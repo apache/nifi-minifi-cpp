@@ -20,7 +20,7 @@
 #include "api/utils/minifi-c-utils.h"
 
 #define MKSOC(x) #x
-#define MAKESTRING(x) MKSOC(x)
+#define MAKESTRING(x) MKSOC(x)  // NOLINT(cppcoreguidelines-macro-usage)
 
 namespace minifi = org::apache::nifi::minifi;
 

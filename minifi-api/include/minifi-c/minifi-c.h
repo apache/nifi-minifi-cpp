@@ -182,6 +182,9 @@ typedef struct MinifiExtensionCreateInfo {
   const MinifiProcessorClassDefinition* processors_ptr;
 } MinifiExtensionCreateInfo;
 
+// api_version is used to provide backwards compatible changes to the MinifiExtensionCreateInfo structure,
+// e.g. if MinifiExtensionCreateInfo gets a new field in version 1.2.0, extensions built with api 1.1.0 do not
+// have to be rebuilt
 MinifiExtension* MinifiCreateExtension(MinifiStringView api_version, const MinifiExtensionCreateInfo*);
 
 const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardPropertyValidator);
