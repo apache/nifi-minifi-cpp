@@ -26,7 +26,7 @@ struct ControllerServiceApi {
   std::string group;
   std::string type;
 
-  ControllerServiceApi(const ControllerServiceApiDefinition& definition)
+  ControllerServiceApi(const ControllerServiceApiDefinition& definition)  // NOLINT(runtime/explicit)
     : artifact(definition.artifact),
       group(definition.group),
       type(definition.type) {}

@@ -31,7 +31,7 @@ struct OutputAttribute {
 
   OutputAttribute() = default;
 
-  OutputAttribute(const OutputAttributeReference& reference)
+  OutputAttribute(const OutputAttributeReference& reference)  // NOLINT(runtime/explicit)
     : name(reference.name),
       relationships(reference.relationships.begin(), reference.relationships.end()),
       description(reference.description) {}

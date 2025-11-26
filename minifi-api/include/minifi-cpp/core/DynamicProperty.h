@@ -27,7 +27,7 @@ struct DynamicProperty {
   std::string description;
   bool supports_expression_language = false;
 
-  DynamicProperty(const DynamicPropertyDefinition& definition)
+  DynamicProperty(const DynamicPropertyDefinition& definition)  // NOLINT(runtime/explicit)
     : name(definition.name),
       value(definition.value),
       description(definition.description),

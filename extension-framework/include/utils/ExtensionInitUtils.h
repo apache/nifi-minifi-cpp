@@ -16,11 +16,10 @@
  */
 #pragma once
 
-#include "minifi-c/minifi-c.h"
 #include <string_view>
 #include <optional>
 #include <functional>
-#include "minifi-cpp/utils/gsl.h"
+#include "minifi-c/minifi-c.h"
 
 namespace org::apache::nifi::minifi::utils {
 
