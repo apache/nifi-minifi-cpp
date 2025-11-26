@@ -31,7 +31,7 @@ add_minifi_library(minifi-llamacpp SHARED ${SOURCES})
 target_include_directories(minifi-llamacpp PUBLIC "${CMAKE_SOURCE_DIR}/extensions/llamacpp")
 target_include_directories(minifi-llamacpp PUBLIC "${LLAMACPP_INCLUDE_DIRS}")
 
-target_link_libraries(minifi-llamacpp minifi-core-c-api-framework llama)
+target_link_libraries(minifi-llamacpp minifi-cpp-extension-lib llama)
 
 register_c_api_extension(minifi-llamacpp "LLAMACPP EXTENSION" LLAMACPP-EXTENSION "Provides llama.cpp support" "extensions/llamacpp/tests")
 

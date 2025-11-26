@@ -17,6 +17,11 @@
 # under the License.
 #
 
-add_library(libminifi-c-unittest INTERFACE)
-target_link_libraries(libminifi-c-unittest INTERFACE minifi-core-c-api-framework core-minifi Catch2WithMain)
-target_include_directories(libminifi-c-unittest INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+file(GLOB SOURCES src/core/*.cpp src/core/logging/*.cpp src/utils/*.cpp)
+
+add_minifi_library(minifi-cpp-extension-lib STATIC ${SOURCES})
+target_include_directories(minifi-cpp-extension-lib PUBLIC include)
+target_link_libraries(minifi-cpp-extension-lib PUBLIC minifi-core-framework-common minifi-c-api)
+
+add_subdirectory(libtest)
+
