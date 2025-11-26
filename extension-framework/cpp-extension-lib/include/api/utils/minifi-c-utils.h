@@ -36,7 +36,7 @@ std::string classNameWithDots() {
   return minifi::utils::string::replaceAll(class_name, "::", ".");
 }
 
-MinifiStandardPropertyValidator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator);
+MinifiValidator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator);
 
 inline MinifiInputRequirement toInputRequirement(minifi::core::annotation::Input req) {
   switch (req) {
@@ -80,7 +80,7 @@ inline std::vector<MinifiPropertyDefinition> toProperties(std::span<const minifi
         .default_value = default_value_begin ? sv_cache.data() + default_value_begin.value() : nullptr,
         .allowed_values_count = prop.allowed_values.size(),
         .allowed_values_ptr = sv_cache.data() + allowed_values_begin,
-        .validator = MinifiGetStandardValidator(toStandardPropertyValidator(prop.validator)),
+        .validator = toStandardPropertyValidator(prop.validator),
 
         .type = allowed_types_begin ? sv_cache.data() + allowed_types_begin.value() : nullptr,
         .supports_expression_language = prop.supports_expression_language

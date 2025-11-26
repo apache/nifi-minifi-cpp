@@ -99,6 +99,17 @@ typedef enum MinifiStatus {
   MINIFI_STATUS_PROCESSOR_YIELD = 6
 } MinifiStatus;
 
+typedef enum MinifiValidator {
+  MINIFI_VALIDATOR_ALWAYS_VALID = 0,
+  MINIFI_VALIDATOR_NON_BLANK = 1,
+  MINIFI_VALIDATOR_TIME_PERIOD = 2,
+  MINIFI_VALIDATOR_BOOLEAN = 3,
+  MINIFI_VALIDATOR_INTEGER = 4,
+  MINIFI_VALIDATOR_UNSIGNED_INTEGER = 5,
+  MINIFI_VALIDATOR_DATA_SIZE = 6,
+  MINIFI_VALIDATOR_PORT = 7
+} MinifiValidator;
+
 typedef struct MinifiPropertyDefinition {
   MinifiStringView name;
   MinifiStringView display_name;
@@ -109,7 +120,7 @@ typedef struct MinifiPropertyDefinition {
   const MinifiStringView* default_value;
   size_t allowed_values_count;
   const MinifiStringView* allowed_values_ptr;
-  const MinifiPropertyValidator* validator;
+  MinifiValidator validator;
 
   const MinifiStringView* type;
   MinifiBool supports_expression_language;
@@ -162,17 +173,6 @@ typedef struct MinifiProcessorClassDefinition {
   MinifiProcessorCallbacks callbacks;
 } MinifiProcessorClassDefinition;
 
-typedef enum MinifiStandardPropertyValidator {
-  MINIFI_ALWAYS_VALID_VALIDATOR = 0,
-  MINIFI_NON_BLANK_VALIDATOR = 1,
-  MINIFI_TIME_PERIOD_VALIDATOR = 2,
-  MINIFI_BOOLEAN_VALIDATOR = 3,
-  MINIFI_INTEGER_VALIDATOR = 4,
-  MINIFI_UNSIGNED_INTEGER_VALIDATOR = 5,
-  MINIFI_DATA_SIZE_VALIDATOR = 6,
-  MINIFI_PORT_VALIDATOR = 7
-} MinifiStandardPropertyValidator;
-
 typedef struct MinifiExtensionCreateInfo {
   MinifiStringView name;
   MinifiStringView version;
@@ -186,8 +186,6 @@ typedef struct MinifiExtensionCreateInfo {
 // e.g. if MinifiExtensionCreateInfo gets a new field in version 1.2.0, extensions built with api 1.1.0 do not
 // have to be rebuilt
 MinifiExtension* MinifiCreateExtension(MinifiStringView api_version, const MinifiExtensionCreateInfo*);
-
-const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardPropertyValidator);
 
 MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, const MinifiStringView* metric_names, const double* metric_values);
 

@@ -1,7 +1,6 @@
 LIBRARY core-minifi.dll
 EXPORTS
   MinifiCreateExtension
-  MinifiGetStandardValidator
   MinifiPublishedMetricsCreate
   MinifiProcessContextGetProperty
   MinifiProcessContextGetProcessorName

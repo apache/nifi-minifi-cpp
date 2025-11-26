@@ -212,20 +212,6 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
 
 extern "C" {
 
-const MinifiPropertyValidator* MinifiGetStandardValidator(MinifiStandardPropertyValidator validator) {
-  switch (validator) {
-    case MINIFI_ALWAYS_VALID_VALIDATOR: return reinterpret_cast<const MinifiPropertyValidator*>(&minifi::core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR);
-    case MINIFI_NON_BLANK_VALIDATOR: return reinterpret_cast<const MinifiPropertyValidator*>(&minifi::core::StandardPropertyValidators::NON_BLANK_VALIDATOR);
-    case MINIFI_TIME_PERIOD_VALIDATOR: return reinterpret_cast<const MinifiPropertyValidator*>(&minifi::core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR);
-    case MINIFI_BOOLEAN_VALIDATOR: return reinterpret_cast<const MinifiPropertyValidator*>(&minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR);
-    case MINIFI_INTEGER_VALIDATOR: return reinterpret_cast<const MinifiPropertyValidator*>(&minifi::core::StandardPropertyValidators::INTEGER_VALIDATOR);
-    case MINIFI_UNSIGNED_INTEGER_VALIDATOR: return reinterpret_cast<const MinifiPropertyValidator*>(&minifi::core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR);
-    case MINIFI_DATA_SIZE_VALIDATOR: return reinterpret_cast<const MinifiPropertyValidator*>(&minifi::core::StandardPropertyValidators::DATA_SIZE_VALIDATOR);
-    case MINIFI_PORT_VALIDATOR: return reinterpret_cast<const MinifiPropertyValidator*>(&minifi::core::StandardPropertyValidators::PORT_VALIDATOR);
-    default: gsl_FailFast();
-  }
-}
-
 MinifiExtension* MinifiCreateExtension(MinifiStringView /*api_version*/, const MinifiExtensionCreateInfo* extension_create_info) {
   gsl_Assert(extension_create_info);
   auto extension_name = toString(extension_create_info->name);
