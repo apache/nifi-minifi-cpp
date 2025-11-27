@@ -73,6 +73,20 @@ minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel lvl) {
   gsl_FailFast();
 }
 
+gsl::not_null<const minifi::core::PropertyValidator*> toPropertyValidator(MinifiValidator validator) {
+  switch (validator) {
+    case MINIFI_VALIDATOR_ALWAYS_VALID: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR);
+    case MINIFI_VALIDATOR_NON_BLANK: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::NON_BLANK_VALIDATOR);
+    case MINIFI_VALIDATOR_TIME_PERIOD: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR);
+    case MINIFI_VALIDATOR_BOOLEAN: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::BOOLEAN_VALIDATOR);
+    case MINIFI_VALIDATOR_INTEGER: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::INTEGER_VALIDATOR);
+    case MINIFI_VALIDATOR_UNSIGNED_INTEGER: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR);
+    case MINIFI_VALIDATOR_DATA_SIZE: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::DATA_SIZE_VALIDATOR);
+    case MINIFI_VALIDATOR_PORT: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::PORT_VALIDATOR);
+  }
+  gsl_FailFast();
+}
+
 minifi::core::Property createProperty(const MinifiPropertyDefinition* property_description) {
   gsl_Expects(property_description);
   std::vector<std::string_view> allowed_values;
@@ -97,7 +111,7 @@ minifi::core::Property createProperty(const MinifiPropertyDefinition* property_d
     std::span(allowed_values),
     std::span(allowed_types),
     default_value,
-    gsl::make_not_null(reinterpret_cast<const minifi::core::PropertyValidator*>(property_description->validator)),
+    toPropertyValidator(property_description->validator),
     property_description->supports_expression_language
   }};
 }
