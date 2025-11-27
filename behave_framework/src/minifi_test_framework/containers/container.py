@@ -363,6 +363,7 @@ class Container:
         if not self.container:
             return False
 
+        self.container.reload()
         if self.container.status == "running":
             return self._verify_file_contents_in_running_container(directory_path, expected_contents)
 
