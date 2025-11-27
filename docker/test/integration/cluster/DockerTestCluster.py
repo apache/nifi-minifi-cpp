@@ -15,22 +15,16 @@
 import logging
 import time
 import re
-import tarfile
-import tempfile
-import os
-import gzip
-import shutil
 
 from .LogSource import LogSource
 from .ContainerStore import ContainerStore
 from .DockerCommunicator import DockerCommunicator
-from .MinifiControllerExecutor import MinifiControllerExecutor
 from .checkers.AzureChecker import AzureChecker
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.ModbusChecker import ModbusChecker
 from .checkers.MqttHelper import MqttHelper
-from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage, retry_check
+from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage
 
 
 class DockerTestCluster:
@@ -42,7 +36,6 @@ class DockerTestCluster:
         self.azure_checker = AzureChecker(self.container_communicator)
         self.postgres_checker = PostgresChecker(self.container_communicator)
         self.prometheus_checker = PrometheusChecker()
-        self.minifi_controller_executor = MinifiControllerExecutor(self.container_communicator)
         self.modbus_checker = ModbusChecker(self.container_communicator)
         self.mqtt_helper = MqttHelper()
 
@@ -123,9 +116,6 @@ class DockerTestCluster:
 
     def set_json_in_minifi(self):
         self.container_store.set_json_in_minifi()
-
-    def set_controller_socket_properties_in_minifi(self):
-        self.container_store.set_controller_socket_properties_in_minifi()
 
     def enable_log_metrics_publisher_in_minifi(self):
         self.container_store.enable_log_metrics_publisher_in_minifi()
@@ -282,78 +272,6 @@ class DockerTestCluster:
             time.sleep(1)
         logging.warning(f"Memory usage ({current_memory_usage}) is more than the maximum asserted memory usage ({max_memory_usage})")
         return False
-
-    def update_flow_config_through_controller(self, container_name: str):
-        self.minifi_controller_executor.update_flow(container_name)
-
-    @retry_check(10, 1)
-    def check_minifi_controller_updated_config_is_persisted(self, container_name: str) -> bool:
-        return self.minifi_controller_executor.updated_config_is_persisted(container_name)
-
-    def stop_component_through_controller(self, component: str, container_name: str):
-        self.minifi_controller_executor.stop_component(component, container_name)
-
-    def start_component_through_controller(self, component: str, container_name: str):
-        self.minifi_controller_executor.start_component(component, container_name)
-
-    @retry_check(10, 1)
-    def check_component_not_running_through_controller(self, component: str, container_name: str) -> bool:
-        return not self.minifi_controller_executor.is_component_running(component, container_name)
-
-    @retry_check(10, 1)
-    def check_component_running_through_controller(self, component: str, container_name: str) -> bool:
-        return self.minifi_controller_executor.is_component_running(component, container_name)
-
-    @retry_check(10, 1)
-    def connection_found_through_controller(self, connection: str, container_name: str) -> bool:
-        return connection in self.minifi_controller_executor.get_connections(container_name)
-
-    @retry_check(10, 1)
-    def check_connections_full_through_controller(self, connection_count: int, container_name: str) -> bool:
-        return self.minifi_controller_executor.get_full_connection_count(container_name) == connection_count
-
-    @retry_check(10, 1)
-    def check_connection_size_through_controller(self, connection: str, size: int, max_size: int, container_name: str) -> bool:
-        return self.minifi_controller_executor.get_connection_size(connection, container_name) == (size, max_size)
-
-    @retry_check(10, 1)
-    def manifest_can_be_retrieved_through_minifi_controller(self, container_name: str) -> bool:
-        manifest = self.minifi_controller_executor.get_manifest(container_name)
-        return '"agentManifest": {' in manifest and '"componentManifest": {' in manifest and '"agentType": "cpp"' in manifest
-
-    @retry_check(10, 1)
-    def debug_bundle_can_be_retrieved_through_minifi_controller(self, container_name: str) -> bool:
-        with tempfile.TemporaryDirectory() as td:
-            result = self.minifi_controller_executor.get_debug_bundle(container_name, td)
-            if not result:
-                logging.error("Failed to get debug bundle")
-                return False
-
-            with tarfile.open(os.path.join(td, "debug.tar.gz")) as file:
-                file.extractall(td)
-
-            if not os.path.exists(os.path.join(td, "config.yml")):
-                logging.error("config.yml file was not found in debug bundle")
-                return False
-
-            if not os.path.exists(os.path.join(td, "minifi.properties")):
-                logging.error("minifi.properties file was not found in debug bundle")
-                return False
-
-            if not os.path.exists(os.path.join(td, "minifi.log.gz")):
-                logging.error("minifi.log.gz file was not found in debug bundle")
-                return False
-
-            with gzip.open(os.path.join(td, "minifi.log.gz"), 'rb') as f_in:
-                with open(os.path.join(td, "minifi.log"), 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-
-            with open(os.path.join(td, "minifi.log")) as f:
-                if 'MiNiFi started' not in f.read():
-                    logging.error("'MiNiFi started' log entry was not found in minifi.log file")
-                    return False
-
-            return True
 
     def set_value_on_plc_with_modbus(self, container_name, modbus_cmd):
         return self.modbus_checker.set_value_on_plc_with_modbus(container_name, modbus_cmd)

@@ -54,6 +54,7 @@ class DockerCommunicator:
             logging.warning('Container segfaulted: %s', container.name)
             self.segfault = True
 
+        container.reload()
         return container.status, container.logs()
 
     def __put_archive(self, container_name, path, data):

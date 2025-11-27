@@ -33,21 +33,21 @@ def step_impl(context: MinifiTestContext):
 
 
 @step("a Syslog client with UDP protocol is setup to send logs to minifi")
-def step_impl(context):
+def step_impl(context: MinifiTestContext):
     context.containers["syslog-udp"] = SyslogContainer("udp", context)
 
 
 @step('there is an accessible PLC with modbus enabled')
-def step_impl(context):
+def step_impl(context: MinifiTestContext):
     modbus_container = context.containers["diag-slave-tcp"] = DiagSlave(context)
     assert modbus_container.deploy()
 
 
 @step('PLC register has been set with {modbus_cmd} command')
-def step_impl(context, modbus_cmd):
+def step_impl(context: MinifiTestContext, modbus_cmd: str):
     assert context.containers["diag-slave-tcp"].set_value_on_plc_with_modbus(modbus_cmd) or context.containers["diag-slave-tcp"].log_app_output()
 
 
 @step('a TCP client is set up to send a test TCP message to minifi')
-def step_impl(context):
+def step_impl(context: MinifiTestContext):
     context.containers["tcp-client"] = TcpClientContainer(context)

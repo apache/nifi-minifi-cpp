@@ -41,7 +41,6 @@ class MinifiOptions:
         self.config_format = "json"
         self.use_flow_config_from_url = False
         self.set_ssl_context_properties = False
-        self.enable_controller_socket = False
         self.enable_log_metrics_publisher = False
         self.enable_example_minifi_python_processors = False
         if "true" in os.environ['MINIFI_FIPS']:
@@ -66,7 +65,6 @@ class MinifiLocations:
             self.minifi_python_venv_parent = '/var/lib/nifi-minifi-cpp'
             self.minifi_python_examples = '/usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples'
             self.models_path = '/var/lib/nifi-minifi-cpp/models'
-            self.minifi_controller_path = '/usr/bin/minifi-controller'
             self.minifi_home = '/var/lib/nifi-minifi-cpp'
         else:
             self.run_minifi_cmd = '/opt/minifi/minifi-current/bin/minifi.sh run'
@@ -78,7 +76,6 @@ class MinifiLocations:
             self.minifi_python_examples = '/opt/minifi/minifi-current/minifi-python-examples'
             self.minifi_python_venv_parent = '/opt/minifi/minifi-current'
             self.models_path = '/opt/minifi/minifi-current/models'
-            self.minifi_controller_path = '/opt/minifi/minifi-current/bin/minifi-controller'
             self.minifi_home = '/opt/minifi/minifi-current'
 
 
@@ -185,12 +182,6 @@ class MinifiContainer(FlowContainer):
 
             if self.options.use_flow_config_from_url:
                 f.write(f"nifi.c2.flow.url=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config?class=minifi-test-class\n")
-
-            if self.options.enable_controller_socket:
-                f.write("controller.socket.enable=true\n")
-                f.write("controller.socket.host=localhost\n")
-                f.write("controller.socket.port=9998\n")
-                f.write("controller.socket.local.any.interface=false\n")
 
             if self.options.use_nifi_python_processors_with_virtualenv or self.options.remove_python_requirements_txt or self.options.use_nifi_python_processors_without_dependencies:
                 f.write("nifi.python.virtualenv.directory={minifi_python_venv_parent}/venv\n".format(minifi_python_venv_parent=MinifiContainer.MINIFI_LOCATIONS.minifi_python_venv_parent))
