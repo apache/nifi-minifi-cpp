@@ -273,9 +273,6 @@ class ContainerStore:
     def set_json_in_minifi(self):
         self.minifi_options.config_format = "json"
 
-    def set_controller_socket_properties_in_minifi(self):
-        self.minifi_options.enable_controller_socket = True
-
     def enable_log_metrics_publisher_in_minifi(self):
         self.minifi_options.enable_log_metrics_publisher = True
 
