@@ -137,7 +137,7 @@ void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, c
   }
 }
 
-[[nodiscard]] std::optional<int /* exit code */> dumpDocsIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
+[[nodiscard]] std::optional<int /* exit code */> dumpDocsIfRequested(const argparse::ArgumentParser& parser) {
   if (!parser.is_used("--docs")) {
     return std::nullopt;  // don't exit
   }
@@ -152,7 +152,7 @@ void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, c
   return 0;
 }
 
-[[nodiscard]] std::optional<int /* exit code */> writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
+[[nodiscard]] std::optional<int /* exit code */> writeSchemaIfRequested(const argparse::ArgumentParser& parser) {
   if (!parser.is_used("--schema")) {
     return std::nullopt;
   }
@@ -325,8 +325,8 @@ int main(int argc, char **argv) {
 
     minifi::core::extension::ExtensionManager extension_manager(configure);
 
-    if (const auto maybe_exit_code = dumpDocsIfRequested(argument_parser, configure)) { return *maybe_exit_code; }
-    if (const auto maybe_exit_code = writeSchemaIfRequested(argument_parser, configure)) { return *maybe_exit_code; }
+    if (const auto maybe_exit_code = dumpDocsIfRequested(argument_parser)) { return *maybe_exit_code; }
+    if (const auto maybe_exit_code = writeSchemaIfRequested(argument_parser)) { return *maybe_exit_code; }
 
     std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
         | utils::andThen(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
