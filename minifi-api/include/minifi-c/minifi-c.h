@@ -78,7 +78,6 @@ typedef struct MinifiDynamicPropertyDefinition {
   MinifiBool supports_expression_language;
 } MinifiDynamicPropertyDefinition;
 
-typedef struct MinifiPropertyValidator MinifiPropertyValidator;
 typedef struct MinifiFlowFile MinifiFlowFile;
 typedef struct MinifiLogger MinifiLogger;
 typedef struct MinifiProcessContext MinifiProcessContext;
