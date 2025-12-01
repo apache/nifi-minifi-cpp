@@ -29,6 +29,7 @@
 #include "unit/TestUtils.h"
 #include "unit/Catch.h"
 #include "utils/TimeUtil.h"
+#include "utils/TimeZoneUtils.h"
 
 using namespace std::literals::chrono_literals;
 

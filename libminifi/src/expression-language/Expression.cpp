@@ -35,6 +35,7 @@
 #include "expression-language/Expression.h"
 #include "utils/RegexUtils.h"
 #include "utils/TimeUtil.h"
+#include "utils/TimeZoneUtils.h"
 
 #ifdef WIN32
 #pragma comment(lib, "wldap32.lib" )
@@ -398,7 +399,9 @@ Value expr_endsWith(const std::vector<Value> &args) {
 }
 
 Value expr_contains(const std::vector<Value> &args) {
-  return Value(std::string::npos != args[0].asString().find(args[1].asString()));
+  const std::string &arg_0 = args[0].asString();
+  const std::string &arg_1 = args[1].asString();
+  return Value(arg_0.contains(arg_1));
 }
 
 Value expr_in(const std::vector<Value> &args) {
@@ -633,12 +636,13 @@ Value expr_escapeCsv(const std::vector<Value> &args) {
 Value expr_format(const std::vector<Value> &args) {
   using std::chrono::milliseconds;
 
-  date::sys_time<milliseconds> utc_time_point{milliseconds(args[0].asUnsignedLong())};
-  auto zone = args.size() > 2 ? date::locate_zone(args[2].asString()) : date::current_zone();
+  const date::sys_time<milliseconds> utc_time_point{milliseconds(args[0].asUnsignedLong())};
+  const auto format_string = args[1].asString();
+  const auto zone = args.size() > 2 ? date::locate_zone(args[2].asString()) : date::current_zone();
 
-  auto zoned_time_point = date::make_zoned(zone, utc_time_point);
+  const auto zoned_time_point = date::make_zoned(zone, utc_time_point);
   std::ostringstream result_stream;
-  result_stream << date::format(args[1].asString(), zoned_time_point);
+  result_stream << date::format(format_string, zoned_time_point);
   return Value(result_stream.str());
 }
 

@@ -16,15 +16,22 @@
  */
 #pragma once
 
-#include <string_view>
+#include <string>
+#include "minifi-cpp/core/DynamicPropertyDefinition.h"
 
 namespace org::apache::nifi::minifi::core {
 
 struct DynamicProperty {
-  std::string_view name;
-  std::string_view value;
-  std::string_view description;
+  std::string name;
+  std::string value;
+  std::string description;
   bool supports_expression_language = false;
+
+  DynamicProperty(const DynamicPropertyDefinition& definition)  // NOLINT(runtime/explicit)
+    : name(definition.name),
+      value(definition.value),
+      description(definition.description),
+      supports_expression_language(definition.supports_expression_language) {}
 };
 
 }  // namespace org::apache::nifi::minifi::core

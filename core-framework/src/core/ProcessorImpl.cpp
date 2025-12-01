@@ -58,7 +58,7 @@ bool ProcessorImpl::isWorkAvailable() {
 }
 
 void ProcessorImpl::restore(const std::shared_ptr<FlowFile>& /*file*/) {
-  gsl_Assert("Not implemented");
+  gsl_Assert(false && "Not implemented");
 }
 
 std::string ProcessorImpl::getName() const {
@@ -90,8 +90,13 @@ void ProcessorImpl::setSupportedProperties(std::span<const PropertyReference> pr
   descriptor_->setSupportedProperties(properties);
 }
 
-void ProcessorImpl::setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) {
-  logger_->setLogCallback(callback);
+void ProcessorImpl::setSupportedProperties(std::span<const Property> properties) {
+  gsl_Expects(descriptor_);
+  descriptor_->setSupportedProperties(properties);
+}
+
+void ProcessorImpl::forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) {
+  callback(logger_);
 }
 
 }  // namespace org::apache::nifi::minifi::core

@@ -193,7 +193,7 @@ class RouteText : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 1>{Group};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
-  EXTENSIONAPI static constexpr auto RelationshipToRouteTo = core::DynamicProperty{"Relationship Name",
+  EXTENSIONAPI static constexpr auto RelationshipToRouteTo = core::DynamicPropertyDefinition{"Relationship Name",
     "value to match against",
     "Routes data that matches the value specified in the Dynamic Property Value to the Relationship specified in the Dynamic Property Key.",
     true};

@@ -50,8 +50,6 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual const ProcessorInfo& getProcessorInfo() const = 0;
   virtual Processor& getProcessor() const = 0;
 
-  virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
-
   virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
   nonstd::expected<std::string, std::error_code> getProperty(const Property& property, const FlowFile* flow_file = nullptr) const { return getProperty(property.getName(), flow_file); }
   nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
@@ -81,12 +79,14 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual bool isRunning() const = 0;
   virtual bool isAutoTerminated(Relationship relationship) const = 0;
   virtual uint8_t getMaxConcurrentTasks() const = 0;
-  virtual void yield() = 0;
   virtual std::shared_ptr<core::Repository> getProvenanceRepository() = 0;
   virtual std::shared_ptr<core::ContentRepository> getContentRepository() const = 0;
   virtual std::shared_ptr<core::Repository> getFlowFileRepository() const = 0;
 
   virtual bool hasIncomingConnections() const = 0;
+
+  virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
+  virtual void yield() = 0;
 
   virtual std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const = 0;
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "minifi-c/minifi-c.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 #include "PythonCreator.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "PythonBindings.h"
@@ -36,7 +36,7 @@ extern "C" const int LOAD_MODULE_AS_GLOBAL = 1;
 extern "C" MinifiExtension* InitExtension(MinifiConfig* config) {
   getPythonCreator().configure([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
-    MinifiConfigureGet(config, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
+    MinifiConfigGet(config, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
       *static_cast<std::optional<std::string>*>(user_data) = std::string{value.data, value.length};
     }, &result);
     return result;
@@ -45,7 +45,9 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* config) {
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
-    .user_data = nullptr
+    .user_data = nullptr,
+    .processors_count = 0,
+    .processors_ptr = nullptr
   };
-  return MinifiCreateExtension(&ext_create_info);
+  return MinifiCreateExtension(minifi::utils::toStringView(MINIFI_API_VERSION), &ext_create_info);
 }

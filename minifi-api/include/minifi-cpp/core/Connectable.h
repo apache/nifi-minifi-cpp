@@ -28,7 +28,7 @@
 
 #include "Core.h"
 #include <condition_variable>
-#include "Relationship.h"
+#include "minifi-cpp/core/Relationship.h"
 #include "Scheduling.h"
 #include "minifi-cpp/core/state/FlowIdentifier.h"
 #include "minifi-cpp/utils/gsl.h"

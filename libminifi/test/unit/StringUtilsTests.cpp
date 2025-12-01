@@ -630,6 +630,16 @@ TEST_CASE("string::replaceEscapedCharacters tests") {
   CHECK(string::replaceEscapedCharacters(R"(\\n)") == "\\n");
 }
 
+TEST_CASE("string::snakeCaseToPascalCase tests") {
+  CHECK(string::snakeCaseToPascalCase("NotAThing") == "Notathing");
+  CHECK(string::snakeCaseToPascalCase("one_thing_other") == "OneThingOther");
+  CHECK(string::snakeCaseToPascalCase("trailing_underSCORE_") == "TrailingUnderscore");
+  CHECK(string::snakeCaseToPascalCase("HTTP_GET_count") == "HttpGetCount");
+  CHECK(string::snakeCaseToPascalCase("_leading_underscore") == "LeadingUnderscore");
+  CHECK(string::snakeCaseToPascalCase("multiple__underscores") == "MultipleUnderscores");
+  CHECK(string::snakeCaseToPascalCase("some_123_\n\rchars") == "Some123\n\rchars");
+}
+
 #ifdef WIN32
 TEST_CASE("Conversion from UTF-8 strings to UTF-16 strings works") {
   using org::apache::nifi::minifi::utils::to_wstring;

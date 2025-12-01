@@ -24,8 +24,8 @@
 #include <memory>
 #include <vector>
 
-#include "OutputStream.h"
-#include "Stream.h"
+#include "io/OutputStream.h"
+#include "io/Stream.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/utils/gsl.h"
 

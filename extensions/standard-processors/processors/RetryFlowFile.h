@@ -128,7 +128,7 @@ class RetryFlowFile : public core::ProcessorImpl {
   };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
-  EXTENSIONAPI static constexpr auto RetriesExceededAttribute = core::DynamicProperty{"Exceeded FlowFile Attribute Key",
+  EXTENSIONAPI static constexpr auto RetriesExceededAttribute = core::DynamicPropertyDefinition{"Exceeded FlowFile Attribute Key",
       "The value of the attribute added to the FlowFile",
       "One or more dynamic properties can be used to add attributes to FlowFiles passed to the 'retries_exceeded' relationship.",
       true};

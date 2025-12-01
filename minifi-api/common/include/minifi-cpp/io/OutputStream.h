@@ -24,7 +24,7 @@
 #include "Stream.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/SmallString.h"
-#include "utils/Id.h"
+#include "minifi-cpp/utils/Id.h"
 
 namespace org::apache::nifi::minifi::io {
 

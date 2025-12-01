@@ -19,20 +19,13 @@
 
 #include <string>
 #include <mutex>
-#include <memory>
-#include <optional>
-#include <sstream>
 #include <utility>
-#include <iostream>
 #include <vector>
 #include <algorithm>
 
 #include "minifi-cpp/utils/gsl.h"
-#include "utils/Enum.h"
 #include "utils/GeneralUtils.h"
-#include "fmt/chrono.h"
 #include "fmt/std.h"
-#include "fmt/ostream.h"
 
 namespace org::apache::nifi::minifi::core::logging {
 
@@ -92,41 +85,19 @@ class Logger {
   }
 
   virtual void set_max_log_size(int size) = 0;
-  virtual std::optional<std::string> get_id() = 0;
   virtual void log_string(LOG_LEVEL level, std::string str) = 0;
   virtual bool should_log(LOG_LEVEL level) = 0;
   [[nodiscard]] virtual LOG_LEVEL level() const = 0;
 
   virtual ~Logger() = default;
 
-  virtual void setLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback) = 0;
-
- protected:
-  virtual int getMaxLogSize() = 0;
-
  private:
-  std::string trimToMaxSizeAndAddId(std::string my_string) {
-    auto max_log_size = getMaxLogSize();
-    if (max_log_size >= 0 && my_string.size() > gsl::narrow<size_t>(max_log_size))
-      my_string = my_string.substr(0, max_log_size);
-    if (auto id = get_id()) {
-      my_string += *id;
-    }
-    return my_string;
-  }
-
   template<typename ...Args>
-  std::string stringify(fmt::format_string<Args...> fmt, Args&&... args) {
-    auto log_message = fmt::format(std::move(fmt), std::forward<Args>(args)...);
-    return trimToMaxSizeAndAddId(std::move(log_message));
-  }
-
-  template<typename ...Args>
-  inline void log(LOG_LEVEL level, log_format_string<Args...> fmt, Args&& ...args) {
+  void log(LOG_LEVEL level, log_format_string<Args...> fmt, Args&& ...args) {
     if (!should_log(level)) {
       return;
     }
-    log_string(level, stringify(std::move(fmt), map_args(std::forward<Args>(args))...));
+    log_string(level, fmt::format(std::move(fmt), map_args(std::forward<Args>(args))...));
   }
 };
 

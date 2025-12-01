@@ -20,7 +20,7 @@
 #include <string>
 #include <memory>
 #include <utility>
-#include "ClassName.h"
+#include "core/ClassName.h"
 #include "minifi-cpp/core/ObjectFactory.h"
 
 namespace org::apache::nifi::minifi::core {

@@ -19,7 +19,7 @@
 #include <filesystem>
 
 #include "Defaults.h"
-#include "Environment.h"
+#include "utils/Environment.h"
 #include "file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::utils {

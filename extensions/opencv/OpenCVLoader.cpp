@@ -19,7 +19,7 @@
 #include "utils/Environment.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "minifi-c/minifi-c.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 #include "core/Resource.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -38,7 +38,9 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
-    .user_data = nullptr
+    .user_data = nullptr,
+    .processors_count = 0,
+    .processors_ptr = nullptr
   };
-  return MinifiCreateExtension(&ext_create_info);
+  return MinifiCreateExtension(minifi::utils::toStringView(MINIFI_API_VERSION), &ext_create_info);
 }

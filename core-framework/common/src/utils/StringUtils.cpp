@@ -610,4 +610,20 @@ std::string partAfterLastOccurrenceOf(std::string_view input, char delimiter) {
   return std::string{input.substr(last_pos + 1)};
 }
 
+std::string snakeCaseToPascalCase(std::string_view input) {
+  std::string result;
+  bool should_uppercase_next_letter = true;
+  for (char ch : input) {
+    if (ch == '_') {
+      should_uppercase_next_letter = true;
+    } else if (should_uppercase_next_letter) {
+      result += static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+      should_uppercase_next_letter = false;
+    } else {
+      result += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    }
+  }
+  return result;
+}
+
 }  // namespace org::apache::nifi::minifi::utils::string

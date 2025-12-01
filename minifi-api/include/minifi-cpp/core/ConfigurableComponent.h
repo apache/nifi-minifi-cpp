@@ -23,7 +23,7 @@
 
 #include "Core.h"
 #include "Property.h"
-#include "PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::core {

@@ -20,7 +20,7 @@
 #include "minifi-cpp/properties/Configure.h"
 #include "client/SFTPClient.h"
 #include "minifi-c/minifi-c.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 #include "core/Resource.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -40,7 +40,9 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
       curl_global_cleanup();
       libssh2_exit();
     },
-    .user_data = nullptr
+    .user_data = nullptr,
+    .processors_count = 0,
+    .processors_ptr = nullptr
   };
-  return MinifiCreateExtension(&ext_create_info);
+  return MinifiCreateExtension(minifi::utils::toStringView(MINIFI_API_VERSION), &ext_create_info);
 }

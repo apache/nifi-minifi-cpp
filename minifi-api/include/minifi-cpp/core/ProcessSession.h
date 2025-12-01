@@ -48,11 +48,10 @@ class ProcessSession : public virtual ReferenceContainer {
   virtual std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() = 0;
   virtual void flushContent() = 0;
   virtual std::shared_ptr<core::FlowFile> get() = 0;
-  virtual std::shared_ptr<core::FlowFile> create(const core::FlowFile* const parent = nullptr) = 0;
+  virtual std::shared_ptr<core::FlowFile> create(const core::FlowFile* parent = nullptr) = 0;
   virtual void add(const std::shared_ptr<core::FlowFile> &record) = 0;
   virtual std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent) = 0;
   virtual std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent, int64_t offset, int64_t size) = 0;
-  virtual void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) = 0;
   virtual void transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name) = 0;
 
   virtual void putAttribute(core::FlowFile& flow, std::string_view key, const std::string& value) = 0;
@@ -117,6 +116,8 @@ class ProcessSession : public virtual ReferenceContainer {
   virtual bool existsFlowFileInRelationship(const Relationship &relationship) = 0;
 
   virtual bool hasBeenTransferred(const core::FlowFile &flow) const = 0;
+
+  virtual void transfer(const std::shared_ptr<FlowFile>& ff, const Relationship& relationship) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

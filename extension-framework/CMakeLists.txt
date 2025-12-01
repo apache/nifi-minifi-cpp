@@ -1,3 +1,5 @@
+add_subdirectory(cpp-extension-lib)
+
 file(GLOB SOURCES
         src/*.cpp
         src/core/*.cpp

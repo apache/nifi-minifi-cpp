@@ -97,7 +97,7 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
-  EXTENSIONAPI static constexpr auto InitialMaxValue = core::DynamicProperty{"initial.maxvalue.<max_value_column>",
+  EXTENSIONAPI static constexpr auto InitialMaxValue = core::DynamicPropertyDefinition{"initial.maxvalue.<max_value_column>",
       "Initial maximum value for the specified column",
       "Specifies an initial max value for max value column(s). Properties should be added in the format `initial.maxvalue.<max_value_column>`. "
       "This value is only used the first time the table is accessed (when a Maximum Value Column is specified).",

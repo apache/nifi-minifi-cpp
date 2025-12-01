@@ -1,0 +1,25 @@
+LIBRARY core-minifi.dll
+EXPORTS
+  MinifiCreateExtension
+  MinifiPublishedMetricsCreate
+  MinifiProcessContextGetProperty
+  MinifiProcessContextGetProcessorName
+  MinifiProcessContextHasNonEmptyProperty
+  MinifiLoggerSetMaxLogSize
+  MinifiLoggerLogString
+  MinifiLoggerShouldLog
+  MinifiLoggerLevel
+  MinifiProcessSessionGet
+  MinifiProcessSessionCreate
+  MinifiProcessSessionTransfer
+  MinifiProcessSessionRemove
+  MinifiProcessSessionRead
+  MinifiProcessSessionWrite
+  MinifiConfigGet
+  MinifiInputStreamSize
+  MinifiInputStreamRead
+  MinifiOutputStreamWrite
+  MinifiStatusToString
+  MinifiFlowFileSetAttribute
+  MinifiFlowFileGetAttribute
+  MinifiFlowFileGetAttributes

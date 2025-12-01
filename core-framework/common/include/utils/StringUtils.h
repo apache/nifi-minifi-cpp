@@ -452,6 +452,7 @@ nonstd::expected<T, std::error_code> parseNumber(std::string_view input) {
 
 std::string partAfterLastOccurrenceOf(std::string_view input, char delimiter);
 
+std::string snakeCaseToPascalCase(std::string_view input);
 
 template<typename ... Bases>
 struct overload : Bases ... {

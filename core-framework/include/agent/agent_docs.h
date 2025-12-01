@@ -25,6 +25,9 @@
 
 #include "utils/StringUtils.h"
 #include "core/ClassName.h"
+#include "minifi-cpp/core/OutputAttribute.h"
+#include "minifi-cpp/core/ControllerServiceApi.h"
+#include "minifi-cpp/core/DynamicProperty.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -35,6 +38,18 @@ inline auto toVector(std::span<const core::PropertyReference> properties) {
 
 inline auto toVector(std::span<const core::RelationshipDefinition> relationships) {
   return std::vector<core::Relationship>(relationships.begin(), relationships.end());
+}
+
+inline auto toVector(std::span<const core::OutputAttributeReference> attributes) {
+  return std::vector<core::OutputAttribute>(attributes.begin(), attributes.end());
+}
+
+inline auto toVector(std::span<const core::ControllerServiceApiDefinition> apis) {
+  return std::vector<core::ControllerServiceApi>(apis.begin(), apis.end());
+}
+
+inline auto toVector(std::span<const core::DynamicPropertyDefinition> properties) {
+  return std::vector<core::DynamicProperty>(properties.begin(), properties.end());
 }
 
 template<typename T>
@@ -55,9 +70,9 @@ void AgentDocs::createClassDescription(const std::string& group, const std::stri
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::Properties),
-        .dynamic_properties_ = Class::DynamicProperties,
+        .dynamic_properties_ = detail::toVector(Class::DynamicProperties),
         .class_relationships_ = detail::toVector(Class::Relationships),
-        .output_attributes_ = Class::OutputAttributes,
+        .output_attributes_ = detail::toVector(Class::OutputAttributes),
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
         .supports_dynamic_relationships_ = Class::SupportsDynamicRelationships,
         .inputRequirement_ = toString(Class::InputRequirement),
@@ -70,7 +85,7 @@ void AgentDocs::createClassDescription(const std::string& group, const std::stri
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::Properties),
-        .api_implementations = Class::ImplementsApis,
+        .api_implementations = detail::toVector(Class::ImplementsApis),
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties
     });
   } else if constexpr (Type == ResourceType::InternalResource) {

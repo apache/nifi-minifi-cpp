@@ -41,8 +41,7 @@
 #include "utils/file/FilePattern.h"
 #include "utils/file/FileUtils.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
-#include "minifi-c/minifi-c.h"
-#include "utils/minifi-c-utils.h"
+#include "utils/ExtensionInitUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -52,28 +51,18 @@ class DummyProcessorDescriptor : public core::ProcessorDescriptor {
 
   void setSupportedRelationships(std::span<const core::RelationshipDefinition> /*relationships*/) override {}
   void setSupportedProperties(std::span<const core::PropertyReference> /*properties*/) override {}
+  void setSupportedProperties(std::span<const core::Property> /*properties*/) override {}
 };
 
 class DummyLogger : public core::logging::Logger {
  public:
   void set_max_log_size(int /*size*/) override {}
-  std::optional<std::string> get_id() override {
-    return std::nullopt;
-  }
   void log_string(core::logging::LOG_LEVEL /*level*/, std::string /*str*/) override {}
   bool should_log(core::logging::LOG_LEVEL /*level*/) override {
     return false;
   }
   [[nodiscard]] core::logging::LOG_LEVEL level() const override {
     return core::logging::LOG_LEVEL::off;
-  }
-
-  int getMaxLogSize() override {
-    return 0;
-  }
-
-  void setLogCallback(const std::function<void(core::logging::LOG_LEVEL level, const std::string&)>& /*callback*/) override {
-    // pass
   }
 
   ~DummyLogger() override = default;

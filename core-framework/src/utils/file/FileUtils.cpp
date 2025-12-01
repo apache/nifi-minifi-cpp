@@ -71,6 +71,31 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   return std::search(view.begin(), view.end(), searcher) != view.end();
 }
 
+// finds a string of length at most @max_length with a given @prefix
+std::optional<std::string> findSubstringWithPrefix(std::istream& stream, std::string_view prefix, size_t max_length) {
+  gsl_Expects(prefix.size() <= max_length);
+  gsl_Expects(max_length <= 8_KiB);
+  std::array<char, 16_KiB> buf{};
+  std::span<char> view;
+
+  Searcher searcher(prefix.begin(), prefix.end());
+
+  do {
+    std::copy(buf.end() - max_length, buf.end(), buf.begin());
+    stream.read(buf.data() + max_length, gsl::narrow<std::streamsize>(buf.size() - max_length));
+    view = std::span<char>(buf.data(), max_length + gsl::narrow<size_t>(stream.gcount()));
+    auto prefix_end = view.begin() + gsl::narrow<std::span<char>::difference_type>(view.size() - (max_length - prefix.size()));
+    if (auto it = std::search(view.begin(), prefix_end, searcher); it != prefix_end) {
+      return std::string{it, it + gsl::narrow<std::span<char>::difference_type>(max_length)};
+    }
+  } while (stream);
+  // there might be a partial (less than max_length) at the end
+  if (auto it = std::search(view.begin(), view.end(), searcher); it != view.end()) {
+    return std::string{it, view.end()};
+  }
+  return std::nullopt;
+}
+
 std::chrono::system_clock::time_point to_sys(std::chrono::file_clock::time_point file_time) {
 #if defined(WIN32)
   // workaround for https://github.com/microsoft/STL/issues/2446

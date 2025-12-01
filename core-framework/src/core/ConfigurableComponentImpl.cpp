@@ -31,6 +31,15 @@ void ConfigurableComponentImpl::setSupportedProperties(std::span<const core::Pro
   for (const auto& item: properties) { supported_properties_.emplace(item.name, item); }
 }
 
+void ConfigurableComponentImpl::setSupportedProperties(std::span<const Property> properties) {
+  if (!canEdit()) { return; }
+
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+  supported_properties_.clear();
+  for (const auto& item: properties) { supported_properties_.emplace(item.getName(), item); }
+}
+
+
 nonstd::expected<std::string, std::error_code> ConfigurableComponentImpl::getProperty(const std::string_view name) const {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   const auto it = supported_properties_.find(name);

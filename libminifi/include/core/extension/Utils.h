@@ -29,7 +29,6 @@
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "utils/file/PathUtils.h"
 
 namespace org::apache::nifi::minifi::core::extension::internal {
 
@@ -45,24 +44,35 @@ class Timer {
   Callback cb_;
 };
 
+enum LibraryType {
+  Cpp,
+  CApi,
+  Invalid
+};
+
 struct LibraryDescriptor {
   std::string name;
   std::filesystem::path dir;
   std::string filename;
 
+
+  [[nodiscard]] bool verify_as_cpp_extension() const;
+
+  [[nodiscard]] bool verify_as_c_extension(const std::shared_ptr<logging::Logger>& logger) const;
+
   [[nodiscard]]
-  bool verify(const std::shared_ptr<logging::Logger>& logger) const {
+  LibraryType verify(const std::shared_ptr<logging::Logger>& logger) const {
     const auto path = getFullPath();
-    if (!std::filesystem::exists(path)) {
-      throw std::runtime_error{"File not found: " + path.string()};
-    }
     const Timer timer{[&](const std::chrono::milliseconds elapsed) {
       logger->log_debug("Verification for '{}' took {}", path, elapsed);
     }};
-    const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
-    const std::string_view end_marker = "__EXTENSION_BUILD_IDENTIFIER_END__";
-    const std::string magic_constant = utils::string::join_pack(begin_marker, AgentBuild::BUILD_IDENTIFIER, end_marker);
-    return utils::file::contains(path, magic_constant);
+    if (verify_as_cpp_extension()) {
+      return Cpp;
+    }
+    if (verify_as_c_extension(logger)) {
+      return CApi;
+    }
+    return Invalid;
   }
 
   [[nodiscard]]
@@ -71,7 +81,7 @@ struct LibraryDescriptor {
   }
 };
 
-std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& path) {
+inline std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& path) {
 #if defined(WIN32)
   static const std::string_view extension = ".dll";
 #elif defined(__APPLE__)

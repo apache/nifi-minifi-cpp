@@ -19,14 +19,9 @@
 #include <memory>
 #include <string>
 
-#include "ConfigurableComponent.h"
 #include "Property.h"
-#include "DynamicProperty.h"
-#include "Core.h"
 #include "minifi-cpp/core/Annotation.h"
-#include "Scheduling.h"
-#include "minifi-cpp/core/state/nodes/MetricsBase.h"
-#include "minifi-cpp/utils/gsl.h"
+#include "minifi-cpp/core/FlowFile.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/ProcessorMetricsExtension.h"
 
@@ -63,7 +58,7 @@ class ProcessorApi {
   virtual void notifyStop() = 0;
   virtual annotation::Input getInputRequirement() const = 0;
   virtual std::shared_ptr<ProcessorMetricsExtension> getMetricsExtension() const = 0;
-  virtual void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback) = 0;
+  virtual void forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) = 0;
 };
 
 }  // namespace core
