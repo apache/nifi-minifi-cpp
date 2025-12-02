@@ -17,12 +17,13 @@
 
 
 import time
+import re
 
 import humanfriendly
 from behave import then, step
 
 from minifi_test_framework.containers.http_proxy_container import HttpProxy
-from minifi_test_framework.core.helpers import wait_for_condition
+from minifi_test_framework.core.helpers import wait_for_condition, check_condition_after_wait
 from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
 
 
@@ -83,16 +84,34 @@ def step_impl(context: MinifiTestContext, message: str, duration: str):
                               context=context)
 
 
+@then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")
+def step_impl(context, regex, duration):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    assert wait_for_condition(condition=lambda: re.search(regex, context.get_default_minifi_container().get_logs()),
+                              timeout_seconds=duration_seconds, bail_condition=lambda: context.get_default_minifi_container().exited,
+                              context=context)
+
+
 @step('no errors were generated on the http-proxy regarding "{url}"')
 def step_impl(context: MinifiTestContext, url: str):
     http_proxy_container = next(container for container in context.containers.values() if isinstance(container, HttpProxy))
     assert http_proxy_container.check_http_proxy_access(url) or http_proxy_container.log_app_output()
 
 
+@then('no files are placed in the "{directory}" directory in {duration} of running time')
+def step_impl(context, directory, duration):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    assert check_condition_after_wait(condition=lambda: context.get_default_minifi_container().get_number_of_files(directory) < 1,
+                                      context=context, wait_time=duration_seconds)
+
+
 @then('there are {num_str} files in the "{directory}" directory in less than {duration}')
 @then('there is {num_str} file in the "{directory}" directory in less than {duration}')
 def step_impl(context: MinifiTestContext, num_str: str, directory: str, duration: str):
     duration_seconds = humanfriendly.parse_timespan(duration)
+    if int(num_str) == 0:
+        context.execute_steps(f'then no files are placed in the "{directory}" directory in {duration} of running time')
+        return
     assert wait_for_condition(condition=lambda: context.get_default_minifi_container().get_number_of_files(directory) == int(num_str),
                               timeout_seconds=duration_seconds, bail_condition=lambda: context.get_default_minifi_container().exited,
                               context=context)
@@ -152,3 +171,28 @@ def step_impl(context: MinifiTestContext, max_increase: str, duration: str):
     time.sleep(time_in_seconds)
     final_memory_usage = context.get_default_minifi_container().get_memory_usage()
     assert final_memory_usage - initial_memory_usage <= max_increase_in_bytes
+
+
+@then('after a wait of {duration}, at least {lower_bound:d} and at most {upper_bound:d} flowfiles are produced and placed in the "{directory}" directory')
+def step_impl(context, lower_bound, upper_bound, duration, directory):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    assert check_condition_after_wait(condition=lambda: context.get_default_minifi_container().get_number_of_files(directory) >= lower_bound
+                                      and context.get_default_minifi_container().get_number_of_files(directory) <= upper_bound,
+                                      context=context, wait_time=duration_seconds)
+
+
+@then('exactly these files are in the "{directory}" directory in less than {duration}: "{contents}"')
+def step_impl(context, directory, duration, contents):
+    if not contents:
+        context.execute_steps(f'then no files are placed in the "{directory}" directory in {duration} of running time')
+        return
+    contents_arr = contents.split(",")
+    timeout_in_seconds = humanfriendly.parse_timespan(duration)
+    assert wait_for_condition(condition=lambda: context.get_default_minifi_container().verify_file_contents(directory, contents_arr),
+                              timeout_seconds=timeout_in_seconds, bail_condition=lambda: False,
+                              context=context)
+
+
+@then('exactly these files are in the "{directory}" directory in less than {duration}: ""')
+def step_impl(context, directory, duration):
+    context.execute_steps(f'then no files are placed in the "{directory}" directory in {duration} of running time')
