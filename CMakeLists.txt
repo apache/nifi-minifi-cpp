@@ -426,7 +426,6 @@ if (WIN32)
         "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_COMPILER_VERSION}"
         "${CMAKE_CXX_FLAGS};${MINIFI_CPP_COMPILE_OPTIONS};${MINIFI_CPP_COMPILE_DEFINITIONS}"
-        \"${selected_extensions}\"
         "${BUILD_IDENTIFIER}"
         "${BUILD_REV}"
         COMMAND_ECHO STDOUT)
@@ -439,7 +438,6 @@ else()
         "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_COMPILER_VERSION}"
         "${CMAKE_CXX_FLAGS};${MINIFI_CPP_COMPILE_OPTIONS};${MINIFI_CPP_COMPILE_DEFINITIONS}"
-        "${selected_extensions}"
         "${BUILD_IDENTIFIER}")
 endif()
 

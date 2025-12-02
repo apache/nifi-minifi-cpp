@@ -27,6 +27,7 @@
 #include "minifi-cpp/core/OutputAttribute.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Relationship.h"
+#include "utils/Hash.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -51,23 +52,41 @@ struct ClassDescription {
 };
 
 struct Components {
-  std::vector<ClassDescription> processors_;
-  std::vector<ClassDescription> controller_services_;
-  std::vector<ClassDescription> parameter_providers_;
-  std::vector<ClassDescription> other_components_;
+  std::vector<ClassDescription> processors;
+  std::vector<ClassDescription> controller_services;
+  std::vector<ClassDescription> parameter_providers;
+  std::vector<ClassDescription> other_components;
 
   [[nodiscard]] bool empty() const noexcept {
-    return processors_.empty() && controller_services_.empty() && parameter_providers_.empty() && other_components_.empty();
+    return processors.empty() && controller_services.empty() && parameter_providers.empty() && other_components.empty();
   }
 };
 
-class AgentDocs {
+struct BundleIdentifier {
+  std::string name;
+  std::string version;
+
+  auto operator<=>(const BundleIdentifier& rhs) const = default;
+};
+
+class ClassDescriptionRegistry {
  public:
-  static const std::map<std::string, Components>& getClassDescriptions();
-  static std::map<std::string, Components>& getMutableClassDescriptions();
+  static const std::map<minifi::BundleIdentifier, Components>& getClassDescriptions();
+  static std::map<minifi::BundleIdentifier, Components>& getMutableClassDescriptions();
 
   template<typename Class, ResourceType Type>
-  static void createClassDescription(const std::string& group, const std::string& name);
+  static void createClassDescription(std::string bundle_name, std::string class_name, std::string version);
 };
 
 }  // namespace org::apache::nifi::minifi
+
+template<>
+struct std::hash<org::apache::nifi::minifi::BundleIdentifier> {
+  size_t operator()(const org::apache::nifi::minifi::BundleIdentifier& bundle_details) const noexcept {
+    size_t hash_value{0};
+    hash_value = org::apache::nifi::minifi::utils::hash_combine(hash_value, std::hash<std::string>{}(bundle_details.name));
+    hash_value = org::apache::nifi::minifi::utils::hash_combine(hash_value, std::hash<std::string>{}(bundle_details.version));
+
+    return hash_value;
+  }
+};

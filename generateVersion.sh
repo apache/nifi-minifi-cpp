@@ -22,8 +22,7 @@ out_dir=$3
 compiler=$4
 compiler_version=$5
 flags=$6
-extensions=$7
-buildident=$8
+buildident=$7
 
 date=$(date +%s)
 
@@ -32,10 +31,6 @@ if [ -d "${src_dir}"/.git ]; then
 else
   buildrev="Unknown"
 fi
-
-IFS=';' read -r -a extensions_array <<< "$extensions"
-
-extension_list="${extension_list} } "
 
 cat >"$out_dir/agent_version.cpp" <<EOF
 /**
@@ -56,8 +51,6 @@ cat >"$out_dir/agent_version.cpp" <<EOF
  * limitations under the License.
  */
 
-#include <string>
-#include <vector>
 #include "minifi-cpp/agent/agent_version.h"
 
 namespace org::apache::nifi::minifi {
@@ -69,24 +62,6 @@ const char* const AgentBuild::BUILD_DATE = "$date";
 const char* const AgentBuild::COMPILER = "$compiler";
 const char* const AgentBuild::COMPILER_VERSION = "$compiler_version";
 const char* const AgentBuild::COMPILER_FLAGS = R"($flags)";
-
-std::vector<std::string> AgentBuild::getExtensions() {
-  static std::vector<std::string> extensions;
-  if (extensions.empty()) {
-EOF
-
-for EXTENSION in "${extensions_array[@]}"
-do
-cat <<EOF >> "$out_dir/agent_version.cpp"
-    extensions.push_back("${EXTENSION}");
-EOF
-done
-
-cat <<EOF >> "$out_dir/agent_version.cpp"
-    extensions.push_back("minifi-system");
-  }
-  return extensions;
-}
 
 }  // namespace org::apache::nifi::minifi
 

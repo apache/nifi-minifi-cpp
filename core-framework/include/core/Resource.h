@@ -31,6 +31,7 @@
 #include "utils/Macro.h"
 #include "core/ProcessorFactoryImpl.h"
 #include "core/ObjectFactory.h"
+#include "minifi-cpp/agent/agent_version.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -68,7 +69,7 @@ class StaticClassType {
       }
     }
 
-    minifi::AgentDocs::createClassDescription<Class, Type>(module_name, class_name);
+    minifi::ClassDescriptionRegistry::createClassDescription<Class, Type>(module_name, class_name, minifi::AgentBuild::VERSION);
   }
 
   ~StaticClassType() {

@@ -20,17 +20,18 @@
 #include <algorithm>
 
 #include "CivetStream.h"
-#include "io/CRCStream.h"
 #include "io/BufferStream.h"
-#include "rapidjson/error/en.h"
+#include "io/CRCStream.h"
+#include "minifi-cpp/agent/agent_docs.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "minifi-cpp/utils/gsl.h"
-#include "agent/build_description.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/view/filter.hpp"
 #include "range/v3/view/view.hpp"
-#include "utils/net/DNS.h"
+#include "rapidjson/error/en.h"
 #include "sitetosite/HttpSiteToSiteClient.h"
 #include "utils/StringUtils.h"
+#include "utils/net/DNS.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -313,8 +314,9 @@ void HeartbeatHandler::verifyJsonHasAgentManifest(const rapidjson::Document& roo
         classes.push_back(proc["type"].GetString());
       }
 
-      auto group = minifi::BuildDescription{}.getClassDescriptions(str);
-      for (const auto& proc : group.processors_) {
+      const auto bundle_details = BundleIdentifier{.name = str, .version = AgentBuild::VERSION};
+      const auto group = minifi::ClassDescriptionRegistry::getClassDescriptions().at(bundle_details);
+      for (const auto& proc : group.processors) {
         REQUIRE(std::find(classes.begin(), classes.end(), proc.full_name_) != std::end(classes));
         (void)proc;
         found = true;

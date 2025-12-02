@@ -19,16 +19,19 @@
 #define EXTENSION_LIST "*minifi-system*, *minifi-standard-processors*"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include <memory>
-#include "core/state/nodes/DeviceInformation.h"
+
 #include "core/state/nodes/AgentInformation.h"
-#include "unit/TestBase.h"
-#include "unit/Catch.h"
+#include "core/state/nodes/DeviceInformation.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/algorithm/find_if.hpp"
+#include "unit/Catch.h"
+#include "unit/TestBase.h"
 
 TEST_CASE("Test Required", "[required]") {
-  minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
-  auto serialized = manifest.serialize();
+  const auto standard_processor_bundle_id = minifi::BundleIdentifier{.name = "minifi-standard-processors", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_id);
+  auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
   REQUIRE_FALSE(resp.children.empty());
@@ -62,8 +65,9 @@ TEST_CASE("Test Required", "[required]") {
 }
 
 TEST_CASE("Test Valid Regex", "[validRegex]") {
-  minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
-  auto serialized = manifest.serialize();
+  const auto standard_processor_bundle_id = minifi::BundleIdentifier{.name = "minifi-standard-processors", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_id);
+  auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
   REQUIRE_FALSE(resp.children.empty());
@@ -81,8 +85,9 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
 }
 
 TEST_CASE("Test Relationships", "[rel1]") {
-  minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
-  auto serialized = manifest.serialize();
+  const auto standard_processor_bundle_id = minifi::BundleIdentifier{.name = "minifi-standard-processors", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_id);
+  auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
   REQUIRE_FALSE(resp.children.empty());
@@ -120,8 +125,9 @@ TEST_CASE("Test Relationships", "[rel1]") {
 }
 
 TEST_CASE("Test Dependent", "[dependent]") {
-  minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
-  auto serialized = manifest.serialize();
+  const auto standard_processor_bundle_id = minifi::BundleIdentifier{.name = "minifi-standard-processors", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_id);
+  auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
   REQUIRE_FALSE(resp.children.empty());

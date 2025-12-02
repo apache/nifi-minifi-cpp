@@ -60,13 +60,14 @@ std::string classNameWithDots() {
 }  // namespace detail
 
 template<typename Class, ResourceType Type>
-void AgentDocs::createClassDescription(const std::string& group, const std::string& name) {
-  Components& components = getMutableClassDescriptions()[group];
+void ClassDescriptionRegistry::createClassDescription(std::string bundle_name, std::string class_name, std::string version) {
+  const BundleIdentifier group_details{.name = std::move(bundle_name), .version = std::move(version)};
+  auto& [processors, controller_services, parameter_providers, other_components] = getMutableClassDescriptions()[group_details];
 
   if constexpr (Type == ResourceType::Processor) {
-    components.processors_.push_back(ClassDescription{
+    processors.push_back(ClassDescription{
         .type_ = Type,
-        .short_name_ = name,
+        .short_name_ = std::move(class_name),
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::Properties),
@@ -79,9 +80,9 @@ void AgentDocs::createClassDescription(const std::string& group, const std::stri
         .isSingleThreaded_ = Class::IsSingleThreaded
     });
   } else if constexpr (Type == ResourceType::ControllerService) {
-    components.controller_services_.push_back(ClassDescription{
+    controller_services.push_back(ClassDescription{
         .type_ = Type,
-        .short_name_ = name,
+        .short_name_ = std::move(class_name),
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::Properties),
@@ -89,25 +90,25 @@ void AgentDocs::createClassDescription(const std::string& group, const std::stri
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties
     });
   } else if constexpr (Type == ResourceType::InternalResource) {
-    components.other_components_.push_back(ClassDescription{
+    other_components.push_back(ClassDescription{
         .type_ = Type,
-        .short_name_ = name,
+        .short_name_ = std::move(class_name),
         .full_name_ = detail::classNameWithDots<Class>(),
         .class_properties_ = detail::toVector(Class::Properties),
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
     });
   } else if constexpr (Type == ResourceType::ParameterProvider) {
-    components.parameter_providers_.push_back(ClassDescription{
+    parameter_providers.push_back(ClassDescription{
         .type_ = Type,
-        .short_name_ = name,
+        .short_name_ = std::move(class_name),
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::Properties)
     });
   } else if constexpr (Type == ResourceType::DescriptionOnly) {
-    components.other_components_.push_back(ClassDescription{
+    other_components.push_back(ClassDescription{
         .type_ = Type,
-        .short_name_ = name,
+        .short_name_ = std::move(class_name),
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description
     });
