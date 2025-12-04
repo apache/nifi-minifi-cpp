@@ -1,6 +1,5 @@
 /**
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,18 +15,24 @@
  * limitations under the License.
  */
 
-#include "core/controller/ControllerServiceNode.h"
+#pragma once
+
+#include <string>
 #include <memory>
-#include <vector>
+#include <utility>
+#include "minifi-cpp/core/controller/ControllerServiceMetadata.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerService> ControllerServiceNode::getControllerServiceImplementation() const {
-  return controller_service_;
-}
+class ControllerServiceApi;
 
-const std::vector<ControllerServiceNode*>& ControllerServiceNode::getLinkedControllerServices() const {
-  return linked_controller_services_;
-}
+class ControllerServiceFactory {
+  public:
+    virtual std::unique_ptr<ControllerServiceApi> create(ControllerServiceMetadata metadata) = 0;
+    virtual std::string getGroupName() const = 0;
+    virtual std::string getClassName() const = 0;
+
+    virtual ~ControllerServiceFactory() = default;
+};
 
 }  // namespace org::apache::nifi::minifi::core::controller

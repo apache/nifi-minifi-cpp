@@ -348,8 +348,7 @@ void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex
 }
 
 void LoggerConfiguration::initializeAlertSinks(const std::shared_ptr<Configure>& config) {
-  auto ssl_service = std::make_shared<controllers::SSLContextService>("AlertSinkSSLContextService", config);
-  ssl_service->onEnable();
+  auto ssl_service = controllers::SSLContextService::createAndEnable("AlertSinkSSLContextService", config);
   if (ssl_service->getCertificateFile().empty()) {
     ssl_service.reset();
   }

@@ -23,14 +23,14 @@
 #include <memory>
 
 #include "http/HTTPClient.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
 
-class ElasticsearchCredentialsControllerService : public core::controller::ControllerServiceImpl {
+class ElasticsearchCredentialsControllerService : public core::controller::ControllerServiceBase {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Elasticsearch/Opensearch Credentials Controller Service";
 
@@ -56,21 +56,10 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  using ControllerServiceImpl::ControllerServiceImpl;
+  using ControllerServiceBase::ControllerServiceBase;
 
   void initialize() override;
-
-  void yield() override {}
-
-  bool isWorkAvailable() override {
-    return false;
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
 
   void onEnable() override;
 
@@ -79,6 +68,5 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
  private:
   std::optional<std::pair<std::string, std::string>> username_password_;
   std::optional<std::string> api_key_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ElasticsearchCredentialsControllerService>::getLogger(uuid_);
 };
 }  //  namespace org::apache::nifi::minifi::extensions::elasticsearch

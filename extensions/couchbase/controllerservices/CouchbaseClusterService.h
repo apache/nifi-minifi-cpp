@@ -24,7 +24,7 @@
 #include <mutex>
 #include <variant>
 
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -101,15 +101,9 @@ class CouchbaseClient {
 
 namespace controllers {
 
-class CouchbaseClusterService : public core::controller::ControllerServiceImpl {
+class CouchbaseClusterService : public core::controller::ControllerServiceBase {
  public:
-  explicit CouchbaseClusterService(std::string_view name, const minifi::utils::Identifier &uuid = {})
-      : ControllerServiceImpl(name, uuid) {
-  }
-
-  explicit CouchbaseClusterService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerServiceImpl(name) {
-  }
+  using ControllerServiceBase::ControllerServiceBase;
 
   EXTENSIONAPI static constexpr const char* Description = "Provides a centralized Couchbase connection and bucket passwords management. Bucket passwords can be specified via dynamic properties.";
 
@@ -133,20 +127,8 @@ class CouchbaseClusterService : public core::controller::ControllerServiceImpl {
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
-
-  void yield() override {
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
 
   void onEnable() override;
   void notifyStop() override {
@@ -168,7 +150,6 @@ class CouchbaseClusterService : public core::controller::ControllerServiceImpl {
 
  private:
   std::unique_ptr<CouchbaseClient> client_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CouchbaseClusterService>::getLogger(uuid_);
 };
 
 }  // namespace controllers

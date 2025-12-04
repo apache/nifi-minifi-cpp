@@ -28,7 +28,6 @@ class NetworkInterface;
 
 struct NetworkPrioritizer {
   virtual ~NetworkPrioritizer() noexcept = default;
-  virtual NetworkInterface getInterface(uint32_t size) = 0;
 
  protected:
   friend class NetworkInterface;
@@ -70,34 +69,6 @@ class NetworkInterface {
 
   std::string ifc_;
   std::shared_ptr<NetworkPrioritizer> prioritizer_;
-};
-
-class NetworkPrioritizerFactory {
- public:
-  NetworkPrioritizerFactory() = default;
-
-  static std::shared_ptr<NetworkPrioritizerFactory> getInstance() {
-    static std::shared_ptr<NetworkPrioritizerFactory> fa = std::make_shared<NetworkPrioritizerFactory>();
-    return fa;
-  }
-
-  void clearPrioritizer() {
-    np_ = nullptr;
-  }
-
-  int setPrioritizer(const std::shared_ptr<NetworkPrioritizer> &prioritizer) {
-    if (np_ != nullptr)
-      return -1;
-    np_ = prioritizer;
-    return 0;
-  }
-
-  std::shared_ptr<NetworkPrioritizer> getPrioritizer() {
-    return np_;
-  }
-
- private:
-  std::shared_ptr<NetworkPrioritizer> np_;
 };
 
 }  // namespace org::apache::nifi::minifi::io
