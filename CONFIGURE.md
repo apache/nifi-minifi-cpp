@@ -454,7 +454,7 @@ If a processor is triggered but has no work available, it will yield for the con
     # in minifi.properties
     nifi.bored.yield.duration=100 millis
 
-### FlowController drain timeout
+### FlowController drain timeout and graceful shutdown period
 
 When the flow is stopped, either because of a flow update from C2, a stop or restart command from C2, or because MiNiFi is stopped by the operating system,
 MiNiFi stops all source processors (processors without incoming connections) first. Next, it waits for all connection queues to become empty, but
@@ -466,16 +466,13 @@ at most the amount of time set in the
 property. The default value is zero, i.e., no wait. Finally, it shuts down the remaining processors. If there are flow files left in some connection
 queues after the drain timeout, they will be discarded.
 
-### Graceful shutdown period
-
-When MiNiFi is stopped or restarted, either because of a stop or restart command from C2, or because MiNiFi is stopped by the operating system,
-it may wait for connection queues to become empty if `nifi.flowcontroller.drain.timeout` is set in `minifi.properties`. You can limit this wait
-to a shorter time by setting the
+By default, the wait time will be limited to 30 seconds during any kind of restart or shutdown (but not during flow updates). You can increase or decrease
+this 30 second limit by setting the
 
     # in minifi.properties
     nifi.flowcontroller.graceful.shutdown.period=2 sec
 
-property. If the graceful shutdown period property is not set, its default value is 30 seconds.
+property. The effective wait time during a restart or shutdown will be the minimum of these two property values.
 
 ### SiteToSite Security Configuration
 
