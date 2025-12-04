@@ -456,7 +456,7 @@ If a processor is triggered but has no work available, it will yield for the con
 
 ### FlowController drain timeout
 
-When the flow is stopped, either because of a flow update from C2, a restart command from C2, or because MiNiFi is stopped by the operating system,
+When the flow is stopped, either because of a flow update from C2, a stop or restart command from C2, or because MiNiFi is stopped by the operating system,
 MiNiFi stops all source processors (processors without incoming connections) first. Next, it waits for all connection queues to become empty, but
 at most the amount of time set in the
 
@@ -468,7 +468,7 @@ queues after the drain timeout, they will be discarded.
 
 ### Graceful shutdown period
 
-When MiNiFi is stopped or restarted, either because of a restart command from C2, or because MiNiFi is stopped by the operating system,
+When MiNiFi is stopped or restarted, either because of a stop or restart command from C2, or because MiNiFi is stopped by the operating system,
 it may wait for connection queues to become empty if `nifi.flowcontroller.drain.timeout` is set in `minifi.properties`. You can limit this wait
 to a shorter time by setting the
 
