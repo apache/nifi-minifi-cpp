@@ -475,7 +475,7 @@ to a shorter time by setting the
     # in minifi.properties
     nifi.flowcontroller.graceful.shutdown.period=2 sec
 
-property. By default, the graceful shutdown period property is not set, which means the wait is only limited by the drain timeout property.
+property. If the graceful shutdown period property is not set, its default value is 30 seconds.
 
 ### SiteToSite Security Configuration
 
