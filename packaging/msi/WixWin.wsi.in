@@ -305,13 +305,13 @@ ${WIX_EXTRA_FEATURES}
               <Directory Id="MINIFIPROP.D" Name="minifi.properties.d">
                 <Component Id="UpdateConfig" Guid="87658309-0339-425c-8633-f54ffaaa4945" Permanent="yes">
                   <CreateFolder />
-                  <IniFile Id="ConfigFileA" Action="addLine" Name="10_installer_properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.class" Value="[AGENT_CLASS]" />
-                  <IniFile Id="ConfigFileI" Action="addLine" Name="10_installer_properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.identifier" Value="[AGENT_IDENTIFIER]" />
-                  <IniFile Id="ConfigFileE" Action="addLine" Name="10_installer_properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.enable" Value="true" />
-                  <IniFile Id="ConfigFileT" Action="addLine" Name="10_installer_properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.heartbeat.period" Value="[AGENT_HEARTBEAT]" />
-                  <IniFile Id="ConfigFileS" Action="addLine" Name="10_installer_properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.path.base" Value="[SERVER_PATH_BASE]" />
-                  <IniFile Id="ConfigFileH" Action="addLine" Name="10_installer_properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.url" Value="[SERVER_HEARTBEAT]" />
-                  <IniFile Id="ConfigFileAck" Action="addLine" Name="10_installer_properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.url.ack" Value="[SERVER_ACK]" />
+                  <IniFile Id="ConfigFileA" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.class" Value="[AGENT_CLASS]" />
+                  <IniFile Id="ConfigFileI" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.identifier" Value="[AGENT_IDENTIFIER]" />
+                  <IniFile Id="ConfigFileE" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.enable" Value="true" />
+                  <IniFile Id="ConfigFileT" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.heartbeat.period" Value="[AGENT_HEARTBEAT]" />
+                  <IniFile Id="ConfigFileS" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.path.base" Value="[SERVER_PATH_BASE]" />
+                  <IniFile Id="ConfigFileH" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.url" Value="[SERVER_HEARTBEAT]" />
+                  <IniFile Id="ConfigFileAck" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.url.ack" Value="[SERVER_ACK]" />
                   <Condition><![CDATA[ENABLEC2="1"]]></Condition>
                 </Component>
               </Directory>

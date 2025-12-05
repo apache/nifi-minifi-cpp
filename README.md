@@ -465,8 +465,8 @@ The files conf/minifi.properties, conf/minifi-log.properties and conf/minifi-uid
 these are the default settings supplied by the latest MiNiFi version. If you would like to modify these, you should create a corresponding
 .d directory (e.g. conf/minifi.properties.d) and put your settings in a new file inside this directory. These files are read and applied
 in lexicographic order, after the default settings file.
-The Windows installer creates a conf/minifi.properties.d/10_installer_properties file, which contains C2 connection settings.
-If C2 is enabled and settings are added/modified from the C2 server, these will be saved in conf/minifi.properties.d/90_c2_properties.
+The Windows installer creates a conf/minifi.properties.d/10_installer.properties file, which contains C2 connection settings.
+If C2 is enabled and settings are added/modified from the C2 server, these will be saved in conf/minifi.properties.d/90_c2.properties.
 
 The conf/config.yml file contains the flow definition (i.e. the layout of processors, controller services etc). When you start MiNiFi for
 the first time, the flow will be fetched from the C2 server (if available), or a file containing an empty flow will be created by MiNiFi.
