@@ -47,7 +47,7 @@ class PropertiesImpl : public virtual Properties {
 
   ~PropertiesImpl() override = default;
 
-  static constexpr std::string_view C2PropertiesFileName = "90_c2_properties";
+  static constexpr std::string_view C2PropertiesFileName = "90_c2.properties";
 
   const std::string& getName() const override {
     return name_;
