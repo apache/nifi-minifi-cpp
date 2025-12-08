@@ -464,7 +464,7 @@ at most the amount of time set in the
     nifi.flowcontroller.drain.timeout=5 sec
 
 property. The default value is zero, i.e., no wait. Finally, it shuts down the remaining processors. If there are flow files left in some connection
-queues after the drain timeout, they will be discarded.
+queues after the drain timeout, they will remain saved to disk (when using persistent repositories, which is the default) or be discarded (when using volatile repositories).
 
 By default, the wait time will be limited to 30 seconds during any kind of restart or shutdown (but not during flow updates). You can increase or decrease
 this 30 second limit by setting the
