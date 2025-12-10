@@ -17,16 +17,13 @@
 #pragma once
 
 #include <iostream>
-#include "agent/build_description.h"
+#include <filesystem>
 
 namespace org::apache::nifi::minifi::docs {
 
 class AgentDocs {
  public:
-  void generate(const std::filesystem::path& docs_dir);
-
- private:
-  BuildDescription build_description_;
+  static void generate(const std::filesystem::path& docs_dir);
 };
 
 }  // namespace org::apache::nifi::minifi::docs

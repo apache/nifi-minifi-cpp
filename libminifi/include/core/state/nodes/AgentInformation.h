@@ -23,7 +23,6 @@
 #include <map>
 
 #include "agent/agent_docs.h"
-#include "agent/build_description.h"
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "core/state/nodes/StateMonitor.h"
 #include "utils/ProcessCpuUsageTracker.h"
@@ -37,41 +36,7 @@ namespace org::apache::nifi::minifi::state::response {
 
 #define GROUP_STR "org.apache.nifi.minifi"
 
-class ComponentManifest : public DeviceInformation {
- public:
-  ComponentManifest(std::string_view name, const utils::Identifier& uuid)
-      : DeviceInformation(name, uuid) {
-  }
-
-  explicit ComponentManifest(std::string_view name)
-      : DeviceInformation(name) {
-  }
-
-  std::string getName() const override {
-    return CoreComponentImpl::getName();
-  }
-
-  std::vector<SerializedResponseNode> serialize() override;
-
- protected:
-  static void serializeClassDescription(const std::vector<ClassDescription>& descriptions, const std::string& name, SerializedResponseNode& response);
-
- private:
-  BuildDescription build_description_;
-};
-
-class ExternalManifest : public ComponentManifest {
- public:
-  ExternalManifest(std::string_view name, const utils::Identifier& uuid)
-      : ComponentManifest(name, uuid) {
-  }
-
-  explicit ExternalManifest(std::string_view name)
-      : ComponentManifest(name) {
-  }
-
-  std::vector<SerializedResponseNode> serialize() override;
-};
+std::vector<SerializedResponseNode> serializeComponentManifest(const Components& components);
 
 class Bundles : public DeviceInformation {
  public:

@@ -29,18 +29,8 @@ namespace org::apache::nifi::minifi::state::response {
 utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
 std::mutex AgentStatus::cpu_load_tracker_mutex_;
 
-std::vector<SerializedResponseNode> ComponentManifest::serialize() {
-  std::vector<SerializedResponseNode> serialized;
-  SerializedResponseNode resp;
-  resp.name = "componentManifest";
-  struct Components group = build_description_.getClassDescriptions(getName());
-  serializeClassDescription(group.processors_, "processors", resp);
-  serializeClassDescription(group.controller_services_, "controllerServices", resp);
-  serialized.push_back(resp);
-  return serialized;
-}
-
-void ComponentManifest::serializeClassDescription(const std::vector<ClassDescription>& descriptions, const std::string& name, SerializedResponseNode& response) {
+namespace {
+void serializeClassDescription(const std::vector<ClassDescription>& descriptions, const std::string& name, SerializedResponseNode& response) {
   if (descriptions.empty()) {
     return;
   }
@@ -145,58 +135,38 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
   }
   response.children.push_back(type);
 }
+}  // namespace
 
-std::vector<SerializedResponseNode> ExternalManifest::serialize() {
+std::vector<SerializedResponseNode> serializeComponentManifest(const Components& components) {
   std::vector<SerializedResponseNode> serialized;
   SerializedResponseNode resp;
   resp.name = "componentManifest";
-  struct Components group = ExternalBuildDescription::getClassDescriptions(getName());
-  serializeClassDescription(group.processors_, "processors", resp);
-  serializeClassDescription(group.controller_services_, "controllerServices", resp);
+  serializeClassDescription(components.processors, "processors", resp);
+  serializeClassDescription(components.controller_services, "controllerServices", resp);
   serialized.push_back(resp);
   return serialized;
 }
 
 std::vector<SerializedResponseNode> Bundles::serialize() {
   std::vector<SerializedResponseNode> serialized;
-  for (const auto& group : AgentBuild::getExtensions()) {
-    ComponentManifest component_manifest(group);
-    const auto components = component_manifest.serialize();
-    gsl_Expects(components.size() == 1);
-    if (components[0].children.empty()) {
+  for (const auto& [bundle, components] : ClassDescriptionRegistry::getClassDescriptions()) {
+    const auto serialized_components = serializeComponentManifest(components);
+    gsl_Expects(serialized_components.size() == 1);
+    if (serialized_components[0].children.empty()) {
       continue;
     }
 
-    SerializedResponseNode bundle {
+    SerializedResponseNode serialized_bundle {
       .name = "bundles",
       .children = {
-        components[0],
+        serialized_components[0],
         {.name = "group", .value = GROUP_STR},
-        {.name = "artifact", .value = group},
-        {.name = "version", .value = AgentBuild::VERSION},
+        {.name = "artifact", .value = bundle.name},
+        {.name = "version", .value = bundle.version},
       }
     };
 
-    serialized.push_back(bundle);
-  }
-
-  // let's provide our external manifests.
-  for (const auto& group : ExternalBuildDescription::getExternalGroups()) {
-    SerializedResponseNode bundle {
-      .name = "bundles",
-      .children = {
-        {.name = "group", .value = group.group},
-        {.name = "artifact", .value = group.artifact},
-        {.name = "version", .value = group.version},
-      }
-    };
-
-    ExternalManifest compMan(group.artifact);
-    // serialize the component information.
-    for (const auto& component : compMan.serialize()) {
-      bundle.children.push_back(component);
-    }
-    serialized.push_back(bundle);
+    serialized.push_back(serialized_bundle);
   }
 
   return serialized;
