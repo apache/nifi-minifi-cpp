@@ -32,6 +32,7 @@
 namespace {
 void createDefaultFlowConfigFile(const std::filesystem::path& path) {
   std::ofstream ostream(path);
+  ostream.exceptions(std::ofstream::failbit | std::ofstream::badbit);
   ostream << "Flow Controller:\n"
       "  name: MiNiFi Flow\n"
       "Processors: []\n"
