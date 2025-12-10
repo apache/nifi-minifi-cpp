@@ -32,7 +32,7 @@ std::vector<SerializedResponseNode> ConfigurationChecksums::serialize() {
 
   for (auto checksum_calculator : checksum_calculators_) {
     SerializedResponseNode file_checksum_node;
-    file_checksum_node.name = checksum_calculator->getFileName().string();
+    file_checksum_node.name = checksum_calculator->getFileNameOfFirstFileLocation().string();
     file_checksum_node.value = checksum_calculator->getChecksum();
     checksums_node.children.push_back(file_checksum_node);
   }

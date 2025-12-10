@@ -30,7 +30,7 @@ class ChecksumCalculator {
   static constexpr size_t LENGTH_OF_HASH_IN_BYTES = 32;
 
   void setFileLocations(std::vector<std::filesystem::path> file_locations);
-  [[nodiscard]] std::filesystem::path getFileName() const;
+  [[nodiscard]] std::filesystem::path getFileNameOfFirstFileLocation() const;
   std::string getChecksum();
   void invalidateChecksum();
 

@@ -62,7 +62,7 @@ void ChecksumCalculator::setFileLocations(std::vector<std::filesystem::path> fil
   invalidateChecksum();
 }
 
-std::filesystem::path ChecksumCalculator::getFileName() const {
+std::filesystem::path ChecksumCalculator::getFileNameOfFirstFileLocation() const {
   gsl_Expects(!file_locations_.empty());
   return file_locations_.front().filename();
 }
