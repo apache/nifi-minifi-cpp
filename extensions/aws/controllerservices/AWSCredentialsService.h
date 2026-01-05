@@ -37,7 +37,7 @@ class AWSCredentialsServiceTestAccessor;
 
 namespace org::apache::nifi::minifi::aws::controllers {
 
-class AWSCredentialsService : public core::controller::ControllerServiceBase {
+class AWSCredentialsService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
@@ -74,6 +74,8 @@ class AWSCredentialsService : public core::controller::ControllerServiceBase {
   void initialize() override;
 
   void onEnable() override;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 

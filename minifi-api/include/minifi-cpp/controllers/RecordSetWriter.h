@@ -26,7 +26,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class RecordSetWriter : public virtual controller::ControllerServiceInterface {
+class RecordSetWriter : public controller::ControllerServiceInterface {
  public:
   static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
     .artifact = "minifi-system",

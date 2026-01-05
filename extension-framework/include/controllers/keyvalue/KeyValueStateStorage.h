@@ -30,7 +30,7 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-class KeyValueStateStorage : public core::StateStorageImpl, public core::controller::ControllerServiceBase {
+class KeyValueStateStorage : public core::StateStorageImpl, public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
@@ -48,6 +48,7 @@ class KeyValueStateStorage : public core::StateStorageImpl, public core::control
   virtual bool clear() = 0;
   virtual bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) = 0;
   virtual bool persist() = 0;
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
  private:
   bool getAll(std::unordered_map<utils::Identifier, std::string>& kvs);

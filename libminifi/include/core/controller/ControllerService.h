@@ -103,7 +103,7 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
     ControllerServiceContextImpl context{*this};
     std::vector<std::shared_ptr<ControllerServiceInterface>> service_interfaces;
     for (auto& service : linked_services_) {
-      service_interfaces.emplace_back(std::shared_ptr<ControllerServiceInterface>(service, service->impl_.get()));
+      service_interfaces.emplace_back(std::shared_ptr<ControllerServiceInterface>(service, service->impl_->getControllerServiceInterface()));
     }
     impl_->onEnable(context, configuration_, service_interfaces);
   }

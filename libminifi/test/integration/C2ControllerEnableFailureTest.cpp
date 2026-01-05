@@ -31,7 +31,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-class DummyController : public core::controller::ControllerServiceBase {
+class DummyController : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
@@ -47,6 +47,8 @@ class DummyController : public core::controller::ControllerServiceBase {
   void initialize() override {
     setSupportedProperties(Properties);
   }
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   void onEnable() override {
     auto dummy_controller_property = getProperty(DummyControllerProperty.name);
