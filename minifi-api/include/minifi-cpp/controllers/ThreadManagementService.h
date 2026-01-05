@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::controllers {
  * Purpose: Thread management service provides a contextual awareness across
  * thread pools that enables us to deliver QOS to an agent.
  */
-class ThreadManagementService : public virtual core::controller::ControllerServiceInterface {
+class ThreadManagementService : public core::controller::ControllerServiceInterface {
  public:
   /**
    * Helps to determine if the number of tasks will increase the pools above their threshold.

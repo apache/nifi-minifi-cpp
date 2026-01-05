@@ -23,13 +23,14 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ControllerServiceApi : public ControllerServiceInterface {
+class ControllerServiceApi {
   public:
     virtual ~ControllerServiceApi() = default;
 
     virtual void initialize(ControllerServiceDescriptor& descriptor) = 0;
     virtual void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceInterface>>& linked_services) = 0;
     virtual void notifyStop() = 0;
+    virtual ControllerServiceInterface* getControllerServiceInterface() = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

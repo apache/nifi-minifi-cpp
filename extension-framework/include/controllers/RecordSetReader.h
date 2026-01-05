@@ -22,9 +22,11 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class RecordSetReaderImpl : public virtual controller::ControllerServiceBase, public virtual RecordSetReader {
+class RecordSetReaderImpl : public controller::ControllerServiceBase, public RecordSetReader {
  public:
   using ControllerServiceBase::ControllerServiceBase;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 };
 
 }  // namespace org::apache::nifi::minifi::core
