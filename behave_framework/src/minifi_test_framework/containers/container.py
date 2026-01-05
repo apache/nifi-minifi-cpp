@@ -100,18 +100,26 @@ class Container:
     def start(self):
         if self.container:
             self.container.start()
+        else:
+            logging.error("Container does not exist. Cannot start.")
 
     def stop(self):
         if self.container:
             self.container.stop()
+        else:
+            logging.error("Container does not exist. Cannot stop.")
 
     def kill(self):
         if self.container:
             self.container.kill()
+        else:
+            logging.error("Container does not exist. Cannot kill.")
 
     def restart(self):
         if self.container:
             self.container.restart()
+        else:
+            logging.error("Container does not exist. Cannot restart.")
 
     def clean_up(self):
         if self.container:
@@ -231,9 +239,13 @@ class Container:
             return False
 
     def get_number_of_files(self, directory_path: str) -> int:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
-            logging.warning(f"Container not running or directory does not exist: {directory_path}")
+        if not self.container:
+            logging.warning("Container not running")
             return -1
+
+        if not self.not_empty_dir_exists(directory_path):
+            logging.warning(f"Container directory does not exist: {directory_path}")
+            return 0
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
         exit_code, output = self.exec_run(count_command)
@@ -314,7 +326,7 @@ class Container:
 
             return os.path.join(temp_dir, os.path.basename(directory_path.strip('/')))
         except Exception as e:
-            logging.error(f"Error extracting files from container: {e}")
+            logging.error(f"Error extracting files from directory path '{directory_path}' from container '{self.container_name}': {e}")
             return None
 
     def _read_files_from_directory(self, directory_path: str) -> list[str] | None:

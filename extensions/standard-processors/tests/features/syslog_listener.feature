@@ -42,4 +42,4 @@ Feature: Minifi C++ can act as a syslog listener
     And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then there are at least 1 files is in the "/tmp/output" directory in less than 10 seconds
+    Then at least 1 file is placed in the "/tmp/output" directory in less than 10 seconds

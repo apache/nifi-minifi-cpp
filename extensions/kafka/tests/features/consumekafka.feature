@@ -37,10 +37,11 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And the MiNiFi instance starts up
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic
 
-    Then the contents of "/tmp/output" in less than 30 seconds are: "<message 1>" and "<message 2>"
+    Then files with contents "<message 1>" and "<message 2>" are placed in the "/tmp/output" directory in less than 30 seconds
 
     Examples: Topic names and formats to test
       | message 1            | message 2           | topic names              | topic name format |
+      | Ulysses              | James Joyce         | ConsumeKafkaTest         | (not set)         |
       | The Great Gatsby     | F. Scott Fitzgerald | ConsumeKafkaTest         | Names             |
       | War and Peace        | Lev Tolstoy         | a,b,c,ConsumeKafkaTest,d | Names             |
       | Nineteen Eighty Four | George Orwell       | ConsumeKafkaTest         | Patterns          |
@@ -67,7 +68,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic with key "consume_kafka_test_key"
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic with key "consume_kafka_test_key"
 
-    Then the contents of "/tmp/output" in less than 30 seconds are: "<message 1>" and "<message 2>"
+    Then files with contents "<message 1>" and "<message 2>" are placed in the "/tmp/output" directory in less than 30 seconds
 
     Examples: Key attribute encoding values
       | message 1            | message 2                     | key attribute encoding |
@@ -88,7 +89,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     When all instances start up
     And the publisher performs a <transaction type> transaction publishing to the "ConsumeKafkaTest" topic these messages: <messages sent>
 
-    Then there are <number of flowfiles expected> files in the "/tmp/output" directory in less than 15 seconds
+    Then <number of flowfiles expected> files are placed in the "/tmp/output" directory in less than 15 seconds
 
     Examples: Transaction descriptions
       | messages sent                     | transaction type             | honor transactions | number of flowfiles expected |
@@ -121,7 +122,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic with headers "<message headers sent>"
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic with headers "<message headers sent>"
 
-    Then the contents of "/tmp/output" in less than 45 seconds are: "<message 1>" and "<message 2>"
+    Then files with contents "<message 1>" and "<message 2>" are placed in the "/tmp/output" directory in less than 45 seconds
 
     Examples: Messages with headers
       | message 1             | message 2         | message headers sent        | headers to add as attributes | expected value       | duplicate header handling |
@@ -148,7 +149,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     When the MiNiFi instance starts up
     And two messages with content "Barbapapa" and "Anette Tison and Talus Taylor" is published to the "ConsumeKafkaTest" topic
 
-    Then there is a single file with "Barbapapa,Anette Tison and Talus Taylor" content in the "/tmp/output" directory in less than 45 seconds
+    Then a single file with the content "Barbapapa,Anette Tison and Talus Taylor" is placed in the "/tmp/output" directory in less than 45 seconds
 
   Scenario Outline: The ConsumeKafka "Maximum Poll Records" property sets a limit on the messages processed in a single batch
     Given a Kafka server is set up
@@ -170,7 +171,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     When all instances start up
     And 1000 kafka messages are sent to the topic "ConsumeKafkaTest"
 
-    Then after a wait of 15 seconds, at least <min expected messages> and at most <max expected messages> flowfiles are produced and placed in the "/tmp/output" directory
+    Then after a wait of 15 seconds, at least <min expected messages> and at most <max expected messages> files are produced and placed in the "/tmp/output" directory
 
     Examples: Message batching
       | max poll records | min expected messages | max expected messages |
@@ -194,7 +195,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And a message with content "Through the Looking-Glass" is published to the "ConsumeKafkaTest" topic
     And a message with content "Lewis Carroll" is published to the "ConsumeKafkaTest" topic
 
-    Then the contents of "/tmp/output" in less than 60 seconds are: "Through the Looking-Glass" and "Lewis Carroll"
+    Then files with contents "Through the Looking-Glass" and "Lewis Carroll" are placed in the "/tmp/output" directory in less than 60 seconds
 
   Scenario: ConsumeKafka receives data via SASL SSL
     Given a Kafka server is set up
@@ -216,7 +217,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And a message with content "Through the Looking-Glass" is published to the "ConsumeKafkaTest" topic
     And a message with content "Lewis Carroll" is published to the "ConsumeKafkaTest" topic
 
-    Then the contents of "/tmp/output" in less than 45 seconds are: "Through the Looking-Glass" and "Lewis Carroll"
+    Then files with contents "Through the Looking-Glass" and "Lewis Carroll" are placed in the "/tmp/output" directory in less than 45 seconds
 
   Scenario: MiNiFi consumes data from a kafka topic via SASL PLAIN connection
     Given a Kafka server is set up

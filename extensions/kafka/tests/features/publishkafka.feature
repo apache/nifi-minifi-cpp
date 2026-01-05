@@ -52,7 +52,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 60 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
     And the Minifi logs contain the following message: " is 'test'" in less than 60 seconds
     And the Minifi logs contain the following message: "PublishKafka: request.required.acks [1]" in less than 10 seconds
     And the Minifi logs contain the following message: "PublishKafka: request.timeout.ms [12000]" in less than 10 seconds
@@ -83,7 +83,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And PutFile's success relationship is auto-terminated
 
     When the MiNiFi instance starts up
-    Then there is a single file with "no broker" content in the "/tmp/output" directory in less than 60 seconds
+    Then a single file with the content "no broker" is placed in the "/tmp/output" directory in less than 60 seconds
 
   Scenario: PublishKafka sends can use SSL connect with security properties
     Given a Kafka server is set up
@@ -113,7 +113,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 60 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
 
     # We fallback to the flowfile's uuid as message key if the Kafka Key property is not set
     And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds
@@ -143,7 +143,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 60 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
 
   Scenario: PublishKafka sends can use SASL SSL connect with security properties
     Given a Kafka server is set up
@@ -176,7 +176,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 60 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
 
   Scenario: PublishKafka sends can use SASL SSL connect with SSL Context
     Given a Kafka server is set up
@@ -207,7 +207,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 60 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
 
   Scenario: PublishKafka sends can use SSL connect with SSL Context Service
     Given a Kafka server is set up
@@ -235,7 +235,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And PutFile's success relationship is auto-terminated
 
     When both instances start up
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 60 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
 
     # We fallback to the flowfile's uuid as message key if the Kafka Key property is not set
     And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds

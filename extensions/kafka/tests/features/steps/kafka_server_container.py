@@ -98,23 +98,23 @@ Client {
             context=None)
 
     def create_topic(self, topic_name: str):
-        (code, output) = self.exec_run(["/bin/bash", "-c", f"/opt/kafka/bin/kafka-topics.sh --create --topic {topic_name} --bootstrap-server {self.container_name}:9092"])
-        logging.info("Create topic output: %s", output)
+        (code, output) = self.exec_run(["/bin/sh", "-c", f"/opt/kafka/bin/kafka-topics.sh --create --topic '{topic_name}' --bootstrap-server '{self.container_name}':9092"])
+        logging.info(f"Create topic output: '{output}' with code {code}")
         return code == 0
 
     def produce_message(self, topic_name: str, message: str):
-        (code, output) = self.exec_run(["/bin/bash", "-c", f"/opt/kafka/bin/kafka-console-producer.sh --topic {topic_name} --bootstrap-server {self.container_name}:9092 <<< '{message}'"])
-        logging.info("Produce message output: %s", output)
+        (code, output) = self.exec_run(["/bin/sh", "-c", f"echo '{message}' | /opt/kafka/bin/kafka-console-producer.sh --topic '{topic_name}' --bootstrap-server '{self.container_name}':9092"])
+        logging.info(f"Produce message output: '{output}' with code {code}")
         return code == 0
 
     def produce_message_with_key(self, topic_name: str, message: str, message_key: str):
-        (code, output) = self.exec_run(["/bin/bash", "-c", f"/opt/kafka/bin/kafka-console-producer.sh --property 'key.separator=:' --property 'parse.key=true' --topic {topic_name} --bootstrap-server {self.container_name}:9092 <<< '{message_key}:{message}'"])
-        logging.info("Produce message with key output: %s", output)
+        (code, output) = self.exec_run(["/bin/sh", "-c", f" echo '{message_key}:{message}' | /opt/kafka/bin/kafka-console-producer.sh --property 'key.separator=:' --property 'parse.key=true' --topic '{topic_name}' --bootstrap-server '{self.container_name}':9092"])
+        logging.info(f"Produce message with key output: '{output}' with code {code}")
         return code == 0
 
     def run_python_in_kafka_helper_docker(self, command: str):
         output = self.client.containers.run("minifi-kafka-helper:latest", ["python", "-c", command], remove=True, stdout=True, stderr=True, network=self.network.name)
-        logging.info("Run python in kafka helper docker output: %s", output)
+        logging.info(f"Run python in kafka helper docker output: '{output.decode('utf-8')}'")
         return True
 
     def wait_for_kafka_consumer_to_be_registered(self, expected_consumer_count: int):
