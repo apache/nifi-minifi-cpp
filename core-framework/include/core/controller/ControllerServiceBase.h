@@ -27,6 +27,7 @@
 #include "core/ConfigurableComponentImpl.h"
 #include "core/Connectable.h"
 #include "minifi-cpp/core/controller/ControllerServiceApi.h"
+#include "minifi-cpp/core/controller/ControllerServiceInterface.h"
 #include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/controller/ControllerServiceMetadata.h"
 
@@ -38,7 +39,7 @@ namespace org::apache::nifi::minifi::core::controller {
  * Design: OnEnable is executed when the controller service is being enabled.
  * Note that keeping state here must be protected  in this function.
  */
-class ControllerServiceBase : public virtual ControllerServiceApi {
+class ControllerServiceBase : public ControllerServiceApi {
  public:
   explicit ControllerServiceBase(ControllerServiceMetadata metadata)
       : name_(std::move(metadata.name)),

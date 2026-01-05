@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::sql::controllers {
  * services to internal services. While a controller service is generally configured from the flow,
  * we want to follow the open closed principle and provide Database services
  */
-class DatabaseService : public core::controller::ControllerServiceBase {
+class DatabaseService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
@@ -51,6 +51,8 @@ class DatabaseService : public core::controller::ControllerServiceBase {
   void initialize() override;
 
   void onEnable() override;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   virtual std::unique_ptr<sql::Connection> getConnection() const = 0;
 

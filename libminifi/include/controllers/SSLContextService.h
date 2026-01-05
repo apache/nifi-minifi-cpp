@@ -84,6 +84,8 @@ class SSLContextService : public core::controller::ControllerServiceBase, public
 
   void initialize() override;
 
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
+
   std::unique_ptr<SSLContext> createSSLContext();
 
   const std::filesystem::path& getCertificateFile() const override;
