@@ -1,11 +1,11 @@
 Apache NiFi MiNiFi C++
-Copyright 2024 The Apache Software Foundation
+Copyright 2026 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
 This includes derived works from the Apache NiFi (ALv2 Licensed) project (https://github.com/apache/nifi):
-Copyright 2024 The Apache Software Foundation
+Copyright 2026 The Apache Software Foundation
 The derived and original works are listed below:
     SFTPTestServer extends and is based on SSHTestServer
 
