@@ -37,10 +37,8 @@
 #include "asio.hpp"
 #include "asio/ssl.hpp"
 #include "utils/net/Ssl.h"
-#include "range/v3/algorithm/any_of.hpp"
 #include "core/Processor.h"
-#include "core/logging/LoggerFactory.h"
-#include "./ProcessorUtils.h"
+#include <range/v3/all.hpp>
 
 using namespace std::literals::chrono_literals;
 
@@ -238,6 +236,61 @@ inline bool runningAsUnixRoot() {
 #else
   return geteuid() == 0;
 #endif
+}
+
+struct LogMessageView {
+  std::string_view timestamp;
+  std::string_view logger_class;
+  std::string_view log_level;
+  std::string_view payload;
+};
+
+inline std::vector<LogMessageView> extractLogMessageViews(const std::string& log_str) {
+  std::vector<LogMessageView> messages;
+  const std::regex header_pattern(R"((\[[\d\-\s\:\.]+\]) (\s*\[[^\]]+\]) \[(.*)\])");
+  const auto search_range = std::ranges::subrange(std::sregex_iterator(log_str.begin(), log_str.end(), header_pattern), std::sregex_iterator());
+  struct MsgMarker {
+    size_t start;
+    size_t timestamp_start;
+    size_t timestamp_length;
+    size_t logger_class_start;
+    size_t logger_class_length;
+    size_t log_level_start;
+    size_t log_level_length;
+  };
+
+  std::vector<MsgMarker> markers = ranges::subrange<std::sregex_iterator>(std::sregex_iterator(log_str.begin(), log_str.end(), header_pattern),
+                                       std::sregex_iterator()) |
+      ranges::views::transform([=](const std::smatch& m) {
+        return MsgMarker{.start = static_cast<size_t>(m.position(0)),
+            .timestamp_start = static_cast<size_t>(m.position(1)),
+            .timestamp_length = static_cast<size_t>(m.length(1)),
+            .logger_class_start = static_cast<size_t>(m.position(2)),
+            .logger_class_length = static_cast<size_t>(m.length(2)),
+            .log_level_start = static_cast<size_t>(m.position(3)),
+            .log_level_length = static_cast<size_t>(m.length(3))};
+      }) |
+      ranges::to<std::vector>();
+
+  markers.push_back(MsgMarker{.start = log_str.size(),
+      .timestamp_start = log_str.size(),
+      .timestamp_length = 0,
+      .logger_class_start = log_str.size(),
+      .logger_class_length = 0,
+      .log_level_start = log_str.size(),
+      .log_level_length = 0});
+
+  for (auto window: markers | ranges::views::sliding(2)) {
+    const std::string_view timestamp{log_str.data() + window[0].timestamp_start, window[0].timestamp_length};
+    const std::string_view logger_class{log_str.data() + window[0].logger_class_start, window[0].logger_class_length};
+    const std::string_view log_level{log_str.data() + window[0].log_level_start, window[0].log_level_length};
+    const size_t msg_start_pos = window[0].log_level_start + window[0].log_level_length + 2;
+    const size_t msg_length = window[1].start >= msg_start_pos ? window[1].start - msg_start_pos : 0;
+    const std::string_view message{log_str.data() + msg_start_pos, msg_length};
+    messages.push_back(LogMessageView{.timestamp = timestamp, .logger_class = logger_class, .log_level = log_level, .payload = message});
+  }
+
+  return messages;
 }
 
 }  // namespace org::apache::nifi::minifi::test::utils
