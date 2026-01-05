@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::azure::controllers {
 
-class AzureStorageCredentialsService : public core::controller::ControllerServiceBase {
+class AzureStorageCredentialsService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Manages the credentials for an Azure Storage account. This allows for multiple Azure Storage related processors to reference this single "
       "controller service so that Azure storage credentials can be managed and controlled in a central location.";
@@ -90,6 +90,8 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   void initialize() override;
 
   void onEnable() override;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   storage::AzureStorageCredentials getCredentials() const {
     return credentials_;

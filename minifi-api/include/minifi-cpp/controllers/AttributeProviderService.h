@@ -25,7 +25,7 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-class AttributeProviderService : public virtual core::controller::ControllerServiceInterface {
+class AttributeProviderService : public core::controller::ControllerServiceInterface {
  public:
   using AttributeMap = std::unordered_map<std::string, std::string>;
   virtual std::optional<std::vector<AttributeMap>> getAttributes() = 0;

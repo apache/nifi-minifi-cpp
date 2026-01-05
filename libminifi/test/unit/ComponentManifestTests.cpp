@@ -40,9 +40,11 @@ SerializedResponseNode& get(SerializedResponseNode& node, const std::string& fie
 
 namespace test::apple {
 
-class ExampleService : public core::controller::ControllerServiceBase {
+class ExampleService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   using ControllerServiceBase::ControllerServiceBase;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   static constexpr const char* Description = "An example service";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};

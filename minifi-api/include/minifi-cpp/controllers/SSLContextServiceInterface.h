@@ -35,7 +35,7 @@ namespace org::apache::nifi::minifi::controllers {
  * Justification: Abstracts SSL support out of processors into a
  * configurable controller service.
  */
-class SSLContextServiceInterface : public virtual core::controller::ControllerServiceInterface {
+class SSLContextServiceInterface : public core::controller::ControllerServiceInterface {
  public:
   static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
     .artifact = "minifi-system",

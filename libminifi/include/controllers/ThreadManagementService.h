@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::controllers {
  * Purpose: Thread management service provides a contextual awareness across
  * thread pools that enables us to deliver QOS to an agent.
  */
-class ThreadManagementServiceImpl : public core::controller::ControllerServiceBase, public virtual ThreadManagementService {
+class ThreadManagementServiceImpl : public core::controller::ControllerServiceBase, public ThreadManagementService {
  public:
   explicit ThreadManagementServiceImpl(std::string_view name, const utils::Identifier &uuid = {})
       : ControllerServiceBase(name, uuid),
@@ -71,6 +71,8 @@ class ThreadManagementServiceImpl : public core::controller::ControllerServiceBa
 
   void onEnable() override {
   }
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
  protected:
   std::atomic<int> thread_count_;

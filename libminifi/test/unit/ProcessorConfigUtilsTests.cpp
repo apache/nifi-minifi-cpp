@@ -92,9 +92,10 @@ TEST_CASE("Parse enum property") {
 }
 
 namespace {
-class TestControllerService : public controller::ControllerServiceBase {
+class TestControllerService : public controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   using ControllerServiceBase::ControllerServiceBase;
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 };
 
 const std::shared_ptr test_controller_service = []() {

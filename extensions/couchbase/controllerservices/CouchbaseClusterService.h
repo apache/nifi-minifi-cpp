@@ -101,7 +101,7 @@ class CouchbaseClient {
 
 namespace controllers {
 
-class CouchbaseClusterService : public core::controller::ControllerServiceBase {
+class CouchbaseClusterService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
@@ -136,6 +136,8 @@ class CouchbaseClusterService : public core::controller::ControllerServiceBase {
       client_->close();
     }
   }
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   virtual nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type,
       const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {

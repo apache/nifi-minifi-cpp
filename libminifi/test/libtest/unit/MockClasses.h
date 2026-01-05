@@ -35,7 +35,7 @@ std::mutex control_mutex;
 std::atomic<bool> subprocess_controller_service_found_correctly{false};
 std::atomic<bool> subprocess_controller_service_not_found_correctly{false};
 
-class MockControllerService : public minifi::core::controller::ControllerServiceBase {
+class MockControllerService : public minifi::core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   using ControllerServiceBase::ControllerServiceBase;
   MockControllerService()
@@ -59,6 +59,8 @@ class MockControllerService : public minifi::core::controller::ControllerService
   virtual void enable() {
     str = "pushitrealgood";
   }
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
  protected:
   std::string str;

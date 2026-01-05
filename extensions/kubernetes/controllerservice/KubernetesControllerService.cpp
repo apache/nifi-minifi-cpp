@@ -31,17 +31,6 @@ extern "C" {
 
 namespace org::apache::nifi::minifi::controllers {
 
-KubernetesControllerService::KubernetesControllerService(const std::string_view name, const utils::Identifier& uuid)
-  : AttributeProviderServiceImpl(name, uuid),
-    logger_{core::logging::LoggerFactory<KubernetesControllerService>::getLogger(uuid)} {
-}
-
-KubernetesControllerService::KubernetesControllerService(const std::string_view name, const std::shared_ptr<Configure>& configuration)
-  : KubernetesControllerService{name} {
-    setConfiguration(configuration);
-    initialize();
-}
-
 void KubernetesControllerService::initialize() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (initialized_) { return; }

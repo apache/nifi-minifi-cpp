@@ -26,7 +26,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class RecordSetReader : public virtual controller::ControllerServiceInterface {
+class RecordSetReader : public controller::ControllerServiceInterface {
  public:
   static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
     .artifact = "minifi-system",

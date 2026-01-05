@@ -26,9 +26,11 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-class AttributeProviderServiceImpl : public core::controller::ControllerServiceBase, public virtual AttributeProviderService {
+class AttributeProviderServiceImpl : public core::controller::ControllerServiceBase, public AttributeProviderService {
  public:
   using ControllerServiceBase::ControllerServiceBase;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

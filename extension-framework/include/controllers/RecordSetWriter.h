@@ -21,9 +21,11 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class RecordSetWriterImpl : public virtual controller::ControllerServiceBase, public virtual RecordSetWriter {
+class RecordSetWriterImpl : public controller::ControllerServiceBase, public RecordSetWriter {
  public:
   using ControllerServiceBase::ControllerServiceBase;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 };
 
 }  // namespace org::apache::nifi::minifi::core
