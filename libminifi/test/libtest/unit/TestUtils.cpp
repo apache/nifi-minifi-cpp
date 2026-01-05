@@ -260,4 +260,43 @@ std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents
   return {};
 }
 
+std::vector<LogMessageView> extractLogMessageViews(const std::string& log_str) {
+  std::vector<LogMessageView> messages;
+  const std::regex header_pattern(R"((\[[\d\-\s\:\.]+\]) (\s*\[[^\]]+\]) \[(.*)\])");
+  struct HeaderMarker {
+    size_t start;
+    std::string_view timestamp;
+    std::string_view logger_class;
+    std::string_view log_level;
+    size_t end;
+  };
+
+  std::vector<HeaderMarker> markers = ranges::subrange<std::sregex_iterator>(std::sregex_iterator(log_str.begin(), log_str.end(), header_pattern),
+                                       std::sregex_iterator()) |
+      ranges::views::transform([=](const std::smatch& m) {
+        return HeaderMarker{.start = static_cast<size_t>(m.position(0)),
+            .timestamp = std::string_view{log_str.data() + m.position(1), static_cast<size_t>(m.length(1))},
+            .logger_class = std::string_view{log_str.data() + m.position(2), static_cast<size_t>(m.length(2))},
+            .log_level = std::string_view{log_str.data() + m.position(3), static_cast<size_t>(m.length(3))},
+            .end = static_cast<size_t>(m.position(0) + m.length(0))
+        };
+      }) | ranges::to<std::vector>();
+
+  markers.push_back(HeaderMarker{.start = log_str.size(),
+      .timestamp = {},
+      .logger_class = {},
+      .log_level = {},
+      .end = log_str.size()
+  });
+
+  for (auto window: markers | ranges::views::sliding(2)) {
+    messages.push_back(LogMessageView{.timestamp = window[0].timestamp,
+      .logger_class = window[0].logger_class,
+      .log_level = window[0].log_level,
+      .payload = {log_str.data() + window[0].end, window[1].start - window[0].end}});
+  }
+
+  return messages;
+}
+
 }  // namespace org::apache::nifi::minifi::test::utils
