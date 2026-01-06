@@ -62,7 +62,7 @@ class DatabaseService : public core::controller::ControllerServiceBase, public c
   // initialization mutex.
   std::recursive_mutex initialization_mutex_;
 
-  bool initialized_;
+  bool initialized_{false};
 
   std::string connection_string_;
 };
