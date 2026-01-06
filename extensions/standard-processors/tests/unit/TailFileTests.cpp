@@ -1723,7 +1723,7 @@ class TestAttributeProviderService final : public minifi::controllers::Attribute
     return std::vector<AttributeMap>{AttributeMap{{"color", "red"}, {"fruit", "apple"}, {"uid", "001"}, {"animal", "dog"}},
                                      AttributeMap{{"color", "yellow"}, {"fruit", "banana"}, {"uid", "004"}, {"animal", "dolphin"}}};
   }
-  std::string_view name() const override { return "test"; }
+  [[nodiscard]] std::string_view name() const override { return "test"; }
 };
 REGISTER_RESOURCE(TestAttributeProviderService, ControllerService);
 
