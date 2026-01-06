@@ -37,13 +37,13 @@ def step_impl(context):
     context.containers["syslog-udp"] = SyslogContainer("udp", context)
 
 
-@step(u'there is an accessible PLC with modbus enabled')
+@step('there is an accessible PLC with modbus enabled')
 def step_impl(context):
     modbus_container = context.containers["diag-slave-tcp"] = DiagSlave(context)
     assert modbus_container.deploy()
 
 
-@step(u'PLC register has been set with {modbus_cmd} command')
+@step('PLC register has been set with {modbus_cmd} command')
 def step_impl(context, modbus_cmd):
     assert context.containers["diag-slave-tcp"].set_value_on_plc_with_modbus(modbus_cmd) or context.containers["diag-slave-tcp"].log_app_output()
 

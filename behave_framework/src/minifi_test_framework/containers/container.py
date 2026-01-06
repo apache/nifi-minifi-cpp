@@ -134,7 +134,7 @@ class Container:
             return code, output.decode("utf-8")
         return None, "Container not running."
 
-    def not_empty_dir_exists(self, directory_path: str) -> bool:
+    def nonempty_dir_exists(self, directory_path: str) -> bool:
         if not self.container:
             return False
         dir_exists_exit_code, dir_exists_output = self.exec_run(
@@ -146,7 +146,7 @@ class Container:
         return dir_not_empty_ec == 0
 
     def directory_contains_empty_file(self, directory_path: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         command = "sh -c {}".format(shlex.quote(f"find {directory_path} -maxdepth 1 -type f -empty"))
@@ -156,7 +156,7 @@ class Container:
         return exit_code == 0
 
     def directory_contains_file_with_content(self, directory_path: str, expected_content: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         quoted_content = shlex.quote(expected_content)
@@ -167,7 +167,7 @@ class Container:
         return exit_code == 0
 
     def directory_contains_file_with_regex(self, directory_path: str, regex_str: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         safe_dir_path = shlex.quote(directory_path)
@@ -197,7 +197,7 @@ class Container:
         return file_count == 1
 
     def directory_has_single_file_with_content(self, directory_path: str, expected_content: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
@@ -253,7 +253,7 @@ class Container:
             logging.warning("Container not running")
             return -1
 
-        if not self.not_empty_dir_exists(directory_path):
+        if not self.nonempty_dir_exists(directory_path):
             logging.warning(f"Container directory does not exist: {directory_path}")
             return 0
 
@@ -301,7 +301,7 @@ class Container:
         return actual_file_contents
 
     def _verify_file_contents_in_running_container(self, directory_path: str, expected_contents: list[str]) -> bool:
-        if not self.not_empty_dir_exists(directory_path):
+        if not self.nonempty_dir_exists(directory_path):
             return False
 
         actual_file_contents = self._get_contents_of_all_files_in_directory(directory_path)
@@ -375,7 +375,7 @@ class Container:
         return False
 
     def verify_path_with_json_content(self, directory_path: str, expected_str: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             logging.warning(f"Container not running or directory does not exist: {directory_path}")
             return False
 
@@ -410,7 +410,7 @@ class Container:
         return actual_json == expected_json
 
     def directory_contains_file_with_json_content(self, directory_path: str, expected_content: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             logging.warning(f"Container not running or directory does not exist: {directory_path}")
             return False
 
