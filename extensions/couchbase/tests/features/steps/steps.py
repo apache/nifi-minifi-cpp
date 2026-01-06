@@ -42,15 +42,15 @@ def step_impl(context: MinifiTestContext):
 
 @step("a CouchbaseClusterService is set up using SSL connection")
 def step_impl(context):
-    controller_service = ControllerService(class_name="SSLContextService", service_name="SSLContextService")
-    controller_service.add_property("CA Certificate", "/tmp/resources/root_ca.crt")
-    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
-    controller_service = ControllerService(class_name="CouchbaseClusterService", service_name="CouchbaseClusterService")
-    controller_service.add_property("Connection String", f"couchbases://couchbase-server-{context.scenario_id}")
-    controller_service.add_property("User Name", "Administrator")
-    controller_service.add_property("User Password", "password123")
-    controller_service.add_property("Linked Services", "SSLContextService")
-    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
+    ssl_context_service = ControllerService(class_name="SSLContextService", service_name="SSLContextService")
+    ssl_context_service.add_property("CA Certificate", "/tmp/resources/root_ca.crt")
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(ssl_context_service)
+    couchbase_cluster_service = ControllerService(class_name="CouchbaseClusterService", service_name="CouchbaseClusterService")
+    couchbase_cluster_service.add_property("Connection String", f"couchbases://couchbase-server-{context.scenario_id}")
+    couchbase_cluster_service.add_property("User Name", "Administrator")
+    couchbase_cluster_service.add_property("User Password", "password123")
+    couchbase_cluster_service.add_property("Linked Services", "SSLContextService")
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(couchbase_cluster_service)
 
 
 @step("a CouchbaseClusterService is setup up using mTLS authentication")

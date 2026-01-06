@@ -246,8 +246,7 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the Minifi logs match the following regex: "key:couchbase.doc.expiry value:\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}" in less than 1 seconds
 
   Scenario: A MiNiFi instance can get data from test bucket with GetCouchbaseKey processor using mTLS authentication
-    Given a MiNiFi CPP server with yaml config
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a directory at '/tmp/input' has a file with the content '{"field1": "value1", "field2": "value2"}'
     And a PutCouchbaseKey processor with the "Bucket Name" property set to "test_bucket"
     And PutCouchbaseKey is EVENT_DRIVEN

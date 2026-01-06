@@ -89,10 +89,11 @@ def retry_check(max_tries=5, retry_interval=1):
     def retry_check_func(func):
         @functools.wraps(func)
         def retry_wrapper(*args, **kwargs):
-            for _ in range(max_tries):
+            for i in range(max_tries):
                 if func(*args, **kwargs):
                     return True
-                time.sleep(retry_interval)
+                if i < max_tries - 1:
+                    time.sleep(retry_interval)
             return False
         return retry_wrapper
     return retry_check_func

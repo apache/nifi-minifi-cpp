@@ -21,6 +21,7 @@ from minifi_test_framework.core.ssl_utils import make_server_cert
 from minifi_test_framework.containers.container import Container
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from docker.errors import ContainerError
 
 
 class CouchbaseServerContainer(Container):
@@ -67,9 +68,9 @@ class CouchbaseServerContainer(Container):
 
     @retry_check(max_tries=12, retry_interval=5)
     def _run_couchbase_cli_command(self, command):
-        (code, _) = self.exec_run(command)
+        (code, output) = self.exec_run(command)
         if code != 0:
-            logging.error(f"Failed to run command '{command}', returned error code: {code}")
+            logging.error(f"Failed to run command '{command}', returned error code: {code}, output: '{output}'")
             return False
         return True
 
@@ -80,8 +81,13 @@ class CouchbaseServerContainer(Container):
         try:
             self.client.containers.run("minifi-couchbase-helper:latest", ["python", "-c", command], remove=True, stdout=True, stderr=True, network=self.network.name)
             return True
+        except ContainerError as e:
+            stdout = e.stdout.decode("utf-8", errors="replace") if e.stdout else ""
+            stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else ""
+            logging.error(f"Python command '{command}' failed in couchbase helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'")
+            return False
         except Exception as e:
-            logging.error(f"Python command '{command}' failed in couchbase helper docker: {e}")
+            logging.error(f"Unexpected error while running python command '{command}' in couchbase helper docker: '{e}'")
             return False
 
     @retry_check(max_tries=15, retry_interval=2)
@@ -122,6 +128,7 @@ try:
         result = collection.get("{doc_id}", transcoder=RawBinaryTranscoder())
         flags = result.flags
         if not flags & binary_flag:
+            print("Expected binary data for document '{doc_id}' but no binary flags were found.")
             sys.exit(1)
 
         content = result.content_as[bytes]
@@ -133,6 +140,7 @@ try:
         result = collection.get("{doc_id}")
         flags = result.flags
         if not flags & json_flag:
+            print("Expected JSON data for document '{doc_id}' but no JSON flags were found.")
             sys.exit(1)
 
         content = result.content_as[dict]
@@ -143,7 +151,7 @@ try:
         result = collection.get("{doc_id}", transcoder=RawStringTranscoder())
         flags = result.flags
         if not flags & string_flag:
-            print("FAILURE")
+            print("Expected string data for document '{doc_id}' but no string flags were found.")
             sys.exit(1)
 
         content = result.content_as[str]
