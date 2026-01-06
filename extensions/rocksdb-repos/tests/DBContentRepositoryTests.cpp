@@ -355,3 +355,35 @@ TEST_CASE("DBContentRepository can clear orphan entries") {
 
   REQUIRE(getDbSize(dir) == 0);
 }
+
+TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size default") {
+  LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
+
+  const auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  const auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+  REQUIRE(content_repo->initialize(configuration));
+
+  CHECK(LogTestController::getInstance().contains("Using 8388608 sized cache for DatabaseContentRepository"));
+}
+
+TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size override") {
+  LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
+
+  const auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set("nifi.database.content.repository.optimize.for.small.db.cache.size", "100 MB");
+  const auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+  REQUIRE(content_repo->initialize(configuration));
+
+  CHECK(LogTestController::getInstance().contains("Using 104857600 sized cache for DatabaseContentRepository"));
+}
+
+TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size disable") {
+  LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
+
+  const auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set("nifi.database.content.repository.optimize.for.small.db.cache.size", "");
+  const auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+  REQUIRE(content_repo->initialize(configuration));
+
+  CHECK(LogTestController::getInstance().contains("Cache limitation disabled for DatabaseContentRepository"));
+}

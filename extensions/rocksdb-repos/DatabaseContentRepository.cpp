@@ -58,37 +58,50 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
 
   setCompactionPeriod(configuration);
 
-  const auto cache_size = configuration->get(Configure::nifi_dbcontent_optimize_for_small_db_cache_size)
+  const auto cache_size = configuration->get(Configure::nifi_dbcontent_optimize_for_small_db_cache_size).or_else([] { return std::make_optional<std::string>("8 MB"); })
     | utils::andThen([](const auto& cache_size_str) -> std::optional<uint64_t> {
       return parsing::parseDataSize(cache_size_str) | utils::toOptional();
     });
 
   std::shared_ptr<rocksdb::Cache> cache = nullptr;
+  std::shared_ptr<rocksdb::WriteBufferManager> wbm = nullptr;
   if (cache_size) {
     cache = rocksdb::NewLRUCache(*cache_size);
+    wbm = std::make_shared<rocksdb::WriteBufferManager>(0, cache);
+    logger_->log_trace("Using {} sized cache for DatabaseContentRepository", *cache_size);
+  } else {
+    logger_->log_trace("Cache limitation disabled for DatabaseContentRepository");
   }
 
-  auto set_db_opts = [encrypted_env, &cache] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+  auto set_db_opts = [encrypted_env, &cache, &wbm] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     minifi::internal::setCommonRocksDbOptions(db_opts);
     if (encrypted_env) {
       db_opts.set(&rocksdb::DBOptions::env, encrypted_env.get(), EncryptionEq{});
     } else {
       db_opts.set(&rocksdb::DBOptions::env, rocksdb::Env::Default());
     }
-    if (cache) {
-      db_opts.call(&rocksdb::DBOptions::OptimizeForSmallDb, &cache);
-    }
+    db_opts.optimizeForSmallDb(cache, wbm);
   };
   auto set_cf_opts = [&configuration, &cache] (rocksdb::ColumnFamilyOptions& cf_opts) {
     cf_opts.OptimizeForPointLookup(4);
     cf_opts.merge_operator = std::make_shared<StringAppender>();
     cf_opts.max_successive_merges = 0;
-    if (auto compression_type = minifi::internal::readConfiguredCompressionType(configuration, Configure::nifi_content_repository_rocksdb_compression)) {
+    cf_opts.max_write_buffer_number = 2;
+    cf_opts.write_buffer_size = 4_MB;
+    if (const auto compression_type = internal::readConfiguredCompressionType(configuration, Configure::nifi_content_repository_rocksdb_compression)) {
       cf_opts.compression = *compression_type;
     }
     if (cache) {
-      cf_opts.OptimizeForSmallDb(&cache);
-      cf_opts.compression_opts.max_dict_bytes = 0;
+      rocksdb::BlockBasedTableOptions table_options;
+      table_options.block_cache = cache;
+
+      table_options.cache_index_and_filter_blocks = true;
+      table_options.cache_index_and_filter_blocks_with_high_priority = true;
+
+      table_options.pin_l0_filter_and_index_blocks_in_cache = false;
+      table_options.pin_top_level_index_and_filter = false;
+
+      cf_opts.table_factory.reset(rocksdb::NewBlockBasedTableFactory(table_options));
     }
   };
   db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_,
