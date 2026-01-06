@@ -34,7 +34,7 @@ def step_impl(context: MinifiTestContext):
     assert context.containers["elasticsearch"].create_doc_elasticsearch("my_index", "preloaded_id") or context.containers["elasticsearch"].log_app_output()
 
 
-@given(u'an ElasticsearchCredentialsControllerService is set up with Basic Authentication')
+@given('an ElasticsearchCredentialsControllerService is set up with Basic Authentication')
 def step_impl(context: MinifiTestContext):
     controller_service = ControllerService(class_name="ElasticsearchCredentialsControllerService", service_name="ElasticsearchCredentialsControllerService")
     controller_service.add_property("Username", "elastic")
@@ -42,7 +42,7 @@ def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
-@given(u'an ElasticsearchCredentialsControllerService is set up with ApiKey')
+@given('an ElasticsearchCredentialsControllerService is set up with ApiKey')
 def step_impl(context: MinifiTestContext):
     controller_service = ControllerService(class_name="ElasticsearchCredentialsControllerService", service_name="ElasticsearchCredentialsControllerService")
     api_key = context.containers["elasticsearch"].elastic_generate_apikey()
@@ -50,7 +50,7 @@ def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
-@then(u'Elasticsearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
+@then('Elasticsearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
 def step_impl(context: MinifiTestContext, doc_id: str, index: str, value: str, field: str):
     assert context.containers["elasticsearch"].check_elastic_field_value(index_name=index, doc_id=doc_id, field_name=field, field_value=value) or log_due_to_failure(context)
 
@@ -70,7 +70,7 @@ def step_impl(context):
     context.containers["opensearch"].create_doc_elasticsearch("my_index", "preloaded_id")
 
 
-@then(u'Opensearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
+@then('Opensearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
 def step_impl(context: MinifiTestContext, doc_id: str, index: str, value: str, field: str):
     assert context.containers["opensearch"].check_elastic_field_value(index_name=index, doc_id=doc_id, field_name=field, field_value=value) or log_due_to_failure(context)
 

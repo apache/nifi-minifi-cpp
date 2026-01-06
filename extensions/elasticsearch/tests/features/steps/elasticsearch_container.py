@@ -61,12 +61,27 @@ class ElasticsearchContainer(ElasticBaseContainer):
         api_user = "elastic:password"
         api_headers = "Content-Type:application/json"
         api_data = (
-            '{"name":"my-api-key",'
-            '"expiration":"1d",'
-            '"role_descriptors":{"role-a": {'
-            '"cluster": ["all"],'
-            '"index": [{"names": ["my_index"],"privileges": ["all"]}]'
-            '}}}'
+            '{'
+            '    "name": "my-api-key",'
+            '    "expiration": "1d",'
+            '    "role_descriptors": {'
+            '        "role-a": {'
+            '            "cluster": ['
+            '                "all"'
+            '            ],'
+            '            "index": ['
+            '                {'
+            '                    "names": ['
+            '                        "my_index"'
+            '                    ],'
+            '                    "privileges": ['
+            '                        "all"'
+            '                    ]'
+            '                }'
+            '            ]'
+            '        }'
+            '    }'
+            '}'
         )
         curl_cmd = (
             f"curl -s -u {api_user} -k -XPOST {api_url} "
