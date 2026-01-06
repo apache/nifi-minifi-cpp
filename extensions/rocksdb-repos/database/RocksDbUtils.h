@@ -51,8 +51,14 @@ class Writable {
 
   template <typename Method, typename... Args>
   decltype(auto) call(Method method, Args&&... args) {
-    is_modified_ = true;
     return std::invoke(method, target_, std::forward<Args>(args)...);
+  }
+
+  void optimizeForSmallDb(std::shared_ptr<rocksdb::Cache> cache, std::shared_ptr<rocksdb::WriteBufferManager> wbm) {
+    if (!cache || !wbm) { return; }
+    target_.OptimizeForSmallDb(&cache);
+    target_.write_buffer_manager = wbm;
+    target_.max_open_files = 20;
   }
 
   template<typename F>

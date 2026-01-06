@@ -52,6 +52,7 @@ nifi.content.repository.class.name=DatabaseContentRepository
 ## Relates to the internal workings of the rocksdb backend
 # nifi.flowfile.repository.rocksdb.compaction.period=2 min
 # nifi.database.content.repository.rocksdb.compaction.period=2 min
+# nifi.database.content.repository.optimize.for.small.db.cache.size=8 MB
 
 # setting this value to "0" enables synchronous deletion
 # nifi.database.content.repository.purge.period = 1 sec

@@ -39,6 +39,7 @@
 #include "utils/net/Ssl.h"
 #include "core/Processor.h"
 #include <range/v3/all.hpp>
+#include "./ProcessorUtils.h"
 
 using namespace std::literals::chrono_literals;
 
