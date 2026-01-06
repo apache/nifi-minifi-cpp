@@ -44,9 +44,9 @@ splunk:
 
         splunk_cert, splunk_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
         splunk_cert_content = crypto.dump_certificate(crypto.FILETYPE_PEM, splunk_cert)
-        splunkt_key_content = crypto.dump_privatekey(crypto.FILETYPE_PEM, splunk_key)
+        splunk_key_content = crypto.dump_privatekey(crypto.FILETYPE_PEM, splunk_key)
         root_ca_content = crypto.dump_certificate(crypto.FILETYPE_PEM, test_context.root_ca_cert)
-        self.files.append(File("/opt/splunk/etc/auth/splunk_cert.pem", splunk_cert_content.decode() + splunkt_key_content.decode() + root_ca_content.decode(), permissions=0o644))
+        self.files.append(File("/opt/splunk/etc/auth/splunk_cert.pem", splunk_cert_content.decode() + splunk_key_content.decode() + root_ca_content.decode(), permissions=0o644))
         self.files.append(File("/opt/splunk/etc/auth/root_ca.pem", root_ca_content.decode(), permissions=0o644))
 
     def deploy(self):

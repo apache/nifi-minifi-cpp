@@ -25,7 +25,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And PutSplunkHTTP is EVENT_DRIVEN
     And a QuerySplunkIndexingStatus processor
     And QuerySplunkIndexingStatus is EVENT_DRIVEN
-    And the "Splunk Request Channel" properties of the PutSplunkHTTP and QuerySplunkIndexingStatus processors are set to the same random guid
+    And the "Splunk Request Channel" properties of the PutSplunkHTTP and QuerySplunkIndexingStatus processors are set to the same random UUID
     And the "Source" property of the PutSplunkHTTP processor is set to "my-source"
     And the "Source Type" property of the PutSplunkHTTP processor is set to "my-source-type"
     And the "Host" property of the PutSplunkHTTP processor is set to "my-host"
@@ -45,7 +45,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And PutFile's success relationship is auto-terminated
 
     When the MiNiFi instance starts up
-    Then a single file with the content "foobar" is placed in the "/tmp/output" directory in less than 120 seconds
+    Then a single file with the content "foobar" is placed in the "/tmp/output" directory in less than 20 seconds
     And an event is registered in Splunk HEC with the content "foobar" with "my-source" set as source and "my-source-type" set as sourcetype and "my-host" set as host
 
   Scenario: A MiNiFi instance transfers data to a Splunk HEC with SSL enabled
@@ -56,7 +56,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And PutSplunkHTTP is EVENT_DRIVEN
     And a QuerySplunkIndexingStatus processor
     And QuerySplunkIndexingStatus is EVENT_DRIVEN
-    And the "Splunk Request Channel" properties of the PutSplunkHTTP and QuerySplunkIndexingStatus processors are set to the same random guid
+    And the "Splunk Request Channel" properties of the PutSplunkHTTP and QuerySplunkIndexingStatus processors are set to the same random UUID
     And the "Source" property of the PutSplunkHTTP processor is set to "my-source"
     And the "Source Type" property of the PutSplunkHTTP processor is set to "my-source-type"
     And the "Host" property of the PutSplunkHTTP processor is set to "my-host"
@@ -79,5 +79,5 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And SSL is enabled for the Splunk HEC and the SSL context service is set up for PutSplunkHTTP and QuerySplunkIndexingStatus
 
     When the MiNiFi instance starts up
-    Then a single file with the content "foobar" is placed in the "/tmp/output" directory in less than 120 seconds
+    Then a single file with the content "foobar" is placed in the "/tmp/output" directory in less than 20 seconds
     And an event is registered in Splunk HEC with the content "foobar" with "my-source" set as source and "my-source-type" set as sourcetype and "my-host" set as host
