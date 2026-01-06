@@ -85,7 +85,11 @@ def run_shell_cmd_in_docker_image(image_name: str, cmd: str, network: str) -> st
     return run_cmd_in_docker_image(image_name, ["/bin/sh", "-c", cmd], network)
 
 
-def retry_check(max_tries=5, retry_interval=1):
+def retry_check(max_tries: int = 5, retry_interval_seconds: int = 1):
+    """
+    Decorator for retrying a checker function that returns a boolean. The decorated function is called repeatedly until it returns True
+    or the maximum number of attempts is reached. The maximum number of attempts and the interval between attempts in seconds can be configured.
+    """
     def retry_check_func(func):
         @functools.wraps(func)
         def retry_wrapper(*args, **kwargs):
@@ -93,7 +97,7 @@ def retry_check(max_tries=5, retry_interval=1):
                 if func(*args, **kwargs):
                     return True
                 if i < max_tries - 1:
-                    time.sleep(retry_interval)
+                    time.sleep(retry_interval_seconds)
             return False
         return retry_wrapper
     return retry_check_func
