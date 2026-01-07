@@ -19,21 +19,27 @@ Feature: Sending data from MiNiFi-C++ to an AWS Kinesis server
   As a user of MiNiFi
   I need to have PutKinesisStream processor
 
-  Background:
-    Given the content of "/tmp/output" is monitored
-
   Scenario: A MiNiFi instance can send data to AWS Kinesis
-    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    Given a kinesis server is set up in correspondence with the PutKinesisStream
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "Schnappi, das kleine Krokodil" is present in "/tmp/input"
-    And a PutKinesisStream processor set up to communicate with the kinesis server
+    And a PutKinesisStream processor
+    And these processor properties are set
+      | processor name     | property name              | property value                           |
+      | PutKinesisStream   | Amazon Kinesis Stream Name | test_stream                              |
+      | PutKinesisStream   | Access Key                 | test_access_key                          |
+      | PutKinesisStream   | Secret Key                 | test_secret                              |
+      | PutKinesisStream   | Endpoint Override URL      | http://kinesis-server-${scenario_id}:4568 |
+      | PutKinesisStream   | Region                     | us-east-1                                |
+    And PutKinesisStream is EVENT_DRIVEN
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PutKinesisStream
     And the "success" relationship of the PutKinesisStream processor is connected to the PutFile
     And the "failure" relationship of the PutKinesisStream processor is connected to the PutKinesisStream
-
-    And a kinesis server is set up in correspondence with the PutKinesisStream
+    And PutFile's success relationship is auto-terminated
 
     When both instances start up
 
-    Then a flowfile with the content "Schnappi, das kleine Krokodil" is placed in the monitored directory in less than 60 seconds
+    Then a single file with the content "Schnappi, das kleine Krokodil" is placed in the "/tmp/output" directory in less than 60 seconds
     And there is a record on the kinesis server with "Schnappi, das kleine Krokodil"
