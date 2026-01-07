@@ -21,6 +21,7 @@ from minifi_test_framework.containers.container import Container
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.core.ssl_utils import make_server_cert
+from docker.errors import ContainerError
 
 
 class GrafanaLokiOptions:
@@ -140,6 +141,11 @@ analytics:
             self.client.containers.run("minifi-grafana-loki-helper:latest", ["python", "/scripts/check_log_lines_on_grafana.py", self.container_name, lines, str(timeout), str(ssl), tenant_id],
                                        remove=True, stdout=True, stderr=True, network=self.network.name)
             return True
+        except ContainerError as e:
+            stdout = e.stdout.decode("utf-8", errors="replace") if e.stdout else ""
+            stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else ""
+            logging.error(f"Failed to run python command in grafana loki helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'")
+            return False
         except Exception as e:
-            logging.error(f"Failed to run python command in grafana loki helper docker: {e}")
+            logging.error(f"Unexpected error while running python command in grafana loki helper docker: '{e}'")
             return False

@@ -24,13 +24,13 @@ def wait_for(action, timeout_seconds, *args, **kwargs) -> bool:
         result = action(*args, **kwargs)
         if result:
             return result
-        time.sleep(1)
         if timeout_seconds < (time.perf_counter() - start_time):
             break
+        time.sleep(1)
     return False
 
 
-def veify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, tenant_id: str) -> bool:
+def verify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, tenant_id: str) -> bool:
     labels = '{job="minifi"}'
     prefix = "http://"
     if ssl:
@@ -61,7 +61,7 @@ def veify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, tena
 
 
 def wait_for_lines_on_grafana_loki(host: str, lines: list[str], timeout_seconds: int, ssl: bool, tenant_id: str) -> bool:
-    return wait_for(lambda: veify_log_lines_on_grafana_loki(host, lines, ssl, tenant_id), timeout_seconds)
+    return wait_for(lambda: verify_log_lines_on_grafana_loki(host, lines, ssl, tenant_id), timeout_seconds)
 
 
 if __name__ == "__main__":
