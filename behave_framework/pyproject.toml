@@ -7,7 +7,10 @@ dependencies = [
     "behavex==4.6.0",
     "docker==7.1.0",
     "PyYAML==6.0.3",
-    "humanfriendly==10.0"
+    "humanfriendly==10.0",
+    "m2crypto==0.41.0",
+    "pyopenssl==25.0.0",
+    "pyjks==20.0.0"
 ]
 
 [tool.setuptools]

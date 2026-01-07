@@ -38,7 +38,7 @@ def step_impl(context: MinifiTestContext):
 
 
 @when("the MiNiFi instance starts up")
-def step_impl(context):
+def step_impl(context: MinifiTestContext):
     assert context.get_or_create_default_minifi_container().deploy()
     logging.debug("MiNiFi instance started up")
 
@@ -71,5 +71,15 @@ def step_impl(context: MinifiTestContext, filename: str, container_path: str):
 
 @step("after {duration} have passed")
 @step("after {duration} has passed")
-def step_impl(context, duration):
+def step_impl(context: MinifiTestContext, duration: str):
     time.sleep(humanfriendly.parse_timespan(duration))
+
+
+@when("MiNiFi is stopped")
+def step_impl(context: MinifiTestContext):
+    context.get_or_create_default_minifi_container().stop()
+
+
+@when("MiNiFi is restarted")
+def step_impl(context: MinifiTestContext):
+    context.get_or_create_default_minifi_container().restart()

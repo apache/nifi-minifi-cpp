@@ -30,7 +30,6 @@ from .checkers.AwsChecker import AwsChecker
 from .checkers.AzureChecker import AzureChecker
 from .checkers.ElasticSearchChecker import ElasticSearchChecker
 from .checkers.GcsChecker import GcsChecker
-from .checkers.KafkaHelper import KafkaHelper
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.SplunkChecker import SplunkChecker
@@ -58,7 +57,6 @@ class DockerTestCluster:
         self.minifi_controller_executor = MinifiControllerExecutor(self.container_communicator)
         self.modbus_checker = ModbusChecker(self.container_communicator)
         self.couchbase_checker = CouchbaseChecker()
-        self.kafka_checker = KafkaHelper(self.container_communicator, feature_id)
         self.mqtt_helper = MqttHelper()
 
     def cleanup(self):
@@ -292,14 +290,6 @@ class DockerTestCluster:
 
     def segfault_happened(self):
         return self.segfault
-
-    def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name: str, count: int):
-        kafka_container_name = self.container_store.get_container_name_with_postfix(kafka_container_name)
-        return self.wait_for_app_logs_regex(kafka_container_name, "Assignment received from leader.*for group docker_test_group", 60, count)
-
-    def wait_for_kafka_consumer_to_be_reregistered(self, kafka_container_name):
-        kafka_container_name = self.container_store.get_container_name_with_postfix(kafka_container_name)
-        return self.wait_for_app_logs_regex(kafka_container_name, "Assignment received from leader.*for group docker_test_group.*Assignment received from leader.*for group docker_test_group.", 60)
 
     def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
         return self.prometheus_checker.wait_for_metric_class_on_prometheus(metric_class, timeout_seconds)

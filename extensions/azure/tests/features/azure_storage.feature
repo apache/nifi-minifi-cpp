@@ -32,7 +32,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And an Azure storage server is set up
     When the MiNiFi instance starts up
 
-    Then there is a single file with "#test_data$123$#" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "#test_data$123$#" is placed in the "/tmp/output" directory in less than 20 seconds
     And the object on the Azure storage server is "#test_data$123$#"
 
   Scenario: A MiNiFi instance can delete blob from Azure blob storage
@@ -90,7 +90,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     When the MiNiFi instance starts up
     And test blob "test" with the content "#test_data_123$#" is created on Azure blob storage
 
-    Then there is a single file with "data_" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "data_" is placed in the "/tmp/output" directory in less than 20 seconds
 
   Scenario: A MiNiFi instance can list a container on Azure blob storage
     Given a ListAzureBlobStorage processor set up to communicate with an Azure blob storage

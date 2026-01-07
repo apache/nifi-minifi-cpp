@@ -33,7 +33,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When both instances start up
 
-    Then there is a single file with "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" is placed in the "/tmp/output" directory in less than 20 seconds
     And the object on the s3 server is "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{"
     And the object content type on the s3 server is "application/octet-stream" and the object metadata matches use metadata
     And the Minifi logs contain the following message: "in a single upload" in less than 10 seconds
@@ -58,7 +58,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the http proxy server is set up
     When all instances start up
 
-    Then there is a single file with "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" is placed in the "/tmp/output" directory in less than 20 seconds
     And the object on the s3 server is "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{"
     And the object content type on the s3 server is "application/octet-stream" and the object metadata matches use metadata
     And no errors were generated on the http-proxy regarding "http://s3-server-s3-1:9090/test_bucket/test_object_key"
@@ -81,7 +81,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When both instances start up
 
-    Then there is a single file with "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" is placed in the "/tmp/output" directory in less than 20 seconds
     And the object bucket on the s3 server is empty in less than 10 seconds
 
   Scenario: Deletion of a non-existent s3 object succeeds
@@ -96,7 +96,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When both instances start up
 
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 20 seconds
     And the object bucket on the s3 server is empty in less than 10 seconds
 
   Scenario: Deletion of a s3 object through a proxy-server succeeds
@@ -124,7 +124,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then there is a single file with "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" is placed in the "/tmp/output" directory in less than 20 seconds
     And the object bucket on the s3 server is empty in less than 10 seconds
     And no errors were generated on the http-proxy regarding "http://s3-server-s3-4:9090/test_bucket/test_object_key"
 
@@ -149,7 +149,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 20 seconds
 
   Scenario: A MiNiFi instance can download s3 bucket objects via a http-proxy
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -176,7 +176,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then there is a single file with "test" content in the "/tmp/output" directory in less than 20 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 20 seconds
     And no errors were generated on the http-proxy regarding "http://s3-server-s3-6:9090/test_bucket/test_object_key"
 
   Scenario: A MiNiFi instance can list an S3 bucket directly
@@ -197,7 +197,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then there are 2 files in the "/tmp/output" directory in less than 20 seconds
+    Then 2 files are placed in the "/tmp/output" directory in less than 20 seconds
 
   Scenario: A MiNiFi instance can list an S3 bucket objects via a http-proxy
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -220,7 +220,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then there is 1 file in the "/tmp/output" directory in less than 20 seconds
+    Then 1 file is placed in the "/tmp/output" directory in less than 20 seconds
     And no errors were generated on the http-proxy regarding "http://s3-server-s3-8:9090/test_bucket"
 
   Scenario: A MiNiFi instance transfers data in multiple parts to s3
@@ -236,7 +236,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     When all instances start up
 
-    Then there is 1 file in the "/tmp/output" directory in less than 20 seconds
+    Then 1 file is placed in the "/tmp/output" directory in less than 20 seconds
     And the object on the s3 server is present and matches the original hash
     And the Minifi logs contain the following message: "passes the multipart threshold, uploading it in multiple parts" in less than 10 seconds
 
@@ -260,7 +260,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the http proxy server is set up
     When all instances start up
 
-    Then there is 1 file in the "/tmp/output" directory in less than 20 seconds
+    Then 1 file is placed in the "/tmp/output" directory in less than 20 seconds
     And the object on the s3 server is present and matches the original hash
     And the Minifi logs contain the following message: "passes the multipart threshold, uploading it in multiple parts" in less than 10 seconds
     And no errors were generated on the http-proxy regarding "http://s3-server-s3-10:9090/test_bucket/test_object_key"
