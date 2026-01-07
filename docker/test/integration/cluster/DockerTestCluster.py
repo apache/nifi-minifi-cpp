@@ -28,7 +28,6 @@ from .DockerCommunicator import DockerCommunicator
 from .MinifiControllerExecutor import MinifiControllerExecutor
 from .checkers.AwsChecker import AwsChecker
 from .checkers.AzureChecker import AzureChecker
-from .checkers.GcsChecker import GcsChecker
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.GrafanaLokiChecker import GrafanaLokiChecker
@@ -45,7 +44,6 @@ class DockerTestCluster:
         self.container_store = ContainerStore(self.container_communicator.create_docker_network(feature_id), context.image_store, context.kubernetes_proxy, feature_id=feature_id)
         self.aws_checker = AwsChecker(self.container_communicator)
         self.azure_checker = AzureChecker(self.container_communicator)
-        self.gcs_checker = GcsChecker(self.container_communicator)
         self.postgres_checker = PostgresChecker(self.container_communicator)
         self.prometheus_checker = PrometheusChecker()
         self.grafana_loki_checker = GrafanaLokiChecker()
@@ -233,14 +231,6 @@ class DockerTestCluster:
 
     def check_azure_blob_storage_is_empty(self, timeout_seconds):
         return self.azure_checker.check_azure_blob_storage_is_empty(timeout_seconds)
-
-    def check_google_cloud_storage(self, gcs_container_name, content):
-        gcs_container_name = self.container_store.get_container_name_with_postfix(gcs_container_name)
-        return self.gcs_checker.check_google_cloud_storage(gcs_container_name, content)
-
-    def is_gcs_bucket_empty(self, container_name):
-        container_name = self.container_store.get_container_name_with_postfix(container_name)
-        return self.gcs_checker.is_gcs_bucket_empty(container_name)
 
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
         postgresql_container_name = self.container_store.get_container_name_with_postfix(postgresql_container_name)

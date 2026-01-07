@@ -90,6 +90,15 @@ def step_impl(context: MinifiTestContext, property_name: str, processor_name: st
         processor.add_property(property_name, property_value)
 
 
+@step('the "{property_name}" property of the {controller_name} controller service is set to "{property_value}"')
+def step_impl(context: MinifiTestContext, property_name: str, controller_name: str, property_value: str):
+    controller_service = context.get_or_create_default_minifi_container().flow_definition.get_controller_service(controller_name)
+    if property_value == "(not set)":
+        controller_service.remove_property(property_name)
+    else:
+        controller_service.add_property(property_name, property_value)
+
+
 @step('a Funnel with the name "{funnel_name}" is set up')
 def step_impl(context: MinifiTestContext, funnel_name: str):
     context.get_or_create_default_minifi_container().flow_definition.add_funnel(Funnel(funnel_name))
