@@ -20,12 +20,13 @@ import uuid
 
 class Processor:
     def __init__(self, class_name: str, proc_name: str, scheduling_strategy: str = "TIMER_DRIVEN",
-                 scheduling_period: str = "1 sec", ):
+                 scheduling_period: str = "1 sec", penalization_period: str = "1 sec"):
         self.class_name = class_name
         self.id: str = str(uuid.uuid4())
         self.name = proc_name
         self.scheduling_strategy: str = scheduling_strategy
         self.scheduling_period: str = scheduling_period
+        self.penalization_period: str = penalization_period
         self.properties: dict[str, str] = {}
         self.auto_terminated_relationships: list[str] = []
 
@@ -46,6 +47,7 @@ class Processor:
             'class': self.class_name,
             'scheduling strategy': self.scheduling_strategy,
             'scheduling period': self.scheduling_period,
+            'penalization period': self.penalization_period,
         }
         if self.auto_terminated_relationships:
             data['auto-terminated relationships list'] = self.auto_terminated_relationships
