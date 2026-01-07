@@ -70,16 +70,6 @@ class MiNiFi_integration_test:
         assert self.cluster.wait_for_container_startup_to_finish('splunk') or self.cluster.log_app_output()
         assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token') or self.cluster.log_app_output()
 
-    def start_elasticsearch(self, context):
-        self.cluster.acquire_container(context=context, name='elasticsearch', engine='elasticsearch')
-        self.cluster.deploy_container('elasticsearch')
-        assert self.cluster.wait_for_container_startup_to_finish('elasticsearch') or self.cluster.log_app_output()
-
-    def start_opensearch(self, context):
-        self.cluster.acquire_container(context=context, name='opensearch', engine='opensearch')
-        self.cluster.deploy_container('opensearch')
-        assert self.cluster.wait_for_container_startup_to_finish('opensearch') or self.cluster.log_app_output()
-
     def start_minifi_c2_server(self, context):
         self.cluster.acquire_container(context=context, name="minifi-c2-server", engine="minifi-c2-server")
         self.cluster.deploy_container('minifi-c2-server')
@@ -324,21 +314,6 @@ class MiNiFi_integration_test:
 
     def check_empty_gcs_bucket(self, gcs_container_name):
         assert self.cluster.is_gcs_bucket_empty(gcs_container_name) or self.cluster.log_app_output()
-
-    def check_empty_elastic(self, elastic_container_name):
-        assert self.cluster.is_elasticsearch_empty(elastic_container_name) or self.cluster.log_app_output()
-
-    def elastic_generate_apikey(self, elastic_container_name):
-        return self.cluster.elastic_generate_apikey(elastic_container_name) or self.cluster.log_app_output()
-
-    def create_doc_elasticsearch(self, elastic_container_name, index_name, doc_id):
-        assert self.cluster.create_doc_elasticsearch(elastic_container_name, index_name, doc_id) or self.cluster.log_app_output()
-
-    def check_elastic_field_value(self, elastic_container_name, index_name, doc_id, field_name, field_value):
-        assert self.cluster.check_elastic_field_value(elastic_container_name, index_name, doc_id, field_name, field_value) or self.cluster.log_app_output()
-
-    def add_elastic_user_to_opensearch(self, container_name):
-        assert self.cluster.add_elastic_user_to_opensearch(container_name) or self.cluster.log_app_output()
 
     def check_minifi_log_contents(self, line, timeout_seconds=60, count=1):
         self.check_container_log_contents("minifi-cpp", line, timeout_seconds, count)

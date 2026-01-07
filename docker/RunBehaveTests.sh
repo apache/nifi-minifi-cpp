@@ -201,4 +201,5 @@ exec \
     "${docker_dir}/../extensions/llamacpp/tests/features" \
     "${docker_dir}/../extensions/opc/tests/features" \
     "${docker_dir}/../extensions/kafka/tests/features" \
-    "${docker_dir}/../extensions/couchbase/tests/features"
+    "${docker_dir}/../extensions/couchbase/tests/features" \
+    "${docker_dir}/../extensions/elasticsearch/tests/features"

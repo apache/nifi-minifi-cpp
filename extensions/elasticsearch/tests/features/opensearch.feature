@@ -16,26 +16,27 @@
 @ENABLE_ELASTICSEARCH
 Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Keys)
 
-  Background:
-    Given the content of "/tmp/output" is monitored
-
   Scenario Outline: MiNiFi instance creates a document on Opensearch using Basic Authentication
     Given an Opensearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "{ "field1" : "value1" }" is present in "/tmp/input"
     And a PostElasticsearch processor
-    And the "Hosts" property of the PostElasticsearch processor is set to "https://opensearch-${feature_id}:9200"
+    And PostElasticsearch is EVENT_DRIVEN
+    And the "Hosts" property of the PostElasticsearch processor is set to "https://opensearch-${scenario_id}:9200"
     And the "Index" property of the PostElasticsearch processor is set to "my_index"
     And the "Identifier" property of the PostElasticsearch processor is set to "my_id"
     And the "Action" property of the PostElasticsearch processor is set to <action>
-    And a SSL context service is set up for PostElasticsearch and Opensearch
-    And an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication
+    And the "Elasticsearch Credentials Provider Service" property of the PostElasticsearch processor is set to "ElasticsearchCredentialsControllerService"
+    And an ssl context service is set up for PostElasticsearch
+    And an ElasticsearchCredentialsControllerService is set up with Basic Authentication
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
     And the "success" relationship of the PostElasticsearch processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
 
-    When both instances start up
-    Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
+    When the MiNiFi instance starts up
+    Then a single file with the content "{ "field1" : "value1" }" is placed in the "/tmp/output" directory in less than 20 seconds
     And Opensearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
     Examples:
@@ -48,18 +49,22 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "hello world" is present in "/tmp/input"
     And a PostElasticsearch processor
-    And the "Hosts" property of the PostElasticsearch processor is set to "https://opensearch-${feature_id}:9200"
+    And PostElasticsearch is EVENT_DRIVEN
+    And the "Hosts" property of the PostElasticsearch processor is set to "https://opensearch-${scenario_id}:9200"
     And the "Index" property of the PostElasticsearch processor is set to "my_index"
     And the "Identifier" property of the PostElasticsearch processor is set to "preloaded_id"
     And the "Action" property of the PostElasticsearch processor is set to "delete"
-    And a SSL context service is set up for PostElasticsearch and Opensearch
-    And an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication
+    And the "Elasticsearch Credentials Provider Service" property of the PostElasticsearch processor is set to "ElasticsearchCredentialsControllerService"
+    And an ssl context service is set up for PostElasticsearch
+    And an ElasticsearchCredentialsControllerService is set up with Basic Authentication
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
     And the "success" relationship of the PostElasticsearch processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
 
-    When both instances start up
-    Then a flowfile with the content "hello world" is placed in the monitored directory in less than 20 seconds
+    When the MiNiFi instance starts up
+    Then a single file with the content "hello world" is placed in the "/tmp/output" directory in less than 20 seconds
     And Opensearch is empty
 
   Scenario: MiNiFi instance partially updates a document in Opensearch using Basic Authentication
@@ -67,17 +72,21 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "{ "field2" : "value2" }" is present in "/tmp/input"
     And a PostElasticsearch processor
-    And the "Hosts" property of the PostElasticsearch processor is set to "https://opensearch-${feature_id}:9200"
+    And PostElasticsearch is EVENT_DRIVEN
+    And the "Hosts" property of the PostElasticsearch processor is set to "https://opensearch-${scenario_id}:9200"
     And the "Index" property of the PostElasticsearch processor is set to "my_index"
     And the "Identifier" property of the PostElasticsearch processor is set to "preloaded_id"
     And the "Action" property of the PostElasticsearch processor is set to "update"
-    And a SSL context service is set up for PostElasticsearch and Opensearch
-    And an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication
+    And the "Elasticsearch Credentials Provider Service" property of the PostElasticsearch processor is set to "ElasticsearchCredentialsControllerService"
+    And an ssl context service is set up for PostElasticsearch
+    And an ElasticsearchCredentialsControllerService is set up with Basic Authentication
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
     And the "success" relationship of the PostElasticsearch processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
 
-    When both instances start up
-    Then a flowfile with the content "{ "field2" : "value2" }" is placed in the monitored directory in less than 20 seconds
+    When the MiNiFi instance starts up
+    Then a single file with the content "{ "field2" : "value2" }" is placed in the "/tmp/output" directory in less than 20 seconds
     And Opensearch has a document with "preloaded_id" in "my_index" that has "value1" set in "field1"
     And Opensearch has a document with "preloaded_id" in "my_index" that has "value2" set in "field2"
