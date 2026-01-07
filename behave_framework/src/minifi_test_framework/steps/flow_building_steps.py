@@ -29,6 +29,11 @@ from minifi_test_framework.minifi.parameter_context import ParameterContext
 from minifi_test_framework.minifi.processor import Processor
 
 
+@given("a MiNiFi CPP server with yaml config")
+def step_impl(context: MinifiTestContext):
+    pass  # TODO(lordgamez): Needs to be implemented after JSON config is set to be default
+
+
 @given("a transient MiNiFi flow with a LogOnDestructionProcessor processor")
 def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().command = ["/bin/sh", "-c", "timeout 10s ./bin/minifi.sh run && sleep 100"]
@@ -140,6 +145,7 @@ def step_impl(context: MinifiTestContext, parameter_name: str, parameter_value: 
 
 
 @step('a directory at "{directory}" has a file with the content "{content}" in the "{flow_name}" flow')
+@step("a directory at '{directory}' has a file with the content '{content}' in the '{flow_name}' flow")
 def step_impl(context: MinifiTestContext, directory: str, content: str, flow_name: str):
     new_content = content.replace("\\n", "\n")
     new_dir = Directory(directory)
@@ -148,6 +154,7 @@ def step_impl(context: MinifiTestContext, directory: str, content: str, flow_nam
 
 
 @step('a directory at "{directory}" has a file with the content "{content}"')
+@step("a directory at '{directory}' has a file with the content '{content}'")
 def step_impl(context: MinifiTestContext, directory: str, content: str):
     context.execute_steps(f'given a directory at "{directory}" has a file with the content "{content}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
@@ -240,14 +247,22 @@ def step_impl(context: MinifiTestContext, property_name: str, processor_name: st
 
 
 # TLS
-@given("an ssl context service is set up for {processor_name}")
-@given("an ssl context service with a manual CA cert file is set up for {processor_name}")
-def step_impl(context, processor_name):
+def add_ssl_context_service_for_minifi(context: MinifiTestContext, cert_name: str):
     controller_service = ControllerService(class_name="SSLContextService", service_name="SSLContextService")
-    controller_service.add_property("Client Certificate", "/tmp/resources/minifi_client.crt")
-    controller_service.add_property("Private Key", "/tmp/resources/minifi_client.key")
+    controller_service.add_property("Client Certificate", f"/tmp/resources/{cert_name}.crt")
+    controller_service.add_property("Private Key", f"/tmp/resources/{cert_name}.key")
     controller_service.add_property("CA Certificate", "/tmp/resources/root_ca.crt")
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
+
+@given("an ssl context service is set up")
+def step_impl(context: MinifiTestContext):
+    add_ssl_context_service_for_minifi(context, "minifi_client")
+
+
+@given("an ssl context service is set up for {processor_name}")
+@given("an ssl context service with a manual CA cert file is set up for {processor_name}")
+def step_impl(context, processor_name):
+    add_ssl_context_service_for_minifi(context, "minifi_client")
     processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
     processor.add_property('SSL Context Service', 'SSLContextService')
