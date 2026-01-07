@@ -44,6 +44,7 @@ std::unique_ptr<core::ContentRepository> createContentRepository(const std::stri
       return std::make_unique<core::repository::FileSystemRepository>(repo_name);
     }
     if (fail_safe) {
+      logging::LoggerFactory<ContentRepository>::getLogger()->log_error("Failed to instantiate ContentRepository with class name {}, falling back to VolatileContentRepository", configuration_class_name);
       return std::make_unique<core::repository::VolatileContentRepository>("fail_safe");
     } else {
       throw std::runtime_error("Support for the provided configuration class could not be found");
