@@ -134,7 +134,7 @@ class Container:
             return code, output.decode("utf-8")
         return None, "Container not running."
 
-    def not_empty_dir_exists(self, directory_path: str) -> bool:
+    def nonempty_dir_exists(self, directory_path: str) -> bool:
         if not self.container:
             return False
         dir_exists_exit_code, dir_exists_output = self.exec_run(
@@ -145,8 +145,18 @@ class Container:
             "sh -c {}".format(shlex.quote(f'[ "$(ls -A {directory_path})" ]')))
         return dir_not_empty_ec == 0
 
+    def directory_contains_empty_file(self, directory_path: str) -> bool:
+        if not self.container or not self.nonempty_dir_exists(directory_path):
+            return False
+
+        command = "sh -c {}".format(shlex.quote(f"find {directory_path} -maxdepth 1 -type f -empty"))
+
+        exit_code, _ = self.exec_run(command)
+
+        return exit_code == 0
+
     def directory_contains_file_with_content(self, directory_path: str, expected_content: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         quoted_content = shlex.quote(expected_content)
@@ -157,7 +167,7 @@ class Container:
         return exit_code == 0
 
     def directory_contains_file_with_regex(self, directory_path: str, regex_str: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         safe_dir_path = shlex.quote(directory_path)
@@ -187,7 +197,7 @@ class Container:
         return file_count == 1
 
     def directory_has_single_file_with_content(self, directory_path: str, expected_content: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
@@ -243,7 +253,7 @@ class Container:
             logging.warning("Container not running")
             return -1
 
-        if not self.not_empty_dir_exists(directory_path):
+        if not self.nonempty_dir_exists(directory_path):
             logging.warning(f"Container directory does not exist: {directory_path}")
             return 0
 
@@ -262,10 +272,7 @@ class Container:
             logging.error(f"Error parsing output '{output}' from command '{count_command}'")
             return -1
 
-    def _verify_file_contents_in_running_container(self, directory_path: str, expected_contents: list[str]) -> bool:
-        if not self.not_empty_dir_exists(directory_path):
-            return False
-
+    def _get_contents_of_all_files_in_directory(self, directory_path: str) -> list[str] | None:
         safe_dir_path = shlex.quote(directory_path)
         list_files_command = f"find {safe_dir_path} -mindepth 1 -maxdepth 1 -type f -print0"
 
@@ -273,13 +280,9 @@ class Container:
 
         if exit_code != 0:
             logging.error(f"Error running command '{list_files_command}': {output}")
-            return False
+            return None
 
         actual_filepaths = [path for path in output.split('\0') if path]
-
-        if len(actual_filepaths) != len(expected_contents):
-            logging.debug(f"Expected {len(expected_contents)} files, but found {len(actual_filepaths)}")
-            return False
 
         actual_file_contents = []
         for path in actual_filepaths:
@@ -291,9 +294,23 @@ class Container:
             if exit_code != 0:
                 error_message = f"Command to read file '{path}' failed with exit code {exit_code}"
                 logging.error(error_message)
-                return False
+                return None
 
             actual_file_contents.append(content)
+
+        return actual_file_contents
+
+    def _verify_file_contents_in_running_container(self, directory_path: str, expected_contents: list[str]) -> bool:
+        if not self.nonempty_dir_exists(directory_path):
+            return False
+
+        actual_file_contents = self._get_contents_of_all_files_in_directory(directory_path)
+        if actual_file_contents is None:
+            return False
+
+        if len(actual_file_contents) != len(expected_contents):
+            logging.debug(f"Expected {len(expected_contents)} files, but found {len(actual_file_contents)}")
+            return False
 
         return sorted(actual_file_contents) == sorted(expected_contents)
 
@@ -358,7 +375,8 @@ class Container:
         return False
 
     def verify_path_with_json_content(self, directory_path: str, expected_str: str) -> bool:
-        if not self.container or not self.not_empty_dir_exists(directory_path):
+        if not self.container or not self.nonempty_dir_exists(directory_path):
+            logging.warning(f"Container not running or directory does not exist: {directory_path}")
             return False
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
@@ -390,3 +408,25 @@ class Container:
         expected_json = json.loads(expected_str)
 
         return actual_json == expected_json
+
+    def directory_contains_file_with_json_content(self, directory_path: str, expected_content: str) -> bool:
+        if not self.container or not self.nonempty_dir_exists(directory_path):
+            logging.warning(f"Container not running or directory does not exist: {directory_path}")
+            return False
+
+        actual_file_contents = self._get_contents_of_all_files_in_directory(directory_path)
+        if actual_file_contents is None:
+            return False
+
+        for file_content in actual_file_contents:
+            try:
+                actual_json = json.loads(file_content)
+                expected_json = json.loads(expected_content)
+                if actual_json == expected_json:
+                    return True
+                logging.warning(f"File content does not match expected JSON: {file_content}")
+            except json.JSONDecodeError:
+                logging.error("Error decoding JSON content from file.")
+                continue
+
+        return False

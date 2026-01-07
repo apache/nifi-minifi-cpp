@@ -15,8 +15,6 @@
 
 @CORE
 Feature: Writing JSON path query result to attribute or flow file using EvaluateJsonPath processor
-  Background:
-    Given the content of "/tmp/output" is monitored
 
   Scenario: Write query result to flow file
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -24,10 +22,13 @@ Feature: Writing JSON path query result to attribute or flow file using Evaluate
     And a EvaluateJsonPath processor with the "Destination" property set to "flowfile-content"
     And the "JsonPath" property of the EvaluateJsonPath processor is set to "$.books[*].title"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the EvaluateJsonPath
     And the "matched" relationship of the EvaluateJsonPath processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     When the MiNiFi instance starts up
-    Then a flowfile with the JSON content "["The Great Gatsby","1984"]" is placed in the monitored directory in less than 10 seconds
+    Then a file with the JSON content "["The Great Gatsby","1984"]" is placed in the "/tmp/output" directory in less than 10 seconds
 
   Scenario: Write query result to attributes
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -39,12 +40,16 @@ Feature: Writing JSON path query result to attribute or flow file using Evaluate
     And the "author" property of the EvaluateJsonPath processor is set to "$.author"
     And the "release" property of the EvaluateJsonPath processor is set to "$.release"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
     And a LogAttribute processor
+    And LogAttribute is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the EvaluateJsonPath
     And the "matched" relationship of the EvaluateJsonPath processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And PutFile's failure relationship is auto-terminated
+    And LogAttribute's success relationship is auto-terminated
     When the MiNiFi instance starts up
-    Then a flowfile with the JSON content "{"title": "1984", "author": null}" is placed in the monitored directory in less than 10 seconds
+    Then a file with the JSON content "{"title": "1984", "author": null}" is placed in the "/tmp/output" directory in less than 10 seconds
     And the Minifi logs contain the following message: "key:title value:1984" in less than 10 seconds
-    And the Minifi logs contain the following message: "key:author value:null" in less than 0 seconds
-    And the Minifi logs do not contain the following message: "key:release" after 0 seconds
+    And the Minifi logs contain the following message: "key:author value:null" in less than 1 seconds
+    And the Minifi logs do not contain the following message: "key:release" after 10 seconds
