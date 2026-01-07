@@ -256,6 +256,12 @@ def step_impl(context: MinifiTestContext, property_name: str, processor_name: st
     processor.add_property(property_name, filtering)
 
 
+@given("the max concurrent tasks attribute of the {processor_name} processor is set to {max_concurrent_tasks:d}")
+def step_impl(context, processor_name: str, max_concurrent_tasks: int):
+    processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
+    processor.set_max_concurrent_tasks(max_concurrent_tasks)
+
+
 @given("the \"{property_name}\" properties of the {processor_name_one} and {processor_name_two} processors are set to the same random UUID")
 def step_impl(context, property_name, processor_name_one, processor_name_two):
     uuid_str = str(uuid.uuid4())
