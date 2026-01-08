@@ -436,20 +436,13 @@ class Container:
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
-        command = "sh -c {}".format(shlex.quote(f"find {directory_path} -maxdepth 1 -type f -exec stat -c %s {{}} \\;"))
+        command = f"find \"{directory_path}\" -maxdepth 1 -type f -size +{expected_size}c"
 
         exit_code, output = self.exec_run(command)
         if exit_code != 0:
             logging.error(f"Error running command to get file sizes: {output}")
             return False
-        sizes = output.strip().split('\n')
-        for size_str in sizes:
-            try:
-                size = int(size_str)
-                if size >= expected_size:
-                    return True
-            except ValueError:
-                logging.error(f"Error parsing size '{size_str}' as integer for file size comparison.")
-                continue
+        if len(output.strip()) > 0:
+            return True
 
         return False
