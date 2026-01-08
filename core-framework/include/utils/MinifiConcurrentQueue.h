@@ -17,13 +17,14 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <deque>
 #include <mutex>
-#include <condition_variable>
-#include <utility>
+#include <optional>
 #include <stdexcept>
-#include <atomic>
+#include <utility>
 
 #include "utils/TryMoveCall.h"
 #include "minifi-cpp/utils/gsl.h"

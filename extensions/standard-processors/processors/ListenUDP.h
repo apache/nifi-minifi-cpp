@@ -63,9 +63,9 @@ class ListenUDP : public NetworkListenerProcessor {
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Messages received successfully will be sent out this relationship."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
-  EXTENSIONAPI static constexpr auto PortOutputAttribute = core::OutputAttributeDefinition<0>{"udp.port", {}, "The listener port the messages were received to."};
+  EXTENSIONAPI static constexpr auto PortOutputAttribute = core::OutputAttributeDefinition<0>{"udp.port", {}, "The listening port on which the messages were received."};
   EXTENSIONAPI static constexpr auto Sender = core::OutputAttributeDefinition<0>{"udp.sender", {}, "The sending host of the messages."};
-  EXTENSIONAPI static constexpr auto SenderPort = core::OutputAttributeDefinition<0>{"udp.sender.port", {}, "The sending port the messages were received from."};
+  EXTENSIONAPI static constexpr auto SenderPort = core::OutputAttributeDefinition<0>{"udp.sender.port", {}, "The sending port of the messages."};
   EXTENSIONAPI static constexpr auto OutputAttributes = std::to_array<core::OutputAttributeReference>({PortOutputAttribute, Sender, SenderPort});
 
   void initialize() override;
