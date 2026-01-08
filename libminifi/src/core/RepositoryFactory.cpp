@@ -28,7 +28,10 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name, bool fail_safe, const std::string& repo_name) {
+std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name,
+    bool fail_safe,
+    const std::string& repo_name,
+    logging::Logger* logger) {
   std::string class_name_lc = configuration_class_name;
   std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
   try {
@@ -44,7 +47,10 @@ std::unique_ptr<core::ContentRepository> createContentRepository(const std::stri
       return std::make_unique<core::repository::FileSystemRepository>(repo_name);
     }
     if (fail_safe) {
-      logging::LoggerFactory<ContentRepository>::getLogger()->log_error("Failed to instantiate ContentRepository with class name {}, falling back to VolatileContentRepository", configuration_class_name);
+      if (logger) {
+        logger->log_error("Failed to instantiate ContentRepository with class name {}, falling back to VolatileContentRepository",
+            configuration_class_name);
+      }
       return std::make_unique<core::repository::VolatileContentRepository>("fail_safe");
     } else {
       throw std::runtime_error("Support for the provided configuration class could not be found");
