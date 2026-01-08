@@ -125,9 +125,9 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
 
     When all instances start up
 
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    Then a single file with the content "#test_data$123$#" is placed in the "/tmp/output" directory in less than 60 seconds
     And the object on the Azure storage server is "#test_data$123$#"
-    And no errors were generated on the http-proxy regarding "http://azure-storage-server-${feature_id}:10000/devstoreaccount1/test-container/test-blob"
+    And no errors were generated on the http-proxy regarding "http://azure-storage-server-${scenario_id}:10000/devstoreaccount1/test-container/test-blob"
 
   Scenario: A MiNiFi instance can delete blob from Azure blob storage through a proxy
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
@@ -144,7 +144,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And test blob "test" is created on Azure blob storage
 
     Then the Azure blob storage becomes empty in 30 seconds
-    And no errors were generated on the http-proxy regarding "http://azure-storage-server-${feature_id}:10000/devstoreaccount1/test-container/test"
+    And no errors were generated on the http-proxy regarding "http://azure-storage-server-${scenario_id}:10000/devstoreaccount1/test-container/test"
 
   Scenario: A MiNiFi instance can fetch a blob from Azure blob storage through a proxy
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -166,8 +166,8 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     When all instances start up
     And test blob "test" with the content "#test_data$123$#" is created on Azure blob storage
 
-    Then a flowfile with the content "data$" is placed in the monitored directory in less than 60 seconds
-    And no errors were generated on the http-proxy regarding "http://azure-storage-server-${feature_id}:10000/devstoreaccount1/test-container/test"
+    Then a single file with the content "data$" is placed in the "/tmp/output" directory in less than 60 seconds
+    And no errors were generated on the http-proxy regarding "http://azure-storage-server-${scenario_id}:10000/devstoreaccount1/test-container/test"
 
   Scenario: A MiNiFi instance can list a container on Azure blob storage through a proxy
     Given a ListAzureBlobStorage processor set up to communicate with an Azure blob storage
@@ -188,4 +188,4 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     Then the Minifi logs contain the following message: "key:azure.blobname value:test_1" in less than 60 seconds
     And the Minifi logs contain the following message: "key:azure.blobname value:test_2" in less than 60 seconds
     And the Minifi logs do not contain the following message: "key:azure.blobname value:other_test" after 0 seconds
-    And no errors were generated on the http-proxy regarding "http://azure-storage-server-${feature_id}:10000/devstoreaccount1/test-container"
+    And no errors were generated on the http-proxy regarding "http://azure-storage-server-${scenario_id}:10000/devstoreaccount1/test-container"
