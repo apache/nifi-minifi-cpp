@@ -117,7 +117,7 @@ void GetTCP::notifyStop() {
 void GetTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
   auto flow_file = session.create();
   session.writeBuffer(flow_file, message.message_data);
-  flow_file->setAttribute(GetTCP::SourceEndpoint.name, fmt::format("{}:{}", message.sender_address.to_string(), std::to_string(message.server_port)));
+  flow_file->setAttribute(GetTCP::SourceEndpoint.name, fmt::format("{}:{}", message.remote_address.to_string(), std::to_string(message.remote_port)));
   if (message.is_partial)
     session.transfer(flow_file, Partial);
   else
@@ -128,11 +128,12 @@ void GetTCP::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   gsl_Expects(max_batch_size_ > 0);
   size_t logs_processed = 0;
   while (!client_->queueEmpty() && logs_processed < max_batch_size_) {
-    utils::net::Message received_message;
-    if (!client_->tryDequeue(received_message))
+    if (const auto received_message = client_->tryDequeue()) {
+      transferAsFlowFile(received_message.value(), session);
+      ++logs_processed;
+    } else {
       break;
-    transferAsFlowFile(received_message, session);
-    ++logs_processed;
+    }
   }
 }
 
@@ -175,8 +176,8 @@ bool GetTCP::TcpClient::queueEmpty() const {
   return concurrent_queue_.empty();
 }
 
-bool GetTCP::TcpClient::tryDequeue(utils::net::Message& received_message) {
-  return concurrent_queue_.tryDequeue(received_message);
+std::optional<utils::net::Message> GetTCP::TcpClient::tryDequeue() {
+  return concurrent_queue_.tryDequeue();
 }
 
 asio::awaitable<std::error_code> GetTCP::TcpClient::readLoop(auto& socket) {
@@ -203,7 +204,10 @@ asio::awaitable<std::error_code> GetTCP::TcpClient::readLoop(auto& socket) {
       continue;
 
     if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size()) {
-      utils::net::Message message{read_message.substr(0, bytes_read), utils::net::IpProtocol::TCP, socket.lowest_layer().remote_endpoint().address(), socket.lowest_layer().remote_endpoint().port()};
+      const auto remote_endpoint = socket.lowest_layer().remote_endpoint();
+      const auto local_endpoint = socket.lowest_layer().remote_endpoint();
+      utils::net::Message message{read_message.substr(0, bytes_read), utils::net::IpProtocol::TCP, remote_endpoint.address(),
+        remote_endpoint.port(), local_endpoint.port()};
       if (previous_didnt_end_with_delimiter || current_doesnt_end_with_delimiter)
         message.is_partial = true;
       concurrent_queue_.enqueue(std::move(message));

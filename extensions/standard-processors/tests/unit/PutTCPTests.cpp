@@ -67,12 +67,13 @@ class CancellableTcpServer : public utils::net::TcpServer {
       }
       std::error_code error;
       auto remote_address = socket.lowest_layer().remote_endpoint(error).address();
+      auto remote_port = socket.lowest_layer().remote_endpoint(error).port();
       auto cancellable_timer = std::make_shared<asio::steady_timer>(io_context_);
       cancellable_timers_.push_back(cancellable_timer);
       if (ssl_data_)
-        co_spawn(io_context_, secureSession(std::move(socket), std::move(remote_address), port_) || wait_until_cancelled(cancellable_timer), asio::detached);
+        co_spawn(io_context_, secureSession(std::move(socket), std::move(remote_address), remote_port, port_) || wait_until_cancelled(cancellable_timer), asio::detached);
       else
-        co_spawn(io_context_, insecureSession(std::move(socket), std::move(remote_address), port_) || wait_until_cancelled(cancellable_timer), asio::detached);
+        co_spawn(io_context_, insecureSession(std::move(socket), std::move(remote_address), remote_port, port_) || wait_until_cancelled(cancellable_timer), asio::detached);
     }
   }
 
@@ -158,9 +159,8 @@ class PutTCPTestFixture {
     auto interval = 10ms;
 
     auto start_time = std::chrono::system_clock::now();
-    utils::net::Message result;
     while (start_time + timeout > std::chrono::system_clock::now()) {
-      if (getServer(port)->tryDequeue(result))
+      if (const auto result = getServer(port)->tryDequeue())
         return result;
       std::this_thread::sleep_for(interval);
     }
@@ -274,7 +274,7 @@ void receive_success(PutTCPTestFixture& test_fixture, const std::string_view exp
   if (received_message) {
     CHECK(received_message->message_data == expected_message);
     CHECK(received_message->protocol == utils::net::IpProtocol::TCP);
-    CHECK(!received_message->sender_address.to_string().empty());
+    CHECK(!received_message->remote_address.to_string().empty());
   }
 }
 

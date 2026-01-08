@@ -25,20 +25,21 @@
 namespace org::apache::nifi::minifi::utils::net {
 
 struct Message {
- public:
-  Message() = default;
-  Message(std::string message_data, IpProtocol protocol, asio::ip::address sender_address, asio::ip::port_type server_port)
+  Message() = delete;
+  Message(std::string message_data, IpProtocol protocol, asio::ip::address remote_address, asio::ip::port_type remote_port, asio::ip::port_type local_port)
       : message_data(std::move(message_data)),
       protocol(protocol),
-      server_port(server_port),
-      sender_address(std::move(sender_address)) {
+      remote_address(std::move(remote_address)),
+      remote_port(remote_port),
+      local_port(local_port) {
   }
 
   bool is_partial = false;
   std::string message_data;
   IpProtocol protocol;
-  asio::ip::port_type server_port;
-  asio::ip::address sender_address;
+  asio::ip::address remote_address;
+  asio::ip::port_type remote_port;
+  asio::ip::port_type local_port;
 };
 
 }  // namespace org::apache::nifi::minifi::utils::net

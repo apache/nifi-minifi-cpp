@@ -95,8 +95,8 @@ void ListenSyslog::transferAsFlowFile(const utils::net::Message& message, core::
 
   session.writeBuffer(flow_file, message.message_data);
   flow_file->setAttribute("syslog.protocol", std::string{magic_enum::enum_name(message.protocol)});
-  flow_file->setAttribute("syslog.port", std::to_string(message.server_port));
-  flow_file->setAttribute("syslog.sender", message.sender_address.to_string());
+  flow_file->setAttribute("syslog.port", std::to_string(message.local_port));
+  flow_file->setAttribute("syslog.sender", message.remote_address.to_string());
   session.transfer(flow_file, valid ? Success : Invalid);
 }
 
