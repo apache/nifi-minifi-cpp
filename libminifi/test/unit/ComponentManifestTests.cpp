@@ -21,7 +21,7 @@
 #include "unit/Catch.h"
 #include "core/Core.h"
 #include "core/ConfigurableComponentImpl.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/Resource.h"
@@ -40,19 +40,15 @@ SerializedResponseNode& get(SerializedResponseNode& node, const std::string& fie
 
 namespace test::apple {
 
-class ExampleService : public core::controller::ControllerServiceImpl {
+class ExampleService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
-  using ControllerServiceImpl::ControllerServiceImpl;
+  using ControllerServiceBase::ControllerServiceBase;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   static constexpr const char* Description = "An example service";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
-
-  bool canEdit() override { return false; }
-  void yield() override {}
-  bool isRunning() const override { return false; }
-  bool isWorkAvailable() override { return false; }
 };
 
 REGISTER_RESOURCE(ExampleService, ControllerService);

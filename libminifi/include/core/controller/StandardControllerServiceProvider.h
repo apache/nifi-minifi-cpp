@@ -22,17 +22,17 @@
 #include <memory>
 #include <unordered_set>
 #include <thread>
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "ControllerServiceNodeMap.h"
 #include "ControllerServiceProvider.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class StandardControllerServiceProvider : public ControllerServiceProviderImpl  {
+class StandardControllerServiceProvider : public ControllerServiceProvider  {
  public:
   explicit StandardControllerServiceProvider(std::unique_ptr<ControllerServiceNodeMap> services, std::shared_ptr<Configure> configuration, ClassLoader& loader = ClassLoader::getDefaultClassLoader())
-      : ControllerServiceProviderImpl(std::move(services)),
+      : ControllerServiceProvider(std::move(services)),
         extension_loader_(loader),
         configuration_(std::move(configuration)),
         admin_yield_duration_(readAdministrativeYieldDuration()),

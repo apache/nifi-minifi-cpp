@@ -24,7 +24,7 @@
 
 #include "utils/StringUtils.h"
 #include "io/validation.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -38,17 +38,9 @@ namespace org::apache::nifi::minifi::controllers {
  * Purpose: UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates.
  * Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.
  */
-class UpdatePolicyControllerService : public core::controller::ControllerServiceImpl {
+class UpdatePolicyControllerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
-  explicit UpdatePolicyControllerService(std::string_view name, const utils::Identifier &uuid = {})
-      : ControllerServiceImpl(name, uuid) {
-  }
-
-  explicit UpdatePolicyControllerService(std::string_view name, const std::shared_ptr<Configure> &configuration)
-      : UpdatePolicyControllerService(name) {
-    ControllerServiceImpl::setConfiguration(configuration);
-    UpdatePolicyControllerService::initialize();
-  }
+  using ControllerServiceBase::ControllerServiceBase;
 
   MINIFIAPI static constexpr const char* Description = "UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates. "
                                                        "Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.";
@@ -80,17 +72,12 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
                                                                                       });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 
-  void yield() override;
-
-  bool isRunning() const override;
-
-  bool isWorkAvailable() override;
-
   void onEnable() override;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   bool canUpdate(const std::string &property) const {
     return policy_->canUpdate(property);
@@ -103,7 +90,6 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
  private:
   bool persist_updates_ = false;
   std::unique_ptr<state::UpdatePolicy> policy_ = std::make_unique<state::UpdatePolicy>(false);
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdatePolicyControllerService>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

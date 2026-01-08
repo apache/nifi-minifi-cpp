@@ -712,11 +712,11 @@ TEST_CASE("The encrypted flow configuration can be decrypted with the correct ke
   const auto controller_service_id = "b9801278-7b5d-4314-aed6-713fd4b5f933";
   const auto* const controller_service_node_before = process_group_before->findControllerService(controller_service_id);
   REQUIRE(controller_service_node_before);
-  const auto* const controller_service_before = controller_service_node_before->getControllerServiceImplementation();
+  const auto controller_service_before = controller_service_node_before->getControllerServiceImplementation();
   REQUIRE(controller_service_node_before);
   const auto* const controller_service_node_after = process_group_after->findControllerService(controller_service_id);
   REQUIRE(controller_service_node_after);
-  const auto* const controller_service_after = controller_service_node_before->getControllerServiceImplementation();
+  const auto controller_service_after = controller_service_node_before->getControllerServiceImplementation();
   REQUIRE(controller_service_after);
   CHECK(controller_service_before->getProperty("CA Certificate") == controller_service_after->getProperty("CA Certificate"));
   CHECK(controller_service_before->getProperty("Passphrase") == controller_service_after->getProperty("Passphrase"));

@@ -24,6 +24,7 @@ struct ControllerServiceApiDefinition {
   std::string_view artifact;
   std::string_view group;
   std::string_view type;
+  std::string_view version;
 };
 
 }  // namespace org::apache::nifi::minifi::core

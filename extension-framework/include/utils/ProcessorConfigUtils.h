@@ -173,7 +173,7 @@ std::shared_ptr<ControllerServiceType> parseOptionalControllerService(const core
     return nullptr;
   }
 
-  const std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(*controller_service_name, processor_uuid);
+  const std::shared_ptr<core::controller::ControllerServiceInterface> service = context.getControllerService(*controller_service_name, processor_uuid);
   if (!service) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Controller service '{}' = '{}' not found", prop.name, *controller_service_name));
   }
