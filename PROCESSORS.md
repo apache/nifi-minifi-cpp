@@ -1565,10 +1565,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute  | Relationship | Description                                  |
-|------------|--------------|----------------------------------------------|
-| udp.port   |              | The sending port the messages were received. |
-| udp.sender |              | The sending host of the messages.            |
+| Attribute       | Relationship | Description                                             |
+|-----------------|--------------|---------------------------------------------------------|
+| udp.port        |              | The listening port on which the messages were received. |
+| udp.sender      |              | The sending host of the messages.                       |
+| udp.sender.port |              | The sending port of the messages.                       |
 
 
 ## ListFile
