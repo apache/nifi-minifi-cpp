@@ -135,23 +135,23 @@ std::optional<uint64_t> OpenRocksDb::getApproximateSizes() const {
   return std::nullopt;
 }
 
+void OpenRocksDb::fillU64FromProperty(uint64_t& member, std::string_view property_name) {
+  std::string property_value;
+  GetProperty(property_name, &property_value);
+  try {
+    member = std::stoull(property_value);
+  } catch (const std::exception&) {
+    logger_->log_warn("Could not retrieve valid '{}' property value from rocksdb content repository!", property_name);
+  }
+}
+
+
 minifi::core::RepositoryMetricsSource::RocksDbStats OpenRocksDb::getStats() {
   minifi::core::RepositoryMetricsSource::RocksDbStats stats;
-  std::string table_readers;
-  GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
-  try {
-    stats.table_readers_size = std::stoull(table_readers);
-  } catch (const std::exception&) {
-    logger_->log_warn("Could not retrieve valid 'rocksdb.estimate-table-readers-mem' property value from rocksdb content repository!");
-  }
-
-  std::string all_memtables;
-  GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
-  try {
-    stats.all_memory_tables_size = std::stoull(all_memtables);
-  } catch (const std::exception&) {
-    logger_->log_warn("Could not retrieve valid 'rocksdb.cur-size-all-mem-tables' property value from rocksdb content repository!");
-  }
+  fillU64FromProperty(stats.table_readers_size, "rocksdb.estimate-table-readers-mem");
+  fillU64FromProperty(stats.all_memory_tables_size, "rocksdb.cur-size-all-mem-tables");
+  fillU64FromProperty(stats.block_cache_usage, "rocksdb.block-cache-usage");
+  fillU64FromProperty(stats.block_cache_pinned_usage, "rocksdb.block-cache-pinned-usage");
 
   return stats;
 }

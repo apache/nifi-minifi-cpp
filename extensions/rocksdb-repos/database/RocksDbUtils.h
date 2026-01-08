@@ -49,6 +49,12 @@ class Writable {
     }
   }
 
+  template <typename Method, typename... Args>
+  decltype(auto) call(Method method, Args&&... args) {
+    is_modified_ = true;
+    return std::invoke(method, target_, std::forward<Args>(args)...);
+  }
+
   template<typename F>
   const F& get(F T::* member) {
     return target_.*member;

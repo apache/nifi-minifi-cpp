@@ -48,6 +48,8 @@ std::vector<SerializedResponseNode> RepositoryMetricsSourceStore::serialize() co
     if (auto rocksdb_stats = repo->getRocksDbStats()) {
       parent.children.push_back({.name = "rocksDbTableReadersSize", .value = rocksdb_stats->table_readers_size});
       parent.children.push_back({.name = "rocksDbAllMemoryTablesSize", .value = rocksdb_stats->all_memory_tables_size});
+      parent.children.push_back({.name = "rocksDbBlockCacheUsage", .value = rocksdb_stats->block_cache_usage});
+      parent.children.push_back({.name = "rocksDbBlockCachePinnedUsage", .value = rocksdb_stats->block_cache_pinned_usage});
     }
 
     serialized.push_back(parent);
@@ -67,6 +69,10 @@ std::vector<PublishedMetric> RepositoryMetricsSourceStore::calculateMetrics() co
       metrics.push_back({"rocksdb_table_readers_size_bytes", static_cast<double>(rocksdb_stats->table_readers_size),
         {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});
       metrics.push_back({"rocksdb_all_memory_tables_size_bytes", static_cast<double>(rocksdb_stats->all_memory_tables_size),
+        {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"rocksdb_block_cache_usage_bytes", static_cast<double>(rocksdb_stats->block_cache_usage),
+        {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"rocksdb_block_cache_pinned_usage_bytes", static_cast<double>(rocksdb_stats->block_cache_pinned_usage),
         {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});
     }
   }
