@@ -77,7 +77,6 @@ bool ProcessContextImpl::hasNonEmptyProperty(std::string_view name) const {
 std::vector<std::string> ProcessContextImpl::getDynamicPropertyKeys() const { return processor_.getDynamicPropertyKeys(); }
 
 std::map<std::string, std::string> ProcessContextImpl::getDynamicProperties(const FlowFile* flow_file) const {
-  std::lock_guard<std::mutex> lock(mutex_);
   auto dynamic_props = processor_.getDynamicProperties();
   const expression::Parameters params{this, flow_file};
   for (auto& [dynamic_property_name, dynamic_property_value]: dynamic_props) {
@@ -101,7 +100,6 @@ uint8_t ProcessContextImpl::getMaxConcurrentTasks() const { return processor_.ge
 void ProcessContextImpl::yield() { processor_.yield(); }
 
 nonstd::expected<std::string, std::error_code> ProcessContextImpl::getProperty(const std::string_view name, const FlowFile* flow_file) const {
-  std::lock_guard<std::mutex> lock(mutex_);
   const auto property = getProcessorInfo().getSupportedProperty(name);
   if (!property) {
     return nonstd::make_unexpected(PropertyErrorCode::NotSupportedProperty);
@@ -124,19 +122,16 @@ nonstd::expected<std::string, std::error_code> ProcessContextImpl::getProperty(c
 }
 
 nonstd::expected<void, std::error_code> ProcessContextImpl::setProperty(const std::string_view name, std::string value) {
-  std::lock_guard<std::mutex> lock(mutex_);
   cached_expressions_.erase(std::string{name});
   return getProcessor().setProperty(name, std::move(value));
 }
 
 nonstd::expected<void, std::error_code> ProcessContextImpl::clearProperty(const std::string_view name) {
-  std::lock_guard<std::mutex> lock(mutex_);
   cached_expressions_.erase(std::string{name});
   return getProcessor().clearProperty(name);
 }
 
 nonstd::expected<std::string, std::error_code> ProcessContextImpl::getDynamicProperty(const std::string_view name, const FlowFile* flow_file) const {
-  std::lock_guard<std::mutex> lock(mutex_);
   if (!cached_dynamic_expressions_.contains(name)) {
     auto expression_str = getProcessor().getDynamicProperty(name);
     if (!expression_str) { return expression_str; }
@@ -155,7 +150,6 @@ nonstd::expected<std::string, std::error_code> ProcessContextImpl::getRawDynamic
 }
 
 nonstd::expected<void, std::error_code> ProcessContextImpl::setDynamicProperty(std::string name, std::string value) {
-  std::lock_guard<std::mutex> lock(mutex_);
   cached_dynamic_expressions_.erase(name);
   return getProcessor().setDynamicProperty(std::move(name), std::move(value));
 }
