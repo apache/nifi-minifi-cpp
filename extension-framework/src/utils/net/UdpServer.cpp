@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 #include "utils/net/UdpServer.h"
-#include "asio/use_awaitable.hpp"
-#include "asio/detached.hpp"
 #include "utils/net/AsioCoro.h"
 
 namespace org::apache::nifi::minifi::utils::net {
@@ -43,10 +41,11 @@ asio::awaitable<void> UdpServer::doReceive() {
       continue;
     }
     buffer.resize(bytes_received);
-    if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size())
-      concurrent_queue_.enqueue(utils::net::Message(std::move(buffer), IpProtocol::UDP, sender_endpoint.address(), socket.local_endpoint().port()));
-    else
+    if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size()) {
+      concurrent_queue_.enqueue(utils::net::Message(std::move(buffer), IpProtocol::UDP, sender_endpoint.address(), sender_endpoint.port(), socket.local_endpoint().port()));
+    } else {
       logger_->log_warn("Queue is full. UDP message ignored.");
+    }
   }
 }
 

@@ -29,10 +29,11 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
+void check_for_attributes(core::FlowFile& flow_file, uint16_t server_port, uint16_t remote_port) {
   const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
-  CHECK(std::to_string(port) == flow_file.getAttribute("udp.port"));
+  CHECK(std::to_string(server_port) == flow_file.getAttribute("udp.port"));
   CHECK(ranges::contains(local_addresses, flow_file.getAttribute("udp.sender")));
+  CHECK(std::to_string(remote_port) == flow_file.getAttribute("udp.sender.port"));
 }
 
 TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProcessor]") {
@@ -43,7 +44,6 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
   REQUIRE(listen_udp->setProperty(ListenUDP::MaxBatchSize.name, "2"));
 
   auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_udp);
-
   asio::ip::udp::endpoint endpoint;
   SECTION("sending through IPv6", "[IPv6]") {
     if (utils::isIPv6Disabled())
@@ -55,16 +55,20 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
   }
 
   controller.plan->scheduleProcessor(listen_udp);
-  CHECK_THAT(utils::sendUdpDatagram({"test_message_1"}, endpoint), MatchesSuccess());
-  CHECK_THAT(utils::sendUdpDatagram({"another_message"}, endpoint), MatchesSuccess());
+  const auto test_message_1_result = utils::sendUdpDatagram({"test_message_1"}, endpoint);
+  CHECK(test_message_1_result.has_value());
+  const auto another_message_result = utils::sendUdpDatagram({"another_message"}, endpoint);
+  CHECK(another_message_result.has_value());
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenUDP::Success, 2}}, result, 300ms, 50ms));
   CHECK(result.at(ListenUDP::Success).size() == 2);
-  CHECK(controller.plan->getContent(result.at(ListenUDP::Success)[0]) == "test_message_1");
-  CHECK(controller.plan->getContent(result.at(ListenUDP::Success)[1]) == "another_message");
+  const auto test_message_1_flow_file = result.at(ListenUDP::Success)[0];
+  CHECK(controller.plan->getContent(test_message_1_flow_file) == "test_message_1");
+  const auto another_message_flow_file = result.at(ListenUDP::Success)[1];
+  CHECK(controller.plan->getContent(another_message_flow_file) == "another_message");
 
-  check_for_attributes(*result.at(ListenUDP::Success)[0], port);
-  check_for_attributes(*result.at(ListenUDP::Success)[1], port);
+  check_for_attributes(*test_message_1_flow_file, port, test_message_1_result.value().port());
+  check_for_attributes(*another_message_flow_file, port, another_message_result.value().port());
 }
 
 TEST_CASE("ListenUDP can be rescheduled", "[ListenUDP][NetworkListenerProcessor]") {
@@ -101,7 +105,7 @@ TEST_CASE("ListenUDP max queue and max batch size test", "[ListenUDP][NetworkLis
 
   controller.plan->scheduleProcessor(listen_udp);
   for (auto i = 0; i < 100; ++i) {
-    CHECK_THAT(utils::sendUdpDatagram({"test_message"}, endpoint), MatchesSuccess());
+    CHECK(utils::sendUdpDatagram({"test_message"}, endpoint).has_value());
   }
 
   CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));

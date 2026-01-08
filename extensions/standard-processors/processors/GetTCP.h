@@ -147,14 +147,17 @@ class GetTCP : public core::ProcessorImpl {
         std::optional<size_t> max_message_size,
         std::vector<utils::net::ConnectionId> connections,
         std::shared_ptr<core::logging::Logger> logger);
-
+    TcpClient(const TcpClient&) = delete;
+    TcpClient(TcpClient&&) = delete;
+    TcpClient& operator=(const TcpClient&) = delete;
+    TcpClient& operator=(TcpClient&&) = delete;
     ~TcpClient();
 
     void run();
     void stop();
 
     bool queueEmpty() const;
-    bool tryDequeue(utils::net::Message& received_message);
+    std::optional<utils::net::Message> tryDequeue();
 
    private:
     asio::awaitable<void> doReceiveFrom(const utils::net::ConnectionId& connection_id);

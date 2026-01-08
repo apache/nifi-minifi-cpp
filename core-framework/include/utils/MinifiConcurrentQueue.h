@@ -17,15 +17,17 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <deque>
 #include <mutex>
-#include <condition_variable>
-#include <utility>
+#include <optional>
 #include <stdexcept>
-#include <atomic>
+#include <utility>
 
 #include "utils/TryMoveCall.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -54,6 +56,13 @@ class ConcurrentQueue {
   bool tryDequeue(T& out) {
     std::unique_lock<std::mutex> lck(mtx_);
     return tryDequeueImpl(lck, out);
+  }
+
+  std::optional<T> tryDequeue() {
+    std::optional<T> result = std::nullopt;
+    const bool consume_result = consume([&result](T value) { result = std::move(value); });
+    gsl_Assert(consume_result == result.has_value());
+    return result;
   }
 
   template<typename Functor>

@@ -30,11 +30,12 @@ void NetworkListenerProcessor::onTrigger(core::ProcessContext&, core::ProcessSes
   gsl_Expects(max_batch_size_ > 0);
   size_t logs_processed = 0;
   while (!server_->queueEmpty() && logs_processed < max_batch_size_) {
-    utils::net::Message received_message;
-    if (!server_->tryDequeue(received_message))
+    if (const auto received_message = server_->tryDequeue()) {
+      transferAsFlowFile(received_message.value(), session);
+      ++logs_processed;
+    } else {
       break;
-    transferAsFlowFile(received_message, session);
-    ++logs_processed;
+    }
   }
 }
 
