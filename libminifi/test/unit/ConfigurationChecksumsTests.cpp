@@ -39,7 +39,7 @@ TEST_CASE("If one checksum calculator is added, we get a node with one child", "
   auto file_location = minifi::test::utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   utils::ChecksumCalculator checksum_calculator;
-  checksum_calculator.setFileLocation(file_location);
+  checksum_calculator.setFileLocations(std::vector{file_location});
 
   ConfigurationChecksums configuration_checksums;
   configuration_checksums.addChecksumCalculator(checksum_calculator);
@@ -62,9 +62,9 @@ TEST_CASE("If two checksum calculators are added, we get a node with two childre
   auto file_location_2 = minifi::test::utils::putFileToDir(test_dir, "second.txt", "this is the second file\n");
 
   utils::ChecksumCalculator checksum_calculator_1;
-  checksum_calculator_1.setFileLocation(file_location_1);
+  checksum_calculator_1.setFileLocations(std::vector{file_location_1});
   utils::ChecksumCalculator checksum_calculator_2;
-  checksum_calculator_2.setFileLocation(file_location_2);
+  checksum_calculator_2.setFileLocations(std::vector{file_location_2});
 
   ConfigurationChecksums configuration_checksums;
   configuration_checksums.addChecksumCalculator(checksum_calculator_1);
