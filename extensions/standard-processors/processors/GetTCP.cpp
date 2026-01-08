@@ -205,7 +205,7 @@ asio::awaitable<std::error_code> GetTCP::TcpClient::readLoop(auto& socket) {
 
     if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size()) {
       const auto remote_endpoint = socket.lowest_layer().remote_endpoint();
-      const auto local_endpoint = socket.lowest_layer().remote_endpoint();
+      const auto local_endpoint = socket.lowest_layer().local_endpoint();
       utils::net::Message message{read_message.substr(0, bytes_read), utils::net::IpProtocol::TCP, remote_endpoint.address(),
         remote_endpoint.port(), local_endpoint.port()};
       if (previous_didnt_end_with_delimiter || current_doesnt_end_with_delimiter)
