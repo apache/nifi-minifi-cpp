@@ -77,15 +77,12 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
 
   processor->onSchedule(*process_context, *session_factory);
 
-  std::vector<std::thread *> threads;
-
   ThreadedSchedulingAgent *agent = this;
   for (uint8_t i = 0; i < processor->getMaxConcurrentTasks(); i++) {
-    // reference the disable function from serviceNode
     processor->incrementActiveTasks();
-
-    std::function<utils::TaskRescheduleInfo()> f_ex = [agent, processor, process_context, session_factory] () {
-      return agent->run(processor, process_context, session_factory);
+    auto thread_process_context = std::make_shared<core::ProcessContextImpl>(*processor, controller_service_provider_, repo_, flow_repo_, configure_, content_repo_);
+    std::function<utils::TaskRescheduleInfo()> f_ex = [agent, processor, thread_process_context, session_factory] () {
+      return agent->run(processor, thread_process_context, session_factory);
     };
 
     std::future<utils::TaskRescheduleInfo> future;
