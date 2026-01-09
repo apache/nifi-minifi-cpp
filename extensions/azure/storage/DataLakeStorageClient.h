@@ -32,6 +32,7 @@
 #include "utils/Enum.h"
 #include "utils/RegexUtils.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "controllers/ProxyConfiguration.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
