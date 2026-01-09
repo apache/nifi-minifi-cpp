@@ -21,11 +21,8 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-struct ProxyConfiguration {
-  std::string proxy_host;
-  std::optional<uint16_t> proxy_port;
-  std::optional<std::string> proxy_user;
-  std::optional<std::string> proxy_password;
+enum class ProxyType {
+  HTTP
 };
 
 class ProxyConfigurationServiceInterface : public virtual core::controller::ControllerService {
@@ -36,7 +33,11 @@ class ProxyConfigurationServiceInterface : public virtual core::controller::Cont
     .type = "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface",
   };
 
-  virtual ProxyConfiguration getProxyConfiguration() const = 0;
+  virtual std::string getHost() const = 0;
+  virtual std::optional<uint16_t> getPort() const = 0;
+  virtual std::optional<std::string> getUsername() const = 0;
+  virtual std::optional<std::string> getPassword() const = 0;
+  virtual ProxyType getProxyType() const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

@@ -31,6 +31,7 @@
 #include "utils/Enum.h"
 #include "minifi-cpp/io/InputStream.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "controllers/ProxyConfiguration.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 

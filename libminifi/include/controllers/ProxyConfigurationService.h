@@ -19,6 +19,7 @@
 #include <mutex>
 
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "controllers/ProxyConfiguration.h"
 #include "core/controller/ControllerService.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
@@ -74,9 +75,29 @@ class ProxyConfigurationService : public core::controller::ControllerServiceImpl
   void initialize() override;
   void onEnable() override;
 
-  ProxyConfiguration getProxyConfiguration() const override {
+  ProxyType getProxyType() const override {
     std::lock_guard lock(configuration_mutex_);
-    return proxy_configuration_;
+    return proxy_configuration_.proxy_type;
+  }
+
+  std::string getHost() const override {
+    std::lock_guard lock(configuration_mutex_);
+    return proxy_configuration_.proxy_host;
+  }
+
+  std::optional<uint16_t> getPort() const override {
+    std::lock_guard lock(configuration_mutex_);
+    return proxy_configuration_.proxy_port;
+  }
+
+  std::optional<std::string> getUsername() const override {
+    std::lock_guard lock(configuration_mutex_);
+    return proxy_configuration_.proxy_user;
+  }
+
+  std::optional<std::string> getPassword() const override {
+    std::lock_guard lock(configuration_mutex_);
+    return proxy_configuration_.proxy_password;
   }
 
  private:
