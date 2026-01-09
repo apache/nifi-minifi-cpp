@@ -42,11 +42,10 @@ TEST_CASE_METHOD(ProxyConfigurationServiceTestFixture, "ProxyConfigurationServic
 TEST_CASE_METHOD(ProxyConfigurationServiceTestFixture, "Only required properties are set in ProxyConfigurationService") {
   plan_->setProperty(proxy_configuration_node_, controllers::ProxyConfigurationService::ProxyServerHost, "192.168.1.123");
   REQUIRE_NOTHROW(plan_->finalize());
-  auto proxy = proxy_configuration_service_->getProxyConfiguration();
-  CHECK(proxy.proxy_host == "192.168.1.123");
-  CHECK(proxy.proxy_port == std::nullopt);
-  CHECK(proxy.proxy_user == std::nullopt);
-  CHECK(proxy.proxy_password == std::nullopt);
+  CHECK(proxy_configuration_service_->getHost() == "192.168.1.123");
+  CHECK(proxy_configuration_service_->getPort() == std::nullopt);
+  CHECK(proxy_configuration_service_->getUsername() == std::nullopt);
+  CHECK(proxy_configuration_service_->getPassword() == std::nullopt);
 }
 
 TEST_CASE_METHOD(ProxyConfigurationServiceTestFixture, "All properties are set in ProxyConfigurationService") {
@@ -55,11 +54,10 @@ TEST_CASE_METHOD(ProxyConfigurationServiceTestFixture, "All properties are set i
   plan_->setProperty(proxy_configuration_node_, controllers::ProxyConfigurationService::ProxyUserName, "user");
   plan_->setProperty(proxy_configuration_node_, controllers::ProxyConfigurationService::ProxyUserPassword, "password");
   REQUIRE_NOTHROW(plan_->finalize());
-  auto proxy = proxy_configuration_service_->getProxyConfiguration();
-  CHECK(proxy.proxy_host == "192.168.1.123");
-  CHECK(proxy.proxy_port == 8080);
-  CHECK(proxy.proxy_user == "user");
-  CHECK(proxy.proxy_password == "password");
+  CHECK(proxy_configuration_service_->getHost() == "192.168.1.123");
+  CHECK(proxy_configuration_service_->getPort() == 8080);
+  CHECK(proxy_configuration_service_->getUsername() == "user");
+  CHECK(proxy_configuration_service_->getPassword() == "password");
 }
 
 }  // namespace org::apache::nifi::minifi::test

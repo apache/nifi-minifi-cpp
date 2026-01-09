@@ -69,11 +69,13 @@ aws::ProxyOptions AwsProcessor::getProxy(core::ProcessContext& context) {
 
   auto proxy_controller_service = minifi::utils::parseOptionalControllerService<minifi::controllers::ProxyConfigurationServiceInterface>(context, ProxyConfigurationService, getUUID());
   if (proxy_controller_service) {
-    auto controller_service_proxy = proxy_controller_service->getProxyConfiguration();
-    proxy.host = controller_service_proxy.proxy_host;
-    proxy.port = controller_service_proxy.proxy_port ? *controller_service_proxy.proxy_port : 0;
-    proxy.username = controller_service_proxy.proxy_user ? *controller_service_proxy.proxy_user : "";
-    proxy.password = controller_service_proxy.proxy_password ? *controller_service_proxy.proxy_password : "";
+    proxy.host = proxy_controller_service->getHost();
+    auto port_opt = proxy_controller_service->getPort();
+    proxy.port = port_opt ? *port_opt : 0;
+    auto username_opt = proxy_controller_service->getUsername();
+    proxy.username = username_opt ? *username_opt : "";
+    auto password_opt = proxy_controller_service->getPassword();
+    proxy.password = password_opt ? *password_opt : "";
   } else {
     proxy.host = minifi::utils::parseOptionalProperty(context, ProxyHost).value_or("");
     proxy.port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort).value_or(0));

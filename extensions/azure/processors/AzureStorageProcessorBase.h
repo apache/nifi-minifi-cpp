@@ -33,6 +33,7 @@
 #include "minifi-cpp/core/logging/Logger.h"
 #include "storage/AzureStorageCredentials.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "controllers/ProxyConfiguration.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 

@@ -33,7 +33,13 @@ void AzureStorageProcessorBase::onSchedule(core::ProcessContext& context, core::
   auto proxy_controller_service = minifi::utils::parseOptionalControllerService<minifi::controllers::ProxyConfigurationServiceInterface>(context, ProxyConfigurationService, getUUID());
   if (proxy_controller_service) {
     logger_->log_debug("Proxy configuration is set for Azure Storage processor");
-    proxy_configuration_ = proxy_controller_service->getProxyConfiguration();
+    proxy_configuration_ = minifi::controllers::ProxyConfiguration{
+      .proxy_type = minifi::controllers::ProxyType::HTTP,
+      .proxy_host = proxy_controller_service->getHost(),
+      .proxy_port = proxy_controller_service->getPort(),
+      .proxy_user = proxy_controller_service->getUsername(),
+      .proxy_password = proxy_controller_service->getPassword()
+    };
   }
 }
 
