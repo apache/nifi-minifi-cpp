@@ -200,7 +200,12 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
   setRequiredProperties();
-  setProxy();
+  SECTION("Use proxy configuration service") {
+    setProxy(true);
+  }
+  SECTION("Use processor properties") {
+    setProxy(false);
+  }
   test_controller.runSession(plan);
   checkProxySettings();
 }
