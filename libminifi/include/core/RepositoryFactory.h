@@ -35,7 +35,6 @@ namespace org::apache::nifi::minifi::core {
  * @param logger pointer to a logger so it can log out errors
  */
 std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name,
-    bool fail_safe = false,
     const std::string& repo_name = "",
     logging::Logger* logger = nullptr);
 
