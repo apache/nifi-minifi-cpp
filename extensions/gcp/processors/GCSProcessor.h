@@ -27,7 +27,7 @@
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "google/cloud/storage/oauth2/credentials.h"
+#include "google/cloud/credentials.h"
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"
 
@@ -64,10 +64,10 @@ class GCSProcessor : public core::ProcessorImpl {
 
  protected:
   virtual google::cloud::storage::Client getClient() const;
-  std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) const;
+  std::shared_ptr<google::cloud::Credentials> getCredentials(core::ProcessContext& context) const;
 
   std::optional<std::string> endpoint_url_;
-  std::shared_ptr<google::cloud::storage::oauth2::Credentials> gcp_credentials_;
+  std::shared_ptr<google::cloud::Credentials> gcp_credentials_;
   google::cloud::storage::RetryPolicyOption::Type retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(6);
 };
 
