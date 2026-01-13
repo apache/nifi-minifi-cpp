@@ -22,10 +22,10 @@
 namespace org::apache::nifi::minifi::core::controller {
 
 class ControllerServiceDescriptor {
-  public:
-    virtual ~ControllerServiceDescriptor() = default;
+ public:
+  virtual ~ControllerServiceDescriptor() = default;
 
-    virtual void setSupportedProperties(std::span<const PropertyReference> properties) = 0;
+  virtual void setSupportedProperties(std::span<const PropertyReference> properties) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

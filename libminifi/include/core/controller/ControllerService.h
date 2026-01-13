@@ -55,13 +55,13 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
   };
 
   class ControllerServiceContextImpl : public ControllerServiceContext {
-    public:
-      explicit ControllerServiceContextImpl(ControllerService& impl): impl_(impl) {}
-      [[nodiscard]] nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const override;
-      [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const override;
+   public:
+    explicit ControllerServiceContextImpl(ControllerService& impl): impl_(impl) {}
+    [[nodiscard]] nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const override;
+    [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const override;
 
-    private:
-      ControllerService& impl_;
+   private:
+    ControllerService& impl_;
   };
 
  public:
