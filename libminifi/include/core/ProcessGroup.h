@@ -36,7 +36,7 @@
 #include "CronDrivenSchedulingAgent.h"
 #include "Port.h"
 #include "minifi-cpp/core/logging/Logger.h"
-#include "minifi-cpp/core/controller/ControllerServiceNode.h"
+#include "core/controller/ControllerServiceNode.h"
 #include "controller/ControllerServiceNodeMap.h"
 #include "utils/Id.h"
 #include "http/BaseHTTPClient.h"

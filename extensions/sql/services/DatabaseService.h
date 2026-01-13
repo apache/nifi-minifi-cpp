@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "data/DatabaseConnectors.h"
@@ -34,20 +34,9 @@ namespace org::apache::nifi::minifi::sql::controllers {
  * services to internal services. While a controller service is generally configured from the flow,
  * we want to follow the open closed principle and provide Database services
  */
-class DatabaseService : public core::controller::ControllerServiceImpl {
+class DatabaseService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
-  explicit DatabaseService(const std::string_view name, const utils::Identifier &uuid = {})
-      : ControllerServiceImpl(name, uuid),
-        initialized_(false) {
-    DatabaseService::initialize();
-  }
-
-  explicit DatabaseService(const std::string_view name, const std::shared_ptr<Configure> &configuration)
-      : ControllerServiceImpl(name),
-        initialized_(false) {
-    ControllerServiceImpl::setConfiguration(configuration);
-    DatabaseService::initialize();
-  }
+  using ControllerServiceBase::ControllerServiceBase;
 
   /**
    * Parameters needed.
@@ -61,18 +50,9 @@ class DatabaseService : public core::controller::ControllerServiceImpl {
 
   void initialize() override;
 
-  void yield() override {
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
-
   void onEnable() override;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   virtual std::unique_ptr<sql::Connection> getConnection() const = 0;
 
@@ -82,12 +62,9 @@ class DatabaseService : public core::controller::ControllerServiceImpl {
   // initialization mutex.
   std::recursive_mutex initialization_mutex_;
 
-  bool initialized_;
+  bool initialized_{false};
 
   std::string connection_string_;
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DatabaseService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::sql::controllers

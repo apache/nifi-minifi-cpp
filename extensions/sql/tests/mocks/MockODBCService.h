@@ -30,30 +30,15 @@ namespace org::apache::nifi::minifi::sql::controllers {
 
 class MockODBCService : public DatabaseService {
  public:
-  explicit MockODBCService(std::string_view name, utils::Identifier uuid = utils::Identifier())
-    : DatabaseService(name, uuid),
-      logger_(logging::LoggerFactory<MockODBCService>::getLogger(uuid)) {
-    initialize();
-  }
-
-  explicit MockODBCService(std::string_view name, const std::shared_ptr<Configure> &configuration)
-      : DatabaseService(name),
-        logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
-    setConfiguration(configuration);
-    initialize();
-  }
+  using DatabaseService::DatabaseService;
 
   static constexpr const char* Description = "Controller service that provides Mock ODBC database connection";
   static constexpr auto Properties = DatabaseService::Properties;
   static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   std::unique_ptr<sql::Connection> getConnection() const override {
     return std::make_unique<sql::MockODBCConnection>(connection_string_);
   }
-
- private:
-  std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(MockODBCService, ControllerService);
