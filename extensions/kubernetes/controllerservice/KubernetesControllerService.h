@@ -71,7 +71,6 @@ class KubernetesControllerService : public AttributeProviderServiceImpl {
   std::optional<utils::Regex> namespace_filter_;
   std::optional<utils::Regex> pod_name_filter_;
   std::optional<utils::Regex> container_name_filter_;
-  std::shared_ptr<core::logging::Logger> logger_;
   std::unique_ptr<kubernetes::ApiClient> api_client_;
 };
 
