@@ -27,12 +27,12 @@ namespace org::apache::nifi::minifi::core::controller {
 class ControllerServiceApi;
 
 class ControllerServiceFactory {
-  public:
-    virtual std::unique_ptr<ControllerServiceApi> create(ControllerServiceMetadata metadata) = 0;
-    virtual std::string getGroupName() const = 0;
-    virtual std::string getClassName() const = 0;
+ public:
+  virtual std::unique_ptr<ControllerServiceApi> create(ControllerServiceMetadata metadata) = 0;
+  virtual std::string getGroupName() const = 0;
+  virtual std::string getClassName() const = 0;
 
-    virtual ~ControllerServiceFactory() = default;
+  virtual ~ControllerServiceFactory() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller
