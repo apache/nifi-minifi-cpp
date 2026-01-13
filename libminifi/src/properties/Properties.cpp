@@ -163,7 +163,7 @@ auto getExtraPropertiesFileNames(const std::filesystem::path& extra_properties_f
   std::vector<std::filesystem::path> extra_properties_file_names;
   if (utils::file::exists(extra_properties_files_dir) && utils::file::is_directory(extra_properties_files_dir)) {
     utils::file::list_dir(extra_properties_files_dir, [&](const std::filesystem::path&, const std::filesystem::path& file_name) {
-      if (!file_name.string().ends_with(".bak")) {
+      if (file_name.string().ends_with(".properties")) {
         extra_properties_file_names.push_back(file_name);
       }
       return true;
