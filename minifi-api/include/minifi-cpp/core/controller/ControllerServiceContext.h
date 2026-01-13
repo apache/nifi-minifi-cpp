@@ -22,11 +22,11 @@
 namespace org::apache::nifi::minifi::core::controller {
 
 class ControllerServiceContext {
-  public:
-    virtual ~ControllerServiceContext() = default;
+ public:
+  virtual ~ControllerServiceContext() = default;
 
-    [[nodiscard]] virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const = 0;
-    [[nodiscard]] virtual nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const = 0;
+  [[nodiscard]] virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const = 0;
+  [[nodiscard]] virtual nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

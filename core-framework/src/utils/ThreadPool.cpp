@@ -152,7 +152,7 @@ void ThreadPool::manageWorkers() {
           continue;
         }
         if (thread_manager_->isAboveMax(current_workers_)) {
-          auto max = 1; // thread_manager_->getMaxConcurrentTasks();
+          auto max = 1;  // thread_manager_->getMaxConcurrentTasks();
           auto differential = current_workers_ - max;
           thread_reduction_count_ += differential;
         } else if (thread_manager_->shouldReduce()) {
