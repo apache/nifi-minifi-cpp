@@ -18,7 +18,6 @@
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
-#include "core/controller/ControllerService.h"
 #endif
 
 #ifdef WIN32
@@ -39,8 +38,6 @@
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/controller/ControllerServiceBase.h"
-#include "core/controller/ControllerService.h"
-#include "core/logging/LoggerFactory.h"
 #include "io/validation.h"
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "minifi-cpp/core/PropertyValidator.h"
