@@ -106,11 +106,23 @@ class HTTPUploadStreamContentsCallback : public HTTPUploadCallback {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HTTPUploadStreamContentsCallback>::getLogger();
 };
 
-class HTTPReadCallback : public utils::ByteOutputCallback {
+class HTTPReadCallback {
+ public:
+  virtual bool process(std::span<const char> data) = 0;
+  virtual ~HTTPReadCallback() = default;
+
+  std::atomic<bool> stop = false;
+};
+
+class HTTPReadByteOutputCallback : public HTTPReadCallback, public utils::ByteOutputCallback {
  public:
   using ByteOutputCallback::ByteOutputCallback;
 
-  std::atomic<bool> stop = false;
+  bool process(std::span<const char> data) override {
+    ByteOutputCallback::write(data.data(), data.size());
+    return true;
+  }
+
   std::atomic<size_t> pos = 0;
 };
 

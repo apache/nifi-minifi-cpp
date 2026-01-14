@@ -122,6 +122,7 @@ class Configuration : public virtual Properties {
   static constexpr const char *nifi_c2_rest_heartbeat_minimize_updates = "nifi.c2.rest.heartbeat.minimize.updates";
   static constexpr const char *nifi_c2_rest_request_encoding = "nifi.c2.rest.request.encoding";
   static constexpr const char *nifi_c2_flow_info_processor_bulletin_limit = "nifi.c2.flow.info.processor.bulletin.limit";
+  static constexpr const char *nifi_c2_asset_download_timeout = "nifi.c2.asset.download.timeout";
 
   // state management options
   static constexpr const char *nifi_state_storage_local = "nifi.state.storage.local";

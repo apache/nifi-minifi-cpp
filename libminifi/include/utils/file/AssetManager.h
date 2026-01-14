@@ -53,7 +53,7 @@ class AssetManager {
  public:
   explicit AssetManager(const Configure& configuration);
 
-  nonstd::expected<void, std::string> sync(const AssetLayout& layout, const std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)>& fetch);
+  nonstd::expected<void, std::string> sync(const AssetLayout& layout, const std::function<nonstd::expected<void, std::string>(std::string_view /*url*/, std::filesystem::path /*tmp_path*/)>& fetch);
 
   std::string hash() const;
 

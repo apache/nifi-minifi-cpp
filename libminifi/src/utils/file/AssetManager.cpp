@@ -121,7 +121,7 @@ std::string AssetManager::hash() const {
 
 nonstd::expected<void, std::string> AssetManager::sync(
     const AssetLayout& layout,
-    const std::function<nonstd::expected<std::vector<std::byte>, std::string>(std::string_view /*url*/)>& fetch) {
+    const std::function<nonstd::expected<void, std::string>(std::string_view /*url*/, std::filesystem::path /*tmp_path*/)>& fetch) {
   logger_->log_info("Synchronizing assets");
   std::lock_guard lock(mtx_);
   AssetLayout new_state{
@@ -129,16 +129,16 @@ nonstd::expected<void, std::string> AssetManager::sync(
     .assets = {}
   };
   std::string fetch_errors;
-  std::vector<std::pair<std::filesystem::path, std::vector<std::byte>>> new_file_contents;
+  std::vector<std::filesystem::path> new_file_paths;
   for (auto& new_entry : layout.assets) {
     if (std::find_if(state_.assets.begin(), state_.assets.end(), [&] (auto& entry) {return entry.id == new_entry.id;}) == state_.assets.end()) {
       logger_->log_info("Fetching asset (id = '{}', path = '{}') from {}", new_entry.id, new_entry.path.string(), new_entry.url);
-      if (auto data = fetch(new_entry.url)) {
-        new_file_contents.emplace_back(new_entry.path, data.value());
+      if (auto status = fetch(new_entry.url, (root_ / new_entry.path).string() + ".part")) {
+        new_file_paths.emplace_back(root_ / new_entry.path);
         new_state.assets.insert(new_entry);
       } else {
-        logger_->log_error("Failed to fetch asset (id = '{}', path = '{}') from {}: {}", new_entry.id, new_entry.path.string(), new_entry.url, data.error());
-        fetch_errors += "Failed to fetch '" + new_entry.id + "' from '" + new_entry.url + "': " + data.error() + "\n";
+        logger_->log_error("Failed to fetch asset (id = '{}', path = '{}') from {}: {}", new_entry.id, new_entry.path.string(), new_entry.url, status.error());
+        fetch_errors += "Failed to fetch '" + new_entry.id + "' from '" + new_entry.url + "': " + status.error() + "\n";
       }
     } else {
       logger_->log_info("Asset (id = '{}', path = '{}') already exists", new_entry.id, new_entry.path.string());
@@ -156,9 +156,9 @@ nonstd::expected<void, std::string> AssetManager::sync(
     }
   }
 
-  for (auto& [path, content] : new_file_contents) {
-    create_dir((root_ / path).parent_path());
-    std::ofstream{root_ / path, std::ios::binary}.write(reinterpret_cast<const char*>(content.data()), gsl::narrow<std::streamsize>(content.size()));
+  for (auto& path : new_file_paths) {
+    create_dir(path.parent_path());
+    std::filesystem::rename(path.string() + ".part", path);
   }
 
   state_ = std::move(new_state);
