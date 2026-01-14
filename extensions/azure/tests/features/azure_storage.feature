@@ -109,7 +109,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     Then the Minifi logs contain the following message: "key:azure.blobname value:test_2" in less than 60 seconds
     And the Minifi logs do not contain the following message: "key:azure.blobname value:other_test" after 0 seconds
 
-  Scenario: A MiNiFi instance can upload data to Azure blob storage through a proxy
+  Scenario Outline: A MiNiFi instance can upload data to Azure blob storage through a proxy
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "#test_data$123$#" is present in "/tmp/input"
     And a PutAzureBlobStorage processor set up to communicate with an Azure blob storage
@@ -118,7 +118,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "success" relationship of the GetFile processor is connected to the PutAzureBlobStorage
     And the "success" relationship of the PutAzureBlobStorage processor is connected to the PutFile
     And the "failure" relationship of the PutAzureBlobStorage processor is connected to the PutAzureBlobStorage
-    And a ProxyConfigurationService controller service is set up with HTTP proxy configuration
+    And a ProxyConfigurationService controller service is set up with <proxy type> proxy configuration
 
     And an Azure storage server is set up
     And the http proxy server is set up
@@ -128,6 +128,11 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     Then a single file with the content "#test_data$123$#" is placed in the "/tmp/output" directory in less than 60 seconds
     And the object on the Azure storage server is "#test_data$123$#"
     And no errors were generated on the http-proxy regarding "http://azure-storage-server-${scenario_id}:10000/devstoreaccount1/test-container/test-blob"
+
+    Examples: Proxy Type
+    | proxy type |
+    | HTTP       |
+    | HTTPS      |
 
   Scenario: A MiNiFi instance can delete blob from Azure blob storage through a proxy
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"

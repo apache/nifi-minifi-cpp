@@ -22,7 +22,8 @@
 namespace org::apache::nifi::minifi::controllers {
 
 enum class ProxyType {
-  HTTP
+  HTTP,
+  HTTPS
 };
 
 class ProxyConfigurationServiceInterface : public virtual core::controller::ControllerService {

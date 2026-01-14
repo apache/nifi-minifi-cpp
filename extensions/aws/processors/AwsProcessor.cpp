@@ -66,26 +66,28 @@ std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentials(
   return aws_credentials_provider.getAWSCredentials();
 }
 
-aws::ProxyOptions AwsProcessor::getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file) {
-  aws::ProxyOptions proxy;
+minifi::controllers::ProxyConfiguration AwsProcessor::getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file) {
+  minifi::controllers::ProxyConfiguration proxy;
 
   auto proxy_controller_service = minifi::utils::parseOptionalControllerService<minifi::controllers::ProxyConfigurationServiceInterface>(context, ProxyConfigurationService, getUUID());
   if (proxy_controller_service) {
-    proxy.host = proxy_controller_service->getHost();
+    proxy.proxy_type = proxy_controller_service->getProxyType();
+    proxy.proxy_host = proxy_controller_service->getHost();
     auto port_opt = proxy_controller_service->getPort();
-    proxy.port = port_opt ? *port_opt : 0;
+    proxy.proxy_port = port_opt.value_or(0);
     auto username_opt = proxy_controller_service->getUsername();
-    proxy.username = username_opt ? *username_opt : "";
+    proxy.proxy_user = username_opt.value_or("");
     auto password_opt = proxy_controller_service->getPassword();
-    proxy.password = password_opt ? *password_opt : "";
+    proxy.proxy_password = password_opt.value_or("");
   } else {
-    proxy.host = minifi::utils::parseOptionalProperty(context, ProxyHost, flow_file).value_or("");
-    proxy.port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort, flow_file).value_or(0));
-    proxy.username = minifi::utils::parseOptionalProperty(context, ProxyUsername, flow_file).value_or("");
-    proxy.password = minifi::utils::parseOptionalProperty(context, ProxyPassword, flow_file).value_or("");
+    proxy.proxy_type = minifi::utils::parseOptionalEnumProperty<minifi::controllers::ProxyType>(context, ProxyType).value_or(minifi::controllers::ProxyType::HTTP);
+    proxy.proxy_host = minifi::utils::parseOptionalProperty(context, ProxyHost, flow_file).value_or("");
+    proxy.proxy_port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort, flow_file).value_or(0));
+    proxy.proxy_user = minifi::utils::parseOptionalProperty(context, ProxyUsername, flow_file).value_or("");
+    proxy.proxy_password = minifi::utils::parseOptionalProperty(context, ProxyPassword, flow_file).value_or("");
   }
 
-  if (!proxy.host.empty()) {
+  if (!proxy.proxy_host.empty()) {
     logger_->log_info("Proxy for AwsProcessor was set.");
   }
   return proxy;

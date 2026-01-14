@@ -261,6 +261,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Proxy Server Port     |               |                  | Proxy server port number.                                                                  |
 | Proxy User Name       |               |                  | The name of the proxy client for user authentication.                                      |
 | Proxy User Password   |               |                  | The password of the proxy client for user authentication.<br/>**Sensitive Property: true** |
+| Proxy Type            | HTTP          | HTTP<br/>HTTPS   | Proxy type.                                                                                |
 
 
 ## RocksDbStateStorage

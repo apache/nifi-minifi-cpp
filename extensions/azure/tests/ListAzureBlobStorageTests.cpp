@@ -360,6 +360,7 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files through a pro
   plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
   plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
   plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+  plan_->setProperty(proxy_configuration_service, "Proxy Type", "HTTP");
   plan_->setProperty(list_azure_blob_storage_, "Proxy Configuration Service", "ProxyConfigurationService");
 
   test_controller_.runSession(plan_, true);
@@ -372,6 +373,7 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files through a pro
   REQUIRE(*passed_params.proxy_configuration->proxy_user == "username");
   REQUIRE(passed_params.proxy_configuration->proxy_password);
   REQUIRE(*passed_params.proxy_configuration->proxy_password == "password");
+  REQUIRE(passed_params.proxy_configuration->proxy_type == minifi::controllers::ProxyType::HTTP);
 }
 
 }  // namespace

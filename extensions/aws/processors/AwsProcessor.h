@@ -28,12 +28,12 @@
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "AWSCredentialsProvider.h"
-#include "utils/ProxyOptions.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/ProcessorImpl.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "controllers/ProxyConfiguration.h"
 
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -91,7 +91,7 @@ inline constexpr auto REGIONS = std::array{
 
 struct CommonProperties {
   Aws::Auth::AWSCredentials credentials;
-  aws::ProxyOptions proxy;
+  minifi::controllers::ProxyConfiguration proxy;
   std::string endpoint_override_url;
 };
 
@@ -132,6 +132,11 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .supportsExpressionLanguage(true)
       .build();
+  EXTENSIONAPI static constexpr auto ProxyType = core::PropertyDefinitionBuilder<magic_enum::enum_count<minifi::controllers::ProxyType>()>::createProperty("Proxy Type")
+      .withDescription("Proxy type")
+      .withDefaultValue(magic_enum::enum_name(minifi::controllers::ProxyType::HTTP))
+      .withAllowedValues(magic_enum::enum_names<minifi::controllers::ProxyType>())
+      .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
       .withDescription("Proxy host name or IP")
       .supportsExpressionLanguage(true)
@@ -168,6 +173,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       Region,
       CommunicationsTimeout,
       EndpointOverrideURL,
+      ProxyType,
       ProxyHost,
       ProxyPort,
       ProxyUsername,
@@ -184,7 +190,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
  protected:
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(core::ProcessContext& context) const;
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context, const core::FlowFile* flow_file);
-  aws::ProxyOptions getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file);
+  minifi::controllers::ProxyConfiguration getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file);
   std::optional<CommonProperties> getCommonELSupportedProperties(core::ProcessContext& context, const core::FlowFile* flow_file);
 
   std::optional<Aws::Client::ClientConfiguration> client_config_;

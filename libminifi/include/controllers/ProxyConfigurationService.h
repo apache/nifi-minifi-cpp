@@ -50,11 +50,17 @@ class ProxyConfigurationService : public core::controller::ControllerServiceImpl
       .withDescription("The password of the proxy client for user authentication.")
       .isSensitive(true)
       .build();
+  MINIFIAPI static constexpr auto ProxyTypeProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<ProxyType>()>::createProperty("Proxy Type")
+      .withDescription("Proxy type.")
+      .withDefaultValue(magic_enum::enum_name(ProxyType::HTTP))
+      .withAllowedValues(magic_enum::enum_names<ProxyType>())
+      .build();
   MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
     ProxyServerHost,
     ProxyServerPort,
     ProxyUserName,
-    ProxyUserPassword
+    ProxyUserPassword,
+    ProxyTypeProperty
   });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
