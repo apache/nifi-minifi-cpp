@@ -16,6 +16,7 @@
 ###  NOTE: Changes to this file are overwritten on upgrade. Add your custom settings to new files     ###
 ###  in the conf/minifi.properties.d directory instead. These custom settings files should have       ###
 ###  a name ending with ".properties", and they are applied in lexicographic order, after this file.  ###
+###  Example filenames: conf/minifi.properties.d/10-c2.properties, conf/minifi.properties.d/90-repository-tweaks.properties  ###
 
 # Core Properties #
 nifi.flow.configuration.file=@MINIFI_PATH_FLOW_CONFIG@
