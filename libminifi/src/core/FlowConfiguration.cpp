@@ -29,6 +29,19 @@
 #include "minifi-cpp/SwapManager.h"
 #include "Connection.h"
 
+namespace {
+void createDefaultFlowConfigFile(const std::filesystem::path& path) {
+  std::ofstream ostream(path);
+  ostream.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+  ostream << "Flow Controller:\n"
+      "  name: MiNiFi Flow\n"
+      "Processors: []\n"
+      "Connections: []\n"
+      "Remote Processing Groups: []\n"
+      "Provenance Reporting:\n";
+}
+}  // namespace
+
 namespace org::apache::nifi::minifi::core {
 
 FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
@@ -52,12 +65,16 @@ FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
   if (!ctx.path) {
     logger_->log_error("Configuration path is not specified.");
   } else {
+    const bool c2_enabled = configuration_->get(Configure::nifi_c2_enable).and_then(&utils::string::toBool).value_or(false);
+    if (!c2_enabled && !ctx.path->empty() && !std::filesystem::exists(*ctx.path)) {
+      createDefaultFlowConfigFile(*ctx.path);
+    }
     config_path_ = utils::file::canonicalize(*ctx.path);
     if (!config_path_) {
       logger_->log_error("Couldn't find config file \"{}\".", ctx.path->string());
       config_path_ = ctx.path;
     }
-    checksum_calculator_.setFileLocation(*config_path_);
+    checksum_calculator_.setFileLocations(std::vector{*config_path_});
   }
 }
 
