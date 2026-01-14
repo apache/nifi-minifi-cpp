@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+###  NOTE: Changes to this file are overwritten on upgrade. Add your custom settings to new files     ###
+###  in the conf/minifi-uid.properties.d directory instead. These custom settings files should have   ###
+###  a name ending with ".properties", and they are applied in lexicographic order, after this file.  ###
+
 # Implementation for uid generation.
 # Valid values:
 # time - use uuid_generate_time

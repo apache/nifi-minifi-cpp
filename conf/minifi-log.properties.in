@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+###  NOTE: Changes to this file are overwritten on upgrade. Add your custom settings to new files     ###
+###  in the conf/minifi-log.properties.d directory instead. These custom settings files should have   ###
+###  a name ending with ".properties", and they are applied in lexicographic order, after this file.  ###
+
 #More verbose pattern by default
 #Format details at https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
 spdlog.pattern=[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v
