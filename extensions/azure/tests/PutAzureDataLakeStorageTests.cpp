@@ -199,6 +199,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Test Azure data lake stor
   plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
   plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
   plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+  plan_->setProperty(proxy_configuration_service, "Proxy Type", "HTTP");
   plan_->setProperty(azure_data_lake_storage_, "Proxy Configuration Service", "ProxyConfigurationService");
 
   test_controller_.runSession(plan_, true);
@@ -212,6 +213,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Test Azure data lake stor
   REQUIRE(*passed_params.proxy_configuration->proxy_user == "username");
   REQUIRE(passed_params.proxy_configuration->proxy_password);
   REQUIRE(*passed_params.proxy_configuration->proxy_password == "password");
+  REQUIRE(passed_params.proxy_configuration->proxy_type == minifi::controllers::ProxyType::HTTP);
   CHECK(getFailedFlowFileContents().empty());
 }
 

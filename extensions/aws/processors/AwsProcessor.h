@@ -28,12 +28,12 @@
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "AWSCredentialsProvider.h"
-#include "utils/ProxyOptions.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/ProcessorImpl.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "controllers/ProxyConfiguration.h"
 
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -129,6 +129,11 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
           "with other S3-compatible endpoints.")
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
+  EXTENSIONAPI static constexpr auto ProxyType = core::PropertyDefinitionBuilder<magic_enum::enum_count<minifi::controllers::ProxyType>()>::createProperty("Proxy Type")
+      .withDescription("Proxy type")
+      .withDefaultValue(magic_enum::enum_name(minifi::controllers::ProxyType::HTTP))
+      .withAllowedValues(magic_enum::enum_names<minifi::controllers::ProxyType>())
+      .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
       .withDescription("Proxy host name or IP")
       .build();
@@ -161,6 +166,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       Region,
       CommunicationsTimeout,
       EndpointOverrideURL,
+      ProxyType,
       ProxyHost,
       ProxyPort,
       ProxyUsername,

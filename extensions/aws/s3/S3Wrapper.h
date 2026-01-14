@@ -45,7 +45,7 @@
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
 #include "minifi-cpp/utils/gsl.h"
-#include "utils/ProxyOptions.h"
+#include "controllers/ProxyConfiguration.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 

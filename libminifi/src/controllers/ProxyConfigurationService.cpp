@@ -28,7 +28,7 @@ void ProxyConfigurationService::initialize() {
 
 void ProxyConfigurationService::onEnable() {
   std::lock_guard lock(configuration_mutex_);
-  proxy_configuration_.proxy_type = ProxyType::HTTP;
+  proxy_configuration_.proxy_type = magic_enum::enum_cast<ProxyType>(getProperty(ProxyTypeProperty.name).value_or("HTTP")).value_or(ProxyType::HTTP);
   proxy_configuration_.proxy_host = getProperty(ProxyServerHost.name).value_or("");
   if (proxy_configuration_.proxy_host.empty()) {
     logger_->log_error("Proxy Server Host is required");

@@ -69,6 +69,7 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
                                                                                  ca_key=test_context.root_ca_key)
         self.files.append(File("/usr/local/share/certs/ca-root-nss.crt", dump_cert(test_context.root_ca_cert)))
         self.files.append(File("/tmp/resources/root_ca.crt", dump_cert(test_context.root_ca_cert)))
+        self.files.append(File("/etc/ssl/certs/ca-certificates.crt", dump_cert(test_context.root_ca_cert)))
         self.files.append(File("/tmp/resources/minifi_client.crt", dump_cert(minifi_client_cert)))
         self.files.append(File("/tmp/resources/minifi_client.key", dump_key(minifi_client_key)))
         self.files.append(
