@@ -53,7 +53,7 @@ class AzureServerContainer(Container):
         cmd_create = ["az", "storage", "container", "create", "--name", "test-container", "--connection-string",
                       self.azure_connection_string]
         try:
-            run_cmd_in_docker_image("mcr.microsoft.com/azure-cli", cmd_create, self.network.name)
+            run_cmd_in_docker_image("mcr.microsoft.com/azure-cli:2.81.0", cmd_create, self.network.name)
         except ContainerError as e:
             logging.error(e)
             return False
@@ -61,7 +61,7 @@ class AzureServerContainer(Container):
         cmd_upload = ["az", "storage", "blob", "upload", "--container-name", "test-container", "--name", blob_name,
                       "--data", content, "--connection-string", self.azure_connection_string]
         try:
-            run_cmd_in_docker_image("mcr.microsoft.com/azure-cli", cmd_upload, self.network.name)
+            run_cmd_in_docker_image("mcr.microsoft.com/azure-cli:2.81.0", cmd_upload, self.network.name)
         except ContainerError as e:
             logging.error(e)
             return False
@@ -70,7 +70,7 @@ class AzureServerContainer(Container):
             cmd_snapshot = ["az", "storage", "blob", "snapshot", "--container-name", "test-container", "--name",
                             blob_name, "--connection-string", self.azure_connection_string]
             try:
-                run_cmd_in_docker_image("mcr.microsoft.com/azure-cli", cmd_snapshot, self.network.name)
+                run_cmd_in_docker_image("mcr.microsoft.com/azure-cli:2.81.0", cmd_snapshot, self.network.name)
             except ContainerError as e:
                 logging.error(e)
                 return False
@@ -83,7 +83,7 @@ class AzureServerContainer(Container):
                f'--connection-string "{self.azure_connection_string}"')
 
         try:
-            output = run_cmd_in_docker_image("mcr.microsoft.com/azure-cli", cmd, self.network.name)
+            output = run_cmd_in_docker_image("mcr.microsoft.com/azure-cli:2.81.0", cmd, self.network.name)
         except ContainerError as e:
             logging.error(e)
             return -1
