@@ -192,8 +192,23 @@ def step_impl(context: MinifiTestContext):
 
 
 @step("the http proxy server is set up")
-def step_impl(context):
+def step_impl(context: MinifiTestContext):
     context.containers["http-proxy"] = HttpProxy(context)
+
+
+@given("a ProxyConfigurationService controller service is set up with HTTP proxy configuration in the \"{container_name}\" flow")
+def step_impl(context: MinifiTestContext, container_name: str):
+    controller_service = ControllerService(class_name="ProxyConfigurationService", service_name="ProxyConfigurationService")
+    controller_service.add_property("Proxy Server Host", f"http-proxy-{context.scenario_id}")
+    controller_service.add_property("Proxy Server Port", "3128")
+    controller_service.add_property("Proxy User Name", "admin")
+    controller_service.add_property("Proxy User Password", "test101")
+    context.get_or_create_minifi_container(container_name).flow_definition.controller_services.append(controller_service)
+
+
+@given("a ProxyConfigurationService controller service is set up with HTTP proxy configuration")
+def step_impl(context: MinifiTestContext):
+    context.execute_steps(f"given a ProxyConfigurationService controller service is set up with HTTP proxy configuration in the \"{DEFAULT_MINIFI_CONTAINER_NAME}\" flow")
 
 
 @step("the processors are connected up as described here")
