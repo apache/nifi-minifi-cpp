@@ -72,8 +72,10 @@ class C2Protocol : public core::ConnectableImpl {
    */
   virtual C2Payload consumePayload(const C2Payload &operation, Direction direction = TRANSMIT, bool async = false) = 0;
 
-  virtual C2Payload fetch(const std::string& url, const std::vector<std::string>& /*accepted_formats*/ = {}, bool async = false) {
-    return consumePayload(url, C2Payload(Operation::transfer, true), Direction::RECEIVE, async);
+  virtual bool fetch(const std::string& url, const std::vector<std::string>& accepted_formats, std::function<bool(std::span<const char> chunk)> chunk_callback) = 0;
+
+  bool fetch(const std::string& url, std::function<bool(std::span<const char> chunk)> chunk_callback) {
+    return fetch(url, {}, std::move(chunk_callback));
   }
 
   /**

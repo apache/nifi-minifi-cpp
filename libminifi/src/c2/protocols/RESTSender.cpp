@@ -76,6 +76,7 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
       req_encoding_ = RequestEncoding::none;
     }
   }
+  asset_download_timeout_ = (configure->get(Configuration::nifi_c2_asset_download_timeout) | utils::andThen([] (const auto& s) { return parsing::parseDuration(s) | utils::toOptional(); })).value_or(0s);
   logger_->log_debug("Submitting to {}", rest_uri_);
 }
 
@@ -173,7 +174,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   }
 
   if (payload.getOperation() == Operation::transfer) {
-    auto read = std::make_unique<http::HTTPReadCallback>(std::numeric_limits<size_t>::max());
+    auto read = std::make_unique<http::HTTPReadByteOutputCallback>(std::numeric_limits<size_t>::max());
     client.setReadCallback(std::move(read));
     if (accepted_formats && !accepted_formats->empty()) {
       client.setRequestHeader("Accept", utils::string::join(", ", accepted_formats.value()));
@@ -207,8 +208,52 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   }
 }
 
-C2Payload RESTSender::fetch(const std::string& url, const std::vector<std::string>& accepted_formats, bool /*async*/) {
-  return sendPayload(url, Direction::RECEIVE, C2Payload(Operation::transfer, true), std::nullopt, accepted_formats);
+namespace {
+
+class ForwardingHTTPReadCallback : public http::HTTPReadCallback {
+ public:
+  ForwardingHTTPReadCallback(std::function<bool(std::span<const char> chunk)> callback): callback_(std::move(callback)) {}
+  bool process(std::span<const char> data) override {
+    return callback_(data);
+  }
+
+ private:
+  std::function<bool(std::span<const char> chunk)> callback_;
+};
+
+}  // namespace
+
+bool RESTSender::fetch(const std::string& url, const std::vector<std::string>& accepted_formats, std::function<bool(std::span<const char> chunk)> chunk_callback) {
+  if (url.empty()) {
+    return false;
+  }
+  http::HTTPClient client(url, ssl_context_service_);
+  client.setKeepAliveProbe(http::KeepAliveProbeData{2s, 2s});
+  client.setConnectionTimeout(2s);
+  client.set_request_method(http::HttpRequestMethod::Get);
+  client.setAbsoluteTimeout(asset_download_timeout_);
+  if (url.starts_with("https://")) {
+    if (!ssl_context_service_) {
+      setSecurityContext(client, http::HttpRequestMethod::Get, url);
+    } else {
+      client.initialize(http::HttpRequestMethod::Get, url, ssl_context_service_);
+    }
+  }
+  auto read = std::make_unique<ForwardingHTTPReadCallback>(std::move(chunk_callback));
+  client.setReadCallback(std::move(read));
+  if (!accepted_formats.empty()) {
+    client.setRequestHeader("Accept", utils::string::join(", ", accepted_formats));
+  }
+  bool is_okay = client.submit();
+  int64_t response_code = client.getResponseCode();
+  const bool client_error = 400 <= response_code && response_code < 500;
+  const bool server_error = 500 <= response_code && response_code < 600;
+  if (client_error || server_error) {
+    logger_->log_error("Error response code '{}' from '{}'", response_code, url);
+  } else {
+    logger_->log_debug("Response code '{}' from '{}'", response_code, url);
+  }
+  return is_okay && !client_error && !server_error;
 }
 
 REGISTER_RESOURCE(RESTSender, DescriptionOnly);

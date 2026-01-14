@@ -62,7 +62,7 @@ bool ByteOutputCallback::waitingOps() {
   return true;
 }
 
-void ByteOutputCallback::write(char *data, size_t size) {
+void ByteOutputCallback::write(const char *data, size_t size) {
   if (!read_started_) {
     std::unique_lock<std::recursive_mutex> lock(vector_lock_);
     spinner_.wait(lock, [&] {
@@ -73,7 +73,7 @@ void ByteOutputCallback::write(char *data, size_t size) {
   write_and_notify(data, size);
 }
 
-void ByteOutputCallback::write_and_notify(char *data, size_t size) {
+void ByteOutputCallback::write_and_notify(const char *data, size_t size) {
   queue_.enqueue(std::string(data, size));
   size_ += size;
   total_written_ += size;
