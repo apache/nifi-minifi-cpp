@@ -173,8 +173,10 @@ size_t HTTPRequestResponse::receiveWrite(char *data, size_t size, size_t nmemb, 
     if (callback->stop) {
       return CALLBACK_ABORT;
     }
-    callback->write(data, (size * nmemb));
-    return (size * nmemb);
+    if (!callback->process(std::span(data, size * nmemb))) {
+      return CALLBACK_ABORT;
+    }
+    return size * nmemb;
   } catch (...) {
     return CALLBACK_ABORT;
   }

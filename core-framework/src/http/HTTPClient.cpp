@@ -398,8 +398,8 @@ const char *HTTPClient::getContentType() {
 
 const std::vector<char> &HTTPClient::getResponseBody() {
   if (response_data_.response_body.empty()) {
-    if (read_callback_) {
-      response_data_.response_body = read_callback_->to_string();
+    if (auto byte_output = dynamic_cast<utils::ByteOutputCallback*>(read_callback_.get())) {
+      response_data_.response_body = byte_output->to_string();
     } else {
       response_data_.response_body = content_.to_string();
     }
