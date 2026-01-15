@@ -171,15 +171,11 @@ bool countLogOccurrencesUntil(const std::string& pattern,
                               const std::chrono::milliseconds max_duration,
                               const std::chrono::milliseconds wait_time = 50ms);
 
-struct UdpNetworkSendResult {
-  std::error_code ec;
-  std::optional<asio::ip::udp::endpoint> local_endpoint = std::nullopt;
-};
 std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint, const std::optional<std::string_view> delimiter = std::nullopt);
-UdpNetworkSendResult sendUdpDatagram(asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint);
+std::expected<asio::ip::udp::endpoint /* local */, std::error_code> sendUdpDatagram(asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint);
 
-UdpNetworkSendResult sendUdpDatagram(std::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint);
-UdpNetworkSendResult sendUdpDatagram(std::string_view content, const asio::ip::udp::endpoint& remote_endpoint);
+std::expected<asio::ip::udp::endpoint /* local */, std::error_code> sendUdpDatagram(std::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint);
+std::expected<asio::ip::udp::endpoint /* local */, std::error_code> sendUdpDatagram(std::string_view content, const asio::ip::udp::endpoint& remote_endpoint);
 
 bool isIPv6Disabled();
 

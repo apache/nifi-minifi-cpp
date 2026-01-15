@@ -56,9 +56,9 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
 
   controller.plan->scheduleProcessor(listen_udp);
   const auto test_message_1_result = utils::sendUdpDatagram({"test_message_1"}, endpoint);
-  CHECK_THAT(test_message_1_result.ec, MatchesSuccess());
+  CHECK(test_message_1_result.has_value());
   const auto another_message_result = utils::sendUdpDatagram({"another_message"}, endpoint);
-  CHECK_THAT(another_message_result.ec, MatchesSuccess());
+  CHECK(another_message_result.has_value());
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenUDP::Success, 2}}, result, 300ms, 50ms));
   CHECK(result.at(ListenUDP::Success).size() == 2);
@@ -67,8 +67,8 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
   const auto another_message_flow_file = result.at(ListenUDP::Success)[1];
   CHECK(controller.plan->getContent(another_message_flow_file) == "another_message");
 
-  check_for_attributes(*test_message_1_flow_file, port, test_message_1_result.local_endpoint.value().port());
-  check_for_attributes(*another_message_flow_file, port, another_message_result.local_endpoint.value().port());
+  check_for_attributes(*test_message_1_flow_file, port, test_message_1_result.value().port());
+  check_for_attributes(*another_message_flow_file, port, another_message_result.value().port());
 }
 
 TEST_CASE("ListenUDP can be rescheduled", "[ListenUDP][NetworkListenerProcessor]") {
@@ -105,7 +105,7 @@ TEST_CASE("ListenUDP max queue and max batch size test", "[ListenUDP][NetworkLis
 
   controller.plan->scheduleProcessor(listen_udp);
   for (auto i = 0; i < 100; ++i) {
-    CHECK_THAT(utils::sendUdpDatagram({"test_message"}, endpoint).ec, MatchesSuccess());
+    CHECK(utils::sendUdpDatagram({"test_message"}, endpoint).has_value());
   }
 
   CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));

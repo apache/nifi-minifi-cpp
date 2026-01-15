@@ -34,7 +34,7 @@ void ListenUDP::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
 void ListenUDP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
   auto flow_file = session.create();
   session.writeBuffer(flow_file, message.message_data);
-  flow_file->setAttribute(PortOutputAttribute.name, std::to_string(message.local_port));
+  flow_file->setAttribute(ListeningPort.name, std::to_string(message.local_port));
   flow_file->setAttribute(SenderPort.name, std::to_string(message.remote_port));
   flow_file->setAttribute(Sender.name, message.remote_address.to_string());
   session.transfer(flow_file, Success);

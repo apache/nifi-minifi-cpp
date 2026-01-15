@@ -188,25 +188,26 @@ std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents
   return {};
 }
 
-UdpNetworkSendResult sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::expected<asio::ip::udp::endpoint, std::error_code> sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::udp::socket socket(io_context);
   std::error_code err;
   std::ignore = socket.open(remote_endpoint.protocol(), err);
-  if (err)
-    return {.ec = err};
+  if (err) {
+    return std::unexpected{err};
+  }
   socket.send_to(content, remote_endpoint, 0, err);
   if (err) {
-    return {.ec = err};
+    return std::unexpected{err};
   }
-  return {.ec = err, .local_endpoint = socket.local_endpoint()};
+  return socket.local_endpoint();
 }
 
-UdpNetworkSendResult sendUdpDatagram(const std::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::expected<asio::ip::udp::endpoint, std::error_code> sendUdpDatagram(const std::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
   return sendUdpDatagram(asio::const_buffer(content.data(), content.size()), remote_endpoint);
 }
 
-UdpNetworkSendResult sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::expected<asio::ip::udp::endpoint, std::error_code> sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
   return sendUdpDatagram(asio::buffer(content), remote_endpoint);
 }
 

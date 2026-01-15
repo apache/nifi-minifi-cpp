@@ -107,7 +107,7 @@ asio::awaitable<void> TcpServer::secureSession(asio::ip::tcp::socket socket, asi
     logger_->log_warn("Handshake with {} failed due to {}", remote_address, handshake_error.message());
     co_return;
   }
-  co_await readLoop(ssl_socket, remote_address, remote_port, local_port);  // NOLINT
+  co_await readLoop(ssl_socket, remote_address, remote_port, local_port);
 
   asio::error_code ec;
   std::ignore = ssl_socket.lowest_layer().cancel(ec);
