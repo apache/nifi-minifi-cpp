@@ -34,20 +34,23 @@ asio::awaitable<void> TcpServer::doReceive() {
       continue;
     }
     std::error_code error;
-    auto remote_address = socket.lowest_layer().remote_endpoint(error).address();
-    if (error)
+    auto remote_endpoint = socket.lowest_layer().remote_endpoint(error);
+    if (error) {
       logger_->log_warn("Error during fetching remote endpoint: {}", error.message());
+    }
     auto local_port = socket.lowest_layer().local_endpoint(error).port();
-    if (error)
+    if (error) {
       logger_->log_warn("Error during fetching local endpoint: {}", error.message());
-    if (ssl_data_)
-      co_spawn(io_context_, secureSession(std::move(socket), std::move(remote_address), local_port), asio::detached);
-    else
-      co_spawn(io_context_, insecureSession(std::move(socket), std::move(remote_address), local_port), asio::detached);
+    }
+    if (ssl_data_) {
+      co_spawn(io_context_, secureSession(std::move(socket), remote_endpoint.address(), remote_endpoint.port(), local_port), asio::detached);
+    } else {
+      co_spawn(io_context_, insecureSession(std::move(socket), remote_endpoint.address(), remote_endpoint.port(), local_port), asio::detached);
+    }
   }
 }
 
-asio::awaitable<void> TcpServer::readLoop(auto& socket, const auto& remote_address, const auto& local_port) {
+asio::awaitable<void> TcpServer::readLoop(auto& socket, asio::ip::address remote_address, asio::ip::port_type remote_port, asio::ip::port_type local_port) {
   std::string read_message;
   while (true) {
     auto [read_error, bytes_read] = co_await asio::async_read_until(socket, asio::dynamic_buffer(read_message), delimiter_, use_nothrow_awaitable);  // NOLINT
@@ -65,7 +68,7 @@ asio::awaitable<void> TcpServer::readLoop(auto& socket, const auto& remote_addre
 
     if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size()) {
       auto message_str = read_message.substr(0, bytes_read - (consume_delimiter_ ? delimiter_.size() : 0));
-      concurrent_queue_.enqueue(Message(std::move(message_str), IpProtocol::TCP, remote_address, local_port));
+      concurrent_queue_.enqueue(Message(std::move(message_str), IpProtocol::TCP, remote_address, remote_port, local_port));
     } else {
       logger_->log_warn("Queue is full. TCP message ignored.");
     }
@@ -73,8 +76,8 @@ asio::awaitable<void> TcpServer::readLoop(auto& socket, const auto& remote_addre
   }
 }
 
-asio::awaitable<void> TcpServer::insecureSession(asio::ip::tcp::socket socket, asio::ip::address remote_address, asio::ip::port_type local_port) {
-  co_return co_await readLoop(socket, remote_address, local_port);  // NOLINT
+asio::awaitable<void> TcpServer::insecureSession(asio::ip::tcp::socket socket, asio::ip::address remote_address, asio::ip::port_type remote_port, asio::ip::port_type local_port) {
+  co_return co_await readLoop(socket, remote_address, remote_port, local_port);  // NOLINT
 }
 
 namespace {
@@ -95,7 +98,7 @@ asio::ssl::context setupSslContext(SslServerOptions& ssl_data) {
 }
 }  // namespace
 
-asio::awaitable<void> TcpServer::secureSession(asio::ip::tcp::socket socket, asio::ip::address remote_address, asio::ip::port_type local_port) {
+asio::awaitable<void> TcpServer::secureSession(asio::ip::tcp::socket socket, asio::ip::address remote_address, asio::ip::port_type remote_port, asio::ip::port_type local_port) {
   gsl_Expects(ssl_data_);
   auto ssl_context = setupSslContext(*ssl_data_);
   SslSocket ssl_socket(std::move(socket), ssl_context);
@@ -104,7 +107,7 @@ asio::awaitable<void> TcpServer::secureSession(asio::ip::tcp::socket socket, asi
     logger_->log_warn("Handshake with {} failed due to {}", remote_address, handshake_error.message());
     co_return;
   }
-  co_await readLoop(ssl_socket, remote_address, local_port);  // NOLINT
+  co_await readLoop(ssl_socket, remote_address, remote_port, local_port);
 
   asio::error_code ec;
   std::ignore = ssl_socket.lowest_layer().cancel(ec);

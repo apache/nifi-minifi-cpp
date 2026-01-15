@@ -41,10 +41,10 @@ class TcpServer : public Server {
  protected:
   asio::awaitable<void> doReceive() override;
 
-  asio::awaitable<void> insecureSession(asio::ip::tcp::socket socket, asio::ip::address remote_address, asio::ip::port_type local_port);
-  asio::awaitable<void> secureSession(asio::ip::tcp::socket socket, asio::ip::address remote_address, asio::ip::port_type local_port);
+  asio::awaitable<void> insecureSession(asio::ip::tcp::socket socket, asio::ip::address remote_address, asio::ip::port_type remote_port, asio::ip::port_type local_port);
+  asio::awaitable<void> secureSession(asio::ip::tcp::socket socket, asio::ip::address remote_address, asio::ip::port_type remote_port, asio::ip::port_type local_port);
 
-  asio::awaitable<void> readLoop(auto& socket, const auto& remote_address, const auto& local_port);
+  asio::awaitable<void> readLoop(auto& socket, asio::ip::address remote_address, asio::ip::port_type remote_port, asio::ip::port_type local_port);
 
   bool consume_delimiter_;
   const std::string delimiter_;

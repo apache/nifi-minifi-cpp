@@ -43,8 +43,8 @@ void ListenTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
 void ListenTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
   auto flow_file = session.create();
   session.writeBuffer(flow_file, message.message_data);
-  flow_file->setAttribute("tcp.port", std::to_string(message.server_port));
-  flow_file->setAttribute("tcp.sender", message.sender_address.to_string());
+  flow_file->setAttribute("tcp.port", std::to_string(message.local_port));
+  flow_file->setAttribute("tcp.sender", message.remote_address.to_string());
   session.transfer(flow_file, Success);
 }
 

@@ -36,9 +36,8 @@ namespace org::apache::nifi::minifi::processors {
 namespace {
 std::optional<utils::net::Message> tryDequeueWithTimeout(utils::net::UdpServer& listener, std::chrono::milliseconds timeout = 200ms, std::chrono::milliseconds interval = 10ms) {
   auto start_time = std::chrono::system_clock::now();
-  utils::net::Message result;
   while (start_time + timeout > std::chrono::system_clock::now()) {
-    if (listener.tryDequeue(result))
+    if (const auto result = listener.tryDequeue())
       return result;
     std::this_thread::sleep_for(interval);
   }
@@ -80,7 +79,7 @@ TEST_CASE("PutUDP", "[putudp]") {
     REQUIRE(received_message);
     CHECK(received_message->message_data == message);
     CHECK(received_message->protocol == utils::net::IpProtocol::UDP);
-    CHECK(!received_message->sender_address.to_string().empty());
+    CHECK(!received_message->remote_address.to_string().empty());
   }
 
   {
@@ -94,7 +93,7 @@ TEST_CASE("PutUDP", "[putudp]") {
     REQUIRE(received_message);
     CHECK(received_message->message_data == message);
     CHECK(received_message->protocol == utils::net::IpProtocol::UDP);
-    CHECK(!received_message->sender_address.to_string().empty());
+    CHECK(!received_message->remote_address.to_string().empty());
   }
 
   {

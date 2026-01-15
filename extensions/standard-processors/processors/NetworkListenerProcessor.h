@@ -18,13 +18,11 @@
 
 #include <memory>
 #include <string>
-#include <utility>
+#include <thread>
 
 #include "core/ProcessorImpl.h"
-#include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "minifi-cpp/core/Property.h"
 #include "utils/net/Server.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -32,6 +30,10 @@ namespace org::apache::nifi::minifi::processors {
 class NetworkListenerProcessor : public core::ProcessorImpl {
  public:
   using ProcessorImpl::ProcessorImpl;
+  NetworkListenerProcessor(const NetworkListenerProcessor&) = delete;
+  NetworkListenerProcessor(NetworkListenerProcessor&&) = delete;
+  NetworkListenerProcessor& operator=(const NetworkListenerProcessor&) = delete;
+  NetworkListenerProcessor& operator=(NetworkListenerProcessor&&) = delete;
   ~NetworkListenerProcessor() override;
 
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;

@@ -47,9 +47,13 @@ class Server {
   bool queueEmpty() {
     return concurrent_queue_.empty();
   }
-  bool tryDequeue(utils::net::Message& received_message) {
-    return concurrent_queue_.tryDequeue(received_message);
+  std::optional<utils::net::Message> tryDequeue() {
+    return concurrent_queue_.tryDequeue();
   }
+  Server(const Server&) = delete;
+  Server(Server&&) = delete;
+  Server& operator=(const Server&) = delete;
+  Server& operator=(Server&&) = delete;
   virtual ~Server() {
     stop();
   }

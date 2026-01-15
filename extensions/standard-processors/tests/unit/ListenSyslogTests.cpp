@@ -273,8 +273,8 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     protocol = "UDP";
-    CHECK_THAT(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint), MatchesSuccess());
-    CHECK_THAT(utils::sendUdpDatagram(invalid_syslog, endpoint), MatchesSuccess());
+    CHECK(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint).has_value());
+    CHECK(utils::sendUdpDatagram(invalid_syslog, endpoint).has_value());
   }
 
   SECTION("TCP") {
@@ -329,18 +329,18 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
 
-    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint), MatchesSuccess());
-    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_2.unparsed_, endpoint), MatchesSuccess());
-    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_3.unparsed_, endpoint), MatchesSuccess());
-    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_4.unparsed_, endpoint), MatchesSuccess());
+    CHECK(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint).has_value());
+    CHECK(utils::sendUdpDatagram(rfc5424_doc_example_2.unparsed_, endpoint).has_value());
+    CHECK(utils::sendUdpDatagram(rfc5424_doc_example_3.unparsed_, endpoint).has_value());
+    CHECK(utils::sendUdpDatagram(rfc5424_doc_example_4.unparsed_, endpoint).has_value());
 
-    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_1.unparsed_, endpoint), MatchesSuccess());
-    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_2.unparsed_, endpoint), MatchesSuccess());
-    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_3.unparsed_, endpoint), MatchesSuccess());
-    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_4.unparsed_, endpoint), MatchesSuccess());
+    CHECK(utils::sendUdpDatagram(rfc3164_doc_example_1.unparsed_, endpoint).has_value());
+    CHECK(utils::sendUdpDatagram(rfc3164_doc_example_2.unparsed_, endpoint).has_value());
+    CHECK(utils::sendUdpDatagram(rfc3164_doc_example_3.unparsed_, endpoint).has_value());
+    CHECK(utils::sendUdpDatagram(rfc3164_doc_example_4.unparsed_, endpoint).has_value());
 
-    CHECK_THAT(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint), MatchesSuccess());
-    CHECK_THAT(utils::sendUdpDatagram(invalid_syslog, endpoint), MatchesSuccess());
+    CHECK(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint).has_value());
+    CHECK(utils::sendUdpDatagram(invalid_syslog, endpoint).has_value());
   }
 
   SECTION("TCP") {
@@ -456,7 +456,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     for (auto i = 0; i < 100; ++i) {
-      CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint), MatchesSuccess());
+      CHECK(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint).has_value());
     }
     CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
   }
