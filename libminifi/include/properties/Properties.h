@@ -125,7 +125,7 @@ class PropertiesImpl : public virtual Properties {
   std::map<std::string, std::string> getProperties() const override;
 
  private:
-  std::filesystem::path extra_properties_files_dir_name() const;
+  std::filesystem::path extraPropertiesFilesDirName() const;
   void setPropertiesFromFile(const std::filesystem::path& properties_file, std::string_view prefix);
 
   std::map<std::string, PropertyValue> properties_;

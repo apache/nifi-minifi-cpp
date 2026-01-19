@@ -187,7 +187,7 @@ void updateChangedPropertiesInPropertiesFile(minifi::PropertiesFile& current_con
 }
 }  // namespace
 
-std::filesystem::path PropertiesImpl::extra_properties_files_dir_name() const {
+std::filesystem::path PropertiesImpl::extraPropertiesFilesDirName() const {
   auto extra_properties_files_dir = base_properties_file_;
   extra_properties_files_dir += ".d";
   return extra_properties_files_dir;
@@ -215,7 +215,7 @@ void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuratio
   }
 
   properties_files_ = { base_properties_file_ };
-  const auto extra_properties_files_dir = extra_properties_files_dir_name();
+  const auto extra_properties_files_dir = extraPropertiesFilesDirName();
   const auto extra_properties_file_names = getExtraPropertiesFileNames(extra_properties_files_dir, logger_);
   for (const auto& file_name : extra_properties_file_names) {
     properties_files_.push_back(extra_properties_files_dir / file_name);
@@ -265,7 +265,7 @@ bool PropertiesImpl::commitChanges() {
     logger_->log_debug("commitChanges() called, but properties have not changed, nothing to do");
     return true;
   }
-  const auto output_file = (persist_to_ == PersistTo::SingleFile ? base_properties_file_ : extra_properties_files_dir_name() / C2PropertiesFileName);
+  const auto output_file = (persist_to_ == PersistTo::SingleFile ? base_properties_file_ : extraPropertiesFilesDirName() / C2PropertiesFileName);
   if (!std::filesystem::exists(output_file)) {
     logger_->log_debug("Configuration file {} does not exist yet, creating it", output_file);
     utils::file::create_dir(output_file.parent_path(), /* recursive = */ true);
