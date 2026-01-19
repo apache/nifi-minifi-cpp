@@ -40,6 +40,7 @@
 #include "utils/tls/DistinguishedName.h"
 #include "utils/tls/WindowsCertStoreLocation.h"
 #include "utils/TimeUtil.h"
+#include "core/controller/ControllerService.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
