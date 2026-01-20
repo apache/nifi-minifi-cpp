@@ -142,8 +142,8 @@ analytics:
                                        remove=True, stdout=True, stderr=True, network=self.network.name)
             return True
         except ContainerError as e:
-            stdout = e.stdout.decode("utf-8", errors="replace") if e.stdout else ""
-            stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else ""
+            stdout = e.stdout.decode("utf-8", errors="replace") if hasattr(e, "stdout") and e.stdout else ""
+            stderr = e.stderr.decode("utf-8", errors="replace") if hasattr(e, "stderr") and e.stderr else ""
             logging.error(f"Failed to run python command in grafana loki helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'")
             return False
         except Exception as e:

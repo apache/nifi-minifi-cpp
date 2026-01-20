@@ -207,4 +207,5 @@ exec \
     "${docker_dir}/../extensions/gcp/tests/features" \
     "${docker_dir}/../extensions/grafana-loki/tests/features" \
     "${docker_dir}/../extensions/lua/tests/features/" \
-    "${docker_dir}/../extensions/civetweb/tests/features/"
+    "${docker_dir}/../extensions/civetweb/tests/features/" \
+    "${docker_dir}/../extensions/mqtt/tests/features/"

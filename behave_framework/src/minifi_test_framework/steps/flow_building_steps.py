@@ -66,10 +66,16 @@ def step_impl(context: MinifiTestContext, processor_type: str, property_name: st
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
 
+@given('a {processor_type} processor with the name "{processor_name}" in the "{minifi_container_name}" flow')
+def step_impl(context: MinifiTestContext, processor_type: str, processor_name: str, minifi_container_name: str):
+    processor = Processor(processor_type, processor_name)
+    context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
+
+
 @given('a {processor_type} processor with the name "{processor_name}"')
 def step_impl(context: MinifiTestContext, processor_type: str, processor_name: str):
-    processor = Processor(processor_type, processor_name)
-    context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
+    context.execute_steps(
+        f'given a {processor_type} processor with the name "{processor_name}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 
 @given("a {processor_type} processor in the \"{minifi_container_name}\" flow")

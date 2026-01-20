@@ -63,8 +63,6 @@ class ImageStore:
             image = self.__build_http_proxy_image()
         elif container_engine == "postgresql-server":
             image = self.__build_postgresql_server_image()
-        elif container_engine == "mqtt-broker":
-            image = self.__build_mqtt_broker_image()
         else:
             raise Exception("There is no associated image for " + container_engine)
 
@@ -275,15 +273,6 @@ class ImageStore:
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (6, 'BaNaNa');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
                 """.format(base_image='postgres:17.4'))
-        return self.__build_image(dockerfile)
-
-    def __build_mqtt_broker_image(self):
-        dockerfile = dedent("""\
-            FROM {base_image}
-            RUN echo 'log_dest stderr' >> /mosquitto-no-auth.conf
-            CMD ["/usr/sbin/mosquitto", "--verbose", "--config-file", "/mosquitto-no-auth.conf"]
-            """.format(base_image='eclipse-mosquitto:2.0.14'))
-
         return self.__build_image(dockerfile)
 
     def __build_image(self, dockerfile, context_files=[]):

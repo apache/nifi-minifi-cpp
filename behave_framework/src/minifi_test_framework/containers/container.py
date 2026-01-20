@@ -20,6 +20,7 @@ import os
 import shlex
 import tempfile
 import tarfile
+import uuid
 
 import docker
 from docker.models.networks import Network
@@ -50,6 +51,23 @@ class Container:
     def add_host_file(self, host_path: str, container_path: str, mode: str = "ro"):
         self.host_files.append(HostFile(container_path, host_path, mode))
 
+    def add_file_to_running_container(self, content: str, path: str):
+        if not self.container:
+            logging.error("Container is not running. Cannot add file.")
+            raise RuntimeError("Container is not running. Cannot add file.")
+
+        mkdir_command = f"mkdir -p {shlex.quote(path)}"
+        exit_code, output = self.exec_run(mkdir_command)
+        if exit_code != 0:
+            logging.error(f"Error creating directory '{path}' in container: {output}")
+            raise RuntimeError(f"Error creating directory '{path}' in container: {output}")
+
+        file_name = str(uuid.uuid4())
+        exit_code, output = self.exec_run(f"sh -c \"printf %s '{content}' > {os.path.join(path, file_name)}\"")
+        if exit_code != 0:
+            logging.error(f"Error adding file to running container: {output}")
+            raise RuntimeError(f"Error adding file to running container: {output}")
+
     def _write_content_to_file(self, filepath: str, permissions: int | None, content: str | bytes):
         write_mode = "w"
         if isinstance(content, bytes):
@@ -74,7 +92,13 @@ class Container:
                 self._write_content_to_file(file_path, None, content)
             self.volumes[temp_path] = {"bind": directory.path, "mode": directory.mode}
 
+    def is_deployed(self) -> bool:
+        return self.container is not None
+
     def deploy(self) -> bool:
+        if self.is_deployed():
+            logging.info(f"Container '{self.container_name}' is already deployed.")
+            return True
         self._temp_dir = tempfile.TemporaryDirectory()
         self._configure_volumes_of_container_files()
         self._configure_volumes_of_container_dirs()

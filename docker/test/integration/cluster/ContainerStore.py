@@ -21,7 +21,6 @@ from .containers.NifiContainer import NiFiOptions
 from .containers.AzureStorageServerContainer import AzureStorageServerContainer
 from .containers.HttpProxyContainer import HttpProxyContainer
 from .containers.PostgreSQLServerContainer import PostgreSQLServerContainer
-from .containers.MqttBrokerContainer import MqttBrokerContainer
 from .containers.SyslogUdpClientContainer import SyslogUdpClientContainer
 from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
 from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
@@ -128,14 +127,6 @@ class ContainerStore:
                                                                         network=self.network,
                                                                         image_store=self.image_store,
                                                                         command=command))
-        elif engine == 'mqtt-broker':
-            return self.containers.setdefault(container_name,
-                                              MqttBrokerContainer(feature_context=feature_context,
-                                                                  name=container_name,
-                                                                  vols=self.vols,
-                                                                  network=self.network,
-                                                                  image_store=self.image_store,
-                                                                  command=command))
         elif engine == "syslog-udp-client":
             return self.containers.setdefault(container_name,
                                               SyslogUdpClientContainer(

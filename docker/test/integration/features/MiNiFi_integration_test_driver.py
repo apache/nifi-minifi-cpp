@@ -389,6 +389,3 @@ class MiNiFi_integration_test:
 
     def enable_ssl_in_nifi(self):
         self.cluster.enable_ssl_in_nifi()
-
-    def publish_test_mqtt_message(self, topic, message):
-        self.cluster.publish_test_mqtt_message(topic, message)

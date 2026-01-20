@@ -23,7 +23,6 @@ from .checkers.AzureChecker import AzureChecker
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.ModbusChecker import ModbusChecker
-from .checkers.MqttHelper import MqttHelper
 from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage
 
 
@@ -37,7 +36,6 @@ class DockerTestCluster:
         self.postgres_checker = PostgresChecker(self.container_communicator)
         self.prometheus_checker = PrometheusChecker()
         self.modbus_checker = ModbusChecker(self.container_communicator)
-        self.mqtt_helper = MqttHelper()
 
     def cleanup(self):
         self.container_store.cleanup()
@@ -278,6 +276,3 @@ class DockerTestCluster:
 
     def enable_ssl_in_nifi(self):
         self.container_store.enable_ssl_in_nifi()
-
-    def publish_test_mqtt_message(self, topic: str, message: str):
-        self.mqtt_helper.publish_test_mqtt_message(topic, message)

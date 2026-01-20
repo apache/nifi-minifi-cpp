@@ -82,8 +82,8 @@ class CouchbaseServerContainer(Container):
             self.client.containers.run("minifi-couchbase-helper:latest", ["python", "-c", command], remove=True, stdout=True, stderr=True, network=self.network.name)
             return True
         except ContainerError as e:
-            stdout = e.stdout.decode("utf-8", errors="replace") if e.stdout else ""
-            stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else ""
+            stdout = e.stdout.decode("utf-8", errors="replace") if hasattr(e, "stdout") and e.stdout else ""
+            stderr = e.stderr.decode("utf-8", errors="replace") if hasattr(e, "stderr") and e.stderr else ""
             logging.error(f"Python command '{command}' failed in couchbase helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'")
             return False
         except Exception as e:
