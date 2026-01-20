@@ -26,7 +26,6 @@ from .containers.SyslogUdpClientContainer import SyslogUdpClientContainer
 from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
 from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
 from .containers.PrometheusContainer import PrometheusContainer
-from .containers.MinifiC2ServerContainer import MinifiC2ServerContainer
 from .FeatureContext import FeatureContext
 
 
@@ -172,24 +171,6 @@ class ContainerStore:
                                                                   image_store=self.image_store,
                                                                   command=command,
                                                                   ssl=True))
-        elif engine == "minifi-c2-server":
-            return self.containers.setdefault(container_name,
-                                              MinifiC2ServerContainer(feature_context=feature_context,
-                                                                      name=container_name,
-                                                                      vols=self.vols,
-                                                                      network=self.network,
-                                                                      image_store=self.image_store,
-                                                                      command=command,
-                                                                      ssl=False))
-        elif engine == "minifi-c2-server-ssl":
-            return self.containers.setdefault(container_name,
-                                              MinifiC2ServerContainer(feature_context=feature_context,
-                                                                      name=container_name,
-                                                                      vols=self.vols,
-                                                                      network=self.network,
-                                                                      image_store=self.image_store,
-                                                                      command=command,
-                                                                      ssl=True))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
@@ -230,15 +211,6 @@ class ContainerStore:
 
     def enable_provenance_repository_in_minifi(self):
         self.minifi_options.enable_provenance = True
-
-    def enable_c2_in_minifi(self):
-        self.minifi_options.enable_c2 = True
-
-    def enable_c2_with_ssl_in_minifi(self):
-        self.minifi_options.enable_c2_with_ssl = True
-
-    def fetch_flow_config_from_c2_url_in_minifi(self):
-        self.minifi_options.use_flow_config_from_url = True
 
     def set_ssl_context_properties_in_minifi(self):
         self.minifi_options.set_ssl_context_properties = True

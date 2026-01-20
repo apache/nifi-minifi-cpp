@@ -196,7 +196,7 @@ def step_impl(context: MinifiTestContext, content: str, directory: str, duration
 
 
 @then('after a wait of {duration}, at least {lower_bound:d} and at most {upper_bound:d} files are produced and placed in the "{directory}" directory')
-def step_impl(context, lower_bound, upper_bound, duration, directory):
+def step_impl(context: MinifiTestContext, lower_bound: int, upper_bound: int, duration: str, directory: str):
     duration_seconds = humanfriendly.parse_timespan(duration)
     assert check_condition_after_wait(condition=lambda: context.get_default_minifi_container().get_number_of_files(directory) >= lower_bound
                                       and context.get_default_minifi_container().get_number_of_files(directory) <= upper_bound,
@@ -204,7 +204,7 @@ def step_impl(context, lower_bound, upper_bound, duration, directory):
 
 
 @then('exactly these files are in the "{directory}" directory in less than {duration}: "{contents}"')
-def step_impl(context, directory, duration, contents):
+def step_impl(context: MinifiTestContext, directory: str, duration: str, contents: str):
     if not contents:
         context.execute_steps(f'then no files are placed in the "{directory}" directory in {duration} of running time')
         return
@@ -221,7 +221,7 @@ def step_impl(context, directory, duration):
 
 
 @then("at least one empty file is placed in the \"{directory}\" directory in less than {duration}")
-def step_impl(context, directory, duration):
+def step_impl(context: MinifiTestContext, directory: str, duration: str):
     timeout_in_seconds = humanfriendly.parse_timespan(duration)
     assert wait_for_condition(
         condition=lambda: context.get_default_minifi_container().directory_contains_empty_file(directory),
@@ -229,7 +229,7 @@ def step_impl(context, directory, duration):
 
 
 @then("in the \"{container_name}\" container at least one empty file is placed in the \"{directory}\" directory in less than {duration}")
-def step_impl(context, container_name, directory, duration):
+def step_impl(context: MinifiTestContext, container_name: str, directory: str, duration: str):
     timeout_in_seconds = humanfriendly.parse_timespan(duration)
     if container_name == "nifi":
         assert wait_for_condition(
@@ -242,7 +242,7 @@ def step_impl(context, container_name, directory, duration):
 
 
 @then("in the \"{container_name}\" container at least one file with minimum size of \"{size}\" is placed in the \"{directory}\" directory in less than {duration}")
-def step_impl(context, container_name: str, directory: str, size: str, duration: str):
+def step_impl(context: MinifiTestContext, container_name: str, directory: str, size: str, duration: str):
     timeout_in_seconds = humanfriendly.parse_timespan(duration)
     size_in_bytes = humanfriendly.parse_size(size)
     assert wait_for_condition(
@@ -251,6 +251,14 @@ def step_impl(context, container_name: str, directory: str, size: str, duration:
 
 
 @then("at least one file with minimum size of \"{size}\" is placed in the \"{directory}\" directory in less than {duration}")
-def step_impl(context, directory: str, size: str, duration: str):
+def step_impl(context: MinifiTestContext, directory: str, size: str, duration: str):
     context.execute_steps(
         f'Then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container at least one file with minimum size of "{size}" is placed in the "{directory}" directory in less than {duration}')
+
+
+@then("the MiNiFi C2 server logs contain the following message: \"{log_message}\" in less than {duration}")
+def step_impl(context: MinifiTestContext, log_message: str, duration: str):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    assert wait_for_condition(condition=lambda: log_message in context.get_minifi_container("minifi-c2-server").get_logs(),
+                              timeout_seconds=duration_seconds, bail_condition=lambda: context.get_minifi_container("minifi-c2-server").exited,
+                              context=context)
