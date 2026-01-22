@@ -115,9 +115,9 @@ class HttpStream : public io::BaseStreamImpl {
 
   inline bool isFinished(int seconds = 0) {
     return http_client_future_.wait_for(std::chrono::seconds(seconds)) == std::future_status::ready
-        && dynamic_cast<utils::ByteOutputCallback*>(http_client_->getReadCallback())
-        && dynamic_cast<utils::ByteOutputCallback*>(http_client_->getReadCallback())->getSize() == 0
-        && dynamic_cast<utils::ByteOutputCallback*>(http_client_->getReadCallback())->waitingOps();
+        && getByteOutputReadCallback()
+        && getByteOutputReadCallback()->getSize() == 0
+        && getByteOutputReadCallback()->waitingOps();
   }
 
   /**
@@ -127,11 +127,11 @@ class HttpStream : public io::BaseStreamImpl {
     do {
       logger_->log_trace("Waiting for more data");
     } while (http_client_future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready
-        && dynamic_cast<utils::ByteOutputCallback*>(http_client_->getReadCallback())
-        && dynamic_cast<utils::ByteOutputCallback*>(http_client_->getReadCallback())->getSize() == 0);
+        && getByteOutputReadCallback()
+        && getByteOutputReadCallback()->getSize() == 0);
 
-    return dynamic_cast<utils::ByteOutputCallback*>(http_client_->getReadCallback())
-        && dynamic_cast<utils::ByteOutputCallback*>(http_client_->getReadCallback())->getSize() > 0;
+    return getByteOutputReadCallback()
+        && getByteOutputReadCallback()->getSize() > 0;
   }
 
  protected:
@@ -147,6 +147,10 @@ class HttpStream : public io::BaseStreamImpl {
   std::atomic<bool> started_{false};
 
  private:
+  utils::ByteOutputCallback* getByteOutputReadCallback() {
+    return dynamic_cast<utils::ByteOutputCallback*>(http_client_->getReadCallback());
+  }
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HttpStream>::getLogger();
 };
 }  // namespace org::apache::nifi::minifi::http

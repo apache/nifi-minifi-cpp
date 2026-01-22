@@ -828,7 +828,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     });
   }
 
-  auto result = asset_manager_->sync(asset_layout, [&] (std::string_view url, std::filesystem::path file_path) -> nonstd::expected<void, std::string> {
+  auto result = asset_manager_->sync(asset_layout, [&] (std::string_view url, const std::filesystem::path& file_path) -> nonstd::expected<void, std::string> {
     auto resolved_url = resolveUrl(std::string{url});
     if (!resolved_url) {
       return nonstd::make_unexpected("Couldn't resolve url");
@@ -847,7 +847,13 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     });
     file.close();
     if (!file || !success) {
-      std::filesystem::remove(file_path);
+      std::error_code ec;
+      std::filesystem::remove(file_path, ec);
+      if (ec) {
+        logger_->log_error("Failed remove partial asset file '{}'", file_path.string());
+      } else {
+        logger_->log_info("Successfully removed partial asset file '{}'", file_path.string());
+      }
       return nonstd::make_unexpected(fmt::format("Failed to fetch asset from '{}'", url));
     }
     return {};

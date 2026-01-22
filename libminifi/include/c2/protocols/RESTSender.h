@@ -77,7 +77,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
   RequestEncoding req_encoding_ = RequestEncoding::none;
 
  private:
-  std::optional<std::chrono::milliseconds> asset_download_timeout_;
+  std::chrono::milliseconds asset_download_timeout_{std::chrono::seconds{0}};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTSender>::getLogger();
 };
 
