@@ -34,7 +34,7 @@ class PropertyValidator;
 
 class ConfigurationImpl : public PropertiesImpl, public virtual Configuration {
  public:
-  ConfigurationImpl() : PropertiesImpl("MiNiFi configuration") {}
+  ConfigurationImpl() : PropertiesImpl(PersistTo::MultipleFiles, "MiNiFi configuration") {}
 };
 
 }  // namespace org::apache::nifi::minifi

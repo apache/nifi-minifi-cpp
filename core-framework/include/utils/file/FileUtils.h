@@ -242,6 +242,12 @@ inline int copy_file(const std::filesystem::path& path_from, const std::filesyst
   return 0;
 }
 
+inline bool move_file(const std::filesystem::path& source_path, const std::filesystem::path& dest_path) {
+  std::error_code ec;
+  std::filesystem::rename(source_path, dest_path, ec);
+  return !ec;
+}
+
 inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logger> &logger,
                                       const std::filesystem::path& originalPath,
                                       const std::filesystem::path& extension,

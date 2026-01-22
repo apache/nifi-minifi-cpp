@@ -58,10 +58,9 @@ ${WIX_EXTRA_FEATURES}
     <Feature Id="InstallConf" Title="Apache NiFi MiNiFi C++ Configuration" AllowAdvertise="yes"  Level="1">
       <ComponentRef Id="LOGPROP"/>
       <ComponentRef Id="UIDPROP"/>
-      <ComponentRef Id="CONFIGFILE"/>
-      <ComponentRef Id="OPENSSLCONFCOMP"/>
       <ComponentRef Id="UpdateConfig"/>
-      <ComponentRef Id="UpdateConfigNotExist"/>
+      <ComponentRef Id="MINIFIPROP"/>
+      <ComponentRef Id="OPENSSLCONFCOMP"/>
     </Feature>
 
 <?ifdef INCLUDE_PYTHON_PROCESSORS?>
@@ -263,16 +262,16 @@ ${WIX_EXTRA_FEATURES}
 
     </UI>
 
-    <Property Id="AGENT_CLASS"  Value="Your Agent Class" />
-    <Property Id="AGENT_IDENTIFIER"  />
-    <Property Id="AGENT_HEARTBEAT"  Value="30 sec" />
-    <Property Id="SERVER_PATH_BASE"  Value="http://localhost:8181/api" />
-    <Property Id="SERVER_HEARTBEAT"  Value="/c2-protocol/heartbeat" />
-    <Property Id="SERVER_ACK"  Value="/c2-protocol/acknowledge" />
-    <Property Id="ENABLEC2" />
-    <Property Id="AUTOSTART" Value="1" />
-    <Property Id="SERVICEACCOUNT" Value="LocalSystem" />
-    <Property Id="SERVICEACCOUNTPASSWORD" />
+    <Property Id="AGENT_CLASS" Secure="yes" Value="Your Agent Class" />
+    <Property Id="AGENT_IDENTIFIER" Secure="yes" />
+    <Property Id="AGENT_HEARTBEAT" Secure="yes" Value="30 sec" />
+    <Property Id="SERVER_PATH_BASE" Secure="yes" Value="http://localhost:8181/api" />
+    <Property Id="SERVER_HEARTBEAT" Secure="yes" Value="/c2-protocol/heartbeat" />
+    <Property Id="SERVER_ACK" Secure="yes" Value="/c2-protocol/acknowledge" />
+    <Property Id="ENABLEC2" Secure="yes" />
+    <Property Id="AUTOSTART" Secure="yes" Value="1" />
+    <Property Id="SERVICEACCOUNT" Secure="yes" Value="LocalSystem" />
+    <Property Id="SERVICEACCOUNTPASSWORD" Secure="yes" />
 
     <SetProperty Id="AGENT_IDENTIFIER" After="AppSearch" Value="[ComputerName]" Sequence="first" />
     <SetProperty Id="ENABLEC2" After="AppSearch" Value="0" Sequence="first" >
@@ -303,27 +302,22 @@ ${WIX_EXTRA_FEATURES}
                 <File Id="UID" Source="conf/minifi-uid.properties" KeyPath="yes"/>
               </Component>
 
-              <Component Id="CONFIGFILE" Guid="87658309-0339-425c-8633-f54ffaaa4944">
-                <File Id="CONFIG" Source="conf/config.yml" KeyPath="yes"/>
-              </Component>
+              <Directory Id="MINIFIPROP.D" Name="minifi.properties.d">
+                <Component Id="UpdateConfig" Guid="87658309-0339-425c-8633-f54ffaaa4945" Permanent="yes">
+                  <CreateFolder />
+                  <IniFile Id="ConfigFileA" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.class" Value="[AGENT_CLASS]" />
+                  <IniFile Id="ConfigFileI" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.identifier" Value="[AGENT_IDENTIFIER]" />
+                  <IniFile Id="ConfigFileE" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.enable" Value="true" />
+                  <IniFile Id="ConfigFileT" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.agent.heartbeat.period" Value="[AGENT_HEARTBEAT]" />
+                  <IniFile Id="ConfigFileS" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.path.base" Value="[SERVER_PATH_BASE]" />
+                  <IniFile Id="ConfigFileH" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.url" Value="[SERVER_HEARTBEAT]" />
+                  <IniFile Id="ConfigFileAck" Action="addLine" Name="10_installer.properties" Directory="MINIFIPROP.D" Section="c2props" Key="nifi.c2.rest.url.ack" Value="[SERVER_ACK]" />
+                  <Condition><![CDATA[ENABLEC2="1"]]></Condition>
+                </Component>
+              </Directory>
 
-              <Component Id="UpdateConfig" Guid="87658309-0339-425c-8633-f54ffaaa4945">
-
-                <File Source="conf/minifi.properties" Id="minifiprops" KeyPath="yes" />
-
-                <IniFile Id="ConfigFileA" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.class" Value="[AGENT_CLASS]" />
-                <IniFile Id="ConfigFileI" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.identifier" Value="[AGENT_IDENTIFIER]" />
-                <IniFile Id="ConfigFileE" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.enable" Value="true" />
-                <IniFile Id="ConfigFileT" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.heartbeat.period" Value="[AGENT_HEARTBEAT]" />
-                <IniFile Id="ConfigFileS" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.path.base" Value="[SERVER_PATH_BASE]" />
-                <IniFile Id="ConfigFileH" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.url" Value="[SERVER_HEARTBEAT]" />
-                <IniFile Id="ConfigFileAck" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.rest.url.ack" Value="[SERVER_ACK]" />
-                <Condition><![CDATA[ENABLEC2="1"]]></Condition>
-              </Component>
-              <Component Id="UpdateConfigNotExist" Guid="87658309-0339-425c-8633-f54ffaaa4946">
-
-                <File Source="conf/minifi.properties" Id="minifiprops2" KeyPath="yes" />
-                <Condition><![CDATA[ENABLEC2<>"1"]]></Condition>
+              <Component Id="MINIFIPROP" Guid="87658309-0339-425c-8633-f54ffaaa4946">
+                <File Id="PROPERTIES" Source="conf/minifi.properties" KeyPath="yes" />
               </Component>
             </Directory>
 
