@@ -159,28 +159,3 @@ TEST_CASE("ProcessContextExpr can use expression language in dynamic properties"
     }
   }
 }
-
-TEST_CASE("ProcessContextExpr is mutex guarded properly") {
-  TestController test_controller;
-  const std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
-  std::ignore = test_plan->addProcessor("DummyProcessor", "dummy_processor");
-  test_plan->runNextProcessor();
-  const auto context = test_plan->getCurrentContext();
-  REQUIRE(dynamic_pointer_cast<core::ProcessContextImpl>(context) != nullptr);
-
-  auto play_with_context = [=]() {
-    for (auto i = 0; i < 100; ++i) {
-      CHECK(context->setDynamicProperty("foo", fmt::format("${{literal('{}')}}", std::this_thread::get_id())));
-      const auto dynamic_properties = context->getDynamicProperties();
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-  };
-
-  std::thread thread_one{play_with_context};
-  std::thread thread_two{play_with_context};
-  std::thread thread_three{play_with_context};
-
-  REQUIRE_NOTHROW(thread_one.join());
-  REQUIRE_NOTHROW(thread_two.join());
-  REQUIRE_NOTHROW(thread_three.join());
-}

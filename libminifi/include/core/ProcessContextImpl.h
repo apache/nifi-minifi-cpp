@@ -206,7 +206,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   gsl::not_null<std::shared_ptr<Configure>> configure_;
   std::unique_ptr<ProcessorInfo> info_;
 
-  mutable std::mutex mutex_;
+  // each ProcessContextImpl instance is only accessed from one thread at a time, so no synchronization is needed on these caches
   mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_expressions_;
   mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_dynamic_expressions_;
 };
