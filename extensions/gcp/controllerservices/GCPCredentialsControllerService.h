@@ -28,7 +28,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
 
-#include "google/cloud/storage/oauth2/credentials.h"
+#include "google/cloud/credentials.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 enum class CredentialsLocation {
@@ -113,12 +113,11 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
   [[nodiscard]] const auto& getCredentials() const { return credentials_; }
 
  protected:
-  [[nodiscard]] std::shared_ptr<google::cloud::storage::oauth2::Credentials> createDefaultCredentials() const;
-  [[nodiscard]] std::shared_ptr<google::cloud::storage::oauth2::Credentials> createCredentialsFromJsonPath() const;
-  [[nodiscard]] std::shared_ptr<google::cloud::storage::oauth2::Credentials> createCredentialsFromJsonContents() const;
+  [[nodiscard]] std::shared_ptr<google::cloud::Credentials> createCredentialsFromJsonPath() const;
+  [[nodiscard]] std::shared_ptr<google::cloud::Credentials> createCredentialsFromJsonContents() const;
 
 
-  std::shared_ptr<google::cloud::storage::oauth2::Credentials> credentials_;
+  std::shared_ptr<google::cloud::Credentials> credentials_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GCPCredentialsControllerService>::getLogger(uuid_);
 };
 }  // namespace org::apache::nifi::minifi::extensions::gcp

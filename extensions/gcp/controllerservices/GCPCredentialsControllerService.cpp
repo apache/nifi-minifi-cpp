@@ -21,8 +21,7 @@
 #include "core/Resource.h"
 #include "google/cloud/storage/client.h"
 #include "utils/ProcessorConfigUtils.h"
-
-namespace gcs = ::google::cloud::storage;
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
@@ -30,43 +29,24 @@ void GCPCredentialsControllerService::initialize() {
   setSupportedProperties(Properties);
 }
 
-std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createDefaultCredentials() const {
-  auto default_credentials = gcs::oauth2::CreateServiceAccountCredentialsFromDefaultPaths();
-  if (!default_credentials.ok()) {
-    logger_->log_error("{}", default_credentials.status().message());
-    return nullptr;
-  }
-  return *default_credentials;
-}
-
-std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonPath() const {
+std::shared_ptr<google::cloud::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonPath() const {
   const auto json_path = getProperty(JsonFilePath.name);
   if (!json_path) {
     logger_->log_error("Missing or invalid {}", JsonFilePath.name);
     return nullptr;
   }
 
-  auto json_path_credentials = gcs::oauth2::CreateServiceAccountCredentialsFromJsonFilePath(*json_path);
-  if (!json_path_credentials.ok()) {
-    logger_->log_error("{}", json_path_credentials.status().message());
-    return nullptr;
-  }
-  return *json_path_credentials;
+  return google::cloud::MakeServiceAccountCredentials(utils::file::get_content(*json_path));
 }
 
-std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonContents() const {
+std::shared_ptr<google::cloud::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonContents() const {
   auto json_contents = getProperty(JsonContents.name);
   if (!json_contents) {
     logger_->log_error("Missing or invalid {}", JsonContents.name);
     return nullptr;
   }
 
-  auto json_path_credentials = gcs::oauth2::CreateServiceAccountCredentialsFromJsonContents(*json_contents);
-  if (!json_path_credentials.ok()) {
-    logger_->log_error("{}", json_path_credentials.status().message());
-    return nullptr;
-  }
-  return *json_path_credentials;
+  return google::cloud::MakeServiceAccountCredentials(*json_contents);
 }
 
 void GCPCredentialsControllerService::onEnable() {
@@ -79,15 +59,15 @@ void GCPCredentialsControllerService::onEnable() {
     credentials_location = CredentialsLocation::USE_DEFAULT_CREDENTIALS;
   }
   if (*credentials_location == CredentialsLocation::USE_DEFAULT_CREDENTIALS) {
-    credentials_ = createDefaultCredentials();
+    credentials_ = google::cloud::MakeGoogleDefaultCredentials();
   } else if (*credentials_location == CredentialsLocation::USE_COMPUTE_ENGINE_CREDENTIALS) {
-    credentials_ = gcs::oauth2::CreateComputeEngineCredentials();
+    credentials_ = google::cloud::MakeComputeEngineCredentials();
   } else if (*credentials_location == CredentialsLocation::USE_JSON_FILE) {
     credentials_ = createCredentialsFromJsonPath();
   } else if (*credentials_location == CredentialsLocation::USE_JSON_CONTENTS) {
     credentials_ = createCredentialsFromJsonContents();
   } else if (*credentials_location == CredentialsLocation::USE_ANONYMOUS_CREDENTIALS) {
-    credentials_ = gcs::oauth2::CreateAnonymousCredentials();
+    credentials_ = google::cloud::MakeInsecureCredentials();
   }
   if (!credentials_)
     logger_->log_error("Couldn't create valid credentials");
