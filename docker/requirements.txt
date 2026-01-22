@@ -3,7 +3,7 @@ shortuuid==1.0.13
 behavex==4.1.0
 docker==7.1.0
 PyYAML==6.0.2
-m2crypto==0.41.0
+m2crypto==0.46.2
 watchdog==6.0.0
 pyopenssl==25.0.0
 azure-storage-blob==12.24.1
