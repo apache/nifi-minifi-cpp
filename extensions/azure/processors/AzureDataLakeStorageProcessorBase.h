@@ -56,7 +56,7 @@ class AzureDataLakeStorageProcessorBase : public AzureStorageProcessorBase {
 
   ~AzureDataLakeStorageProcessorBase() override = default;
 
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& sessionFactory) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
   explicit AzureDataLakeStorageProcessorBase(core::ProcessorMetadata metadata, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)

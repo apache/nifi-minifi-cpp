@@ -31,7 +31,7 @@ class S3ServerContainer(Container):
         finished_str = "Started S3MockApplication"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
-            timeout_seconds=15,
+            timeout_seconds=60,
             bail_condition=lambda: self.exited,
             context=None)
 

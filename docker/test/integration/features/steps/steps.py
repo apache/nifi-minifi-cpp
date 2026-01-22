@@ -25,6 +25,7 @@ from minifi.controllers.JsonTreeReader import JsonTreeReader
 from minifi.controllers.XMLReader import XMLReader
 from minifi.controllers.XMLRecordSetWriter import XMLRecordSetWriter
 from minifi.controllers.XMLReader import XMLReader
+from minifi.controllers.ProxyConfigurationService import ProxyConfigurationService
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -401,6 +402,18 @@ def step_impl(context):
 @given("a http proxy server is set up accordingly")
 def step_impl(context):
     context.test.acquire_container(context=context, name="http-proxy", engine="http-proxy")
+
+
+@given("a ProxyConfigurationService controller service is set up with HTTP proxy configuration in the \"{container_name}\" flow")
+def step_impl(context, container_name):
+    proxy_service = ProxyConfigurationService("ProxyConfigurationService", host=f"http-proxy-{context.feature_id}", port=3128, username="admin", password="test101")
+    container = context.test.acquire_container(context=context, name=container_name)
+    container.add_controller(proxy_service)
+
+
+@given("a ProxyConfigurationService controller service is set up with HTTP proxy configuration")
+def step_impl(context):
+    context.execute_steps("given a ProxyConfigurationService controller service is set up with HTTP proxy configuration in the \"{container_name}\" flow".format(container_name="minifi-cpp-flow"))
 
 
 # TLS

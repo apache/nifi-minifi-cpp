@@ -25,7 +25,8 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-void AzureDataLakeStorageProcessorBase::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+void AzureDataLakeStorageProcessorBase::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  AzureStorageProcessorBase::onSchedule(context, session_factory);
   std::optional<storage::AzureStorageCredentials> credentials;
   std::tie(std::ignore, credentials) = getCredentialsFromControllerService(context);
   if (!credentials) {
@@ -51,6 +52,7 @@ bool AzureDataLakeStorageProcessorBase::setCommonParameters(storage::AzureDataLa
   }
 
   params.directory_name = context.getProperty(DirectoryName, flow_file).value_or("");
+  params.proxy_configuration = proxy_configuration_;
 
   return true;
 }

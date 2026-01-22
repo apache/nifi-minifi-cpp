@@ -35,11 +35,21 @@ AzureDataLakeStorageClient::AzureDataLakeStorageClient() {
   utils::AzureSdkLogger::initialize();
 }
 
-std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> AzureDataLakeStorageClient::createClient(
-    const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries) {
+std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> AzureDataLakeStorageClient::createClient(const AzureStorageCredentials& credentials,
+    const std::string& file_system_name, std::optional<uint64_t> number_of_retries, const std::optional<minifi::controllers::ProxyConfiguration>& proxy_configuration) {
   Azure::Storage::Files::DataLake::DataLakeClientOptions options;
   if (number_of_retries) {
     options.Retry.MaxRetries = gsl::narrow<int32_t>(*number_of_retries);
+  }
+
+  if (proxy_configuration) {
+    options.Transport.HttpProxy = proxy_configuration->proxy_host + (proxy_configuration->proxy_port ? (":" + std::to_string(*proxy_configuration->proxy_port)) : "");
+    if (proxy_configuration->proxy_user) {
+      options.Transport.ProxyUserName = *proxy_configuration->proxy_user;
+    }
+    if (proxy_configuration->proxy_password) {
+      options.Transport.ProxyPassword = *proxy_configuration->proxy_password;
+    }
   }
 
   if (credentials.getCredentialConfigurationStrategy() == CredentialConfigurationStrategyOption::FromProperties) {
@@ -53,7 +63,7 @@ std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> Azure
 }
 
 Azure::Storage::Files::DataLake::DataLakeDirectoryClient AzureDataLakeStorageClient::getDirectoryClient(const AzureDataLakeStorageParameters& params) {
-  auto client = createClient(params.credentials, params.file_system_name, params.number_of_retries);
+  auto client = createClient(params.credentials, params.file_system_name, params.number_of_retries, params.proxy_configuration);
   return client->GetDirectoryClient(params.directory_name);
 }
 
@@ -104,7 +114,7 @@ std::unique_ptr<io::InputStream> AzureDataLakeStorageClient::fetchFile(const Fet
 std::vector<Azure::Storage::Files::DataLake::Models::PathItem> AzureDataLakeStorageClient::listDirectory(const ListAzureDataLakeStorageParameters& params) {
   std::vector<Azure::Storage::Files::DataLake::Models::PathItem> result;
   if (params.directory_name.empty()) {
-    auto client = createClient(params.credentials, params.file_system_name, params.number_of_retries);
+    auto client = createClient(params.credentials, params.file_system_name, params.number_of_retries, params.proxy_configuration);
     for (auto page_result = client->ListPaths(params.recurse_subdirectories); page_result.HasPage(); page_result.MoveToNextPage()) {
       result.insert(result.end(), page_result.Paths.begin(), page_result.Paths.end());
     }
