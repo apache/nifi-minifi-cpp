@@ -26,7 +26,7 @@
 #include "minifi-cpp/io/BaseStream.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/state/nodes/StateMonitor.h"
-#include "minifi-cpp/core/controller/ControllerServiceProvider.h"
+#include "core/controller/ControllerServiceProvider.h"
 #include "ControllerSocketReporter.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "asio/ip/tcp.hpp"

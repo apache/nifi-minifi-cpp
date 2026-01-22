@@ -48,7 +48,6 @@ class MockCouchbaseClusterService : public controllers::CouchbaseClusterService 
  public:
   using CouchbaseClusterService::CouchbaseClusterService;
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void onEnable() override {}
   void notifyStop() override {}

@@ -17,13 +17,15 @@
 #pragma once
 
 #include "minifi-cpp/controllers/RecordSetWriter.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class RecordSetWriterImpl : public virtual controller::ControllerServiceImpl, public virtual RecordSetWriter {
+class RecordSetWriterImpl : public controller::ControllerServiceBase, public RecordSetWriter {
  public:
-  using ControllerServiceImpl::ControllerServiceImpl;
+  using ControllerServiceBase::ControllerServiceBase;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 };
 
 }  // namespace org::apache::nifi::minifi::core

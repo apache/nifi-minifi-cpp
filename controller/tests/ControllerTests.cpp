@@ -228,8 +228,7 @@ class ControllerTestFixture {
     configuration_->set(minifi::Configure::nifi_security_client_private_key, (minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "minifi-cpp-flow.key").string());
     configuration_->set(minifi::Configure::nifi_security_client_pass_phrase, "abcdefgh");
     configuration_->set(minifi::Configure::nifi_security_client_ca_certificate, (minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "root-ca.pem").string());
-    ssl_context_service_ = std::make_shared<controllers::SSLContextService>("SSLContextService", configuration_);
-    ssl_context_service_->onEnable();
+    ssl_context_service_ = controllers::SSLContextService::createAndEnable("SSLContextService", configuration_);
     controller_socket_data_.host = "localhost";
     controller_socket_data_.port = 9997;
   }

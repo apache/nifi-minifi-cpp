@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "C2Payload.h"
-#include "minifi-cpp/core/controller/ControllerServiceProvider.h"
+#include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
 #include "core/Connectable.h"
 namespace org::apache::nifi::minifi::c2 {

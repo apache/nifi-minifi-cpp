@@ -23,13 +23,13 @@
 #include <string>
 
 #include "ControllerServiceProvider.h"
-#include "minifi-cpp/core/controller/ControllerServiceNode.h"
+#include "ControllerServiceNode.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ForwardingControllerServiceProvider : public ControllerServiceProviderImpl {
+class ForwardingControllerServiceProvider : public ControllerServiceProvider {
  public:
-  using ControllerServiceProviderImpl::ControllerServiceProviderImpl;
+  using ControllerServiceProvider::ControllerServiceProvider;
 
   std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &id) override {
     return controller_service_provider_impl_->createControllerService(type, id);
@@ -57,18 +57,6 @@ class ForwardingControllerServiceProvider : public ControllerServiceProviderImpl
 
   std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() override {
     return controller_service_provider_impl_->getAllControllerServices();
-  }
-
-  bool isControllerServiceEnabled(const std::string &identifier) override {
-    return controller_service_provider_impl_->isControllerServiceEnabled(identifier);
-  }
-
-  bool isControllerServiceEnabling(const std::string &identifier) override {
-    return controller_service_provider_impl_->isControllerServiceEnabling(identifier);
-  }
-
-  const std::string getControllerServiceName(const std::string &identifier) const override {
-    return controller_service_provider_impl_->getControllerServiceName(identifier);
   }
 
   void enableAllControllerServices() override {

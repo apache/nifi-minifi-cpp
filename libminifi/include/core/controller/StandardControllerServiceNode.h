@@ -23,22 +23,23 @@
 
 #include "core/Core.h"
 #include "ControllerServiceNode.h"
+#include "ControllerServiceProvider.h"
 #include "core/logging/LoggerFactory.h"
 #include "core/ProcessGroup.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class StandardControllerServiceNode : public ControllerServiceNodeImpl {
+class StandardControllerServiceNode : public ControllerServiceNode {
  public:
   explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::shared_ptr<ControllerServiceProvider> provider, std::string id,
                                          std::shared_ptr<Configure> configuration)
-      : ControllerServiceNodeImpl(std::move(service), std::move(id), std::move(configuration)),
+      : ControllerServiceNode(std::move(service), std::move(id), std::move(configuration)),
         provider(std::move(provider)),
         logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
 
   explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
-      : ControllerServiceNodeImpl(std::move(service), std::move(id), std::move(configuration)),
+      : ControllerServiceNode(std::move(service), std::move(id), std::move(configuration)),
         provider(nullptr),
         logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
@@ -47,7 +48,7 @@ class StandardControllerServiceNode : public ControllerServiceNodeImpl {
   StandardControllerServiceNode &operator=(const StandardControllerServiceNode &parent) = delete;
 
   void initialize() override {
-    ControllerServiceNodeImpl::initialize();
+    ControllerServiceNode::initialize();
     active = false;
   }
 

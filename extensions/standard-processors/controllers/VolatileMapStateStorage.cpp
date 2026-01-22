@@ -20,17 +20,8 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-VolatileMapStateStorage::VolatileMapStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : KeyValueStateStorage(name, uuid) {
-}
-
-VolatileMapStateStorage::VolatileMapStateStorage(const std::string& name, const std::shared_ptr<Configure> &configuration)
-    : KeyValueStateStorage(name) {
-  setConfiguration(configuration);
-}
-
 void VolatileMapStateStorage::initialize() {
-  ControllerServiceImpl::initialize();
+  ControllerServiceBase::initialize();
   setSupportedProperties(Properties);
 }
 

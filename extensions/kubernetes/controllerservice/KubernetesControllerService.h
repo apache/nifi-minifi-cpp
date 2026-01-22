@@ -33,8 +33,7 @@ namespace org::apache::nifi::minifi::controllers {
 
 class KubernetesControllerService : public AttributeProviderServiceImpl {
  public:
-  explicit KubernetesControllerService(const std::string_view name, const utils::Identifier& uuid = {});
-  KubernetesControllerService(const std::string_view name, const std::shared_ptr<Configure>& configuration);
+  using AttributeProviderServiceImpl::AttributeProviderServiceImpl;
 
   EXTENSIONAPI static constexpr const char* Description = "Controller service that provides access to the Kubernetes API";
 
@@ -56,7 +55,6 @@ class KubernetesControllerService : public AttributeProviderServiceImpl {
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() final;
   void onEnable() override;
@@ -73,7 +71,6 @@ class KubernetesControllerService : public AttributeProviderServiceImpl {
   std::optional<utils::Regex> namespace_filter_;
   std::optional<utils::Regex> pod_name_filter_;
   std::optional<utils::Regex> container_name_filter_;
-  std::shared_ptr<core::logging::Logger> logger_;
   std::unique_ptr<kubernetes::ApiClient> api_client_;
 };
 

@@ -26,6 +26,7 @@
 #include "core/ProcessSession.h"
 #include "catch2/generators/catch_generators.hpp"
 #include "utils/StringUtils.h"
+#include "unit/ControllerServiceUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -33,7 +34,7 @@ class XMLRecordSetWriterTestFixture {
  public:
   const core::Relationship Success{"success", "everything is fine"};
 
-  XMLRecordSetWriterTestFixture() : xml_record_set_writer_("XMLRecordSetWriter") {
+  XMLRecordSetWriterTestFixture() : xml_record_set_writer_(minifi::test::utils::make_controller_service<standard::XMLRecordSetWriter>("XMLRecordSetWriter")) {
     test_plan_ = test_controller_.createPlan();
     dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
     context_ = [this] {
@@ -44,14 +45,14 @@ class XMLRecordSetWriterTestFixture {
   }
 
   std::string writeRecordsAsXml(const core::RecordSet& record_set, const std::unordered_map<std::string_view, std::string_view>& properties) {
-    xml_record_set_writer_.initialize();
+    xml_record_set_writer_->initialize();
     for (const auto& [key, value] : properties) {
-      REQUIRE(xml_record_set_writer_.setProperty(key, std::string{value}));
+      REQUIRE(xml_record_set_writer_->setProperty(key, std::string{value}));
     }
-    xml_record_set_writer_.onEnable();
+    xml_record_set_writer_->onEnable();
 
     auto flow_file = process_session_->create();
-    xml_record_set_writer_.write(record_set, flow_file, *process_session_);
+    xml_record_set_writer_->getImplementation<standard::XMLRecordSetWriter>()->write(record_set, flow_file, *process_session_);
     transferAndCommit(flow_file);
     std::string xml_content;
     process_session_->read(*flow_file, [&xml_content](const std::shared_ptr<io::InputStream>& input_stream) {
@@ -125,31 +126,31 @@ class XMLRecordSetWriterTestFixture {
   core::Processor* dummy_processor_;
   std::shared_ptr<core::ProcessContext> context_;
   std::unique_ptr<core::ProcessSession> process_session_;
-  standard::XMLRecordSetWriter xml_record_set_writer_;
+  std::unique_ptr<core::controller::ControllerService> xml_record_set_writer_;
 };
 
 TEST_CASE_METHOD(XMLRecordSetWriterTestFixture, "If wrap elements of arrays is set then Array Tag Name property must be set", "[XMLRecordSetWriter]") {
-  standard::XMLRecordSetWriter xml_record_set_writer("XMLRecordSetWriter");
-  xml_record_set_writer.initialize();
-  REQUIRE(xml_record_set_writer.setProperty(standard::XMLRecordSetWriter::NameOfRecordTag.name, "record"));
-  REQUIRE(xml_record_set_writer.setProperty(standard::XMLRecordSetWriter::NameOfRootTag.name, "root"));
+  auto xml_record_set_writer = minifi::test::utils::make_controller_service<standard::XMLRecordSetWriter>("XMLRecordSetWriter");
+  xml_record_set_writer->initialize();
+  REQUIRE(xml_record_set_writer->setProperty(standard::XMLRecordSetWriter::NameOfRecordTag.name, "record"));
+  REQUIRE(xml_record_set_writer->setProperty(standard::XMLRecordSetWriter::NameOfRootTag.name, "root"));
   std::string wrap_element_option = GENERATE("Use Property as Wrapper", "Use Property for Elements");
-  REQUIRE(xml_record_set_writer.setProperty(standard::XMLRecordSetWriter::WrapElementsOfArrays.name, wrap_element_option));
-  REQUIRE_THROWS_WITH(xml_record_set_writer.onEnable(),
+  REQUIRE(xml_record_set_writer->setProperty(standard::XMLRecordSetWriter::WrapElementsOfArrays.name, wrap_element_option));
+  REQUIRE_THROWS_WITH(xml_record_set_writer->onEnable(),
     "Process Schedule Operation: Array Tag Name property must be set when Wrap Elements of Arrays is set to Use Property as Wrapper or Use Property for Elements");
 }
 
 TEST_CASE_METHOD(XMLRecordSetWriterTestFixture, "Name of Record Tag must be set", "[XMLRecordSetWriter]") {
-  standard::XMLRecordSetWriter xml_record_set_writer("XMLRecordSetWriter");
-  xml_record_set_writer.initialize();
-  REQUIRE_THROWS_WITH(xml_record_set_writer.onEnable(), "Process Schedule Operation: Name of Record Tag property must be set");
+  auto xml_record_set_writer = minifi::test::utils::make_controller_service<standard::XMLRecordSetWriter>("XMLRecordSetWriter");
+  xml_record_set_writer->initialize();
+  REQUIRE_THROWS_WITH(xml_record_set_writer->onEnable(), "Process Schedule Operation: Name of Record Tag property must be set");
 }
 
 TEST_CASE_METHOD(XMLRecordSetWriterTestFixture, "Name of Root Tag must be set", "[XMLRecordSetWriter]") {
-  standard::XMLRecordSetWriter xml_record_set_writer("XMLRecordSetWriter");
-  xml_record_set_writer.initialize();
-  REQUIRE(xml_record_set_writer.setProperty(standard::XMLRecordSetWriter::NameOfRecordTag.name, "record"));
-  REQUIRE_THROWS_WITH(xml_record_set_writer.onEnable(), "Process Schedule Operation: Name of Root Tag property must be set");
+  auto xml_record_set_writer = minifi::test::utils::make_controller_service<standard::XMLRecordSetWriter>("XMLRecordSetWriter");
+  xml_record_set_writer->initialize();
+  REQUIRE(xml_record_set_writer->setProperty(standard::XMLRecordSetWriter::NameOfRecordTag.name, "record"));
+  REQUIRE_THROWS_WITH(xml_record_set_writer->onEnable(), "Process Schedule Operation: Name of Root Tag property must be set");
 }
 
 TEST_CASE_METHOD(XMLRecordSetWriterTestFixture, "Test empty record set", "[XMLRecordSetWriter]") {

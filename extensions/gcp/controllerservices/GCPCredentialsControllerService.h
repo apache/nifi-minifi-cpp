@@ -21,7 +21,7 @@
 #include <string>
 #include <memory>
 
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
@@ -63,7 +63,7 @@ constexpr customize_t enum_name<CredentialsLocation>(CredentialsLocation value) 
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class GCPCredentialsControllerService : public core::controller::ControllerServiceImpl {
+class GCPCredentialsControllerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Manages the credentials for Google Cloud Platform. This allows for multiple Google Cloud Platform related processors "
       "to reference this single controller service so that Google Cloud Platform credentials can be managed and controlled in a central location.";
@@ -91,24 +91,14 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  using ControllerServiceImpl::ControllerServiceImpl;
+  using ControllerServiceBase::ControllerServiceBase;
 
   void initialize() override;
 
-  void yield() override {
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
-
   void onEnable() override;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   [[nodiscard]] const auto& getCredentials() const { return credentials_; }
 
@@ -119,6 +109,5 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
 
 
   std::shared_ptr<google::cloud::storage::oauth2::Credentials> credentials_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GCPCredentialsControllerService>::getLogger(uuid_);
 };
 }  // namespace org::apache::nifi::minifi::extensions::gcp

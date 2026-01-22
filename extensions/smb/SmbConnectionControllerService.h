@@ -26,7 +26,7 @@
 #include "minifi-cpp/core/ProcessContext.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/Enum.h"
@@ -34,7 +34,7 @@
 
 namespace org::apache::nifi::minifi::extensions::smb {
 
-class SmbConnectionControllerService : public core::controller::ControllerServiceImpl {
+class SmbConnectionControllerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   EXTENSIONAPI static constexpr const char* Description = "SMB Connection Controller Service";
 
@@ -69,18 +69,15 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   });
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  using ControllerServiceImpl::ControllerServiceImpl;
+  using ControllerServiceBase::ControllerServiceBase;
 
   void initialize() override;
 
   void onEnable() override;
   void notifyStop() override;
 
-  void yield() override {}
-  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
-  bool isWorkAvailable() override { return false; }
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   virtual std::error_code validateConnection();
   virtual std::filesystem::path getPath() const { return server_path_; }
@@ -98,6 +95,5 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   std::optional<Credentials> credentials_;
   std::string server_path_;
   NETRESOURCEA net_resource_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SmbConnectionControllerService>::getLogger(uuid_);
 };
 }  // namespace org::apache::nifi::minifi::extensions::smb

@@ -23,12 +23,12 @@
 
 #include "minifi-cpp/core/Core.h"
 #include "minifi-cpp/core/ContentRepository.h"
-#include "minifi-cpp/core/controller/ControllerServiceLookup.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Repository.h"
 #include "minifi-cpp/core/FlowFile.h"
 #include "minifi-cpp/core/StateStorage.h"
 #include "minifi-cpp/core/VariableRegistry.h"
+#include "minifi-cpp/core/controller/ControllerServiceInterface.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -88,7 +88,7 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
   virtual void yield() = 0;
 
-  virtual std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const = 0;
+  virtual std::shared_ptr<core::controller::ControllerServiceInterface> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const = 0;
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";
 
   virtual StateManager* getStateManager() = 0;

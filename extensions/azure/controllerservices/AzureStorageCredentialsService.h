@@ -22,7 +22,7 @@
 #include <memory>
 #include <utility>
 
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -33,7 +33,7 @@
 
 namespace org::apache::nifi::minifi::azure::controllers {
 
-class AzureStorageCredentialsService : public core::controller::ControllerServiceImpl {
+class AzureStorageCredentialsService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Manages the credentials for an Azure Storage account. This allows for multiple Azure Storage related processors to reference this single "
       "controller service so that Azure storage credentials can be managed and controlled in a central location.";
@@ -83,32 +83,15 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
       ManagedIdentityClientId
   });
 
+  using ControllerServiceBase::ControllerServiceBase;
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
-
-  explicit AzureStorageCredentialsService(std::string_view name, const minifi::utils::Identifier& uuid = {})
-      : ControllerServiceImpl(name, uuid) {
-  }
-
-  explicit AzureStorageCredentialsService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerServiceImpl(name) {
-  }
 
   void initialize() override;
 
-  void yield() override {
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
-
   void onEnable() override;
+
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
 
   storage::AzureStorageCredentials getCredentials() const {
     return credentials_;
@@ -116,7 +99,6 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
 
  private:
   storage::AzureStorageCredentials credentials_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AzureStorageCredentialsService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::azure::controllers

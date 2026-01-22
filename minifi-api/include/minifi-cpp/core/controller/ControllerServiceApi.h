@@ -1,6 +1,5 @@
 /**
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,19 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "core/controller/ControllerServiceNode.h"
-#include <memory>
-#include <vector>
+#include "ControllerServiceInterface.h"
+#include "ControllerServiceContext.h"
+#include "ControllerServiceDescriptor.h"
+#include "minifi-cpp/properties/Configure.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerService> ControllerServiceNode::getControllerServiceImplementation() const {
-  return controller_service_;
-}
+class ControllerServiceApi {
+ public:
+  virtual ~ControllerServiceApi() = default;
 
-const std::vector<ControllerServiceNode*>& ControllerServiceNode::getLinkedControllerServices() const {
-  return linked_controller_services_;
-}
+  virtual void initialize(ControllerServiceDescriptor& descriptor) = 0;
+  virtual void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceInterface>>& linked_services) = 0;
+  virtual void notifyStop() = 0;
+  virtual ControllerServiceInterface* getControllerServiceInterface() = 0;
+};
 
 }  // namespace org::apache::nifi::minifi::core::controller

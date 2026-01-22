@@ -22,7 +22,7 @@ namespace org::apache::nifi::minifi::standard {
 
 class JsonTreeReader final : public core::RecordSetReaderImpl {
  public:
-  explicit JsonTreeReader(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetReaderImpl(name, uuid) {}
+  using RecordSetReaderImpl::RecordSetReaderImpl;
 
   JsonTreeReader(JsonTreeReader&&) = delete;
   JsonTreeReader(const JsonTreeReader&) = delete;
@@ -42,7 +42,6 @@ class JsonTreeReader final : public core::RecordSetReaderImpl {
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr auto ImplementsApis = std::array{ RecordSetReader::ProvidesApi };
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   nonstd::expected<core::RecordSet, std::error_code> read(io::InputStream& input_stream) override;
 
@@ -50,9 +49,6 @@ class JsonTreeReader final : public core::RecordSetReaderImpl {
     setSupportedProperties(Properties);
   }
   void onEnable() override {}
-  void yield() override {}
-  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
-  bool isWorkAvailable() override { return false; }
 };
 
 }  // namespace org::apache::nifi::minifi::standard

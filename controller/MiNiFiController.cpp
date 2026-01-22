@@ -30,7 +30,6 @@
 #include "c2/ControllerSocketProtocol.h"
 #include "controllers/SSLContextService.h"
 #include "core/ConfigurationFactory.h"
-#include "minifi-cpp/core/controller/ControllerService.h"
 #include "core/extension/ExtensionManager.h"
 #include "properties/Configure.h"
 #include "range/v3/algorithm/contains.hpp"
@@ -42,8 +41,7 @@ std::shared_ptr<minifi::controllers::SSLContextServiceInterface> getSSLContextSe
   std::shared_ptr<minifi::controllers::SSLContextServiceInterface> secure_context;
   std::string secure_str;
   if (configuration->get(minifi::Configure::nifi_remote_input_secure, secure_str) && minifi::utils::string::toBool(secure_str).value_or(false)) {
-    secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
-    secure_context->onEnable();
+    secure_context = minifi::controllers::SSLContextService::createAndEnable("ControllerSocketProtocolSSL", configuration);
   }
 
   return secure_context;

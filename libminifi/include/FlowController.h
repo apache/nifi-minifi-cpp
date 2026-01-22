@@ -32,7 +32,7 @@
 #include <utility>
 #include <vector>
 
-#include "minifi-cpp/core/controller/ControllerServiceProvider.h"
+#include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ForwardingControllerServiceProvider.h"
 #include "core/FlowConfiguration.h"
 #include "minifi-cpp/core/logging/Logger.h"

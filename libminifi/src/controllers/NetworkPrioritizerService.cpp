@@ -45,9 +45,6 @@ void NetworkPrioritizerService::initialize() {
   setSupportedProperties(Properties);
 }
 
-void NetworkPrioritizerService::yield() {
-}
-
 /**
  * If not an intersecting operation we will attempt to locate the highest priority interface available.
  */
@@ -63,8 +60,8 @@ io::NetworkInterface NetworkPrioritizerService::getInterface(uint32_t size = 0) 
   if (!controllers.empty()) {
     ifc = get_nearest_interface(controllers);
     if (!ifc.empty()) {
-      reduce_tokens(size);
-      io::NetworkInterface newifc(ifc, sharedFromThis<NetworkPrioritizerService>());
+      prioritizer_->reduce_tokens(size);
+      io::NetworkInterface newifc(ifc, prioritizer_);
       return newifc;
     }
   }
@@ -74,8 +71,8 @@ io::NetworkInterface NetworkPrioritizerService::getInterface(uint32_t size = 0) 
       auto ifcs = np->getInterfaces(size);
       ifc = get_nearest_interface(ifcs);
       if (!ifc.empty()) {
-        np->reduce_tokens(size);
-        io::NetworkInterface newifc(ifc, np);
+        np->prioritizer_->reduce_tokens(size);
+        io::NetworkInterface newifc(ifc, np->prioritizer_);
         return newifc;
       }
     }
@@ -126,33 +123,25 @@ std::vector<std::string> NetworkPrioritizerService::getInterfaces(uint32_t size 
 }
 
 bool NetworkPrioritizerService::sufficient_tokens(uint32_t size) {
-  std::lock_guard<std::mutex> lock(token_mutex_);
+  std::lock_guard<std::mutex> lock(prioritizer_->token_mutex_);
   auto ms = clock_->timeSinceEpoch().count();
   auto diff = ms - timestamp_;
   timestamp_ = ms;
   if (diff > 0) {
-    tokens_ += gsl::narrow<uint32_t>(diff * tokens_per_ms);
+    prioritizer_->tokens_ += gsl::narrow<uint32_t>(diff * tokens_per_ms);
   }
-  if (bytes_per_token_ > 0 && size > 0) {
-    return tokens_ * bytes_per_token_ >= size;
+  if (prioritizer_->bytes_per_token_ > 0 && size > 0) {
+    return prioritizer_->tokens_ * prioritizer_->bytes_per_token_ >= size;
   }
   return true;
 }
 
-void NetworkPrioritizerService::reduce_tokens(uint32_t size) {
+void NetworkPrioritizerService::StandardNetworkPrioritizer::reduce_tokens(uint32_t size) {
   std::lock_guard<std::mutex> lock(token_mutex_);
   if (bytes_per_token_ > 0 && size > 0) {
     uint32_t tokens = size / bytes_per_token_;
     tokens_ -= tokens;
   }
-}
-
-bool NetworkPrioritizerService::isRunning() const {
-  return getState() == core::controller::ControllerServiceState::ENABLED;
-}
-
-bool NetworkPrioritizerService::isWorkAvailable() {
-  return false;
 }
 
 void NetworkPrioritizerService::onEnable() {
@@ -162,10 +151,10 @@ void NetworkPrioritizerService::onEnable() {
       max_throughput_ = *max_throughput;
       logger_->log_trace("Max throughput is {}", max_throughput_);
       if (max_throughput_ < 1000) {
-        bytes_per_token_ = 1;
-        tokens_ = gsl::narrow<uint32_t>(max_throughput_);
+        prioritizer_->bytes_per_token_ = 1;
+        prioritizer_->tokens_ = gsl::narrow<uint32_t>(max_throughput_);
       } else {
-        bytes_per_token_ = gsl::narrow<uint32_t>(max_throughput_ / 1000);
+        prioritizer_->bytes_per_token_ = gsl::narrow<uint32_t>(max_throughput_ / 1000);
       }
     }
 
@@ -175,13 +164,6 @@ void NetworkPrioritizerService::onEnable() {
       network_controllers_ = utils::string::split(*controllers, ",");
       for (const auto &ifc : network_controllers_) {
         logger_->log_trace("{} added to list of applied interfaces", ifc);
-      }
-    }
-    if (const auto is_default = getProperty(DefaultPrioritizer.name) | utils::andThen(parsing::parseBool)) {
-      if (*is_default) {
-        if (io::NetworkPrioritizerFactory::getInstance()->setPrioritizer(sharedFromThis<NetworkPrioritizerService>()) < 0) {
-          throw std::runtime_error("Can only have one prioritizer");
-        }
       }
     }
 

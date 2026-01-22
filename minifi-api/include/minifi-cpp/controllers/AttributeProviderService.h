@@ -21,11 +21,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "minifi-cpp/core/controller/ControllerService.h"
+#include "minifi-cpp/core/controller/ControllerServiceInterface.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-class AttributeProviderService : public virtual core::controller::ControllerService {
+class AttributeProviderService : public core::controller::ControllerServiceInterface {
  public:
   using AttributeMap = std::unordered_map<std::string, std::string>;
   virtual std::optional<std::vector<AttributeMap>> getAttributes() = 0;

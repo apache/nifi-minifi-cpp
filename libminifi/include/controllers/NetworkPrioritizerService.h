@@ -25,7 +25,7 @@
 
 #include "utils/StringUtils.h"
 #include "io/validation.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -39,27 +39,22 @@ namespace org::apache::nifi::minifi::controllers {
 /**
  * Purpose: Network prioritizer for selecting network interfaces through the flow configuration.
  */
-class NetworkPrioritizerService : public core::controller::ControllerServiceImpl, public minifi::io::NetworkPrioritizer, public utils::EnableSharedFromThis {
- public:
-  explicit NetworkPrioritizerService(std::string_view name,
-                                     const utils::Identifier& uuid = {},
-                                     std::shared_ptr<utils::timeutils::Clock> clock = std::make_shared<utils::timeutils::SteadyClock>())
-      : ControllerServiceImpl(name, uuid),
-        enabled_(false),
-        max_throughput_(std::numeric_limits<uint64_t>::max()),
-        max_payload_(std::numeric_limits<uint64_t>::max()),
-        tokens_per_ms(2),
-        tokens_(1000),
-        timestamp_(0),
-        bytes_per_token_(0),
-        verify_interfaces_(true),
-        clock_(std::move(clock)) {
-  }
+class NetworkPrioritizerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
+  class StandardNetworkPrioritizer : public io::NetworkPrioritizer {
+   public:
+    void reduce_tokens(uint32_t size) override;
 
-  explicit NetworkPrioritizerService(std::string_view name, const std::shared_ptr<Configure> &configuration)
-      : NetworkPrioritizerService(name) {
-    setConfiguration(configuration);
-    initialize();
+    uint32_t tokens_{1000};
+    std::mutex token_mutex_;
+    uint32_t bytes_per_token_{0};
+  };
+
+ public:
+  using ControllerServiceBase::ControllerServiceBase;
+  explicit NetworkPrioritizerService(core::controller::ControllerServiceMetadata metadata,
+                                     std::shared_ptr<utils::timeutils::Clock> clock)
+      : ControllerServiceBase(std::move(metadata)),
+        clock_(std::move(clock)) {
   }
 
   MINIFIAPI static constexpr const char* Description = "Enables selection of networking interfaces on defined parameters to include output and payload size";
@@ -102,19 +97,14 @@ class NetworkPrioritizerService : public core::controller::ControllerServiceImpl
 
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 
-  void yield() override;
-
-  bool isRunning() const override;
-
-  bool isWorkAvailable() override;
-
   void onEnable() override;
 
-  io::NetworkInterface getInterface(uint32_t size) override;
+  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
+
+  io::NetworkInterface getInterface(uint32_t size);
 
  protected:
   std::string get_nearest_interface(const std::vector<std::string> &ifcs);
@@ -125,17 +115,15 @@ class NetworkPrioritizerService : public core::controller::ControllerServiceImpl
 
   bool sufficient_tokens(uint32_t size);
 
-  void reduce_tokens(uint32_t size) override;
+  bool enabled_{false};
 
-  bool enabled_;
+  uint64_t max_throughput_{std::numeric_limits<uint64_t>::max()};
 
-  uint64_t max_throughput_;
-
-  uint64_t max_payload_;
+  uint64_t max_payload_{std::numeric_limits<uint64_t>::max()};
 
   std::vector<std::string> network_controllers_;
 
-  int tokens_per_ms;
+  int tokens_per_ms{2};
 
   /**
    * Using a variation of the token bucket algorithm.
@@ -146,19 +134,14 @@ class NetworkPrioritizerService : public core::controller::ControllerServiceImpl
    * When a request arrives tokens will be decremented. We will compute the amount of data that can be sent per token from the configuration
    * of max_throughput_
    */
-  uint32_t tokens_;
 
-  std::mutex token_mutex_;
+  uint64_t timestamp_{0};
 
-  uint64_t timestamp_;
-
-  uint32_t bytes_per_token_;
-
-  bool verify_interfaces_;
+  bool verify_interfaces_{true};
 
  private:
-  std::shared_ptr<utils::timeutils::Clock> clock_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<NetworkPrioritizerService>::getLogger(uuid_);
+  std::shared_ptr<StandardNetworkPrioritizer> prioritizer_{std::make_shared<StandardNetworkPrioritizer>()};
+  std::shared_ptr<utils::timeutils::Clock> clock_{std::make_shared<utils::timeutils::SteadyClock>()};
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

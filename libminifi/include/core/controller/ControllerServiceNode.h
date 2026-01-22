@@ -25,19 +25,18 @@
 #include "core/Core.h"
 #include "core/ConfigurableComponentImpl.h"
 #include "minifi-cpp/core/logging/Logger.h"
-#include "minifi-cpp/core/controller/ControllerServiceNode.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "properties/Configure.h"
-#include "minifi-cpp/core/controller/ControllerService.h"
+#include "core/controller/ControllerService.h"
 #include "io/validation.h"
 #include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ControllerServiceNodeImpl : public CoreComponentImpl, public ConfigurableComponentImpl, public virtual ControllerServiceNode {
+class ControllerServiceNode : public CoreComponentImpl, public ConfigurableComponentImpl {
  public:
-  explicit ControllerServiceNodeImpl(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
+  explicit ControllerServiceNode(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
       : CoreComponentImpl(std::move(id)),
         active(false),
         configuration_(std::move(configuration)),
@@ -73,13 +72,23 @@ class ControllerServiceNodeImpl : public CoreComponentImpl, public ConfigurableC
    * maintains
    * @return the implementation of the Controller Service
    */
-  std::shared_ptr<ControllerService> getControllerServiceImplementation() override;
-  const ControllerService* getControllerServiceImplementation() const override;
-  const std::vector<ControllerServiceNode*>& getLinkedControllerServices() const override;
+  std::shared_ptr<ControllerService> getControllerServiceImplementation() const;
+  template<typename T>
+  std::shared_ptr<T> getControllerServiceImplementation() {
+    if (auto impl = getControllerServiceImplementation()) {
+      return {impl, impl->getImplementation<T>()};
+    }
+    return {};
+  }
+  virtual const std::vector<ControllerServiceNode*>& getLinkedControllerServices() const;
 
-  bool enabled() override {
+  virtual bool enabled() {
     return active.load();
   }
+
+  virtual bool canEnable() = 0;
+  virtual bool enable() = 0;
+  virtual bool disable() = 0;
 
   bool supportsDynamicProperties() const override {
     return false;
@@ -89,8 +98,8 @@ class ControllerServiceNodeImpl : public CoreComponentImpl, public ConfigurableC
     return false;
   }
 
-  ControllerServiceNodeImpl(const ControllerServiceNodeImpl &other) = delete;
-  ControllerServiceNodeImpl &operator=(const ControllerServiceNodeImpl &parent) = delete;
+  ControllerServiceNode(const ControllerServiceNode &other) = delete;
+  ControllerServiceNode &operator=(const ControllerServiceNode &parent) = delete;
 
  protected:
   bool canEdit() override {

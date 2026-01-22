@@ -1716,7 +1716,6 @@ class TestAttributeProviderService final : public minifi::controllers::Attribute
   static constexpr const char* Description = "An attribute provider service which provides a constant set of records.";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override {};
   void onEnable() override {};
@@ -1724,7 +1723,7 @@ class TestAttributeProviderService final : public minifi::controllers::Attribute
     return std::vector<AttributeMap>{AttributeMap{{"color", "red"}, {"fruit", "apple"}, {"uid", "001"}, {"animal", "dog"}},
                                      AttributeMap{{"color", "yellow"}, {"fruit", "banana"}, {"uid", "004"}, {"animal", "dolphin"}}};
   }
-  std::string_view name() const override { return "test"; }
+  [[nodiscard]] std::string_view name() const override { return "test"; }
 };
 REGISTER_RESOURCE(TestAttributeProviderService, ControllerService);
 
