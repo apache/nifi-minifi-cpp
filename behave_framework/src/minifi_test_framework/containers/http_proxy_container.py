@@ -33,7 +33,8 @@ class HttpProxy(Container):
                     echo 'auth_param basic realm proxy' >> /etc/squid/squid.conf && \
                     echo 'acl authenticated proxy_auth REQUIRED' >> /etc/squid/squid.conf && \
                     echo 'http_access allow authenticated' >> /etc/squid/squid.conf && \
-                    echo 'http_port {proxy_port}' >> /etc/squid/squid.conf
+                    echo 'http_port {proxy_port}' >> /etc/squid/squid.conf && \
+                    echo 'max_filedescriptors 1024' >> /etc/squid/squid.conf
                 """.format(base_image='ubuntu/squid:5.2-22.04_beta', proxy_username='admin', proxy_password='test101',
                            proxy_port='3128'))
 
