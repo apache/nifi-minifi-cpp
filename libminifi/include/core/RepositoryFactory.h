@@ -27,20 +27,10 @@
 
 namespace org::apache::nifi::minifi::core {
 
-/**
- * Create a context repository
- * @param configuration_class_name configuration class name
- * @param fail_safe determines whether or not to make the default class if configuration_class_name is invalid
- * @param repo_name name of the repository
- */
-std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name, bool fail_safe = false, const std::string& repo_name = "");
+std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name,
+    const std::string& repo_name,
+    logging::Logger& logger);
 
-/**
- * Create a repository represented by the configuration class name
- * @param configuration_class_name configuration class name
- * @param fail_safe determines whether or not to make the default class if configuration_class_name is invalid
- * @param repo_name name of the repository
- */
 std::unique_ptr<core::Repository> createRepository(const std::string& configuration_class_name, const std::string& repo_name = "");
 
 }  // namespace org::apache::nifi::minifi::core

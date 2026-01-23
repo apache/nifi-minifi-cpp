@@ -52,7 +52,7 @@ class PrometheusPublisherTestFixture {
     : configuration_(std::make_shared<ConfigureImpl>()),
       provenance_repo_(core::createRepository("provenancerepository")),
       flow_file_repo_(core::createRepository("flowfilerepository")),
-      content_repo_(core::createContentRepository("volatilecontentrepository")),
+      content_repo_(core::createContentRepository("volatilecontentrepository", "", *core::logging::LoggerFactory<PrometheusPublisherTestFixture>::getLogger())),
       response_node_loader_(std::make_shared<state::response::ResponseNodeLoaderImpl>(configuration_,
         std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_, content_repo_}, nullptr)) {
     std::unique_ptr<DummyMetricsExposer> dummy_exposer;

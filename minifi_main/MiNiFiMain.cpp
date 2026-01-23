@@ -352,7 +352,7 @@ int main(int argc, char **argv) {
 
     configure->get(minifi::Configure::nifi_content_repository_class_name, content_repo_class);
 
-    std::shared_ptr<core::ContentRepository> content_repo = core::createContentRepository(content_repo_class, true, "content");
+    std::shared_ptr<core::ContentRepository> content_repo = core::createContentRepository(content_repo_class, "content", *logger);
 
     if (!content_repo->initialize(configure)) {
       logger->log_error("Content repository failed to initialize, exiting..");
