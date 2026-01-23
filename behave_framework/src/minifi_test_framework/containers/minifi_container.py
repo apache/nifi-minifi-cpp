@@ -14,7 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
 import logging
 import os
 from pathlib import Path
@@ -42,6 +41,8 @@ class MinifiContainer(Container):
         self.files.append(File("/tmp/resources/root_ca.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)))
         self.files.append(File("/tmp/resources/minifi_client.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=minifi_client_cert)))
         self.files.append(File("/tmp/resources/minifi_client.key", crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=minifi_client_key)))
+        self.files.append(File("/tmp/resources/minifi_merged_cert.crt",
+                               crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=minifi_client_cert) + crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=minifi_client_key)))
 
         clientuser_cert, clientuser_key = make_client_cert("clientuser", ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
         self.files.append(File("/tmp/resources/clientuser.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=clientuser_cert)))
@@ -96,6 +97,22 @@ class MinifiContainer(Container):
 
     def enable_openssl_fips_mode(self):
         self.properties["nifi.openssl.fips.support.enable"] = "true"
+
+    def enable_log_metrics_publisher(self):
+        self.properties["nifi.metrics.publisher.LogMetricsPublisher.metrics"] = "RepositoryMetrics"
+        self.properties["nifi.metrics.publisher.LogMetricsPublisher.logging.interval"] = "1s"
+        self.properties["nifi.metrics.publisher.class"] = "LogMetricsPublisher"
+
+    def enable_prometheus(self):
+        self.properties["nifi.metrics.publisher.agent.identifier"] = "Agent1"
+        self.properties["nifi.metrics.publisher.PrometheusMetricsPublisher.port"] = "9936"
+        self.properties["nifi.metrics.publisher.PrometheusMetricsPublisher.metrics"] = "RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus"
+        self.properties["nifi.metrics.publisher.class"] = "PrometheusMetricsPublisher"
+
+    def enable_prometheus_with_ssl(self):
+        self.enable_prometheus()
+        self.properties["nifi.metrics.publisher.PrometheusMetricsPublisher.certificate"] = "/tmp/resources/minifi_merged_cert.crt"
+        self.properties["nifi.metrics.publisher.PrometheusMetricsPublisher.ca.certificate"] = "/tmp/resources/root_ca.crt"
 
     def fetch_flow_config_from_flow_url(self):
         self.properties["nifi.c2.flow.url"] = f"http://minifi-c2-server-{self.scenario_id}:10090/c2/config?class=minifi-test-class"

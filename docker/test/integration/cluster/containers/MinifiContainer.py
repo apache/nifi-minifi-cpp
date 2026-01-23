@@ -28,8 +28,6 @@ from minifi.flow_serialization.Minifi_flow_json_serializer import Minifi_flow_js
 class MinifiOptions:
     def __init__(self):
         self.enable_provenance = False
-        self.enable_prometheus = False
-        self.enable_prometheus_with_ssl = False
         self.enable_sql = False
         self.use_nifi_python_processors_with_system_python_packages_installed = False
         self.use_nifi_python_processors_with_virtualenv = False
@@ -140,16 +138,6 @@ class MinifiContainer(FlowContainer):
                 f.write("nifi.provenance.repository.class.name=NoOpRepository\n")
 
             metrics_publisher_classes = []
-            if self.options.enable_prometheus or self.options.enable_prometheus_with_ssl:
-                f.write("nifi.metrics.publisher.agent.identifier=Agent1\n")
-                f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936\n")
-                f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.metrics=RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus\n")
-                metrics_publisher_classes.append("PrometheusMetricsPublisher")
-
-            if self.options.enable_prometheus_with_ssl:
-                f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.certificate=/tmp/resources/minifi_merged_cert.crt\n")
-                f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.ca.certificate=/tmp/resources/root_ca.crt\n")
-
             if self.options.enable_log_metrics_publisher:
                 f.write("nifi.metrics.publisher.LogMetricsPublisher.metrics=RepositoryMetrics\n")
                 f.write("nifi.metrics.publisher.LogMetricsPublisher.logging.interval=1s\n")
@@ -202,16 +190,11 @@ class MinifiContainer(FlowContainer):
         else:
             image = 'apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION
 
-        ports = {}
-        if self.options.enable_prometheus or self.options.enable_prometheus_with_ssl:
-            ports = {'9936/tcp': 9936}
-
         self.client.containers.run(
             image,
             detach=True,
             name=self.name,
             network=self.network.name,
             entrypoint=self.command,
-            ports=ports,
             volumes=self.vols)
         logging.info('Added container \'%s\'', self.name)
