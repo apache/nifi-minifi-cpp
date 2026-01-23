@@ -28,6 +28,8 @@ class RepositoryMetricsSource {
   struct RocksDbStats {
     uint64_t table_readers_size{};
     uint64_t all_memory_tables_size{};
+    uint64_t block_cache_usage{};
+    uint64_t block_cache_pinned_usage{};
   };
 
   virtual ~RepositoryMetricsSource() = default;

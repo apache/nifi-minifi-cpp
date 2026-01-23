@@ -161,7 +161,9 @@ class TestRocksDbRepository : public TestThreadedRepository {
   std::optional<RocksDbStats> getRocksDbStats() const override {
     return RocksDbStats {
       .table_readers_size = 100,
-      .all_memory_tables_size = 200
+      .all_memory_tables_size = 200,
+      .block_cache_usage = 85,
+      .block_cache_pinned_usage = 50
     };
   }
 };
