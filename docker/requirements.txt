@@ -10,4 +10,3 @@ azure-storage-blob==12.24.1
 prometheus-api-client==0.5.5
 humanfriendly==10.0
 requests<2.29  # https://github.com/docker/docker-py/issues/3113
-paho-mqtt==2.1.0

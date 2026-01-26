@@ -36,13 +36,18 @@ def step_impl(context: MinifiTestContext, content: str, path: str, duration: str
         timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_default_minifi_container().exited, context=context)
 
 
-@then('a single file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
-def step_impl(context: MinifiTestContext, content: str, directory: str, duration: str):
+@then('in the "{container_name}" container a single file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
+def step_impl(context: MinifiTestContext, container_name: str, content: str, directory: str, duration: str):
     new_content = content.replace("\\n", "\n")
     timeout_in_seconds = humanfriendly.parse_timespan(duration)
     assert wait_for_condition(
-        condition=lambda: context.get_default_minifi_container().directory_has_single_file_with_content(directory, new_content),
-        timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_default_minifi_container().exited, context=context)
+        condition=lambda: context.get_minifi_container(container_name).directory_has_single_file_with_content(directory, new_content),
+        timeout_seconds=timeout_in_seconds, bail_condition=lambda: context.get_minifi_container(container_name).exited, context=context)
+
+
+@then('a single file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
+def step_impl(context: MinifiTestContext, content: str, directory: str, duration: str):
+    context.execute_steps(f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container a single file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
 
 
 @then('in the "{container_name}" container at least one file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
@@ -147,6 +152,7 @@ def step_impl(context: MinifiTestContext, directory: str, regex_str: str, durati
 
 
 @then('files with contents "{content_one}" and "{content_two}" are placed in the "{directory}" directory in less than {timeout}')
+@then("files with contents '{content_one}' and '{content_two}' are placed in the '{directory}' directory in less than {timeout}")
 def step_impl(context: MinifiTestContext, directory: str, timeout: str, content_one: str, content_two: str):
     timeout_seconds = humanfriendly.parse_timespan(timeout)
     c1 = content_one.replace("\\n", "\n")

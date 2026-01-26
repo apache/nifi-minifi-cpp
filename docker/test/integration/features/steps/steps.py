@@ -121,7 +121,6 @@ def step_impl(context, processor_type, minifi_container_name):
 
 @given("a {processor_type} processor")
 @given("a {processor_type} processor set up to communicate with an Azure blob storage")
-@given("a {processor_type} processor set up to communicate with an MQTT broker instance")
 def step_impl(context, processor_type):
     __create_processor(context, processor_type, processor_type, None, None, "minifi-cpp-flow")
 
@@ -486,16 +485,6 @@ def step_impl(context, processor_name, service_property_name, property_name, pro
     __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {property_name: property_value})
 
 
-# MQTT setup
-@when("an MQTT broker is set up in correspondence with the PublishMQTT")
-@given("an MQTT broker is set up in correspondence with the PublishMQTT")
-@given("an MQTT broker is set up in correspondence with the ConsumeMQTT")
-@given("an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="mqtt-broker", engine="mqtt-broker")
-    context.test.start('mqtt-broker')
-
-
 # azure storage setup
 @given("an Azure storage server is set up")
 def step_impl(context):
@@ -777,22 +766,6 @@ def step_impl(context, log_message, seconds):
 @then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")
 def step_impl(context, regex, duration):
     context.test.check_minifi_log_matches_regex(regex, humanfriendly.parse_timespan(duration))
-
-
-# MQTT
-@then("the MQTT broker has a log line matching \"{log_pattern}\"")
-def step_impl(context, log_pattern):
-    context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 60, count=1)
-
-
-@then("the MQTT broker has {log_count} log lines matching \"{log_pattern}\"")
-def step_impl(context, log_count, log_pattern):
-    context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 60, count=int(log_count))
-
-
-@when("a test message \"{message}\" is published to the MQTT broker on topic \"{topic}\"")
-def step_impl(context, message, topic):
-    context.test.publish_test_mqtt_message(topic, message)
 
 
 @then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")

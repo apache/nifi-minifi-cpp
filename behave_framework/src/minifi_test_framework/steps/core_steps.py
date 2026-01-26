@@ -62,10 +62,27 @@ def step_impl(context: MinifiTestContext, file_name: str, content: str, path: st
     context.get_or_create_default_minifi_container().files.append(File(os.path.join(path, file_name), new_content))
 
 
-@step('a file with the content "{content}" is present in "{path}"')
-def step_impl(context: MinifiTestContext, content: str, path: str):
+@given('a file with the content "{content}" is present in "{path}" in the "{container_name}" flow')
+def step_impl(context: MinifiTestContext, content: str, path: str, container_name: str):
     new_content = content.replace("\\n", "\n")
-    context.get_or_create_default_minifi_container().files.append(File(os.path.join(path, str(uuid.uuid4())), new_content))
+    context.get_or_create_minifi_container(container_name).files.append(File(os.path.join(path, str(uuid.uuid4())), new_content))
+
+
+@given('a file with the content "{content}" is present in "{path}"')
+@given("a file with the content '{content}' is present in '{path}'")
+def step_impl(context: MinifiTestContext, content: str, path: str):
+    context.execute_steps(f"given a file with the content \"{content}\" is present in \"{path}\" in the \"{DEFAULT_MINIFI_CONTAINER_NAME}\" flow")
+
+
+@when('a file with the content "{content}" is placed in "{path}" in the "{container_name}" flow')
+def step_impl(context: MinifiTestContext, content: str, path: str, container_name: str):
+    new_content = content.replace("\\n", "\n")
+    context.get_minifi_container(container_name).add_file_to_running_container(new_content, path)
+
+
+@when('a file with the content "{content}" is placed in "{path}"')
+def step_impl(context: MinifiTestContext, content: str, path: str):
+    context.execute_steps(f"when a file with the content \"{content}\" is placed in \"{path}\" in the \"{DEFAULT_MINIFI_CONTAINER_NAME}\" flow")
 
 
 @given("an empty file is present in \"{path}\"")
@@ -95,9 +112,29 @@ def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().stop()
 
 
+@when("\"{container_name}\" flow is stopped")
+def step_impl(context: MinifiTestContext, container_name: str):
+    context.get_or_create_minifi_container(container_name).stop()
+
+
 @when("MiNiFi is restarted")
 def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().restart()
+
+
+@when("\"{container_name}\" flow is restarted")
+def step_impl(context: MinifiTestContext, container_name: str):
+    context.get_or_create_minifi_container(container_name).restart()
+
+
+@when("\"{container_name}\" flow is started")
+def step_impl(context: MinifiTestContext, container_name: str):
+    context.get_or_create_minifi_container(container_name).start()
+
+
+@when("\"{container_name}\" flow is killed")
+def step_impl(context: MinifiTestContext, container_name: str):
+    context.get_or_create_minifi_container(container_name).kill()
 
 
 @given("OpenSSL FIPS mode is enabled in MiNiFi")
@@ -145,3 +182,8 @@ def step_impl(context: MinifiTestContext):
 def step_impl(context: MinifiTestContext):
     context.containers["minifi-c2-server"] = MinifiC2Server(context)
     assert context.containers["minifi-c2-server"].deploy()
+
+
+@step("{duration} later")
+def step_impl(context: MinifiTestContext, duration: str):
+    time.sleep(humanfriendly.parse_timespan(duration))
