@@ -2,9 +2,12 @@ LIBRARY core-minifi.dll
 EXPORTS
   MinifiCreateExtension
   MinifiRegisterProcessor
+  MinifiRegisterControllerService
   MinifiPublishedMetricsCreate
+  MinifiProcessContextGetControllerService
   MinifiProcessContextGetProperty
   MinifiProcessContextHasNonEmptyProperty
+  MinifiControllerServiceContextGetProperty
   MinifiLoggerSetMaxLogSize
   MinifiLoggerLogString
   MinifiLoggerShouldLog

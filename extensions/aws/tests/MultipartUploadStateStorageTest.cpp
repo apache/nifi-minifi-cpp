@@ -32,7 +32,7 @@ class MultipartUploadStateStorageTestFixture {
   MultipartUploadStateStorageTestFixture() {
     LogTestController::getInstance().setDebug<minifi::aws::s3::MultipartUploadStateStorage>();
     const auto storage_uuid = minifi::utils::IdGenerator::getIdGenerator()->generate();
-    state_storage_ = std::make_unique<minifi::controllers::VolatileMapStateStorage>(core::controller::ControllerServiceMetadata{
+    state_storage_ = std::make_unique<minifi::controllers::VolatileMapStateStorage>(core::ControllerServiceMetadata{
       .uuid = storage_uuid,
       .name = "KeyValueStateStorage",
       .logger = logging::LoggerFactory<minifi::controllers::VolatileMapStateStorage>::getLogger(storage_uuid)
