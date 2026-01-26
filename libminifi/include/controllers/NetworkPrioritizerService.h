@@ -51,7 +51,7 @@ class NetworkPrioritizerService : public core::controller::ControllerServiceBase
 
  public:
   using ControllerServiceBase::ControllerServiceBase;
-  explicit NetworkPrioritizerService(core::controller::ControllerServiceMetadata metadata,
+  explicit NetworkPrioritizerService(core::ControllerServiceMetadata metadata,
                                      std::shared_ptr<utils::timeutils::Clock> clock)
       : ControllerServiceBase(std::move(metadata)),
         clock_(std::move(clock)) {

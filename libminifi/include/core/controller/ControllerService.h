@@ -27,7 +27,7 @@
 #include "core/ConfigurableComponentImpl.h"
 #include "core/Connectable.h"
 #include "minifi-cpp/core/controller/ControllerServiceApi.h"
-#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
+#include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
@@ -44,6 +44,7 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
    public:
     explicit ControllerServiceDescriptorImpl(ControllerService& impl): impl_(impl) {}
     void setSupportedProperties(std::span<const PropertyReference> properties) override;
+    void setSupportedProperties(std::span<const Property> properties) override;
 
    private:
     ControllerService& impl_;
@@ -130,7 +131,7 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
     return false;
   }
 
-  static constexpr auto ImplementsApis = std::array<ControllerServiceApiDefinition, 0>{};
+  static constexpr auto ImplementsApis = std::array<ControllerServiceTypeDefinition, 0>{};
 
  protected:
   std::unique_ptr<ControllerServiceApi> impl_;
@@ -143,6 +144,10 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
 };
 
 inline void ControllerService::ControllerServiceDescriptorImpl::setSupportedProperties(std::span<const PropertyReference> properties) {
+  impl_.setSupportedProperties(properties);
+}
+
+inline void ControllerService::ControllerServiceDescriptorImpl::setSupportedProperties(std::span<const Property> properties) {
   impl_.setSupportedProperties(properties);
 }
 

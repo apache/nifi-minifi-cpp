@@ -36,11 +36,16 @@
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/state/PublishedMetricProvider.h"
 #include "utils/CProcessor.h"
+#include "utils/CControllerService.h"
 #include "utils/PropertyErrors.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
 namespace {
+
+MinifiStringView minifiStringView(const std::string_view s) {
+  return MinifiStringView{.data = s.data(), .length = s.size()};
+}
 
 std::string toString(MinifiStringView sv) {
   return {sv.data, sv.length};
@@ -146,6 +151,37 @@ class CProcessorFactory : public minifi::core::ProcessorFactory {
   minifi::utils::CProcessorClassDescription class_description_;
 };
 
+class CControllerServiceFactory : public minifi::core::controller::ControllerServiceFactory {
+ public:
+  CControllerServiceFactory(std::string group_name, std::string class_name, minifi::utils::CControllerServiceClassDescription class_description)
+    : group_name_(std::move(group_name)),
+      class_name_(std::move(class_name)),
+      class_description_(std::move(class_description)) {}
+  std::unique_ptr<minifi::core::controller::ControllerServiceApi> create(minifi::core::ControllerServiceMetadata metadata) override {
+    return std::make_unique<minifi::utils::CControllerService>(class_description_, std::move(metadata));
+  }
+
+  [[nodiscard]] std::string getGroupName() const override {
+    return group_name_;
+  }
+
+  [[nodiscard]] std::string getClassName() const override {
+    return class_name_;
+  }
+
+  CControllerServiceFactory() = delete;
+  CControllerServiceFactory(const CControllerServiceFactory&) = delete;
+  CControllerServiceFactory& operator=(const CControllerServiceFactory&) = delete;
+  CControllerServiceFactory(CControllerServiceFactory&&) = delete;
+  CControllerServiceFactory& operator=(CControllerServiceFactory&&) = delete;
+  ~CControllerServiceFactory() override = default;
+
+ private:
+  std::string group_name_;
+  std::string class_name_;
+  minifi::utils::CControllerServiceClassDescription class_description_;
+};
+
 }  // namespace
 
 namespace org::apache::nifi::minifi::utils {
@@ -221,6 +257,35 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
   fn(description, c_class_description);
 }
 
+void useCControllerServiceClassDescription(const MinifiControllerServiceClassDefinition& class_description,
+    const BundleIdentifier& bundle_id,
+    const std::function<void(ClassDescription, CControllerServiceClassDescription)>& fn) {
+  std::vector<minifi::core::Property> properties;
+  properties.reserve(class_description.class_properties_count);
+  for (size_t i = 0; i < class_description.class_properties_count; ++i) {
+    properties.push_back(createProperty(&class_description.class_properties_ptr[i]));
+  }
+
+  auto name_segments = minifi::utils::string::split(toStringView(class_description.full_name), "::");
+  gsl_Assert(!name_segments.empty());
+
+  minifi::ClassDescription description{
+    .type_ = minifi::ResourceType::ControllerService,
+    .short_name_ = name_segments.back(),
+    .full_name_ = minifi::utils::string::join(".", name_segments),
+    .description_ = toString(class_description.description),
+    .class_properties_ = properties,
+  };
+
+  minifi::utils::CControllerServiceClassDescription c_class_description{
+    .group_name = bundle_id.name,
+    .name = name_segments.back(),
+    .version = bundle_id.version,
+    .class_properties = properties,
+    .callbacks = class_description.callbacks
+  };
+  fn(description, c_class_description);
+}
 }  // namespace org::apache::nifi::minifi::utils
 
 extern "C" {
@@ -243,6 +308,14 @@ MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extensio
       bundle_components.processors.emplace_back(description);
     });
   }
+  for (size_t controller_service_idx = 0; controller_service_idx < extension_create_info->controller_services_count; ++controller_service_idx) {
+    minifi::utils::useCControllerServiceClassDescription(extension_create_info->controller_services_ptr[controller_service_idx], bundle, [&](const auto& description, const auto& c_class_description) {
+      minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_name).registerClass(
+        c_class_description.name,
+        std::make_unique<CControllerServiceFactory>(extension_name, toString(extension_create_info->controller_services_ptr[controller_service_idx].full_name), c_class_description));
+      bundle_components.controller_services.emplace_back(description);
+    });
+  }
   return reinterpret_cast<MinifiExtension*>(new org::apache::nifi::minifi::core::extension::Extension::Info{
     .name = toString(extension_create_info->name),
     .version = toString(extension_create_info->version),
@@ -261,7 +334,7 @@ MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, Mini
   auto result = reinterpret_cast<minifi::core::ProcessContext*>(context)->getProperty(toStringView(property_name),
       flowfile != MINIFI_NULL ? reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile)->get() : nullptr);
   if (result) {
-    result_cb(user_ctx, MinifiStringView{.data = result.value().data(), .length = result.value().length()});
+    result_cb(user_ctx, minifiStringView(result.value()));
     return MINIFI_STATUS_SUCCESS;
   }
   switch (static_cast<minifi::core::PropertyErrorCode>(result.error().value())) {
@@ -276,7 +349,7 @@ MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, Mini
 void MinifiProcessContextGetProcessorName(MinifiProcessContext* context, void(*cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
   gsl_Assert(context != MINIFI_NULL);
   auto name = reinterpret_cast<minifi::core::ProcessContext*>(context)->getProcessorInfo().getName();
-  cb(user_ctx, MinifiStringView{.data = name.data(), .length = name.length()});
+  cb(user_ctx, minifiStringView(name));
 }
 
 MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext* context, MinifiStringView property_name) {
@@ -288,10 +361,7 @@ void MinifiConfigGet(MinifiConfig* configure, MinifiStringView key, void(*cb)(vo
   gsl_Assert(configure != MINIFI_NULL);
   auto value = reinterpret_cast<minifi::Configure*>(configure)->get(toString(key));
   if (value) {
-    cb(user_ctx, MinifiStringView{
-      .data = value->data(),
-      .length = value->length()
-    });
+    cb(user_ctx, minifiStringView(*value));
   }
 }
 
@@ -415,7 +485,7 @@ void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiS
       default: return "Unknown error";
     }
   }();
-  cb(user_ctx, MinifiStringView{.data = message.data(), .length = message.size()});
+  cb(user_ctx, minifiStringView(message));
 }
 
 void MinifiFlowFileSetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name, const MinifiStringView* attribute_value) {
@@ -437,7 +507,7 @@ MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowF
   if (!value.has_value()) {
     return false;
   }
-  cb(user_ctx, MinifiStringView{.data = value->data(), .length = value->size()});
+  cb(user_ctx, minifiStringView(*value));
   return true;
 }
 
@@ -446,8 +516,56 @@ void MinifiFlowFileGetAttributes(MinifiProcessSession* session, MinifiFlowFile* 
   gsl_Assert(session != MINIFI_NULL);
   gsl_Assert(flowfile != MINIFI_NULL);
   for (auto& [key, value] : (*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile))->getAttributes()) {
-    cb(user_ctx, MinifiStringView{.data = key.data(), .length = key.size()}, MinifiStringView{.data = value.data(), .length = value.size()});
+    cb(user_ctx, minifiStringView(key), minifiStringView(value));
   }
 }
+
+MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceContext* context, MinifiStringView property_name,
+    void (*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
+  gsl_Assert(context != MINIFI_NULL);
+  auto result = reinterpret_cast<minifi::core::controller::ControllerServiceContext*>(context)->getProperty(toStringView(property_name));
+  if (result) {
+    result_cb(user_ctx, minifiStringView(result.value()));
+    return MINIFI_STATUS_SUCCESS;
+  }
+  switch (static_cast<minifi::core::PropertyErrorCode>(result.error().value())) {
+    case minifi::core::PropertyErrorCode::NotSupportedProperty: return MINIFI_STATUS_NOT_SUPPORTED_PROPERTY;
+    case minifi::core::PropertyErrorCode::DynamicPropertiesNotSupported: return MINIFI_STATUS_DYNAMIC_PROPERTIES_NOT_SUPPORTED;
+    case minifi::core::PropertyErrorCode::PropertyNotSet: return MINIFI_STATUS_PROPERTY_NOT_SET;
+    case minifi::core::PropertyErrorCode::ValidationFailed: return MINIFI_STATUS_VALIDATION_FAILED;
+    default: return MINIFI_STATUS_UNKNOWN_ERROR;
+  }
+}
+
+
+MinifiStatus MinifiProcessContextGetControllerService(
+    MinifiProcessContext* process_context,
+    const MinifiStringView controller_service_name,
+    MinifiStatus(*cb)(
+        void* user_ctx,
+        void* service,
+        MinifiStringView type,
+        MinifiStringView group,
+        MinifiStringView version),
+    void* user_ctx) {
+
+  gsl_Assert(process_context != MINIFI_NULL);
+  const auto context = reinterpret_cast<minifi::core::ProcessContext*>(process_context);
+  const auto name_str = std::string{toStringView(controller_service_name)};
+  const auto service_shared_ptr = context->getControllerService(name_str, context->getProcessorInfo().getUUID());
+  if (!service_shared_ptr) {
+    return MINIFI_STATUS_VALIDATION_FAILED;
+  }
+  if (const minifi::utils::CControllerService* c_controller_service = dynamic_cast<minifi::utils::CControllerService*>(&*service_shared_ptr)) {
+    const auto class_description = c_controller_service->getClassDescription();
+    return cb(user_ctx,
+      c_controller_service->getImpl(),
+      minifiStringView(class_description.name),
+      minifiStringView(class_description.group_name),
+      minifiStringView(class_description.version));
+  }
+  return MINIFI_STATUS_VALIDATION_FAILED;
+}
+
 
 }  // extern "C"

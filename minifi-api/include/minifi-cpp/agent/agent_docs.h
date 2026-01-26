@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "minifi-cpp/core/Annotation.h"
-#include "minifi-cpp/core/ControllerServiceApi.h"
+#include "minifi-cpp/core/ControllerServiceType.h"
 #include "minifi-cpp/core/DynamicProperty.h"
 #include "minifi-cpp/core/OutputAttribute.h"
 #include "minifi-cpp/core/Property.h"
@@ -44,7 +44,7 @@ struct ClassDescription {
   std::vector<core::DynamicProperty> dynamic_properties_{};
   std::vector<core::Relationship> class_relationships_{};
   std::vector<core::OutputAttribute> output_attributes_{};
-  std::vector<core::ControllerServiceApi> api_implementations{};
+  std::vector<core::ControllerServiceType> api_implementations{};
   bool supports_dynamic_properties_ = false;
   bool supports_dynamic_relationships_ = false;
   std::string inputRequirement_{};

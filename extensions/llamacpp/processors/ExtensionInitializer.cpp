@@ -36,6 +36,8 @@ extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
       .user_data = nullptr,
       .processors_count = 1,
       .processors_ptr = &description,
+      .controller_services_count = 0,
+      .controller_services_ptr = nullptr,
     };
     extension = MinifiCreateExtension(&ext_create_info);
   });

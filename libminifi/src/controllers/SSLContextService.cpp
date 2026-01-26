@@ -598,7 +598,7 @@ void SSLContextService::verifyCertificateExpiration() {
 std::shared_ptr<SSLContextService> SSLContextService::createAndEnable(std::string_view name, const std::shared_ptr<Configure>& configuration) {
   auto uuid = utils::IdGenerator::getIdGenerator()->generate();
   auto logger = core::logging::LoggerFactory<SSLContextService>::getLogger(uuid);
-  auto service = std::make_shared<core::controller::ControllerService>(name, uuid, std::make_unique<SSLContextService>(core::controller::ControllerServiceMetadata{
+  auto service = std::make_shared<core::controller::ControllerService>(name, uuid, std::make_unique<SSLContextService>(core::ControllerServiceMetadata{
     .uuid = uuid,
     .name = std::string{name},
     .logger = logger,

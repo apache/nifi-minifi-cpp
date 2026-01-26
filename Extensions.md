@@ -80,7 +80,9 @@ extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* /*config*/) {
     .deinit = nullptr,
     .user_data = nullptr,
     .processors_count = 0,
-    .processors_ptr = nullptr
+    .processors_ptr = nullptr,
+    .controller_services_count = 0,
+    .controller_services_ptr = nullptr,
   };
   return MinifiCreateCppExtension(&ext_create_info);
 }

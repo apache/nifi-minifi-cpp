@@ -29,7 +29,7 @@ std::unique_ptr<core::controller::ControllerService> make_controller_service(std
   if (!uuid) {
     uuid = minifi::utils::IdGenerator::getIdGenerator()->generate();
   }
-  auto processor_impl = std::make_unique<T>(core::controller::ControllerServiceMetadata{
+  auto processor_impl = std::make_unique<T>(core::ControllerServiceMetadata{
       .uuid = uuid.value(),
       .name = std::string{name},
       .logger = minifi::core::logging::LoggerFactory<T>::getLogger(uuid.value())

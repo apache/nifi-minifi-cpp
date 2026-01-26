@@ -28,8 +28,8 @@
 #include "core/Connectable.h"
 #include "minifi-cpp/core/controller/ControllerServiceApi.h"
 #include "minifi-cpp/core/controller/ControllerServiceInterface.h"
-#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
-#include "minifi-cpp/core/controller/ControllerServiceMetadata.h"
+#include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
+#include "minifi-cpp/core/ControllerServiceMetadata.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
@@ -95,7 +95,7 @@ class ControllerServiceBase : public ControllerServiceApi {
   }
 
 
-  static constexpr auto ImplementsApis = std::array<ControllerServiceApiDefinition, 0>{};
+  static constexpr auto ImplementsApis = std::array<ControllerServiceTypeDefinition, 0>{};
 
  protected:
   std::string name_;

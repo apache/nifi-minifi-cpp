@@ -17,7 +17,7 @@
 #pragma once
 
 #include "minifi-cpp/core/controller/ControllerServiceInterface.h"
-#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
+#include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
 #include "minifi-cpp/core/Record.h"
 #include "utils/Enum.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -28,7 +28,7 @@ namespace org::apache::nifi::minifi::core {
 
 class RecordSetReader : public controller::ControllerServiceInterface {
  public:
-  static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
+  static constexpr auto ProvidesApi = core::ControllerServiceTypeDefinition{
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.core.RecordSetReader",
