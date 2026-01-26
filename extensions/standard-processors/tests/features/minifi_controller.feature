@@ -17,16 +17,13 @@
 Feature: MiNiFi Controller functionalities
   Test MiNiFi Controller functionalities
 
-  Background:
-    Given the content of "/tmp/output" is monitored
-
   Scenario: Flow config can be updated through MiNiFi controller
     Given a GenerateFlowFile processor
     And a file with the content "test" is present in "/tmp/input"
     And controller socket properties are set up
     When all instances start up
     And MiNiFi config is updated through MiNiFi controller
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
     And the updated config is persisted
 
   Scenario: A component can be stopped
