@@ -35,6 +35,8 @@ CEXTENSIONAPI void MinifiInitExtension(MinifiExtension* extension, MinifiConfig*
       .user_data = nullptr,
       .processors_count = 1,
       .processors_ptr = &description,
+      .controller_services_count = 0,
+      .controller_services_ptr = nullptr,
     };
     MinifiCreateExtension(extension, &ext_create_info);
   });
