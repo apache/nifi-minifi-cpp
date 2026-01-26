@@ -208,4 +208,5 @@ exec \
     "${docker_dir}/../extensions/grafana-loki/tests/features" \
     "${docker_dir}/../extensions/lua/tests/features/" \
     "${docker_dir}/../extensions/civetweb/tests/features/" \
-    "${docker_dir}/../extensions/mqtt/tests/features/"
+    "${docker_dir}/../extensions/mqtt/tests/features/" \
+    "${docker_dir}/../extensions/prometheus/tests/features/"

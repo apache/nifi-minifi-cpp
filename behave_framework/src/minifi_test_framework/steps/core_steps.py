@@ -137,11 +137,6 @@ def step_impl(context: MinifiTestContext, container_name: str):
     context.get_or_create_minifi_container(container_name).kill()
 
 
-@given("OpenSSL FIPS mode is enabled in MiNiFi")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_openssl_fips_mode()
-
-
 @step("the http proxy server is set up")
 def step_impl(context: MinifiTestContext):
     context.containers["http-proxy"] = HttpProxy(context)
@@ -150,22 +145,6 @@ def step_impl(context: MinifiTestContext):
 @step("a NiFi container is set up")
 def step_impl(context: MinifiTestContext):
     context.containers["nifi"] = NifiContainer(context)
-
-
-@given("C2 is enabled in MiNiFi")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_c2()
-
-
-@given("flow configuration path is set up in flow url property")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().fetch_flow_config_from_flow_url()
-
-
-@given("ssl properties are set up for MiNiFi C2 server")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_c2_with_ssl()
-    context.get_or_create_default_minifi_container().set_up_ssl_proprties()
 
 
 @given("a MiNiFi C2 server is set up")

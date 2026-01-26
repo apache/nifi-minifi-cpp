@@ -21,7 +21,6 @@ from .ContainerStore import ContainerStore
 from .DockerCommunicator import DockerCommunicator
 from .checkers.AzureChecker import AzureChecker
 from .checkers.PostgresChecker import PostgresChecker
-from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.ModbusChecker import ModbusChecker
 from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage
 
@@ -34,7 +33,6 @@ class DockerTestCluster:
         self.container_store = ContainerStore(self.container_communicator.create_docker_network(feature_id), context.image_store, context.kubernetes_proxy, feature_id=feature_id)
         self.azure_checker = AzureChecker(self.container_communicator)
         self.postgres_checker = PostgresChecker(self.container_communicator)
-        self.prometheus_checker = PrometheusChecker()
         self.modbus_checker = ModbusChecker(self.container_communicator)
 
     def cleanup(self):
@@ -78,12 +76,6 @@ class DockerTestCluster:
 
     def set_ssl_context_properties_in_minifi(self):
         self.container_store.set_ssl_context_properties_in_minifi()
-
-    def enable_prometheus_in_minifi(self):
-        self.container_store.enable_prometheus_in_minifi()
-
-    def enable_prometheus_with_ssl_in_minifi(self):
-        self.container_store.enable_prometheus_with_ssl_in_minifi()
 
     def enable_openssl_fips_mode_in_minifi(self):
         self.container_store.enable_openssl_fips_mode_in_minifi()
@@ -195,15 +187,6 @@ class DockerTestCluster:
 
     def segfault_happened(self):
         return self.segfault
-
-    def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
-        return self.prometheus_checker.wait_for_metric_class_on_prometheus(metric_class, timeout_seconds)
-
-    def wait_for_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
-        return self.prometheus_checker.wait_for_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
-
-    def verify_all_metric_types_are_defined_once(self):
-        return self.prometheus_checker.verify_all_metric_types_are_defined_once()
 
     def check_minifi_log_matches_regex(self, regex, timeout_seconds=60, count=1):
         for container_name in self.container_store.get_container_names("minifi-cpp"):

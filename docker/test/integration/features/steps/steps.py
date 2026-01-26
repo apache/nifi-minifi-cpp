@@ -370,19 +370,9 @@ def step_impl(context):
     context.test.enable_c2_in_minifi()
 
 
-@given("Prometheus is enabled in MiNiFi")
-def step_impl(context):
-    context.test.enable_prometheus_in_minifi()
-
-
 @given("log metrics publisher is enabled in MiNiFi")
 def step_impl(context):
     context.test.enable_log_metrics_publisher_in_minifi()
-
-
-@given("Prometheus with SSL is enabled in MiNiFi")
-def step_impl(context):
-    context.test.enable_prometheus_with_ssl_in_minifi()
 
 
 @given("OpenSSL FIPS mode is enabled in MiNiFi")
@@ -771,33 +761,6 @@ def step_impl(context, regex, duration):
 @then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")
 def step_impl(context, minifi_container_name, log_pattern, duration):
     context.test.check_container_log_matches_regex(minifi_container_name, log_pattern, humanfriendly.parse_timespan(duration), count=1)
-
-
-# Prometheus
-@given("a Prometheus server is set up")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="prometheus", engine="prometheus")
-
-
-@given("a Prometheus server is set up with SSL")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="prometheus", engine="prometheus-ssl")
-
-
-@then("\"{metric_class}\" are published to the Prometheus server in less than {timeout_seconds:d} seconds")
-@then("\"{metric_class}\" is published to the Prometheus server in less than {timeout_seconds:d} seconds")
-def step_impl(context, metric_class, timeout_seconds):
-    context.test.check_metric_class_on_prometheus(metric_class, timeout_seconds)
-
-
-@then("\"{metric_class}\" processor metric is published to the Prometheus server in less than {timeout_seconds:d} seconds for \"{processor_name}\" processor")
-def step_impl(context, metric_class, timeout_seconds, processor_name):
-    context.test.check_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
-
-
-@then("all Prometheus metric types are only defined once")
-def step_impl(context):
-    context.test.check_all_prometheus_metric_types_are_defined_once()
 
 
 @given("SSL properties are set in MiNiFi")
