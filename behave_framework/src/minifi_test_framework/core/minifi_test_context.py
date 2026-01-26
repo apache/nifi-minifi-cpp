@@ -46,11 +46,3 @@ class MinifiTestContext(Context):
 
     def get_or_create_default_minifi_container(self) -> MinifiContainer:
         return self.get_or_create_minifi_container(DEFAULT_MINIFI_CONTAINER_NAME)
-
-    def get_minifi_container(self, container_name: str) -> MinifiContainer:
-        if container_name not in self.containers:
-            raise KeyError(f"MiNiFi container '{container_name}' does not exist in the test context.")
-        return self.containers[container_name]
-
-    def get_default_minifi_container(self) -> MinifiContainer:
-        return self.get_minifi_container(DEFAULT_MINIFI_CONTAINER_NAME)

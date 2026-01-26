@@ -20,19 +20,20 @@ from OpenSSL import crypto
 
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.containers.file import File
-from minifi_test_framework.minifi.flow_definition import FlowDefinition
-from minifi_test_framework.core.ssl_utils import make_cert_without_extended_usage, make_client_cert
+from minifi_test_framework.minifi.minifi_flow_definition import MinifiFlowDefinition
+from minifi_test_framework.core.ssl_utils import make_cert_without_extended_usage, make_client_cert, make_server_cert
 from .container import Container
 
 
 class MinifiContainer(Container):
     def __init__(self, container_name: str, test_context: MinifiTestContext):
         super().__init__(test_context.minifi_container_image, f"{container_name}-{test_context.scenario_id}", test_context.network)
-        self.flow_definition = FlowDefinition()
+        self.flow_definition = MinifiFlowDefinition()
         self.properties: dict[str, str] = {}
         self.log_properties: dict[str, str] = {}
 
         minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=self.container_name, ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
+        self.files.append(File("/usr/local/share/certs/ca-root-nss.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)))
         self.files.append(File("/tmp/resources/root_ca.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)))
         self.files.append(File("/tmp/resources/minifi_client.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=minifi_client_cert)))
         self.files.append(File("/tmp/resources/minifi_client.key", crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=minifi_client_key)))
@@ -40,6 +41,10 @@ class MinifiContainer(Container):
         clientuser_cert, clientuser_key = make_client_cert("clientuser", ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
         self.files.append(File("/tmp/resources/clientuser.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=clientuser_cert)))
         self.files.append(File("/tmp/resources/clientuser.key", crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=clientuser_key)))
+
+        minifi_server_cert, minifi_server_key = make_server_cert(common_name=f"server-{test_context.scenario_id}", ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
+        self.files.append(File("/tmp/resources/minifi_server.crt",
+                               crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=minifi_server_cert) + crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=minifi_server_key)))
 
         self.is_fhs = 'MINIFI_INSTALLATION_TYPE=FHS' in str(self.client.images.get(test_context.minifi_container_image).history())
 

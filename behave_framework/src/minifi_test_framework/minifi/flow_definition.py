@@ -15,7 +15,7 @@
 #  limitations under the License.
 #
 
-import yaml
+from abc import ABC
 
 from .connection import Connection
 from .controller_service import ControllerService
@@ -24,7 +24,7 @@ from .parameter_context import ParameterContext
 from .processor import Processor
 
 
-class FlowDefinition:
+class FlowDefinition(ABC):
     def __init__(self, flow_name: str = "MiNiFi Flow"):
         self.flow_name = flow_name
         self.processors: list[Processor] = []
@@ -53,42 +53,10 @@ class FlowDefinition:
         self.connections.append(connection)
 
     def to_yaml(self) -> str:
-        """Serializes the entire flow definition into the MiNiFi YAML format."""
+        raise NotImplementedError("to_yaml method must be implemented in subclasses")
 
-        # Create a quick lookup map of processor names to their objects
-        # This is crucial for finding the source/destination IDs for connections
-        processors_by_name = {p.name: p for p in self.processors}
-        funnels_by_name = {f.name: f for f in self.funnels}
-
-        connectables_by_name = {**processors_by_name, **funnels_by_name}
-
-        if len(self.parameter_contexts) > 0:
-            parameter_context_name = self.parameter_contexts[0].name
-        else:
-            parameter_context_name = ''
-        # Build the final dictionary structure
-        config = {'MiNiFi Config Version': 3, 'Flow Controller': {'name': self.flow_name},
-                  'Parameter Contexts': [p.to_yaml_dict() for p in self.parameter_contexts],
-                  'Processors': [p.to_yaml_dict() for p in self.processors],
-                  'Funnels': [f.to_yaml_dict() for f in self.funnels], 'Connections': [],
-                  'Controller Services': [c.to_yaml_dict() for c in self.controller_services],
-                  'Remote Processing Groups': [], 'Parameter Context Name': parameter_context_name}
-
-        # Build the connections list by looking up processor IDs
-        for conn in self.connections:
-            source_proc = connectables_by_name.get(conn.source_name)
-            dest_proc = connectables_by_name.get(conn.target_name)
-
-            if not source_proc or not dest_proc:
-                raise ValueError(
-                    f"Could not find processors for connection from '{conn.source_name}' to '{conn.target_name}'")
-
-            config['Connections'].append(
-                {'name': f"{conn.source_name}/{conn.source_relationship}/{conn.target_name}", 'id': conn.id,
-                 'source id': source_proc.id, 'source relationship name': conn.source_relationship,
-                 'destination id': dest_proc.id})
-
-        return yaml.dump(config, sort_keys=False, indent=2, width=120)
+    def to_json(self) -> str:
+        raise NotImplementedError("to_json method must be implemented in subclasses")
 
     def __repr__(self):
         return f"FlowDefinition(Processors: {self.processors}, Controller Services: {self.controller_services})"
