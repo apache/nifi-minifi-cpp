@@ -120,11 +120,11 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
 
     And a NiFi container is set up
-    And a ListenHTTP processor with the "Listening Port" property set to "8081" in the "nifi" flow
-    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
-    And in the "nifi" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
-    And PutFile's success relationship is auto-terminated in the "nifi" flow
-    And PutFile's failure relationship is auto-terminated in the "nifi" flow
+    And a ListenHTTP processor with the "Listening Port" property set to "8081" in the NiFi flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the NiFi flow
+    And in the NiFi flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated in the NiFi flow
+    And PutFile's failure relationship is auto-terminated in the NiFi flow
 
     When both instances start up
     Then in the "nifi" container at least one empty file is placed in the "/tmp/output" directory in less than 60 seconds

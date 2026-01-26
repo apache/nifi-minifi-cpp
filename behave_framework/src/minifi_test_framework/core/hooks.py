@@ -51,9 +51,7 @@ def common_before_scenario(context: Context, scenario: Scenario):
 
     method_map = {
         "get_or_create_minifi_container": MinifiTestContext.get_or_create_minifi_container,
-        "get_or_create_default_minifi_container": MinifiTestContext.get_or_create_default_minifi_container,
-        "get_minifi_container": MinifiTestContext.get_minifi_container,
-        "get_default_minifi_container": MinifiTestContext.get_default_minifi_container,
+        "get_or_create_default_minifi_container": MinifiTestContext.get_or_create_default_minifi_container
     }
     for attr, method in method_map.items():
         if not hasattr(context, attr):

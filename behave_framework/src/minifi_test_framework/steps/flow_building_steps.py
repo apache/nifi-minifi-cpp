@@ -60,10 +60,14 @@ def step_impl(context: MinifiTestContext, processor_type: str, property_name: st
 def step_impl(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str, minifi_container_name: str):
     processor = Processor(processor_type, processor_type)
     processor.add_property(property_name, property_value)
-    if minifi_container_name == "nifi":
-        context.containers["nifi"].flow_definition.add_processor(processor)
-        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
+
+
+@step('a {processor_type} processor with the "{property_name}" property set to "{property_value}" in the NiFi flow')
+def step_impl(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str):
+    processor = Processor(processor_type, processor_type)
+    processor.add_property(property_name, property_value)
+    context.containers["nifi"].flow_definition.add_processor(processor)
 
 
 @given('a {processor_type} processor with the name "{processor_name}"')
@@ -75,10 +79,13 @@ def step_impl(context: MinifiTestContext, processor_type: str, processor_name: s
 @given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
 def step_impl(context: MinifiTestContext, processor_type: str, minifi_container_name: str):
     processor = Processor(processor_type, processor_type)
-    if minifi_container_name == "nifi":
-        context.containers["nifi"].flow_definition.add_processor(processor)
-        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
+
+
+@given("a {processor_type} processor in the NiFi flow")
+def step_impl(context: MinifiTestContext, processor_type: str):
+    processor = Processor(processor_type, processor_type)
+    context.containers["nifi"].flow_definition.add_processor(processor)
 
 
 @given("a {processor_type} processor")
@@ -88,11 +95,16 @@ def step_impl(context: MinifiTestContext, processor_type: str):
 
 @given('the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the "{minifi_container_name}" flow')
 def step_impl(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str, minifi_container_name: str):
-    processor = None
-    if minifi_container_name == "nifi":
-        processor = context.containers["nifi"].flow_definition.get_processor(processor_name)
+    processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name)
+    if property_value == "(not set)":
+        processor.remove_property(property_name)
     else:
-        processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name)
+        processor.add_property(property_name, property_value)
+
+
+@given('the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the NiFi flow')
+def step_impl(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str):
+    processor = context.containers["nifi"].flow_definition.get_processor(processor_name)
     if property_value == "(not set)":
         processor.remove_property(property_name)
     else:
@@ -122,10 +134,13 @@ def step_impl(context: MinifiTestContext, funnel_name: str):
 @step('in the "{minifi_container_name}" flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
 def step_impl(context: MinifiTestContext, relationship_name: str, source: str, target: str, minifi_container_name: str):
     connection = Connection(source_name=source, source_relationship=relationship_name, target_name=target)
-    if minifi_container_name == "nifi":
-        context.containers["nifi"].flow_definition.add_connection(connection)
-        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_connection(connection)
+
+
+@step('in the NiFi flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
+def step_impl(context: MinifiTestContext, relationship_name: str, source: str, target: str):
+    connection = Connection(source_name=source, source_relationship=relationship_name, target_name=target)
+    context.containers["nifi"].flow_definition.add_connection(connection)
 
 
 @step('the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
@@ -141,11 +156,13 @@ def step_impl(context: MinifiTestContext, funnel_name: str, target: str):
 
 @step("{processor_name}'s {relationship} relationship is auto-terminated in the \"{minifi_container_name}\" flow")
 def step_impl(context: MinifiTestContext, processor_name: str, relationship: str, minifi_container_name: str):
-    if minifi_container_name == "nifi":
-        context.containers["nifi"].flow_definition.get_processor(processor_name).auto_terminated_relationships.append(relationship)
-        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name).auto_terminated_relationships.append(
         relationship)
+
+
+@step("{processor_name}'s {relationship} relationship is auto-terminated in the NiFi flow")
+def step_impl(context: MinifiTestContext, processor_name: str, relationship: str):
+    context.containers["nifi"].flow_definition.get_processor(processor_name).auto_terminated_relationships.append(relationship)
 
 
 @step("{processor_name}'s {relationship} relationship is auto-terminated")
@@ -160,10 +177,12 @@ def step_impl(context: MinifiTestContext):
 
 @step('the scheduling period of the {processor_name} processor is set to "{duration_str}" in the "{minifi_container_name}" flow')
 def step_impl(context: MinifiTestContext, processor_name: str, duration_str: str, minifi_container_name: str):
-    if minifi_container_name == "nifi":
-        context.containers["nifi"].flow_definition.get_processor(processor_name).scheduling_period = duration_str
-        return
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name).scheduling_period = duration_str
+
+
+@step('the scheduling period of the {processor_name} processor is set to "{duration_str}" in the NiFi flow')
+def step_impl(context: MinifiTestContext, processor_name: str, duration_str: str, minifi_container_name: str):
+    context.containers["nifi"].flow_definition.get_processor(processor_name).scheduling_period = duration_str
 
 
 @step('the scheduling period of the {processor_name} processor is set to "{duration_str}"')
