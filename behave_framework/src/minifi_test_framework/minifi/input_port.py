@@ -15,16 +15,27 @@
 #  limitations under the License.
 #
 
-import uuid
+class InputPort:
+    def __init__(self, name: str, id: str):
+        self.id: str = id
+        self.name: str = name
 
-
-class Connection:
-    def __init__(self, source_name: str, source_relationship: str, target_name: str):
-        self.id: str = str(uuid.uuid4())
-        self.source_name: str = source_name
-        self.source_relationship: str = source_relationship
-        self.target_name: str = target_name
-        self.drop_empty_flowfiles: bool = False
-
-    def __repr__(self):
-        return f"({self.source_name}:{self.source_relationship} --> {self.target_name})"
+    def to_json_dict(self):
+        data = {
+            "identifier": self.id,
+            "instanceIdentifier": self.id,
+            "name": self.name,
+            "comments": "",
+            "position": {
+                "x": 0,
+                "y": 0
+            },
+            "type": "INPUT_PORT",
+            "concurrentlySchedulableTaskCount": 1,
+            "scheduledState": "RUNNING",
+            "allowRemoteAccess": True,
+            "portFunction": "STANDARD",
+            "componentType": "INPUT_PORT",
+            "groupIdentifier": "9802c873-3322-3b60-a71d-732d02bd60f8"
+        }
+        return data

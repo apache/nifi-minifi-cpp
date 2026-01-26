@@ -146,6 +146,16 @@ def step_impl(context: MinifiTestContext):
     context.containers["nifi"] = NifiContainer(context)
 
 
+@step("a NiFi container is set up with SSL enabled")
+def step_impl(context: MinifiTestContext):
+    context.containers["nifi"] = NifiContainer(context, use_ssl=True)
+
+
+@when(u'NiFi is started')
+def step_impl(context):
+    assert context.containers["nifi"].deploy() or context.containers["nifi"].log_app_output()
+
+
 @step("{duration} later")
 def step_impl(context: MinifiTestContext, duration: str):
     time.sleep(humanfriendly.parse_timespan(duration))

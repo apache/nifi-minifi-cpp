@@ -99,6 +99,17 @@ def step_impl(context: MinifiTestContext, processor_type: str):
     context.execute_steps(f'given a {processor_type} processor in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 
+@given('the "{property_name}" property of the "{port_name}" port in the "{rpg_name}" remote process group is set to "{property_value}"')
+def step_impl(context: MinifiTestContext, property_name: str, port_name: str, rpg_name: str, property_value: str):
+    rpg = context.get_or_create_minifi_container(DEFAULT_MINIFI_CONTAINER_NAME).flow_definition.get_remote_process_group(rpg_name)
+    if not rpg:
+        raise ValueError(f"Remote Process Group with name {rpg_name} not found")
+    port = rpg.get_input_port(port_name)
+    if not port:
+        raise ValueError(f"Remote input port with name {port_name} not found in RPG {rpg_name}")
+    port.add_property(property_name, property_value)
+
+
 @given('the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the "{minifi_container_name}" flow')
 def step_impl(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str, minifi_container_name: str):
     processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name)
@@ -138,6 +149,7 @@ def step_impl(context: MinifiTestContext, funnel_name: str):
 
 
 @step('in the "{minifi_container_name}" flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
+@step('in the "{minifi_container_name}" flow the "{relationship_name}" relationship of the {source} node is connected to the {target}')
 def step_impl(context: MinifiTestContext, relationship_name: str, source: str, target: str, minifi_container_name: str):
     connection = Connection(source_name=source, source_relationship=relationship_name, target_name=target)
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_connection(connection)
@@ -150,8 +162,15 @@ def step_impl(context: MinifiTestContext, relationship_name: str, source: str, t
 
 
 @step('the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
+@step('the "{relationship_name}" relationship of the {source} node is connected to the {target}')
 def step_impl(context: MinifiTestContext, relationship_name: str, source: str, target: str):
     context.execute_steps(f'given in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
+
+
+@step("the output port \"{port_name}\" is connected to the {destination_name} processor")
+def step_impl(context: MinifiTestContext, port_name: str, destination_name: str):
+    connection = Connection(source_name=port_name, source_relationship="undefined", target_name=destination_name)
+    context.get_or_create_minifi_container(DEFAULT_MINIFI_CONTAINER_NAME).flow_definition.add_connection(connection)
 
 
 @step('the Funnel with the name "{funnel_name}" is connected to the {target}')
@@ -351,3 +370,50 @@ def step_impl(context: MinifiTestContext, processor_name):
     add_ssl_context_service_for_minifi(context, "minifi_client", use_system_cert_store=True)
     processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
     processor.add_property('SSL Context Service', 'SSLContextService')
+
+
+@given("a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\" with transport protocol set to \"{transport_protocol}\"")
+def step_impl(context: MinifiTestContext, rpg_name: str, address: str, transport_protocol: str):
+    context.get_or_create_default_minifi_container().flow_definition.add_remote_process_group(address, rpg_name, transport_protocol)
+
+
+@given("a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\"")
+def step_impl(context: MinifiTestContext, rpg_name: str, address: str):
+    context.execute_steps(f"given a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\" with transport protocol set to \"RAW\"")
+
+
+@given("an input port with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context: MinifiTestContext, port_name: str, rpg_name: str):
+    context.get_or_create_default_minifi_container().flow_definition.add_input_port_to_rpg(rpg_name, port_name)
+
+
+@given("an input port using compression with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context: MinifiTestContext, port_name: str, rpg_name: str):
+    context.get_or_create_default_minifi_container().flow_definition.add_input_port_to_rpg(rpg_name, port_name, use_compression=True)
+
+
+@given("an output port with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context: MinifiTestContext, port_name: str, rpg_name: str):
+    context.get_or_create_default_minifi_container().flow_definition.add_output_port_to_rpg(rpg_name, port_name)
+
+
+@given("an output port using compression with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context: MinifiTestContext, port_name: str, rpg_name: str):
+    context.get_or_create_default_minifi_container().flow_definition.add_output_port_to_rpg(rpg_name, port_name, use_compression=True)
+
+
+@given("a NiFi flow is receiving data from the RemoteProcessGroup named \"{rpg_name}\" in an input port named \"{input_port_name}\" which has the same id as the port named \"{rpg_port_name}\"")
+def step_impl(context: MinifiTestContext, input_port_name: str, rpg_port_name: str, rpg_name: str):
+    input_port_id = context.get_or_create_default_minifi_container().flow_definition.get_input_port_id_of_rpg(rpg_name, rpg_port_name)
+    context.containers["nifi"].flow_definition.add_input_port(input_port_id, input_port_name)
+
+
+@given("a NiFi flow is sending data to an output port named \"{port_name}\" with the id of the port named \"{rpg_port_name}\" from the RemoteProcessGroup named \"{rpg_name}\"")
+def step_impl(context: MinifiTestContext, port_name: str, rpg_port_name: str, rpg_name: str):
+    output_port_id = context.get_or_create_default_minifi_container().flow_definition.get_output_port_id_of_rpg(rpg_name, rpg_port_name)
+    context.containers["nifi"].flow_definition.add_output_port(output_port_id, port_name)
+
+
+@given("the connection going to {destination} has \"drop empty\" set")
+def step_impl(context: MinifiTestContext, destination: str):
+    context.get_or_create_default_minifi_container().flow_definition.set_drop_empty_for_destination(destination)
