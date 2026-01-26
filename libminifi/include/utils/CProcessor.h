@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 #include "minifi-cpp/core/Annotation.h"
 #include "core/ProcessorMetrics.h"
@@ -63,18 +64,18 @@ class CProcessor : public minifi::core::ProcessorApi {
   CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata)
       : class_description_(std::move(class_description)),
         metrics_extension_(std::make_shared<CProcessorMetricsWrapper>(*this)) {
-    metadata_ = metadata;
+    metadata_ = std::move(metadata);
     MinifiProcessorMetadata c_metadata;
-    auto uuid_str = metadata.uuid.to_string();
+    const auto uuid_str = metadata.uuid.to_string();
     c_metadata.uuid = MinifiStringView{.data = uuid_str.data(), .length = uuid_str.length()};
-    c_metadata.name = MinifiStringView{.data = metadata.name.data(), .length = metadata.name.length()};
+    c_metadata.name = MinifiStringView{.data = metadata_.name.data(), .length = metadata_.name.length()};
     c_metadata.logger = reinterpret_cast<MinifiLogger*>(&metadata_.logger);
     impl_ = class_description_.callbacks.create(c_metadata);
   }
   CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata, gsl::owner<void*> impl)
       : class_description_(std::move(class_description)),
         impl_(impl),
-        metadata_(metadata),
+        metadata_(std::move(metadata)),
         metrics_extension_(std::make_shared<CProcessorMetricsWrapper>(*this)) {}
   ~CProcessor() override {
     class_description_.callbacks.destroy(impl_);
