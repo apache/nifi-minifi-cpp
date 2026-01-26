@@ -16,15 +16,17 @@
  */
 #pragma once
 
-#include <string_view>
+#include <memory>
+#include <string>
+#include "minifi-cpp/utils/Id.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::core {
 
-struct ControllerServiceApiDefinition {
-  std::string_view artifact;
-  std::string_view group;
-  std::string_view type;
-  std::string_view version;
+struct ControllerServiceMetadata {
+  utils::Identifier uuid;
+  std::string name;
+  std::shared_ptr<logging::Logger> logger;
 };
 
 }  // namespace org::apache::nifi::minifi::core
