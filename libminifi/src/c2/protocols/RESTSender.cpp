@@ -75,7 +75,8 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
       logger_->log_debug("Request encoding is not specified, using default '{}'", magic_enum::enum_name(RequestEncoding::none));
       req_encoding_ = RequestEncoding::none;
     }
-    asset_download_timeout_ = (configure->get(Configuration::nifi_c2_asset_download_timeout) | utils::andThen([] (const auto& s) { return parsing::parseDuration(s) | utils::toOptional(); })).value_or(0s);
+    asset_download_timeout_ = (configure->get(Configuration::nifi_c2_asset_download_timeout)
+        | utils::andThen([] (const auto& s) { return parsing::parseDuration(s) | utils::toOptional(); })).value_or(0s);
   }
   logger_->log_debug("Submitting to {}", rest_uri_);
 }
