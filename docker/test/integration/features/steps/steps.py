@@ -827,41 +827,9 @@ def step_impl(context):
     context.test.check_all_prometheus_metric_types_are_defined_once()
 
 
-# MiNiFi C2 Server
-@given("ssl properties are set up for MiNiFi C2 server")
-def step_impl(context):
-    context.test.enable_c2_with_ssl_in_minifi()
-    context.test.set_ssl_context_properties_in_minifi()
-
-
 @given("SSL properties are set in MiNiFi")
 def step_impl(context):
     context.test.set_ssl_context_properties_in_minifi()
-
-
-@given(u'a MiNiFi C2 server is set up')
-def step_impl(context):
-    context.test.acquire_container(context=context, name="minifi-c2-server", engine="minifi-c2-server")
-
-
-@given(u'a MiNiFi C2 server is started')
-def step_impl(context):
-    context.test.start_minifi_c2_server(context)
-
-
-@then("the MiNiFi C2 server logs contain the following message: \"{log_message}\" in less than {duration}")
-def step_impl(context, log_message, duration):
-    context.test.check_container_log_contents("minifi-c2-server", log_message, humanfriendly.parse_timespan(duration))
-
-
-@then("the MiNiFi C2 SSL server logs contain the following message: \"{log_message}\" in less than {duration}")
-def step_impl(context, log_message, duration):
-    context.test.check_container_log_contents("minifi-c2-server-ssl", log_message, humanfriendly.parse_timespan(duration))
-
-
-@given(u'a MiNiFi C2 server is set up with SSL')
-def step_impl(context):
-    context.test.acquire_container(context=context, name="minifi-c2-server", engine="minifi-c2-server-ssl")
 
 
 @given(u'flow configuration path is set up in flow url property')

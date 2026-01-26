@@ -35,6 +35,7 @@ class MinifiContainer(Container):
         self.flow_definition = MinifiFlowDefinition()
         self.properties: dict[str, str] = {}
         self.log_properties: dict[str, str] = {}
+        self.scenario_id = test_context.scenario_id
 
         minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=self.container_name, ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
         self.files.append(File("/usr/local/share/certs/ca-root-nss.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)))
@@ -95,6 +96,35 @@ class MinifiContainer(Container):
 
     def enable_openssl_fips_mode(self):
         self.properties["nifi.openssl.fips.support.enable"] = "true"
+
+    def enable_c2(self):
+        self.properties["nifi.c2.enable"] = "true"
+        self.properties["nifi.c2.rest.url"] = f"http://minifi-c2-server-{self.scenario_id}:10090/c2/config/heartbeat"
+        self.properties["nifi.c2.rest.url.ack"] = f"http://minifi-c2-server-{self.scenario_id}:10090/c2/config/acknowledge"
+        self.properties["nifi.c2.flow.base.url"] = f"http://minifi-c2-server-{self.scenario_id}:10090/c2/config/"
+        self.properties["nifi.c2.root.classes"] = "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation"
+        self.properties["nifi.c2.full.heartbeat"] = "false"
+        self.properties["nifi.c2.agent.class"] = "minifi-test-class"
+        self.properties["nifi.c2.agent.identifier"] = "minifi-test-id"
+
+    def enable_c2_with_ssl(self):
+        self.properties["nifi.c2.enable"] = "true"
+        self.properties["nifi.c2.rest.url"] = f"https://minifi-c2-server-{self.scenario_id}:10090/c2/config/heartbeat"
+        self.properties["nifi.c2.rest.url.ack"] = f"https://minifi-c2-server-{self.scenario_id}:10090/c2/config/acknowledge"
+        self.properties["nifi.c2.flow.base.url"] = f"https://minifi-c2-server-{self.scenario_id}:10090/c2/config/"
+        self.properties["nifi.c2.root.classes"] = "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation"
+        self.properties["nifi.c2.full.heartbeat"] = "false"
+        self.properties["nifi.c2.agent.class"] = "minifi-test-class"
+        self.properties["nifi.c2.agent.identifier"] = "minifi-test-id"
+
+    def fetch_flow_config_from_flow_url(self):
+        self.properties["nifi.c2.flow.url"] = f"http://minifi-c2-server-{self.scenario_id}:10090/c2/config?class=minifi-test-class"
+
+    def set_up_ssl_proprties(self):
+        self.properties["nifi.remote.input.secure"] = "true"
+        self.properties["nifi.security.client.certificate"] = "/tmp/resources/minifi_client.crt"
+        self.properties["nifi.security.client.private.key"] = "/tmp/resources/minifi_client.key"
+        self.properties["nifi.security.client.ca.certificate"] = "/tmp/resources/root_ca.crt"
 
     def _fill_default_properties(self):
         if self.is_fhs:

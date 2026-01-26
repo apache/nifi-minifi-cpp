@@ -27,8 +27,6 @@ from minifi.flow_serialization.Minifi_flow_json_serializer import Minifi_flow_js
 
 class MinifiOptions:
     def __init__(self):
-        self.enable_c2 = False
-        self.enable_c2_with_ssl = False
         self.enable_provenance = False
         self.enable_prometheus = False
         self.enable_prometheus_with_ssl = False
@@ -39,7 +37,6 @@ class MinifiOptions:
         self.remove_python_requirements_txt = False
         self.use_nifi_python_processors_without_dependencies = False
         self.config_format = "json"
-        self.use_flow_config_from_url = False
         self.set_ssl_context_properties = False
         self.enable_log_metrics_publisher = False
         self.enable_example_minifi_python_processors = False
@@ -133,25 +130,6 @@ class MinifiContainer(FlowContainer):
             f.write("nifi.database.content.repository.directory.default={minifi_home}/content_repository\n".format(minifi_home=MinifiContainer.MINIFI_LOCATIONS.minifi_home))
             f.write("nifi.python.processor.dir={minifi_home}/minifi-python\n".format(minifi_home=MinifiContainer.MINIFI_LOCATIONS.minifi_home))
 
-            if self.options.enable_c2:
-                f.write("nifi.c2.enable=true\n")
-                f.write(f"nifi.c2.rest.url=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config/heartbeat\n")
-                f.write(f"nifi.c2.rest.url.ack=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config/acknowledge\n")
-                f.write(f"nifi.c2.flow.base.url=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config/\n")
-                f.write("nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation\n")
-                f.write("nifi.c2.full.heartbeat=false\n")
-                f.write("nifi.c2.agent.class=minifi-test-class\n")
-                f.write("nifi.c2.agent.identifier=minifi-test-id\n")
-            elif self.options.enable_c2_with_ssl:
-                f.write("nifi.c2.enable=true\n")
-                f.write(f"nifi.c2.rest.url=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/heartbeat\n")
-                f.write(f"nifi.c2.rest.url.ack=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/acknowledge\n")
-                f.write(f"nifi.c2.flow.base.url=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/\n")
-                f.write("nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation\n")
-                f.write("nifi.c2.full.heartbeat=false\n")
-                f.write("nifi.c2.agent.class=minifi-test-class\n")
-                f.write("nifi.c2.agent.identifier=minifi-test-id\n")
-
             if self.options.set_ssl_context_properties:
                 f.write("nifi.remote.input.secure=true\n")
                 f.write("nifi.security.client.certificate=/tmp/resources/minifi_client.crt\n")
@@ -180,9 +158,6 @@ class MinifiContainer(FlowContainer):
             if metrics_publisher_classes:
                 f.write("nifi.metrics.publisher.class=" + ",".join(metrics_publisher_classes) + "\n")
 
-            if self.options.use_flow_config_from_url:
-                f.write(f"nifi.c2.flow.url=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config?class=minifi-test-class\n")
-
             if self.options.use_nifi_python_processors_with_virtualenv or self.options.remove_python_requirements_txt or self.options.use_nifi_python_processors_without_dependencies:
                 f.write("nifi.python.virtualenv.directory={minifi_python_venv_parent}/venv\n".format(minifi_python_venv_parent=MinifiContainer.MINIFI_LOCATIONS.minifi_python_venv_parent))
             elif self.options.use_nifi_python_processors_with_virtualenv_packages_installed:
@@ -198,10 +173,8 @@ class MinifiContainer(FlowContainer):
 
     def _setup_config(self):
         self._create_properties()
-        if not self.options.use_flow_config_from_url:
-            self._create_config()
-            self.vols[os.path.join(self.container_specific_config_dir, 'config.yml')] = {"bind": MinifiContainer.MINIFI_LOCATIONS.config_path, "mode": "rw"}
-
+        self._create_config()
+        self.vols[os.path.join(self.container_specific_config_dir, 'config.yml')] = {"bind": MinifiContainer.MINIFI_LOCATIONS.config_path, "mode": "rw"}
         self.vols[os.path.join(self.container_specific_config_dir, 'minifi.properties')] = {"bind": MinifiContainer.MINIFI_LOCATIONS.properties_path, "mode": "rw"}
         self.vols[os.path.join(self.container_specific_config_dir, 'minifi-log.properties')] = {"bind": MinifiContainer.MINIFI_LOCATIONS.log_properties_path, "mode": "rw"}
 
@@ -228,9 +201,6 @@ class MinifiContainer(FlowContainer):
             image = self.image_store.get_image('minifi-cpp-with-llamacpp-model')
         else:
             image = 'apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION
-
-        if self.options.use_flow_config_from_url:
-            self.command = ["/bin/sh", "-c", "rm " + MinifiContainer.MINIFI_LOCATIONS.config_path + " && " + MinifiContainer.MINIFI_LOCATIONS.run_minifi_cmd]
 
         ports = {}
         if self.options.enable_prometheus or self.options.enable_prometheus_with_ssl:

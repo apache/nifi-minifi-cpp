@@ -63,11 +63,6 @@ class MiNiFi_integration_test:
     def acquire_transient_minifi(self, context, name, engine='minifi-cpp'):
         return self.cluster.acquire_transient_minifi(context=context, name=name, engine=engine)
 
-    def start_minifi_c2_server(self, context):
-        self.cluster.acquire_container(context=context, name="minifi-c2-server", engine="minifi-c2-server")
-        self.cluster.deploy_container('minifi-c2-server')
-        assert self.cluster.wait_for_container_startup_to_finish('minifi-c2-server') or self.cluster.log_app_output()
-
     def start_nifi(self, context):
         self.cluster.acquire_container(context=context, name='nifi', engine='nifi')
         self.cluster.deploy_container('nifi')
