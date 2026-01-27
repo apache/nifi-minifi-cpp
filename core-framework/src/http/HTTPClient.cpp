@@ -334,9 +334,11 @@ bool HTTPClient::submit() {
 
   response_data_.clear();
 
+  const auto absolute_timeout = absolute_timeout_.value_or(3 * read_timeout_);
+
   curl_easy_setopt(http_session_.get(), CURLOPT_NOSIGNAL, 1);
   curl_easy_setopt(http_session_.get(), CURLOPT_CONNECTTIMEOUT_MS, connect_timeout_.count());
-  curl_easy_setopt(http_session_.get(), CURLOPT_TIMEOUT_MS, getAbsoluteTimeout().count());
+  curl_easy_setopt(http_session_.get(), CURLOPT_TIMEOUT_MS, absolute_timeout.count());
 
   if (read_timeout_ > 0ms) {
     progress_.reset();
@@ -376,7 +378,7 @@ bool HTTPClient::submit() {
   response_data_.response_code = http_code;
   curl_easy_getinfo(http_session_.get(), CURLINFO_CONTENT_TYPE, &response_data_.response_content_type);
   if (res_ == CURLE_OPERATION_TIMEDOUT) {
-    logger_->log_error("HTTP operation timed out, with absolute timeout {}\n", getAbsoluteTimeout());
+    logger_->log_error("HTTP operation timed out, with absolute timeout {}\n", absolute_timeout);
   }
   if (res_ != CURLE_OK) {
     logger_->log_info("{}", request_headers_.size());

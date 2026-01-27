@@ -321,6 +321,33 @@ struct C2DebugBundleError : public C2TransferError {
   using C2TransferError::C2TransferError;
 };
 
+nonstd::expected<void, std::string> fetchAssetAsFile(C2Protocol& protocol, const std::string& url, const std::filesystem::path& file_path, std::shared_ptr<core::logging::Logger> logger) {
+  if (utils::file::create_dir(file_path.parent_path()) != 0) {
+    return nonstd::make_unexpected(fmt::format("Failed to create directory '{}'", file_path.parent_path().string()));
+  }
+
+  std::ofstream file{file_path, std::ofstream::binary};
+  if (!file) {
+    return nonstd::make_unexpected(fmt::format("Failed to open file to write '{}'", file_path.string()));
+  }
+  bool success = protocol.fetch(url, [&] (std::span<const char> chunk) {
+    file.write(chunk.data(), gsl::narrow<std::streamsize>(chunk.size()));
+    return file.good();
+  });
+  file.close();
+  if (!file || !success) {
+    std::error_code ec;
+    std::filesystem::remove(file_path, ec);
+    if (ec) {
+      logger->log_error("Failed remove partial asset file '{}'", file_path.string());
+    } else {
+      logger->log_info("Successfully removed partial asset file '{}'", file_path.string());
+    }
+    return nonstd::make_unexpected(fmt::format("Failed to fetch asset from '{}'", url));
+  }
+  return {};
+}
+
 }  // namespace
 
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
@@ -833,30 +860,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     if (!resolved_url) {
       return nonstd::make_unexpected("Couldn't resolve url");
     }
-    if (utils::file::create_dir(file_path.parent_path()) != 0) {
-      return nonstd::make_unexpected(fmt::format("Failed to create directory '{}'", file_path.parent_path().string()));
-    }
-
-    std::ofstream file{file_path, std::ofstream::binary};
-    if (!file) {
-      return nonstd::make_unexpected(fmt::format("Failed to open file to write '{}'", file_path.string()));
-    }
-    bool success = protocol_->fetch(resolved_url.value(), [&] (std::span<const char> chunk) {
-      file.write(chunk.data(), gsl::narrow<std::streamsize>(chunk.size()));
-      return file.good();
-    });
-    file.close();
-    if (!file || !success) {
-      std::error_code ec;
-      std::filesystem::remove(file_path, ec);
-      if (ec) {
-        logger_->log_error("Failed remove partial asset file '{}'", file_path.string());
-      } else {
-        logger_->log_info("Successfully removed partial asset file '{}'", file_path.string());
-      }
-      return nonstd::make_unexpected(fmt::format("Failed to fetch asset from '{}'", url));
-    }
-    return {};
+    return fetchAssetAsFile(*protocol_, resolved_url.value(), file_path, logger_);
   });
   if (!result) {
     send_error(result.error());
@@ -1164,31 +1168,20 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     return;
   }
 
-  // ensure directory exists for file
-  if (utils::file::create_dir(file_path.parent_path()) != 0) {
-    send_error("Failed to create directory '" + file_path.parent_path().string() + "'");
-    return;
-  }
-
   std::filesystem::path tmp_file{file_path.string() + ".part"};
 
-  std::ofstream file{tmp_file, std::ofstream::binary};
-  if (!file) {
-    send_error("Failed to open asset file to write '" + tmp_file.string() + "'");
-    return;
-  }
-  bool success = protocol_->fetch(url, [&] (std::span<const char> chunk) {
-    file.write(chunk.data(), gsl::narrow<std::streamsize>(chunk.size()));
-    return file.good();
-  });
-  file.close();
-  if (!file || !success) {
-    std::filesystem::remove(tmp_file);
-    send_error("Failed to fetch asset from '" + url + "'");
+  auto fetch_status = fetchAssetAsFile(*protocol_, url, tmp_file, logger_);
+  if (!fetch_status) {
+    send_error(fetch_status.error());
     return;
   }
 
-  std::filesystem::rename(tmp_file, file_path);
+  std::error_code ec;
+  std::filesystem::rename(tmp_file, file_path, ec);
+  if (ec) {
+    send_error(fmt::format("Failed to move temporary asset file '{}' to '{}'", tmp_file.string(), file_path.string()));
+    return;
+  }
 
   C2Payload response(Operation::acknowledge, state::UpdateState::FULLY_APPLIED, resp.ident, true);
   enqueue_c2_response(std::move(response));

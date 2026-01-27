@@ -230,8 +230,6 @@ class HTTPClient : public BaseHTTPClient, public core::ConnectableImpl {
 
   void configure_secure_connection();
 
-  std::chrono::milliseconds getAbsoluteTimeout() const { return absolute_timeout_.value_or(3*read_timeout_); }
-
   HTTPReadByteOutputCallback content_{std::numeric_limits<size_t>::max()};
 
   std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service_;
