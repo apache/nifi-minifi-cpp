@@ -111,12 +111,12 @@ class ByteOutputCallback {
 
   bool waitingOps();
 
-  virtual void write(char *data, size_t size);
+  virtual void write(const char *data, size_t size);
 
   size_t readFully(char *buffer, size_t size);
 
  protected:
-  inline void write_and_notify(char *data, size_t size);
+  inline void write_and_notify(const char *data, size_t size);
 
   inline size_t read_current_str(char *buffer, size_t size);
 

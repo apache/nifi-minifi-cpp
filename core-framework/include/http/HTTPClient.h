@@ -99,6 +99,10 @@ class HTTPClient : public BaseHTTPClient, public core::ConnectableImpl {
 
   void setReadTimeout(std::chrono::milliseconds timeout) override;
 
+  void setAbsoluteTimeout(std::optional<std::chrono::milliseconds> timeout) {
+    absolute_timeout_ = timeout;
+  }
+
   void setUploadCallback(std::unique_ptr<HTTPUploadCallback> callback) override;
 
   void setReadCallback(std::unique_ptr<HTTPReadCallback> callback);
@@ -226,9 +230,7 @@ class HTTPClient : public BaseHTTPClient, public core::ConnectableImpl {
 
   void configure_secure_connection();
 
-  std::chrono::milliseconds getAbsoluteTimeout() const { return 3*read_timeout_; }
-
-  HTTPReadCallback content_{std::numeric_limits<size_t>::max()};
+  HTTPReadByteOutputCallback content_{std::numeric_limits<size_t>::max()};
 
   std::shared_ptr<minifi::controllers::SSLContextServiceInterface> ssl_context_service_;
   std::string url_;
@@ -236,6 +238,7 @@ class HTTPClient : public BaseHTTPClient, public core::ConnectableImpl {
 
   std::chrono::milliseconds connect_timeout_{std::chrono::seconds(30)};
   std::chrono::milliseconds read_timeout_{std::chrono::seconds(30)};
+  std::optional<std::chrono::milliseconds> absolute_timeout_;
 
   HTTPResponseData response_data_;
 

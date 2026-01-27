@@ -33,7 +33,7 @@ HttpStream::HttpStream(std::shared_ptr<HTTPClient> client)
 }
 
 void HttpStream::close() {
-  if (auto read_callback = http_client_->getReadCallback())
+  if (auto read_callback = getByteOutputReadCallback())
     read_callback->close();
   if (auto upload_callback = http_client_->getUploadCallback())
     upload_callback->close();
@@ -78,13 +78,13 @@ size_t HttpStream::read(std::span<std::byte> buf) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);
       if (!started_) {
-        auto read_callback = std::make_unique<HTTPReadCallback>(66560, true);
+        auto read_callback = std::make_unique<HTTPReadByteOutputCallback>(66560, true);
         http_client_future_ = std::async(std::launch::async, submit_read_client, http_client_, read_callback.get());
         http_client_->setReadCallback(std::move(read_callback));
         started_ = true;
       }
     }
-    return http_client_->getReadCallback()->readFully(reinterpret_cast<char*>(buf.data()), buf.size());
+    return gsl::not_null(getByteOutputReadCallback())->readFully(reinterpret_cast<char*>(buf.data()), buf.size());
   } else {
     return io::STREAM_ERROR;
   }

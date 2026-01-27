@@ -52,7 +52,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async) override;
 
-  C2Payload fetch(const std::string& url, const std::vector<std::string>& accepted_formats, bool async) override;
+  bool fetch(const std::string& url, const std::vector<std::string>& accepted_formats, std::function<bool(std::span<const char> chunk)> chunk_callback) override;
 
   void update(const std::shared_ptr<Configure> &configure) override;
 
@@ -77,6 +77,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
   RequestEncoding req_encoding_ = RequestEncoding::none;
 
  private:
+  std::chrono::milliseconds asset_download_timeout_{std::chrono::seconds{0}};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTSender>::getLogger();
 };
 
