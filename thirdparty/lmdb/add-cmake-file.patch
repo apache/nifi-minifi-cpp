@@ -1,0 +1,29 @@
+lmdb only comes with a Makefile which only works on Linux so we create our own CMakeLists.txt file to be platform independent
+
+diff -rupN orig/libraries/liblmdb/CMakeLists.txt patched/libraries/liblmdb/CMakeLists.txt
+--- orig/libraries/liblmdb/CMakeLists.txt	2026-06-12 13:02:00.868592927 +0200
++++ patched/libraries/liblmdb/CMakeLists.txt	2026-06-12 11:51:51.369241534 +0200
+@@ -0,0 +1,23 @@
++cmake_minimum_required(VERSION 3.25)
++project(lmdb C)
++
++if(MSVC)
++    add_compile_options(/W3 /WX-)
++else()
++    add_compile_options(-W -Wall -Wno-unused-parameter -Wbad-function-cast -Wuninitialized -O2 -g)
++endif()
++
++find_package(Threads REQUIRED)
++
++add_library(lmdb STATIC mdb.c midl.c)
++target_include_directories(lmdb PUBLIC
++    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
++    $<INSTALL_INTERFACE:include>
++)
++target_link_libraries(lmdb PUBLIC Threads::Threads)
++set_target_properties(lmdb PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
++
++include(GNUInstallDirs)
++
++install(TARGETS lmdb ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
++install(FILES lmdb.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

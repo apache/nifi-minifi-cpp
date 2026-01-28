@@ -625,7 +625,7 @@ The Flow File Repository can be configured with the `nifi.flowfile.repository.cl
     # in minifi.properties
     nifi.flowfile.repository.class.name=NoOpRepository  # VolatileFlowFileRepository can also be used which is an alias for NoOpRepository
 
-The Content Repository can be configured with the `nifi.content.repository.class.name` property. If not specified, it uses the `DatabaseContentRepository` class by default, which persists the content in a RocksDB database. `DatabaseContentRepository` is also the default value specified in the minifi.properties file. Alternatively it can be configured to use a `VolatileContentRepository` that keeps the state in memory (so the state gets lost upon restart), or the `FileSystemRepository` to keep the state in regular files.
+The Content Repository can be configured with the `nifi.content.repository.class.name` property. If not specified, it uses the `DatabaseContentRepository` class by default, which persists the content in a RocksDB database. `DatabaseContentRepository` is also the default value specified in the minifi.properties file. Alternatively it can be configured to use a `VolatileContentRepository` that keeps the state in memory (so the state gets lost upon restart), the `FileSystemRepository` to keep the state in regular files, or `LmdbContentRepository` that uses LMDB database as an alternative to RocksDB.
 
 **NOTE:** RocksDB database has a limit of 4GB for the size of a database object. Due to this if you expect to process larger flow files than 4GB you should use the `FileSystemRepository`. The downside of using `FileSystemRepository` is that it does not have the transactional guarantees of the RocksDB repository implementation.
 
@@ -744,6 +744,18 @@ RocksDB options can also be overridden for a specific repository using the `nifi
     nifi.content.repository.rocksdb.options.atomic_flush=true
     nifi.provenance.repository.rocksdb.options.use_direct_reads=false
     nifi.state.storage.rocksdb.options.use_direct_io_for_flush_and_compaction=false
+
+### Configuring LMDB content repository
+
+There is an alternative content repository that can be used: the LMDB database. When `LmdbContentRepository` is set, LMDB is used for storing content, which is a memory-mapped, fast (especially for reads), low-footprint, key-value database. It can be a good alternative on memory-limited edge devices, but each use case should be evaluated separately. The caveats of using this database are the following:
+
+- Single writer only — concurrent writes are serialized, which can be a bottleneck for write-heavy workloads
+- Database file never shrinks automatically — occasional large flow files could keep the database size permanently high on disk and in the reserved virtual address space
+- No compression - stores everything uncompressed on disk
+- The maximum database size must be set upfront, which is done in the minifi.properties file with the following property, with the current default value set to 10 GB:
+
+    # in minifi.properties
+    nifi.content.repository.lmdb.max.db.size=10 GB
 
 #### Shared database
 
