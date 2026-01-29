@@ -161,20 +161,14 @@ nonstd::expected<void, std::string> AssetManager::sync(
 
   for (auto& asset : new_assets) {
     auto full_path = root_ / asset.path;
-    if (utils::file::create_dir(full_path.parent_path()) != 0) {
-      logger_->log_error("Failed to create asset directory '{}'", full_path.parent_path());
-      new_asset_errors += fmt::format("Failed to create asset directory '{}'", full_path.parent_path()) + "\n";
+    std::error_code ec;
+    std::filesystem::rename(full_path.string() + ".part", full_path, ec);
+    if (ec) {
+      logger_->log_error("Failed to move temporary asset file '{}' to '{}'", full_path.string() + ".part", full_path.string());
+      new_asset_errors += fmt::format("Failed to move temporary asset file '{}' to '{}'", full_path.string() + ".part", full_path.string()) + "\n";
       new_state.assets.erase(asset);
     } else {
-      std::error_code ec;
-      std::filesystem::rename(full_path.string() + ".part", full_path, ec);
-      if (ec) {
-        logger_->log_error("Failed to move temporary asset file '{}' to '{}'", full_path.string() + ".part", full_path.string());
-        new_asset_errors += fmt::format("Failed to move temporary asset file '{}' to '{}'", full_path.string() + ".part", full_path.string()) + "\n";
-        new_state.assets.erase(asset);
-      } else {
-        logger_->log_info("Successfully downloaded asset to file '{}'", full_path.string());
-      }
+      logger_->log_info("Successfully downloaded asset to file '{}'", full_path.string());
     }
   }
 

@@ -127,6 +127,12 @@ nifi.c2.full.heartbeat=false
 # specify the maximum number of bulletins to send in a heartbeat
 #nifi.c2.flow.info.processor.bulletin.limit=1000
 
+# Specify timeout for asset download operations. The entire download must
+# finish in the specified amount of time. There is a separate fixed 30 second
+# timeout from the last received data packet.
+# setting to 0 disables the timeout (default)
+# nifi.c2.asset.download.timeout=0s
+
 ## enable the controller socket provider on port 9998
 ## off by default.
 #controller.socket.enable=true
