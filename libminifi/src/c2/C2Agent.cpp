@@ -321,7 +321,7 @@ struct C2DebugBundleError : public C2TransferError {
   using C2TransferError::C2TransferError;
 };
 
-nonstd::expected<void, std::string> fetchAssetAsFile(C2Protocol& protocol, const std::string& url, const std::filesystem::path& file_path, std::shared_ptr<core::logging::Logger> logger) {
+nonstd::expected<void, std::string> fetchAssetAsFile(C2Protocol& protocol, const std::string& url, const std::filesystem::path& file_path, const std::shared_ptr<core::logging::Logger>& logger) {
   if (utils::file::create_dir(file_path.parent_path()) != 0) {
     return nonstd::make_unexpected(fmt::format("Failed to create directory '{}'", file_path.parent_path().string()));
   }
