@@ -173,7 +173,7 @@ nonstd::expected<void, std::string> AssetManager::sync(
         new_asset_errors += fmt::format("Failed to move temporary asset file '{}' to '{}'", full_path.string() + ".part", full_path.string()) + "\n";
         new_state.assets.erase(asset);
       } else {
-        logger_->log_info("Successfully moved temporary asset file '{}' to '{}'", full_path.string() + ".part", full_path.string());
+        logger_->log_info("Successfully downloaded asset to file '{}'", full_path.string());
       }
     }
   }
