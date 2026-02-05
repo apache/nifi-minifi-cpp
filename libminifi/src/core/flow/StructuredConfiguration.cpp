@@ -656,7 +656,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
 
     utils::Identifier uuid;
     uuid = id;
-    std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node = createControllerService(type, name, uuid);
+    std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node = createControllerService(type, name, uuid, parent_group);
     if (nullptr != controller_service_node) {
       logger_->log_debug("Created Controller Service with UUID {} and name {}", id, name);
       controller_service_node->initialize();
@@ -667,9 +667,6 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
           parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, parent_group->getParameterContext());
         }
       }
-
-      service_provider_->putControllerServiceNode(id, controller_service_node, parent_group);
-      service_provider_->putControllerServiceNode(name, controller_service_node, parent_group);
 
       parent_group->addControllerService(controller_service_node->getName(), controller_service_node);
       parent_group->addControllerService(controller_service_node->getUUIDStr(), controller_service_node);

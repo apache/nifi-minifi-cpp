@@ -279,7 +279,7 @@ Processor* ProcessGroup::findProcessorByName(const std::string &processorName, T
 }
 
 void ProcessGroup::addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node) {
-  controller_service_map_.put(nodeId, node);
+  controller_service_map_.put(nodeId, node, this);
 }
 
 core::controller::ControllerServiceNode* ProcessGroup::findControllerService(const std::string &nodeId, Traverse traverse) const {
