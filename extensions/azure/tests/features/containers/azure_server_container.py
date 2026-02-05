@@ -33,13 +33,13 @@ class AzureServerContainer(Container):
         self.azure_connection_string = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;" \
                                        f"BlobEndpoint=http://{azure_storage_hostname}:10000/devstoreaccount1;QueueEndpoint=http://{azure_storage_hostname}:10001/devstoreaccount1;"
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Azurite Queue service is successfully listening at"
         return wait_for_condition(condition=lambda: finished_str in self.get_logs(),
                                   timeout_seconds=15,
                                   bail_condition=lambda: self.exited,
-                                  context=None)
+                                  context=context)
 
     def check_azure_storage_server_data(self, test_data):
         (code, output) = self.exec_run(["find", "/data/__blobstorage__", "-type", "f"])

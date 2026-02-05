@@ -57,14 +57,14 @@ scrape_configs:
 
         self.files.append(File("/etc/prometheus/prometheus.yml", prometheus_yml_content, permissions=0o666))
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Server is ready to receive web requests."
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
-            context=None
+            context=context
         )
 
     def check_metric_class_on_prometheus(self, metric_class: str) -> bool:

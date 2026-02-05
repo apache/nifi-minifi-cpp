@@ -65,12 +65,12 @@ class MinifiC2Server(Container):
             self.host_files.append(HostFile("/opt/minifi-c2/minifi-c2-current/conf/authorizations.yaml", os.path.join(resource_dir, "authorizations.yaml")))
             self.host_files.append(HostFile("/opt/minifi-c2/minifi-c2-current/conf/c2.properties", os.path.join(resource_dir, "c2.properties")))
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Server Started"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
-            context=None
+            context=context
         )

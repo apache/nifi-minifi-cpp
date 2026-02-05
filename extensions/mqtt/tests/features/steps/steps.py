@@ -50,7 +50,7 @@ def step_impl(context: MinifiTestContext, processor_name: str):
 @step("an MQTT broker is started")
 def step_impl(context: MinifiTestContext):
     context.containers["mqtt-broker"] = MqttBrokerContainer(context)
-    assert context.containers["mqtt-broker"].deploy()
+    assert context.containers["mqtt-broker"].deploy(context)
 
 
 @then('the MQTT broker has a log line matching "{log_line_regex}"')
