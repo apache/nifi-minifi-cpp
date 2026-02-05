@@ -20,6 +20,7 @@ from textwrap import dedent
 from minifi_test_framework.containers.container import Container
 from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
 from minifi_test_framework.core.helpers import wait_for_condition
+from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
 class PostgresContainer(Container):
@@ -48,14 +49,14 @@ class PostgresContainer(Container):
         super(PostgresContainer, self).__init__("minifi-postgres-server:latest", f"postgres-server-{context.scenario_id}", context.network)
         self.environment = ["POSTGRES_PASSWORD=password"]
 
-    def deploy(self) -> bool:
-        super(PostgresContainer, self).deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super(PostgresContainer, self).deploy(context)
         finished_str = "database system is ready to accept connections"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=5,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     def check_query_results(self, query: str, number_of_rows: int) -> bool:
         (code, output) = self.exec_run(["psql", "-U", "postgres", "-c", query])

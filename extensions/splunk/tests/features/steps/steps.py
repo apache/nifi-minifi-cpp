@@ -26,7 +26,7 @@ from splunk_container import SplunkContainer
 @step("a Splunk HEC is set up and running")
 def step_impl(context: MinifiTestContext):
     context.containers["splunk"] = SplunkContainer(context)
-    assert context.containers["splunk"].deploy()
+    assert context.containers["splunk"].deploy(context)
     assert context.containers["splunk"].enable_splunk_hec_indexer('splunk_hec_token') or context.containers["splunk"].log_app_output()
 
 

@@ -14,6 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+from typing import TYPE_CHECKING, Union
+
 import json
 import logging
 import os
@@ -28,6 +30,9 @@ from docker.models.networks import Network
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
+
+if TYPE_CHECKING:
+    from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
 class Container:
@@ -96,7 +101,7 @@ class Container:
     def is_deployed(self) -> bool:
         return self.container is not None
 
-    def deploy(self) -> bool:
+    def deploy(self, context: "Union[MinifiTestContext, None]") -> bool:
         if self.is_deployed():
             logging.info(f"Container '{self.container_name}' is already deployed.")
             return True

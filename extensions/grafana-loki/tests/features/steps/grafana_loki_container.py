@@ -126,8 +126,8 @@ analytics:
 
         self.files.append(File("/etc/loki/local-config.yaml", grafana_loki_yml_content.encode(), permissions=0o644))
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Loki started"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),

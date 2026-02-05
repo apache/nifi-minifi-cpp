@@ -88,8 +88,8 @@ Client {
 """
         self.files.append(File("/opt/kafka/config/kafka_jaas.conf", jaas_config_file_content, permissions=0o644))
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Kafka Server started"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),

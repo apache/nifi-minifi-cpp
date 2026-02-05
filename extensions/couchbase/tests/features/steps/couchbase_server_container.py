@@ -37,14 +37,14 @@ class CouchbaseServerContainer(Container):
         couchbase_key_content = crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=couchbase_key)
         self.files.append(File("/opt/couchbase/var/lib/couchbase/inbox/pkey.key", couchbase_key_content, permissions=0o666))
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "logs available in"
         assert wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=15,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
         return self.run_post_startup_commands()
 
     def run_post_startup_commands(self):

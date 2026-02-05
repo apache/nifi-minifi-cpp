@@ -28,11 +28,11 @@ class ReverseProxyContainer(Container):
             "FORWARD_PORT=3100",
         ]
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "start worker process"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)

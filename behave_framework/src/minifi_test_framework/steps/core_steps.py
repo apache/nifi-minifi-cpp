@@ -36,14 +36,19 @@ from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAI
 @when("all instances start up")
 def step_impl(context: MinifiTestContext):
     for container in context.containers.values():
-        assert container.deploy() or container.log_app_output()
+        assert container.deploy(context)
     logging.debug("All instances started up")
 
 
 @when("the MiNiFi instance starts up")
 def step_impl(context: MinifiTestContext):
-    assert context.get_or_create_default_minifi_container().deploy()
+    assert context.get_or_create_default_minifi_container().deploy(context)
     logging.debug("MiNiFi instance started up")
+
+
+@when("the MiNiFi instance is started without assertions")
+def step_impl(context: MinifiTestContext):
+    context.get_or_create_default_minifi_container().deploy(context)
 
 
 @step('a directory at "{directory}" has a file with the size "{size}"')

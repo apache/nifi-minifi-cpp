@@ -23,13 +23,13 @@ class ElasticBaseContainer(Container):
         super().__init__(image, container_name, test_context.network)
         self.user = None
 
-    def deploy(self, finished_str: str):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None, finished_str: str):
+        super().deploy(context)
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=300,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     def create_doc_elasticsearch(self, index_name: str, doc_id: str) -> bool:
         (code, output) = self.exec_run(["/bin/bash", "-c",

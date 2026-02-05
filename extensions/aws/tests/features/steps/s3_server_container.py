@@ -26,14 +26,14 @@ class S3ServerContainer(Container):
         super().__init__("adobe/s3mock:3.12.0", f"s3-server-{test_context.scenario_id}", test_context.network)
         self.environment.append("initialBuckets=test_bucket")
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Started S3MockApplication"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=15,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     def check_s3_server_object_data(self, test_data):
         (code, output) = self.exec_run(["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])

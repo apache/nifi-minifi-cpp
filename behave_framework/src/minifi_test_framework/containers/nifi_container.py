@@ -70,7 +70,7 @@ class NifiContainer(Container):
 
         super().__init__("apache/nifi:" + self.NIFI_VERSION, name, test_context.network, entrypoint=command)
 
-    def deploy(self):
+    def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_json()
         buffer = io.BytesIO()
 
@@ -80,10 +80,10 @@ class NifiContainer(Container):
         gzipped_bytes = buffer.getvalue()
         self.files.append(File("/tmp/nifi_config/flow.json.gz", gzipped_bytes))
 
-        super().deploy()
+        super().deploy(context)
         finished_str = "Started Application in"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=300,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)

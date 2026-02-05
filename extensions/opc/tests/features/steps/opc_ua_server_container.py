@@ -23,11 +23,11 @@ class OPCUAServerContainer(Container):
     def __init__(self, test_context: MinifiTestContext, command: Optional[List[str]] = None):
         super().__init__("lordgamez/open62541:1.4.10", f"opcua-server-{test_context.scenario_id}", test_context.network, command=command)
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "New DiscoveryUrl added: opc.tcp://"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=15,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
