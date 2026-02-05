@@ -49,14 +49,14 @@ splunk:
         self.files.append(File("/opt/splunk/etc/auth/splunk_cert.pem", splunk_cert_content.decode() + splunk_key_content.decode() + root_ca_content.decode(), permissions=0o644))
         self.files.append(File("/opt/splunk/etc/auth/root_ca.pem", root_ca_content.decode(), permissions=0o644))
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Ansible playbook complete, will begin streaming splunkd_stderr.log"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=300,
             bail_condition=lambda: False,
-            context=None)
+            context=context)
 
     @retry_check()
     def check_splunk_event(self, query: str) -> bool:

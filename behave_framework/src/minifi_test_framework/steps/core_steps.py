@@ -36,13 +36,13 @@ from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAI
 @when("all instances start up")
 def step_impl(context: MinifiTestContext):
     for container in context.containers.values():
-        assert container.deploy() or container.log_app_output()
+        assert container.deploy(context)
     logging.debug("All instances started up")
 
 
 @when("the MiNiFi instance starts up")
 def step_impl(context: MinifiTestContext):
-    assert context.get_or_create_default_minifi_container().deploy()
+    assert context.get_or_create_default_minifi_container().deploy(context)
     logging.debug("MiNiFi instance started up")
 
 
@@ -185,7 +185,7 @@ def step_impl(context: MinifiTestContext):
 
 @when('NiFi is started')
 def step_impl(context):
-    assert context.containers["nifi"].deploy() or context.containers["nifi"].log_app_output()
+    assert context.containers["nifi"].deploy(context) or context.containers["nifi"].log_app_output()
 
 
 @step("{duration} later")

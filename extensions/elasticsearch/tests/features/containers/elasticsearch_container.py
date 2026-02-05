@@ -53,8 +53,8 @@ class ElasticsearchContainer(ElasticBaseContainer):
 
         self.environment.append("ELASTIC_PASSWORD=password")
 
-    def deploy(self):
-        return super().deploy('"current.health":"GREEN"')
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        return super().deploy(context, '"current.health":"GREEN"')
 
     def elastic_generate_apikey(self):
         api_url = "https://localhost:9200/_security/api_key"

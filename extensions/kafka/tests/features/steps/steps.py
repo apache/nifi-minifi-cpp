@@ -66,7 +66,7 @@ def step_impl(context):
 def step_impl(context: MinifiTestContext):
     kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
-    assert kafka_server_container.deploy()
+    assert kafka_server_container.deploy(context)
 
 
 @step('the topic "{topic_name}" is initialized on the kafka broker')

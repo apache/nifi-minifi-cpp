@@ -53,7 +53,7 @@ def step_impl(context: MinifiTestContext, processor_name: str):
 @step('the s3 server starts up')
 def step_impl(context: MinifiTestContext):
     context.containers["s3-server"] = S3ServerContainer(context)
-    assert context.containers["s3-server"].deploy()
+    assert context.containers["s3-server"].deploy(context)
 
 
 @step('the object on the s3 server is "{object_data}"')

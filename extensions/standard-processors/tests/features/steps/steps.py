@@ -43,7 +43,7 @@ def step_impl(context: MinifiTestContext):
 @step('there is an accessible PLC with modbus enabled')
 def step_impl(context: MinifiTestContext):
     modbus_container = context.containers["diag-slave-tcp"] = DiagSlave(context)
-    assert modbus_container.deploy()
+    assert modbus_container.deploy(context)
 
 
 @step('PLC register has been set with {modbus_cmd} command')
@@ -94,7 +94,7 @@ def step_impl(context: MinifiTestContext):
 @given("a MiNiFi C2 server is started")
 def step_impl(context: MinifiTestContext):
     context.containers["minifi-c2-server"] = MinifiC2Server(context)
-    assert context.containers["minifi-c2-server"].deploy()
+    assert context.containers["minifi-c2-server"].deploy(context)
 
 
 @then("the MiNiFi C2 server logs contain the following message: \"{log_message}\" in less than {duration}")
