@@ -45,7 +45,7 @@ class ControllerServiceNodeMap {
 
   bool put(std::string id, std::shared_ptr<ControllerServiceNode> controller_service_node, ProcessGroup* parent_group);
 
-  bool register_alternative_key(std::string primary_key, std::string alternative_key);
+  bool registerAlternativeKey(std::string primary_key, std::string alternative_key);
 
   void clear();
   std::vector<std::shared_ptr<ControllerServiceNode>> getAllControllerServices() const;

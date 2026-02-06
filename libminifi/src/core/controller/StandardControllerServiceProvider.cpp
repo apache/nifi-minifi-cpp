@@ -40,7 +40,7 @@ std::shared_ptr<ControllerServiceNode> StandardControllerServiceProvider::create
 
   controller_map_->put(id, new_service_node, parent_group);
   if (alternative_key) {
-    controller_map_->register_alternative_key(id, *alternative_key);
+    controller_map_->registerAlternativeKey(id, *alternative_key);
   }
 
   return new_service_node;

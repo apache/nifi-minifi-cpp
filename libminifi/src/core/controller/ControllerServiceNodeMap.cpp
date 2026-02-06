@@ -53,10 +53,10 @@ ControllerServiceNode* ControllerServiceNodeMap::get(const std::string &id, cons
 
 bool ControllerServiceNodeMap::put(std::string id, std::shared_ptr<ControllerServiceNode> controller_service_node,
     ProcessGroup* parent_group) {
+  std::scoped_lock lock(mutex_);
   if (id.empty() || controller_service_node == nullptr || alternative_keys.contains(id)) {
     return false;
   }
-  std::scoped_lock lock(mutex_);
   auto [_it, success] = services_.emplace(std::move(id), ServiceEntry{.controller_service_node = std::move(controller_service_node), .parent_group = parent_group});
   return success;
 }
@@ -68,6 +68,7 @@ void ControllerServiceNodeMap::clear() {
     node.controller_service_node->disable();
   }
   services_.clear();
+  alternative_keys.clear();
 }
 
 std::vector<std::shared_ptr<ControllerServiceNode>> ControllerServiceNodeMap::getAllControllerServices() const {
@@ -95,9 +96,9 @@ const ControllerServiceNodeMap::ServiceEntry* ControllerServiceNodeMap::getEntry
 }
 
 
-bool ControllerServiceNodeMap::register_alternative_key(std::string primary_key, std::string alternative_key) {
+bool ControllerServiceNodeMap::registerAlternativeKey(std::string primary_key, std::string alternative_key) {
   std::scoped_lock lock(mutex_);
-  if (!services_.contains(primary_key)) {
+  if (!services_.contains(primary_key) || services_.contains(alternative_key) || alternative_keys.contains(alternative_key)) {
     return false;
   }
 

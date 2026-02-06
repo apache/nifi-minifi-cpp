@@ -50,7 +50,7 @@ void ControllerServiceProvider::putControllerServiceNode(const std::string& prim
   gsl_Expects(controller_map_);
   controller_map_->put(primary_key, controller_service_node, process_group);
   if (alternative_key) {
-    controller_map_->register_alternative_key(primary_key, *alternative_key);
+    controller_map_->registerAlternativeKey(primary_key, *alternative_key);
   }
 }
 
