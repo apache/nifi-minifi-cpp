@@ -29,15 +29,9 @@ class MinifiOptions:
     def __init__(self):
         self.enable_provenance = False
         self.enable_sql = False
-        self.use_nifi_python_processors_with_system_python_packages_installed = False
-        self.use_nifi_python_processors_with_virtualenv = False
-        self.use_nifi_python_processors_with_virtualenv_packages_installed = False
-        self.remove_python_requirements_txt = False
-        self.use_nifi_python_processors_without_dependencies = False
         self.config_format = "json"
         self.set_ssl_context_properties = False
         self.enable_log_metrics_publisher = False
-        self.enable_example_minifi_python_processors = False
         if "true" in os.environ['MINIFI_FIPS']:
             self.enable_openssl_fips_mode = True
         else:
@@ -56,9 +50,6 @@ class MinifiLocations:
             self.properties_path = '/etc/nifi-minifi-cpp/minifi.properties'
             self.log_properties_path = '/etc/nifi-minifi-cpp/minifi-log.properties'
             self.uid_properties_path = '/etc/nifi-minifi-cpp/minifi-uid.properties'
-            self.minifi_python_dir_path = '/var/lib/nifi-minifi-cpp/minifi-python'
-            self.minifi_python_venv_parent = '/var/lib/nifi-minifi-cpp'
-            self.minifi_python_examples = '/usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples'
             self.models_path = '/var/lib/nifi-minifi-cpp/models'
             self.minifi_home = '/var/lib/nifi-minifi-cpp'
         else:
@@ -67,9 +58,6 @@ class MinifiLocations:
             self.properties_path = '/opt/minifi/minifi-current/conf/minifi.properties'
             self.log_properties_path = '/opt/minifi/minifi-current/conf/minifi-log.properties'
             self.uid_properties_path = '/opt/minifi/minifi-current/conf/minifi-uid.properties'
-            self.minifi_python_dir_path = '/opt/minifi/minifi-current/minifi-python'
-            self.minifi_python_examples = '/opt/minifi/minifi-current/minifi-python-examples'
-            self.minifi_python_venv_parent = '/opt/minifi/minifi-current'
             self.models_path = '/opt/minifi/minifi-current/models'
             self.minifi_home = '/opt/minifi/minifi-current'
 
@@ -126,7 +114,6 @@ class MinifiContainer(FlowContainer):
             f.write("nifi.provenance.repository.directory.default={minifi_home}/provenance_repository\n".format(minifi_home=MinifiContainer.MINIFI_LOCATIONS.minifi_home))
             f.write("nifi.flowfile.repository.directory.default={minifi_home}/flowfile_repository\n".format(minifi_home=MinifiContainer.MINIFI_LOCATIONS.minifi_home))
             f.write("nifi.database.content.repository.directory.default={minifi_home}/content_repository\n".format(minifi_home=MinifiContainer.MINIFI_LOCATIONS.minifi_home))
-            f.write("nifi.python.processor.dir={minifi_home}/minifi-python\n".format(minifi_home=MinifiContainer.MINIFI_LOCATIONS.minifi_home))
 
             if self.options.set_ssl_context_properties:
                 f.write("nifi.remote.input.secure=true\n")
@@ -145,14 +132,6 @@ class MinifiContainer(FlowContainer):
 
             if metrics_publisher_classes:
                 f.write("nifi.metrics.publisher.class=" + ",".join(metrics_publisher_classes) + "\n")
-
-            if self.options.use_nifi_python_processors_with_virtualenv or self.options.remove_python_requirements_txt or self.options.use_nifi_python_processors_without_dependencies:
-                f.write("nifi.python.virtualenv.directory={minifi_python_venv_parent}/venv\n".format(minifi_python_venv_parent=MinifiContainer.MINIFI_LOCATIONS.minifi_python_venv_parent))
-            elif self.options.use_nifi_python_processors_with_virtualenv_packages_installed:
-                f.write("nifi.python.virtualenv.directory={minifi_python_venv_parent}/venv-with-langchain\n".format(minifi_python_venv_parent=MinifiContainer.MINIFI_LOCATIONS.minifi_python_venv_parent))
-
-            if self.options.use_nifi_python_processors_with_virtualenv or self.options.remove_python_requirements_txt:
-                f.write("nifi.python.install.packages.automatically=true\n")
 
             if self.options.enable_openssl_fips_mode:
                 f.write("nifi.openssl.fips.support.enable=true\n")
@@ -175,16 +154,6 @@ class MinifiContainer(FlowContainer):
 
         if self.options.enable_sql:
             image = self.image_store.get_image('minifi-cpp-sql')
-        elif self.options.enable_example_minifi_python_processors:
-            image = self.image_store.get_image('minifi-cpp-with-example-python-processors')
-        elif self.options.use_nifi_python_processors_with_system_python_packages_installed:
-            image = self.image_store.get_image('minifi-cpp-nifi-python-system-python-packages')
-        elif self.options.use_nifi_python_processors_with_virtualenv or self.options.use_nifi_python_processors_with_virtualenv_packages_installed:
-            image = self.image_store.get_image('minifi-cpp-nifi-python')
-        elif self.options.remove_python_requirements_txt:
-            image = self.image_store.get_image('minifi-cpp-nifi-with-inline-python-dependencies')
-        elif self.options.use_nifi_python_processors_without_dependencies:
-            image = self.image_store.get_image('minifi-cpp-nifi-with-python-without-dependencies')
         elif self.options.download_llama_model:
             image = self.image_store.get_image('minifi-cpp-with-llamacpp-model')
         else:

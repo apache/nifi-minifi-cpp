@@ -85,7 +85,7 @@ class MinifiContainer(Container):
         finished_str = "MiNiFi started"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
-            timeout_seconds=15,
+            timeout_seconds=300,
             bail_condition=lambda: self.exited,
             context=None)
 
@@ -116,9 +116,11 @@ class MinifiContainer(Container):
         if self.is_fhs:
             self.properties["nifi.flow.configuration.file"] = "/etc/nifi-minifi-cpp/config.yml"
             self.properties["nifi.extension.path"] = "/usr/lib64/nifi-minifi-cpp/extensions/*"
+            self.properties["nifi.python.processor.dir"] = '/var/lib/nifi-minifi-cpp/minifi-python'
         else:
             self.properties["nifi.flow.configuration.file"] = "./conf/config.yml"
             self.properties["nifi.extension.path"] = "../extensions/*"
+            self.properties["nifi.python.processor.dir"] = '/opt/minifi/minifi-current/minifi-python'
         self.properties["nifi.administrative.yield.duration"] = "1 sec"
         self.properties["nifi.bored.yield.duration"] = "100 millis"
         self.properties["nifi.openssl.fips.support.enable"] = "false"
@@ -217,3 +219,9 @@ class MinifiContainer(Container):
 
         (code, _) = self.exec_run(["test", "-f", "/tmp/debug.tar.gz"])
         return code == 0
+
+    def add_example_python_processors(self):
+        run_minifi_cmd = '/opt/minifi/minifi-current/bin/minifi.sh run' if not self.is_fhs else '/usr/bin/minifi'
+        minifi_python_dir_path = '/opt/minifi/minifi-current/minifi-python' if not self.is_fhs else '/var/lib/nifi-minifi-cpp/minifi-python'
+        minifi_python_examples = '/opt/minifi/minifi-current/minifi-python-examples' if not self.is_fhs else '/usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples'
+        self.command = f'sh -c "cp -r {minifi_python_examples} {minifi_python_dir_path}/examples && {run_minifi_cmd}"'

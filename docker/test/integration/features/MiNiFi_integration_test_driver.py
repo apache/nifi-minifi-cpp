@@ -333,21 +333,6 @@ class MiNiFi_integration_test:
     def enable_sql_in_minifi(self):
         self.cluster.enable_sql_in_minifi()
 
-    def use_nifi_python_processors_with_system_python_packages_installed_in_minifi(self):
-        self.cluster.use_nifi_python_processors_with_system_python_packages_installed_in_minifi()
-
-    def use_nifi_python_processors_with_virtualenv_in_minifi(self):
-        self.cluster.use_nifi_python_processors_with_virtualenv_in_minifi()
-
-    def use_nifi_python_processors_with_virtualenv_packages_installed_in_minifi(self):
-        self.cluster.use_nifi_python_processors_with_virtualenv_packages_installed_in_minifi()
-
-    def remove_python_requirements_txt_in_minifi(self):
-        self.cluster.remove_python_requirements_txt_in_minifi()
-
-    def use_nifi_python_processors_without_dependencies_in_minifi(self):
-        self.cluster.use_nifi_python_processors_without_dependencies_in_minifi()
-
     def set_yaml_in_minifi(self):
         self.cluster.set_yaml_in_minifi()
 
@@ -359,9 +344,6 @@ class MiNiFi_integration_test:
 
     def enable_log_metrics_publisher_in_minifi(self):
         self.cluster.enable_log_metrics_publisher_in_minifi()
-
-    def enable_example_minifi_python_processors(self):
-        self.cluster.enable_example_minifi_python_processors()
 
     def enable_openssl_fips_mode_in_minifi(self):
         self.cluster.enable_openssl_fips_mode_in_minifi()

@@ -810,31 +810,6 @@ def step_impl(context, remote_process_group: str):
     setUpSslContextServiceForRPG(context, remote_process_group)
 
 
-# Python
-@given("python with langchain is installed on the MiNiFi agent {install_mode}")
-def step_impl(context, install_mode):
-    if install_mode == "with required python packages":
-        context.test.use_nifi_python_processors_with_system_python_packages_installed_in_minifi()
-    elif install_mode == "with a pre-created virtualenv":
-        context.test.use_nifi_python_processors_with_virtualenv_in_minifi()
-    elif install_mode == "with a pre-created virtualenv containing the required python packages":
-        context.test.use_nifi_python_processors_with_virtualenv_packages_installed_in_minifi()
-    elif install_mode == "using inline defined Python dependencies to install packages":
-        context.test.remove_python_requirements_txt_in_minifi()
-    else:
-        raise Exception("Unknown python install mode.")
-
-
-@given("python processors without dependencies are present on the MiNiFi agent")
-def step_impl(context):
-    context.test.use_nifi_python_processors_without_dependencies_in_minifi()
-
-
-@given("the example MiNiFi python processors are present")
-def step_impl(context):
-    context.test.enable_example_minifi_python_processors()
-
-
 @given("a non-sensitive parameter in the flow config called '{parameter_name}' with the value '{parameter_value}' in the parameter context '{parameter_context_name}'")
 def step_impl(context, parameter_context_name, parameter_name, parameter_value):
     container = context.test.acquire_container(context=context, name='minifi-cpp-flow', engine='minifi-cpp')

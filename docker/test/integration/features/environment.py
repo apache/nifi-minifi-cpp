@@ -48,11 +48,6 @@ def before_scenario(context, scenario):
     logging.info("Integration test setup at {time:%H:%M:%S.%f}".format(time=datetime.datetime.now()))
     context.test = MiNiFi_integration_test(context=context, feature_id=context.feature_id)
 
-    if "USE_NIFI_PYTHON_PROCESSORS_WITH_LANGCHAIN" in scenario.effective_tags:
-        if not context.image_store.is_conda_available_in_minifi_image() and context.image_store.get_minifi_image_python_version() < (3, 8, 1):
-            scenario.skip("NiFi Python processor tests use langchain library which requires Python 3.8.1 or later.")
-            return
-
     for step in scenario.steps:
         inject_feature_id(context, step)
 

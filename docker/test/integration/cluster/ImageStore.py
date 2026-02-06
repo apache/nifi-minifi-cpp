@@ -23,12 +23,6 @@ from textwrap import dedent
 import os
 
 
-class PythonWithDependenciesOptions:
-    REQUIREMENTS_FILE = 0
-    SYSTEM_INSTALLED_PACKAGES = 1
-    INLINE_DEFINED_PACKAGES = 2
-
-
 class ImageStore:
     def __init__(self):
         self.client = docker.from_env()
@@ -47,16 +41,6 @@ class ImageStore:
 
         if container_engine == "minifi-cpp-sql":
             image = self.__build_minifi_cpp_sql_image()
-        elif container_engine == "minifi-cpp-with-example-python-processors":
-            image = self.__build_minifi_cpp_image_with_example_minifi_python_processors()
-        elif container_engine == "minifi-cpp-nifi-python":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(PythonWithDependenciesOptions.REQUIREMENTS_FILE)
-        elif container_engine == "minifi-cpp-nifi-python-system-python-packages":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(PythonWithDependenciesOptions.SYSTEM_INSTALLED_PACKAGES)
-        elif container_engine == "minifi-cpp-nifi-with-inline-python-dependencies":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(PythonWithDependenciesOptions.INLINE_DEFINED_PACKAGES)
-        elif container_engine == "minifi-cpp-nifi-with-python-without-dependencies":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors()
         elif container_engine == "minifi-cpp-with-llamacpp-model":
             image = self.__build_minifi_cpp_image_with_llamacpp_model()
         elif container_engine == "http-proxy":
@@ -116,123 +100,6 @@ class ImageStore:
                            install_sql_cmd=install_sql_cmd, so_location=so_location))
 
         return self.__build_image(dockerfile)
-
-    def __build_minifi_cpp_image_with_example_minifi_python_processors(self):
-        dockerfile = dedent("""\
-                FROM {base_image}
-                RUN cp -r {minifi_python_examples_dir} {minifi_python_dir}/examples
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
-                           minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path,
-                           minifi_python_examples_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_examples))
-
-        return self.__build_image(dockerfile)
-
-    def __build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(self, python_option):
-        parse_document_url = "https://raw.githubusercontent.com/apache/nifi-python-extensions/refs/heads/main/src/extensions/chunking/ParseDocument.py"
-        chunk_document_url = "https://raw.githubusercontent.com/apache/nifi-python-extensions/refs/heads/main/src/extensions/chunking/ChunkDocument.py"
-        pip3_install_command = ""
-        requirements_install_command = ""
-        additional_cmd = ""
-        # The following sed command is used to remove the existing dependencies from the ParseDocument and ChunkDocument processors
-        # /class ProcessorDetails:/,/^$/: Do the following between 'class ProcessorDetails:' and the first empty line (so we don't modify other PropertyDescriptor blocks below)
-        # /^\s*dependencies\s*=/,/\]\s*$/: Do the following between 'dependencies =' at the start of a line, and ']' at the end of a line
-        # d: Delete line
-        parse_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}}" {minifi_python_dir}/nifi_python_processors/ParseDocument.py && \\'.format(minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path)
-        chunk_document_sed_cmd = 'sed -i "/class ProcessorDetails:/,/^$/{{/^\\s*dependencies\\s*=/,/\\]\\s*$/d}}" {minifi_python_dir}/nifi_python_processors/ChunkDocument.py && \\'.format(minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path)
-        if python_option == PythonWithDependenciesOptions.SYSTEM_INSTALLED_PACKAGES:
-            if not MinifiContainer.MINIFI_TAG_PREFIX or "bookworm" in MinifiContainer.MINIFI_TAG_PREFIX or "noble" in MinifiContainer.MINIFI_TAG_PREFIX or "trixie" in MinifiContainer.MINIFI_TAG_PREFIX:
-                additional_cmd = "RUN pip3 install --break-system-packages 'langchain<=0.17.0'"
-            else:
-                additional_cmd = "RUN pip3 install 'langchain<=0.17.0'"
-        elif python_option == PythonWithDependenciesOptions.REQUIREMENTS_FILE:
-            requirements_install_command = "echo 'langchain<=0.17.0' > {minifi_python_dir}/nifi_python_processors/requirements.txt && \\".format(minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path)
-        elif python_option == PythonWithDependenciesOptions.INLINE_DEFINED_PACKAGES:
-            parse_document_sed_cmd = parse_document_sed_cmd[:-2] + ' sed -i "s/langchain==[0-9.]\\+/langchain<=0.17.0/" {minifi_python_dir}/nifi_python_processors/ParseDocument.py && \\'.format(minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path)
-            chunk_document_sed_cmd = 'sed -i "s/\\[\\\'langchain\\\'\\]/\\[\\\'langchain<=0.17.0\\\'\\]/" {minifi_python_dir}/nifi_python_processors/ChunkDocument.py && \\'.format(minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path)
-        if not MinifiContainer.MINIFI_TAG_PREFIX:
-            pip3_install_command = "RUN apk --update --no-cache add py3-pip"
-        dockerfile = dedent("""\
-                FROM {base_image}
-                USER root
-                {pip3_install_command}
-                {additional_cmd}
-                USER minificpp
-                RUN wget {parse_document_url} --directory-prefix={minifi_python_dir}/nifi_python_processors && \\
-                    wget {chunk_document_url} --directory-prefix={minifi_python_dir}/nifi_python_processors && \\
-                    echo 'langchain<=0.17.0' > {minifi_python_dir}/nifi_python_processors/requirements.txt && \\
-                    {requirements_install_command}
-                    {parse_document_sed_cmd}
-                    {chunk_document_sed_cmd}
-                    python3 -m venv {minifi_python_venv_parent}/venv && \\
-                    python3 -m venv {minifi_python_venv_parent}/venv-with-langchain && \\
-                    . {minifi_python_venv_parent}/venv-with-langchain/bin/activate && python3 -m pip install --no-cache-dir "langchain<=0.17.0" && \\
-                    deactivate
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
-                           pip3_install_command=pip3_install_command,
-                           parse_document_url=parse_document_url,
-                           chunk_document_url=chunk_document_url,
-                           additional_cmd=additional_cmd,
-                           requirements_install_command=requirements_install_command,
-                           parse_document_sed_cmd=parse_document_sed_cmd,
-                           chunk_document_sed_cmd=chunk_document_sed_cmd,
-                           minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path,
-                           minifi_python_venv_parent=MinifiContainer.MINIFI_LOCATIONS.minifi_python_venv_parent))
-        return self.__build_image(dockerfile)
-
-    def __build_minifi_cpp_image_with_nifi_python_processors(self):
-        pip3_install_command = ""
-        if not MinifiContainer.MINIFI_TAG_PREFIX:
-            pip3_install_command = "RUN apk --update --no-cache add py3-pip"
-        dockerfile = dedent("""\
-                FROM {base_image}
-                USER root
-                {pip3_install_command}
-                USER minificpp
-                COPY RotatingForwarder.py {minifi_python_dir}/nifi_python_processors/RotatingForwarder.py
-                COPY SpecialPropertyTypeChecker.py {minifi_python_dir}/nifi_python_processors/SpecialPropertyTypeChecker.py
-                COPY ProcessContextInterfaceChecker.py {minifi_python_dir}/nifi_python_processors/ProcessContextInterfaceChecker.py
-                COPY CreateFlowFile.py {minifi_python_dir}/nifi_python_processors/CreateFlowFile.py
-                COPY FailureWithAttributes.py {minifi_python_dir}/nifi_python_processors/FailureWithAttributes.py
-                COPY subtractutils.py {minifi_python_dir}/nifi_python_processors/compute/subtractutils.py
-                COPY RelativeImporterProcessor.py {minifi_python_dir}/nifi_python_processors/compute/processors/RelativeImporterProcessor.py
-                COPY multiplierutils.py {minifi_python_dir}/nifi_python_processors/compute/processors/multiplierutils.py
-                COPY CreateNothing.py {minifi_python_dir}/nifi_python_processors/CreateNothing.py
-                COPY FailureWithContent.py {minifi_python_dir}/nifi_python_processors/FailureWithContent.py
-                COPY TransferToOriginal.py {minifi_python_dir}/nifi_python_processors/TransferToOriginal.py
-                COPY SetRecordField.py {minifi_python_dir}/nifi_python_processors/SetRecordField.py
-                COPY TestStateManager.py {minifi_python_dir}/nifi_python_processors/TestStateManager.py
-                COPY NifiStyleLogDynamicProperties.py {minifi_python_dir}/nifi_python_processors/NifiStyleLogDynamicProperties.py
-                COPY LogDynamicProperties.py {minifi_python_dir}/LogDynamicProperties.py
-                COPY ExpressionLanguagePropertyWithValidator.py {minifi_python_dir}/nifi_python_processors/ExpressionLanguagePropertyWithValidator.py
-                COPY EvaluateExpressionLanguageChecker.py {minifi_python_dir}/nifi_python_processors/EvaluateExpressionLanguageChecker.py
-                RUN python3 -m venv {minifi_python_venv_parent}/venv
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
-                           pip3_install_command=pip3_install_command,
-                           minifi_python_dir=MinifiContainer.MINIFI_LOCATIONS.minifi_python_dir_path,
-                           minifi_python_venv_parent=MinifiContainer.MINIFI_LOCATIONS.minifi_python_venv_parent))
-
-        def build_full_python_resource_path(resource):
-            return os.path.join(self.test_dir, "resources", "python", resource)
-
-        return self.__build_image(dockerfile, [
-            build_full_python_resource_path("RotatingForwarder.py"),
-            build_full_python_resource_path("SpecialPropertyTypeChecker.py"),
-            build_full_python_resource_path("ProcessContextInterfaceChecker.py"),
-            build_full_python_resource_path("CreateFlowFile.py"),
-            build_full_python_resource_path("FailureWithAttributes.py"),
-            build_full_python_resource_path("RelativeImporterProcessor.py"),
-            build_full_python_resource_path("subtractutils.py"),
-            build_full_python_resource_path("multiplierutils.py"),
-            build_full_python_resource_path("CreateNothing.py"),
-            build_full_python_resource_path("FailureWithContent.py"),
-            build_full_python_resource_path("TransferToOriginal.py"),
-            build_full_python_resource_path("SetRecordField.py"),
-            build_full_python_resource_path("TestStateManager.py"),
-            build_full_python_resource_path("NifiStyleLogDynamicProperties.py"),
-            build_full_python_resource_path("LogDynamicProperties.py"),
-            build_full_python_resource_path("ExpressionLanguagePropertyWithValidator.py"),
-            build_full_python_resource_path("EvaluateExpressionLanguageChecker.py")
-        ])
 
     def __build_minifi_cpp_image_with_llamacpp_model(self):
         dockerfile = dedent("""\
@@ -322,29 +189,3 @@ class ImageStore:
         except Exception as e:
             logging.info(e)
             raise
-
-    def get_minifi_image_python_version(self):
-        result = self.client.containers.run(
-            image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
-            command=['python3', '-c', 'import platform; print(platform.python_version())'],
-            remove=True
-        )
-
-        python_ver_str = result.decode('utf-8')
-        logging.info('MiNiFi python version: %s', python_ver_str)
-        return tuple(map(int, python_ver_str.split('.')))
-
-    def is_conda_available_in_minifi_image(self):
-        container = self.client.containers.create(
-            image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
-            command=['conda', '--version'],
-        )
-        try:
-            container.start()
-            result = container.logs()
-            container.remove(force=True)
-        except docker.errors.APIError:
-            container.remove(force=True)
-            return False
-
-        return result.decode('utf-8').startswith('conda ')

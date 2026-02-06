@@ -191,21 +191,6 @@ class ContainerStore:
     def enable_sql_in_minifi(self):
         self.minifi_options.enable_sql = True
 
-    def use_nifi_python_processors_with_system_python_packages_installed_in_minifi(self):
-        self.minifi_options.use_nifi_python_processors_with_system_python_packages_installed = True
-
-    def use_nifi_python_processors_with_virtualenv_in_minifi(self):
-        self.minifi_options.use_nifi_python_processors_with_virtualenv = True
-
-    def use_nifi_python_processors_with_virtualenv_packages_installed_in_minifi(self):
-        self.minifi_options.use_nifi_python_processors_with_virtualenv_packages_installed = True
-
-    def remove_python_requirements_txt_in_minifi(self):
-        self.minifi_options.remove_python_requirements_txt = True
-
-    def use_nifi_python_processors_without_dependencies_in_minifi(self):
-        self.minifi_options.use_nifi_python_processors_without_dependencies = True
-
     def set_yaml_in_minifi(self):
         self.minifi_options.config_format = "yaml"
 
@@ -214,9 +199,6 @@ class ContainerStore:
 
     def enable_log_metrics_publisher_in_minifi(self):
         self.minifi_options.enable_log_metrics_publisher = True
-
-    def enable_example_minifi_python_processors(self):
-        self.minifi_options.enable_example_minifi_python_processors = True
 
     def enable_openssl_fips_mode_in_minifi(self):
         self.minifi_options.enable_openssl_fips_mode = True
