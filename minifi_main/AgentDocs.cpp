@@ -34,7 +34,6 @@
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/join.hpp"
 #include "range/v3/view/transform.hpp"
-#include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 
@@ -197,12 +196,12 @@ class MonolithDocumentation {
 
   void write(const std::filesystem::path& docs_dir) {
     std::ofstream controllers_md(docs_dir / "CONTROLLERS.md");
-    writeControllers(controllers_md);
-
     std::ofstream processors_md(docs_dir / "PROCESSORS.md");
-    writeProcessors(processors_md);
-
     std::ofstream parameter_providers_md(docs_dir / "PARAMETER_PROVIDERS.md");
+    gsl_Assert(controllers_md && processors_md && parameter_providers_md);
+
+    writeControllers(controllers_md);
+    writeProcessors(processors_md);
     writeParameterProviders(parameter_providers_md);
   }
 
@@ -278,8 +277,10 @@ class ModularDocumentation {
   }
 
   static void writeModule(const std::filesystem::path& docs_dir, const std::string_view module_name, const minifi::Components& components) {
-    minifi::utils::file::create_dir(docs_dir / "modules");
+    const auto dir_creation_result = minifi::utils::file::create_dir(docs_dir / "modules");
+    gsl_Assert(dir_creation_result == 0);
     std::ofstream os(docs_dir / "modules" / (std::string(module_name) + ".md"));
+    gsl_Assert(os);
     os << APACHE_LICENSE;
 
     writeToC(os, components);
