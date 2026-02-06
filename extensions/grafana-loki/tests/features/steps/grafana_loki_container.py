@@ -133,7 +133,7 @@ analytics:
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=120,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     @retry_check()
     def are_lines_present(self, lines: str, timeout: int, ssl: bool, tenant_id: str = "") -> bool:

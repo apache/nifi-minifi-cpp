@@ -33,7 +33,7 @@ class FakeGcsServerContainer(Container):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=30,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     @retry_check()
     def check_google_cloud_storage(self, content):

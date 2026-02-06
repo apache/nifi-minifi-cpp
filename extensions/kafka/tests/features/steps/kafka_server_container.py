@@ -95,7 +95,7 @@ Client {
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     def create_topic(self, topic_name: str):
         (code, output) = self.exec_run(["/bin/sh", "-c", f"/opt/kafka/bin/kafka-topics.sh --create --topic '{topic_name}' --bootstrap-server '{self.container_name}':9092"])
