@@ -62,7 +62,7 @@ C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
       configuration_(std::move(configuration)),
       node_reporter_(std::move(node_reporter)),
       filesystem_(std::move(filesystem)),
-      thread_pool_(2, nullptr, "C2 threadpool"),
+      thread_pool_(2, "C2 threadpool"),
       request_restart_(std::move(request_restart)),
       last_run_(std::chrono::steady_clock::now()),
       asset_manager_(asset_manager) {

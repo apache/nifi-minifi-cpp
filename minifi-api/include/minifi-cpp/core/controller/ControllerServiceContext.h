@@ -16,6 +16,9 @@
  */
 #pragma once
 
+#include <string>
+#include <vector>
+#include <system_error>
 #include <string_view>
 #include "utils/expected.h"
 

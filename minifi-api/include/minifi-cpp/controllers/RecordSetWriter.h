@@ -32,7 +32,7 @@ class RecordSetWriter : public controller::ControllerServiceInterface {
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.core.RecordSetWriter",
-    .version = "1.0.0"
+    .version = MINIFI_VERSION_STR
   };
 
   virtual void write(const RecordSet& record_set, const std::shared_ptr<FlowFile>& flow_file, ProcessSession& session) = 0;

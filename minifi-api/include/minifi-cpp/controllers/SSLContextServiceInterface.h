@@ -41,7 +41,7 @@ class SSLContextServiceInterface : public core::controller::ControllerServiceInt
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.controllers.SSLContextServiceInterface",
-    .version = "1.0.0"
+    .version = MINIFI_VERSION_STR
   };
 
   virtual const std::filesystem::path& getCertificateFile() const = 0;
