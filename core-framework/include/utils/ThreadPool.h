@@ -37,7 +37,6 @@
 #include "MinifiConcurrentQueue.h"
 #include "Monitors.h"
 #include "core/expect.h"
-#include "minifi-cpp/controllers/ThreadManagementService.h"
 #include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::utils {
@@ -136,10 +135,7 @@ class WorkerThread {
  */
 class ThreadPool {
  public:
-  using ControllerServiceProvider = std::function<std::shared_ptr<core::controller::ControllerServiceInterface>(std::string_view)>;
-
-  ThreadPool(int max_worker_threads = 2,
-             ControllerServiceProvider controller_service_provider = nullptr, std::string name = "NamelessPool");
+  ThreadPool(int max_worker_threads = 2, std::string name = "NamelessPool");
 
   ThreadPool(const ThreadPool &other) = delete;
   ThreadPool& operator=(const ThreadPool &other) = delete;
@@ -232,20 +228,6 @@ class ThreadPool {
       start();
   }
 
-  void setControllerServiceProvider(ControllerServiceProvider controller_service_provider) {
-    std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
-    bool was_running = running_;
-    if (was_running) {
-      shutdown();
-    }
-    controller_service_provider_ = controller_service_provider;
-    if (was_running)
-      start();
-  }
-
- private:
-  std::shared_ptr<controllers::ThreadManagementService> createThreadManager() const;
-
  protected:
   std::thread createThread(std::function<void()> &&functor) {
     return std::thread([ functor ]() mutable {
@@ -273,8 +255,6 @@ class ThreadPool {
   std::thread manager_thread_;
   std::thread delayed_scheduler_thread_;
   std::atomic<bool> running_;
-  ControllerServiceProvider controller_service_provider_;
-  std::shared_ptr<controllers::ThreadManagementService> thread_manager_;
   ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
   ConditionConcurrentQueue<Worker> worker_queue_;
   std::priority_queue<Worker, std::vector<Worker>, DelayedTaskComparator> delayed_worker_queue_;

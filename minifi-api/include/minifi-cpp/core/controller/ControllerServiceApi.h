@@ -16,6 +16,9 @@
  */
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "ControllerServiceInterface.h"
 #include "ControllerServiceContext.h"
 #include "ControllerServiceDescriptor.h"

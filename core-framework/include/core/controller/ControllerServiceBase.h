@@ -33,12 +33,7 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-/**
- * Controller Service base class that contains some pure virtual methods.
- *
- * Design: OnEnable is executed when the controller service is being enabled.
- * Note that keeping state here must be protected  in this function.
- */
+// A base class that helps with controller service development, contains common functionalities.
 class ControllerServiceBase : public ControllerServiceApi {
  public:
   explicit ControllerServiceBase(ControllerServiceMetadata metadata)
@@ -107,7 +102,9 @@ class ControllerServiceBase : public ControllerServiceApi {
   utils::Identifier uuid_;
   std::vector<std::shared_ptr<controller::ControllerServiceInterface> > linked_services_;
   std::shared_ptr<Configure> configuration_;
+  // valid during initialize, sink for supported properties
   ControllerServiceDescriptor* descriptor_{nullptr};
+  // valid during onEnable, provides property access
   ControllerServiceContext* context_{nullptr};
 
   std::shared_ptr<core::logging::Logger> logger_;

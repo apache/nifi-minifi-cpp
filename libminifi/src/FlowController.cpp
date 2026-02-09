@@ -54,7 +54,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     : core::controller::ForwardingControllerServiceProvider(core::className<FlowController>()),
       running_(false),
       initialized_(false),
-      thread_pool_(5, nullptr, "Flowcontroller threadpool"),
+      thread_pool_(5, "Flowcontroller threadpool"),
       configuration_(std::move(configure)),
       provenance_repo_(std::move(provenance_repo)),
       flow_file_repo_(std::move(flow_file_repo)),
@@ -276,12 +276,6 @@ void FlowController::load(bool reload) {
   if (!thread_pool_.isRunning() || reload) {
     thread_pool_.shutdown();
     thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 5));
-    thread_pool_.setControllerServiceProvider([this] (std::string_view name) -> std::shared_ptr<core::controller::ControllerServiceInterface> {
-      if (auto service = this->getControllerService(std::string{name})) {
-        return {service, service->getImplementation()};
-      }
-      return {};
-    });
     thread_pool_.start();
   }
 

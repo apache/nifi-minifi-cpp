@@ -38,12 +38,7 @@ enum ControllerServiceState {
   ENABLED
 };
 
-/**
- * Controller Service base class that contains some pure virtual methods.
- *
- * Design: OnEnable is executed when the controller service is being enabled.
- * Note that keeping state here must be protected  in this function.
- */
+// Wrapper class to manage common functionalities of controller service implementations (properties, name, id, etc)
 class ControllerService : public ConfigurableComponentImpl, public CoreComponentImpl {
   class ControllerServiceDescriptorImpl : public ControllerServiceDescriptor {
    public:
@@ -128,7 +123,7 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
 
   template<typename T = ControllerServiceInterface>
   gsl::not_null<T*> getImplementation() {
-    return gsl::make_not_null(dynamic_cast<T*>(impl_.get()));
+    return gsl::make_not_null(dynamic_cast<T*>(impl_->getControllerServiceInterface()));
   }
 
   bool supportsDynamicProperties() const final {
