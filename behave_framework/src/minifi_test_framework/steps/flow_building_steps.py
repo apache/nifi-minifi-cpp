@@ -190,6 +190,7 @@ def step_impl(context: MinifiTestContext, processor_name: str, relationship: str
 
 
 @step("{processor_name}'s {relationship} relationship is auto-terminated")
+@step("the \"{relationship}\" relationship of the {processor_name} processor is auto-terminated")
 def step_impl(context: MinifiTestContext, processor_name: str, relationship: str):
     context.execute_steps(f'given {processor_name}\'s {relationship} relationship is auto-terminated in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 

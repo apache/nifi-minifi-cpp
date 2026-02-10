@@ -45,9 +45,7 @@ class DockerTestDirectoryBindings:
             "resources_dir": "/tmp/.nifi-test-resources." + self.feature_id,
             "system_certs_dir": "/tmp/.nifi-test-resources." + self.feature_id + "/system_certs_dir",
             "minifi_config_dir": "/tmp/.nifi-test-minifi-config-dir." + self.feature_id,
-            "nifi_config_dir": "/tmp/.nifi-test-nifi-config-dir." + self.feature_id,
-            "kubernetes_temp_dir": "/tmp/.nifi-test-kubernetes-temp-dir." + self.feature_id,
-            "kubernetes_config_dir": "/tmp/.nifi-test-kubernetes-config-dir." + self.feature_id
+            "nifi_config_dir": "/tmp/.nifi-test-nifi-config-dir." + self.feature_id
         }
 
         [self.create_directory(directory) for directory in self.data_directories[self.feature_id].values()]
@@ -88,7 +86,6 @@ class DockerTestDirectoryBindings:
         vols[self.data_directories[self.feature_id]["system_certs_dir"]] = {"bind": "/usr/local/share/certs", "mode": "rw"}
         vols[self.data_directories[self.feature_id]["minifi_config_dir"]] = {"bind": "/tmp/minifi_config", "mode": "rw"}
         vols[self.data_directories[self.feature_id]["nifi_config_dir"]] = {"bind": "/tmp/nifi_config", "mode": "rw"}
-        vols[self.data_directories[self.feature_id]["kubernetes_config_dir"]] = {"bind": "/tmp/kubernetes_config", "mode": "rw"}
         return vols
 
     @staticmethod

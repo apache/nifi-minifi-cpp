@@ -16,7 +16,7 @@ spec:
     - name: var-log-pods
       mountPath: /var/log/pods
       readOnly: true
-    - name: tmp-minifi-config
+    - name: minifi-conf
       mountPath: /opt/minifi/minifi-current/conf
       readOnly: false
     - name: tmp-output
@@ -25,9 +25,9 @@ spec:
   - name: var-log-pods
     hostPath:
       path: /var/log/pods
-  - name: tmp-minifi-config
+  - name: minifi-conf
     hostPath:
-      path: /tmp/kubernetes_config
+      path: /tmp/minifi_conf
   - name: tmp-output
     hostPath:
       path: /tmp/output

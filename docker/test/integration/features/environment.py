@@ -27,7 +27,6 @@ from MiNiFi_integration_test_driver import MiNiFi_integration_test  # noqa: E402
 from minifi import *  # noqa
 from cluster.ImageStore import ImageStore  # noqa
 from cluster.DockerTestDirectoryBindings import DockerTestDirectoryBindings  # noqa
-from cluster.KubernetesProxy import KubernetesProxy  # noqa
 
 
 def inject_feature_id(context, step):
@@ -60,14 +59,11 @@ def after_scenario(context, scenario):
     logging.info("Integration test teardown at {time:%H:%M:%S.%f}".format(time=datetime.datetime.now()))
     context.test.cleanup()
     context.directory_bindings.cleanup_io()
-    if context.kubernetes_proxy:
-        context.kubernetes_proxy.delete_pods()
 
 
 def before_all(context):
     context.config.setup_logging()
     context.image_store = ImageStore()
-    context.kubernetes_proxy = None
 
 
 def before_feature(context, feature):
@@ -86,15 +82,3 @@ def before_feature(context, feature):
     context.directory_bindings.create_cert_files()
     context.root_ca_cert = context.directory_bindings.root_ca_cert
     context.root_ca_key = context.directory_bindings.root_ca_key
-    if "requires.kubernetes.cluster" in feature.tags:
-        context.kubernetes_proxy = KubernetesProxy(
-            context.directory_bindings.get_data_directories()["kubernetes_temp_dir"],
-            os.path.join(os.environ['TEST_DIRECTORY'], 'resources', 'kubernetes', 'pods-etc'))
-        context.kubernetes_proxy.create_config(context.directory_bindings.get_directory_bindings())
-        context.kubernetes_proxy.start_cluster()
-
-
-def after_feature(context, feature):
-    if "requires.kubernetes.cluster" in feature.tags and context.kubernetes_proxy:
-        context.kubernetes_proxy.cleanup()
-        context.kubernetes_proxy = None

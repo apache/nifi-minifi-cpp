@@ -23,19 +23,17 @@ from .containers.HttpProxyContainer import HttpProxyContainer
 from .containers.PostgreSQLServerContainer import PostgreSQLServerContainer
 from .containers.SyslogUdpClientContainer import SyslogUdpClientContainer
 from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
-from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
 from .FeatureContext import FeatureContext
 
 
 class ContainerStore:
-    def __init__(self, network, image_store, kubernetes_proxy, feature_id):
+    def __init__(self, network, image_store, feature_id):
         self.feature_id = feature_id
         self.minifi_options = MinifiOptions()
         self.containers = {}
         self.data_directories = {}
         self.network = network
         self.image_store = image_store
-        self.kubernetes_proxy = kubernetes_proxy
         self.nifi_options = NiFiOptions()
 
     def get_container_name_with_postfix(self, container_name: str):
@@ -91,17 +89,6 @@ class ContainerStore:
                                                               network=self.network,
                                                               image_store=self.image_store,
                                                               command=command))
-        elif engine == 'kubernetes':
-            return self.containers.setdefault(container_name,
-                                              MinifiAsPodInKubernetesCluster(feature_context=feature_context,
-                                                                             kubernetes_proxy=self.kubernetes_proxy,
-                                                                             config_dir=self.data_directories["kubernetes_config_dir"],
-                                                                             minifi_options=self.minifi_options,
-                                                                             name=container_name,
-                                                                             vols=self.vols,
-                                                                             network=self.network,
-                                                                             image_store=self.image_store,
-                                                                             command=command))
         elif engine == 'http-proxy':
             return self.containers.setdefault(container_name,
                                               HttpProxyContainer(feature_context=feature_context,

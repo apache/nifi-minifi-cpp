@@ -19,7 +19,6 @@ from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
 from minifi.controllers.ODBCService import ODBCService
-from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 from minifi.controllers.JsonRecordSetWriter import JsonRecordSetWriter
 from minifi.controllers.JsonTreeReader import JsonTreeReader
 from minifi.controllers.XMLReader import XMLReader
@@ -123,12 +122,6 @@ def step_impl(context, processor_type, minifi_container_name):
 @given("a {processor_type} processor set up to communicate with an Azure blob storage")
 def step_impl(context, processor_type):
     __create_processor(context, processor_type, processor_type, None, None, "minifi-cpp-flow")
-
-
-@given("a {processor_type} processor in a Kubernetes cluster")
-@given("a {processor_type} processor in the Kubernetes cluster")
-def step_impl(context, processor_type):
-    __create_processor(context, processor_type, processor_type, None, None, "kubernetes", "kubernetes")
 
 
 @given("a set of processors in the \"{minifi_container_name}\" flow")
@@ -453,26 +446,6 @@ def step_impl(context):
     xml_record_set_writer = XMLRecordSetWriter("XMLRecordSetWriter")
     container = context.test.acquire_container(context=context, name="minifi-cpp-flow")
     container.add_controller(xml_record_set_writer)
-
-
-# Kubernetes
-def __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, properties):
-    kubernetes_controller_service = KubernetesControllerService("Kubernetes Controller Service", properties)
-    processor = context.test.get_node_by_name(processor_name)
-    processor.controller_services.append(kubernetes_controller_service)
-    processor.set_property(service_property_name, kubernetes_controller_service.name)
-
-
-@given("the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service")
-@given("the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service")
-def step_impl(context, processor_name, service_property_name):
-    __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {})
-
-
-@given("the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service with the \"{property_name}\" property set to \"{property_value}\"")
-@given("the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service with the \"{property_name}\" property set to \"{property_value}\"")
-def step_impl(context, processor_name, service_property_name, property_name, property_value):
-    __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {property_name: property_value})
 
 
 # azure storage setup

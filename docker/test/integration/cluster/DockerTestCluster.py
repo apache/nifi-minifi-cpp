@@ -30,7 +30,7 @@ class DockerTestCluster:
         self.segfault = False
         self.vols = {}
         self.container_communicator = DockerCommunicator()
-        self.container_store = ContainerStore(self.container_communicator.create_docker_network(feature_id), context.image_store, context.kubernetes_proxy, feature_id=feature_id)
+        self.container_store = ContainerStore(self.container_communicator.create_docker_network(feature_id), context.image_store, feature_id=feature_id)
         self.azure_checker = AzureChecker(self.container_communicator)
         self.postgres_checker = PostgresChecker(self.container_communicator)
         self.modbus_checker = ModbusChecker(self.container_communicator)
