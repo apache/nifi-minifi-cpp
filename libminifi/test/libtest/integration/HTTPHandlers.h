@@ -34,7 +34,7 @@
 #include "utils/HTTPUtils.h"
 #include "ServerAwareHandler.h"
 #include "c2/C2Payload.h"
-#include "properties/Configuration.h"
+#include "properties/Configure.h"
 #include "unit/Catch.h"
 
 namespace org::apache::nifi::minifi::test {
