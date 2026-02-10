@@ -18,7 +18,7 @@ Feature: Splitting JSON content using SplitJson processor
 
   Scenario: Split multiple query results to separate flow files
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with filename "test_file.json" and content "{"company": {"departments": [{"name": "Engineering", "employees": ["Alice", "Bob"]}, {"name": "Marketing", "employees": "Dave"}, {"name": "Sales", "employees": null}]}}" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file ("test_file.json") with the content "{"company": {"departments": [{"name": "Engineering", "employees": ["Alice", "Bob"]}, {"name": "Marketing", "employees": "Dave"}, {"name": "Sales", "employees": null}]}}"
     And a SplitJson processor with the "JsonPath Expression" property set to "$.company.departments[*].employees"
     And the "Null Value Representation" property of the SplitJson processor is set to "the string 'null'"
     And SplitJson is EVENT_DRIVEN

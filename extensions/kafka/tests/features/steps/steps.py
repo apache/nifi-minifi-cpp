@@ -24,7 +24,7 @@ from minifi_test_framework.steps import core_steps            # noqa: F401
 from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.minifi.processor import Processor
-from kafka_server_container import KafkaServer
+from containers.kafka_server_container import KafkaServer
 
 
 @step("a Kafka server is set up")

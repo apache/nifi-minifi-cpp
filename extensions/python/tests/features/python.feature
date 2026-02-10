@@ -84,7 +84,7 @@ Feature: MiNiFi can use python processors in its flows
   @USE_NIFI_PYTHON_PROCESSORS_WITH_LANGCHAIN
   Scenario Outline: MiNiFi C++ can use native NiFi python processors
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with filename "test_file.log" and content "test_data" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file ("test_file.log") with the content "test_data"
     And a org.apache.nifi.minifi.processors.nifi_python_processors.ParseDocument processor with the name "ParseDocument"
     And ParseDocument is EVENT_DRIVEN
     And a org.apache.nifi.minifi.processors.nifi_python_processors.ChunkDocument processor with the name "ChunkDocument"
@@ -132,10 +132,10 @@ Feature: MiNiFi can use python processors in its flows
 
   Scenario: MiNiFi C++ can use custom relationships in NiFi native python processors
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with filename "test_file.log" and content "test_data_one" is present in "/tmp/input"
-    And a file with filename "test_file2.log" and content "test_data_two" is present in "/tmp/input"
-    And a file with filename "test_file3.log" and content "test_data_three" is present in "/tmp/input"
-    And a file with filename "test_file4.log" and content "test_data_four" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file ("test_file.log") with the content "test_data_one"
+    And a directory at "/tmp/input" has a file ("test_file2.log") with the content "test_data_two"
+    And a directory at "/tmp/input" has a file ("test_file3.log") with the content "test_data_three"
+    And a directory at "/tmp/input" has a file ("test_file4.log") with the content "test_data_four"
     And a org.apache.nifi.minifi.processors.nifi_python_processors.RotatingForwarder processor with the name "RotatingForwarder"
     And RotatingForwarder is EVENT_DRIVEN
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -253,8 +253,8 @@ Feature: MiNiFi can use python processors in its flows
 
   Scenario: MiNiFi C++ supports RecordTransform native python processors
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content '{"group": "group1", "name": "John"}\n{"group": "group1", "name": "Jane"}\n{"group": "group2", "name": "Kyle"}\n{"name": "Zoe"}' is present in '/tmp/input'
-    And a file with the content '{"group": "group1", "name": "Steve"}\n{}' is present in '/tmp/input'
+    And a directory at '/tmp/input' has a file with the content '{"group": "group1", "name": "John"}\n{"group": "group1", "name": "Jane"}\n{"group": "group2", "name": "Kyle"}\n{"name": "Zoe"}'
+    And a directory at '/tmp/input' has a file with the content '{"group": "group1", "name": "Steve"}\n{}'
     And a org.apache.nifi.minifi.processors.nifi_python_processors.SetRecordField processor with the name "SetRecordField"
     And SetRecordField is EVENT_DRIVEN
     And the "Record Reader" property of the SetRecordField processor is set to "JsonTreeReader"

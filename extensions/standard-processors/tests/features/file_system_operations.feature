@@ -21,7 +21,7 @@ Feature: File system operations are handled by the GetFile, PutFile, ListFile an
 
   Scenario: Get and put operations run in a simple flow
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PutFile
@@ -56,7 +56,7 @@ Feature: File system operations are handled by the GetFile, PutFile, ListFile an
     And PutFile_3's success relationship is auto-terminated
     And PutFile_3's failure relationship is auto-terminated
 
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     When the MiNiFi instance starts up
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 10 seconds
 

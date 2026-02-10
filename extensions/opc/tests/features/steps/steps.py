@@ -22,7 +22,7 @@ from minifi_test_framework.steps import core_steps            # noqa: F401
 from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.core.helpers import wait_for_condition
-from opc_ua_server_container import OPCUAServerContainer
+from containers.opc_ua_server_container import OPCUAServerContainer
 
 
 @step("an OPC UA server is set up")

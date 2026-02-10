@@ -19,7 +19,7 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
   Scenario Outline: MiNiFi instance indexes a document on Elasticsearch using Basic Authentication
     Given an Elasticsearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "{ "field1" : "value1" }" is present in "/tmp/input"
+    And a directory at '/tmp/input' has a file with the content '{ "field1" : "value1" }'
     And a PostElasticsearch processor
     And PostElasticsearch is EVENT_DRIVEN
     And the "Hosts" property of the PostElasticsearch processor is set to "https://elasticsearch-${scenario_id}:9200"
@@ -47,7 +47,7 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
   Scenario: MiNiFi instance deletes a document from Elasticsearch using API Key authentication
     Given an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "hello world" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "hello world"
     And a PostElasticsearch processor
     And PostElasticsearch is EVENT_DRIVEN
     And the "Hosts" property of the PostElasticsearch processor is set to "https://elasticsearch-${scenario_id}:9200"
@@ -70,7 +70,7 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
   Scenario: MiNiFi instance partially updates a document in Elasticsearch using Basic Authentication
     Given an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "{ "field2" : "value2" }" is present in "/tmp/input"
+    And a directory at '/tmp/input' has a file with the content '{ "field2" : "value2" }'
     And a PostElasticsearch processor
     And PostElasticsearch is EVENT_DRIVEN
     And the "Hosts" property of the PostElasticsearch processor is set to "https://elasticsearch-${scenario_id}:9200"

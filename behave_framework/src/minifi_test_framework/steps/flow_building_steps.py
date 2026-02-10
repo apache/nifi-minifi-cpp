@@ -19,7 +19,6 @@ import logging
 import uuid
 from behave import given, step
 
-from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
 from minifi_test_framework.minifi.connection import Connection
 from minifi_test_framework.minifi.controller_service import ControllerService
@@ -225,29 +224,6 @@ def step_impl(context: MinifiTestContext, context_name: str):
 def step_impl(context: MinifiTestContext, parameter_name: str, parameter_value: str, context_name: str):
     parameter_context = context.get_or_create_default_minifi_container().flow_definition.get_parameter_context(context_name)
     parameter_context.parameters.append(Parameter(parameter_name, parameter_value, False))
-
-
-@step('a directory at "{directory}" has a file with the content "{content}" in the "{flow_name}" flow')
-@step("a directory at '{directory}' has a file with the content '{content}' in the '{flow_name}' flow")
-def step_impl(context: MinifiTestContext, directory: str, content: str, flow_name: str):
-    new_content = content.replace("\\n", "\n")
-    new_dir = Directory(directory)
-    new_dir.files["input.txt"] = new_content
-    context.get_or_create_minifi_container(flow_name).dirs.append(new_dir)
-
-
-@step('a directory at "{directory}" has a file with the content "{content}"')
-@step("a directory at '{directory}' has a file with the content '{content}'")
-def step_impl(context: MinifiTestContext, directory: str, content: str):
-    context.execute_steps(f'given a directory at "{directory}" has a file with the content "{content}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
-
-
-@step('a directory at "{directory}" has a file ("{file_name}") with the content "{content}"')
-def step_impl(context: MinifiTestContext, directory: str, file_name: str, content: str):
-    new_content = content.replace("\\n", "\n")
-    new_dir = Directory(directory)
-    new_dir.files[file_name] = new_content
-    context.get_or_create_default_minifi_container().dirs.append(new_dir)
 
 
 @given("these processor properties are set in the \"{minifi_container_name}\" flow")

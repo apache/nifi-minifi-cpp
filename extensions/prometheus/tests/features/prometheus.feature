@@ -18,7 +18,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
 
   Scenario: Published metrics are scraped by Prometheus server
     Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
@@ -37,7 +37,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
 
   Scenario: Published metrics are scraped by Prometheus server through SSL connection
     Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
@@ -58,7 +58,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And a GetFile processor with the name "GetFile2" and the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile1 processor is set to "true"
     And the "Keep Source File" property of the GetFile2 processor is set to "true"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
     And the "success" relationship of the GetFile2 processor is connected to the PutFile

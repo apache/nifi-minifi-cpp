@@ -22,7 +22,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS Kinesis server
   Scenario: A MiNiFi instance can send data to AWS Kinesis
     Given a kinesis server is set up in correspondence with the PutKinesisStream
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "Schnappi, das kleine Krokodil" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "Schnappi, das kleine Krokodil"
     And a PutKinesisStream processor
     And these processor properties are set
       | processor name     | property name              | property value                           |

@@ -50,9 +50,41 @@ def step_impl(context: MinifiTestContext):
 def step_impl(context: MinifiTestContext, directory: str, size: str):
     size = humanfriendly.parse_size(size)
     content = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(size))
+    dirs = context.get_or_create_default_minifi_container().dirs
+    if directory in dirs:
+        dirs[directory].files[str(uuid.uuid4())] = content
+        return
     new_dir = Directory(directory)
-    new_dir.files["input.txt"] = content
-    context.get_or_create_default_minifi_container().dirs.append(new_dir)
+    new_dir.files[str(uuid.uuid4())] = content
+    dirs.append(new_dir)
+
+
+def __add_directory_with_file_to_container(context: MinifiTestContext, directory: str, file_name: str, content: str, container_name: str):
+    dirs = context.get_or_create_minifi_container(container_name).dirs
+    new_content = content.replace("\\n", "\n")
+    if directory in dirs:
+        dirs[directory].files[file_name] = new_content
+        return
+    new_dir = Directory(directory)
+    new_dir.files[file_name] = new_content
+    dirs.append(new_dir)
+
+
+@step('a directory at "{directory}" has a file with the content "{content}" in the "{flow_name}" flow')
+@step("a directory at '{directory}' has a file with the content '{content}' in the '{flow_name}' flow")
+def step_impl(context: MinifiTestContext, directory: str, content: str, flow_name: str):
+    __add_directory_with_file_to_container(context, directory, str(uuid.uuid4()), content, flow_name)
+
+
+@step('a directory at "{directory}" has a file with the content "{content}"')
+@step("a directory at '{directory}' has a file with the content '{content}'")
+def step_impl(context: MinifiTestContext, directory: str, content: str):
+    context.execute_steps(f'given a directory at "{directory}" has a file with the content "{content}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
+
+
+@step('a directory at "{directory}" has a file ("{file_name}") with the content "{content}"')
+def step_impl(context: MinifiTestContext, directory: str, file_name: str, content: str):
+    __add_directory_with_file_to_container(context, directory, file_name, content, DEFAULT_MINIFI_CONTAINER_NAME)
 
 
 @step('a file with filename "{file_name}" and content "{content}" is present in "{path}"')

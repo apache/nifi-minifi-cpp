@@ -21,7 +21,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
   Scenario Outline: A MiNiFi instance transfers data to an MQTT broker
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the PublishMQTT processor is set to "<version>"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -43,7 +43,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
   Scenario Outline: If the MQTT broker does not exist, then no flow files are processed
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the PublishMQTT processor is set to "<version>"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -63,7 +63,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
   Scenario Outline: Verify delivery of message when MQTT broker is unstable
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the PublishMQTT processor is set to "<version>"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -339,7 +339,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     # publishing MQTT client
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "publisher-client" flow
     And the scheduling period of the GetFile processor is set to "120 seconds" in the "publisher-client" flow
-    And a file with the content "test" is present in "/tmp/input" in the "publisher-client" flow
+    And a directory at "/tmp/input" has a file with the content "test" in the "publisher-client" flow
     And a PublishMQTT processor set up to communicate with an MQTT broker instance in the "publisher-client" flow
     And PublishMQTT is EVENT_DRIVEN in the "publisher-client" flow
     And the "MQTT Version" property of the PublishMQTT processor is set to "<version>" in the "publisher-client" flow
@@ -600,7 +600,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Name of Record Tag" property of the XMLRecordSetWriter controller service is set to "record"
     And the "Name of Root Tag" property of the XMLRecordSetWriter controller service is set to "root"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content '[{"string": "test"}, {"int": 42}]' is present in '/tmp/input'
+    And a directory at '/tmp/input' has a file with the content '[{"string": "test"}, {"int": 42}]'
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And PublishMQTT is EVENT_DRIVEN
     And the "MQTT Version" property of the PublishMQTT processor is set to "3.x AUTO"

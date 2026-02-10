@@ -22,7 +22,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
   Scenario: A MiNiFi instance transfers data to another MiNiFi instance with message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${scenario_id}:8080/contentListener"
     And InvokeHTTP is EVENT_DRIVEN
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
@@ -43,7 +43,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     Given the http proxy server is set up
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://minifi-listen-${scenario_id}:8080/contentListener"
     And InvokeHTTP is EVENT_DRIVEN
     And these processor properties are set
@@ -70,7 +70,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
   Scenario: A MiNiFi instance and transfers hashed data to another MiNiFi instance
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a HashContent processor with the "Hash Attribute" property set to "hash"
     And HashContent is EVENT_DRIVEN
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${scenario_id}:8080/contentListener"
@@ -93,7 +93,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
   Scenario: A MiNiFi instance transfers data to another MiNiFi instance without message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${scenario_id}:8080/contentListener"
     And InvokeHTTP is EVENT_DRIVEN
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
@@ -114,7 +114,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
   Scenario: A MiNiFi instance transfers data to a NiFi instance with message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://nifi-${scenario_id}:8081/contentListener"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP

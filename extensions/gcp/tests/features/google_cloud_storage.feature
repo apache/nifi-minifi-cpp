@@ -18,7 +18,7 @@ Feature: Sending data to Google Cloud Storage using PutGCSObject
 
   Scenario: A MiNiFi instance can upload data to Google Cloud storage
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "hello_gcs" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "hello_gcs"
     And a Google Cloud storage server is set up
     And a PutGCSObject processor
     And PutGCSObject is EVENT_DRIVEN

@@ -25,7 +25,7 @@ from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.minifi.controller_service import ControllerService
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from postgress_server_container import PostgresContainer
+from containers.postgress_server_container import PostgresContainer
 
 
 @given("an ODBCService is setup up for {processor_name} with the name \"{service_name}\"")

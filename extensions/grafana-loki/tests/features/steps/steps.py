@@ -20,8 +20,8 @@ from minifi_test_framework.steps import core_steps            # noqa: F401
 from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.core.helpers import log_due_to_failure
-from grafana_loki_container import GrafanaLokiContainer, GrafanaLokiOptions
-from reverse_proxy_container import ReverseProxyContainer
+from containers.grafana_loki_container import GrafanaLokiContainer, GrafanaLokiOptions
+from containers.reverse_proxy_container import ReverseProxyContainer
 
 
 @step("a Grafana Loki server is set up")

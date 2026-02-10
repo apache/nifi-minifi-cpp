@@ -21,8 +21,8 @@ from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.minifi.controller_service import ControllerService
 from minifi_test_framework.core.helpers import log_due_to_failure
-from elasticsearch_container import ElasticsearchContainer
-from opensearch_container import OpensearchContainer
+from containers.elasticsearch_container import ElasticsearchContainer
+from containers.opensearch_container import OpensearchContainer
 
 
 @step('an Elasticsearch server is set up and running')

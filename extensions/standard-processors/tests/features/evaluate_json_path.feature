@@ -18,7 +18,7 @@ Feature: Writing JSON path query result to attribute or flow file using Evaluate
 
   Scenario: Write query result to flow file
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with filename "test_file.json" and content "{"books": [{"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"}, {"title": "1984", "author": "George Orwell"}]}" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file ("test_file.json") with the content "{"books": [{"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"}, {"title": "1984", "author": "George Orwell"}]}"
     And a EvaluateJsonPath processor with the "Destination" property set to "flowfile-content"
     And the "JsonPath" property of the EvaluateJsonPath processor is set to "$.books[*].title"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -32,7 +32,7 @@ Feature: Writing JSON path query result to attribute or flow file using Evaluate
 
   Scenario: Write query result to attributes
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with filename "test_file.json" and content "{"title": "1984", "author": null}" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file ("test_file.json") with the content "{"title": "1984", "author": null}"
     And a EvaluateJsonPath processor with the "Destination" property set to "flowfile-attribute"
     And the "Null Value Representation" property of the EvaluateJsonPath processor is set to "the string 'null'"
     And the "Path Not Found Behavior" property of the EvaluateJsonPath processor is set to "skip"

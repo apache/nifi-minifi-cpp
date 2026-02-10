@@ -19,7 +19,7 @@ Feature: MiNiFi Controller functionalities
 
   Scenario: Flow config can be updated through MiNiFi controller
     Given a GenerateFlowFile processor
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
     When all instances start up
     And MiNiFi config is updated through MiNiFi controller
@@ -28,7 +28,7 @@ Feature: MiNiFi Controller functionalities
 
   Scenario: A component can be stopped
     Given a GenerateFlowFile processor
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
     When all instances start up
     And the GenerateFlowFile component is stopped through MiNiFi controller
@@ -37,7 +37,7 @@ Feature: MiNiFi Controller functionalities
 
   Scenario: If FlowController is stopped all other components are stopped
     Given a GenerateFlowFile processor
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
     When all instances start up
     And the FlowController component is stopped through MiNiFi controller
@@ -46,7 +46,7 @@ Feature: MiNiFi Controller functionalities
 
   Scenario: FlowController can be stopped and restarted
     Given a GenerateFlowFile processor
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
     When all instances start up
     And the FlowController component is stopped through MiNiFi controller
@@ -67,14 +67,14 @@ Feature: MiNiFi Controller functionalities
 
   Scenario: Manifest can be retrieved
     Given a GenerateFlowFile processor
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
     When all instances start up
     Then manifest can be retrieved through MiNiFi controller
 
   Scenario: Debug bundle can be retrieved
     Given a GenerateFlowFile processor
-    And a file with the content "test" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
     When all instances start up
     Then debug bundle can be retrieved through MiNiFi controller

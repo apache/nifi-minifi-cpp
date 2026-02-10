@@ -21,7 +21,7 @@ Feature: Hash value is added to Flowfiles by HashContent processor
 
   Scenario Outline: HashContent adds hash attribute to flowfiles
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content <content> is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "<content>"
     And a HashContent processor with the "Hash Attribute" property set to "hash"
     And the "Hash Algorithm" property of the HashContent processor is set to "<hash_algorithm>"
     And HashContent is EVENT_DRIVEN
@@ -34,10 +34,10 @@ Feature: Hash value is added to Flowfiles by HashContent processor
     Then the Minifi logs contain the following message: "key:hash value:<hash_value>" in less than 10 seconds
 
     Examples:
-      | content  | hash_algorithm | hash_value                                                       |
-      | "apple"  | MD5            | 1F3870BE274F6C49B3E31A0C6728957F                                 |
-      | "test"   | SHA1           | A94A8FE5CCB19BA61C4C0873D391E987982FBBD3                         |
-      | "coffee" | SHA256         | 37290D74AC4D186E3A8E5785D259D2EC04FAC91AE28092E7620EC8BC99E830AA |
+      | content | hash_algorithm | hash_value                                                       |
+      | apple   | MD5            | 1F3870BE274F6C49B3E31A0C6728957F                                 |
+      | test    | SHA1           | A94A8FE5CCB19BA61C4C0873D391E987982FBBD3                         |
+      | coffee  | SHA256         | 37290D74AC4D186E3A8E5785D259D2EC04FAC91AE28092E7620EC8BC99E830AA |
 
   Scenario: HashContent fails for an empty file if 'fail on empty' property is set to true
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -57,7 +57,7 @@ Feature: Hash value is added to Flowfiles by HashContent processor
   Scenario: HashContent can use MD5 in FIPS mode
     Given OpenSSL FIPS mode is enabled in MiNiFi
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "apple" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "apple"
     And a HashContent processor with the "Hash Attribute" property set to "hash"
     And the "Hash Algorithm" property of the HashContent processor is set to "MD5"
     And HashContent is EVENT_DRIVEN
