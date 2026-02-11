@@ -98,7 +98,7 @@ class PythonLibLoader {
   std::shared_ptr<minifi::core::logging::Logger> logger_ = minifi::core::logging::LoggerFactory<PythonLibLoader>::getLogger();
 };
 
-extern "C" MinifiExtension* InitExtension(MinifiConfig* config) {
+extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* config) {
   static PythonLibLoader python_lib_loader([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
     MinifiConfigGet(config, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
