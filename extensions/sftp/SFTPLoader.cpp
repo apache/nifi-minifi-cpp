@@ -25,7 +25,7 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
+extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
   if (libssh2_init(0) != 0) {
     return nullptr;
   }

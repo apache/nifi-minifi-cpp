@@ -22,29 +22,14 @@ define_property(GLOBAL PROPERTY EXTENSION-OPTIONS
 
 set_property(GLOBAL PROPERTY EXTENSION-OPTIONS "")
 
-set(extension-build-info-file "${CMAKE_CURRENT_BINARY_DIR}/ExtensionBuildInfo.cpp")
-file(GENERATE OUTPUT ${extension-build-info-file}
-    CONTENT "\
-    #include \"minifi-cpp/utils/Export.h\"\n\
-    #ifdef BUILD_ID_VARIABLE_NAME\n\
-    EXTENSIONAPI extern const char* const BUILD_ID_VARIABLE_NAME = \"__EXTENSION_BUILD_IDENTIFIER_BEGIN__${BUILD_IDENTIFIER}__EXTENSION_BUILD_IDENTIFIER_END__\";\n\
-    #else\n\
-    static_assert(false, \"BUILD_ID_VARIABLE_NAME is not defined\");\n\
-    #endif\n")
-
-function(get_build_id_variable_name extension-name output)
-    string(REPLACE "-" "_" result ${extension-name})
-    string(APPEND result "_build_identifier")
-    set("${output}" "${result}" PARENT_SCOPE)
-endfunction()
-
 macro(register_extension extension-name extension-display-name extension-guard description)
     set(${extension-guard} ${extension-name} PARENT_SCOPE)
     get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
     set_property(GLOBAL APPEND PROPERTY EXTENSION-OPTIONS ${extension-name})
-    get_build_id_variable_name(${extension-name} build-id-variable-name)
-    set_source_files_properties(${extension-build-info-file} PROPERTIES GENERATED TRUE)
-    target_sources(${extension-name} PRIVATE ${extension-build-info-file})
+    get_target_property(has_custom_initializer ${extension-name} HAS_CUSTOM_INITIALIZER)
+    if (NOT has_custom_initializer)
+        target_sources(${extension-name} PRIVATE ${CMAKE_SOURCE_DIR}/extensions/ExtensionInitializer.cpp)
+    endif()
     target_compile_definitions(${extension-name}
         PRIVATE "MODULE_NAME=${extension-name}"
         PRIVATE "BUILD_ID_VARIABLE_NAME=${build-id-variable-name}")

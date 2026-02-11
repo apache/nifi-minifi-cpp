@@ -33,10 +33,10 @@ REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
 Some extensions (e.g. `OpenCVExtension`) require initialization before use.
-You need to define an `InitExtension` function of type `MinifiExtension*(MinifiConfig*)` to be called.
+You need to define an `MinifiInitExtension` function of type `MinifiExtension*(MinifiConfig*)` to be called.
 
 ```C++
-extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
+extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
   const auto success = org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
   if (!success) {
     return nullptr;
