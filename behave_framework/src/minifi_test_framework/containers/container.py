@@ -101,7 +101,7 @@ class Container:
     def is_deployed(self) -> bool:
         return self.container is not None
 
-    def deploy(self, context: "Union[MinifiTestContext, None]") -> bool:
+    def deploy(self, context: MinifiTestContext | None) -> bool:
         if self.is_deployed():
             logging.info(f"Container '{self.container_name}' is already deployed.")
             return True

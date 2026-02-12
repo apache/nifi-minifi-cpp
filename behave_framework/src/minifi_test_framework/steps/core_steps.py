@@ -46,11 +46,6 @@ def step_impl(context: MinifiTestContext):
     logging.debug("MiNiFi instance started up")
 
 
-@when("the MiNiFi instance is started without assertions")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().deploy(context)
-
-
 @step('a directory at "{directory}" has a file with the size "{size}"')
 def step_impl(context: MinifiTestContext, directory: str, size: str):
     size = humanfriendly.parse_size(size)
