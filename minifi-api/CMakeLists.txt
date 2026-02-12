@@ -5,7 +5,7 @@ target_link_libraries(minifi-api-common INTERFACE gsl-lite)
 add_library(minifi-api INTERFACE)
 target_include_directories(minifi-api INTERFACE include)
 target_link_libraries(minifi-api INTERFACE minifi-api-common)
-target_compile_definitions(minifi-api INTERFACE MINIFI_API_VERSION_FN=MinifiCppApiVersion_${BUILD_IDENTIFIER})
+target_compile_definitions(minifi-api INTERFACE MINIFI_CREATE_EXTENSION_FN=MinifiCreateExtension_${BUILD_IDENTIFIER})
 
 add_library(minifi-c-api INTERFACE)
 target_include_directories(minifi-c-api INTERFACE include/minifi-c)
