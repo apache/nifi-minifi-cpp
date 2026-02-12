@@ -29,7 +29,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "failure" relationship of the PutS3Object processor is connected to the PutS3Object
     And PutFile's success relationship is auto-terminated
 
-    And an s3 server is set up
+    And the s3 server starts up
 
     When the MiNiFi instance starts up
 
@@ -54,7 +54,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "failure" relationship of the PutS3Object processor is connected to the PutS3Object
     And PutFile's success relationship is auto-terminated
 
-    And an s3 server is set up
+    And the s3 server starts up
     And the http proxy server is set up
     When all instances start up
 
@@ -77,7 +77,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
       | DeleteS3Object | success           | PutFile          |
       | PutFile        | success           | auto-terminated  |
 
-    And an s3 server is set up
+    And the s3 server starts up
 
     When the MiNiFi instance starts up
 
@@ -92,7 +92,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "success" relationship of the GetFile processor is connected to the DeleteS3Object
     And the "success" relationship of the DeleteS3Object processor is connected to the PutFile
 
-    And an s3 server is set up
+    And the s3 server starts up
 
     When the MiNiFi instance starts up
 
@@ -119,7 +119,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
       | DeleteS3Object | success           | PutFile          |
       | PutFile        | success           | auto-terminated  |
 
-    And an s3 server is set up
+    And the s3 server starts up
     And the http proxy server is set up
 
     When all instances start up
@@ -145,7 +145,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
       | PutS3Object      | success           | auto-terminated  |
       | PutS3Object      | failure           | PutS3Object      |
 
-    And an s3 server is set up
+    And the s3 server starts up
 
     When the MiNiFi instance starts up
 
@@ -171,7 +171,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
       | GenerateFlowFile | success           | FetchS3Object    |
       | FetchS3Object    | success           | PutFile          |
 
-    And an s3 server is set up
+    And the s3 server starts up
     And the http proxy server is set up
 
     When all instances start up
@@ -183,8 +183,8 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Batch Size" property of the GetFile processor is set to "1"
     And the scheduling period of the GetFile processor is set to "5 sec"
-    And a directory at "/tmp/input" has a file ("test_file_1.log") with the content "test_data1"
-    And a directory at "/tmp/input" has a file ("test_file_2.log") with the content "test_data2"
+    And a directory at "/tmp/input" has a file "test_file_1.log" with the content "test_data1"
+    And a directory at "/tmp/input" has a file "test_file_2.log" with the content "test_data2"
     And a PutS3Object processor set up to communicate with an s3 server
     And the "Object Key" property of the PutS3Object processor is set to "${filename}"
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
@@ -193,7 +193,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the ListS3 processor is connected to the PutFile
 
-    And an s3 server is set up
+    And the s3 server starts up
 
     When the MiNiFi instance starts up
 
@@ -215,7 +215,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the ListS3 processor is connected to the PutFile
 
-    And an s3 server is set up
+    And the s3 server starts up
     And the http proxy server is set up
 
     When all instances start up
@@ -232,7 +232,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the PutS3Object processor is connected to the PutFile
-    And an s3 server is set up
+    And the s3 server starts up
 
     When the MiNiFi instance starts up
 
@@ -256,7 +256,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the PutS3Object processor is connected to the PutFile
 
-    And an s3 server is set up
+    And the s3 server starts up
     And the http proxy server is set up
     When all instances start up
 

@@ -22,8 +22,8 @@ Feature: DefragmentText can defragment fragmented data from TailFile
     And the "tail-mode" property of the MultiTail processor is set to "Multiple file"
     And the "Initial Start Position" property of the MultiTail processor is set to "Beginning of File"
     And the "Input Delimiter" property of the MultiTail processor is set to "%"
-    And a directory at "/tmp/input" has a file ("test_file_one.log") with the content "<input_one>"
-    And a directory at "/tmp/input" has a file ("test_file_two.log") with the content "<input_two>"
+    And a file with filename "test_file_one.log" and content "<input_one>" is present in "/tmp/input"
+    And a file with filename "test_file_two.log" and content "<input_two>" is present in "/tmp/input"
     And a DefragmentText processor with the "Pattern" property set to "<pattern>"
     And the "Pattern Location" property of the DefragmentText processor is set to "<pattern location>"
     And DefragmentText is EVENT_DRIVEN

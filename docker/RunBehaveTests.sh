@@ -192,6 +192,6 @@ fi
 
 echo "${BEHAVE_OPTS[@]}"
 
-mapfile -t FEATURE_FILES < <(find "${docker_dir}/.." -type f -name '*.feature')
+mapfile -t FEATURE_FILES < <(find "${docker_dir}/../extensions" -type f -name '*.feature')
 
 behavex "${BEHAVE_OPTS[@]}" "${FEATURE_FILES[@]}"

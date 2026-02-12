@@ -50,7 +50,7 @@ def step_impl(context: MinifiTestContext, processor_name: str):
     context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
-@step('an s3 server is set up')
+@step('the s3 server starts up')
 def step_impl(context: MinifiTestContext):
     context.containers["s3-server"] = S3ServerContainer(context)
     assert context.containers["s3-server"].deploy()

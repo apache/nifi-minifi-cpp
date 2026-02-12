@@ -82,7 +82,7 @@ def step_impl(context: MinifiTestContext, directory: str, content: str):
     context.execute_steps(f'given a directory at "{directory}" has a file with the content "{content}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 
-@step('a directory at "{directory}" has a file ("{file_name}") with the content "{content}"')
+@step('a directory at "{directory}" has a file "{file_name}" with the content "{content}"')
 def step_impl(context: MinifiTestContext, directory: str, file_name: str, content: str):
     __add_directory_with_file_to_container(context, directory, file_name, content, DEFAULT_MINIFI_CONTAINER_NAME)
 
