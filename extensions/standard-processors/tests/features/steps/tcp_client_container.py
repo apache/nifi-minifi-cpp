@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class TcpClientContainer(Container):
+class TcpClientContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         cmd = (
             "/bin/sh -c 'apk add netcat-openbsd && "

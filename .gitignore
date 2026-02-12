@@ -44,6 +44,8 @@ cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
 cmake-build-debug
+venv
+behave_venv
 
 # Generated files
 *flowfile_checkpoint

@@ -1,6 +1,6 @@
 [project]
 name = "minifi-test-framework"
-version = "0.1.0"
+version = "0.2.0"
 requires-python = ">= 3.10"
 description = "A testing framework for MiNiFi extensions."
 dependencies = [
@@ -8,8 +8,7 @@ dependencies = [
     "docker==7.1.0",
     "PyYAML==6.0.3",
     "humanfriendly==10.0",
-    "m2crypto==0.46.2",
-    "pyopenssl==25.0.0",
+    "cryptography==46.0.5",
     "pyjks==20.0.0"
 ]
 

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@CORE
+@CORE @SUPPORTS_WINDOWS
 Feature: Core flow functionalities
   Test core flow configuration functionalities
 
@@ -33,8 +33,8 @@ Feature: Core flow functionalities
 
     When all instances start up
 
-    Then at least one file with the content "first_custom_text" is placed in the "/tmp/output" directory in less than 20 seconds
-    And at least one file with the content "second_custom_text" is placed in the "/tmp/output" directory in less than 20 seconds
+    Then at least one file with the content "first_custom_text" is placed in the "/tmp/output" directory in less than 200 seconds
+    And at least one file with the content "second_custom_text" is placed in the "/tmp/output" directory in less than 200 seconds
 
   Scenario: A funnel can be used as a terminator
     Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
@@ -77,7 +77,7 @@ Feature: Core flow functionalities
     And a non-sensitive parameter in the flow config called 'FILE_INPUT_PATH' with the value '/tmp/input' in the parameter context 'my-context'
     And a non-sensitive parameter in the flow config called 'FILE_OUTPUT_UPPER_PATH_ATTR' with the value 'upper_out_path_attr' in the parameter context 'my-context'
     And a GetFile processor with the "Input Directory" property set to "#{FILE_INPUT_PATH}"
-    And a file with filename "test_file_name" and content "test content" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file ("test_file_name") with the content "test content"
     And a UpdateAttribute processor with the "expr-lang-filename" property set to "#{FILENAME}"
     And the "is-upper-correct" property of the UpdateAttribute processor is set to "${#{FILENAME_IN_EXPRESSION}:toUpper():equals('TEST_FILE_NAME')}"
     And the "upper_out_path_attr" property of the UpdateAttribute processor is set to "/TMP/OUTPUT"

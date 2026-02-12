@@ -27,6 +27,7 @@ import tarfile
 import docker
 from docker.models.networks import Network
 
+from minifi_test_framework.containers.container_protocol import ContainerProtocol
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
@@ -35,8 +36,9 @@ if TYPE_CHECKING:
     from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class Container:
+class LinuxContainer(ContainerProtocol):
     def __init__(self, image_name: str, container_name: str, network: Network, command: str | None = None, entrypoint: str | None = None):
+        super().__init__()
         self.image_name: str = image_name
         self.container_name: str = container_name
         self.network: Network = network

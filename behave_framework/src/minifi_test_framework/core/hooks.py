@@ -46,6 +46,10 @@ def inject_scenario_id(context: MinifiTestContext, step):
 
 
 def common_before_scenario(context: Context, scenario: Scenario):
+    if "SUPPORTS_WINDOWS" not in scenario.effective_tags and os.name == 'nt':
+        scenario.skip("No windows support")
+        return
+
     if not hasattr(context, "minifi_container_image"):
         context.minifi_container_image = get_minifi_container_image()
 
@@ -80,6 +84,8 @@ def common_before_scenario(context: Context, scenario: Scenario):
 
 
 def common_after_scenario(context: MinifiTestContext, scenario: Scenario):
-    for container in context.containers.values():
-        container.clean_up()
-    context.network.remove()
+    if hasattr(context, 'containers'):
+        for container in context.containers.values():
+            container.clean_up()
+    if hasattr(context, 'network'):
+        context.network.remove()

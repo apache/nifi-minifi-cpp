@@ -19,21 +19,26 @@ import logging
 import os
 from pathlib import Path
 
+from .container_linux import LinuxContainer
+
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
 from minifi_test_framework.minifi.minifi_flow_definition import MinifiFlowDefinition
 from minifi_test_framework.core.ssl_utils import make_cert_without_extended_usage, make_client_cert, make_server_cert, dump_cert, dump_key
-from minifi_test_framework.core.helpers import wait_for_condition, retry_check
-from .container import Container
+from minifi_test_framework.core.helpers import wait_for_condition
+
+from .minifi_protocol import MinifiProtocol
+from .minifi_controller import MinifiController
 
 
-class MinifiContainer(Container):
+class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
     def __init__(self, container_name: str, test_context: MinifiTestContext):
         super().__init__(test_context.minifi_container_image, f"{container_name}-{test_context.scenario_id}", test_context.network)
         self.flow_definition = MinifiFlowDefinition()
         self.properties: dict[str, str] = {}
         self.log_properties: dict[str, str] = {}
+        self.controller = MinifiController(self, "/opt/minifi/minifi-current/conf/config.yml")
 
         minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=self.container_name, ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
         self.files.append(File("/usr/local/share/certs/ca-root-nss.crt", dump_cert(test_context.root_ca_cert)))
@@ -47,13 +52,9 @@ class MinifiContainer(Container):
 
         minifi_server_cert, minifi_server_key = make_server_cert(common_name=f"server-{test_context.scenario_id}", ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
         self.files.append(File("/tmp/resources/minifi_server.crt",
-                               dump_cert(minifi_server_cert) + dump_key(minifi_server_key)))
+                               dump_cert(cert=minifi_server_cert) + dump_key(minifi_server_key)))
 
-        self.is_fhs = 'MINIFI_INSTALLATION_TYPE=FHS' in str(self.client.images.get(test_context.minifi_container_image).history())
-        if self.is_fhs:
-            self.minifi_controller_path = '/usr/bin/minifi-controller'
-        else:
-            self.minifi_controller_path = '/opt/minifi/minifi-current/bin/minifi-controller'
+        self.minifi_controller_path = '/opt/minifi/minifi-current/bin/minifi-controller'
 
         self._fill_default_properties()
         self._fill_default_log_properties()
@@ -61,18 +62,9 @@ class MinifiContainer(Container):
     def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_yaml()
         logging.info(f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
-        if self.is_fhs:
-            self.files.append(File("/etc/nifi-minifi-cpp/config.yml", flow_config))
-            self.files.append(File("/etc/nifi-minifi-cpp/minifi.properties", self._get_properties_file_content()))
-            self.files.append(
-                File("/etc/nifi-minifi-cpp/minifi-log.properties", self._get_log_properties_file_content()))
-        else:
-            self.files.append(File("/opt/minifi/minifi-current/conf/config.yml", flow_config))
-            self.files.append(
-                File("/opt/minifi/minifi-current/conf/minifi.properties", self._get_properties_file_content()))
-            self.files.append(File("/opt/minifi/minifi-current/conf/minifi-log.properties",
-                                   self._get_log_properties_file_content()))
-
+        self.files.append(File("/opt/minifi/minifi-current/conf/config.yml", flow_config))
+        self.files.append(File("/opt/minifi/minifi-current/conf/minifi.properties", self._get_properties_file_content()))
+        self.files.append(File("/opt/minifi/minifi-current/conf/minifi-log.properties", self._get_log_properties_file_content()))
         resource_dir = Path(__file__).resolve().parent / "resources" / "minifi-controller"
         self.host_files.append(HostFile("/tmp/resources/minifi-controller/config.yml", os.path.join(resource_dir, "config.yml")))
 
@@ -96,12 +88,8 @@ class MinifiContainer(Container):
         self.properties["nifi.openssl.fips.support.enable"] = "true"
 
     def _fill_default_properties(self):
-        if self.is_fhs:
-            self.properties["nifi.flow.configuration.file"] = "/etc/nifi-minifi-cpp/config.yml"
-            self.properties["nifi.extension.path"] = "/usr/lib64/nifi-minifi-cpp/extensions/*"
-        else:
-            self.properties["nifi.flow.configuration.file"] = "./conf/config.yml"
-            self.properties["nifi.extension.path"] = "../extensions/*"
+        self.properties["nifi.flow.configuration.file"] = "./conf/config.yml"
+        self.properties["nifi.extension.path"] = "../extensions/*"
         self.properties["nifi.administrative.yield.duration"] = "1 sec"
         self.properties["nifi.bored.yield.duration"] = "100 millis"
         self.properties["nifi.openssl.fips.support.enable"] = "false"
@@ -129,74 +117,3 @@ class MinifiContainer(Container):
         memory_usage_in_bytes = int(output.strip()) * 1024
         logging.info(f"MiNiFi memory usage: {memory_usage_in_bytes} bytes")
         return memory_usage_in_bytes
-
-    def set_controller_socket_properties(self):
-        self.properties["controller.socket.enable"] = "true"
-        self.properties["controller.socket.host"] = "localhost"
-        self.properties["controller.socket.port"] = "9998"
-        self.properties["controller.socket.local.any.interface"] = "false"
-
-    def update_flow_config_through_controller(self):
-        self.exec_run([self.minifi_controller_path, "--updateflow", "/tmp/resources/minifi-controller/config.yml"])
-
-    def updated_config_is_persisted(self) -> bool:
-        exit_code, output = self.exec_run(["cat", "/opt/minifi/minifi-current/conf/config.yml" if not self.is_fhs else "/etc/nifi-minifi-cpp/config.yml"])
-        if exit_code != 0:
-            logging.error("Failed to read MiNiFi config file to check if updated config is persisted")
-            return False
-        return "2f2a3b47-f5ba-49f6-82b5-bc1c86b96f38" in output
-
-    def stop_component_through_controller(self, component: str):
-        self.exec_run([self.minifi_controller_path, "--stop", component])
-
-    def start_component_through_controller(self, component: str):
-        self.exec_run([self.minifi_controller_path, "--start", component])
-
-    @retry_check(10, 1)
-    def is_component_running(self, component: str) -> bool:
-        (code, output) = self.exec_run([self.minifi_controller_path, "--list", "components"])
-        return code == 0 and component + ", running: true" in output
-
-    def get_connections(self):
-        (_, output) = self.exec_run([self.minifi_controller_path, "--list", "connections"])
-        connections = []
-        for line in output.split('\n'):
-            if not line.startswith('[') and not line.startswith('Connection Names'):
-                connections.append(line)
-        return connections
-
-    @retry_check(10, 1)
-    def connection_found_through_controller(self, connection: str) -> bool:
-        return connection in self.get_connections()
-
-    def get_full_connection_count(self) -> int:
-        (_, output) = self.exec_run([self.minifi_controller_path, "--getfull"])
-        for line in output.split('\n'):
-            if "are full" in line:
-                return int(line.split(' ')[0])
-        return -1
-
-    def get_connection_size(self, connection: str):
-        (_, output) = self.exec_run([self.minifi_controller_path, "--getsize", connection])
-        for line in output.split('\n'):
-            if "Size/Max of " + connection in line:
-                size_and_max = line.split(connection)[1].split('/')
-                return (int(size_and_max[0].strip()), int(size_and_max[1].strip()))
-        return (-1, -1)
-
-    def get_manifest(self) -> str:
-        (_, output) = self.exec_run([self.minifi_controller_path, "--manifest"])
-        manifest = ""
-        for line in output.split('\n'):
-            if not line.startswith('['):
-                manifest += line
-        return manifest
-
-    def create_debug_bundle(self) -> bool:
-        (code, _) = self.exec_run([self.minifi_controller_path, "--debug", "/tmp"])
-        if code != 0:
-            logging.error("Minifi controller debug command failed with code: %d", code)
-            return False
-
-        (code, _) = self.exec_run(["test", "-f", "/tmp/debug.tar.gz"])
-        return code == 0
