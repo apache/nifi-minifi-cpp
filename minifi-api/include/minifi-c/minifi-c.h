@@ -34,14 +34,14 @@ extern "C" {
 #define MINIFI_PRIVATE_JOIN_HELPER(X, Y) X ## _ ## Y
 #define MINIFI_PRIVATE_JOIN(X, Y) MINIFI_PRIVATE_JOIN_HELPER(X, Y)
 
-#define MINIFI_C_API_MAJOR_VERSION 0
-#define MINIFI_C_API_MINOR_VERSION 1
-#define MINIFI_C_API_PATCH_VERSION 0
+#define MINIFI_API_MAJOR_VERSION 0
+#define MINIFI_API_MINOR_VERSION 1
+#define MINIFI_API_PATCH_VERSION 0
+#define MINIFI_API_VERSION MINIFI_PRIVATE_STRINGIFY(MINIFI_API_MAJOR_VERSION) "." MINIFI_PRIVATE_STRINGIFY(MINIFI_API_MINOR_VERSION) "." MINIFI_PRIVATE_STRINGIFY(MINIFI_API_PATCH_VERSION)
 
-#ifndef MINIFI_API_VERSION_FN
-#define MINIFI_API_VERSION_FN MINIFI_PRIVATE_JOIN(MinifiCApiVersion, MINIFI_PRIVATE_JOIN(MINIFI_C_API_MAJOR_VERSION, MINIFI_C_API_MINOR_VERSION))
+#ifndef MINIFI_CREATE_EXTENSION_FN
+#define MINIFI_CREATE_EXTENSION_FN MINIFI_PRIVATE_JOIN(MinifiCreateExtension, MINIFI_PRIVATE_JOIN(MINIFI_API_MAJOR_VERSION, MINIFI_API_MINOR_VERSION))
 #endif
-#define MINIFI_API_VERSION MINIFI_API_VERSION_FN()
 
 #define MINIFI_NULL nullptr
 #define MINIFI_OWNED
@@ -189,12 +189,10 @@ typedef struct MinifiExtensionCreateInfo {
   const MinifiProcessorClassDefinition* processors_ptr;
 } MinifiExtensionCreateInfo;
 
-const MinifiApiVersion* MINIFI_API_VERSION_FN();
-
 // api_version is used to provide backwards compatible changes to the MinifiExtensionCreateInfo structure,
 // e.g. if MinifiExtensionCreateInfo gets a new field in version 1.2.0, extensions built with api 1.1.0 do not
 // have to be rebuilt
-MinifiExtension* MinifiCreateExtension(const MinifiApiVersion* api_version, const MinifiExtensionCreateInfo*);
+MinifiExtension* MINIFI_CREATE_EXTENSION_FN(MinifiStringView api_version, const MinifiExtensionCreateInfo* create_info);
 
 MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, const MinifiStringView* metric_names, const double* metric_values);
 
@@ -233,5 +231,9 @@ void MinifiFlowFileGetAttributes(MinifiProcessSession* session, MinifiFlowFile* 
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
+
+static inline MinifiExtension* MinifiCreateExtension(MinifiStringView api_version, const MinifiExtensionCreateInfo* create_info) {
+  return MINIFI_CREATE_EXTENSION_FN(api_version, create_info);
+}
 
 #endif  // MINIFI_API_INCLUDE_MINIFI_C_MINIFI_C_H_
