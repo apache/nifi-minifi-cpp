@@ -34,7 +34,7 @@ class TcpClientContainer(Container):
         finished_str = "TCP client container started"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
-            timeout_seconds=5,
+            timeout_seconds=30,
             bail_condition=lambda: self.exited,
             context=None
         )
