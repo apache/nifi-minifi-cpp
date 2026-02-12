@@ -215,6 +215,11 @@ jobs:
         with:
           name: cpack_error
           path: D:/a/nifi-minifi-cpp/nifi-minifi-cpp/build/_CPack_Packages/win64/WIX/wix.log
+      - name: Upload msi
+        uses: actions/upload-artifact@v4
+        with:
+          name: msi_installer
+          path: build/nifi-minifi-cpp.msi
   ubuntu_22_04_clang_arm:
     name: "Ubuntu 22.04 clang aarch64"
     runs-on: ubuntu-22.04-arm
