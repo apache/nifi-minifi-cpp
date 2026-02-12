@@ -38,10 +38,10 @@ extern "C" {
 #define MINIFI_C_API_MINOR_VERSION 1
 #define MINIFI_C_API_PATCH_VERSION 0
 
-#ifndef MINIFI_API_VERSION
-#define MINIFI_API_VERSION MINIFI_PRIVATE_JOIN(MINIFI_C_API_VERSION, MINIFI_PRIVATE_JOIN(MINIFI_C_API_MAJOR_VERSION, MINIFI_C_API_MINOR_VERSION))
+#ifndef MINIFI_API_VERSION_FN
+#define MINIFI_API_VERSION_FN MINIFI_PRIVATE_JOIN(MinifiCApiVersion, MINIFI_PRIVATE_JOIN(MINIFI_C_API_MAJOR_VERSION, MINIFI_C_API_MINOR_VERSION))
 #endif
-extern const char* const MINIFI_API_VERSION;
+#define MINIFI_API_VERSION MINIFI_API_VERSION_FN()
 
 #define MINIFI_NULL nullptr
 #define MINIFI_OWNED
@@ -94,6 +94,7 @@ typedef struct MinifiOutputStream MinifiOutputStream;
 typedef struct MinifiConfig MinifiConfig;
 typedef struct MinifiExtension MinifiExtension;
 typedef struct MinifiPublishedMetrics MinifiPublishedMetrics;
+typedef struct MinifiApiVersion MinifiApiVersion;
 
 typedef enum MinifiStatus : uint32_t {
   MINIFI_STATUS_SUCCESS = 0,
@@ -188,10 +189,12 @@ typedef struct MinifiExtensionCreateInfo {
   const MinifiProcessorClassDefinition* processors_ptr;
 } MinifiExtensionCreateInfo;
 
+const MinifiApiVersion* MINIFI_API_VERSION_FN();
+
 // api_version is used to provide backwards compatible changes to the MinifiExtensionCreateInfo structure,
 // e.g. if MinifiExtensionCreateInfo gets a new field in version 1.2.0, extensions built with api 1.1.0 do not
 // have to be rebuilt
-MinifiExtension* MinifiCreateExtension(MinifiStringView api_version, const MinifiExtensionCreateInfo*);
+MinifiExtension* MinifiCreateExtension(const MinifiApiVersion* api_version, const MinifiExtensionCreateInfo*);
 
 MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, const MinifiStringView* metric_names, const double* metric_values);
 
