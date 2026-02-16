@@ -253,12 +253,22 @@ class MonolithDocumentation {
 class ModularDocumentation {
  public:
   static void write(const std::filesystem::path& docs_dir) {
-    for (const auto& [bundle_id, component]: minifi::ClassDescriptionRegistry::getClassDescriptions()) {
+    for (auto& [bundle_id, component]: minifi::ClassDescriptionRegistry::getMutableClassDescriptions()) {
+      if (component.empty()) {
+        continue;
+      }
+      sortComponents(component);
       writeModule(docs_dir, bundle_id.name, component);
     }
   }
 
  private:
+  static void sortComponents(minifi::Components& components) {
+    std::ranges::sort(components.processors, {}, &minifi::ClassDescription::short_name_);
+    std::ranges::sort(components.controller_services, {}, &minifi::ClassDescription::short_name_);
+    std::ranges::sort(components.parameter_providers, {}, &minifi::ClassDescription::short_name_);
+  }
+
   static void writeComponentParts(std::ostream& os, const std::vector<minifi::ClassDescription>& class_descriptions, const std::string_view h3) {
     if (!class_descriptions.empty()) {
       os << fmt::format("### {}\n\n", h3);
