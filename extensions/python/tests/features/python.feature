@@ -102,6 +102,7 @@ Feature: MiNiFi can use python processors in its flows
     And the "success" relationship of the ChunkDocument processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
     And LogAttribute's success relationship is auto-terminated
+    And the MiNiFi deployment timeout is set to 300 seconds
 
     When all instances start up
     Then at least one file with the content '{"text": "test_", "metadata": {"filename": "test_file.log", "uuid": "", "chunk_index": 0, "chunk_count": 3}}' is placed in the '/tmp/output' directory in less than 30 seconds

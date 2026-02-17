@@ -35,6 +35,7 @@ class MinifiContainer(Container):
         self.properties: dict[str, str] = {}
         self.log_properties: dict[str, str] = {}
         self.scenario_id = test_context.scenario_id
+        self.deploy_timeout_seconds = 20
 
         minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=self.container_name, ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
         self.files.append(File("/usr/local/share/certs/ca-root-nss.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)))
@@ -85,9 +86,12 @@ class MinifiContainer(Container):
         finished_str = "MiNiFi started"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
-            timeout_seconds=300,
+            timeout_seconds=self.deploy_timeout_seconds,
             bail_condition=lambda: self.exited,
             context=None)
+
+    def set_deploy_timeout_seconds(self, timeout_seconds: int):
+        self.deploy_timeout_seconds = timeout_seconds
 
     def set_property(self, key: str, value: str):
         self.properties[key] = value
