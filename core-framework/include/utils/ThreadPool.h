@@ -135,7 +135,7 @@ class WorkerThread {
  */
 class ThreadPool {
  public:
-  ThreadPool(int max_worker_threads = 2, std::string name = "NamelessPool");
+  explicit ThreadPool(int max_worker_threads = 2, std::string name = "NamelessPool");
 
   ThreadPool(const ThreadPool &other) = delete;
   ThreadPool& operator=(const ThreadPool &other) = delete;
