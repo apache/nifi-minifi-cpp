@@ -103,17 +103,6 @@ class MinifiContainer(Container):
         self.properties["nifi.metrics.publisher.LogMetricsPublisher.logging.interval"] = "1s"
         self.properties["nifi.metrics.publisher.class"] = "LogMetricsPublisher"
 
-    def enable_prometheus(self):
-        self.properties["nifi.metrics.publisher.agent.identifier"] = "Agent1"
-        self.properties["nifi.metrics.publisher.PrometheusMetricsPublisher.port"] = "9936"
-        self.properties["nifi.metrics.publisher.PrometheusMetricsPublisher.metrics"] = "RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus"
-        self.properties["nifi.metrics.publisher.class"] = "PrometheusMetricsPublisher"
-
-    def enable_prometheus_with_ssl(self):
-        self.enable_prometheus()
-        self.properties["nifi.metrics.publisher.PrometheusMetricsPublisher.certificate"] = "/tmp/resources/minifi_merged_cert.crt"
-        self.properties["nifi.metrics.publisher.PrometheusMetricsPublisher.ca.certificate"] = "/tmp/resources/root_ca.crt"
-
     def fetch_flow_config_from_flow_url(self):
         self.properties["nifi.c2.flow.url"] = f"http://minifi-c2-server-{self.scenario_id}:10090/c2/config?class=minifi-test-class"
 

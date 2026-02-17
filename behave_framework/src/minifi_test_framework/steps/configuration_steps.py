@@ -54,13 +54,3 @@ def step_impl(context: MinifiTestContext):
 def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().enable_c2_with_ssl()
     context.get_or_create_default_minifi_container().set_up_ssl_proprties()
-
-
-@given("Prometheus is enabled in MiNiFi")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_prometheus()
-
-
-@given("Prometheus with SSL is enabled in MiNiFi")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_prometheus_with_ssl()

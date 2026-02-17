@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from behave import step, then
+from behave import step, then, given
 
 from minifi_test_framework.steps import checking_steps        # noqa: F401
 from minifi_test_framework.steps import configuration_steps   # noqa: F401
@@ -51,3 +51,23 @@ def step_impl(context: MinifiTestContext, metric_class: str, timeout_seconds: in
 @then("all Prometheus metric types are only defined once")
 def step_impl(context: MinifiTestContext):
     assert context.containers["prometheus"].check_all_metric_types_defined_once()
+
+
+def _enable_prometheus(context: MinifiTestContext):
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.agent.identifier", "Agent1")
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.PrometheusMetricsPublisher.port", "9936")
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.PrometheusMetricsPublisher.metrics",
+                                                                  "RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus")
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.class", "PrometheusMetricsPublisher")
+
+
+@given("Prometheus is enabled in MiNiFi")
+def step_impl(context: MinifiTestContext):
+    _enable_prometheus(context)
+
+
+@given("Prometheus with SSL is enabled in MiNiFi")
+def step_impl(context: MinifiTestContext):
+    _enable_prometheus(context)
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.PrometheusMetricsPublisher.certificate", "/tmp/resources/minifi_merged_cert.crt")
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.PrometheusMetricsPublisher.ca.certificate", "/tmp/resources/root_ca.crt")
