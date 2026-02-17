@@ -31,7 +31,9 @@ namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 MinifiStatus RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& context) {
   model_path_.clear();
   model_path_ = api::utils::parseProperty(context, ModelPath);
+  multimodal_model_path_ = api::utils::parseOptionalProperty(context, MultiModalModelPath);
   system_prompt_ = context.getProperty(SystemPrompt).value_or("");
+  output_attribute_ = api::utils::parseOptionalProperty(context, OutputAttributeName);
 
   LlamaSamplerParams llama_sampler_params;
   llama_sampler_params.temperature = api::utils::parseOptionalFloatProperty(context, Temperature);
@@ -53,7 +55,7 @@ MinifiStatus RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& con
   if (llama_context_provider_) {
     llama_ctx_ = llama_context_provider_(model_path_, llama_sampler_params, llama_ctx_params);
   } else {
-    llama_ctx_ = std::make_unique<DefaultLlamaContext>(model_path_, llama_sampler_params, llama_ctx_params);
+    llama_ctx_ = std::make_unique<DefaultLlamaContext>(model_path_, multimodal_model_path_, llama_sampler_params, llama_ctx_params, logger_);
   }
 
   return MINIFI_STATUS_SUCCESS;
@@ -76,10 +78,16 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
   auto prompt = context.getProperty(Prompt, &flow_file).value_or("");
 
   auto read_result = session.readBuffer(flow_file);
+  std::vector<std::vector<std::byte>> files;
   std::string input_data_and_prompt;
   if (!read_result.empty()) {
     input_data_and_prompt.append("Input data (or flow file content):\n");
-    input_data_and_prompt.append({reinterpret_cast<const char*>(read_result.data()), read_result.size()});
+    if (multimodal_model_path_) {
+      input_data_and_prompt.append(mtmd_default_marker());
+      files.push_back(std::move(read_result));
+    } else {
+      input_data_and_prompt.append({reinterpret_cast<const char*>(read_result.data()), read_result.size()});
+    }
     input_data_and_prompt.append("\n\n");
   }
   input_data_and_prompt.append(prompt);
@@ -111,7 +119,7 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
   auto start_time = std::chrono::steady_clock::now();
 
   std::string text;
-  auto generation_result = llama_ctx_->generate(*input, [&] (std::string_view token) {
+  auto generation_result = llama_ctx_->generate(*input, files, [&] (std::string_view token) {
     text += token;
   });
 
@@ -133,7 +141,12 @@ MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& cont
   session.setAttribute(flow_file, LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
   session.setAttribute(flow_file, LlamaCppTokensPerSecond.name, fmt::format("{:.2f}", generation_result->tokens_per_second));
 
-  session.writeBuffer(flow_file, text);
+  if (output_attribute_) {
+    session.setAttribute(flow_file, output_attribute_.value(), text);
+  } else {
+    session.writeBuffer(flow_file, text);
+  }
+
   session.transfer(std::move(flow_file), Success);
 
   return MINIFI_STATUS_SUCCESS;
