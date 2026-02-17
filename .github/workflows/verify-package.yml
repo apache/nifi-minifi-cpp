@@ -19,77 +19,8 @@ env:
     -DENABLE_ELASTICSEARCH=OFF -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DDOCKER_BUILD_ONLY=ON
 
 jobs:
-  docker-tests:
-    name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
-    runs-on: ${{ matrix.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    timeout-minutes: 240
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x86_64, aarch64]
-        platform: [
-          { name: "Rocky Linux 9", id: "rocky9", build_cmd: "make rocky9_from_rocky_package", verify_cmd: "make docker-verify-rocky9" },
-          { name: "Rocky Linux 10", id: "rocky10", build_cmd: "make rocky10_from_rocky_package", verify_cmd: "make docker-verify-rocky10" },
-          { name: "Rocky Linux 9 from RPM", id: "rocky9-rpm", build_cmd: "make rocky9_from_rpm_package", verify_cmd: "make docker-verify-rocky9-rpm" },
-          { name: "Rocky Linux 10 from RPM", id: "rocky10-rpm", build_cmd: "make rocky10_from_rpm_package", verify_cmd: "make docker-verify-rocky10-rpm" },
-          { name: "Ubuntu 22.04", id: "ubuntu_jammy", build_cmd: "make jammy_from_rocky_package", verify_cmd: "make docker-verify-jammy" },
-          { name: "Ubuntu 24.04", id: "ubuntu_noble", build_cmd: "make noble_from_rocky_package", verify_cmd: "make docker-verify-noble" },
-          { name: "Debian 12", id: "debian_bookworm", build_cmd: "make bookworm_from_rocky_package", verify_cmd: "make docker-verify-bookworm" },
-          { name: "Debian 13", id: "debian_trixie", build_cmd: "make trixie_from_rocky_package", verify_cmd: "make docker-verify-trixie" },
-        ]
-    permissions:
-      contents: read
-    steps:
-      - id: checkout
-        uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          run-id: ${{ inputs.artifacts_workflow_id }}
-          name: minifi-${{ matrix.arch }}-tar
-          path: build
-          github-token: ${{ github.token }}
-
-      - uses: actions/download-artifact@v4
-        with:
-          run-id: ${{ inputs.artifacts_workflow_id }}
-          name: minifi-${{ matrix.arch }}-rpm
-          path: build
-          github-token: ${{ github.token }}
-
-      - id: install_deps
-        run: |
-          sudo apt update
-          sudo apt install -y python3-virtualenv
-
-      - run: |
-          cd build && cmake ${DOCKER_CMAKE_FLAGS} ..
-          VERIFY_CMD="${{ matrix.platform.verify_cmd }}"
-          if [[ "${{ inputs.enable_fips }}" == "true" ]]; then
-            VERIFY_CMD="${VERIFY_CMD}-fips"
-          fi
-          ${{ matrix.platform.build_cmd }} && $VERIFY_CMD
-
-      - name: Test Reporter
-        if: always()
-        uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
-        with:
-          name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
-          path: build/behavex_output/behave/*.xml
-          reporter: java-junit
-          output-to: 'step-summary'
-          list-tests: 'failed'
-          list-suites: 'failed'
-
-      - name: Upload artifact
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform.id }}_${{ matrix.arch }}_behavex_output${{ inputs.enable_fips && '_fips' || '' }}
-          path: build/behavex_output
-
   docker-test-modular:
-    name: "${{ matrix.platform.name }} (${{ matrix.arch }}) Modular"
+    name: "${{ matrix.platform.name }} (${{ matrix.arch }}) Modular${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
     runs-on: ${{ matrix.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 240
     strategy:
@@ -134,6 +65,9 @@ jobs:
       - run: |
           cd build && cmake ${DOCKER_CMAKE_FLAGS} ..
           VERIFY_CMD="${{ matrix.platform.verify_cmd }}"
+          if [[ "${{ inputs.enable_fips }}" == "true" ]]; then
+            VERIFY_CMD="${VERIFY_CMD}-fips"
+          fi
           ${{ matrix.platform.build_cmd }} && $VERIFY_CMD
 
       - name: Test Reporter

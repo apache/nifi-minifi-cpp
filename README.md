@@ -405,12 +405,6 @@ $ make docker-minimal
 #### Executing integration tests with your docker image
 You can execute system integration tests using a minifi docker image.</br>
 Currently, there are two types of docker integration tests:
-##### Monolith legacy tests (features locates in docker/test/integration/features)
-(we are in the process of migrating these)
-  ```
-  ~/Development/code/apache/nifi-minifi-cpp/build
-  $ make docker-verify
-  ```
 ##### Modular tests located near the tested extension (e.g. extensions/aws/tests/features)
   ```
   ~/Development/code/apache/nifi-minifi-cpp/build

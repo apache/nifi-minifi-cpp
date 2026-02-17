@@ -474,64 +474,6 @@ jobs:
         with:
           name: minifi_docker
           path: build/minifi_docker.tar
-  legacy_docker_tests:
-    name: "Docker integration tests (x86_64)"
-    needs: docker_build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 180
-    steps:
-      - id: checkout
-        uses: actions/checkout@v4
-      - id: run_cmake
-        name: Run CMake
-        run: |
-          mkdir build
-          cd build
-          cmake ${DOCKER_CMAKE_FLAGS} ..
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: minifi_docker
-          path: build
-      - name: Load Docker image
-        run: |
-          docker load --input ./build/minifi_docker.tar
-      - id: install_deps
-        name: Install dependencies for Docker Verify
-        run: |
-          sudo apt update
-          sudo apt install -y python3-virtualenv
-      - id: free_disk_space
-        run: |
-          # We can gain additional disk space on the Ubuntu runners thanks to these suggestions:
-          # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
-          # https://github.com/actions/runner-images/issues/2606#issuecomment-772683150
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-      - id: test
-        name: Docker Verify
-        working-directory: ./build
-        run: make docker-verify
-      - name: Test Reporter
-        if: always()
-        uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
-        with:
-          name: Docker integration tests
-          path: build/behavex_output/behave/*.xml
-          reporter: java-junit
-          output-to: 'step-summary'
-          only-summary: 'true'
-          list-tests: 'failed'
-          list-suites: 'failed'
-      - name: Upload artifact
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: behavex_output
-          path: build/behavex_output
   modular_docker_tests:
     name: "Modular Docker integration tests (x86_64)"
     needs: docker_build
