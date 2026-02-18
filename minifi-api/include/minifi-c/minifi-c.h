@@ -41,7 +41,7 @@ extern "C" {
 
 typedef bool MinifiBool;
 
-typedef enum MinifiInputRequirement {
+typedef enum MinifiInputRequirement : uint32_t {
   MINIFI_INPUT_REQUIRED = 0,
   MINIFI_INPUT_ALLOWED = 1,
   MINIFI_INPUT_FORBIDDEN = 2
@@ -88,7 +88,7 @@ typedef struct MinifiConfig MinifiConfig;
 typedef struct MinifiExtension MinifiExtension;
 typedef struct MinifiPublishedMetrics MinifiPublishedMetrics;
 
-typedef enum MinifiStatus {
+typedef enum MinifiStatus : uint32_t {
   MINIFI_STATUS_SUCCESS = 0,
   MINIFI_STATUS_UNKNOWN_ERROR = 1,
   MINIFI_STATUS_NOT_SUPPORTED_PROPERTY = 2,
@@ -98,7 +98,7 @@ typedef enum MinifiStatus {
   MINIFI_STATUS_PROCESSOR_YIELD = 6
 } MinifiStatus;
 
-typedef enum MinifiValidator {
+typedef enum MinifiValidator : uint32_t {
   MINIFI_VALIDATOR_ALWAYS_VALID = 0,
   MINIFI_VALIDATOR_NON_BLANK = 1,
   MINIFI_VALIDATOR_TIME_PERIOD = 2,
@@ -125,7 +125,7 @@ typedef struct MinifiPropertyDefinition {
   MinifiBool supports_expression_language;
 } MinifiPropertyDefinition;
 
-typedef enum MinifiLogLevel {
+typedef enum MinifiLogLevel : uint32_t {
   MINIFI_LOG_LEVEL_TRACE = 0,
   MINIFI_LOG_LEVEL_DEBUG = 1,
   MINIFI_LOG_LEVEL_INFO = 2,
