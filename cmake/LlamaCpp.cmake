@@ -22,7 +22,6 @@ set(LLAMA_BUILD_TESTS "OFF" CACHE STRING "" FORCE)
 set(LLAMA_BUILD_EXAMPLES "OFF" CACHE STRING "" FORCE)
 set(LLAMA_BUILD_SERVER "OFF" CACHE STRING "" FORCE)
 set(LLAMA_BUILD_COMMON "ON" CACHE STRING "" FORCE)
-set(LLAMA_BUILD_TOOLS "ON" CACHE STRING "" FORCE)
 set(GGML_OPENMP "OFF" CACHE STRING "" FORCE)
 set(GGML_METAL "OFF" CACHE STRING "" FORCE)
 set(GGML_BLAS "OFF" CACHE STRING "" FORCE)
@@ -32,9 +31,16 @@ else()
     set(GGML_NATIVE "ON" CACHE STRING "" FORCE)
 endif()
 
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/llamacpp/mtmd-fix.patch")
+
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\")")
+
+
 FetchContent_Declare(llamacpp
         URL https://github.com/ggml-org/llama.cpp/archive/refs/tags/b7836.tar.gz
         URL_HASH SHA256=3d384e7e8b3bc3cd31abddedf684a6e201405c1d932cafb3c4a5277d872b0614
+        PATCH_COMMAND "${PC}"
         SYSTEM
 )
 
