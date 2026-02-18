@@ -73,12 +73,9 @@ minifi::controllers::ProxyConfiguration AwsProcessor::getProxy(core::ProcessCont
   if (proxy_controller_service) {
     proxy.proxy_type = proxy_controller_service->getProxyType();
     proxy.proxy_host = proxy_controller_service->getHost();
-    auto port_opt = proxy_controller_service->getPort();
-    proxy.proxy_port = port_opt.value_or(0);
-    auto username_opt = proxy_controller_service->getUsername();
-    proxy.proxy_user = username_opt.value_or("");
-    auto password_opt = proxy_controller_service->getPassword();
-    proxy.proxy_password = password_opt.value_or("");
+    proxy.proxy_port = proxy_controller_service->getPort().value_or(0);
+    proxy.proxy_user = proxy_controller_service->getUsername().value_or("");
+    proxy.proxy_password = proxy_controller_service->getPassword().value_or("");
   } else {
     proxy.proxy_type = minifi::utils::parseOptionalEnumProperty<minifi::controllers::ProxyType>(context, ProxyType).value_or(minifi::controllers::ProxyType::HTTP);
     proxy.proxy_host = minifi::utils::parseOptionalProperty(context, ProxyHost, flow_file).value_or("");

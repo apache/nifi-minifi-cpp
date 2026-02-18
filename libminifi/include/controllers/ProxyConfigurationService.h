@@ -32,12 +32,13 @@ class ProxyConfigurationService : public core::controller::ControllerServiceImpl
       : ControllerServiceImpl(name, uuid) {
   }
 
-  MINIFIAPI static constexpr const char* Description = "Provides a set of configurations for different MiNiFi C++ components to use a proxy server. "
-      "Currently these properties can only be used for HTTP proxy configuration, not other protocols are supported at this time.";
+  MINIFIAPI static constexpr const char* Description = "Provides a set of configurations for various MiNiFi C++ components to use a proxy server. Currently these properties can only be used for "
+      "HTTP proxy configuration, no other protocols are supported at this time.";
 
   MINIFIAPI static constexpr auto ProxyServerHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Server Host")
       .withDescription("Proxy server hostname or ip-address.")
       .isRequired(true)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   MINIFIAPI static constexpr auto ProxyServerPort = core::PropertyDefinitionBuilder<>::createProperty("Proxy Server Port")
       .withDescription("Proxy server port number.")
