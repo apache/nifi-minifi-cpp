@@ -39,7 +39,7 @@ TEST_CASE("WithoutByteSequence") {
   REQUIRE(split_content->setProperty(SplitContent::KeepByteSequence.name, "true"));
   REQUIRE(split_content->setProperty(SplitContent::ByteSequenceLocationProperty.name, std::string{magic_enum::enum_name(SplitContent::ByteSequenceLocation::Leading)}));
 
-  REQUIRE_THROWS_WITH(controller.trigger("rub-a-dub-dub"), "Expected valid value from \"SplitContent::Byte Sequence\", but got PropertyNotSet (Property Error:2)");
+  REQUIRE_THROWS_WITH(controller.trigger("rub-a-dub-dub"), "Expected valid value from \"Byte Sequence\", but got PropertyNotSet (Property Error:2)");
 }
 
 TEST_CASE("EmptyFlowFile") {

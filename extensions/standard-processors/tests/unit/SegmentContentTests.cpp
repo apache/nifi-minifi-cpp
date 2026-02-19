@@ -62,11 +62,11 @@ TEST_CASE("Invalid segmentSize tests") {
 
   SECTION("foo") {
     REQUIRE(segment_content->setProperty(SegmentContent::SegmentSize.name, "foo"));
-    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Expected parsable data size from \"SegmentContent::Segment Size\", but got GeneralParsingError (Parsing Error:0)");
+    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Expected parsable data size from \"Segment Size\", but got GeneralParsingError (Parsing Error:0)");
   }
   SECTION("10 foo") {
     REQUIRE(segment_content->setProperty(SegmentContent::SegmentSize.name, "10 foo"));
-    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Expected parsable data size from \"SegmentContent::Segment Size\", but got GeneralParsingError (Parsing Error:0)");
+    REQUIRE_THROWS_WITH(controller.trigger("bar"), "Expected parsable data size from \"Segment Size\", but got GeneralParsingError (Parsing Error:0)");
   }
   SECTION("0") {
     REQUIRE(segment_content->setProperty(SegmentContent::SegmentSize.name, "0"));

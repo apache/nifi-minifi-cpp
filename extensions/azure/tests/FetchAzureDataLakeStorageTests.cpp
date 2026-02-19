@@ -157,7 +157,7 @@ TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Valid Number of Retries
 
 TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Invalid Number of Retries is set via EL", "[azureDataLakeStorageFetch]") {
   plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::FetchAzureDataLakeStorage::NumberOfRetries, "${literal(\"asd\")}");
-  REQUIRE_THROWS_WITH(test_controller_.runSession(plan_, true), "Expected parsable uint64_t from \"AzureDataLakeStorageProcessor::Number of Retries\", but got GeneralParsingError (Parsing Error:0)");
+  REQUIRE_THROWS_WITH(test_controller_.runSession(plan_, true), "Expected parsable uint64_t from \"Number of Retries\", but got GeneralParsingError (Parsing Error:0)");
   CHECK_FALSE(mock_data_lake_storage_client_ptr_->getPassedFetchParams().number_of_retries);
 }
 

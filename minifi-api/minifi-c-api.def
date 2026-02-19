@@ -3,7 +3,6 @@ EXPORTS
   MinifiCreateExtension
   MinifiPublishedMetricsCreate
   MinifiProcessContextGetProperty
-  MinifiProcessContextGetProcessorName
   MinifiProcessContextHasNonEmptyProperty
   MinifiLoggerSetMaxLogSize
   MinifiLoggerLogString

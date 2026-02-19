@@ -37,8 +37,6 @@ class ProcessContext {
 
   bool hasNonEmptyProperty(std::string_view name) const;
 
-  std::string getProcessorName() const;
-
  private:
   MinifiProcessContext* impl_;
 };
