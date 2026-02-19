@@ -37,7 +37,6 @@
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileSystem.h"
 #include "http/BaseHTTPClient.h"
-#include "io/NetworkPrioritizer.h"
 #include "io/FileStream.h"
 #include "core/ClassLoader.h"
 #include "minifi-cpp/core/ThreadedRepository.h"
@@ -54,7 +53,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     : core::controller::ForwardingControllerServiceProvider(core::className<FlowController>()),
       running_(false),
       initialized_(false),
-      thread_pool_(5, nullptr, "Flowcontroller threadpool"),
+      thread_pool_(5, "Flowcontroller threadpool"),
       configuration_(std::move(configure)),
       provenance_repo_(std::move(provenance_repo)),
       flow_file_repo_(std::move(flow_file_repo)),
@@ -256,9 +255,6 @@ void FlowController::load(bool reload) {
   if (running_) {
     stop();
   }
-  if (reload) {
-    io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
-  }
 
   {
     std::scoped_lock<UpdateState> update_lock(updating_);
@@ -279,7 +275,6 @@ void FlowController::load(bool reload) {
   if (!thread_pool_.isRunning() || reload) {
     thread_pool_.shutdown();
     thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 5));
-    thread_pool_.setControllerServiceProvider(this);
     thread_pool_.start();
   }
 

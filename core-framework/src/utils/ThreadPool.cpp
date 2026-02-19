@@ -22,12 +22,11 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::utils {
 
-ThreadPool::ThreadPool(int max_worker_threads, core::controller::ControllerServiceLookup* controller_service_provider, std::string name)
+ThreadPool::ThreadPool(int max_worker_threads, std::string name)
     : thread_reduction_count_(0),
       max_worker_threads_(max_worker_threads),
       current_workers_(0),
       running_(false),
-      controller_service_provider_(controller_service_provider),
       name_(std::move(name)),
       logger_(core::logging::LoggerFactory<ThreadPool>::getLogger()) {
 }
@@ -141,71 +140,15 @@ void ThreadPool::manageWorkers() {
     }
   }
 
-  if (nullptr != thread_manager_) {
-    while (running_) {
-      auto wait_period = 500ms;
-      {
-        std::unique_lock<std::recursive_mutex> manager_lock(manager_mutex_, std::try_to_lock);
-        if (!manager_lock.owns_lock()) {
-          // Threadpool is being stopped/started or config is being changed, better wait a bit
-          std::this_thread::sleep_for(10ms);
-          continue;
-        }
-        if (thread_manager_->isAboveMax(current_workers_)) {
-          auto max = thread_manager_->getMaxConcurrentTasks();
-          auto differential = current_workers_ - max;
-          thread_reduction_count_ += differential;
-        } else if (thread_manager_->shouldReduce()) {
-          if (current_workers_ > 1)
-            thread_reduction_count_++;
-          thread_manager_->reduce();
-        } else if (thread_manager_->canIncrease() && max_worker_threads_ > current_workers_) {  // increase slowly
-          std::unique_lock<std::mutex> worker_queue_lock(worker_queue_mutex_);
-          auto worker_thread = std::make_shared<WorkerThread>();
-          worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
-          thread_queue_.push_back(worker_thread);
-          current_workers_++;
-        }
-        std::shared_ptr<WorkerThread> thread_ref;
-        while (deceased_thread_queue_.tryDequeue(thread_ref)) {
-          std::unique_lock<std::mutex> worker_queue_lock(worker_queue_mutex_);
-          if (thread_ref->thread_.joinable())
-            thread_ref->thread_.join();
-          thread_queue_.erase(std::remove(thread_queue_.begin(), thread_queue_.end(), thread_ref), thread_queue_.end());
-        }
-      }
-      std::this_thread::sleep_for(wait_period);
-    }
-  } else {
-    for (auto &thread : thread_queue_) {
-      if (thread->thread_.joinable())
-        thread->thread_.join();
-    }
+  for (auto &thread : thread_queue_) {
+    if (thread->thread_.joinable())
+      thread->thread_.join();
   }
-}
-
-std::shared_ptr<controllers::ThreadManagementService> ThreadPool::createThreadManager() const {
-  if (!controller_service_provider_) {
-    return nullptr;
-  }
-  auto service = controller_service_provider_->getControllerService("ThreadPoolManager");
-  if (!service) {
-    logger_->log_info("Could not find a ThreadPoolManager service");
-    return nullptr;
-  }
-  auto thread_manager_service = std::dynamic_pointer_cast<controllers::ThreadManagementService>(service);
-  if (!thread_manager_service) {
-    logger_->log_error("Found ThreadPoolManager, but it is not a ThreadManagementService");
-    return nullptr;
-  }
-  return thread_manager_service;
 }
 
 void ThreadPool::start() {
   std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
   if (!running_) {
-    thread_manager_ = createThreadManager();
-
     running_ = true;
     worker_queue_.start();
     manager_thread_ = std::thread(&ThreadPool::manageWorkers, this);

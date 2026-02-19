@@ -21,16 +21,21 @@
 #include <string>
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
-#include "minifi-cpp/core/controller/ControllerService.h"
 #include "controllers/NetworkPrioritizerService.h"
 #include "unit/TestUtils.h"
 
 namespace {
 
-std::shared_ptr<minifi::controllers::NetworkPrioritizerService> createNetworkPrioritizerService(
+std::shared_ptr<core::controller::ControllerService> createNetworkPrioritizerService(
     const std::string& name,
     const std::shared_ptr<utils::timeutils::Clock>& clock = std::make_shared<minifi::test::utils::ManualClock>()) {
-  return std::make_shared<minifi::controllers::NetworkPrioritizerService>(name, utils::Identifier{}, clock);
+  return std::make_shared<core::controller::ControllerService>(
+    name, utils::Identifier{},
+    std::make_unique<minifi::controllers::NetworkPrioritizerService>(core::controller::ControllerServiceMetadata{
+      .uuid = utils::Identifier{},
+      .name = name,
+      .logger = logging::LoggerFactory<minifi::controllers::NetworkPrioritizerService>::getLogger()
+    }, clock));
 }
 
 }  // namespace
@@ -43,7 +48,7 @@ TEST_CASE("TestPrioritizerOneInterface", "[test1]") {
   REQUIRE(controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput.name, "10 B"));
   REQUIRE(controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxPayload.name, "10 B"));
   controller->onEnable();
-  REQUIRE("eth0" == controller->getInterface(0).getInterface());
+  REQUIRE("eth0" == controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(0).getInterface());
 }
 
 TEST_CASE("TestPrioritizerOneInterfaceMaxPayload", "[test2]") {
@@ -55,9 +60,9 @@ TEST_CASE("TestPrioritizerOneInterfaceMaxPayload", "[test2]") {
   REQUIRE(controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxPayload.name, "10 B"));
   controller->onEnable();
 
-  REQUIRE("eth0" == controller->getInterface(5).getInterface());
-  REQUIRE(controller->getInterface(20).getInterface().empty());  // larger than max payload
-  REQUIRE("eth0" == controller->getInterface(5).getInterface());
+  REQUIRE("eth0" == controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());
+  REQUIRE(controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(20).getInterface().empty());  // larger than max payload
+  REQUIRE("eth0" == controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());
 }
 
 TEST_CASE("TestPrioritizerOneInterfaceMaxThroughput", "[test3]") {
@@ -68,11 +73,11 @@ TEST_CASE("TestPrioritizerOneInterfaceMaxThroughput", "[test3]") {
   REQUIRE(controller->setProperty(minifi::controllers::NetworkPrioritizerService::VerifyInterfaces.name, "false"));
   REQUIRE(controller->setProperty(minifi::controllers::NetworkPrioritizerService::MaxThroughput.name, "10 B"));
   controller->onEnable();
-  REQUIRE("eth0" == controller->getInterface(5).getInterface());
-  REQUIRE("eth0" == controller->getInterface(5).getInterface());
-  REQUIRE(controller->getInterface(5).getInterface().empty());  // max throughput reached
+  REQUIRE("eth0" == controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());
+  REQUIRE("eth0" == controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());
+  REQUIRE(controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface().empty());  // max throughput reached
   clock->advance(std::chrono::milliseconds{10});   // wait for more tokens to be generated
-  REQUIRE("eth0" == controller->getInterface(5).getInterface());  // now we can send again
+  REQUIRE("eth0" == controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());  // now we can send again
 }
 
 TEST_CASE("TestPriorotizerMultipleInterfaces", "[test4]") {
@@ -103,16 +108,16 @@ TEST_CASE("TestPriorotizerMultipleInterfaces", "[test4]") {
   parent_controller->onEnable();
 
   SECTION("Switch to second interface when the first is saturated") {
-    REQUIRE("eth0" == parent_controller->getInterface(5).getInterface());
-    REQUIRE("eth0" == parent_controller->getInterface(5).getInterface());
+    REQUIRE("eth0" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());
+    REQUIRE("eth0" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());
     // triggered the max throughput on eth0, switching to eth1
-    REQUIRE("eth1" == parent_controller->getInterface(5).getInterface());
-    REQUIRE("eth1" == parent_controller->getInterface(5).getInterface());
+    REQUIRE("eth1" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());
+    REQUIRE("eth1" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(5).getInterface());
   }
 
   SECTION("Can keep sending on eth0 if we wait between packets") {
     for (int i = 0; i < 100; i++) {
-      REQUIRE("eth0" == parent_controller->getInterface(10).getInterface());
+      REQUIRE("eth0" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(10).getInterface());
       clock->advance(std::chrono::milliseconds{5});
     }
   }
@@ -144,8 +149,8 @@ TEST_CASE("TestPriorotizerMultipleInterfacesMaxPayload", "[test5]") {
   parent_controller->setLinkedControllerServices(services);
   parent_controller->onEnable();
 
-  REQUIRE("eth0" == parent_controller->getInterface(10).getInterface());
-  REQUIRE("eth0" == parent_controller->getInterface(10).getInterface());
-  REQUIRE("eth1" == parent_controller->getInterface(50).getInterface());  // larger than max payload
-  REQUIRE("eth0" == parent_controller->getInterface(10).getInterface());
+  REQUIRE("eth0" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(10).getInterface());
+  REQUIRE("eth0" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(10).getInterface());
+  REQUIRE("eth1" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(50).getInterface());  // larger than max payload
+  REQUIRE("eth0" == parent_controller->getImplementation<minifi::controllers::NetworkPrioritizerService>()->getInterface(10).getInterface());
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,28 +18,15 @@
 
 #include <memory>
 #include <string>
-#include <utility>
-#include <vector>
-
-#include "minifi-cpp/core/Core.h"
-#include "minifi-cpp/core/ConfigurableComponent.h"
+#include "minifi-cpp/utils/Id.h"
 #include "minifi-cpp/core/logging/Logger.h"
-#include "minifi-cpp/properties/Configure.h"
-#include "ControllerService.h"
-#include "io/validation.h"
-#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ControllerServiceNode : public virtual CoreComponent, public virtual ConfigurableComponent {
- public:
-  virtual std::shared_ptr<ControllerService> getControllerServiceImplementation() = 0;
-  virtual const ControllerService* getControllerServiceImplementation() const = 0;
-  virtual const std::vector<ControllerServiceNode*>& getLinkedControllerServices() const = 0;
-  virtual bool canEnable() = 0;
-  virtual bool enabled() = 0;
-  virtual bool enable() = 0;
-  virtual bool disable() = 0;
+struct ControllerServiceMetadata {
+  utils::Identifier uuid;
+  std::string name;
+  std::shared_ptr<logging::Logger> logger;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

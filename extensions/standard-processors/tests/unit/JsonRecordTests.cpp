@@ -26,6 +26,7 @@
 #include "unit/RecordSetTesters.h"
 #include "unit/TestBase.h"
 #include "unit/TestRecord.h"
+#include "unit/ControllerServiceUtils.h"
 
 namespace org::apache::nifi::minifi::standard::test {
 
@@ -91,16 +92,16 @@ TEST_CASE("JsonRecordSetWriter tests") {
   record_set.push_back(core::test::createSampleRecord());
   record_set.push_back(core::test::createSampleRecord2());
 
-  JsonRecordSetWriter json_record_set_writer{"json_record_set_writer"};
+  auto json_record_set_writer = minifi::test::utils::make_controller_service<JsonRecordSetWriter>("json_record_set_writer");
   const auto [output_grouping, prety_print, output_str] = GENERATE(
       std::make_tuple("One Line Per Object", "false", record_per_line_str),
       std::make_tuple("Array", "false", array_compressed_str),
       std::make_tuple("Array", "true", array_pretty_str));
-  json_record_set_writer.initialize();
-  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::OutputGrouping.name, output_grouping));
-  CHECK(json_record_set_writer.setProperty(JsonRecordSetWriter::PrettyPrint.name, prety_print));
-  json_record_set_writer.onEnable();
-  CHECK(core::test::testRecordWriter(json_record_set_writer, record_set, [expected = output_str](const auto& serialized_record_set) -> bool {
+  json_record_set_writer->initialize();
+  CHECK(json_record_set_writer->setProperty(JsonRecordSetWriter::OutputGrouping.name, output_grouping));
+  CHECK(json_record_set_writer->setProperty(JsonRecordSetWriter::PrettyPrint.name, prety_print));
+  json_record_set_writer->onEnable();
+  CHECK(core::test::testRecordWriter(*json_record_set_writer->getImplementation<JsonRecordSetWriter>(), record_set, [expected = output_str](const auto& serialized_record_set) -> bool {
     return testJsonEquality(expected, serialized_record_set);
   }));
 }
@@ -110,9 +111,9 @@ TEST_CASE("JsonTreeReader tests") {
   expected_record_set.push_back(core::test::createSampleRecord(true));
   expected_record_set.push_back(core::test::createSampleRecord2(true));
 
-  JsonTreeReader json_record_set_reader{"json_record_set_reader"};
+  auto json_record_set_reader = minifi::test::utils::make_controller_service<JsonTreeReader>("json_record_set_reader");
   const auto input_str = GENERATE(record_per_line_str, array_compressed_str, array_pretty_str);
-  CHECK(core::test::testRecordReader(json_record_set_reader, input_str, expected_record_set));
+  CHECK(core::test::testRecordReader(*json_record_set_reader->getImplementation<JsonTreeReader>(), input_str, expected_record_set));
 }
 
 }  // namespace org::apache::nifi::minifi::standard::test

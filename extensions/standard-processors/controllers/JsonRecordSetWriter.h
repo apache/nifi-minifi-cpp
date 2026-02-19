@@ -49,7 +49,7 @@ namespace org::apache::nifi::minifi::standard {
 
 class JsonRecordSetWriter final : public core::RecordSetWriterImpl {
  public:
-  explicit JsonRecordSetWriter(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetWriterImpl(name, uuid) {}
+  using RecordSetWriterImpl::RecordSetWriterImpl;
 
   JsonRecordSetWriter(JsonRecordSetWriter&&) = delete;
   JsonRecordSetWriter(const JsonRecordSetWriter&) = delete;
@@ -84,7 +84,6 @@ class JsonRecordSetWriter final : public core::RecordSetWriterImpl {
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr auto ImplementsApis = std::array{ RecordSetWriter::ProvidesApi };
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void write(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) override;
 
@@ -92,9 +91,6 @@ class JsonRecordSetWriter final : public core::RecordSetWriterImpl {
     setSupportedProperties(Properties);
   }
   void onEnable() override;
-  void yield() override {}
-  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
-  bool isWorkAvailable() override { return false; }
 
  private:
   void writeAsArray(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) const;

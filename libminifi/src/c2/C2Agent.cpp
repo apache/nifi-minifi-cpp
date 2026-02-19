@@ -62,7 +62,7 @@ C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
       configuration_(std::move(configuration)),
       node_reporter_(std::move(node_reporter)),
       filesystem_(std::move(filesystem)),
-      thread_pool_(2, nullptr, "C2 threadpool"),
+      thread_pool_(2, "C2 threadpool"),
       request_restart_(std::move(request_restart)),
       last_run_(std::chrono::steady_clock::now()),
       asset_manager_(asset_manager) {
@@ -87,8 +87,8 @@ void C2Agent::initialize(core::controller::ControllerServiceProvider *controller
 
   if (nullptr != controller_) {
     if (auto service = controller_->getControllerService(UPDATE_NAME)) {
-      if (auto update_service = std::dynamic_pointer_cast<controllers::UpdatePolicyControllerService>(service)) {
-        update_service_ = update_service;
+      if (auto* update_service = dynamic_cast<controllers::UpdatePolicyControllerService*>(&*service->getImplementation())) {
+        update_service_ = {service, update_service};
       } else {
         logger_->log_warn("Found controller service with name '{}', but it is not an UpdatePolicyControllerService", c2::UPDATE_NAME);
       }

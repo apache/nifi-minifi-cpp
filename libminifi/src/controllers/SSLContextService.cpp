@@ -40,6 +40,7 @@
 #include "utils/tls/DistinguishedName.h"
 #include "utils/tls/WindowsCertStoreLocation.h"
 #include "utils/TimeUtil.h"
+#include "core/controller/ControllerService.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -78,7 +79,7 @@ void SSLContextService::initialize() {
     return;
   }
 
-  ControllerServiceImpl::initialize();
+  ControllerServiceBase::initialize();
 
   initializeProperties();
 
@@ -593,6 +594,72 @@ void SSLContextService::verifyCertificateExpiration() {
   }
 #endif
 }
+
+std::shared_ptr<SSLContextService> SSLContextService::createAndEnable(std::string_view name, const std::shared_ptr<Configure>& configuration) {
+  auto uuid = utils::IdGenerator::getIdGenerator()->generate();
+  auto logger = core::logging::LoggerFactory<SSLContextService>::getLogger(uuid);
+  auto service = std::make_shared<core::controller::ControllerService>(name, uuid, std::make_unique<SSLContextService>(core::controller::ControllerServiceMetadata{
+    .uuid = uuid,
+    .name = std::string{name},
+    .logger = logger,
+  }));
+  service->initialize();
+  auto setPropertyAndHandleError = [&](std::string_view property_name, std::string value) {
+    auto result = service->setProperty(property_name, std::move(value));
+    if (!result) {
+      logger->log_error("Failed to set property {}: {}", property_name, result.error().message());
+    }
+  };
+
+  // set the properties based on the configuration
+  std::string value;
+  if (configuration->get(Configure::nifi_security_client_certificate, value)) {
+    setPropertyAndHandleError(ClientCertificate.name, std::move(value));
+  }
+
+  if (configuration->get(Configure::nifi_security_client_private_key, value)) {
+    setPropertyAndHandleError(PrivateKey.name, std::move(value));
+  }
+
+  if (configuration->get(Configure::nifi_security_client_pass_phrase, value)) {
+    setPropertyAndHandleError(Passphrase.name, std::move(value));
+  }
+
+  if (configuration->get(Configure::nifi_security_client_ca_certificate, value)) {
+    setPropertyAndHandleError(CACertificate.name, std::move(value));
+  }
+
+  if (configuration->get(Configure::nifi_security_use_system_cert_store, value)) {
+    setPropertyAndHandleError(UseSystemCertStore.name, std::move(value));
+  }
+
+#ifdef WIN32
+  if (configuration->get(Configure::nifi_security_windows_cert_store_location, value)) {
+    setPropertyAndHandleError(CertStoreLocation.name, std::move(value));
+  }
+
+  if (configuration->get(Configure::nifi_security_windows_server_cert_store, value)) {
+    setPropertyAndHandleError(ServerCertStore.name, std::move(value));
+  }
+
+  if (configuration->get(Configure::nifi_security_windows_client_cert_store, value)) {
+    setPropertyAndHandleError(ClientCertStore.name, std::move(value));
+  }
+
+  if (configuration->get(Configure::nifi_security_windows_client_cert_cn, value)) {
+    setPropertyAndHandleError(ClientCertCN.name, std::move(value));
+  }
+
+  if (configuration->get(Configure::nifi_security_windows_client_cert_key_usage, value)) {
+    setPropertyAndHandleError(ClientCertKeyUsage.name, std::move(value));
+  }
+#endif  // WIN32
+
+  service->onEnable();
+
+  return {service, service->getImplementation<SSLContextService>()};
+}
+
 
 REGISTER_RESOURCE_IMPLEMENTATION(SSLContextService, "SSLContextService", ControllerService);
 
