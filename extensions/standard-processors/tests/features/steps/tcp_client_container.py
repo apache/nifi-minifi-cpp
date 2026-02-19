@@ -29,12 +29,12 @@ class TcpClientContainer(Container):
         )
         super().__init__("alpine:3.17.3", f"tcp-client-{test_context.scenario_id}", test_context.network, cmd)
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "TCP client container started"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=5,
             bail_condition=lambda: self.exited,
-            context=None
+            context=context
         )

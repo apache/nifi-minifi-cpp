@@ -26,14 +26,14 @@ class FakeGcsServerContainer(Container):
                          command=f'-scheme http -host fake-gcs-server-{test_context.scenario_id}')
         self.dirs.append(Directory(path="/data/test-bucket", files={"test-file": "preloaded data\n"}))
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "server started at http"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=30,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     @retry_check()
     def check_google_cloud_storage(self, content):

@@ -34,14 +34,14 @@ class KinesisServerContainer(Container):
         self.environment.append("INITIALIZE_STREAMS=test_stream:3")
         self.environment.append("LOG_LEVEL=DEBUG")
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Starting Kinesis Plain Mock Service on port 4568"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=300,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     @retry_check()
     def check_kinesis_server_record_data(self, record_data):

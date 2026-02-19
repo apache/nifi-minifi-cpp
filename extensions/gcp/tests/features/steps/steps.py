@@ -28,7 +28,7 @@ from fake_gcs_server_container import FakeGcsServerContainer
 @step('a Google Cloud storage server is set up and a single object with contents "preloaded data" is present')
 def step_impl(context: MinifiTestContext):
     context.containers["fake-gcs-server"] = FakeGcsServerContainer(context)
-    assert context.containers["fake-gcs-server"].deploy()
+    assert context.containers["fake-gcs-server"].deploy(context)
 
 
 @then('an object with the content \"{content}\" is present in the Google Cloud storage')

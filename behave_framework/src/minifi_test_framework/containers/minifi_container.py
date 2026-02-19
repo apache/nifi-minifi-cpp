@@ -59,7 +59,7 @@ class MinifiContainer(Container):
         self._fill_default_properties()
         self._fill_default_log_properties()
 
-    def deploy(self) -> bool:
+    def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_yaml()
         logging.info(f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
         if self.is_fhs:
@@ -77,7 +77,7 @@ class MinifiContainer(Container):
         resource_dir = Path(__file__).resolve().parent / "resources" / "minifi-controller"
         self.host_files.append(HostFile("/tmp/resources/minifi-controller/config.yml", os.path.join(resource_dir, "config.yml")))
 
-        if not super().deploy():
+        if not super().deploy(context):
             return False
 
         finished_str = "MiNiFi started"
@@ -85,7 +85,7 @@ class MinifiContainer(Container):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=15,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     def set_property(self, key: str, value: str):
         self.properties[key] = value

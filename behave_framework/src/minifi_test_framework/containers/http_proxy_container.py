@@ -46,14 +46,14 @@ class HttpProxy(Container):
 
         super().__init__("minifi-http-proxy:latest", f"http-proxy-{test_context.scenario_id}", test_context.network)
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Accepting HTTP Socket connections at"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=5,
             bail_condition=lambda: self.exited,
-            context=None
+            context=context
         )
 
     def check_http_proxy_access(self, url):

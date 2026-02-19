@@ -30,7 +30,7 @@ from opensearch_container import OpensearchContainer
 @step('an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"')
 def step_impl(context: MinifiTestContext):
     context.containers["elasticsearch"] = ElasticsearchContainer(context)
-    assert context.containers["elasticsearch"].deploy()
+    assert context.containers["elasticsearch"].deploy(context)
     assert context.containers["elasticsearch"].create_doc_elasticsearch("my_index", "preloaded_id") or context.containers["elasticsearch"].log_app_output()
 
 
@@ -65,7 +65,7 @@ def step_impl(context):
 @given('an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"')
 def step_impl(context):
     context.containers["opensearch"] = OpensearchContainer(context)
-    context.containers["opensearch"].deploy()
+    context.containers["opensearch"].deploy(context)
     context.containers["opensearch"].add_elastic_user_to_opensearch()
     context.containers["opensearch"].create_doc_elasticsearch("my_index", "preloaded_id")
 

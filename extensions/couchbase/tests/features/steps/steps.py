@@ -28,7 +28,7 @@ from couchbase_server_container import CouchbaseServerContainer
 @step("a Couchbase server is started")
 def step_impl(context: MinifiTestContext):
     context.containers["couchbase-server"] = CouchbaseServerContainer(context)
-    assert context.containers["couchbase-server"].deploy()
+    assert context.containers["couchbase-server"].deploy(context)
 
 
 @step("a CouchbaseClusterService controller service is set up to communicate with the Couchbase server")

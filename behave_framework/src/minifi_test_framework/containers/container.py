@@ -14,6 +14,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import json
 import logging
 import os
@@ -27,6 +30,9 @@ from docker.models.networks import Network
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
+
+if TYPE_CHECKING:
+    from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
 class Container:
@@ -74,7 +80,7 @@ class Container:
                 self._write_content_to_file(file_path, None, content)
             self.volumes[temp_path] = {"bind": directory.path, "mode": directory.mode}
 
-    def deploy(self) -> bool:
+    def deploy(self, context: MinifiTestContext | None) -> bool:
         self._temp_dir = tempfile.TemporaryDirectory()
         self._configure_volumes_of_container_files()
         self._configure_volumes_of_container_dirs()

@@ -40,7 +40,7 @@ def step_impl(context: MinifiTestContext):
 @step('there is an accessible PLC with modbus enabled')
 def step_impl(context: MinifiTestContext):
     modbus_container = context.containers["diag-slave-tcp"] = DiagSlave(context)
-    assert modbus_container.deploy()
+    assert modbus_container.deploy(context)
 
 
 @step('PLC register has been set with {modbus_cmd} command')

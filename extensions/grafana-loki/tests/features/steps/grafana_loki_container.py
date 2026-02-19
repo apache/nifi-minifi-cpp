@@ -126,14 +126,14 @@ analytics:
 
         self.files.append(File("/etc/loki/local-config.yaml", grafana_loki_yml_content.encode(), permissions=0o644))
 
-    def deploy(self):
-        super().deploy()
+    def deploy(self, context: MinifiTestContext | None) -> bool:
+        super().deploy(context)
         finished_str = "Loki started"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=120,
             bail_condition=lambda: self.exited,
-            context=None)
+            context=context)
 
     @retry_check()
     def are_lines_present(self, lines: str, timeout: int, ssl: bool, tenant_id: str = "") -> bool:

@@ -43,7 +43,7 @@ def step_impl(context: MinifiTestContext, processor_name: str):
 @step("an Azure storage server is set up")
 def step_impl(context):
     context.containers["azure-storage-server"] = AzureServerContainer(context)
-    assert context.containers["azure-storage-server"].deploy()
+    assert context.containers["azure-storage-server"].deploy(context)
 
 
 @then('the object on the Azure storage server is "{object_data}"')
