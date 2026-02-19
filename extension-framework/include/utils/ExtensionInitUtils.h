@@ -30,4 +30,8 @@ inline MinifiStringView toStringView(std::string_view str) {
 
 using ConfigReader = std::function<std::optional<std::string>(std::string_view key)>;
 
+static inline MinifiExtension* MinifiCreateCppExtension(const MinifiExtensionCreateInfo* create_info) {
+  return MINIFI_CREATE_EXTENSION_FN(create_info);
+}
+
 }  // namespace org::apache::nifi::minifi::utils

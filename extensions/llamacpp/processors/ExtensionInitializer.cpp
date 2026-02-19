@@ -24,6 +24,8 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
+extern "C" const char* const MinifiApiVersion = MINIFI_API_VERSION;
+
 extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
   MinifiExtension* extension = nullptr;
   minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& description) {
@@ -35,7 +37,7 @@ extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
       .processors_count = 1,
       .processors_ptr = &description,
     };
-    extension = MinifiCreateExtension(minifi::api::utils::toStringView(MINIFI_API_VERSION), &ext_create_info);
+    extension = MinifiCreateExtension(&ext_create_info);
   });
   return extension;
 }
