@@ -15,31 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "minifi-cpp/agent/agent_version.h"
-#include "minifi-cpp/properties/Configure.h"
-#include "client/SFTPClient.h"
 #include "minifi-c/minifi-c.h"
 #include "utils/ExtensionInitUtils.h"
+#include "minifi-cpp/agent/agent_version.h"
 #include "core/Resource.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
 extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* /*config*/) {
-  if (libssh2_init(0) != 0) {
-    return nullptr;
-  }
-  if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
-    libssh2_exit();
-    return nullptr;
-  }
   MinifiExtensionCreateInfo ext_create_info{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
-    .deinit = [] (void* /*user_data*/) {
-      curl_global_cleanup();
-      libssh2_exit();
-    },
+    .deinit = nullptr,
     .user_data = nullptr,
     .processors_count = 0,
     .processors_ptr = nullptr

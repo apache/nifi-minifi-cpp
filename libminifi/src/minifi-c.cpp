@@ -22,6 +22,8 @@
 
 #include "agent/agent_docs.h"
 #include "core/ProcessorMetrics.h"
+#include "core/extension/ExtensionManager.h"
+#include "minifi-cpp/Exception.h"
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/ClassLoader.h"
 #include "minifi-cpp/core/ProcessContext.h"
@@ -33,10 +35,8 @@
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/state/PublishedMetricProvider.h"
-#include "minifi-cpp/Exception.h"
-#include "core/extension/ExtensionManager.h"
-#include "utils/PropertyErrors.h"
 #include "utils/CProcessor.h"
+#include "utils/PropertyErrors.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -225,8 +225,10 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
 
 extern "C" {
 
-MinifiExtension* MinifiCreateExtension(MinifiStringView /*api_version*/, const MinifiExtensionCreateInfo* extension_create_info) {
+MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info) {
   gsl_Assert(extension_create_info);
+  auto current_extension = minifi::core::extension::ExtensionManager::getExtensionBeingInitialized();
+  gsl_Assert(current_extension);
   auto extension_name = toString(extension_create_info->name);
   minifi::BundleIdentifier bundle{
     .name = extension_name,
@@ -247,6 +249,10 @@ MinifiExtension* MinifiCreateExtension(MinifiStringView /*api_version*/, const M
     .deinit = extension_create_info->deinit,
     .user_data = extension_create_info->user_data
   });
+}
+
+MinifiExtension* MINIFI_CREATE_EXTENSION_FN(const MinifiExtensionCreateInfo* extension_create_info) {
+  return MinifiCreateExtension(extension_create_info);
 }
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flowfile,

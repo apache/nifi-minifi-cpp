@@ -31,13 +31,20 @@ extern "C" {
 #define MINIFI_PRIVATE_STRINGIFY_HELPER(X) #X
 #define MINIFI_PRIVATE_STRINGIFY(X) MINIFI_PRIVATE_STRINGIFY_HELPER(X)
 
+#define MINIFI_PRIVATE_JOIN_HELPER(X, Y) X ## _ ## Y
+#define MINIFI_PRIVATE_JOIN(X, Y) MINIFI_PRIVATE_JOIN_HELPER(X, Y)
+
 #define MINIFI_API_MAJOR_VERSION 0
 #define MINIFI_API_MINOR_VERSION 1
 #define MINIFI_API_PATCH_VERSION 0
 #define MINIFI_API_VERSION MINIFI_PRIVATE_STRINGIFY(MINIFI_API_MAJOR_VERSION) "." MINIFI_PRIVATE_STRINGIFY(MINIFI_API_MINOR_VERSION) "." MINIFI_PRIVATE_STRINGIFY(MINIFI_API_PATCH_VERSION)
-#define MINIFI_API_VERSION_TAG "MINIFI_API_VERSION=[" MINIFI_API_VERSION "]"
+
 #define MINIFI_NULL nullptr
 #define MINIFI_OWNED
+
+#ifndef MINIFI_CREATE_EXTENSION_FN
+#define MINIFI_CREATE_EXTENSION_FN MinifiCreateExtension
+#endif
 
 typedef bool MinifiBool;
 
@@ -87,6 +94,7 @@ typedef struct MinifiOutputStream MinifiOutputStream;
 typedef struct MinifiConfig MinifiConfig;
 typedef struct MinifiExtension MinifiExtension;
 typedef struct MinifiPublishedMetrics MinifiPublishedMetrics;
+typedef struct MinifiAgent MinifiAgent;
 
 typedef enum MinifiStatus {
   MINIFI_STATUS_SUCCESS = 0,
@@ -181,10 +189,7 @@ typedef struct MinifiExtensionCreateInfo {
   const MinifiProcessorClassDefinition* processors_ptr;
 } MinifiExtensionCreateInfo;
 
-// api_version is used to provide backwards compatible changes to the MinifiExtensionCreateInfo structure,
-// e.g. if MinifiExtensionCreateInfo gets a new field in version 1.2.0, extensions built with api 1.1.0 do not
-// have to be rebuilt
-MinifiExtension* MinifiCreateExtension(MinifiStringView api_version, const MinifiExtensionCreateInfo*);
+MinifiExtension* MINIFI_CREATE_EXTENSION_FN(const MinifiExtensionCreateInfo* create_info);
 
 MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, const MinifiStringView* metric_names, const double* metric_values);
 

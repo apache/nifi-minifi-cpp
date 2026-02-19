@@ -29,6 +29,16 @@
 
 namespace org::apache::nifi::minifi::core::extension {
 
+namespace {
+
+std::atomic<Extension*> extension_being_initialized{nullptr};
+
+}  // namespace
+
+Extension* ExtensionManager::getExtensionBeingInitialized() {
+  return extension_being_initialized.load();
+}
+
 ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): logger_(logging::LoggerFactory<ExtensionManager>::getLogger()) {
   logger_->log_trace("Initializing extensions");
   if (!config) {
@@ -57,14 +67,6 @@ ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): lo
     if (!library) {
       continue;
     }
-    const auto library_type = library->verify(logger_);
-    if (library_type == internal::Invalid) {
-      logger_->log_warn("Skipping library '{}' at '{}': failed verification, different build?",
-          library->name, library->getFullPath());
-      continue;
-    }
-
-    logger_->log_trace("Verified library {} at {} as {} extension", library->name, library->getFullPath(), magic_enum::enum_name(library_type));
     auto extension = std::make_unique<Extension>(library->name, library->getFullPath());
     if (!extension->load()) {
       // error already logged by method
@@ -78,10 +80,14 @@ ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): lo
         continue;
       }
     }
-    if (!extension->initialize(config)) {
-      logger_->log_error("Failed to initialize extension '{}' at '{}'", library->name, library->getFullPath());
-    } else {
-      extensions_.push_back(std::move(extension));
+    {
+      auto extension_guard = gsl::finally([] {extension_being_initialized = nullptr;});
+      extension_being_initialized = extension.get();
+      if (!extension->initialize(config)) {
+        logger_->log_error("Failed to initialize extension '{}' at '{}'", library->name, library->getFullPath());
+      } else {
+        extensions_.push_back(std::move(extension));
+      }
     }
   }
 }

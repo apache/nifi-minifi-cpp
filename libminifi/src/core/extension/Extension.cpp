@@ -37,6 +37,7 @@
 #include "utils/GeneralUtils.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-c/minifi-c.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
@@ -56,10 +57,43 @@ bool Extension::load(bool global) {
   if (!handle_) {
     logger_->log_error("Failed to load extension '{}' at '{}': {}", name_, library_path_, dlerror());
     return false;
-  } else {
-    logger_->log_trace("Loaded extension '{}' at '{}'", name_, library_path_);
+  }
+  logger_->log_trace("Dlopen succeeded for extension '{}' at '{}'", name_, library_path_);
+  if (findSymbol("MinifiInitCppExtension")) {
+    logger_->log_trace("Loaded cpp extension '{}' at '{}'", name_, library_path_);
     return true;
   }
+  if (!findSymbol("MinifiInitExtension")) {
+    logger_->log_error("Failed to load c extension '{}' at '{}': No initializer found", name_, library_path_);
+    return false;
+  }
+  auto api_version = reinterpret_cast<const char* const*>(findSymbol("MinifiApiVersion"));
+  if (!api_version) {
+    logger_->log_error("Failed to load c extension '{}' at '{}': No MinifiApiVersion symbol found", name_, library_path_);
+    return false;
+  }
+  utils::SVMatch match;
+  if (!utils::regexSearch(*api_version, match, utils::Regex{R"(^([0-9]+)\.([0-9]+)\.([0-9]+)$)"})) {
+    logger_->log_error("Failed to load c extension '{}' at '{}': Api version is in invalid format: '{}'", name_, library_path_, *api_version);
+    return false;
+  }
+  gsl_Assert(match.size() == 4);
+  version_.major = std::stoi(match[1]);
+  version_.minor = std::stoi(match[2]);
+  version_.patch = std::stoi(match[3]);
+  if (version_.major != MINIFI_API_MAJOR_VERSION) {
+    logger_->log_error("Failed to load c extension '{}' at '{}': Api major version mismatch, application is '{}' while extension is '{}'",
+        name_, library_path_, MINIFI_API_VERSION, *api_version);
+    return false;
+  }
+  if (version_.minor > MINIFI_API_MINOR_VERSION) {
+    logger_->log_error("Failed to load c extension '{}' at '{}': Extension is built for a newer version, application is '{}' while extension is '{}'",
+        name_, library_path_, MINIFI_API_VERSION, *api_version);
+    return false;
+  }
+  logger_->log_debug("Loaded c extension '{}' at '{}': Application version is '{}', extension version is '{}'",
+        name_, library_path_, MINIFI_API_VERSION, *api_version);
+  return true;
 }
 
 bool Extension::unload() {
@@ -94,17 +128,21 @@ Extension::~Extension() {
 
 bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) {
   logger_->log_trace("Initializing extension '{}'", name_);
-  if (void* init_symbol_ptr = findSymbol("InitExtension")) {
-    logger_->log_debug("Found custom initializer for '{}'", name_);
-    auto init_fn = reinterpret_cast<MinifiExtension*(*)(MinifiConfig*)>(init_symbol_ptr);
-    auto config_handle = reinterpret_cast<MinifiConfig*>(configure.get());
-    info_.reset(reinterpret_cast<Info*>(init_fn(config_handle)));
-    if (!info_) {
-      logger_->log_error("Failed to initialize extension '{}'", name_);
-      return false;
-    }
-  } else {
-    logger_->log_debug("No custom initializer for '{}'", name_);
+  void* init_symbol_ptr = findSymbol("MinifiInitCppExtension");
+  if (!init_symbol_ptr) {
+    init_symbol_ptr = findSymbol("MinifiInitExtension");
+  }
+  if (!init_symbol_ptr) {
+    logger_->log_error("No initializer for '{}'", name_);
+    return false;
+  }
+  logger_->log_debug("Found initializer for '{}'", name_);
+  auto init_fn = reinterpret_cast<MinifiExtension*(*)(MinifiConfig*)>(init_symbol_ptr);
+  auto config_handle = reinterpret_cast<MinifiConfig*>(configure.get());
+  info_.reset(reinterpret_cast<Info*>(init_fn(config_handle)));
+  if (!info_) {
+    logger_->log_error("Failed to initialize extension '{}'", name_);
+    return false;
   }
   return true;
 }

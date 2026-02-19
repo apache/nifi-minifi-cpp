@@ -31,6 +31,8 @@ class ExtensionManager {
  public:
   explicit ExtensionManager(const std::shared_ptr<Configure>& config);
 
+  static Extension* getExtensionBeingInitialized();
+
  private:
   std::vector<std::unique_ptr<Extension>> extensions_;
 
