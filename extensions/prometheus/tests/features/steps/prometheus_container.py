@@ -24,7 +24,7 @@ from minifi_test_framework.containers.file import File
 
 class PrometheusContainer(Container):
     def __init__(self, test_context: MinifiTestContext, ssl: bool = False):
-        super().__init__("prom/prometheus:v2.35.0", f"prometheus-{test_context.scenario_id}", test_context.network)
+        super().__init__("prom/prometheus:v3.9.1", f"prometheus-{test_context.scenario_id}", test_context.network)
         self.scenario_id = test_context.scenario_id
         extra_ssl_settings = ""
         if ssl:
@@ -85,7 +85,7 @@ scrape_configs:
 
     def check_all_metric_types_defined_once(self) -> bool:
         try:
-            self.client.containers.run("minifi-prometheus-helper:latest", ["python", "/scripts/prometheus_checker.py", "--verify-defined-metrics-on-target", f"minifi-primary-{self.scenario_id}"], remove=True, network=self.network.name)
+            self.client.containers.run("minifi-prometheus-helper:latest", ["python", "/scripts/prometheus_checker.py", "--verify-metrics-defined-once", f"minifi-primary-{self.scenario_id}"], remove=True, network=self.network.name)
             return True
         except Exception:
             logging.error("Failed check that all metric types are defined once on Prometheus")

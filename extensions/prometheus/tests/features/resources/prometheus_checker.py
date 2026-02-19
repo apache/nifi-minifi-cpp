@@ -134,7 +134,7 @@ def verify_all_metric_types_are_defined_once(prometheus_target: str) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Prometheus Checker')
-    parser.add_argument('--verify-defined-metrics-on-target', type=str, required=False, help='Prometheus target to verify all defined metrics are unique')
+    parser.add_argument('--verify-metrics-defined-once', type=str, required=False, help='Prometheus target to verify all defined metrics are unique')
     parser.add_argument('--prometheus-host', type=str, required=False, help='Prometheus server host')
     parser.add_argument('--metric-class', type=str, required=False, help='Metric class to verify')
     parser.add_argument('--processor-name', type=str, required=False, help='Processor name to verify')
@@ -142,8 +142,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     checker = PrometheusChecker(args.prometheus_host)
-    if args.verify_defined_metrics_on_target:
-        if not verify_all_metric_types_are_defined_once(args.verify_defined_metrics_on_target):
+    if args.verify_metrics_defined_once:
+        if not verify_all_metric_types_are_defined_once(args.verify_metrics_defined_once):
             sys.exit(1)
     elif args.processor_name and args.metric_class:
         if not checker.verify_processor_metric(args.metric_class, args.processor_name):
@@ -152,5 +152,5 @@ if __name__ == "__main__":
         if not checker.verify_metric_class(args.metric_class):
             sys.exit(1)
     else:
-        print("Either --metric-class or --verify-defined-metrics-on-target must be provided")
+        print("Either --metric-class or --verify-metrics-defined-once must be provided")
         sys.exit(1)
