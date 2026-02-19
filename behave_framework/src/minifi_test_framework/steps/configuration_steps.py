@@ -40,17 +40,6 @@ def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().enable_openssl_fips_mode()
 
 
-@given("C2 is enabled in MiNiFi")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_c2()
-
-
 @given("flow configuration path is set up in flow url property")
 def step_impl(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().fetch_flow_config_from_flow_url()
-
-
-@given("ssl properties are set up for MiNiFi C2 server")
-def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().enable_c2_with_ssl()
-    context.get_or_create_default_minifi_container().set_up_ssl_proprties()
