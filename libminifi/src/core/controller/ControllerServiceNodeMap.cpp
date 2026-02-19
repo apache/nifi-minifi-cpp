@@ -17,81 +17,93 @@
  */
 
 #include "core/controller/ControllerServiceNodeMap.h"
+
+#include <ranges>
+
 #include "core/ProcessGroup.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
 ControllerServiceNode* ControllerServiceNodeMap::get(const std::string &id) const {
-  std::lock_guard<std::mutex> lock(mutex_);
-  auto exists = controller_service_nodes_.find(id);
-  if (exists != controller_service_nodes_.end())
-    return exists->second.get();
-  else
-    return nullptr;
+  const std::scoped_lock lock(mutex_);
+  if (const auto entry = getEntry(id, lock)) {
+    return entry->controller_service_node.get();
+  }
+  return nullptr;
 }
 
 ControllerServiceNode* ControllerServiceNodeMap::get(const std::string &id, const utils::Identifier& processor_or_controller_uuid) const {
-  std::lock_guard<std::mutex> lock(mutex_);
-  ControllerServiceNode* controller = nullptr;
-  auto exists = controller_service_nodes_.find(id);
-  if (exists != controller_service_nodes_.end()) {
-    controller = exists->second.get();
-  } else {
+  const std::scoped_lock lock(mutex_);
+  const auto entry = getEntry(id, lock);
+  if (!entry || !entry->parent_group) {
     return nullptr;
   }
 
-  auto process_group_of_controller_exists = process_groups_.find(id);
-  ProcessGroup* process_group = nullptr;
-  if (process_group_of_controller_exists != process_groups_.end()) {
-    process_group = process_group_of_controller_exists->second;
-  } else {
-    return nullptr;
+
+  if (entry->parent_group->findProcessorById(processor_or_controller_uuid, ProcessGroup::Traverse::IncludeChildren)) {
+    return entry->controller_service_node.get();
   }
 
-  if (process_group->findProcessorById(processor_or_controller_uuid, ProcessGroup::Traverse::IncludeChildren)) {
-    return controller;
-  }
-
-  if (process_group->findControllerService(processor_or_controller_uuid.to_string(), ProcessGroup::Traverse::IncludeChildren)) {
-    return controller;
+  if (entry->parent_group->findControllerService(processor_or_controller_uuid.to_string(), ProcessGroup::Traverse::IncludeChildren)) {
+    return entry->controller_service_node.get();
   }
 
   return nullptr;
 }
 
-bool ControllerServiceNodeMap::put(const std::string &id, const std::shared_ptr<ControllerServiceNode> &serviceNode) {
-  if (id.empty() || serviceNode == nullptr)
+bool ControllerServiceNodeMap::put(std::string id, std::shared_ptr<ControllerServiceNode> controller_service_node,
+    ProcessGroup* parent_group) {
+  std::scoped_lock lock(mutex_);
+  if (id.empty() || controller_service_node == nullptr || alternative_keys.contains(id)) {
     return false;
-  std::lock_guard<std::mutex> lock(mutex_);
-  controller_service_nodes_[id] = serviceNode;
-  return true;
+  }
+  auto [_it, success] = services_.emplace(std::move(id), ServiceEntry{.controller_service_node = std::move(controller_service_node), .parent_group = parent_group});
+  return success;
 }
 
-bool ControllerServiceNodeMap::put(const std::string &id, ProcessGroup* process_group) {
-  if (id.empty() || process_group == nullptr)
-    return false;
-  std::lock_guard<std::mutex> lock(mutex_);
-  process_groups_.emplace(id, gsl::make_not_null(process_group));
-  return true;
-}
 
 void ControllerServiceNodeMap::clear() {
-  std::lock_guard<std::mutex> lock(mutex_);
-  for (const auto& [id, node] : controller_service_nodes_) {
-    node->disable();
+  std::scoped_lock lock(mutex_);
+  for (const auto& node: services_ | std::views::values) {
+    node.controller_service_node->disable();
   }
-  controller_service_nodes_.clear();
-  process_groups_.clear();
+  services_.clear();
+  alternative_keys.clear();
 }
 
 std::vector<std::shared_ptr<ControllerServiceNode>> ControllerServiceNodeMap::getAllControllerServices() const {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::scoped_lock lock(mutex_);
   std::vector<std::shared_ptr<ControllerServiceNode>> services;
-  services.reserve(controller_service_nodes_.size());
-  for (const auto& [id, node] : controller_service_nodes_) {
-    services.push_back(node);
+  services.reserve(services_.size());
+  for (const auto& [controller_service_node, _parent_group]: services_ | std::views::values) {
+    services.push_back(controller_service_node);
   }
   return services;
+}
+
+const ControllerServiceNodeMap::ServiceEntry* ControllerServiceNodeMap::getEntry(const std::string_view key, const std::scoped_lock<std::mutex>&) const {
+  const auto it = services_.find(key);
+  if (it != services_.end()) {
+    return &it->second;
+  }
+  const auto primary_key_it = alternative_keys.find(key);
+  if (primary_key_it == alternative_keys.end()) {
+    return nullptr;
+  }
+  const auto it_from_primary = services_.find(primary_key_it->second);
+  gsl_Expects(it_from_primary != services_.end());
+  return &it_from_primary->second;
+}
+
+
+bool ControllerServiceNodeMap::registerAlternativeKey(std::string primary_key, std::string alternative_key) {
+  std::scoped_lock lock(mutex_);
+  if (!services_.contains(primary_key) || services_.contains(alternative_key) || alternative_keys.contains(alternative_key)) {
+    return false;
+  }
+
+  auto [_it, success] = alternative_keys.emplace(std::move(alternative_key), std::move(primary_key));
+  return success;
 }
 
 }  // namespace org::apache::nifi::minifi::core::controller

@@ -43,18 +43,25 @@ class ControllerServiceNodeMap {
   ControllerServiceNode* get(const std::string &id) const;
   ControllerServiceNode* get(const std::string &id, const utils::Identifier &processor_or_controller_uuid) const;
 
-  bool put(const std::string &id, const std::shared_ptr<ControllerServiceNode> &serviceNode);
-  bool put(const std::string &id, ProcessGroup* process_group);
+  bool put(std::string id, std::shared_ptr<ControllerServiceNode> controller_service_node, ProcessGroup* parent_group);
+
+  bool registerAlternativeKey(std::string primary_key, std::string alternative_key);
 
   void clear();
   std::vector<std::shared_ptr<ControllerServiceNode>> getAllControllerServices() const;
 
  protected:
   mutable std::mutex mutex_;
-  // Map of controller service id to the controller service node
-  std::map<std::string, std::shared_ptr<ControllerServiceNode>> controller_service_nodes_;
-  // Map of controller service id to the process group that contains it
-  std::map<std::string, gsl::not_null<ProcessGroup*>> process_groups_;
+
+  struct ServiceEntry {
+    std::shared_ptr<ControllerServiceNode> controller_service_node;
+    ProcessGroup* parent_group;
+  };
+
+  const ServiceEntry* getEntry(std::string_view primary_key, const std::scoped_lock<std::mutex>& mutex) const;
+
+  std::map<std::string, ServiceEntry, std::less<>> services_;
+  std::map<std::string, std::string, std::less<>> alternative_keys;
 };
 
 }  // namespace controller

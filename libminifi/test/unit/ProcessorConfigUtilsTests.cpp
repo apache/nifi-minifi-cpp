@@ -111,7 +111,7 @@ class WrongTestControllerService : public TestControllerService {};
 class TestControllerServiceProvider : public controller::ControllerServiceProvider {
  public:
   using ControllerServiceProvider::ControllerServiceProvider;
-  std::shared_ptr<controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&) override { return nullptr; }
+  std::shared_ptr<controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&, ProcessGroup*, const std::optional<std::string>&) override { return nullptr; }
   void clearControllerServices() override {}
   void enableAllControllerServices() override {}
   void disableAllControllerServices() override {}

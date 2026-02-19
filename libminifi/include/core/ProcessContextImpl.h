@@ -134,7 +134,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
     /* Function to help creating a state storage */
     auto create_provider = [&](const std::string& type, const std::unordered_map<std::string, std::string>& extraProperties) -> std::shared_ptr<core::StateStorage> {
-      auto new_node = controller_service_provider->createControllerService(type, DefaultStateStorageName);
+      auto new_node = controller_service_provider->createControllerService(type, DefaultStateStorageName, nullptr, std::nullopt);
       if (new_node == nullptr) { return nullptr; }
       new_node->initialize();
       auto storage = new_node->getControllerServiceImplementation();

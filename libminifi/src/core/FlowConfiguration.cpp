@@ -195,8 +195,8 @@ std::unique_ptr<minifi::Connection> FlowConfiguration::createConnection(const st
 }
 
 std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(const std::string &class_name, const std::string &name,
-    const utils::Identifier& uuid) {
-  std::shared_ptr<core::controller::ControllerServiceNode> controllerServicesNode = service_provider_->createControllerService(class_name, name);
+    const utils::Identifier& uuid, ProcessGroup* parent) {
+  std::shared_ptr<core::controller::ControllerServiceNode> controllerServicesNode = service_provider_->createControllerService(class_name, name, parent, uuid.to_string());
   if (nullptr != controllerServicesNode)
     controllerServicesNode->setUUID(uuid);
   return controllerServicesNode;
