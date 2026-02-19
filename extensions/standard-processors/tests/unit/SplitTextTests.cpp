@@ -193,7 +193,7 @@ void runSplitTextTest(const std::string& input, const std::vector<ExpectedSplitT
 
 TEST_CASE("Line Split Count property is required") {
 SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::SplitText>("SplitText")};
-  REQUIRE_THROWS_WITH(controller.trigger("", {}), "Expected parsable uint64_t from \"SplitText::Line Split Count\", but got PropertyNotSet (Property Error:2)");
+  REQUIRE_THROWS_WITH(controller.trigger("", {}), "Expected parsable uint64_t from \"Line Split Count\", but got PropertyNotSet (Property Error:2)");
 }
 
 TEST_CASE("Line Split Count property can only be 0 if Maximum Fragment Size is set") {

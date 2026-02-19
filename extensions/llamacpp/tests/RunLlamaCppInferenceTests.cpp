@@ -229,7 +229,7 @@ TEST_CASE("Invalid values for optional double type properties throw exception") 
 
   REQUIRE_THROWS(controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}}));
   CHECK(minifi::test::utils::verifyLogLinePresenceInPollTime(1s,
-      fmt::format("Expected parsable float from RunLlamaCppInference::{}, but got GeneralParsingError (Parsing Error:0)", property_name)));
+      fmt::format("Expected parsable float from \"{}\", but got GeneralParsingError (Parsing Error:0)", property_name)));
 }
 
 TEST_CASE("Top K property empty and invalid values are handled properly") {
@@ -252,7 +252,7 @@ TEST_CASE("Top K property empty and invalid values are handled properly") {
     REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopK.name, "invalid_value"));
     REQUIRE_THROWS(controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}}));
     CHECK(minifi::test::utils::verifyLogLinePresenceInPollTime(1s,
-                        "Expected parsable int64_t from \"RunLlamaCppInference::Top K\", but got GeneralParsingError (Parsing Error:0)"));
+                        "Expected parsable int64_t from \"Top K\", but got GeneralParsingError (Parsing Error:0)"));
   }
 }
 

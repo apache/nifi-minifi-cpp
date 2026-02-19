@@ -79,11 +79,15 @@ FlowFile ProcessSession::create(const FlowFile* parent) {
 
 void ProcessSession::transfer(FlowFile ff, const minifi::core::Relationship& relationship) {
   const auto rel_name = relationship.getName();
-  MinifiProcessSessionTransfer(impl_, ff.release(), utils::toStringView(rel_name));
+  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionTransfer(impl_, ff.release(), utils::toStringView(rel_name))) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to transfer flowfile");
+  }
 }
 
 void ProcessSession::remove(FlowFile ff) {
-  MinifiProcessSessionRemove(impl_, ff.release());
+  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionRemove(impl_, ff.release())) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to remove flowfile");
+  }
 }
 
 void ProcessSession::write(FlowFile& flow_file, const io::OutputStreamCallback& callback) {
@@ -104,13 +108,17 @@ void ProcessSession::read(FlowFile& flow_file, const io::InputStreamCallback& ca
   }
 }
 
-void ProcessSession::setAttribute(FlowFile& ff, std::string_view key, std::string value) {  // NOLINT(performance-unnecessary-value-param)
-  MinifiStringView value_ref = utils::toStringView(value);
-  MinifiFlowFileSetAttribute(impl_, ff.get(), utils::toStringView(key), &value_ref);
+void ProcessSession::setAttribute(FlowFile& ff, const std::string_view key, std::string value) {  // NOLINT(performance-unnecessary-value-param)
+  const MinifiStringView value_ref = utils::toStringView(value);
+  if (MINIFI_STATUS_SUCCESS != MinifiFlowFileSetAttribute(impl_, ff.get(), utils::toStringView(key), &value_ref)) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to set attribute");
+  }
 }
 
-void ProcessSession::removeAttribute(FlowFile& ff, std::string_view key) {
-  MinifiFlowFileSetAttribute(impl_, ff.get(), utils::toStringView(key), nullptr);
+void ProcessSession::removeAttribute(FlowFile& ff, const std::string_view key) {
+  if (MINIFI_STATUS_SUCCESS != MinifiFlowFileSetAttribute(impl_, ff.get(), utils::toStringView(key), nullptr)) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to remove attribute");
+  }
 }
 
 std::optional<std::string> ProcessSession::getAttribute(FlowFile& ff, std::string_view key) {

@@ -38,14 +38,4 @@ bool ProcessContext::hasNonEmptyProperty(std::string_view name) const {
   return MinifiProcessContextHasNonEmptyProperty(impl_, utils::toStringView(name));
 }
 
-std::string ProcessContext::getProcessorName() const {
-  std::string result;
-  MinifiProcessContextGetProcessorName(impl_, [] (void* data, MinifiStringView name) {
-    *static_cast<std::string*>(data) = std::string(name.data, name.length);
-  }, &result);
-  return result;
-}
-
-
-
 }  // namespace org::apache::nifi::minifi::api::core

@@ -33,37 +33,37 @@ namespace org::apache::nifi::minifi::api::utils {
 
 inline std::string parseProperty(const core::ProcessContext& ctx, const minifi::core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
-      | minifi::utils::orThrow(fmt::format("Expected valid value from \"{}::{}\"", ctx.getProcessorName(), property.name));
+      | minifi::utils::orThrow(fmt::format("Expected valid value from \"{}\"", property.name));
 }
 
 inline bool parseBoolProperty(const core::ProcessContext& ctx, const minifi::core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
       | minifi::utils::andThen(parsing::parseBool)
-      | minifi::utils::orThrow(fmt::format("Expected parsable bool from \"{}::{}\"", ctx.getProcessorName(), property.name));
+      | minifi::utils::orThrow(fmt::format("Expected parsable bool from \"{}\"", property.name));
 }
 
 inline uint64_t parseU64Property(const core::ProcessContext& ctx, const minifi::core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
       | minifi::utils::andThen(parsing::parseIntegral<uint64_t>)
-      | minifi::utils::orThrow(fmt::format("Expected parsable uint64_t from \"{}::{}\"", ctx.getProcessorName(), property.name));
+      | minifi::utils::orThrow(fmt::format("Expected parsable uint64_t from \"{}\"", property.name));
 }
 
 inline int64_t parseI64Property(const core::ProcessContext& ctx, const minifi::core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
       | minifi::utils::andThen(parsing::parseIntegral<int64_t>)
-      | minifi::utils::orThrow(fmt::format("Expected parsable int64_t from \"{}::{}\"", ctx.getProcessorName(), property.name));
+      | minifi::utils::orThrow(fmt::format("Expected parsable int64_t from \"{}\"", property.name));
 }
 
 inline std::chrono::milliseconds parseDurationProperty(const core::ProcessContext& ctx, const minifi::core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
       | minifi::utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)
-      | minifi::utils::orThrow(fmt::format("Expected parsable duration from \"{}::{}\"", ctx.getProcessorName(), property.name));
+      | minifi::utils::orThrow(fmt::format("Expected parsable duration from \"{}\"", property.name));
 }
 
 inline uint64_t parseDataSizeProperty(const core::ProcessContext& ctx, const minifi::core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
       | minifi::utils::andThen(parsing::parseDataSize)
-      | minifi::utils::orThrow(fmt::format("Expected parsable data size from \"{}::{}\"", ctx.getProcessorName(), property.name));
+      | minifi::utils::orThrow(fmt::format("Expected parsable data size from \"{}\"", property.name));
 }
 
 inline std::optional<std::string> parseOptionalProperty(const core::ProcessContext& ctx, const minifi::core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
@@ -74,7 +74,7 @@ inline std::optional<std::string> parseOptionalProperty(const core::ProcessConte
 inline std::optional<bool> parseOptionalBoolProperty(const core::ProcessContext& ctx, const minifi::core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   if (const auto property_str = ctx.getProperty(property.name, flow_file)) {
     return parsing::parseBool(*property_str)
-        | minifi::utils::orThrow(fmt::format("Expected parsable bool from \"{}::{}\"", ctx.getProcessorName(), property.name));
+        | minifi::utils::orThrow(fmt::format("Expected parsable bool from \"{}\"", property.name));
   }
   return std::nullopt;
 }
@@ -85,7 +85,7 @@ inline std::optional<uint64_t> parseOptionalU64Property(const core::ProcessConte
       return std::nullopt;
     }
     return parsing::parseIntegral<uint64_t>(*property_str)
-        | minifi::utils::orThrow(fmt::format("Expected parsable uint64_t from \"{}::{}\"", ctx.getProcessorName(), property.name));
+        | minifi::utils::orThrow(fmt::format("Expected parsable uint64_t from \"{}\"", property.name));
   }
 
   return std::nullopt;
@@ -97,7 +97,7 @@ inline std::optional<int64_t> parseOptionalI64Property(const core::ProcessContex
       return std::nullopt;
     }
     return parsing::parseIntegral<int64_t>(*property_str)
-        | minifi::utils::orThrow(fmt::format("Expected parsable int64_t from \"{}::{}\"", ctx.getProcessorName(), property.name));
+        | minifi::utils::orThrow(fmt::format("Expected parsable int64_t from \"{}\"", property.name));
   }
 
   return std::nullopt;
@@ -111,7 +111,7 @@ inline std::optional<std::chrono::milliseconds> parseOptionalDurationProperty(co
       return std::nullopt;
     }
     return parsing::parseDuration(*property_str)
-        | minifi::utils::orThrow(fmt::format("Expected parsable duration from \"{}::{}\"", ctx.getProcessorName(), property.name));
+        | minifi::utils::orThrow(fmt::format("Expected parsable duration from \"{}\"", property.name));
   }
 
   return std::nullopt;
@@ -123,7 +123,7 @@ inline std::optional<uint64_t> parseOptionalDataSizeProperty(const core::Process
       return std::nullopt;
     }
     return parsing::parseDataSize(*property_str)
-        | minifi::utils::orThrow(fmt::format("Expected parsable data size from \"{}::{}\"", ctx.getProcessorName(), property.name));
+        | minifi::utils::orThrow(fmt::format("Expected parsable data size from \"{}\"", property.name));
   }
 
   return std::nullopt;
@@ -135,7 +135,7 @@ inline std::optional<float> parseOptionalFloatProperty(const core::ProcessContex
       return std::nullopt;
     }
     return parsing::parseFloat(*property_str)
-        | minifi::utils::orThrow(fmt::format("Expected parsable float from {}::{}", ctx.getProcessorName(), property.name));
+        | minifi::utils::orThrow(fmt::format("Expected parsable float from \"{}\"", property.name));
   }
   return std::nullopt;
 }
