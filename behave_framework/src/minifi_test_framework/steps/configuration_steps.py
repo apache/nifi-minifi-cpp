@@ -47,4 +47,4 @@ def step_impl(context: MinifiTestContext):
 
 @given("SSL properties are set in MiNiFi")
 def step_impl(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().set_up_ssl_proprties()
+    context.get_or_create_default_minifi_container().set_up_ssl_properties()

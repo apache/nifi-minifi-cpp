@@ -151,7 +151,7 @@ def step_impl(context: MinifiTestContext):
     context.containers["nifi"] = NifiContainer(context, use_ssl=True)
 
 
-@when(u'NiFi is started')
+@when('NiFi is started')
 def step_impl(context):
     assert context.containers["nifi"].deploy() or context.containers["nifi"].log_app_output()
 
