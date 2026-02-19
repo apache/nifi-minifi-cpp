@@ -24,7 +24,7 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
+extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* /*config*/) {
   // By default in OpenCV, ffmpeg capture is hardcoded to use TCP and this is a workaround
   // also if UDP timeout, ffmpeg will retry with TCP
   // Note:
@@ -42,5 +42,5 @@ extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
     .processors_count = 0,
     .processors_ptr = nullptr
   };
-  return MinifiCreateExtension(minifi::utils::toStringView(MINIFI_API_VERSION), &ext_create_info);
+  return minifi::utils::MinifiCreateCppExtension(&ext_create_info);
 }

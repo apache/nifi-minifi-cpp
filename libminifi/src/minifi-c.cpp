@@ -22,6 +22,8 @@
 
 #include "agent/agent_docs.h"
 #include "core/ProcessorMetrics.h"
+#include "core/extension/ExtensionManager.h"
+#include "minifi-cpp/Exception.h"
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/ClassLoader.h"
 #include "minifi-cpp/core/ProcessContext.h"
@@ -33,10 +35,8 @@
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/state/PublishedMetricProvider.h"
-#include "minifi-cpp/Exception.h"
-#include "core/extension/ExtensionManager.h"
-#include "utils/PropertyErrors.h"
 #include "utils/CProcessor.h"
+#include "utils/PropertyErrors.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -146,30 +146,6 @@ class CProcessorFactory : public minifi::core::ProcessorFactory {
   minifi::utils::CProcessorClassDescription class_description_;
 };
 
-MinifiExtension* MinifiCreateExtensionImpl(MinifiStringView /*api_version*/, const MinifiExtensionCreateInfo* extension_create_info) {
-  gsl_Assert(extension_create_info);
-  auto extension_name = toString(extension_create_info->name);
-  minifi::BundleIdentifier bundle{
-    .name = extension_name,
-    .version = toString(extension_create_info->version)
-  };
-  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[bundle];
-  for (size_t proc_idx = 0; proc_idx < extension_create_info->processors_count; ++proc_idx) {
-    minifi::utils::useCProcessorClassDescription(extension_create_info->processors_ptr[proc_idx], [&] (const auto& description, const auto& c_class_description) {
-      minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_name).registerClass(
-        c_class_description.name,
-        std::make_unique<CProcessorFactory>(extension_name, toString(extension_create_info->processors_ptr[proc_idx].full_name), c_class_description));
-      bundle_components.processors.emplace_back(description);
-    });
-  }
-  return reinterpret_cast<MinifiExtension*>(new org::apache::nifi::minifi::core::extension::Extension::Info{
-    .name = toString(extension_create_info->name),
-    .version = toString(extension_create_info->version),
-    .deinit = extension_create_info->deinit,
-    .user_data = extension_create_info->user_data
-  });
-}
-
 }  // namespace
 
 namespace org::apache::nifi::minifi::utils {
@@ -249,16 +225,35 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
 
 extern "C" {
 
-MinifiExtension* MINIFI_CREATE_EXTENSION_FN(MinifiStringView api_version, const MinifiExtensionCreateInfo* extension_create_info) {
-  return MinifiCreateExtensionImpl(api_version, extension_create_info);
+MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info) {
+  gsl_Assert(extension_create_info);
+  auto current_extension = minifi::core::extension::ExtensionManager::getExtensionBeingInitialized();
+  gsl_Assert(current_extension);
+  auto extension_name = toString(extension_create_info->name);
+  minifi::BundleIdentifier bundle{
+    .name = extension_name,
+    .version = toString(extension_create_info->version)
+  };
+  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[bundle];
+  for (size_t proc_idx = 0; proc_idx < extension_create_info->processors_count; ++proc_idx) {
+    minifi::utils::useCProcessorClassDescription(extension_create_info->processors_ptr[proc_idx], [&] (const auto& description, const auto& c_class_description) {
+      minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_name).registerClass(
+        c_class_description.name,
+        std::make_unique<CProcessorFactory>(extension_name, toString(extension_create_info->processors_ptr[proc_idx].full_name), c_class_description));
+      bundle_components.processors.emplace_back(description);
+    });
+  }
+  return reinterpret_cast<MinifiExtension*>(new org::apache::nifi::minifi::core::extension::Extension::Info{
+    .name = toString(extension_create_info->name),
+    .version = toString(extension_create_info->version),
+    .deinit = extension_create_info->deinit,
+    .user_data = extension_create_info->user_data
+  });
 }
 
-#define REGISTER_C_API_VERSION(major, minor)  \
-  MinifiExtension* MINIFI_PRIVATE_JOIN(MinifiCreateExtension, MINIFI_PRIVATE_JOIN(major, minor))(MinifiStringView api_version, const MinifiExtensionCreateInfo* extension_create_info) {  \
-    return MinifiCreateExtensionImpl(api_version, extension_create_info);  \
-  }
-
-REGISTER_C_API_VERSION(0, 1)
+MinifiExtension* MINIFI_CREATE_EXTENSION_FN(const MinifiExtensionCreateInfo* extension_create_info) {
+  return MinifiCreateExtension(extension_create_info);
+}
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flowfile,
     void (*result_cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
