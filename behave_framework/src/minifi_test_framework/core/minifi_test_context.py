@@ -18,9 +18,10 @@
 from __future__ import annotations
 
 import os
-from typing import Any
 import docker
 from behave.runner import Context
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from cryptography.x509 import Certificate
 from docker.models.networks import Network
 
 from minifi_test_framework.containers.container_protocol import ContainerProtocol
@@ -40,8 +41,8 @@ class MinifiTestContext(Context):
     network: Network
     minifi_container_image: str
     resource_dir: str | None
-    root_ca_key: Any
-    root_ca_cert: Any
+    root_ca_key: Certificate
+    root_ca_cert: RSAPrivateKey
 
     def get_or_create_minifi_container(self, container_name: str) -> MinifiContainer:
         if container_name not in self.containers:

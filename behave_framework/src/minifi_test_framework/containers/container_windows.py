@@ -111,7 +111,7 @@ class WindowsContainer(ContainerProtocol):
 
         # 4. Create and Start
         try:
-            print(f"Creating and starting container '{self.container_name}'...")
+            logging.info(f"Creating and starting container '{self.container_name}'...")
             self.container = self.client.containers.create(
                 image=self.image_name,
                 name=self.container_name,
@@ -136,7 +136,7 @@ class WindowsContainer(ContainerProtocol):
             raise
         return True
 
-    def _copy_content_to_container(self, content: str, target_path: str):
+    def _copy_content_to_container(self, content: str | bytes, target_path: str):
         if not self.container:
             return
 
@@ -148,7 +148,10 @@ class WindowsContainer(ContainerProtocol):
 
         tar_stream = io.BytesIO()
         with tarfile.open(fileobj=tar_stream, mode='w') as tar:
-            encoded_data = content.encode('utf-8')
+            if isinstance(content, str):
+                encoded_data = content.encode('utf-8')
+            else:
+                encoded_data = content
             tarinfo = tarfile.TarInfo(name=file_name)
             tarinfo.size = len(encoded_data)
             tar.addfile(tarinfo, io.BytesIO(encoded_data))
