@@ -369,3 +369,38 @@ class WindowsContainer(ContainerProtocol):
         ]
 
         return sorted(actual_file_contents) == sorted(normalized_expected)
+
+    def nonempty_dir_exists(self, directory_path: str) -> bool:
+        if not self.container:
+            return False
+
+        command = (
+            f"powershell -Command \"if ((Test-Path -LiteralPath '{directory_path}' -PathType Container) "
+            f"-and (Get-ChildItem -LiteralPath '{directory_path}' -Force | Select-Object -First 1)) "
+            f"{{ exit 0 }} else {{ exit 1 }}\""
+        )
+
+        exit_code, _ = self.exec_run(command)
+
+        return exit_code == 0
+
+    def directory_contains_file_with_minimum_size(self, directory_path: str, expected_size: int) -> bool:
+        if not self.container or not self.nonempty_dir_exists(directory_path):
+            return False
+
+        command = (
+            f"powershell -Command \"Get-ChildItem -LiteralPath '{directory_path}' -File "
+            f"| Where-Object {{ $_.Length -gt {expected_size} }}\""
+        )
+
+        exit_code, output = self.exec_run(command)
+
+        if exit_code != 0:
+            logging.error(f"Error running command to get file sizes: {output}")
+            return False
+
+        # If PowerShell returns any text, it means it found files matching the criteria
+        if output and len(output.strip()) > 0:
+            return True
+
+        return False
