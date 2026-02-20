@@ -340,22 +340,24 @@ MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession* se
 }
 
 MinifiStatus MinifiProcessSessionTransfer(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile, MinifiStringView relationship_name) {
+  gsl_Assert(session != MINIFI_NULL);
   gsl_Assert(flowfile !=  MINIFI_NULL);
   try {
     reinterpret_cast<minifi::core::ProcessSession*>(session)->transfer(
         *reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile), minifi::core::Relationship{toString(relationship_name), ""});
     return MINIFI_STATUS_SUCCESS;
-  } catch (std::exception&) {
+  } catch (...) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
 }
 
 MinifiStatus MinifiProcessSessionRemove(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile) {
+  gsl_Assert(session != MINIFI_NULL);
   gsl_Assert(flowfile != MINIFI_NULL);
   try {
     reinterpret_cast<minifi::core::ProcessSession*>(session)->remove(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile));
     return MINIFI_STATUS_SUCCESS;
-  } catch (std::exception&) {
+  } catch (...) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
 }
