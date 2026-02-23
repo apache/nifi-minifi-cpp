@@ -267,7 +267,11 @@ class PythonPropertyValue:
             return self
 
         new_string_value = None
-        if self.is_dynamic:
+        if flow_file is None and self.is_dynamic:
+            new_string_value = self.cpp_context.getDynamicProperty(self.name)
+        elif flow_file is None:
+            new_string_value = self.cpp_context.getProperty(self.name)
+        elif self.is_dynamic:
             new_string_value = self.cpp_context.getDynamicProperty(self.name, flow_file.cpp_flow_file)
         else:
             new_string_value = self.cpp_context.getProperty(self.name, flow_file.cpp_flow_file)
