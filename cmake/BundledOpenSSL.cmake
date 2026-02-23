@@ -56,7 +56,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     endif()
 
     set(OPENSSL_EXTRA_FLAGS
-            no-tests            # Disable tests
+            no-apps             # disable tests and programs
             no-capieng          # disable CAPI engine (legacy)
             no-docs             # disable docs and manpages
             no-legacy           # disable legacy modules
@@ -84,7 +84,6 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
             "-DCMAKE_VISIBILITY_INLINES_HIDDEN=ON"
             )
 
-    # Note: when upgrading to a later release than 3.1.1 the --no-apps could be used instead of --no-tests to minimize the build size
     if (WIN32)
         find_program(JOM_EXECUTABLE_PATH
             NAMES jom.exe
@@ -102,8 +101,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         endif()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.3/openssl-3.3.3.tar.gz
-                URL_HASH "SHA256=712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.6/openssl-3.3.6.tar.gz
+                URL_HASH "SHA256=22db04f3c8f9a808c9795dcf7d2713ff40c12c410ea2d1f6435c6c9c8558958b"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND perl Configure "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} ${OPENSSL_EXTRA_FLAGS} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
@@ -117,8 +116,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     else()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.3/openssl-3.3.3.tar.gz
-                URL_HASH "SHA256=712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.6/openssl-3.3.6.tar.gz
+                URL_HASH "SHA256=22db04f3c8f9a808c9795dcf7d2713ff40c12c410ea2d1f6435c6c9c8558958b"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND ./Configure "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} ${OPENSSL_EXTRA_FLAGS} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
