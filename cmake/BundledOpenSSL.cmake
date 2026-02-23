@@ -56,7 +56,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     endif()
 
     set(OPENSSL_EXTRA_FLAGS
-            no-apps             # disable tests and programs
+            no-tests            # Disable tests
             no-capieng          # disable CAPI engine (legacy)
             no-docs             # disable docs and manpages
             no-legacy           # disable legacy modules
