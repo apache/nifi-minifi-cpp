@@ -266,15 +266,9 @@ class PythonPropertyValue:
         if not self.el_supported or not self.value:
             return self
 
-        new_string_value = None
-        if flow_file is None and self.is_dynamic:
-            new_string_value = self.cpp_context.getDynamicProperty(self.name)
-        elif flow_file is None:
-            new_string_value = self.cpp_context.getProperty(self.name)
-        elif self.is_dynamic:
-            new_string_value = self.cpp_context.getDynamicProperty(self.name, flow_file.cpp_flow_file)
-        else:
-            new_string_value = self.cpp_context.getProperty(self.name, flow_file.cpp_flow_file)
+        getter = self.cpp_context.getDynamicProperty if self.is_dynamic else self.cpp_context.getProperty
+        args = () if flow_file is None else (flow_file.cpp_flow_file,)
+        new_string_value = getter(self.name, *args)
         return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported, self.controller_service_definition, self.is_dynamic)
 
     def asControllerService(self):
