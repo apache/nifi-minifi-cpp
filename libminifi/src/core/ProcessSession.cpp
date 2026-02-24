@@ -31,10 +31,11 @@
 #include <vector>
 
 #include "core/ProcessSessionReadCallback.h"
-#include "io/StreamSlice.h"
-#include "io/StreamPipe.h"
-#include "minifi-cpp/utils/gsl.h"
 #include "core/Processor.h"
+#include "io/StreamPipe.h"
+#include "io/StreamSlice.h"
+#include "minifi-c/minifi-c.h"
+#include "minifi-cpp/utils/gsl.h"
 
 /* This implementation is only for native Windows systems.  */
 #if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__
@@ -256,7 +257,15 @@ void ProcessSessionImpl::write(core::FlowFile &flow, const io::OutputStreamCallb
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
     }
-    if (callback(stream) < 0) {
+    const auto callback_result = callback(stream);
+    if (callback_result == MinifiIoStatus::MINIFI_IO_CANCEL) {
+      stream->close();
+      content_session_->remove(claim);
+      claim.reset();
+      return;
+    }
+
+    if (callback_result < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 

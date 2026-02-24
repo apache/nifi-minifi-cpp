@@ -47,6 +47,11 @@ enum : uint32_t {
 
 typedef bool MinifiBool;
 
+typedef enum MinifiIoStatus : int64_t {
+  MINIFI_IO_ERROR = -1,
+  MINIFI_IO_CANCEL = -125
+} MinifiIoStatus;
+
 typedef enum MinifiInputRequirement : uint32_t {
   MINIFI_INPUT_REQUIRED = 0,
   MINIFI_INPUT_ALLOWED = 1,
