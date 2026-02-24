@@ -17,6 +17,8 @@
 
 function(use_openssl SOURCE_DIR BINARY_DIR)
     message("Using bundled OpenSSL")
+    set(OPENSSL_VERSION "3.3.6" CACHE STRING "" FORCE)
+    set(OPENSSL_FIPS_MODULE_VERSION "3.1.2")
 
     if(APPLE OR WIN32 OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR CMAKE_SYSTEM_PROCESSOR MATCHES "(arm64)|(ARM64)|(aarch64)|(armv8)")
         set(LIBDIR "lib")
@@ -84,7 +86,6 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
             "-DCMAKE_VISIBILITY_INLINES_HIDDEN=ON"
             )
 
-    set(OPENSSL_VERSION "3.3.6" CACHE STRING "" FORCE)
 
     if (WIN32)
         find_program(JOM_EXECUTABLE_PATH
@@ -234,8 +235,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         endif()
         ExternalProject_Add(
                 openssl-fips-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.0.9/openssl-3.0.9.tar.gz
-                URL_HASH "SHA256=eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
+                URL "https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_FIPS_MODULE_VERSION}/openssl-${OPENSSL_FIPS_MODULE_VERSION}.tar.gz"
+                URL_HASH "SHA256=a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-fips-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND perl Configure "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} ${OPENSSL_FIPS_EXTRA_FLAGS} enable-fips "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
@@ -243,12 +244,12 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 EXCLUDE_FROM_ALL TRUE
                 BUILD_COMMAND ${OPENSSL_BUILD_COMMAND}
                 INSTALL_COMMAND nmake install_fips
-            )
+        )
     else()
         ExternalProject_Add(
-            openssl-fips-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.0.9/openssl-3.0.9.tar.gz
-                URL_HASH "SHA256=eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
+                openssl-fips-external
+                URL "https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_FIPS_MODULE_VERSION}/openssl-${OPENSSL_FIPS_MODULE_VERSION}.tar.gz"
+                URL_HASH "SHA256=a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-fips-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND ./Configure "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} ${OPENSSL_FIPS_EXTRA_FLAGS}  "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
