@@ -84,6 +84,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
             "-DCMAKE_VISIBILITY_INLINES_HIDDEN=ON"
             )
 
+    set(OPENSSL_VERSION "3.3.6" CACHE STRING "" FORCE)
+
     if (WIN32)
         find_program(JOM_EXECUTABLE_PATH
             NAMES jom.exe
@@ -101,7 +103,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         endif()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.6/openssl-3.3.6.tar.gz
+                URL "https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz"
                 URL_HASH "SHA256=22db04f3c8f9a808c9795dcf7d2713ff40c12c410ea2d1f6435c6c9c8558958b"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
@@ -116,7 +118,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     else()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.3.6/openssl-3.3.6.tar.gz
+                URL "https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz"
                 URL_HASH "SHA256=22db04f3c8f9a808c9795dcf7d2713ff40c12c410ea2d1f6435c6c9c8558958b"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
@@ -134,7 +136,6 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     set(OPENSSL_LIBRARIES "${OPENSSL_LIBRARIES_LIST};${CMAKE_DL_LIBS}"  CACHE STRING "" FORCE)
     set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_BIN_DIR}/${LIBDIR}/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
     set(OPENSSL_SSL_LIBRARY "${OPENSSL_BIN_DIR}/${LIBDIR}/${BYPRODUCT_PREFIX}ssl${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
-    set(OPENSSL_VERSION "3.3.3" CACHE STRING "" FORCE)
 
     # Set exported variables for FindPackage.cmake
     set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_OPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR}" CACHE STRING "" FORCE)
